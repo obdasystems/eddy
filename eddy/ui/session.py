@@ -49,6 +49,9 @@ from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.common import CommandItemsTranslate
 from eddy.core.commands.common import CommandSnapItemsToGrid
+from eddy.core.commands.diagram import CommandDiagramAdd
+from eddy.core.commands.diagram import CommandDiagramRemove
+from eddy.core.commands.diagram import CommandDiagramRename
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.labels import CommandLabelMove
@@ -76,21 +79,19 @@ from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
-from eddy.core.exporters.graphol import GrapholDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.owl2 import OWLProjectExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
-from eddy.core.functions.fsystem import fcopy, fremove, fexists
+from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import first, format_exception, rstrip
 from eddy.core.functions.misc import snap, snapF
-from eddy.core.functions.path import expandPath, isSubPath
-from eddy.core.functions.path import uniquePath, shortPath
+from eddy.core.functions.path import expandPath
+from eddy.core.functions.path import shortPath
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.graphml import GraphMLDiagramLoader
-from eddy.core.loaders.graphol import GrapholDiagramLoader
-from eddy.core.loaders.graphol import GrapholProjectLoader
+from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
@@ -99,11 +100,11 @@ from eddy.core.profiles.owl2rl import OWL2RLProfile
 from eddy.core.update import UpdateCheckWorker
 
 from eddy.ui.about import AboutDialog
-from eddy.ui.diagram import NewDiagramDialog
-from eddy.ui.diagram import RenameDiagramDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
+from eddy.ui.forms import NewDiagramForm
 from eddy.ui.forms import RefactorNameForm
+from eddy.ui.forms import RenameDiagramForm
 from eddy.ui.forms import ValueForm
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
@@ -133,7 +134,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
     * sgnClosed: whenever the current session is closed.
     * sgnDiagramLoaded: to notify that a diagram has been loaded.
-    * sgnDiagramRenamed: to notify that a diagram has been renamed.
     * sgnFocusDiagram: whenever a diagram is to be focused.
     * sgnFocusItem: whenever an item is to be focused.
     * sgnLoadDiagram: whenever a diagram is to be loaded.
@@ -149,7 +149,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnCheckForUpdate = QtCore.pyqtSignal()
     sgnDiagramFocused = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramLoaded = QtCore.pyqtSignal('QGraphicsScene')
-    sgnDiagramRenamed = QtCore.pyqtSignal('QGraphicsScene')
     sgnFocusDiagram = QtCore.pyqtSignal('QGraphicsScene')
     sgnFocusItem = QtCore.pyqtSignal('QGraphicsItem')
     sgnLoadDiagram = QtCore.pyqtSignal(str)
@@ -207,7 +206,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # COMPLETE SESSION SETUP
         #################################
 
-        self.setAcceptDrops(True)
+        self.setAcceptDrops(False)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -310,7 +309,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             QtGui.QIcon(':/icons/24/ic_folder_open_black'), 'Open...',
             self, objectName='open', shortcut=QtGui.QKeySequence.Open,
             statusTip='Open a diagram and add it to the current project',
-            triggered=self.doOpen))
+            triggered=self.doOpen, enabled=False))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_close_black'), 'Close', self,
@@ -330,14 +329,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             enabled=False, triggered=self.doSaveAs))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_import_black'), 'Import...', self,
-            statusTip='Import a document in the current project',
-            objectName='import', triggered=self.doImport))
+            'Import...', self, objectName='import', triggered=self.doImport,
+            statusTip='Import a document in the current project'))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_export_black'), 'Export...', self,
+            'Export...', self, objectName='export', triggered=self.doExport,
             statusTip='Export the current project in a different format',
-            objectName='export', enabled=False, triggered=self.doExport))
+            enabled=False))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_print_black'), 'Print...', self,
@@ -629,7 +627,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Initialize diagram and project exporters.
         """
         self.addDiagramExporter(GraphMLDiagramExporter)
-        self.addDiagramExporter(GrapholDiagramExporter)
         self.addDiagramExporter(PdfDiagramExporter)
         self.addProjectExporter(GrapholProjectExporter)
         self.addProjectExporter(OWLProjectExporter)
@@ -639,8 +636,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Initialize diagram and project loaders.
         """
         self.addDiagramLoader(GraphMLDiagramLoader)
-        self.addDiagramLoader(GrapholDiagramLoader)
-        self.addProjectLoader(GrapholProjectLoader)
+        self.addProjectLoader(GrapholProjectLoader_v2)
 
     def initMenus(self):
         """
@@ -1048,7 +1044,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Close the currently active subwindow.
         """
-        self.sgnSaveProject.emit()
         self.close()
         self.sgnClosed.emit()
 
@@ -1318,26 +1313,22 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Create a new diagram.
         """
-        form = NewDiagramDialog(self.project, self)
-        if form.exec_() == NewDiagramDialog.Accepted:
-            path = expandPath(form.pathField.value())
-            self.sgnLoadDiagram.emit(path)
-            self.sgnFocusDiagram.emit(self.project.diagram(path))
-            self.sgnSaveProject.emit()
+        form = NewDiagramForm(self.project, self)
+        if form.exec_() == NewDiagramForm.Accepted:
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            size = settings.value('diagram/size', 5000, int)
+            name = form.nameField.value()
+            diagram = Diagram.create(name, size, self.project)
+            self.undostack.push(CommandDiagramAdd(diagram, self.project))
+            self.sgnFocusDiagram.emit(diagram)
 
     @QtCore.pyqtSlot()
     def doOpen(self):
         """
         Open a document.
         """
-        dialog = QtWidgets.QFileDialog(self)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath('~'))
-        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        dialog.setNameFilters([File.Graphol.value])
-        if dialog.exec_():
-            self.openFile(first(dialog.selectedFiles()))
+        # TODO: UPDATE
+        pass
 
     @QtCore.pyqtSlot()
     def doOpenDialog(self):
@@ -1438,7 +1429,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Quit Eddy.
         """
-        self.sgnSaveProject.emit()
+        self.close()
         self.sgnQuit.emit()
 
     @QtCore.pyqtSlot()
@@ -1507,24 +1498,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action = self.sender()
         diagram = action.data()
         if diagram:
-            msgbox = QtWidgets.QMessageBox(self)
-            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
-            msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
-            msgbox.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
-            msgbox.setTextFormat(QtCore.Qt.RichText)
-            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Remove diagram: {0}?'.format(diagram.name))
-            msgbox.setText(textwrap.dedent("""Are you sure you want to remove diagram <b>{0}</b>?
-            If you continue, all the predicates that have been defined only in this
-            diagram will be lost!""".format(diagram.name)))
-            msgbox.exec_()
-            if msgbox.result() == QtWidgets.QMessageBox.Yes:
-                subwindow = self.mdi.subWindowForDiagram(diagram)
-                if subwindow:
-                    subwindow.close()
-                self.project.removeDiagram(diagram)
-                fremove(diagram.path)
-                self.sgnSaveProject.emit()
+            self.undostack.push(CommandDiagramRemove(diagram, self.project))
 
     @QtCore.pyqtSlot()
     def doRenameDiagram(self):
@@ -1534,10 +1508,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action = self.sender()
         diagram = action.data()
         if diagram:
-            form = RenameDiagramDialog(self.project, diagram, self)
-            if form.exec_() == RenameDiagramDialog.Accepted:
-                self.sgnSaveProject.emit()
-                self.sgnDiagramRenamed.emit(diagram)
+            form = RenameDiagramForm(self.project, diagram, self)
+            if form.exec_() == RenameDiagramForm.Accepted:
+                name = form.nameField.value()
+                self.undostack.push(CommandDiagramRename(diagram.name, name, diagram, self.project))
 
     @QtCore.pyqtSlot()
     def doSave(self):
@@ -1930,6 +1904,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Executed when the session is initialized.
         """
+        ## CONNECT PROJECT SPECIFIC SIGNALS
+        connect(self.project.sgnDiagramRemoved, self.mdi.onDiagramRemoved)
+        ## CHECK FOR UPDATES ON STARTUP
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         if settings.value('update/check_on_startup', True, bool):
             action = self.action('check_for_updates')
@@ -1978,89 +1955,22 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if not close:
             closeEvent.ignore()
         else:
-
-            #############################################
-            # SAVE THE CURRENT PROJECT IF NEEDED
-            #################################
-
+            ## SAVE THE CURRENT PROJECT IF NEEDED
             if save:
                 self.sgnSaveProject.emit()
-
-            #############################################
-            # DISPOSE ALL THE PLUGINS
-            #################################
-
+            ## DISPOSE ALL THE PLUGINS
             for plugin in self.plugins():
                 self.pmanager.dispose(plugin)
             self.pmanager.clear()
-
-            #############################################
-            # DISPOSE ALL THE RUNNING THREADS
-            #################################
-
+            ## DISPOSE ALL THE RUNNING THREADS
             self.stopRunningThreads()
-
-            #############################################
-            # HIDE ALL THE NOTIFICATION POPUPS
-            #################################
-
+            ## HIDE ALL THE NOTIFICATION POPUPS
             self.hideNotifications()
-
-            #############################################
-            # SHUTDOWN THE ACTIVE SESSION
-            #################################
-
+            ## SHUTDOWN THE ACTIVE SESSION
             self.sgnClosed.emit()
             closeEvent.accept()
 
             LOGGER.header('Session shutdown completed: %s v%s', APPNAME, VERSION)
-
-    def dragEnterEvent(self, dragEvent):
-        """
-        Executed when a drag is in progress and the mouse enter this widget.
-        :type dragEvent: QDragEnterEvent
-        """
-        if dragEvent.mimeData().hasUrls():
-            self.setCursor(QtGui.QCursor(QtCore.Qt.DragCopyCursor))
-            dragEvent.setDropAction(QtCore.Qt.CopyAction)
-            dragEvent.accept()
-        else:
-            dragEvent.ignore()
-
-    def dragMoveEvent(self, dragEvent):
-        """
-        Executed when a drag is in progress and the mouse moves onto this widget.
-        :type dragEvent: QDragMoveEvent
-        """
-        dragEvent.accept()
-
-    def dragLeaveEvent(self, dragEvent):
-        """
-        Executed when a drag is in progress and the mouse leave this widget.
-        :type dragEvent: QDragEnterEvent
-        """
-        self.unsetCursor()
-
-    def dropEvent(self, dropEvent):
-        """
-        Executed when the drag is dropped on this widget.
-        :type dropEvent: QDropEvent
-        """
-        if dropEvent.mimeData().hasUrls():
-            self.unsetCursor()
-            dropEvent.setDropAction(QtCore.Qt.CopyAction)
-            for url in dropEvent.mimeData().urls():
-                path = url.path()
-                if _WIN32:
-                    # On Windows the absolute path returned for each URL has a
-                    # leading slash: this obviously is not correct on windows
-                    # platform when absolute url have the form C:\\Programs\\... (QtCore.Qt bug?)
-                    path = path.lstrip('/').lstrip('\\')
-                if fexists(path) and File.forPath(path) is File.Graphol:
-                    self.openFile(path)
-            dropEvent.accept()
-        else:
-            dropEvent.ignore()
 
     def keyPressEvent(self, keyEvent):
         """
@@ -2117,25 +2027,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         subwindow = self.mdi.addSubWindow(subwindow)
         subwindow.showMaximized()
         return subwindow
-
-    def openFile(self, path):
-        """
-        Open a graphol document adding it to the project and to the MDI area.
-        :type path: str
-        """
-        if not self.project.diagram(expandPath(path)):
-
-            if not fexists(path):
-                raise IOError('file not found: {0}'.format(path))
-
-            if not isSubPath(self.project.path, path):
-                name = rstrip(os.path.basename(path), File.Graphol.extension)
-                dest = uniquePath(self.project.path, name, File.Graphol.extension)
-                path = fcopy(path, dest)
-
-            self.sgnLoadDiagram.emit(path)
-            self.sgnFocusDiagram.emit(self.project.diagram(path))
-            self.sgnSaveProject.emit()
 
     def setWindowTitle(self, project, diagram=None):
         """

@@ -33,8 +33,6 @@
 ##########################################################################
 
 
-import os
-
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
@@ -47,7 +45,6 @@ from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import snap, partition, first
-from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.guid import GUID
 from eddy.core.items.factory import ItemFactory
@@ -80,10 +77,10 @@ class Diagram(QtWidgets.QGraphicsScene):
     sgnNodeIdentification = QtCore.pyqtSignal('QGraphicsItem')
     sgnUpdated = QtCore.pyqtSignal()
 
-    def __init__(self, path, parent):
+    def __init__(self, name, parent):
         """
         Initialize the diagram.
-        :type path: str
+        :type name: str
         :type parent: Project
         """
         super().__init__(parent)
@@ -92,7 +89,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.guid = GUID(self)
         self.mode = DiagramMode.Idle
         self.modeParam = Item.Undefined
-        self.path = expandPath(path)
+        self.name = name
         self.pasteX = Clipboard.PasteOffsetX
         self.pasteY = Clipboard.PasteOffsetY
 
@@ -105,32 +102,31 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.mp_NodePos = None
         self.mp_Pos = None
 
-        # FIXME: THIS HAS BEEN REINTRODUCED EVEN IF IT'S IN CONTRAST WITH ISSUE #10
-        self.setItemIndexMethod(Diagram.BspTreeIndex)
-
         connect(self.sgnItemAdded, self.onItemAdded)
         connect(self.sgnItemRemoved, self.onItemRemoved)
         connect(self.sgnNodeIdentification, self.doNodeIdentification)
 
     #############################################
-    #   PROPERTIES
+    #   FACTORY
     #################################
 
-    @property
-    def id(self):
+    @classmethod
+    def create(cls, name, size, project):
         """
-        Returns the pseudo unique id of this diagram (alias for Diagram.path).
-        :rtype: str
+        Build and returns a new Diagram instance, using the given parameters.
+        :type name: str
+        :type size: int
+        :type project: Project
+        :rtype: Diagram
         """
-        return self.path
+        diagram = Diagram(name, project)
+        diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
+        diagram.setItemIndexMethod(Diagram.BspTreeIndex)
+        return diagram
 
-    @property
-    def name(self):
-        """
-        Returns the name of the file where this diagram is stored.
-        :rtype: str
-        """
-        return os.path.basename(os.path.normpath(self.path))
+    #############################################
+    #   PROPERTIES
+    #################################
 
     @property
     def project(self):

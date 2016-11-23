@@ -39,8 +39,8 @@ from PyQt5 import QtXml
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
-from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.exporters.common import AbstractProjectExporter
+from eddy.core.functions.misc import postfix
 from eddy.core.functions.fsystem import fwrite, mkdir
 from eddy.core.output import getLogger
 from eddy.core.project import Project
@@ -49,45 +49,24 @@ from eddy.core.project import Project
 LOGGER = getLogger(__name__)
 
 
-class GrapholDiagramExporter(AbstractDiagramExporter):
+class GrapholProjectExporter(AbstractProjectExporter):
     """
-    Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams.
+    Extends AbstractProjectExporter with facilities to export the structure of a Graphol project.
+    A Graphol project is stored in a directory, whose structure is the following:
+    -----------------------
+    - projectname/
+    -   projectname.graphol     # contains information on the ontology
+    -   ...
     """
-    GrapholVersion = 1
-
-    def __init__(self, diagram, session=None):
+    def __init__(self, project, session=None):
         """
-        Initialize the Graphol diagram exporter.
-        :type diagram: Diagram
+        Initialize the project exporter.
+        :type project: Project
         :type session: Session
         """
-        super().__init__(diagram, session)
+        super().__init__(project, session)
 
         self.document = None
-
-        self.exportFuncForItem = {
-            Item.AttributeNode: self.exportAttributeNode,
-            Item.ComplementNode: self.exportComplementNode,
-            Item.ConceptNode: self.exportConceptNode,
-            Item.DatatypeRestrictionNode: self.exportDatatypeRestrictionNode,
-            Item.DisjointUnionNode: self.exportDisjointUnionNode,
-            Item.DomainRestrictionNode: self.exportDomainRestrictionNode,
-            Item.EnumerationNode: self.exportEnumerationNode,
-            Item.FacetNode: self.exportFacetNode,
-            Item.IndividualNode: self.exportIndividualNode,
-            Item.IntersectionNode: self.exportIntersectionNode,
-            Item.PropertyAssertionNode: self.exportPropertyAssertionNode,
-            Item.RangeRestrictionNode: self.exportRangeRestrictionNode,
-            Item.RoleNode: self.exportRoleNode,
-            Item.RoleChainNode: self.exportRoleChainNode,
-            Item.RoleInverseNode: self.exportRoleInverseNode,
-            Item.UnionNode: self.exportUnionNode,
-            Item.ValueDomainNode: self.exportValueDomainNode,
-            Item.InclusionEdge: self.exportInclusionEdge,
-            Item.EquivalenceEdge: self.exportEquivalenceEdge,
-            Item.InputEdge: self.exportInputEdge,
-            Item.MembershipEdge: self.exportMembershipEdge,
-        }
 
         self.itemToXml = {
             Item.AttributeNode: 'attribute',
@@ -112,9 +91,108 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
             Item.InputEdge: 'input',
             Item.MembershipEdge: 'membership',
         }
+        
+        self.exportFuncForItem = {
+            Item.AttributeNode: self.exportAttributeNode,
+            Item.ComplementNode: self.exportComplementNode,
+            Item.ConceptNode: self.exportConceptNode,
+            Item.DatatypeRestrictionNode: self.exportDatatypeRestrictionNode,
+            Item.DisjointUnionNode: self.exportDisjointUnionNode,
+            Item.DomainRestrictionNode: self.exportDomainRestrictionNode,
+            Item.EnumerationNode: self.exportEnumerationNode,
+            Item.FacetNode: self.exportFacetNode,
+            Item.IndividualNode: self.exportIndividualNode,
+            Item.IntersectionNode: self.exportIntersectionNode,
+            Item.PropertyAssertionNode: self.exportPropertyAssertionNode,
+            Item.RangeRestrictionNode: self.exportRangeRestrictionNode,
+            Item.RoleNode: self.exportRoleNode,
+            Item.RoleChainNode: self.exportRoleChainNode,
+            Item.RoleInverseNode: self.exportRoleInverseNode,
+            Item.UnionNode: self.exportUnionNode,
+            Item.ValueDomainNode: self.exportValueDomainNode,
+            Item.InclusionEdge: self.exportInclusionEdge,
+            Item.EquivalenceEdge: self.exportEquivalenceEdge,
+            Item.InputEdge: self.exportInputEdge,
+            Item.MembershipEdge: self.exportMembershipEdge,
+        }
+
+        self.exportMetaFuncForItem = {
+            Item.AttributeNode: self.exportAttributeMeta,
+            Item.ConceptNode: self.exportPredicateMeta,
+            Item.RoleNode: self.exportRoleMeta,
+        }
 
     #############################################
-    #   NODES
+    #   ONTOLOGY PREDICATES EXPORT
+    #################################
+
+    def exportPredicateMeta(self, item, name):
+        """
+        Export predicate metadata.
+        :type item: Item
+        :type name: str
+        :rtype: QDomElement
+        """
+        meta = self.project.meta(item, name)
+        element = self.document.createElement('predicate')
+        element.setAttribute('type', self.itemToXml[item])
+        element.setAttribute('name', name)
+        description = self.document.createElement('description')
+        description.appendChild(self.document.createTextNode(meta.get('description', '')))
+        url = self.document.createElement('url')
+        url.appendChild(self.document.createTextNode(meta.get('url', '')))
+        element.appendChild(url)
+        element.appendChild(description)
+        return element
+
+    def exportAttributeMeta(self, item, name):
+        """
+        Export attribute metadata.
+        :type item: Item
+        :type name: str
+        :rtype: QDomElement
+        """
+        element = self.exportPredicateMeta(item, name)
+        meta = self.project.meta(item, name)
+        functional = self.document.createElement('functional')
+        functional.appendChild(self.document.createTextNode(str(int(meta.get('functional', False)))))
+        element.appendChild(functional)
+        return element
+    
+    def exportRoleMeta(self, item, name):
+        """
+        Export role metadata.
+        :type item: Item
+        :type name: str
+        :rtype: QDomElement
+        """
+        element = self.exportPredicateMeta(item, name)
+        meta = self.project.meta(item, name)
+        functional = self.document.createElement('functional')
+        functional.appendChild(self.document.createTextNode(str(int(meta.get('functional', False)))))
+        inverseFunctional = self.document.createElement('inverseFunctional')
+        inverseFunctional.appendChild(self.document.createTextNode(str(int(meta.get('inverseFunctional', False)))))
+        asymmetric = self.document.createElement('asymmetric')
+        asymmetric.appendChild(self.document.createTextNode(str(int(meta.get('asymmetric', False)))))
+        irreflexive = self.document.createElement('irreflexive')
+        irreflexive.appendChild(self.document.createTextNode(str(int(meta.get('irreflexive', False)))))
+        reflexive = self.document.createElement('reflexive')
+        reflexive.appendChild(self.document.createTextNode(str(int(meta.get('reflexive', False)))))
+        symmetric = self.document.createElement('symmetric')
+        symmetric.appendChild(self.document.createTextNode(str(int(meta.get('symmetric', False)))))
+        transitive = self.document.createElement('transitive')
+        transitive.appendChild(self.document.createTextNode(str(int(meta.get('transitive', False)))))
+        element.appendChild(functional)
+        element.appendChild(inverseFunctional)
+        element.appendChild(asymmetric)
+        element.appendChild(irreflexive)
+        element.appendChild(reflexive)
+        element.appendChild(symmetric)
+        element.appendChild(transitive)
+        return element
+
+    #############################################
+    #   ONTOLOGY DIAGRAMS EXPORT : NODES
     #################################
 
     def exportAttributeNode(self, node):
@@ -267,7 +345,7 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         return self.exportLabelNode(node)
 
     #############################################
-    #   EDGES
+    #   ONTOLOGY DIAGRAMS EXPORT : EDGES
     #################################
 
     def exportInclusionEdge(self, edge):
@@ -303,7 +381,7 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         return self.exportGenericEdge(edge)
 
     #############################################
-    #   AUXILIARY METHODS
+    #   ONTOLOGY DIAGRAMS EXPORT : GENERICS
     #################################
 
     def exportLabelNode(self, node):
@@ -362,253 +440,82 @@ class GrapholDiagramExporter(AbstractDiagramExporter):
         return element
 
     #############################################
-    #   INTERFACE
+    #   MAIN EXPORT
     #################################
 
-    def export(self, path=None):
+    def createDiagrams(self):
         """
-        Perform Graphol document generation.
-        :type path: str
+        Create the 'diagrams' element in the QDomDocument.
         """
-        LOGGER.info('Exporting diagram %s to %s', self.diagram.name, path or self.diagram.path)
+        section = self.document.createElement('diagrams')
+        for diagram in self.project.diagrams():
+            subsection = self.document.createElement('diagram')
+            subsection.setAttribute('name', diagram.name)
+            subsection.setAttribute('width', diagram.width())
+            subsection.setAttribute('height', diagram.height())
+            for node in diagram.nodes():
+                func = self.exportFuncForItem[node.type()]
+                subsection.appendChild(func(node))
+            for edge in diagram.edges():
+                func = self.exportFuncForItem[edge.type()]
+                subsection.appendChild(func(edge))
+            section.appendChild(subsection)
+        self.document.documentElement().appendChild(section)
 
-        # 1) CREATE THE DOCUMENT
+    def createDomDocument(self):
+        """
+        Create the QDomDocument where to store project information.
+        """
         self.document = QtXml.QDomDocument()
         instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
         self.document.appendChild(instruction)
-        
-        # 2) CREATE ROOT ELEMENT
-        root = self.document.createElement('graphol')
-        root.setAttribute('version', str(self.GrapholVersion))
-        
-        self.document.appendChild(root)
-        
-        # 3) CREATE THE GRAPH NODE
-        graph = self.document.createElement('graph')
-        graph.setAttribute('width', self.diagram.width())
-        graph.setAttribute('height', self.diagram.height())
-        
-        # 4) GENERATE NODES
-        for node in self.diagram.nodes():
-            func = self.exportFuncForItem[node.type()]
-            graph.appendChild(func(node))
+        graphol = self.document.createElement('graphol')
+        graphol.setAttribute('version', '2')
+        self.document.appendChild(graphol)
 
-        # 5) GENERATE EDGES
-        for edge in self.diagram.edges():
-            func = self.exportFuncForItem[edge.type()]
-            graph.appendChild(func(edge))
-
-        # 6) APPEND THE GRAPH TO THE DOCUMENT
-        root.appendChild(graph)
-
-        # 7) GENERATE THE FILE
-        fwrite(self.document.toString(2), path or self.diagram.path)
-
-    @classmethod
-    def filetype(cls):
+    def createOntology(self):
         """
-        Returns the type of the file that will be used for the export.
-        :return: File
+        Create the 'ontology' element in the QDomDocument.
         """
-        return File.Graphol
+        iri = self.document.createElement('iri')
+        iri.appendChild(self.document.createTextNode(self.project.iri))
+        name = self.document.createElement('name')
+        name.appendChild(self.document.createTextNode(self.project.name))
+        prefix = self.document.createElement('prefix')
+        prefix.appendChild(self.document.createTextNode(self.project.prefix))
+        profile = self.document.createElement('profile')
+        profile.appendChild(self.document.createTextNode(self.project.profile.name()))
+        section = self.document.createElement('ontology')
+        section.appendChild(name)
+        section.appendChild(prefix)
+        section.appendChild(iri)
+        section.appendChild(profile)
+        self.document.documentElement().appendChild(section)
 
-
-class GrapholProjectExporter(AbstractProjectExporter):
-    """
-    Extends AbstractProjectExporter with facilities to export the structure of a Graphol project.
-
-    A graphol project is stored within a directory whose structure is the following:
-
-    - projectname/
-    -   .eddy/              # subdirectory which contains project specific information
-    -       meta.xml        # contains ontology and predicates meta information
-    -       modules.xml     # contains the paths of all the modules of the ontology
-    -   module1.graphol
-    -   module2.graphol
-    -   ...
-    -   moduleN.graphol
-    """
-
-    def __init__(self, project, session=None):
+    def createPredicatesMeta(self):
         """
-        Initialize the project exporter.
-        :type project: Project
-        :type session: Session
+        Create the 'predicates' element in the QDomDocument.
         """
-        super().__init__(project, session)
-
-        self.projectMainPath = project.path
-        self.projectDataPath = os.path.join(self.projectMainPath, Project.Home)
-        self.projectMetaDataPath = os.path.join(self.projectDataPath, Project.MetaXML)
-        self.projectModulesDataPath = os.path.join(self.projectDataPath, Project.ModulesXML)
-
-        self.metaDocument = None
-        self.modulesDocument = None
-
-        self.metaFuncForItem = {
-            Item.AttributeNode: self.exportAttributeMetadata,
-            Item.ConceptNode: self.exportPredicateMetadata,
-            Item.RoleNode: self.exportRoleMetadata,
-        }
-
-        self.itemToXml = {
-            Item.AttributeNode: 'attribute',
-            Item.ComplementNode: 'complement',
-            Item.ConceptNode: 'concept',
-            Item.DatatypeRestrictionNode: 'datatype-restriction',
-            Item.DisjointUnionNode: 'disjoint-union',
-            Item.DomainRestrictionNode: 'domain-restriction',
-            Item.EnumerationNode: 'enumeration',
-            Item.FacetNode: 'facet',
-            Item.IndividualNode: 'individual',
-            Item.IntersectionNode: 'intersection',
-            Item.PropertyAssertionNode: 'property-assertion',
-            Item.RangeRestrictionNode: 'range-restriction',
-            Item.RoleNode: 'role',
-            Item.RoleChainNode: 'role-chain',
-            Item.RoleInverseNode: 'role-inverse',
-            Item.UnionNode: 'union',
-            Item.ValueDomainNode: 'value-domain',
-            Item.InclusionEdge: 'inclusion',
-            Item.InputEdge: 'input',
-            Item.MembershipEdge: 'membership',
-        }
-
-    #############################################
-    #   AUXILIARY METHODS
-    #################################
-
-    def exportPredicateMetadata(self, item, name):
-        """
-        Export predicate metadata.
-        :type item: Item
-        :type name: str
-        :rtype: QDomElement
-        """
-        meta = self.project.meta(item, name)
-        element = self.metaDocument.createElement('predicate')
-        element.setAttribute('type', self.itemToXml[item])
-        element.setAttribute('name', name)
-        description = self.metaDocument.createElement('description')
-        description.appendChild(self.metaDocument.createTextNode(meta.get('description', '')))
-        url = self.metaDocument.createElement('url')
-        url.appendChild(self.metaDocument.createTextNode(meta.get('url', '')))
-        element.appendChild(url)
-        element.appendChild(description)
-        return element
-
-    def exportAttributeMetadata(self, item, name):
-        """
-        Export attribute metadata.
-        :type item: Item
-        :type name: str
-        :rtype: QDomElement
-        """
-        element = self.exportPredicateMetadata(item, name)
-        meta = self.project.meta(item, name)
-        functional = self.metaDocument.createElement('functional')
-        functional.appendChild(self.metaDocument.createTextNode(str(int(meta.get('functional', False)))))
-        element.appendChild(functional)
-        return element
-
-    def exportRoleMetadata(self, item, name):
-        """
-        Export role metadata.
-        :type item: Item
-        :type name: str
-        :rtype: QDomElement
-        """
-        element = self.exportPredicateMetadata(item, name)
-        meta = self.project.meta(item, name)
-        functional = self.metaDocument.createElement('functional')
-        functional.appendChild(self.metaDocument.createTextNode(str(int(meta.get('functional', False)))))
-        inverseFunctional = self.metaDocument.createElement('inverseFunctional')
-        inverseFunctional.appendChild(self.metaDocument.createTextNode(str(int(meta.get('inverseFunctional', False)))))
-        asymmetric = self.metaDocument.createElement('asymmetric')
-        asymmetric.appendChild(self.metaDocument.createTextNode(str(int(meta.get('asymmetric', False)))))
-        irreflexive = self.metaDocument.createElement('irreflexive')
-        irreflexive.appendChild(self.metaDocument.createTextNode(str(int(meta.get('irreflexive', False)))))
-        reflexive = self.metaDocument.createElement('reflexive')
-        reflexive.appendChild(self.metaDocument.createTextNode(str(int(meta.get('reflexive', False)))))
-        symmetric = self.metaDocument.createElement('symmetric')
-        symmetric.appendChild(self.metaDocument.createTextNode(str(int(meta.get('symmetric', False)))))
-        transitive = self.metaDocument.createElement('transitive')
-        transitive.appendChild(self.metaDocument.createTextNode(str(int(meta.get('transitive', False)))))
-        element.appendChild(functional)
-        element.appendChild(inverseFunctional)
-        element.appendChild(asymmetric)
-        element.appendChild(irreflexive)
-        element.appendChild(reflexive)
-        element.appendChild(symmetric)
-        element.appendChild(transitive)
-        return element
-
-    #############################################
-    #   EXPORT PROJECT SPECIFIC DATA
-    #################################
-
-    def exportMetaToXML(self):
-        """
-        Export project items' matadata to XML file.
-        """
-        # 1) CREATE DOCUMENT
-        self.metaDocument = QtXml.QDomDocument()
-        instruction = self.metaDocument.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
-        self.metaDocument.appendChild(instruction)
-
-        # 2) CREATE ROOT ELEMENT
-        root = self.metaDocument.createElement('project')
-        root.setAttribute('version', str(Project.Version))
-        self.metaDocument.appendChild(root)
-
-        # 3) EXPORT PROJECT METADATA
-        iri = self.metaDocument.createElement('iri')
-        iri.appendChild(self.metaDocument.createTextNode(self.project.iri))
-        prefix = self.metaDocument.createElement('prefix')
-        prefix.appendChild(self.metaDocument.createTextNode(self.project.prefix))
-        profile = self.metaDocument.createElement('profile')
-        profile.appendChild(self.metaDocument.createTextNode(self.project.profile.name()))
-        ontology = self.metaDocument.createElement('ontology')
-        ontology.appendChild(prefix)
-        ontology.appendChild(iri)
-        ontology.appendChild(profile)
-        root.appendChild(ontology)
-
-        # 4) APPEND PREDICATE METADATA
-        metadata = self.metaDocument.createElement('predicates')
+        section = self.document.createElement('predicates')
         for item, predicate in self.project.metas():
-            func = self.metaFuncForItem[item]
+            func = self.exportMetaFuncForItem[item]
             meta = func(item, predicate)
-            metadata.appendChild(meta)
-        root.appendChild(metadata)
+            section.appendChild(meta)
+        self.document.documentElement().appendChild(section)
 
-        # 5) WRITE CONTENT TO DISK
-        fwrite(self.metaDocument.toString(2), self.projectMetaDataPath)
-
-    def exportModulesToXML(self):
+    def createProjectFile(self):
         """
-        Export the list of diagrams in this project to XML file.
+        Serialize a previously created QDomDocument to disk.
         """
-        # 1) CREATE DOCUMENT
-        self.modulesDocument = QtXml.QDomDocument()
-        instruction = self.modulesDocument.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"')
-        self.modulesDocument.appendChild(instruction)
-
-        # 2) CREATE ROOT ELEMENT
-        root = self.modulesDocument.createElement('project')
-        root.setAttribute('version', str(Project.Version))
-        self.modulesDocument.appendChild(root)
-
-        # 3) APPEND ALL THE DIAGRAM NAMES
-        modules = self.modulesDocument.createElement('modules')
-        for diagram in self.project.diagrams():
-            module = self.modulesDocument.createElement('module')
-            module.appendChild(self.modulesDocument.createTextNode(diagram.name))
-            modules.appendChild(module)
-        root.appendChild(modules)
-
-        # 4) WRITE CONTENT TO DISK
-        fwrite(self.modulesDocument.toString(2), self.projectModulesDataPath)
+        try:
+            mkdir(self.project.path)
+            filename = postfix(self.project.name, File.Graphol.extension)
+            filepath = os.path.join(self.project.path, filename)
+            fwrite(self.document.toString(2), filepath)
+        except Exception as e:
+            raise e
+        else:
+            LOGGER.info('Saved project %s to %s', self.project.name, self.project.path)
 
     #############################################
     #   INTERFACE
@@ -618,18 +525,11 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         Perform Project export to disk.
         """
-        # 1) CREATE PROJECT STRUCTURE
-        mkdir(self.projectMainPath)
-        mkdir(self.projectDataPath)
-
-        # 2) EXPORT GRAPHOL DIAGRAMS
-        for diagram in self.project.diagrams():
-            worker = GrapholDiagramExporter(diagram)
-            worker.export()
-
-        # 3) EXPORT PROJECT SPECIFIC DATA
-        self.exportMetaToXML()
-        self.exportModulesToXML()
+        self.createDomDocument()
+        self.createOntology()
+        self.createPredicatesMeta()
+        self.createDiagrams()
+        self.createProjectFile()
 
     @classmethod
     def filetype(cls):

@@ -36,6 +36,89 @@
 from PyQt5 import QtWidgets
 
 
+class CommandDiagramAdd(QtWidgets.QUndoCommand):
+    """
+    Extends QtWidgets.QUndoCommand with facilities to add a Diagram to a Project.
+    """
+    def __init__(self, diagram, project):
+        """
+        Initialize the command.
+        :type diagram: Diagram
+        :type project: Project
+        """
+        super().__init__("add diagram '{0}'".format(diagram.name))
+        self.diagram = diagram
+        self.project = project
+
+    def redo(self):
+        """redo the command"""
+        self.project.addDiagram(self.diagram)
+        self.project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self.project.removeDiagram(self.diagram)
+        self.project.sgnUpdated.emit()
+
+
+class CommandDiagramRemove(QtWidgets.QUndoCommand):
+    """
+    Extends QtWidgets.QUndoCommand with facilities to remove a Diagram from a Project.
+    """
+    def __init__(self, diagram, project):
+        """
+        Initialize the command.
+        :type diagram: Diagram
+        :type project: Project
+        """
+        super().__init__("remove diagram '{0}'".format(diagram.name))
+        self.diagram = diagram
+        self.project = project
+
+    def redo(self):
+        """redo the command"""
+        self.project.removeDiagram(self.diagram)
+        self.project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self.project.addDiagram(self.diagram)
+        self.project.sgnUpdated.emit()
+
+
+class CommandDiagramRename(QtWidgets.QUndoCommand):
+    """
+    Extends QtWidgets.QUndoCommand with facilities to rename a Diagram.
+    """
+    def __init__(self, undo, redo, diagram, project):
+        """
+        Initialize the command.
+        :type undo: str
+        :type redo: str
+        :type diagram: Diagram
+        :type project: Project
+        """
+        super().__init__("rename diagram '{0}' to '{1}'".format(undo, redo))
+        self.diagram = diagram
+        self.project = project
+        self.undo = undo
+        self.redo = redo
+
+    def redo(self):
+        """redo the command"""
+        self.project.removeDiagram(self.diagram)
+        self.diagram.name = self.redo
+        self.project.addDiagram(self.diagram)
+        self.project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self.project.removeDiagram(self.diagram)
+        self.diagram.name = self.undo
+        self.project.addDiagram(self.diagram)
+        self.project.sgnUpdated.emit()
+
+
 class CommandDiagramResize(QtWidgets.QUndoCommand):
     """
     This command is used to resize the size of a diagram.

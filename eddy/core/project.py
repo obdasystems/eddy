@@ -39,6 +39,7 @@ from PyQt5 import QtCore
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import rstrip
+from eddy.core.functions.path import expandPath
 
 
 K_DIAGRAM = 'diagrams'
@@ -64,11 +65,6 @@ class Project(QtCore.QObject):
     * sgnMetaRemoved: whenever predicate metadata are removed from the Project.
     * sgnUpdated: whenever the Project is updated in any of its parts.
     """
-    Home = '.eddy'
-    Version = 1
-    MetaXML = 'meta.xml'
-    ModulesXML = 'modules.xml'
-
     sgnDiagramAdded = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramRemoved = QtCore.pyqtSignal('QGraphicsScene')
     sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
@@ -89,7 +85,7 @@ class Project(QtCore.QObject):
         super().__init__(session)
         self.index = ProjectIndex()
         self.iri = iri
-        self.path = path
+        self.path = expandPath(path)
         self.prefix = prefix
         self.profile = profile
         self.profile.setParent(self)
@@ -330,8 +326,8 @@ class ProjectIndex(dict):
         :type diagram: Diagram
         :rtype: bool
         """
-        if diagram.id not in self[K_DIAGRAM]:
-            self[K_DIAGRAM][diagram.id] = diagram
+        if diagram.name not in self[K_DIAGRAM]:
+            self[K_DIAGRAM][diagram.name] = diagram
             return True
         return False
 
@@ -343,32 +339,32 @@ class ProjectIndex(dict):
         :rtype: bool
         """
         i = item.type()
-        if diagram.id not in self[K_ITEM]:
-            self[K_ITEM][diagram.id] = dict()
-        if item.id not in self[K_ITEM][diagram.id]:
-            self[K_ITEM][diagram.id][item.id] = item
-            if diagram.id not in self[K_TYPE]:
-                self[K_TYPE][diagram.id] = dict()
-            if i not in self[K_TYPE][diagram.id]:
-                self[K_TYPE][diagram.id][i] = set()
-            self[K_TYPE][diagram.id][i] |= {item}
+        if diagram.name not in self[K_ITEM]:
+            self[K_ITEM][diagram.name] = dict()
+        if item.id not in self[K_ITEM][diagram.name]:
+            self[K_ITEM][diagram.name][item.id] = item
+            if diagram.name not in self[K_TYPE]:
+                self[K_TYPE][diagram.name] = dict()
+            if i not in self[K_TYPE][diagram.name]:
+                self[K_TYPE][diagram.name][i] = set()
+            self[K_TYPE][diagram.name][i] |= {item}
             if item.isNode():
-                if diagram.id not in self[K_NODE]:
-                    self[K_NODE][diagram.id] = dict()
-                self[K_NODE][diagram.id][item.id] = item
+                if diagram.name not in self[K_NODE]:
+                    self[K_NODE][diagram.name] = dict()
+                self[K_NODE][diagram.name][item.id] = item
                 if item.isPredicate():
                     k = item.text()
                     if i not in self[K_PREDICATE]:
                         self[K_PREDICATE][i] = dict()
                     if k not in self[K_PREDICATE][i]:
                         self[K_PREDICATE][i][k] = {K_NODE: dict()}
-                    if diagram.id not in self[K_PREDICATE][i][k][K_NODE]:
-                        self[K_PREDICATE][i][k][K_NODE][diagram.id] = set()
-                    self[K_PREDICATE][i][k][K_NODE][diagram.id] |= {item}
+                    if diagram.name not in self[K_PREDICATE][i][k][K_NODE]:
+                        self[K_PREDICATE][i][k][K_NODE][diagram.name] = set()
+                    self[K_PREDICATE][i][k][K_NODE][diagram.name] |= {item}
             if item.isEdge():
-                if diagram.id not in self[K_EDGE]:
-                    self[K_EDGE][diagram.id] = dict()
-                self[K_EDGE][diagram.id][item.id] = item
+                if diagram.name not in self[K_EDGE]:
+                    self[K_EDGE][diagram.name] = dict()
+                self[K_EDGE][diagram.name][item.id] = item
             return True
         return False
 
@@ -398,7 +394,7 @@ class ProjectIndex(dict):
         :rtype: AbstractEdge
         """
         try:
-            return self[K_EDGE][diagram.id][eid]
+            return self[K_EDGE][diagram.name][eid]
         except KeyError:
             return None
 
@@ -412,7 +408,7 @@ class ProjectIndex(dict):
         try:
             if not diagram:
                 return set.union(*(set(self[K_EDGE][i].values()) for i in self[K_EDGE]))
-            return set(self[K_EDGE][diagram.id].values())
+            return set(self[K_EDGE][diagram.name].values())
         except (KeyError, TypeError):
             return set()
 
@@ -434,7 +430,7 @@ class ProjectIndex(dict):
         :rtype: AbstractItem
         """
         try:
-            return self[K_ITEM][diagram.id][iid]
+            return self[K_ITEM][diagram.name][iid]
         except KeyError:
             return None
 
@@ -450,7 +446,7 @@ class ProjectIndex(dict):
             subdict = self[K_TYPE]
             if not diagram:
                 return len(set.union(*(subdict[i][item] for i in subdict if item in subdict[i])))
-            return len(subdict[diagram.id][item])
+            return len(subdict[diagram.name][item])
         except (KeyError, TypeError):
             return 0
 
@@ -464,7 +460,7 @@ class ProjectIndex(dict):
         try:
             if not diagram:
                 return set.union(*(set(self[K_ITEM][i].values()) for i in self[K_ITEM]))
-            return set(self[K_ITEM][diagram.id].values())
+            return set(self[K_ITEM][diagram.name].values())
         except (KeyError, TypeError):
             return set()
 
@@ -499,7 +495,7 @@ class ProjectIndex(dict):
         :rtype: AbstractNode
         """
         try:
-            return self[K_EDGE][diagram.id][nid]
+            return self[K_EDGE][diagram.name][nid]
         except KeyError:
             return None
 
@@ -513,7 +509,7 @@ class ProjectIndex(dict):
         try:
             if not diagram:
                 return set.union(*(set(self[K_NODE][i].values()) for i in self[K_NODE]))
-            return set(self[K_NODE][diagram.id].values())
+            return set(self[K_NODE][diagram.name].values())
         except (KeyError, TypeError):
             return set()
 
@@ -529,7 +525,7 @@ class ProjectIndex(dict):
             subdict = self[K_PREDICATE]
             if not diagram:
                 return len(subdict[item])
-            return len({i for i in subdict[item] if diagram.id in subdict[item][i][K_NODE]})
+            return len({i for i in subdict[item] if diagram.name in subdict[item][i][K_NODE]})
         except (KeyError, TypeError):
             return 0
     
@@ -553,7 +549,7 @@ class ProjectIndex(dict):
                 else:
                     for i in self[K_PREDICATE]:
                         for j in self[K_PREDICATE][i]:
-                            collection.update(self[K_PREDICATE][i][j][K_NODE][diagram.id])
+                            collection.update(self[K_PREDICATE][i][j][K_NODE][diagram.name])
                 return collection
 
             if item and not name:
@@ -563,7 +559,7 @@ class ProjectIndex(dict):
                         collection.update(*self[K_PREDICATE][item][i][K_NODE].values())
                 else:
                     for i in self[K_PREDICATE][item]:
-                        collection.update(self[K_PREDICATE][item][i][K_NODE][diagram.id])
+                        collection.update(self[K_PREDICATE][item][i][K_NODE][diagram.name])
                 return collection
 
             if not item and name:
@@ -573,13 +569,13 @@ class ProjectIndex(dict):
                         collection.update(*self[K_PREDICATE][i][name][K_NODE].values())
                 else:
                     for i in self[K_PREDICATE]:
-                        collection.update(self[K_PREDICATE][i][name][K_NODE][diagram.id])
+                        collection.update(self[K_PREDICATE][i][name][K_NODE][diagram.name])
                 return collection
 
             if item and name:
                 if not diagram:
                     return set.union(*self[K_PREDICATE][item][name][K_NODE].values())
-                return self[K_PREDICATE][item][name][K_NODE][diagram.id]
+                return self[K_PREDICATE][item][name][K_NODE][diagram.name]
 
         except KeyError:
             return set()
@@ -590,8 +586,8 @@ class ProjectIndex(dict):
         :type diagram: Diagram
         :rtype: bool
         """
-        if diagram.id in self[K_DIAGRAM]:
-            del self[K_DIAGRAM][diagram.id]
+        if diagram.name in self[K_DIAGRAM]:
+            del self[K_DIAGRAM][diagram.name]
             return True
         return False
 
@@ -603,42 +599,42 @@ class ProjectIndex(dict):
         :rtype: bool
         """
         i = item.type()
-        if diagram.id in self[K_ITEM]:
-            if item.id in self[K_ITEM][diagram.id]:
-                del self[K_ITEM][diagram.id][item.id]
-                if not self[K_ITEM][diagram.id]:
-                    del self[K_ITEM][diagram.id]
-            if diagram.id in self[K_TYPE]:
-                if i in self[K_TYPE][diagram.id]:
-                    self[K_TYPE][diagram.id][i] -= {item}
-                    if not self[K_TYPE][diagram.id][i]:
-                        del self[K_TYPE][diagram.id][i]
-                        if not self[K_TYPE][diagram.id]:
-                            del self[K_TYPE][diagram.id]
+        if diagram.name in self[K_ITEM]:
+            if item.id in self[K_ITEM][diagram.name]:
+                del self[K_ITEM][diagram.name][item.id]
+                if not self[K_ITEM][diagram.name]:
+                    del self[K_ITEM][diagram.name]
+            if diagram.name in self[K_TYPE]:
+                if i in self[K_TYPE][diagram.name]:
+                    self[K_TYPE][diagram.name][i] -= {item}
+                    if not self[K_TYPE][diagram.name][i]:
+                        del self[K_TYPE][diagram.name][i]
+                        if not self[K_TYPE][diagram.name]:
+                            del self[K_TYPE][diagram.name]
             if item.isNode():
-                if diagram.id in self[K_NODE]:
-                    if item.id in self[K_NODE][diagram.id]:
-                        del self[K_NODE][diagram.id][item.id]
-                        if not self[K_NODE][diagram.id]:
-                            del self[K_NODE][diagram.id]
+                if diagram.name in self[K_NODE]:
+                    if item.id in self[K_NODE][diagram.name]:
+                        del self[K_NODE][diagram.name][item.id]
+                        if not self[K_NODE][diagram.name]:
+                            del self[K_NODE][diagram.name]
                 if item.isPredicate():
                     k = item.text()
                     if i in self[K_PREDICATE]:
                         if k in self[K_PREDICATE][i]:
-                            if diagram.id in self[K_PREDICATE][i][k][K_NODE]:
-                                self[K_PREDICATE][i][k][K_NODE][diagram.id] -= {item}
-                                if not self[K_PREDICATE][i][k][K_NODE][diagram.id]:
-                                    del self[K_PREDICATE][i][k][K_NODE][diagram.id]
+                            if diagram.name in self[K_PREDICATE][i][k][K_NODE]:
+                                self[K_PREDICATE][i][k][K_NODE][diagram.name] -= {item}
+                                if not self[K_PREDICATE][i][k][K_NODE][diagram.name]:
+                                    del self[K_PREDICATE][i][k][K_NODE][diagram.name]
                                     if not self[K_PREDICATE][i][k][K_NODE]:
                                         del self[K_PREDICATE][i][k]
                                         if not self[K_PREDICATE][i]:
                                             del self[K_PREDICATE][i]
             if item.isEdge():
-                if diagram.id in self[K_EDGE]:
-                    if item.id in self[K_EDGE][diagram.id]:
-                        del self[K_EDGE][diagram.id][item.id]
-                        if not self[K_EDGE][diagram.id]:
-                            del self[K_EDGE][diagram.id]
+                if diagram.name in self[K_EDGE]:
+                    if item.id in self[K_EDGE][diagram.name]:
+                        del self[K_EDGE][diagram.name][item.id]
+                        if not self[K_EDGE][diagram.name]:
+                            del self[K_EDGE][diagram.name]
             return True
         return False
                 
@@ -682,5 +678,19 @@ class ProjectNotFoundError(RuntimeError):
 class ProjectNotValidError(RuntimeError):
     """
     Raised whenever a found project has an invalid structure.
+    """
+    pass
+
+
+class ProjectVersionError(RuntimeError):
+    """
+    Raised whenever we have a project version mismatch.
+    """
+    pass
+
+
+class ProjectStopLoadingError(RuntimeError):
+    """
+    Used to signal that a project loading needs to be interrupted.
     """
     pass

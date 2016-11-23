@@ -39,7 +39,6 @@ from tests import EddyTestCase
 
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
-from eddy.core.exporters.graphol import GrapholDiagramExporter
 from eddy.core.exporters.owl2 import OWLProjectExporterWorker
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.functions.fsystem import fread
@@ -63,25 +62,12 @@ class ExportTestCase(EddyTestCase):
 
     def test_export_diagram_to_graphml(self):
         # GIVEN
-        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
         # WHEN
         worker = GraphMLDiagramExporter(self.session.mdi.activeDiagram(), self.session)
         worker.export('@tests/.tests/diagram.graphml')
         # THEN
         self.assertFileExists('@tests/.tests/diagram.graphml')
-
-    #############################################
-    #   GRAPHOL EXPORT
-    #################################
-
-    def test_export_diagram_to_graphol(self):
-        # GIVEN
-        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
-        # WHEN
-        worker = GrapholDiagramExporter(self.session.mdi.activeDiagram(), self.session)
-        worker.export('@tests/.tests/diagram.graphol')
-        # THEN
-        self.assertFileExists('@tests/.tests/diagram.graphol')
 
     #############################################
     #   PDF EXPORT
@@ -90,7 +76,7 @@ class ExportTestCase(EddyTestCase):
     @patch('eddy.core.exporters.pdf.openPath')
     def test_export_diagram_to_pdf(self, _):
         # GIVEN
-        self.session.sgnFocusDiagram.emit(self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
         # WHEN
         worker = PdfDiagramExporter(self.session.mdi.activeDiagram(), self.session)
         worker.export(expandPath('@tests/.tests/diagram.pdf'))

@@ -34,19 +34,23 @@
 
 
 import os
+import textwrap
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtXml
 
+from eddy import APPNAME
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.diagram import DiagramNotFoundError
 from eddy.core.diagram import DiagramNotValidError
-from eddy.core.functions.fsystem import fread, fexists, isdir
+from eddy.core.exporters.graphol import GrapholProjectExporter
+from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir
+from eddy.core.functions.misc import rstrip, postfix
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractDiagramLoader
@@ -55,17 +59,17 @@ from eddy.core.output import getLogger
 from eddy.core.project import Project
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
+from eddy.core.project import ProjectVersionError
+from eddy.core.project import ProjectStopLoadingError
 
 
 LOGGER = getLogger(__name__)
 
 
-class GrapholDiagramLoader(AbstractDiagramLoader):
+class GrapholDiagramLoader_v1(AbstractDiagramLoader):
     """
     Extends AbstractDiagramLoader with facilities to load diagrams from Graphol file format.
     """
-    GrapholVersion = 1
-
     def __init__(self, path, project, session):
         """
         Initialize the Graphol diagram loader.
@@ -508,10 +512,11 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         # CREATE AN EMPTY DIAGRAM
         #################################
 
-        self.diagram = Diagram(self.path, self.project)
-        self.diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
-
         LOGGER.debug('Initialzing empty diagram with size: %s', size)
+
+        name = os.path.basename(self.path)
+        name = rstrip(name, File.Graphol.extension)
+        self.diagram = Diagram.create(name, size, self.project)
 
         #############################################
         # LOAD NODES
@@ -599,12 +604,12 @@ class GrapholDiagramLoader(AbstractDiagramLoader):
         return self.diagram
 
 
-class GrapholProjectLoader(AbstractProjectLoader):
+class GrapholProjectLoader_v1(AbstractProjectLoader):
     """
     Extends AbstractProjectLoader with facilities to load Graphol projects.
     This class can be used to load projects.
 
-    A graphol project is stored within a directory whose structure is the following:
+    A Graphol project is stored within a directory whose structure is the following:
 
     - projectname/
     -   .eddy/              # subdirectory which contains project specific information
@@ -629,9 +634,9 @@ class GrapholProjectLoader(AbstractProjectLoader):
         self.modulesDocument = None
 
         self.projectMainPath = expandPath(self.path)
-        self.projectHomePath = os.path.join(self.projectMainPath, Project.Home)
-        self.projectMetaDataPath = os.path.join(self.projectHomePath, Project.MetaXML)
-        self.projectModulesDataPath = os.path.join(self.projectHomePath, Project.ModulesXML)
+        self.projectHomePath = os.path.join(self.projectMainPath, '.eddy')
+        self.projectMetaDataPath = os.path.join(self.projectHomePath, 'meta.xml')
+        self.projectModulesDataPath = os.path.join(self.projectHomePath, 'modules.xml')
 
         self.metaFuncForItem = {
             Item.AttributeNode: self.buildAttributeMetadata,
@@ -671,7 +676,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
         """
         Build role metadata using the given QDomElement.
         :type element: QDomElement
-        :rtype: AttributeMetaData
+        :rtype: dict
         """
         meta = self.buildPredicateMetadata(element)
         meta['functional'] = bool(int(element.firstChildElement('functional').text()))
@@ -694,7 +699,7 @@ class GrapholProjectLoader(AbstractProjectLoader):
         """
         Build role metadata using the given QDomElement.
         :type element: QDomElement
-        :rtype: AttributeMetaData
+        :rtype: dict
         """
         meta = self.buildPredicateMetadata(element)
         meta['functional'] = bool(int( element.firstChildElement('functional').text()))
@@ -755,13 +760,10 @@ class GrapholProjectLoader(AbstractProjectLoader):
 
         root = self.metaDocument.documentElement()
         predicates = root.firstChildElement('predicates')
-
         predicate = predicates.firstChildElement('predicate')
         while not predicate.isNull():
-
-            QtWidgets.QApplication.processEvents()
-
             try:
+                QtWidgets.QApplication.processEvents()
                 item = self.itemFromXml[predicate.attribute('type')]
                 func = self.metaFuncForItem[item]
                 meta = func(predicate)
@@ -798,17 +800,13 @@ class GrapholProjectLoader(AbstractProjectLoader):
 
         root = self.modulesDocument.documentElement()
         modules = root.firstChildElement('modules')
-
         module = modules.firstChildElement('module')
         while not module.isNull():
-
-            QtWidgets.QApplication.processEvents()
-
-            name = module.text()
-            path = os.path.join(self.project.path, name)
-
             try:
-                loader = GrapholDiagramLoader(path, self.project, self.session)
+                QtWidgets.QApplication.processEvents()
+                name = module.text()
+                path = os.path.join(self.project.path, name)
+                loader = GrapholDiagramLoader_v1(path, self.project, self.session)
                 loader.load()
             except (DiagramNotFoundError, DiagramNotValidError) as e:
                 LOGGER.warning('Failed to load project diagram %s: %s', name, e)
@@ -831,13 +829,12 @@ class GrapholProjectLoader(AbstractProjectLoader):
 
     def load(self):
         """
-        Perform project import.
+        Perform project import (LEGACY MODE).
         :raise ProjectNotFoundError: If the given path does not identify a project.
         :raise ProjectNotValidError: If one of the project data file is missing or not readable.
+        :raise ProjectStopLoadingError: If the use decides not to load the project.
         :rtype: Project
         """
-        LOGGER.header('Loading project: %s', os.path.basename(self.projectMainPath))
-
         #############################################
         # VALIDATE PROJECT
         #################################
@@ -849,13 +846,679 @@ class GrapholProjectLoader(AbstractProjectLoader):
             raise ProjectNotValidError('missing project home: {0}'.format(self.projectHomePath))
 
         #############################################
+        # LEGACY LOADING CHECK
+        #################################
+
+        msgbox = QtWidgets.QMessageBox()
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+        msgbox.setTextFormat(QtCore.Qt.RichText)
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Legacy mode')
+        msgbox.setText(textwrap.dedent("""
+        You have selected an {EDDY} version <b>1</b> project.<br/>
+        If you continue with the loading procedure the project will be automatically
+        converted to the most recent project version.<br/><br/>
+        Do you want to continue?
+        """.format(EDDY=APPNAME)))
+        msgbox.exec_()
+
+        if msgbox.result() == QtWidgets.QMessageBox.No:
+            raise ProjectStopLoadingError
+
+        #############################################
         # IMPORT PROJECT
         #################################
+
+        LOGGER.header('Loading project: %s (LEGACY MODE)', os.path.basename(self.projectMainPath))
 
         self.importProjectFromXML()
         self.importModulesFromXML()
         self.importMetaFromXML()
 
+        #############################################
+        # CLEANUP PROJECT DIRECTORY
+        #################################
+
+        rmdir(self.projectMainPath)
+
         LOGGER.separator('-')
+
+        return self.project
+
+
+class GrapholProjectLoader_v2(AbstractProjectLoader):
+    """
+    Extends AbstractProjectLoader with facilities to load Graphol projects.
+    A Graphol project is stored in a directory, whose structure is the following:
+    -----------------------
+    - projectname/
+    -   projectname.graphol     # contains information on the ontology
+    -   ...
+    """
+    def __init__(self, path, session):
+        """
+        Initialize the Project loader.
+        :type path: str
+        :type session: Session
+        """
+        super().__init__(path, session)
+
+        self.path = expandPath(path)
+        self.project = None
+        self.document = None
+        self.buffer = dict()
+
+        self.itemFromXml = {
+            'attribute': Item.AttributeNode,
+            'complement': Item.ComplementNode,
+            'concept': Item.ConceptNode,
+            'datatype-restriction': Item.DatatypeRestrictionNode,
+            'disjoint-union': Item.DisjointUnionNode,
+            'domain-restriction': Item.DomainRestrictionNode,
+            'enumeration': Item.EnumerationNode,
+            'facet': Item.FacetNode,
+            'individual': Item.IndividualNode,
+            'intersection': Item.IntersectionNode,
+            'property-assertion': Item.PropertyAssertionNode,
+            'range-restriction': Item.RangeRestrictionNode,
+            'role': Item.RoleNode,
+            'role-chain': Item.RoleChainNode,
+            'role-inverse': Item.RoleInverseNode,
+            'union': Item.UnionNode,
+            'value-domain': Item.ValueDomainNode,
+            'inclusion': Item.InclusionEdge,
+            'equivalence': Item.EquivalenceEdge,
+            'input': Item.InputEdge,
+            'membership': Item.MembershipEdge,
+        }
+        
+        self.importFuncForItem = {
+            Item.AttributeNode: self.importAttributeNode,
+            Item.ComplementNode: self.importComplementNode,
+            Item.ConceptNode: self.importConceptNode,
+            Item.DatatypeRestrictionNode: self.importDatatypeRestrictionNode,
+            Item.DisjointUnionNode: self.importDisjointUnionNode,
+            Item.DomainRestrictionNode: self.importDomainRestrictionNode,
+            Item.EnumerationNode: self.importEnumerationNode,
+            Item.FacetNode: self.importFacetNode,
+            Item.IndividualNode: self.importIndividualNode,
+            Item.IntersectionNode: self.importIntersectionNode,
+            Item.PropertyAssertionNode: self.importPropertyAssertionNode,
+            Item.RangeRestrictionNode: self.importRangeRestrictionNode,
+            Item.RoleNode: self.importRoleNode,
+            Item.RoleChainNode: self.importRoleChainNode,
+            Item.RoleInverseNode: self.importRoleInverseNode,
+            Item.UnionNode: self.importUnionNode,
+            Item.ValueDomainNode: self.importValueDomainNode,
+            Item.InclusionEdge: self.importInclusionEdge,
+            Item.EquivalenceEdge: self.importEquivalenceEdge,
+            Item.InputEdge: self.importInputEdge,
+            Item.MembershipEdge: self.importMembershipEdge,
+        }
+
+        self.importMetaFuncForItem = {
+            Item.AttributeNode: self.buildAttributeMeta,
+            Item.ConceptNode: self.buildPredicateMeta,
+            Item.RoleNode: self.buildRoleMeta,
+        }
+
+    #############################################
+    #   ONTOLOGY PREDICATES IMPORT
+    #################################
+
+    def buildAttributeMeta(self, e):
+        """
+        Build role metadata using the given QDomElement.
+        :type e: QDomElement
+        :rtype: dict
+        """
+        meta = self.buildPredicateMeta(e)
+        meta['functional'] = bool(int(e.firstChildElement('functional').text()))
+        return meta
+
+    def buildPredicateMeta(self, e):
+        """
+        Build predicate metadata using the given QDomElement.
+        :type e: QDomElement
+        :rtype: dict
+        """
+        item = self.itemFromXml[e.attribute('type')]
+        name = e.attribute('name')
+        meta = self.project.meta(item, name)
+        meta['description'] = e.firstChildElement('description').text()
+        meta['url'] = e.firstChildElement('url').text()
+        return meta
+
+    def buildRoleMeta(self, e):
+        """
+        Build role metadata using the given QDomElement.
+        :type e: QDomElement
+        :rtype: dict
+        """
+        meta = self.buildPredicateMeta(e)
+        meta['functional'] = bool(int(e.firstChildElement('functional').text()))
+        meta['inverseFunctional'] = bool(int(e.firstChildElement('inverseFunctional').text()))
+        meta['asymmetric'] = bool(int(e.firstChildElement('asymmetric').text()))
+        meta['irreflexive'] = bool(int(e.firstChildElement('irreflexive').text()))
+        meta['reflexive'] = bool(int(e.firstChildElement('reflexive').text()))
+        meta['symmetric'] = bool(int(e.firstChildElement('symmetric').text()))
+        meta['transitive'] = bool(int(e.firstChildElement('transitive').text()))
+        return meta
+    
+    #############################################
+    #   ONTOLOGY DIAGRAMS IMPORT : NODES
+    #################################
+
+    def importAttributeNode(self, d, e):
+        """
+        Build an Attribute node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: AttributeNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.AttributeNode, e)
+        n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        n.setText(x.text())
+        n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
+        return n
+
+    def importComplementNode(self, d, e):
+        """
+        Build a Complement node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: ComplementNode
+        """
+        return self.importGenericNode(d, Item.ComplementNode, e)
+
+    def importConceptNode(self, d, e):
+        """
+        Build a Concept node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: ConceptNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.ConceptNode, e)
+        n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        n.setText(x.text())
+        n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
+        return n
+
+    def importDatatypeRestrictionNode(self, d, e):
+        """
+        Build a DatatypeRestriction node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: DatatypeRestrictionNode
+        """
+        return self.importGenericNode(d, Item.DatatypeRestrictionNode, e)
+
+    def importDisjointUnionNode(self, d, e):
+        """
+        Build a DisjointUnion node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: DisjointUnionNode
+        """
+        return self.importGenericNode(d, Item.DisjointUnionNode, e)
+
+    def importDomainRestrictionNode(self, d, e):
+        """
+        Build a DomainRestriction node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: DomainRestrictionNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.DomainRestrictionNode, e)
+        n.setText(x.text())
+        n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
+        return n
+
+    def importEnumerationNode(self, d, e):
+        """
+        Build an Enumeration node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: EnumerationNode
+        """
+        return self.importGenericNode(d, Item.EnumerationNode, e)
+
+    def importFacetNode(self, d, e):
+        """
+        Build a FacetNode node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: FacetNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.FacetNode, e)
+        n.setText(x.text())
+        return n
+
+    def importIndividualNode(self, d, e):
+        """
+        Build an Individual node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: IndividualNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.IndividualNode, e)
+        n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        n.setText(x.text())
+        n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
+        return n
+
+    def importIntersectionNode(self, d, e):
+        """
+        Build an Intersection node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: IntersectionNode
+        """
+        return self.importGenericNode(d, Item.IntersectionNode, e)
+
+    def importPropertyAssertionNode(self, d, e):
+        """
+        Build a PropertyAssertion node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: PropertyAssertionNode
+        """
+        inputs = e.attribute('inputs', '').strip()
+        n = self.importGenericNode(d, Item.PropertyAssertionNode, e)
+        n.inputs = DistinctList(inputs.split(',') if inputs else [])
+        return n
+
+    def importRangeRestrictionNode(self, d, e):
+        """
+        Build a RangeRestriction node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: RangeRestrictionNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.RangeRestrictionNode, e)
+        n.setText(x.text())
+        n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
+        return n
+
+    def importRoleNode(self, d, e):
+        """
+        Build a Role node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: RoleNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.RoleNode, e)
+        n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        n.setText(x.text())
+        n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
+        return n
+
+    def importRoleChainNode(self, d, e):
+        """
+        Build a RoleChain node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: RoleChainNode
+        """
+        inputs = e.attribute('inputs', '').strip()
+        n = self.importGenericNode(d, Item.RoleChainNode, e)
+        n.inputs = DistinctList(inputs.split(',') if inputs else [])
+        return n
+
+    def importRoleInverseNode(self, d, e):
+        """
+        Build a RoleInverse node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: RoleInverseNode
+        """
+        return self.importGenericNode(d, Item.RoleInverseNode, e)
+
+    def importValueDomainNode(self, d, e):
+        """
+        Build a Value-Domain node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: ValueDomainNode
+        """
+        x = e.firstChildElement('label')
+        n = self.importGenericNode(d, Item.ValueDomainNode, e)
+        n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        n.setText(x.text())
+        n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
+        return n
+
+    def importUnionNode(self, d, e):
+        """
+        Build a Union node using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: UnionNode
+        """
+        return self.importGenericNode(d, Item.UnionNode, e)
+
+    #############################################
+    #   ONTOLOGY DIAGRAMS IMPORT : EDGES
+    #################################
+
+    def importEquivalenceEdge(self, d, e):
+        """
+        Build an Equivalence edge using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: EquivalenceEdge
+        """
+        return self.importGenericEdge(d, Item.EquivalenceEdge, e)
+
+    def importInclusionEdge(self, d, e):
+        """
+        Build an Inclusion edge using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: InclusionEdge
+        """
+        return self.importGenericEdge(d, Item.InclusionEdge, e)
+
+    def importInputEdge(self, d, e):
+        """
+        Build an Input edge using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: InputEdge
+        """
+        return self.importGenericEdge(d, Item.InputEdge, e)
+
+    def importMembershipEdge(self, d, e):
+        """
+        Build a Membership edge using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: MembershipEdge
+        """
+        return self.importGenericEdge(d, Item.MembershipEdge, e)
+
+    #############################################
+    #   ONTOLOGY DIAGRAMS IMPORT : GENERICS
+    #################################
+
+    def importGenericEdge(self, d, i, e):
+        """
+        Build an edge using the given item type and QDomElement.
+        :type d: Diagram
+        :type i: Item
+        :type e: QDomElement
+        :rtype: AbstractEdge
+        """
+        points = []
+        point = e.firstChildElement('point')
+        while not point.isNull():
+            points.append(QtCore.QPointF(int(point.attribute('x')), int(point.attribute('y'))))
+            point = e.nextSiblingElement('point')
+
+        edge = d.factory.create(i, **{
+            'id': e.attribute('id'),
+            'source': self.buffer[d.name][e.attribute('source')],
+            'target': self.buffer[d.name][e.attribute('target')],
+            'breakpoints': points[1:-1]
+        })
+
+        path = edge.source.painterPath()
+        if path.contains(edge.source.mapFromScene(points[0])):
+            edge.source.setAnchor(edge, points[0])
+
+        path = edge.target.painterPath()
+        if path.contains(edge.target.mapFromScene(points[-1])):
+            edge.target.setAnchor(edge, points[-1])
+
+        edge.source.addEdge(edge)
+        edge.target.addEdge(edge)
+        return edge
+
+    @staticmethod
+    def importGenericNode(d, i, e):
+        """
+        Build a node using the given item type and QDomElement.
+        :type d: Diagram
+        :type i: Item
+        :type e: QDomElement
+        :rtype: AbstractNode
+        """
+        geometry = e.firstChildElement('geometry')
+        node = d.factory.create(i, **{
+            'id': e.attribute('id'),
+            'height': int(geometry.attribute('height')),
+            'width': int(geometry.attribute('width'))
+        })
+        node.setPos(QtCore.QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
+        return node
+
+    #############################################
+    #   ONTOLOGY DIAGRAMS : MAIN IMPORT
+    #################################
+
+    def importDiagram(self, e, i):
+        """
+        Create a diagram from the given QDomElement.
+        :type e: QDomElement
+        :type i: int
+        :rtype: Diagram
+        """
+        QtWidgets.QApplication.processEvents()
+        ## PARSE DIAGRAM INFORMATION
+        name = e.attribute('name', 'diagram_{0}'.format(i))
+        size = max(int(e.attribute('width', '10000')), int(e.attribute('height', '10000')))
+        ## CREATE NEW DIAGRAM
+        LOGGER.info('Loading diagram: %s', name)
+        diagram = Diagram.create(name, size, self.project)
+        self.buffer[diagram.name] = dict()
+        ## LOAD DIAGRAM NODES
+        sube = e.firstChildElement('node')
+        while not sube.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                item = self.itemFromXmlNode(sube)
+                func = self.importFuncForItem[item]
+                node = func(diagram, sube)
+            except Exception:
+                LOGGER.exception('Failed to create node %s', sube.attribute('id'))
+            else:
+                diagram.addItem(node)
+                diagram.guid.update(node.id)
+                self.buffer[diagram.name][node.id] = node
+            finally:
+                sube = sube.nextSiblingElement('node')
+        ## LOAD DIAGRAM EDGES
+        sube = e.firstChildElement('edge')
+        while not sube.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                item = self.itemFromXmlNode(sube)
+                func = self.importFuncForItem[item]
+                edge = func(diagram, sube)
+            except Exception:
+                LOGGER.exception('Failed to create edge %s', sube.attribute('id'))
+            else:
+                diagram.addItem(edge)
+                diagram.guid.update(edge.id)
+                self.buffer[diagram.name][edge.id] = edge
+            finally:
+                sube = sube.nextSiblingElement('edge')
+        ## IDENTIFY NEUTRAL NODES
+        nodes = [x for x in diagram.items(edges=False) if Identity.Neutral in x.identities()]
+        if nodes:
+            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
+            for node in nodes:
+                diagram.sgnNodeIdentification.emit(node)
+        ## CONFIGURE DIAGRAM SIGNALS
+        connect(diagram.sgnItemAdded, self.project.doAddItem)
+        connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
+        connect(diagram.selectionChanged, self.session.doUpdateState)
+        ## RETURN GENERATED DIAGRAM
+        return diagram
+
+    def importMeta(self, e):
+        """
+        Create predicate metadata from the given QDomElement.
+        :type e: QDomElement
+        :rtype: tuple
+        """
+        try:
+            QtWidgets.QApplication.processEvents()
+            item = self.itemFromXml[e.attribute('type')]
+            func = self.importMetaFuncForItem[item]
+            meta = func(e)
+        except Exception:
+            LOGGER.exception('Failed to create meta for predicate %s', e.attribute('name'))
+            return None
+        else:
+            return item, e.attribute('name'), meta
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def itemFromXmlNode(self, e):
+        """
+        Returns the item matching the given Graphol XML node.
+        :type e: QDomElement
+        :rtype: Item
+        """
+        try:
+            return self.itemFromXml[e.attribute('type').lower().strip()]
+        except KeyError:
+            return None
+
+    #############################################
+    #   MAIN IMPORT
+    #################################
+
+    def createDiagrams(self):
+        """
+        Create ontology diagrams by parsing the 'diagrams' section of the QDomDocument.
+        """
+        counter = 1
+        section = self.document.documentElement().firstChildElement('diagrams')
+        element = section.firstChildElement('diagram')
+        while not element.isNull():
+            self.project.addDiagram(self.importDiagram(element, counter))
+            element = element.nextSiblingElement('diagram')
+            counter += 1
+
+    def createDomDocument(self):
+        """
+        Create the QDomDocument from where to parse Project information.
+        """
+        QtWidgets.QApplication.processEvents()
+        filename = postfix(os.path.basename(self.path), File.Graphol.extension)
+        filepath = os.path.join(self.path, filename)
+        if not fexists(filepath):
+            raise ProjectNotFoundError('missing project ontology: %s' % filepath)
+        self.document = QtXml.QDomDocument()
+        if not self.document.setContent(fread(filepath)):
+            raise ProjectNotValidError('invalid project ontology supplied: %s' % filepath)
+        graphol = self.document.documentElement()
+        version = int(graphol.attribute('version', '2'))
+        if version != 2:
+            raise ProjectVersionError('project version mismatch: %s != 2' % version)
+
+    def createLegacyProject(self):
+        """
+        Create a Project using the @deprecated Graphol project loader (v1).
+        """
+        worker = GrapholProjectLoader_v1(self.path, self.session)
+        self.project = worker.load()
+        worker = GrapholProjectExporter(self.project)
+        worker.export()
+
+    def createPredicatesMeta(self):
+        """
+        Create ontology predicated metadata by parsing the 'predicates' section of the QDomDocument.
+        """
+        QtWidgets.QApplication.processEvents()
+        section = self.document.documentElement().firstChildElement('predicates')
+        element = section.firstChildElement('predicate')
+        while not element.isNull():
+            meta = self.importMeta(element)
+            if meta:
+                self.project.setMeta(meta[0], meta[1], meta[2])
+            element = element.nextSiblingElement('predicate')
+
+    def createProject(self):
+        """
+        Create the Project by reading data from the parsed QDomDocument.
+        """
+        section = self.document.documentElement().firstChildElement('ontology')
+
+        def parse(tag, default='unknown'):
+            """
+            Read an element from the given tag.
+            :type tag: str
+            :type default: str
+            :rtype: str
+            """
+            QtWidgets.QApplication.processEvents()
+            subelement = section.firstChildElement(tag)
+            if subelement.isNull():
+                LOGGER.warning('Missing tag <%s> in ontology section, using default: %s', tag, default)
+                return default
+            content = subelement.text()
+            if not content:
+                LOGGER.warning('Empty tag <%s> in ontology section, using default: %s', tag, default)
+                return default
+            LOGGER.debug('Loaded ontology %s: %s', tag, content)
+            return content
+
+        self.project = Project(
+            self.path,
+            parse('prefix'),
+            parse('iri'),
+            self.session.createProfile(parse('profile', 'OWL 2')),
+            self.session)
+
+    def projectRender(self):
+        """
+        Render all the elements in the Project ontology.
+        """
+        for item in self.project.items():
+            item.updateEdgeOrNode()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.Graphol
+
+    def load(self):
+        """
+        Perform project import.
+        :raise ProjectNotFoundError: If the given path does not identify a project.
+        :raise ProjectNotValidError: If one of the project data file is missing or not readable.
+        :rtype: Project
+        """
+        try:
+            self.createDomDocument()
+        except (ProjectNotFoundError, ProjectVersionError):
+            self.createLegacyProject()
+        else:
+            LOGGER.header('Loading project: %s', os.path.basename(self.path))
+            self.createProject()
+            self.createDiagrams()
+            self.createPredicatesMeta()
+            self.projectRender()
+            LOGGER.separator('-')
 
         return self.project

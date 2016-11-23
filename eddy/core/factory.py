@@ -41,8 +41,7 @@ from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile
-from eddy.core.datatypes.system import File
-from eddy.core.functions.misc import first, rstrip
+from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 
 from eddy.ui.properties import DiagramProperty
@@ -211,7 +210,7 @@ class MenuFactory(QtCore.QObject):
             action.setCheckable(True)
             action.setChecked(pnode is node)
             action.setData(pnode)
-            action.setText('{} ({})'.format(rstrip(pnode.diagram.name, File.Graphol.extension), pnode.id))
+            action.setText('{} ({})'.format(pnode.diagram.name, pnode.id))
             connect(action.triggered, self.session.doLookupOccurrence)
             self.customAction['occurrences'].append(action)
         # BUILD CUSTOM MENU FOR PREDICATE OCCURRENCES

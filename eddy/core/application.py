@@ -49,6 +49,8 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
+from eddy.core.project import ProjectVersionError
+from eddy.core.project import ProjectStopLoadingError
 
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
@@ -305,25 +307,18 @@ class Eddy(QtWidgets.QApplication):
 
             try:
                 self.session = Session(path)
-            except ProjectNotFoundError as e:
-                LOGGER.warning('Failed to create session for %s: %s', path, e)
+            except ProjectStopLoadingError:
+                pass
+            except (ProjectNotFoundError, ProjectNotValidError, ProjectVersionError) as e:
+                LOGGER.warning('Failed to create session for project %s: %s', path, e)
                 msgbox = QtWidgets.QMessageBox()
                 msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setText('Project <b>{0}</b> not found!'.format(os.path.basename(path)))
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Project not found!')
-                msgbox.exec_()
-            except ProjectNotValidError as e:
-                LOGGER.warning('Failed to create session for %s: %s', path, e)
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setText('Project <b>{0}</b> is not valid!'.format(os.path.basename(path)))
+                msgbox.setText('Failed to create session for project: <b>{0}</b>!'.format(os.path.basename(path)))
                 msgbox.setTextFormat(QtCore.Qt.RichText)
                 msgbox.setDetailedText(format_exception(e))
                 msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
                 msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Project not valid!')
+                msgbox.setWindowTitle('Project Error!')
                 msgbox.exec_()
             except Exception as e:
                 raise e

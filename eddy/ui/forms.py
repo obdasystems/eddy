@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+from abc import ABCMeta
 from operator import attrgetter
 
 from PyQt5 import QtCore
@@ -397,3 +398,151 @@ class ValueForm(QtWidgets.QDialog):
             name = 'change {0} to {1}'.format(node.text(), data)
             self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
         super().accept()
+
+
+class AbstractDiagramForm(QtWidgets.QDialog):
+    """
+    Base class for diagram dialogs.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, project, parent=None):
+        """
+        Initialize the dialog.
+        :type project: Project
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(parent)
+
+        self.project = project
+
+        #############################################
+        # FORM AREA
+        #################################
+
+        self.nameField = StringField(self)
+        self.nameField.setFont(Font('Roboto', 12))
+        self.nameField.setMinimumWidth(400)
+        self.nameField.setMaxLength(64)
+        self.nameField.setPlaceholderText('Name...')
+        connect(self.nameField.textChanged, self.onNameFieldChanged)
+
+        self.warnLabel = QtWidgets.QLabel(self)
+        self.warnLabel.setContentsMargins(0, 0, 0, 0)
+        self.warnLabel.setProperty('class', 'invalid')
+        self.warnLabel.setVisible(False)
+
+        #############################################
+        # CONFIRMATION AREA
+        #################################
+
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.confirmationBox.setFont(Font('Roboto', 12))
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+
+        #############################################
+        # SETUP DIALOG LAYOUT
+        #################################
+
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.mainLayout.setContentsMargins(10, 10, 10, 10)
+        self.mainLayout.addWidget(self.nameField)
+        self.mainLayout.addWidget(self.warnLabel)
+        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
+
+        self.setFixedSize(self.sizeHint())
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot(str)
+    def onNameFieldChanged(self, name):
+        """
+        Executed when the content of the input field changes.
+        :type name: str
+        """
+        name = name.strip()
+        if not name:
+            caption = ''
+            enabled = False
+        else:
+            for diagram in self.project.diagrams():
+                if diagram.name.upper() == name.upper():
+                    caption = "Diagram '{0}' already exists!".format(name)
+                    enabled = False
+                    break
+            else:
+                caption = ''
+                enabled = True
+        self.warnLabel.setText(caption)
+        self.warnLabel.setVisible(not isEmpty(caption))
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
+        self.setFixedSize(self.sizeHint())
+
+
+class NewDiagramForm(AbstractDiagramForm):
+    """
+    This class is used to display a modal window used to create a new diagram.
+    """
+
+    def __init__(self, project, parent=None):
+        """
+        Initialize the new diagram dialog.
+        :type project: Project
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(project, parent)
+        self.setWindowTitle('New diagram')
+
+
+class RenameDiagramForm(AbstractDiagramForm):
+    """
+    This class is used to display a modal window used to rename diagrams.
+    """
+
+    def __init__(self, project, diagram, parent=None):
+        """
+        Initialize the new diagram dialog.
+        :type project: Project
+        :type diagram: Diagram
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(project, parent)
+        self.diagram = diagram
+        self.nameField.setText(self.diagram.name)
+        self.setWindowTitle('Rename diagram: {0}'.format(self.diagram.name))
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot(str)
+    def onNameFieldChanged(self, name):
+        """
+        Executed when the content of the input field changes.
+        :type name: str
+        """
+        name = name.strip()
+        if not name:
+            caption = ''
+            enabled = False
+        else:
+            for diagram in self.project.diagrams():
+                if diagram.name.upper() == name.upper():
+                    caption = ''
+                    enabled = False
+                    break
+            else:
+                caption = ''
+                enabled = True
+        self.warnLabel.setText(caption)
+        self.warnLabel.setVisible(not isEmpty(caption))
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
+        self.setFixedSize(self.sizeHint())

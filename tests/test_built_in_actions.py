@@ -36,7 +36,6 @@
 from tests import EddyTestCase
 
 from eddy.core.functions.misc import first
-from eddy.core.functions.path import expandPath
 from eddy.core.datatypes.graphol import Item
 
 
@@ -50,8 +49,7 @@ class BuiltInActionsTestCase(EddyTestCase):
         """
         super().setUp()
         self.init('test_project_1')
-        self.session.sgnFocusDiagram.emit(
-            self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
 
     #############################################
     #   CUT / COPY / PASTE

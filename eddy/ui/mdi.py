@@ -51,22 +51,18 @@ class MdiArea(QtWidgets.QMdiArea):
         """
         super().__init__(session, **kwargs)
 
-        # Configure widget.
         self.setContentsMargins(0, 0, 0, 0)
         self.setViewMode(MdiArea.TabbedView)
         self.setTabPosition(QtWidgets.QTabWidget.North)
         self.setTabsClosable(True)
         self.setTabsMovable(True)
 
-        # Do not expand MDI area tabs.
         for child in self.children():
             if isinstance(child, QtWidgets.QTabBar):
                 child.setExpanding(False)
                 break
 
-        # Connect signals.
         connect(self.subWindowActivated, self.onSubWindowActivated)
-        connect(self.session.sgnDiagramRenamed, self.onDiagramRenamed)
 
     #############################################
     #   PROPERTIES
@@ -85,18 +81,14 @@ class MdiArea(QtWidgets.QMdiArea):
     #################################
 
     @QtCore.pyqtSlot('QGraphicsScene')
-    def onDiagramRenamed(self, diagram):
+    def onDiagramRemoved(self, diagram):
         """
         Executed when a diagram is renamed.
         :type diagram: Diagram
         """
-        # Make sure to always update the name in tab.
         for subwindow in self.subWindowList():
             if subwindow.diagram is diagram:
-                subwindow.setWindowTitle(diagram.name)
-        # If the diagram is the active one, update also the session title.
-        if self.activeDiagram() is diagram:
-            self.session.setWindowTitle(self.session.project, diagram)
+                subwindow.close()
 
     @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):

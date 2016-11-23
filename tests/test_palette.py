@@ -39,7 +39,6 @@ from PyQt5 import QtTest
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.misc import first
-from eddy.core.functions.path import expandPath
 
 from tests import EddyTestCase
 
@@ -54,8 +53,7 @@ class PaletteTestCase(EddyTestCase):
         """
         super().setUp()
         self.init('test_project_1')
-        self.session.sgnFocusDiagram.emit(
-            self.project.diagram(expandPath('@tests/.tests/test_project_1/diagram.graphol')))
+        self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
 
     #############################################
     #   TEST NODE INSERTION

@@ -676,12 +676,11 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         # CREATE AN EMPTY DIAGRAM
         #################################
 
-        name = rstrip(os.path.basename(self.path), File.GraphML.extension)
-        path = uniquePath(self.project.path, name, File.Graphol.extension)
-        self.diagram = Diagram(path, self.project)
-        self.diagram.setSceneRect(QtCore.QRectF(-Diagram.MaxSize / 2, -Diagram.MaxSize / 2, Diagram.MaxSize, Diagram.MaxSize))
-
         LOGGER.debug('Initialzing empty diagram with size: %s', Diagram.MaxSize)
+
+        name = os.path.basename(self.path)
+        name = rstrip(name, File.GraphML.extension)
+        self.diagram = Diagram.create(name, Diagram.MaxSize, self.project)
 
         #############################################
         # LOAD NODES
