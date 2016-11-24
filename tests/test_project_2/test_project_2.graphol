@@ -8,1112 +8,1112 @@
   </ontology>
   <predicates/>
   <diagrams>
-    <diagram height="5000" width="5000" name="diagram24">
-      <node color="#fcfcfc" type="enumeration" id="n3">
-        <geometry x="0" height="30" y="0" width="50"/>
-        <label x="0" height="22" y="0" width="41">oneOf</label>
+    <diagram width="5000" name="diagram28" height="5000">
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-60" y="80" height="-60"/>
+        <label width="17" x="-60" y="80" height="23">I1</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-60" height="-60" y="80" width="60"/>
-        <label x="-60" height="22" y="80" width="18">I1</label>
+      <node type="role" color="#fcfcfc" id="n0">
+        <geometry width="70" x="0" y="-80" height="50"/>
+        <label width="22" x="0" y="-80" height="23">R2</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n0">
-        <geometry x="60" height="-60" y="80" width="60"/>
-        <label x="60" height="22" y="80" width="18">I2</label>
+      <node type="property-assertion" color="#fcfcfc" inputs="e0" id="n2">
+        <geometry width="52" x="0" y="0" height="30"/>
       </node>
-      <node color="#fcfcfc" type="concept" id="n2">
-        <geometry x="0" height="50" y="-100" width="110"/>
-        <label x="0" height="22" y="-100" width="23">C5</label>
+      <node type="individual" color="#fcfcfc" id="n3">
+        <geometry width="60" x="60" y="80" height="-60"/>
+        <label width="97" x="60" y="80" height="23">"12"^^xsd:integer</label>
       </node>
-      <edge type="input" source="n1" target="n3" id="e1">
+      <edge type="input" target="n2" id="e0" source="n1">
         <point x="-60" y="80"/>
         <point x="0" y="0"/>
       </edge>
-      <edge type="input" source="n0" target="n3" id="e0">
-        <point x="60" y="80"/>
-        <point x="0" y="0"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram26">
-      <node color="#fcfcfc" type="value-domain" id="n0">
-        <geometry x="120" height="40" y="-60" width="90"/>
-        <label x="120" height="22" y="-60" width="66">xsd:integer</label>
-      </node>
-      <node color="#fcfcfc" type="datatype-restriction" id="n2">
-        <geometry x="-20" height="30" y="-60" width="50"/>
-        <label x="-20" height="22" y="-60" width="31">data</label>
-      </node>
-      <node color="#000000" type="facet" id="n3">
-        <geometry x="-20" height="0" y="40" width="80"/>
-        <label x="-20" height="22" y="40" width="92">xsd:length^^"32"</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n1">
-        <geometry x="-140" height="40" y="40" width="90"/>
-        <label x="-140" height="22" y="40" width="59">xsd:string</label>
-      </node>
-      <edge type="input" source="n3" target="n2" id="e1">
-        <point x="-20" y="40"/>
-        <point x="-20" y="-60"/>
-      </edge>
-      <edge type="input" source="n1" target="n2" id="e0">
-        <point x="-140" y="40"/>
-        <point x="-140" y="-60"/>
-        <point x="-20" y="-60"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram32">
-      <node color="#fcfcfc" type="attribute" id="n3">
-        <geometry x="0" height="20" y="-100" width="20"/>
-        <label x="0" height="22" y="-122" width="22">A4</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-60" height="-60" y="80" width="60"/>
-        <label x="-60" height="22" y="80" width="99">"12"^^xsd:integer</label>
-      </node>
-      <node color="#fcfcfc" type="property-assertion" inputs="e0" id="n0">
-        <geometry x="0" height="30" y="0" width="52"/>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n2">
-        <geometry x="60" height="-60" y="80" width="60"/>
-        <label x="60" height="22" y="80" width="99">"32"^^xsd:integer</label>
-      </node>
-      <edge type="input" source="n1" target="n0" id="e0">
-        <point x="-60" y="80"/>
-        <point x="0" y="0"/>
-      </edge>
-      <edge type="membership" source="n0" target="n3" id="e1">
-        <point x="0" y="0"/>
-        <point x="0" y="-100"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram47">
-      <node color="#fcfcfc" type="complement" id="n2">
-        <geometry x="120" height="30" y="70" width="50"/>
-        <label x="120" height="22" y="70" width="24">not</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n0">
-        <geometry x="360" height="30" y="70" width="50"/>
-        <label x="360" height="22" y="70" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n3">
-        <geometry x="-140" height="-60" y="110" width="60"/>
-        <label x="-145" height="22" y="155" width="99">"12"^^xsd:integer</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n4">
-        <geometry x="300" height="30" y="-10" width="50"/>
-        <label x="300" height="22" y="-10" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n6">
-        <geometry x="-140" height="-60" y="30" width="60"/>
-        <label x="-140" height="22" y="30" width="18">I1</label>
-      </node>
-      <node color="#fcfcfc" type="intersection" id="n1">
-        <geometry x="240" height="30" y="70" width="50"/>
-        <label x="240" height="22" y="70" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="property-assertion" inputs="e0,e1" id="n5">
-        <geometry x="-20" height="30" y="70" width="52"/>
-      </node>
-      <edge type="input" source="n6" target="n5" id="e1">
-        <point x="-140" y="30"/>
-        <point x="-20" y="70"/>
-      </edge>
-      <edge type="input" source="n3" target="n5" id="e0">
-        <point x="-140" y="110"/>
-        <point x="-20" y="70"/>
-      </edge>
-      <edge type="input" source="n2" target="n1" id="e2">
-        <point x="120" y="70"/>
-        <point x="240" y="70"/>
-      </edge>
-      <edge type="input" source="n0" target="n4" id="e3">
-        <point x="360" y="70"/>
-        <point x="300" y="-10"/>
-      </edge>
-      <edge type="input" source="n1" target="n4" id="e4">
-        <point x="240" y="70"/>
-        <point x="300" y="-10"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram33">
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-40" height="-60" y="0" width="60"/>
-        <label x="-40" height="22" y="0" width="18">I4</label>
-      </node>
-      <node color="#fcfcfc" type="domain-restriction" id="n0">
-        <geometry x="60" height="20" y="0" width="20"/>
-        <label x="60" height="22" y="-22" width="38">exists</label>
-      </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram23">
-      <node color="#fcfcfc" type="attribute" id="n4">
-        <geometry x="60" height="20" y="-90" width="20"/>
-        <label x="60" height="22" y="-112" width="22">A3</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n2">
-        <geometry x="-80" height="40" y="90" width="90"/>
-        <label x="-80" height="22" y="90" width="59">xsd:string</label>
-      </node>
-      <node color="#000000" type="range-restriction" id="n0">
-        <geometry x="0" height="20" y="-90" width="20"/>
-        <label x="0" height="22" y="-112" width="38">exists</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n3">
-        <geometry x="0" height="30" y="-10" width="50"/>
-        <label x="0" height="22" y="-10" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n1">
-        <geometry x="80" height="40" y="90" width="90"/>
-        <label x="80" height="22" y="90" width="59">xsd:string</label>
-      </node>
-      <edge type="input" source="n4" target="n0" id="e2">
-        <point x="60" y="-90"/>
-        <point x="0" y="-90"/>
-      </edge>
-      <edge type="input" source="n2" target="n3" id="e0">
-        <point x="-80" y="90"/>
-        <point x="-80" y="-10"/>
-        <point x="0" y="-10"/>
-      </edge>
-      <edge type="input" source="n1" target="n3" id="e1">
-        <point x="80" y="90"/>
-        <point x="80" y="-10"/>
-        <point x="0" y="-10"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram30">
-      <node color="#fcfcfc" type="attribute" id="n0">
-        <geometry x="-40" height="20" y="0" width="20"/>
-        <label x="-40" height="22" y="-22" width="22">A4</label>
-      </node>
-      <node color="#fcfcfc" type="domain-restriction" id="n1">
-        <geometry x="60" height="20" y="0" width="20"/>
-        <label x="60" height="22" y="-22" width="27">self</label>
-      </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram22">
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n1">
-        <geometry x="0" height="30" y="40" width="50"/>
-        <label x="0" height="22" y="40" width="36">chain</label>
-      </node>
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n0">
-        <geometry x="0" height="30" y="-40" width="50"/>
-        <label x="0" height="22" y="-40" width="36">chain</label>
-      </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram7">
-      <node color="#fcfcfc" type="individual" id="n5">
-        <geometry x="-60" height="-60" y="0" width="60"/>
-        <label x="-60" height="22" y="0" width="18">I1</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n7">
-        <geometry x="0" height="-60" y="80" width="60"/>
-        <label x="0" height="22" y="80" width="18">I3</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n6">
-        <geometry x="60" height="-60" y="0" width="60"/>
-        <label x="60" height="22" y="0" width="18">I2</label>
-      </node>
-      <node color="#fcfcfc" type="property-assertion" inputs="e1,e2" id="n4">
-        <geometry x="0" height="30" y="-80" width="52"/>
-      </node>
-      <edge type="input" source="n6" target="n4" id="e2">
-        <point x="60" y="0"/>
-        <point x="0" y="-80"/>
-      </edge>
-      <edge type="input" source="n5" target="n4" id="e1">
-        <point x="-60" y="0"/>
-        <point x="0" y="-80"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram17">
-      <node color="#fcfcfc" type="concept" id="n1">
-        <geometry x="-80" height="50" y="50" width="110"/>
-        <label x="-80" height="22" y="50" width="23">C2</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n2">
-        <geometry x="80" height="40" y="-70" width="90"/>
-        <label x="80" height="22" y="-70" width="59">xsd:string</label>
-      </node>
-      <node color="#000000" type="disjoint-union" id="n3">
-        <geometry x="-80" height="30" y="-70" width="50"/>
-      </node>
-      <edge type="input" source="n1" target="n3" id="e0">
-        <point x="-80" y="50"/>
-        <point x="-80" y="-70"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram50">
-      <node color="#fcfcfc" type="union" id="n2">
-        <geometry x="80" height="30" y="60" width="50"/>
-        <label x="80" height="22" y="60" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="complement" id="n4">
-        <geometry x="-40" height="30" y="-40" width="50"/>
-        <label x="-40" height="22" y="-40" width="24">not</label>
-      </node>
-      <node color="#fcfcfc" type="intersection" id="n1">
-        <geometry x="140" height="30" y="-40" width="50"/>
-        <label x="140" height="22" y="-40" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n0">
-        <geometry x="200" height="30" y="60" width="50"/>
-        <label x="200" height="22" y="60" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="attribute" id="n5">
-        <geometry x="-220" height="20" y="-40" width="20"/>
-        <label x="-220" height="22" y="-62" width="22">A1</label>
-      </node>
-      <edge type="input" source="n2" target="n1" id="e0">
-        <point x="80" y="60"/>
-        <point x="140" y="-40"/>
-      </edge>
-      <edge type="input" source="n0" target="n1" id="e2">
-        <point x="200" y="60"/>
-        <point x="140" y="-40"/>
-      </edge>
-      <edge type="input" source="n4" target="n1" id="e1">
-        <point x="-40" y="-40"/>
-        <point x="140" y="-40"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram43">
-      <node color="#fcfcfc" type="individual" id="n5">
-        <geometry x="-60" height="-60" y="60" width="60"/>
-        <label x="-60" height="22" y="60" width="18">I2</label>
-      </node>
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n0">
-        <geometry x="160" height="30" y="20" width="50"/>
-        <label x="160" height="22" y="20" width="36">chain</label>
-      </node>
-      <node color="#fcfcfc" type="property-assertion" inputs="e2,e3" id="n1">
-        <geometry x="60" height="30" y="20" width="52"/>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n4">
-        <geometry x="-60" height="-60" y="-20" width="60"/>
-        <label x="-60" height="22" y="-20" width="18">I1</label>
-      </node>
-      <edge type="input" source="n4" target="n1" id="e2">
-        <point x="-60" y="-20"/>
-        <point x="60" y="20"/>
-      </edge>
-      <edge type="input" source="n5" target="n1" id="e3">
-        <point x="-60" y="60"/>
-        <point x="60" y="20"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram3">
-      <node color="#fcfcfc" type="domain-restriction" id="n17">
-        <geometry x="60" height="20" y="20" width="20"/>
-        <label x="60" height="22" y="-2" width="38">exists</label>
-      </node>
-      <node color="#fcfcfc" type="attribute" id="n16">
-        <geometry x="-20" height="20" y="20" width="20"/>
-        <label x="-20" height="22" y="-2" width="22">A1</label>
-      </node>
-      <node color="#fcfcfc" type="concept" id="n18">
-        <geometry x="60" height="50" y="100" width="110"/>
-        <label x="60" height="22" y="100" width="23">C7</label>
-      </node>
-      <edge type="input" source="n16" target="n17" id="e8">
-        <point x="-20" y="20"/>
-        <point x="60" y="20"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram16">
-      <node color="#fcfcfc" type="concept" id="n0">
-        <geometry x="-80" height="50" y="60" width="110"/>
-        <label x="-80" height="22" y="60" width="23">C2</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n2">
-        <geometry x="80" height="40" y="-60" width="90"/>
-        <label x="80" height="22" y="-60" width="59">xsd:string</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n1">
-        <geometry x="-80" height="30" y="-60" width="50"/>
-        <label x="-80" height="22" y="-60" width="18">or</label>
-      </node>
-      <edge type="input" source="n0" target="n1" id="e0">
-        <point x="-80" y="60"/>
-        <point x="-80" y="-60"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram48">
-      <node color="#fcfcfc" type="property-assertion" inputs="e3" id="n1">
-        <geometry x="0" height="30" y="80" width="52"/>
-      </node>
-      <node color="#fcfcfc" type="complement" id="n4">
-        <geometry x="140" height="30" y="80" width="50"/>
-        <label x="140" height="22" y="80" width="24">not</label>
-      </node>
-      <node color="#fcfcfc" type="intersection" id="n6">
-        <geometry x="260" height="30" y="80" width="50"/>
-        <label x="260" height="22" y="80" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n3">
-        <geometry x="-120" height="-60" y="40" width="60"/>
-        <label x="-120" height="22" y="40" width="18">I1</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n2">
-        <geometry x="380" height="30" y="80" width="50"/>
-        <label x="380" height="22" y="80" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n5">
-        <geometry x="320" height="30" y="0" width="50"/>
-        <label x="320" height="22" y="0" width="18">or</label>
-      </node>
-      <edge type="input" source="n4" target="n6" id="e2">
-        <point x="140" y="80"/>
-        <point x="260" y="80"/>
-      </edge>
-      <edge type="input" source="n3" target="n1" id="e3">
-        <point x="-120" y="40"/>
-        <point x="0" y="80"/>
-      </edge>
-      <edge type="input" source="n2" target="n5" id="e0">
-        <point x="380" y="80"/>
-        <point x="320" y="0"/>
-      </edge>
-      <edge type="input" source="n6" target="n5" id="e1">
-        <point x="260" y="80"/>
-        <point x="320" y="0"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram1">
-      <node color="#fcfcfc" type="value-domain" id="n10">
-        <geometry x="-160" height="40" y="120" width="90"/>
-        <label x="-160" height="22" y="120" width="59">xsd:string</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n0">
-        <geometry x="-160" height="-60" y="-180" width="60"/>
-        <label x="-160" height="22" y="-180" width="18">I1</label>
-      </node>
-      <node color="#fcfcfc" type="attribute" id="n9">
-        <geometry x="-20" height="20" y="60" width="20"/>
-        <label x="-20" height="22" y="38" width="22">A2</label>
-      </node>
-      <node color="#fcfcfc" type="enumeration" id="n16">
-        <geometry x="100" height="30" y="-220" width="50"/>
-        <label x="100" height="22" y="-220" width="41">oneOf</label>
-      </node>
-      <node color="#000000" type="disjoint-union" id="n26">
-        <geometry x="200" height="30" y="200" width="50"/>
-      </node>
-      <node color="#fcfcfc" type="role" id="n7">
-        <geometry x="-20" height="50" y="-100" width="70"/>
-        <label x="-20" height="22" y="-100" width="23">R2</label>
-      </node>
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n19">
-        <geometry x="200" height="30" y="80" width="50"/>
-        <label x="200" height="22" y="80" width="36">chain</label>
-      </node>
-      <node color="#fcfcfc" type="concept" id="n8">
-        <geometry x="-20" height="50" y="-20" width="110"/>
-        <label x="-20" height="22" y="-20" width="23">C2</label>
-      </node>
-      <node color="#fcfcfc" type="complement" id="n21">
-        <geometry x="200" height="30" y="-40" width="50"/>
-        <label x="200" height="22" y="-40" width="24">not</label>
-      </node>
-      <node color="#fcfcfc" type="attribute" id="n5">
-        <geometry x="-160" height="20" y="60" width="20"/>
-        <label x="-160" height="22" y="38" width="22">A1</label>
-      </node>
-      <node color="#000000" type="disjoint-union" id="n17">
-        <geometry x="100" height="30" y="200" width="50"/>
-      </node>
-      <node color="#fcfcfc" type="union" id="n12">
-        <geometry x="100" height="30" y="-100" width="50"/>
-        <label x="100" height="22" y="-100" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="role" id="n3">
-        <geometry x="-160" height="50" y="-100" width="70"/>
-        <label x="-160" height="22" y="-100" width="23">R1</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n22">
-        <geometry x="200" height="30" y="-100" width="50"/>
-        <label x="200" height="22" y="-100" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="concept" id="n2">
-        <geometry x="-160" height="50" y="-20" width="110"/>
-        <label x="-160" height="22" y="-20" width="23">C1</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-20" height="-60" y="-180" width="60"/>
-        <label x="-20" height="22" y="-180" width="18">I2</label>
-      </node>
-      <node color="#fcfcfc" type="datatype-restriction" id="n25">
-        <geometry x="200" height="30" y="140" width="50"/>
-        <label x="200" height="22" y="140" width="31">data</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n6">
-        <geometry x="-20" height="40" y="120" width="90"/>
-        <label x="-20" height="22" y="120" width="59">xsd:string</label>
-      </node>
-      <node color="#fcfcfc" type="role-inverse" id="n20">
-        <geometry x="200" height="30" y="20" width="50"/>
-        <label x="200" height="22" y="20" width="23">inv</label>
-      </node>
-      <node color="#fcfcfc" type="intersection" id="n23">
-        <geometry x="200" height="30" y="-160" width="50"/>
-        <label x="200" height="22" y="-160" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n15">
-        <geometry x="100" height="30" y="80" width="50"/>
-        <label x="100" height="22" y="80" width="36">chain</label>
-      </node>
-      <node color="#fcfcfc" type="datatype-restriction" id="n18">
-        <geometry x="100" height="30" y="140" width="50"/>
-        <label x="100" height="22" y="140" width="31">data</label>
-      </node>
-      <node color="#fcfcfc" type="role-inverse" id="n14">
-        <geometry x="100" height="30" y="20" width="50"/>
-        <label x="100" height="22" y="20" width="23">inv</label>
-      </node>
-      <node color="#fcfcfc" type="intersection" id="n11">
-        <geometry x="100" height="30" y="-160" width="50"/>
-        <label x="100" height="22" y="-160" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="enumeration" id="n24">
-        <geometry x="200" height="30" y="-220" width="50"/>
-        <label x="200" height="22" y="-220" width="41">oneOf</label>
-      </node>
-      <node color="#fcfcfc" type="complement" id="n13">
-        <geometry x="100" height="30" y="-40" width="50"/>
-        <label x="100" height="22" y="-40" width="24">not</label>
-      </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram28">
-      <node color="#fcfcfc" type="property-assertion" inputs="e0" id="n2">
-        <geometry x="0" height="30" y="0" width="52"/>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n3">
-        <geometry x="60" height="-60" y="80" width="60"/>
-        <label x="60" height="22" y="80" width="99">"12"^^xsd:integer</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-60" height="-60" y="80" width="60"/>
-        <label x="-60" height="22" y="80" width="18">I1</label>
-      </node>
-      <node color="#fcfcfc" type="role" id="n0">
-        <geometry x="0" height="50" y="-80" width="70"/>
-        <label x="0" height="22" y="-80" width="23">R2</label>
-      </node>
-      <edge type="input" source="n1" target="n2" id="e0">
-        <point x="-60" y="80"/>
-        <point x="0" y="0"/>
-      </edge>
-      <edge type="membership" source="n2" target="n0" id="e1">
+      <edge type="membership" target="n0" id="e1" source="n2">
         <point x="0" y="0"/>
         <point x="0" y="-80"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram4">
-      <node color="#fcfcfc" type="individual" id="n9">
-        <geometry x="40" height="-60" y="80" width="115"/>
-        <label x="40" height="22" y="80" width="92">"32"^^xsd:string</label>
+    <diagram width="5000" name="diagram11" height="5000">
+      <node type="concept" color="#fcfcfc" id="n3">
+        <geometry width="110" x="-40" y="20" height="50"/>
+        <label width="22" x="-40" y="20" height="23">C1</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n8">
-        <geometry x="100" height="-60" y="-40" width="60"/>
-        <label x="100" height="22" y="-40" width="18">I2</label>
+      <node type="role" color="#fcfcfc" id="n0">
+        <geometry width="70" x="-140" y="-80" height="50"/>
+        <label width="22" x="-140" y="-80" height="23">R1</label>
       </node>
-      <node color="#fcfcfc" type="enumeration" id="n6">
-        <geometry x="40" height="30" y="-140" width="50"/>
-        <label x="40" height="22" y="-140" width="41">oneOf</label>
+      <node type="concept" color="#fcfcfc" id="n4">
+        <geometry width="110" x="100" y="20" height="50"/>
+        <label width="22" x="100" y="20" height="23">C2</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n7">
-        <geometry x="-20" height="-60" y="-40" width="60"/>
-        <label x="-20" height="22" y="-40" width="18">I1</label>
+      <node type="domain-restriction" color="#fcfcfc" id="n2">
+        <geometry width="20" x="-40" y="-80" height="20"/>
+        <label width="39" x="-40" y="-102" height="23">exists</label>
       </node>
-      <edge type="input" source="n8" target="n6" id="e4">
-        <point x="100" y="-40"/>
-        <point x="40" y="-140"/>
-      </edge>
-      <edge type="input" source="n7" target="n6" id="e3">
-        <point x="-20" y="-40"/>
-        <point x="40" y="-140"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram11">
-      <node color="#fcfcfc" type="role" id="n0">
-        <geometry x="-140" height="50" y="-80" width="70"/>
-        <label x="-140" height="22" y="-80" width="23">R1</label>
-      </node>
-      <node color="#fcfcfc" type="concept" id="n4">
-        <geometry x="100" height="50" y="20" width="110"/>
-        <label x="100" height="22" y="20" width="23">C2</label>
-      </node>
-      <node color="#fcfcfc" type="domain-restriction" id="n2">
-        <geometry x="-40" height="20" y="-80" width="20"/>
-        <label x="-40" height="22" y="-102" width="38">exists</label>
-      </node>
-      <node color="#fcfcfc" type="concept" id="n3">
-        <geometry x="-40" height="50" y="20" width="110"/>
-        <label x="-40" height="22" y="20" width="23">C1</label>
-      </node>
-      <edge type="input" source="n3" target="n2" id="e2">
-        <point x="-40" y="20"/>
-        <point x="-40" y="-80"/>
-      </edge>
-      <edge type="input" source="n0" target="n2" id="e1">
+      <edge type="input" target="n2" id="e1" source="n0">
         <point x="-140" y="-80"/>
         <point x="-40" y="-80"/>
       </edge>
+      <edge type="input" target="n2" id="e2" source="n3">
+        <point x="-40" y="20"/>
+        <point x="-40" y="-80"/>
+      </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram10">
-      <node color="#fcfcfc" type="domain-restriction" id="n8">
-        <geometry x="60" height="20" y="0" width="20"/>
-        <label x="60" height="22" y="-22" width="38">exists</label>
+    <diagram width="5000" name="diagram4" height="5000">
+      <node type="individual" color="#fcfcfc" id="n7">
+        <geometry width="60" x="-20" y="-40" height="-60"/>
+        <label width="17" x="-20" y="-40" height="23">I1</label>
       </node>
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n10">
-        <geometry x="-40" height="30" y="0" width="50"/>
-        <label x="-40" height="22" y="0" width="36">chain</label>
+      <node type="individual" color="#fcfcfc" id="n9">
+        <geometry width="115" x="40" y="80" height="-60"/>
+        <label width="91" x="40" y="80" height="23">"32"^^xsd:string</label>
       </node>
+      <node type="individual" color="#fcfcfc" id="n8">
+        <geometry width="60" x="100" y="-40" height="-60"/>
+        <label width="17" x="100" y="-40" height="23">I2</label>
+      </node>
+      <node type="enumeration" color="#fcfcfc" id="n6">
+        <geometry width="50" x="40" y="-140" height="30"/>
+        <label width="40" x="40" y="-140" height="23">oneOf</label>
+      </node>
+      <edge type="input" target="n6" id="e3" source="n7">
+        <point x="-20" y="-40"/>
+        <point x="40" y="-140"/>
+      </edge>
+      <edge type="input" target="n6" id="e4" source="n8">
+        <point x="100" y="-40"/>
+        <point x="40" y="-140"/>
+      </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram29">
-      <node color="#000000" type="facet" id="n0">
-        <geometry x="80" height="0" y="160" width="119"/>
-        <label x="80" height="22" y="160" width="133">xsd:maxExclusive^^"32"</label>
+    <diagram width="5000" name="diagram29" height="5000">
+      <node type="value-domain" color="#fcfcfc" id="n1">
+        <geometry width="90" x="220" y="160" height="40"/>
+        <label width="60" x="220" y="160" height="23">xsd:string</label>
       </node>
-      <node color="#fcfcfc" type="value-domain" id="n1">
-        <geometry x="220" height="40" y="160" width="90"/>
-        <label x="220" height="22" y="160" width="59">xsd:string</label>
+      <node type="datatype-restriction" color="#fcfcfc" id="n2">
+        <geometry width="50" x="80" y="60" height="30"/>
+        <label width="31" x="80" y="60" height="23">data</label>
       </node>
-      <node color="#fcfcfc" type="datatype-restriction" id="n2">
-        <geometry x="80" height="30" y="60" width="50"/>
-        <label x="80" height="22" y="60" width="31">data</label>
+      <node type="facet" color="#000000" id="n0">
+        <geometry width="118" x="80" y="160" height="0"/>
+        <label width="131" x="80" y="160" height="23">xsd:maxExclusive^^"32"</label>
       </node>
-      <edge type="input" source="n1" target="n2" id="e0">
+      <edge type="input" target="n2" id="e0" source="n1">
         <point x="220" y="160"/>
         <point x="80" y="60"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram6">
-      <node color="#000000" type="facet" id="n0">
-        <geometry x="-60" height="0" y="40" width="119"/>
-        <label x="-60" height="22" y="40" width="133">xsd:maxExclusive^^"32"</label>
+    <diagram width="5000" name="diagram37" height="5000">
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n0">
+        <geometry width="50" x="-40" y="10" height="30"/>
+        <label width="36" x="-40" y="10" height="23">chain</label>
       </node>
-      <node color="#fcfcfc" type="datatype-restriction" id="n1">
-        <geometry x="-60" height="30" y="-60" width="50"/>
-        <label x="-60" height="22" y="-60" width="31">data</label>
+      <node type="range-restriction" color="#000000" id="n2">
+        <geometry width="20" x="60" y="10" height="20"/>
+        <label width="39" x="60" y="-12" height="23">exists</label>
       </node>
-      <node color="#fcfcfc" type="value-domain" id="n2">
-        <geometry x="80" height="40" y="40" width="90"/>
-        <label x="80" height="22" y="40" width="59">xsd:string</label>
+    </diagram>
+    <diagram width="5000" name="diagram6" height="5000">
+      <node type="datatype-restriction" color="#fcfcfc" id="n1">
+        <geometry width="50" x="-60" y="-60" height="30"/>
+        <label width="31" x="-60" y="-60" height="23">data</label>
       </node>
-      <edge type="input" source="n0" target="n1" id="e0">
+      <node type="value-domain" color="#fcfcfc" id="n2">
+        <geometry width="90" x="80" y="40" height="40"/>
+        <label width="60" x="80" y="40" height="23">xsd:string</label>
+      </node>
+      <node type="facet" color="#000000" id="n0">
+        <geometry width="118" x="-60" y="40" height="0"/>
+        <label width="131" x="-60" y="40" height="23">xsd:maxExclusive^^"32"</label>
+      </node>
+      <edge type="input" target="n1" id="e0" source="n0">
         <point x="-60" y="40"/>
         <point x="-60" y="-60"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram37">
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n0">
-        <geometry x="-40" height="30" y="10" width="50"/>
-        <label x="-40" height="22" y="10" width="36">chain</label>
+    <diagram width="5000" name="diagram19" height="5000">
+      <node type="role" color="#fcfcfc" id="n2">
+        <geometry width="70" x="0" y="110" height="50"/>
+        <label width="22" x="0" y="110" height="23">R1</label>
       </node>
-      <node color="#000000" type="range-restriction" id="n2">
-        <geometry x="60" height="20" y="10" width="20"/>
-        <label x="60" height="22" y="-12" width="38">exists</label>
+      <node type="complement" color="#fcfcfc" id="n0">
+        <geometry width="50" x="0" y="10" height="30"/>
+        <label width="25" x="0" y="10" height="23">not</label>
       </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram46">
-      <node color="#fcfcfc" type="intersection" id="n1">
-        <geometry x="220" height="30" y="60" width="50"/>
-        <label x="220" height="22" y="60" width="28">and</label>
+      <node type="intersection" color="#fcfcfc" id="n1">
+        <geometry width="50" x="0" y="-110" height="30"/>
+        <label width="27" x="0" y="-110" height="23">and</label>
       </node>
-      <node color="#fcfcfc" type="union" id="n2">
-        <geometry x="280" height="30" y="-20" width="50"/>
-        <label x="280" height="22" y="-20" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n3">
-        <geometry x="340" height="30" y="60" width="50"/>
-        <label x="340" height="22" y="60" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n5">
-        <geometry x="-160" height="-60" y="20" width="60"/>
-        <label x="-160" height="22" y="20" width="18">I1</label>
-      </node>
-      <node color="#fcfcfc" type="individual" id="n6">
-        <geometry x="-160" height="-60" y="100" width="60"/>
-        <label x="-160" height="22" y="100" width="18">I2</label>
-      </node>
-      <node color="#fcfcfc" type="property-assertion" inputs="e3,e4" id="n4">
-        <geometry x="-40" height="30" y="60" width="52"/>
-      </node>
-      <node color="#fcfcfc" type="complement" id="n0">
-        <geometry x="100" height="30" y="60" width="50"/>
-        <label x="100" height="22" y="60" width="24">not</label>
-      </node>
-      <edge type="input" source="n6" target="n4" id="e3">
-        <point x="-160" y="100"/>
-        <point x="-40" y="60"/>
-      </edge>
-      <edge type="input" source="n0" target="n1" id="e2">
-        <point x="100" y="60"/>
-        <point x="220" y="60"/>
-      </edge>
-      <edge type="input" source="n3" target="n2" id="e1">
-        <point x="340" y="60"/>
-        <point x="280" y="-20"/>
-      </edge>
-      <edge type="input" source="n1" target="n2" id="e0">
-        <point x="220" y="60"/>
-        <point x="280" y="-20"/>
-      </edge>
-      <edge type="input" source="n5" target="n4" id="e4">
-        <point x="-160" y="20"/>
-        <point x="-40" y="60"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram19">
-      <node color="#fcfcfc" type="intersection" id="n1">
-        <geometry x="0" height="30" y="-110" width="50"/>
-        <label x="0" height="22" y="-110" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="role" id="n2">
-        <geometry x="0" height="50" y="110" width="70"/>
-        <label x="0" height="22" y="110" width="23">R1</label>
-      </node>
-      <node color="#fcfcfc" type="complement" id="n0">
-        <geometry x="0" height="30" y="10" width="50"/>
-        <label x="0" height="22" y="10" width="24">not</label>
-      </node>
-      <edge type="inclusion" source="n0" target="n1" id="e0">
+      <edge type="inclusion" target="n1" id="e0" source="n0">
         <point x="0" y="10"/>
         <point x="0" y="-110"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram41">
-      <node color="#fcfcfc" type="value-domain" id="n1">
-        <geometry x="60" height="40" y="100" width="90"/>
-        <label x="60" height="22" y="100" width="59">xsd:string</label>
+    <diagram width="5000" name="diagram41" height="5000">
+      <node type="facet" color="#000000" id="n0">
+        <geometry width="80" x="60" y="-20" height="0"/>
+        <label width="92" x="60" y="-20" height="23">xsd:length^^"32"</label>
       </node>
-      <node color="#000000" type="facet" id="n0">
-        <geometry x="60" height="0" y="-20" width="80"/>
-        <label x="60" height="22" y="-20" width="92">xsd:length^^"32"</label>
+      <node type="value-domain" color="#fcfcfc" id="n1">
+        <geometry width="90" x="60" y="100" height="40"/>
+        <label width="60" x="60" y="100" height="23">xsd:string</label>
       </node>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram45">
-      <node color="#fcfcfc" type="role" id="n4">
-        <geometry x="140" height="50" y="0" width="70"/>
-        <label x="140" height="22" y="0" width="23">R1</label>
+    <diagram width="5000" name="diagram46" height="5000">
+      <node type="union" color="#fcfcfc" id="n3">
+        <geometry width="50" x="340" y="60" height="30"/>
+        <label width="18" x="340" y="60" height="23">or</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n0">
-        <geometry x="-140" height="-60" y="-40" width="60"/>
-        <label x="-140" height="22" y="-40" width="18">I1</label>
+      <node type="individual" color="#fcfcfc" id="n5">
+        <geometry width="60" x="-160" y="20" height="-60"/>
+        <label width="17" x="-160" y="20" height="23">I1</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-140" height="-60" y="40" width="60"/>
-        <label x="-140" height="22" y="40" width="99">"32"^^xsd:integer</label>
+      <node type="complement" color="#fcfcfc" id="n0">
+        <geometry width="50" x="100" y="60" height="30"/>
+        <label width="25" x="100" y="60" height="23">not</label>
       </node>
-      <node color="#fcfcfc" type="property-assertion" inputs="e0,e3" id="n3">
-        <geometry x="-20" height="30" y="0" width="52"/>
+      <node type="individual" color="#fcfcfc" id="n6">
+        <geometry width="60" x="-160" y="100" height="-60"/>
+        <label width="17" x="-160" y="100" height="23">I2</label>
       </node>
-      <edge type="input" source="n0" target="n3" id="e0">
+      <node type="property-assertion" color="#fcfcfc" inputs="e3,e4" id="n4">
+        <geometry width="52" x="-40" y="60" height="30"/>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n1">
+        <geometry width="50" x="220" y="60" height="30"/>
+        <label width="27" x="220" y="60" height="23">and</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n2">
+        <geometry width="50" x="280" y="-20" height="30"/>
+        <label width="18" x="280" y="-20" height="23">or</label>
+      </node>
+      <edge type="input" target="n2" id="e1" source="n3">
+        <point x="340" y="60"/>
+        <point x="280" y="-20"/>
+      </edge>
+      <edge type="input" target="n2" id="e0" source="n1">
+        <point x="220" y="60"/>
+        <point x="280" y="-20"/>
+      </edge>
+      <edge type="input" target="n4" id="e4" source="n5">
+        <point x="-160" y="20"/>
+        <point x="-40" y="60"/>
+      </edge>
+      <edge type="input" target="n4" id="e3" source="n6">
+        <point x="-160" y="100"/>
+        <point x="-40" y="60"/>
+      </edge>
+      <edge type="input" target="n1" id="e2" source="n0">
+        <point x="100" y="60"/>
+        <point x="220" y="60"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram45" height="5000">
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-140" y="40" height="-60"/>
+        <label width="97" x="-140" y="40" height="23">"32"^^xsd:integer</label>
+      </node>
+      <node type="property-assertion" color="#fcfcfc" inputs="e0,e3" id="n3">
+        <geometry width="52" x="-20" y="0" height="30"/>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n0">
+        <geometry width="60" x="-140" y="-40" height="-60"/>
+        <label width="17" x="-140" y="-40" height="23">I1</label>
+      </node>
+      <node type="role" color="#fcfcfc" id="n4">
+        <geometry width="70" x="140" y="0" height="50"/>
+        <label width="22" x="140" y="0" height="23">R1</label>
+      </node>
+      <edge type="input" target="n3" id="e0" source="n0">
         <point x="-140" y="-40"/>
         <point x="-20" y="0"/>
       </edge>
-      <edge type="input" source="n1" target="n3" id="e3">
+      <edge type="input" target="n3" id="e3" source="n1">
         <point x="-140" y="40"/>
         <point x="-20" y="0"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram25">
-      <node color="#fcfcfc" type="datatype-restriction" id="n2">
-        <geometry x="-20" height="30" y="-60" width="50"/>
-        <label x="-20" height="22" y="-60" width="31">data</label>
+    <diagram width="5000" name="diagram8" height="5000">
+      <node type="value-domain" color="#fcfcfc" id="n7">
+        <geometry width="90" x="0" y="60" height="40"/>
+        <label width="60" x="0" y="60" height="23">xsd:string</label>
       </node>
-      <node color="#fcfcfc" type="concept" id="n0">
-        <geometry x="140" height="50" y="-60" width="110"/>
-        <label x="140" height="22" y="-60" width="23">C6</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n1">
-        <geometry x="-140" height="40" y="40" width="90"/>
-        <label x="-140" height="22" y="40" width="59">xsd:string</label>
-      </node>
-      <node color="#000000" type="facet" id="n3">
-        <geometry x="-20" height="0" y="40" width="80"/>
-        <label x="-20" height="22" y="40" width="92">xsd:length^^"32"</label>
-      </node>
-      <edge type="input" source="n1" target="n2" id="e0">
-        <point x="-140" y="40"/>
-        <point x="-140" y="-60"/>
-        <point x="-20" y="-60"/>
-      </edge>
-      <edge type="input" source="n3" target="n2" id="e1">
-        <point x="-20" y="40"/>
-        <point x="-20" y="-60"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram21">
-      <node color="#fcfcfc" type="role-inverse" id="n0">
-        <geometry x="0" height="30" y="30" width="50"/>
-        <label x="0" height="22" y="30" width="23">inv</label>
-      </node>
-      <node color="#fcfcfc" type="role-inverse" id="n1">
-        <geometry x="0" height="30" y="-30" width="50"/>
-        <label x="0" height="22" y="-30" width="23">inv</label>
+      <node type="domain-restriction" color="#fcfcfc" id="n15">
+        <geometry width="20" x="0" y="-40" height="20"/>
+        <label width="27" x="0" y="-62" height="23">self</label>
       </node>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram5">
-      <node color="#fcfcfc" type="property-assertion" inputs="" id="n5">
-        <geometry x="40" height="30" y="0" width="52"/>
+    <diagram width="5000" name="diagram9" height="5000">
+      <node type="domain-restriction" color="#fcfcfc" id="n4">
+        <geometry width="20" x="20" y="-40" height="20"/>
+        <label width="39" x="20" y="-62" height="23">exists</label>
       </node>
-      <node color="#fcfcfc" type="domain-restriction" id="n6">
-        <geometry x="-60" height="20" y="0" width="20"/>
-        <label x="-60" height="22" y="-22" width="38">exists</label>
+      <node type="concept" color="#fcfcfc" id="n5">
+        <geometry width="110" x="20" y="60" height="50"/>
+        <label width="22" x="20" y="60" height="23">C8</label>
       </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram8">
-      <node color="#fcfcfc" type="value-domain" id="n7">
-        <geometry x="0" height="40" y="60" width="90"/>
-        <label x="0" height="22" y="60" width="59">xsd:string</label>
+      <node type="attribute" color="#fcfcfc" id="n6">
+        <geometry width="20" x="100" y="-40" height="20"/>
+        <label width="22" x="100" y="-62" height="23">A4</label>
       </node>
-      <node color="#fcfcfc" type="domain-restriction" id="n15">
-        <geometry x="0" height="20" y="-40" width="20"/>
-        <label x="0" height="22" y="-62" width="27">self</label>
-      </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram40">
-      <node color="#fcfcfc" type="attribute" id="n0">
-        <geometry x="-60" height="20" y="10" width="20"/>
-        <label x="-60" height="22" y="-12" width="22">A4</label>
-      </node>
-      <node color="#000000" type="range-restriction" id="n2">
-        <geometry x="40" height="20" y="10" width="20"/>
-        <label x="40" height="22" y="-12" width="27">self</label>
-      </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram9">
-      <node color="#fcfcfc" type="domain-restriction" id="n4">
-        <geometry x="20" height="20" y="-40" width="20"/>
-        <label x="20" height="22" y="-62" width="38">exists</label>
-      </node>
-      <node color="#fcfcfc" type="attribute" id="n6">
-        <geometry x="100" height="20" y="-40" width="20"/>
-        <label x="100" height="22" y="-62" width="22">A4</label>
-      </node>
-      <node color="#fcfcfc" type="concept" id="n5">
-        <geometry x="20" height="50" y="60" width="110"/>
-        <label x="20" height="22" y="60" width="23">C8</label>
-      </node>
-      <edge type="input" source="n5" target="n4" id="e3">
+      <edge type="input" target="n4" id="e3" source="n5">
         <point x="20" y="60"/>
         <point x="20" y="-40"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram13">
-      <node color="#fcfcfc" type="role" id="n0">
-        <geometry x="-60" height="50" y="-40" width="70"/>
-        <label x="-60" height="22" y="-40" width="23">R6</label>
+    <diagram width="5000" name="diagram5" height="5000">
+      <node type="property-assertion" color="#fcfcfc" inputs="" id="n5">
+        <geometry width="52" x="40" y="0" height="30"/>
       </node>
-      <node color="#fcfcfc" type="domain-restriction" id="n1">
-        <geometry x="40" height="20" y="-40" width="20"/>
-        <label x="40" height="22" y="-62" width="38">exists</label>
+      <node type="domain-restriction" color="#fcfcfc" id="n6">
+        <geometry width="20" x="-60" y="0" height="20"/>
+        <label width="39" x="-60" y="-22" height="23">exists</label>
       </node>
-      <node color="#fcfcfc" type="value-domain" id="n2">
-        <geometry x="40" height="40" y="60" width="90"/>
-        <label x="40" height="22" y="60" width="59">xsd:string</label>
+    </diagram>
+    <diagram width="5000" name="diagram25" height="5000">
+      <node type="concept" color="#fcfcfc" id="n0">
+        <geometry width="110" x="140" y="-60" height="50"/>
+        <label width="22" x="140" y="-60" height="23">C6</label>
       </node>
-      <edge type="input" source="n0" target="n1" id="e0">
-        <point x="-60" y="-40"/>
-        <point x="40" y="-40"/>
+      <node type="datatype-restriction" color="#fcfcfc" id="n2">
+        <geometry width="50" x="-20" y="-60" height="30"/>
+        <label width="31" x="-20" y="-60" height="23">data</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n1">
+        <geometry width="90" x="-140" y="40" height="40"/>
+        <label width="60" x="-140" y="40" height="23">xsd:string</label>
+      </node>
+      <node type="facet" color="#000000" id="n3">
+        <geometry width="80" x="-20" y="40" height="0"/>
+        <label width="92" x="-20" y="40" height="23">xsd:length^^"32"</label>
+      </node>
+      <edge type="input" target="n2" id="e0" source="n1">
+        <point x="-140" y="40"/>
+        <point x="-140" y="-60"/>
+        <point x="-20" y="-60"/>
+      </edge>
+      <edge type="input" target="n2" id="e1" source="n3">
+        <point x="-20" y="40"/>
+        <point x="-20" y="-60"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram36">
-      <node color="#000000" type="range-restriction" id="n2">
-        <geometry x="80" height="20" y="10" width="20"/>
-        <label x="80" height="22" y="-12" width="38">exists</label>
+    <diagram width="5000" name="diagram21" height="5000">
+      <node type="role-inverse" color="#fcfcfc" id="n0">
+        <geometry width="50" x="0" y="30" height="30"/>
+        <label width="23" x="0" y="30" height="23">inv</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-20" height="-60" y="10" width="60"/>
-        <label x="-20" height="22" y="10" width="18">I4</label>
+      <node type="role-inverse" color="#fcfcfc" id="n1">
+        <geometry width="50" x="0" y="-30" height="30"/>
+        <label width="23" x="0" y="-30" height="23">inv</label>
       </node>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram15">
-      <node color="#fcfcfc" type="complement" id="n1">
-        <geometry x="-80" height="30" y="-60" width="50"/>
-        <label x="-80" height="22" y="-60" width="24">not</label>
+    <diagram width="5000" name="diagram39" height="5000">
+      <node type="range-restriction" color="#000000" id="n3">
+        <geometry width="20" x="-60" y="-40" height="20"/>
+        <label width="39" x="-60" y="-62" height="23">exists</label>
       </node>
-      <node color="#fcfcfc" type="concept" id="n0">
-        <geometry x="-80" height="50" y="60" width="110"/>
-        <label x="-80" height="22" y="60" width="23">C1</label>
+      <node type="role" color="#fcfcfc" id="n0">
+        <geometry width="70" x="56" y="-36" height="50"/>
+        <label width="22" x="56" y="-36" height="23">R5</label>
       </node>
-      <node color="#fcfcfc" type="concept" id="n2">
-        <geometry x="80" height="50" y="-60" width="110"/>
-        <label x="80" height="22" y="-60" width="23">C2</label>
+      <node type="role" color="#fcfcfc" id="n5">
+        <geometry width="70" x="-60" y="60" height="50"/>
+        <label width="22" x="-60" y="60" height="23">R1</label>
       </node>
-      <edge type="input" source="n0" target="n1" id="e0">
-        <point x="-80" y="60"/>
-        <point x="-80" y="-60"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram39">
-      <node color="#000000" type="range-restriction" id="n3">
-        <geometry x="-60" height="20" y="-40" width="20"/>
-        <label x="-60" height="22" y="-62" width="38">exists</label>
-      </node>
-      <node color="#fcfcfc" type="role" id="n5">
-        <geometry x="-60" height="50" y="60" width="70"/>
-        <label x="-60" height="22" y="60" width="23">R1</label>
-      </node>
-      <node color="#fcfcfc" type="role" id="n0">
-        <geometry x="56" height="50" y="-36" width="70"/>
-        <label x="56" height="22" y="-36" width="23">R5</label>
-      </node>
-      <edge type="input" source="n5" target="n3" id="e4">
+      <edge type="input" target="n3" id="e4" source="n5">
         <point x="-60" y="60"/>
         <point x="-60" y="-40"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram49">
-      <node color="#fcfcfc" type="intersection" id="n1">
-        <geometry x="160" height="30" y="-40" width="50"/>
-        <label x="160" height="22" y="-40" width="28">and</label>
+    <diagram width="5000" name="diagram40" height="5000">
+      <node type="attribute" color="#fcfcfc" id="n0">
+        <geometry width="20" x="-60" y="10" height="20"/>
+        <label width="22" x="-60" y="-12" height="23">A4</label>
       </node>
-      <node color="#fcfcfc" type="role" id="n5">
-        <geometry x="-220" height="50" y="-40" width="70"/>
-        <label x="-220" height="22" y="-40" width="23">R9</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n4">
-        <geometry x="220" height="30" y="60" width="50"/>
-        <label x="220" height="22" y="60" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n3">
-        <geometry x="100" height="30" y="60" width="50"/>
-        <label x="100" height="22" y="60" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="complement" id="n0">
-        <geometry x="-20" height="30" y="-40" width="50"/>
-        <label x="-20" height="22" y="-40" width="24">not</label>
-      </node>
-      <edge type="input" source="n4" target="n1" id="e1">
-        <point x="220" y="60"/>
-        <point x="160" y="-40"/>
-      </edge>
-      <edge type="input" source="n3" target="n1" id="e0">
-        <point x="100" y="60"/>
-        <point x="160" y="-40"/>
-      </edge>
-      <edge type="input" source="n0" target="n1" id="e2">
-        <point x="-20" y="-40"/>
-        <point x="160" y="-40"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram18">
-      <node color="#fcfcfc" type="intersection" id="n7">
-        <geometry x="20" height="30" y="-50" width="50"/>
-        <label x="20" height="22" y="-50" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="intersection" id="n10">
-        <geometry x="20" height="30" y="-170" width="50"/>
-        <label x="20" height="22" y="-170" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="union" id="n8">
-        <geometry x="-60" height="30" y="50" width="50"/>
-        <label x="-60" height="22" y="50" width="18">or</label>
-      </node>
-      <node color="#fcfcfc" type="intersection" id="n9">
-        <geometry x="100" height="30" y="50" width="50"/>
-        <label x="100" height="22" y="50" width="28">and</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n6">
-        <geometry x="-60" height="40" y="170" width="90"/>
-        <label x="-60" height="22" y="170" width="59">xsd:string</label>
-      </node>
-      <edge type="input" source="n8" target="n7" id="e4">
-        <point x="-60" y="50"/>
-        <point x="-60" y="-50"/>
-        <point x="20" y="-50"/>
-      </edge>
-      <edge type="input" source="n9" target="n7" id="e5">
-        <point x="100" y="50"/>
-        <point x="100" y="-50"/>
-        <point x="20" y="-50"/>
-      </edge>
-      <edge type="inclusion" source="n7" target="n10" id="e3">
-        <point x="20" y="-50"/>
-        <point x="20" y="-170"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram20">
-      <node color="#fcfcfc" type="role-inverse" id="n1">
-        <geometry x="0" height="30" y="30" width="50"/>
-        <label x="0" height="22" y="30" width="23">inv</label>
-      </node>
-      <node color="#fcfcfc" type="role-chain" inputs="" id="n0">
-        <geometry x="0" height="30" y="-30" width="50"/>
-        <label x="0" height="22" y="-30" width="36">chain</label>
+      <node type="range-restriction" color="#000000" id="n2">
+        <geometry width="20" x="40" y="10" height="20"/>
+        <label width="27" x="40" y="-12" height="23">self</label>
       </node>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram12">
-      <node color="#fcfcfc" type="domain-restriction" id="n1">
-        <geometry x="40" height="20" y="-40" width="20"/>
-        <label x="40" height="22" y="-62" width="27">self</label>
+    <diagram width="5000" name="diagram15" height="5000">
+      <node type="concept" color="#fcfcfc" id="n2">
+        <geometry width="110" x="80" y="-60" height="50"/>
+        <label width="22" x="80" y="-60" height="23">C2</label>
       </node>
-      <node color="#fcfcfc" type="concept" id="n3">
-        <geometry x="40" height="50" y="40" width="110"/>
-        <label x="40" height="22" y="40" width="23">C1</label>
+      <node type="complement" color="#fcfcfc" id="n1">
+        <geometry width="50" x="-80" y="-60" height="30"/>
+        <label width="25" x="-80" y="-60" height="23">not</label>
       </node>
-      <node color="#fcfcfc" type="role" id="n0">
-        <geometry x="-60" height="50" y="-40" width="70"/>
-        <label x="-60" height="22" y="-40" width="23">R1</label>
+      <node type="concept" color="#fcfcfc" id="n0">
+        <geometry width="110" x="-80" y="60" height="50"/>
+        <label width="22" x="-80" y="60" height="23">C1</label>
       </node>
-      <edge type="input" source="n0" target="n1" id="e0">
+      <edge type="input" target="n1" id="e0" source="n0">
+        <point x="-80" y="60"/>
+        <point x="-80" y="-60"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram13" height="5000">
+      <node type="value-domain" color="#fcfcfc" id="n2">
+        <geometry width="90" x="40" y="60" height="40"/>
+        <label width="60" x="40" y="60" height="23">xsd:string</label>
+      </node>
+      <node type="role" color="#fcfcfc" id="n0">
+        <geometry width="70" x="-60" y="-40" height="50"/>
+        <label width="22" x="-60" y="-40" height="23">R6</label>
+      </node>
+      <node type="domain-restriction" color="#fcfcfc" id="n1">
+        <geometry width="20" x="40" y="-40" height="20"/>
+        <label width="39" x="40" y="-62" height="23">exists</label>
+      </node>
+      <edge type="input" target="n1" id="e0" source="n0">
         <point x="-60" y="-40"/>
         <point x="40" y="-40"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram35">
-      <node color="#fcfcfc" type="attribute" id="n0">
-        <geometry x="-60" height="20" y="-20" width="20"/>
-        <label x="-60" height="22" y="-42" width="51">attribute</label>
+    <diagram width="5000" name="diagram36" height="5000">
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-20" y="10" height="-60"/>
+        <label width="17" x="-20" y="10" height="23">I4</label>
       </node>
-      <node color="#000000" type="range-restriction" id="n1">
-        <geometry x="20" height="20" y="-20" width="20"/>
-        <label x="20" height="22" y="-42" width="38">exists</label>
+      <node type="range-restriction" color="#000000" id="n2">
+        <geometry width="20" x="80" y="10" height="20"/>
+        <label width="39" x="80" y="-12" height="23">exists</label>
       </node>
-      <node color="#fcfcfc" type="value-domain" id="n2">
-        <geometry x="20" height="40" y="80" width="90"/>
-        <label x="20" height="22" y="80" width="59">xsd:string</label>
+    </diagram>
+    <diagram width="5000" name="diagram49" height="5000">
+      <node type="union" color="#fcfcfc" id="n3">
+        <geometry width="50" x="100" y="60" height="30"/>
+        <label width="18" x="100" y="60" height="23">or</label>
       </node>
-      <edge type="input" source="n0" target="n1" id="e0">
+      <node type="union" color="#fcfcfc" id="n4">
+        <geometry width="50" x="220" y="60" height="30"/>
+        <label width="18" x="220" y="60" height="23">or</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n1">
+        <geometry width="50" x="160" y="-40" height="30"/>
+        <label width="27" x="160" y="-40" height="23">and</label>
+      </node>
+      <node type="complement" color="#fcfcfc" id="n0">
+        <geometry width="50" x="-20" y="-40" height="30"/>
+        <label width="25" x="-20" y="-40" height="23">not</label>
+      </node>
+      <node type="role" color="#fcfcfc" id="n5">
+        <geometry width="70" x="-220" y="-40" height="50"/>
+        <label width="22" x="-220" y="-40" height="23">R9</label>
+      </node>
+      <edge type="input" target="n1" id="e0" source="n3">
+        <point x="100" y="60"/>
+        <point x="160" y="-40"/>
+      </edge>
+      <edge type="input" target="n1" id="e2" source="n0">
+        <point x="-20" y="-40"/>
+        <point x="160" y="-40"/>
+      </edge>
+      <edge type="input" target="n1" id="e1" source="n4">
+        <point x="220" y="60"/>
+        <point x="160" y="-40"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram18" height="5000">
+      <node type="intersection" color="#fcfcfc" id="n9">
+        <geometry width="50" x="100" y="50" height="30"/>
+        <label width="27" x="100" y="50" height="23">and</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n6">
+        <geometry width="90" x="-60" y="170" height="40"/>
+        <label width="60" x="-60" y="170" height="23">xsd:string</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n10">
+        <geometry width="50" x="20" y="-170" height="30"/>
+        <label width="27" x="20" y="-170" height="23">and</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n7">
+        <geometry width="50" x="20" y="-50" height="30"/>
+        <label width="27" x="20" y="-50" height="23">and</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n8">
+        <geometry width="50" x="-60" y="50" height="30"/>
+        <label width="18" x="-60" y="50" height="23">or</label>
+      </node>
+      <edge type="inclusion" target="n10" id="e3" source="n7">
+        <point x="20" y="-50"/>
+        <point x="20" y="-170"/>
+      </edge>
+      <edge type="input" target="n7" id="e5" source="n9">
+        <point x="100" y="50"/>
+        <point x="100" y="-50"/>
+        <point x="20" y="-50"/>
+      </edge>
+      <edge type="input" target="n7" id="e4" source="n8">
+        <point x="-60" y="50"/>
+        <point x="-60" y="-50"/>
+        <point x="20" y="-50"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram20" height="5000">
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n0">
+        <geometry width="50" x="0" y="-30" height="30"/>
+        <label width="36" x="0" y="-30" height="23">chain</label>
+      </node>
+      <node type="role-inverse" color="#fcfcfc" id="n1">
+        <geometry width="50" x="0" y="30" height="30"/>
+        <label width="23" x="0" y="30" height="23">inv</label>
+      </node>
+    </diagram>
+    <diagram width="5000" name="diagram12" height="5000">
+      <node type="role" color="#fcfcfc" id="n0">
+        <geometry width="70" x="-60" y="-40" height="50"/>
+        <label width="22" x="-60" y="-40" height="23">R1</label>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n3">
+        <geometry width="110" x="40" y="40" height="50"/>
+        <label width="22" x="40" y="40" height="23">C1</label>
+      </node>
+      <node type="domain-restriction" color="#fcfcfc" id="n1">
+        <geometry width="20" x="40" y="-40" height="20"/>
+        <label width="27" x="40" y="-62" height="23">self</label>
+      </node>
+      <edge type="input" target="n1" id="e0" source="n0">
+        <point x="-60" y="-40"/>
+        <point x="40" y="-40"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram35" height="5000">
+      <node type="value-domain" color="#fcfcfc" id="n2">
+        <geometry width="90" x="20" y="80" height="40"/>
+        <label width="60" x="20" y="80" height="23">xsd:string</label>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n0">
+        <geometry width="20" x="-60" y="-20" height="20"/>
+        <label width="52" x="-60" y="-42" height="23">attribute</label>
+      </node>
+      <node type="range-restriction" color="#000000" id="n1">
+        <geometry width="20" x="20" y="-20" height="20"/>
+        <label width="39" x="20" y="-42" height="23">exists</label>
+      </node>
+      <edge type="input" target="n1" id="e0" source="n0">
         <point x="-60" y="-20"/>
         <point x="20" y="-20"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram2">
-      <node color="#fcfcfc" type="intersection" id="n19">
-        <geometry x="-80" height="30" y="-70" width="50"/>
-        <label x="-80" height="22" y="-70" width="28">and</label>
+    <diagram width="5000" name="diagram2" height="5000">
+      <node type="concept" color="#fcfcfc" id="n17">
+        <geometry width="110" x="-80" y="50" height="50"/>
+        <label width="22" x="-80" y="50" height="23">C2</label>
       </node>
-      <node color="#fcfcfc" type="concept" id="n17">
-        <geometry x="-80" height="50" y="50" width="110"/>
-        <label x="-80" height="22" y="50" width="23">C2</label>
+      <node type="value-domain" color="#fcfcfc" id="n18">
+        <geometry width="90" x="80" y="-70" height="40"/>
+        <label width="60" x="80" y="-70" height="23">xsd:string</label>
       </node>
-      <node color="#fcfcfc" type="value-domain" id="n18">
-        <geometry x="80" height="40" y="-70" width="90"/>
-        <label x="80" height="22" y="-70" width="59">xsd:string</label>
+      <node type="intersection" color="#fcfcfc" id="n19">
+        <geometry width="50" x="-80" y="-70" height="30"/>
+        <label width="27" x="-80" y="-70" height="23">and</label>
       </node>
-      <edge type="input" source="n17" target="n19" id="e9">
+      <edge type="input" target="n19" id="e9" source="n17">
         <point x="-80" y="50"/>
         <point x="-80" y="-70"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram27">
-      <node color="#fcfcfc" type="property-assertion" inputs="e0" id="n3">
-        <geometry x="-20" height="30" y="-70" width="52"/>
+    <diagram width="5000" name="diagram14" height="5000">
+      <node type="role" color="#fcfcfc" id="n0">
+        <geometry width="70" x="56" y="-26" height="50"/>
+        <label width="22" x="56" y="-26" height="23">R5</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n1">
-        <geometry x="-80" height="-60" y="40" width="60"/>
-        <label x="-80" height="22" y="40" width="18">I1</label>
+      <node type="domain-restriction" color="#fcfcfc" id="n1">
+        <geometry width="20" x="-64" y="-26" height="20"/>
+        <label width="39" x="-64" y="-48" height="23">exists</label>
       </node>
-      <node color="#fcfcfc" type="concept" id="n0">
-        <geometry x="40" height="50" y="40" width="110"/>
-        <label x="40" height="22" y="40" width="23">C1</label>
+      <node type="value-domain" color="#fcfcfc" id="n2">
+        <geometry width="90" x="-64" y="54" height="40"/>
+        <label width="60" x="-64" y="54" height="23">xsd:string</label>
       </node>
-      <edge type="input" source="n1" target="n3" id="e0">
-        <point x="-80" y="40"/>
-        <point x="-20" y="-70"/>
-      </edge>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram14">
-      <node color="#fcfcfc" type="domain-restriction" id="n1">
-        <geometry x="-64" height="20" y="-26" width="20"/>
-        <label x="-64" height="22" y="-48" width="38">exists</label>
-      </node>
-      <node color="#fcfcfc" type="value-domain" id="n2">
-        <geometry x="-64" height="40" y="54" width="90"/>
-        <label x="-64" height="22" y="54" width="59">xsd:string</label>
-      </node>
-      <node color="#fcfcfc" type="role" id="n0">
-        <geometry x="56" height="50" y="-26" width="70"/>
-        <label x="56" height="22" y="-26" width="23">R5</label>
-      </node>
-      <edge type="input" source="n2" target="n1" id="e0">
+      <edge type="input" target="n1" id="e0" source="n2">
         <point x="-64" y="54"/>
         <point x="-64" y="-26"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram31">
-      <node color="#fcfcfc" type="attribute" id="n2">
-        <geometry x="0" height="20" y="-100" width="20"/>
-        <label x="0" height="22" y="-122" width="22">A4</label>
+    <diagram width="5000" name="diagram31" height="5000">
+      <node type="property-assertion" color="#fcfcfc" inputs="e1" id="n1">
+        <geometry width="52" x="0" y="0" height="30"/>
       </node>
-      <node color="#fcfcfc" type="individual" id="n0">
-        <geometry x="-60" height="-60" y="80" width="60"/>
-        <label x="-60" height="22" y="80" width="18">I1</label>
+      <node type="attribute" color="#fcfcfc" id="n2">
+        <geometry width="20" x="0" y="-100" height="20"/>
+        <label width="22" x="0" y="-122" height="23">A4</label>
       </node>
-      <node color="#fcfcfc" type="property-assertion" inputs="e1" id="n1">
-        <geometry x="0" height="30" y="0" width="52"/>
+      <node type="individual" color="#fcfcfc" id="n0">
+        <geometry width="60" x="-60" y="80" height="-60"/>
+        <label width="17" x="-60" y="80" height="23">I1</label>
       </node>
-      <node color="#fcfcfc" type="individual" id="n3">
-        <geometry x="60" height="-60" y="80" width="60"/>
-        <label x="60" height="22" y="80" width="18">I2</label>
+      <node type="individual" color="#fcfcfc" id="n3">
+        <geometry width="60" x="60" y="80" height="-60"/>
+        <label width="17" x="60" y="80" height="23">I2</label>
       </node>
-      <edge type="input" source="n0" target="n1" id="e1">
-        <point x="-60" y="80"/>
-        <point x="0" y="0"/>
-      </edge>
-      <edge type="membership" source="n1" target="n2" id="e0">
+      <edge type="membership" target="n2" id="e0" source="n1">
         <point x="0" y="0"/>
         <point x="0" y="-100"/>
       </edge>
+      <edge type="input" target="n1" id="e1" source="n0">
+        <point x="-60" y="80"/>
+        <point x="0" y="0"/>
+      </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram44">
-      <node color="#fcfcfc" type="individual" id="n0">
-        <geometry x="-100" height="-60" y="0" width="60"/>
-        <label x="-100" height="22" y="0" width="18">I1</label>
+    <diagram width="5000" name="diagram44" height="5000">
+      <node type="individual" color="#fcfcfc" id="n0">
+        <geometry width="60" x="-100" y="0" height="-60"/>
+        <label width="17" x="-100" y="0" height="23">I1</label>
       </node>
-      <node color="#fcfcfc" type="role" id="n1">
-        <geometry x="80" height="50" y="0" width="70"/>
-        <label x="80" height="22" y="0" width="23">R4</label>
-      </node>
-    </diagram>
-    <diagram height="5000" width="5000" name="diagram42">
-      <node color="#fcfcfc" type="concept" id="n1">
-        <geometry x="100" height="50" y="0" width="110"/>
-        <label x="100" height="22" y="0" width="23">C2</label>
-      </node>
-      <node color="#fcfcfc" type="concept" id="n0">
-        <geometry x="-120" height="50" y="0" width="110"/>
-        <label x="-120" height="22" y="0" width="23">C1</label>
+      <node type="role" color="#fcfcfc" id="n1">
+        <geometry width="70" x="80" y="0" height="50"/>
+        <label width="22" x="80" y="0" height="23">R4</label>
       </node>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram34">
-      <node color="#fcfcfc" type="concept" id="n3">
-        <geometry x="-20" height="50" y="50" width="110"/>
-        <label x="-20" height="22" y="50" width="23">C1</label>
+    <diagram width="5000" name="diagram42" height="5000">
+      <node type="concept" color="#fcfcfc" id="n1">
+        <geometry width="110" x="100" y="0" height="50"/>
+        <label width="22" x="100" y="0" height="23">C2</label>
       </node>
-      <node color="#000000" type="range-restriction" id="n4">
-        <geometry x="-20" height="20" y="-50" width="20"/>
-        <label x="-20" height="22" y="-72" width="38">exists</label>
+      <node type="concept" color="#fcfcfc" id="n0">
+        <geometry width="110" x="-120" y="0" height="50"/>
+        <label width="22" x="-120" y="0" height="23">C1</label>
       </node>
-      <node color="#fcfcfc" type="concept" id="n1">
-        <geometry x="120" height="50" y="50" width="110"/>
-        <label x="120" height="22" y="50" width="23">C2</label>
+    </diagram>
+    <diagram width="5000" name="diagram33" height="5000">
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-40" y="0" height="-60"/>
+        <label width="17" x="-40" y="0" height="23">I4</label>
       </node>
-      <node color="#fcfcfc" type="role" id="n0">
-        <geometry x="-120" height="50" y="-50" width="70"/>
-        <label x="-120" height="22" y="-50" width="23">R1</label>
+      <node type="domain-restriction" color="#fcfcfc" id="n0">
+        <geometry width="20" x="60" y="0" height="20"/>
+        <label width="39" x="60" y="-22" height="23">exists</label>
       </node>
-      <edge type="input" source="n0" target="n4" id="e0">
+    </diagram>
+    <diagram width="5000" name="diagram26" height="5000">
+      <node type="value-domain" color="#fcfcfc" id="n1">
+        <geometry width="90" x="-140" y="40" height="40"/>
+        <label width="60" x="-140" y="40" height="23">xsd:string</label>
+      </node>
+      <node type="facet" color="#000000" id="n3">
+        <geometry width="80" x="-20" y="40" height="0"/>
+        <label width="92" x="-20" y="40" height="23">xsd:length^^"32"</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n0">
+        <geometry width="90" x="120" y="-60" height="40"/>
+        <label width="66" x="120" y="-60" height="23">xsd:integer</label>
+      </node>
+      <node type="datatype-restriction" color="#fcfcfc" id="n2">
+        <geometry width="50" x="-20" y="-60" height="30"/>
+        <label width="31" x="-20" y="-60" height="23">data</label>
+      </node>
+      <edge type="input" target="n2" id="e1" source="n3">
+        <point x="-20" y="40"/>
+        <point x="-20" y="-60"/>
+      </edge>
+      <edge type="input" target="n2" id="e0" source="n1">
+        <point x="-140" y="40"/>
+        <point x="-140" y="-60"/>
+        <point x="-20" y="-60"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram34" height="5000">
+      <node type="role" color="#fcfcfc" id="n0">
+        <geometry width="70" x="-120" y="-50" height="50"/>
+        <label width="22" x="-120" y="-50" height="23">R1</label>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n3">
+        <geometry width="110" x="-20" y="50" height="50"/>
+        <label width="22" x="-20" y="50" height="23">C1</label>
+      </node>
+      <node type="range-restriction" color="#000000" id="n4">
+        <geometry width="20" x="-20" y="-50" height="20"/>
+        <label width="39" x="-20" y="-72" height="23">exists</label>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n1">
+        <geometry width="110" x="120" y="50" height="50"/>
+        <label width="22" x="120" y="50" height="23">C2</label>
+      </node>
+      <edge type="input" target="n4" id="e0" source="n0">
         <point x="-120" y="-50"/>
         <point x="-20" y="-50"/>
       </edge>
-      <edge type="input" source="n3" target="n4" id="e1">
+      <edge type="input" target="n4" id="e1" source="n3">
         <point x="-20" y="50"/>
         <point x="-20" y="-50"/>
       </edge>
     </diagram>
-    <diagram height="5000" width="5000" name="diagram38">
-      <node color="#fcfcfc" type="property-assertion" inputs="" id="n0">
-        <geometry x="60" height="30" y="10" width="52"/>
+    <diagram width="5000" name="diagram38" height="5000">
+      <node type="range-restriction" color="#000000" id="n2">
+        <geometry width="20" x="-40" y="10" height="20"/>
+        <label width="39" x="-40" y="-12" height="23">exists</label>
       </node>
-      <node color="#000000" type="range-restriction" id="n2">
-        <geometry x="-40" height="20" y="10" width="20"/>
-        <label x="-40" height="22" y="-12" width="38">exists</label>
+      <node type="property-assertion" color="#fcfcfc" inputs="" id="n0">
+        <geometry width="52" x="60" y="10" height="30"/>
       </node>
+    </diagram>
+    <diagram width="5000" name="diagram47" height="5000">
+      <node type="individual" color="#fcfcfc" id="n6">
+        <geometry width="60" x="-140" y="30" height="-60"/>
+        <label width="17" x="-140" y="30" height="23">I1</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n3">
+        <geometry width="60" x="-140" y="110" height="-60"/>
+        <label width="97" x="-145" y="155" height="23">"12"^^xsd:integer</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n1">
+        <geometry width="50" x="240" y="70" height="30"/>
+        <label width="27" x="240" y="70" height="23">and</label>
+      </node>
+      <node type="property-assertion" color="#fcfcfc" inputs="e0,e1" id="n5">
+        <geometry width="52" x="-20" y="70" height="30"/>
+      </node>
+      <node type="union" color="#fcfcfc" id="n4">
+        <geometry width="50" x="300" y="-10" height="30"/>
+        <label width="18" x="300" y="-10" height="23">or</label>
+      </node>
+      <node type="complement" color="#fcfcfc" id="n2">
+        <geometry width="50" x="120" y="70" height="30"/>
+        <label width="25" x="120" y="70" height="23">not</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n0">
+        <geometry width="50" x="360" y="70" height="30"/>
+        <label width="18" x="360" y="70" height="23">or</label>
+      </node>
+      <edge type="input" target="n4" id="e3" source="n0">
+        <point x="360" y="70"/>
+        <point x="300" y="-10"/>
+      </edge>
+      <edge type="input" target="n4" id="e4" source="n1">
+        <point x="240" y="70"/>
+        <point x="300" y="-10"/>
+      </edge>
+      <edge type="input" target="n5" id="e1" source="n6">
+        <point x="-140" y="30"/>
+        <point x="-20" y="70"/>
+      </edge>
+      <edge type="input" target="n5" id="e0" source="n3">
+        <point x="-140" y="110"/>
+        <point x="-20" y="70"/>
+      </edge>
+      <edge type="input" target="n1" id="e2" source="n2">
+        <point x="120" y="70"/>
+        <point x="240" y="70"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram7" height="5000">
+      <node type="property-assertion" color="#fcfcfc" inputs="e1,e2" id="n4">
+        <geometry width="52" x="0" y="-80" height="30"/>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n6">
+        <geometry width="60" x="60" y="0" height="-60"/>
+        <label width="17" x="60" y="0" height="23">I2</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n5">
+        <geometry width="60" x="-60" y="0" height="-60"/>
+        <label width="17" x="-60" y="0" height="23">I1</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n7">
+        <geometry width="60" x="0" y="80" height="-60"/>
+        <label width="17" x="0" y="80" height="23">I3</label>
+      </node>
+      <edge type="input" target="n4" id="e2" source="n6">
+        <point x="60" y="0"/>
+        <point x="0" y="-80"/>
+      </edge>
+      <edge type="input" target="n4" id="e1" source="n5">
+        <point x="-60" y="0"/>
+        <point x="0" y="-80"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram27" height="5000">
+      <node type="property-assertion" color="#fcfcfc" inputs="e0" id="n3">
+        <geometry width="52" x="-20" y="-70" height="30"/>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n0">
+        <geometry width="110" x="40" y="40" height="50"/>
+        <label width="22" x="40" y="40" height="23">C1</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-80" y="40" height="-60"/>
+        <label width="17" x="-80" y="40" height="23">I1</label>
+      </node>
+      <edge type="input" target="n3" id="e0" source="n1">
+        <point x="-80" y="40"/>
+        <point x="-20" y="-70"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram3" height="5000">
+      <node type="concept" color="#fcfcfc" id="n18">
+        <geometry width="110" x="60" y="100" height="50"/>
+        <label width="22" x="60" y="100" height="23">C7</label>
+      </node>
+      <node type="domain-restriction" color="#fcfcfc" id="n17">
+        <geometry width="20" x="60" y="20" height="20"/>
+        <label width="39" x="60" y="-2" height="23">exists</label>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n16">
+        <geometry width="20" x="-20" y="20" height="20"/>
+        <label width="22" x="-20" y="-2" height="23">A1</label>
+      </node>
+      <edge type="input" target="n17" id="e8" source="n16">
+        <point x="-20" y="20"/>
+        <point x="60" y="20"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram24" height="5000">
+      <node type="individual" color="#fcfcfc" id="n0">
+        <geometry width="60" x="60" y="80" height="-60"/>
+        <label width="17" x="60" y="80" height="23">I2</label>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n2">
+        <geometry width="110" x="0" y="-100" height="50"/>
+        <label width="22" x="0" y="-100" height="23">C5</label>
+      </node>
+      <node type="enumeration" color="#fcfcfc" id="n3">
+        <geometry width="50" x="0" y="0" height="30"/>
+        <label width="40" x="0" y="0" height="23">oneOf</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-60" y="80" height="-60"/>
+        <label width="17" x="-60" y="80" height="23">I1</label>
+      </node>
+      <edge type="input" target="n3" id="e0" source="n0">
+        <point x="60" y="80"/>
+        <point x="0" y="0"/>
+      </edge>
+      <edge type="input" target="n3" id="e1" source="n1">
+        <point x="-60" y="80"/>
+        <point x="0" y="0"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram32" height="5000">
+      <node type="individual" color="#fcfcfc" id="n2">
+        <geometry width="60" x="60" y="80" height="-60"/>
+        <label width="97" x="60" y="80" height="23">"32"^^xsd:integer</label>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n3">
+        <geometry width="20" x="0" y="-100" height="20"/>
+        <label width="22" x="0" y="-122" height="23">A4</label>
+      </node>
+      <node type="property-assertion" color="#fcfcfc" inputs="e0" id="n0">
+        <geometry width="52" x="0" y="0" height="30"/>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-60" y="80" height="-60"/>
+        <label width="97" x="-60" y="80" height="23">"12"^^xsd:integer</label>
+      </node>
+      <edge type="input" target="n0" id="e0" source="n1">
+        <point x="-60" y="80"/>
+        <point x="0" y="0"/>
+      </edge>
+      <edge type="membership" target="n3" id="e1" source="n0">
+        <point x="0" y="0"/>
+        <point x="0" y="-100"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram22" height="5000">
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n1">
+        <geometry width="50" x="0" y="40" height="30"/>
+        <label width="36" x="0" y="40" height="23">chain</label>
+      </node>
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n0">
+        <geometry width="50" x="0" y="-40" height="30"/>
+        <label width="36" x="0" y="-40" height="23">chain</label>
+      </node>
+    </diagram>
+    <diagram width="5000" name="diagram43" height="5000">
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n0">
+        <geometry width="50" x="160" y="20" height="30"/>
+        <label width="36" x="160" y="20" height="23">chain</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n4">
+        <geometry width="60" x="-60" y="-20" height="-60"/>
+        <label width="17" x="-60" y="-20" height="23">I1</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n5">
+        <geometry width="60" x="-60" y="60" height="-60"/>
+        <label width="17" x="-60" y="60" height="23">I2</label>
+      </node>
+      <node type="property-assertion" color="#fcfcfc" inputs="e2,e3" id="n1">
+        <geometry width="52" x="60" y="20" height="30"/>
+      </node>
+      <edge type="input" target="n1" id="e2" source="n4">
+        <point x="-60" y="-20"/>
+        <point x="60" y="20"/>
+      </edge>
+      <edge type="input" target="n1" id="e3" source="n5">
+        <point x="-60" y="60"/>
+        <point x="60" y="20"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram50" height="5000">
+      <node type="attribute" color="#fcfcfc" id="n5">
+        <geometry width="20" x="-220" y="-40" height="20"/>
+        <label width="22" x="-220" y="-62" height="23">A1</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n2">
+        <geometry width="50" x="80" y="60" height="30"/>
+        <label width="18" x="80" y="60" height="23">or</label>
+      </node>
+      <node type="complement" color="#fcfcfc" id="n4">
+        <geometry width="50" x="-40" y="-40" height="30"/>
+        <label width="25" x="-40" y="-40" height="23">not</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n1">
+        <geometry width="50" x="140" y="-40" height="30"/>
+        <label width="27" x="140" y="-40" height="23">and</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n0">
+        <geometry width="50" x="200" y="60" height="30"/>
+        <label width="18" x="200" y="60" height="23">or</label>
+      </node>
+      <edge type="input" target="n1" id="e1" source="n4">
+        <point x="-40" y="-40"/>
+        <point x="140" y="-40"/>
+      </edge>
+      <edge type="input" target="n1" id="e0" source="n2">
+        <point x="80" y="60"/>
+        <point x="140" y="-40"/>
+      </edge>
+      <edge type="input" target="n1" id="e2" source="n0">
+        <point x="200" y="60"/>
+        <point x="140" y="-40"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram30" height="5000">
+      <node type="domain-restriction" color="#fcfcfc" id="n1">
+        <geometry width="20" x="60" y="0" height="20"/>
+        <label width="27" x="60" y="-22" height="23">self</label>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n0">
+        <geometry width="20" x="-40" y="0" height="20"/>
+        <label width="22" x="-40" y="-22" height="23">A4</label>
+      </node>
+    </diagram>
+    <diagram width="5000" name="diagram17" height="5000">
+      <node type="disjoint-union" color="#000000" id="n3">
+        <geometry width="50" x="-80" y="-70" height="30"/>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n1">
+        <geometry width="110" x="-80" y="50" height="50"/>
+        <label width="22" x="-80" y="50" height="23">C2</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n2">
+        <geometry width="90" x="80" y="-70" height="40"/>
+        <label width="60" x="80" y="-70" height="23">xsd:string</label>
+      </node>
+      <edge type="input" target="n3" id="e0" source="n1">
+        <point x="-80" y="50"/>
+        <point x="-80" y="-70"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram23" height="5000">
+      <node type="union" color="#fcfcfc" id="n3">
+        <geometry width="50" x="0" y="-10" height="30"/>
+        <label width="18" x="0" y="-10" height="23">or</label>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n4">
+        <geometry width="20" x="60" y="-90" height="20"/>
+        <label width="22" x="60" y="-112" height="23">A3</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n1">
+        <geometry width="90" x="80" y="90" height="40"/>
+        <label width="60" x="80" y="90" height="23">xsd:string</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n2">
+        <geometry width="90" x="-80" y="90" height="40"/>
+        <label width="60" x="-80" y="90" height="23">xsd:string</label>
+      </node>
+      <node type="range-restriction" color="#000000" id="n0">
+        <geometry width="20" x="0" y="-90" height="20"/>
+        <label width="39" x="0" y="-112" height="23">exists</label>
+      </node>
+      <edge type="input" target="n3" id="e1" source="n1">
+        <point x="80" y="90"/>
+        <point x="80" y="-10"/>
+        <point x="0" y="-10"/>
+      </edge>
+      <edge type="input" target="n3" id="e0" source="n2">
+        <point x="-80" y="90"/>
+        <point x="-80" y="-10"/>
+        <point x="0" y="-10"/>
+      </edge>
+      <edge type="input" target="n0" id="e2" source="n4">
+        <point x="60" y="-90"/>
+        <point x="0" y="-90"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram1" height="5000">
+      <node type="concept" color="#fcfcfc" id="n8">
+        <geometry width="110" x="-20" y="-20" height="50"/>
+        <label width="22" x="-20" y="-20" height="23">C2</label>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n5">
+        <geometry width="20" x="-160" y="60" height="20"/>
+        <label width="22" x="-160" y="38" height="23">A1</label>
+      </node>
+      <node type="disjoint-union" color="#000000" id="n17">
+        <geometry width="50" x="100" y="200" height="30"/>
+      </node>
+      <node type="complement" color="#fcfcfc" id="n21">
+        <geometry width="50" x="200" y="-40" height="30"/>
+        <label width="25" x="200" y="-40" height="23">not</label>
+      </node>
+      <node type="role" color="#fcfcfc" id="n3">
+        <geometry width="70" x="-160" y="-100" height="50"/>
+        <label width="22" x="-160" y="-100" height="23">R1</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n22">
+        <geometry width="50" x="200" y="-100" height="30"/>
+        <label width="18" x="200" y="-100" height="23">or</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n12">
+        <geometry width="50" x="100" y="-100" height="30"/>
+        <label width="18" x="100" y="-100" height="23">or</label>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n2">
+        <geometry width="110" x="-160" y="-20" height="50"/>
+        <label width="22" x="-160" y="-20" height="23">C1</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n1">
+        <geometry width="60" x="-20" y="-180" height="-60"/>
+        <label width="17" x="-20" y="-180" height="23">I2</label>
+      </node>
+      <node type="datatype-restriction" color="#fcfcfc" id="n25">
+        <geometry width="50" x="200" y="140" height="30"/>
+        <label width="31" x="200" y="140" height="23">data</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n6">
+        <geometry width="90" x="-20" y="120" height="40"/>
+        <label width="60" x="-20" y="120" height="23">xsd:string</label>
+      </node>
+      <node type="role-inverse" color="#fcfcfc" id="n20">
+        <geometry width="50" x="200" y="20" height="30"/>
+        <label width="23" x="200" y="20" height="23">inv</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n23">
+        <geometry width="50" x="200" y="-160" height="30"/>
+        <label width="27" x="200" y="-160" height="23">and</label>
+      </node>
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n15">
+        <geometry width="50" x="100" y="80" height="30"/>
+        <label width="36" x="100" y="80" height="23">chain</label>
+      </node>
+      <node type="datatype-restriction" color="#fcfcfc" id="n18">
+        <geometry width="50" x="100" y="140" height="30"/>
+        <label width="31" x="100" y="140" height="23">data</label>
+      </node>
+      <node type="role-inverse" color="#fcfcfc" id="n14">
+        <geometry width="50" x="100" y="20" height="30"/>
+        <label width="23" x="100" y="20" height="23">inv</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n11">
+        <geometry width="50" x="100" y="-160" height="30"/>
+        <label width="27" x="100" y="-160" height="23">and</label>
+      </node>
+      <node type="enumeration" color="#fcfcfc" id="n24">
+        <geometry width="50" x="200" y="-220" height="30"/>
+        <label width="40" x="200" y="-220" height="23">oneOf</label>
+      </node>
+      <node type="complement" color="#fcfcfc" id="n13">
+        <geometry width="50" x="100" y="-40" height="30"/>
+        <label width="25" x="100" y="-40" height="23">not</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n10">
+        <geometry width="90" x="-160" y="120" height="40"/>
+        <label width="60" x="-160" y="120" height="23">xsd:string</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n0">
+        <geometry width="60" x="-160" y="-180" height="-60"/>
+        <label width="17" x="-160" y="-180" height="23">I1</label>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n9">
+        <geometry width="20" x="-20" y="60" height="20"/>
+        <label width="22" x="-20" y="38" height="23">A2</label>
+      </node>
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n19">
+        <geometry width="50" x="200" y="80" height="30"/>
+        <label width="36" x="200" y="80" height="23">chain</label>
+      </node>
+      <node type="disjoint-union" color="#000000" id="n26">
+        <geometry width="50" x="200" y="200" height="30"/>
+      </node>
+      <node type="role" color="#fcfcfc" id="n7">
+        <geometry width="70" x="-20" y="-100" height="50"/>
+        <label width="22" x="-20" y="-100" height="23">R2</label>
+      </node>
+      <node type="enumeration" color="#fcfcfc" id="n16">
+        <geometry width="50" x="100" y="-220" height="30"/>
+        <label width="40" x="100" y="-220" height="23">oneOf</label>
+      </node>
+    </diagram>
+    <diagram width="5000" name="diagram10" height="5000">
+      <node type="role-chain" color="#fcfcfc" inputs="" id="n10">
+        <geometry width="50" x="-40" y="0" height="30"/>
+        <label width="36" x="-40" y="0" height="23">chain</label>
+      </node>
+      <node type="domain-restriction" color="#fcfcfc" id="n8">
+        <geometry width="20" x="60" y="0" height="20"/>
+        <label width="39" x="60" y="-22" height="23">exists</label>
+      </node>
+    </diagram>
+    <diagram width="5000" name="diagram48" height="5000">
+      <node type="union" color="#fcfcfc" id="n5">
+        <geometry width="50" x="320" y="0" height="30"/>
+        <label width="18" x="320" y="0" height="23">or</label>
+      </node>
+      <node type="intersection" color="#fcfcfc" id="n6">
+        <geometry width="50" x="260" y="80" height="30"/>
+        <label width="27" x="260" y="80" height="23">and</label>
+      </node>
+      <node type="complement" color="#fcfcfc" id="n4">
+        <geometry width="50" x="140" y="80" height="30"/>
+        <label width="25" x="140" y="80" height="23">not</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n3">
+        <geometry width="60" x="-120" y="40" height="-60"/>
+        <label width="17" x="-120" y="40" height="23">I1</label>
+      </node>
+      <node type="union" color="#fcfcfc" id="n2">
+        <geometry width="50" x="380" y="80" height="30"/>
+        <label width="18" x="380" y="80" height="23">or</label>
+      </node>
+      <node type="property-assertion" color="#fcfcfc" inputs="e3" id="n1">
+        <geometry width="52" x="0" y="80" height="30"/>
+      </node>
+      <edge type="input" target="n5" id="e0" source="n2">
+        <point x="380" y="80"/>
+        <point x="320" y="0"/>
+      </edge>
+      <edge type="input" target="n5" id="e1" source="n6">
+        <point x="260" y="80"/>
+        <point x="320" y="0"/>
+      </edge>
+      <edge type="input" target="n1" id="e3" source="n3">
+        <point x="-120" y="40"/>
+        <point x="0" y="80"/>
+      </edge>
+      <edge type="input" target="n6" id="e2" source="n4">
+        <point x="140" y="80"/>
+        <point x="260" y="80"/>
+      </edge>
+    </diagram>
+    <diagram width="5000" name="diagram16" height="5000">
+      <node type="union" color="#fcfcfc" id="n1">
+        <geometry width="50" x="-80" y="-60" height="30"/>
+        <label width="18" x="-80" y="-60" height="23">or</label>
+      </node>
+      <node type="concept" color="#fcfcfc" id="n0">
+        <geometry width="110" x="-80" y="60" height="50"/>
+        <label width="22" x="-80" y="60" height="23">C2</label>
+      </node>
+      <node type="value-domain" color="#fcfcfc" id="n2">
+        <geometry width="90" x="80" y="-60" height="40"/>
+        <label width="60" x="80" y="-60" height="23">xsd:string</label>
+      </node>
+      <edge type="input" target="n1" id="e0" source="n0">
+        <point x="-80" y="60"/>
+        <point x="-80" y="-60"/>
+      </edge>
     </diagram>
   </diagrams>
 </graphol>
