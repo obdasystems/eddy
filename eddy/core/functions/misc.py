@@ -62,7 +62,7 @@ def first(iterable, default=None, filter_on_item=lambda x: True):
     """
     Returns the first element in 'iterable' if it exists, otherwise it returns the given default.
     Scanned items will be filtered according to the given callable.
-    :type iterable: T <= list|tuple|set|generator
+    :type iterable: T <= list | tuple | set | generator
     :type default: any
     :type filter_on_item: callable
     :rtype: mixed
@@ -86,7 +86,7 @@ def format_exception(e):
 def isEmpty(string):
     """
     Safely detect whether the given string is empty.
-    :type string: str|float|None
+    :type string: T <= str | float | None
     :rtype: bool
     """
     return not string or str(string).strip() == ''
@@ -118,7 +118,7 @@ def lstrip(text, *args):
     """
     Removes from 'text' all the given starting prefixes.
     :type text: str
-    :type args: list
+    :type args: iterable
     :rtype: str
     """
     for token in args:
@@ -179,7 +179,7 @@ def rstrip(text, *args):
     """
     Removes from 'text' all the given ending suffixes.
     :type text: str
-    :type args: list
+    :type args: iterable
     :rtype: str
     """
     for token in args:
