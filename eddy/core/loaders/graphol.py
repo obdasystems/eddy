@@ -1261,7 +1261,7 @@ class GrapholProjectLoader_v2(AbstractProjectLoader):
         point = e.firstChildElement('point')
         while not point.isNull():
             points.append(QtCore.QPointF(int(point.attribute('x')), int(point.attribute('y'))))
-            point = e.nextSiblingElement('point')
+            point = point.nextSiblingElement('point')
 
         edge = d.factory.create(i, **{
             'id': e.attribute('id'),
