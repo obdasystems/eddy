@@ -55,7 +55,16 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
     #   INTERFACE
     #################################
 
-    def export(self, *args, **kwargs):
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        In this particular case we don't have any type, so we return None
+        :return: File
+        """
+        return None
+
+    def run(self, *args, **kwargs):
         """
         Print the diagram.
         """
@@ -79,12 +88,3 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
                             item.setCacheMode(AbstractItem.DeviceCoordinateCache)
                     # COMPLETE THE PRINT
                     painter.end()
-
-    @classmethod
-    def filetype(cls):
-        """
-        Returns the type of the file that will be used for the export.
-        In this particular case we don't have any type, so we return None
-        :return: File
-        """
-        return None

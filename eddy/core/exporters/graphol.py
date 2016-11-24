@@ -521,7 +521,15 @@ class GrapholProjectExporter(AbstractProjectExporter):
     #   INTERFACE
     #################################
 
-    def export(self, *args, **kwargs):
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.Graphol
+
+    def run(self, *args, **kwargs):
         """
         Perform Project export to disk.
         """
@@ -530,11 +538,3 @@ class GrapholProjectExporter(AbstractProjectExporter):
         self.createPredicatesMeta()
         self.createDiagrams()
         self.createProjectFile()
-
-    @classmethod
-    def filetype(cls):
-        """
-        Returns the type of the file that will be used for the export.
-        :return: File
-        """
-        return File.Graphol

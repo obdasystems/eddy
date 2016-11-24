@@ -79,7 +79,7 @@ class AbstractLoader(QtCore.QObject):
         pass
 
     @abstractmethod
-    def load(self):
+    def run(self):
         """
         Perform the load.
         """
@@ -116,7 +116,7 @@ class AbstractDiagramLoader(AbstractLoader):
         pass
 
     @abstractmethod
-    def load(self):
+    def run(self):
         """
         Perform the load of the diagram and add it to the project.
         :rtype: Diagram
@@ -152,9 +152,8 @@ class AbstractProjectLoader(AbstractLoader):
         pass
 
     @abstractmethod
-    def load(self):
+    def run(self):
         """
         Perform the load.
-        :rtype: Project
         """
         pass

@@ -696,10 +696,18 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         return node.pos() - QtCore.QPointF(node.width() / 2, node.height() / 2)
 
     #############################################
-    #   DOCUMENT GENERATION
+    #   INTERFACE
     #################################
 
-    def export(self, path):
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.GraphML
+
+    def run(self, path):
         """
         Perform Graphml document generation.
         :type path: str
@@ -770,11 +778,3 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
         # 8) GENERATE THE FILE
         fwrite(self.document.toString(2), path)
-
-    @classmethod
-    def filetype(cls):
-        """
-        Returns the type of the file that will be used for the export.
-        :return: File
-        """
-        return File.GraphML

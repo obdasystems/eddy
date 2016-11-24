@@ -67,20 +67,20 @@ class AbstractExporter(QtCore.QObject):
     #   INTERFACE
     #################################
 
-    @abstractmethod
-    def export(self, path):
-        """
-        Perform the export.
-        :type path: str
-        """
-        pass
-
     @classmethod
     @abstractmethod
     def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
         :return: File
+        """
+        pass
+
+    @abstractmethod
+    def run(self, path):
+        """
+        Perform the export.
+        :type path: str
         """
         pass
 
@@ -104,20 +104,20 @@ class AbstractDiagramExporter(AbstractExporter):
     #   INTERFACE
     #################################
 
-    @abstractmethod
-    def export(self, path):
-        """
-        Perform the export.
-        :type path: str
-        """
-        pass
-
     @classmethod
     @abstractmethod
     def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
         :return: File
+        """
+        pass
+
+    @abstractmethod
+    def run(self, path):
+        """
+        Perform the export.
+        :type path: str
         """
         pass
 
@@ -141,19 +141,19 @@ class AbstractProjectExporter(AbstractExporter):
     #   INTERFACE
     #################################
 
-    @abstractmethod
-    def export(self, path):
-        """
-        Perform the export.
-        :type path: str
-        """
-        pass
-
     @classmethod
     @abstractmethod
     def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
         :return: File
+        """
+        pass
+
+    @abstractmethod
+    def run(self, path):
+        """
+        Perform the export.
+        :type path: str
         """
         pass

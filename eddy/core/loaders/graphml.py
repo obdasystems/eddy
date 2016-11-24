@@ -49,7 +49,6 @@ from eddy.core.diagram import DiagramParseError
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.misc import snapF, isEmpty, rstrip, snap
-from eddy.core.functions.path import uniquePath
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.output import getLogger
@@ -71,95 +70,95 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         """
         super().__init__(path, project, session)
 
-        self.diagram = None
         self.keys = dict()
         self.edges = dict()
         self.nodes = dict()
+        self.diagram = None
         
         self.importFuncForItem = {
-            Item.AttributeNode: self.buildAttributeNode,
-            Item.ComplementNode: self.buildComplementNode,
-            Item.ConceptNode: self.buildConceptNode,
-            Item.DatatypeRestrictionNode: self.buildDatatypeRestrictionNode,
-            Item.DisjointUnionNode: self.buildDisjointUnionNode,
-            Item.DomainRestrictionNode: self.buildDomainRestrictionNode,
-            Item.EnumerationNode: self.buildEnumerationNode,
-            Item.FacetNode: self.buildFacetNode,
-            Item.IndividualNode: self.buildIndividualNode,
-            Item.IntersectionNode: self.buildIntersectionNode,
-            Item.RangeRestrictionNode: self.buildRangeRestrictionNode,
-            Item.RoleNode: self.buildRoleNode,
-            Item.RoleChainNode: self.buildRoleChainNode,
-            Item.RoleInverseNode: self.buildRoleInverseNode,
-            Item.UnionNode: self.buildUnionNode,
-            Item.ValueDomainNode: self.buildValueDomainNode,
-            Item.InclusionEdge: self.buildInclusionEdge,
-            Item.EquivalenceEdge: self.buildEquivalenceEdge,
-            Item.InputEdge: self.buildInputEdge,
-            Item.MembershipEdge: self.buildMembershipEdge,
+            Item.AttributeNode: self.importAttributeNode,
+            Item.ComplementNode: self.importComplementNode,
+            Item.ConceptNode: self.importConceptNode,
+            Item.DatatypeRestrictionNode: self.importDatatypeRestrictionNode,
+            Item.DisjointUnionNode: self.importDisjointUnionNode,
+            Item.DomainRestrictionNode: self.importDomainRestrictionNode,
+            Item.EnumerationNode: self.importEnumerationNode,
+            Item.FacetNode: self.importFacetNode,
+            Item.IndividualNode: self.importIndividualNode,
+            Item.IntersectionNode: self.importIntersectionNode,
+            Item.RangeRestrictionNode: self.importRangeRestrictionNode,
+            Item.RoleNode: self.importRoleNode,
+            Item.RoleChainNode: self.importRoleChainNode,
+            Item.RoleInverseNode: self.importRoleInverseNode,
+            Item.UnionNode: self.importUnionNode,
+            Item.ValueDomainNode: self.importValueDomainNode,
+            Item.InclusionEdge: self.importInclusionEdge,
+            Item.EquivalenceEdge: self.importEquivalenceEdge,
+            Item.InputEdge: self.importInputEdge,
+            Item.MembershipEdge: self.importMembershipEdge,
         }
 
     #############################################
     #   NODES
     #################################
 
-    def buildAttributeNode(self, element):
+    def importAttributeNode(self, element):
         """
         Build an Attribute node using the given QDomElement.
         :type element: QDomElement
         :rtype: AttributeNode
         """
-        return self.buildNodeFromGenericNode(Item.AttributeNode, element)
+        return self.importNodeFromGenericNode(Item.AttributeNode, element)
 
-    def buildComplementNode(self, element):
+    def importComplementNode(self, element):
         """
         Build a Complement node using the given QDomElement.
         :type element: QDomElement
         :rtype: ComplementNode
         """
-        return self.buildNodeFromShapeNode(Item.ComplementNode, element)
+        return self.importNodeFromShapeNode(Item.ComplementNode, element)
 
-    def buildConceptNode(self, element):
+    def importConceptNode(self, element):
         """
         Build a Concept node using the given QDomElement.
         :type element: QDomElement
         :rtype: ConceptNode
         """
-        return self.buildNodeFromGenericNode(Item.ConceptNode, element)
+        return self.importNodeFromGenericNode(Item.ConceptNode, element)
 
-    def buildDatatypeRestrictionNode(self, element):
+    def importDatatypeRestrictionNode(self, element):
         """
         Build a DatatypeRestriction node using the given QDomElement.
         :type element: QDomElement
         :rtype: DatatypeRestrictionNode
         """
-        return self.buildNodeFromShapeNode(Item.DatatypeRestrictionNode, element)
+        return self.importNodeFromShapeNode(Item.DatatypeRestrictionNode, element)
 
-    def buildDisjointUnionNode(self, element):
+    def importDisjointUnionNode(self, element):
         """
         Build a DisjointUnion node using the given QDomElement.
         :type element: QDomElement
         :rtype: DisjointUnionNode
         """
-        return self.buildNodeFromShapeNode(Item.DisjointUnionNode, element)
+        return self.importNodeFromShapeNode(Item.DisjointUnionNode, element)
 
-    def buildDomainRestrictionNode(self, element):
+    def importDomainRestrictionNode(self, element):
         """
         Build a DomainRestriction node using the given QDomElement.
         :type element: QDomElement
         :rtype: DomainRestrictionNode
         """
-        return self.buildNodeFromShapeNode(Item.DomainRestrictionNode, element)
+        return self.importNodeFromShapeNode(Item.DomainRestrictionNode, element)
 
-    def buildEnumerationNode(self, element):
+    def importEnumerationNode(self, element):
         """
         Build an Enumeration node using the given QDomElement.
         :type element: QDomElement
         :rtype: EnumerationNode
         """
-        return self.buildNodeFromShapeNode(Item.EnumerationNode, element)
+        return self.importNodeFromShapeNode(Item.EnumerationNode, element)
 
-    def buildFacetNode(self, element):
+    def importFacetNode(self, element):
         """
         Build a FacetNode node using the given QDomElement.
         :type element: QDomElement
@@ -167,7 +166,6 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         """
         data = element.firstChildElement('data')
         while not data.isNull():
-
             if data.attribute('key', '') == self.keys['node_key']:
                 noteNode = data.firstChildElement('y:UMLNoteNode')
                 geometry = noteNode.firstChildElement('y:Geometry')
@@ -179,91 +177,89 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 node.setPos(self.parsePos(geometry))
                 node.setText(nodeLabel.text())
                 return node
-
             data = data.nextSiblingElement('data')
-
         return None
 
-    def buildIndividualNode(self, element):
+    def importIndividualNode(self, element):
         """
         Build an Individual node using the given QDomElement.
         :type element: QDomElement
         :rtype: IndividualNode
         """
-        return self.buildNodeFromShapeNode(Item.IndividualNode, element)
+        return self.importNodeFromShapeNode(Item.IndividualNode, element)
 
-    def buildIntersectionNode(self, element):
+    def importIntersectionNode(self, element):
         """
         Build an Intersection node using the given QDomElement.
         :type element: QDomElement
         :rtype: IntersectionNode
         """
-        return self.buildNodeFromShapeNode(Item.IntersectionNode, element)
+        return self.importNodeFromShapeNode(Item.IntersectionNode, element)
 
-    def buildRangeRestrictionNode(self, element):
+    def importRangeRestrictionNode(self, element):
         """
         Build a RangeRestriction node using the given QDomElement.
         :type element: QDomElement
         :rtype: RangeRestrictionNode
         """
-        return self.buildNodeFromShapeNode(Item.RangeRestrictionNode, element)
+        return self.importNodeFromShapeNode(Item.RangeRestrictionNode, element)
 
-    def buildRoleNode(self, element):
+    def importRoleNode(self, element):
         """
         Build a Role node using the given QDomElement.
         :type element: QDomElement
         :rtype: RoleNode
         """
-        return self.buildNodeFromGenericNode(Item.RoleNode, element)
+        return self.importNodeFromGenericNode(Item.RoleNode, element)
 
-    def buildRoleChainNode(self, element):
+    def importRoleChainNode(self, element):
         """
         Build a RoleChain node using the given QDomElement.
         :type element: QDomElement
         :rtype: RoleChainNode
         """
-        return self.buildNodeFromShapeNode(Item.RoleChainNode, element)
+        return self.importNodeFromShapeNode(Item.RoleChainNode, element)
 
-    def buildRoleInverseNode(self, element):
+    def importRoleInverseNode(self, element):
         """
         Build a RoleInverse node using the given QDomElement.
         :type element: QDomElement
         :rtype: RoleInverseNode
         """
-        return self.buildNodeFromShapeNode(Item.RoleInverseNode, element)
+        return self.importNodeFromShapeNode(Item.RoleInverseNode, element)
 
-    def buildValueDomainNode(self, element):
+    def importValueDomainNode(self, element):
         """
         Build a Value-Domain node using the given QDomElement.
         :type element: QDomElement
         :rtype: ValueDomainNode
         """
-        return self.buildNodeFromShapeNode(Item.ValueDomainNode, element)
+        return self.importNodeFromShapeNode(Item.ValueDomainNode, element)
 
-    def buildUnionNode(self, element):
+    def importUnionNode(self, element):
         """
         Build a Union node using the given QDomElement.
         :type element: QDomElement
         :rtype: UnionNode
         """
-        return self.buildNodeFromShapeNode(Item.UnionNode, element)
+        return self.importNodeFromShapeNode(Item.UnionNode, element)
 
     #############################################
     #   NODES
     #################################
 
-    def buildEquivalenceEdge(self, element):
+    def importEquivalenceEdge(self, element):
         """
         Build an Equivalence edge using the given QDomElement.
         :type element: QDomElement
         :rtype: EquivalenceEdge
         """
-        edge = self.buildEdgeFromGenericEdge(Item.EquivalenceEdge, element)
+        edge = self.importEdgeFromGenericEdge(Item.EquivalenceEdge, element)
         if edge:
             edge.updateEdge()
         return edge
 
-    def buildInclusionEdge(self, element):
+    def importInclusionEdge(self, element):
         """
         Build an Inclusion edge using the given QDomElement.
         :type element: QDomElement
@@ -275,31 +271,31 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 polyLineEdge = data.firstChildElement('y:PolyLineEdge')
                 arrows = polyLineEdge.firstChildElement('y:Arrows')
                 if arrows.attribute('source', '') == 'standard' and arrows.attribute('target', '') == 'standard':
-                    return self.buildEquivalenceEdge(element)
+                    return self.importEquivalenceEdge(element)
             data = data.nextSiblingElement('data')
-        edge = self.buildEdgeFromGenericEdge(Item.InclusionEdge, element)
+        edge = self.importEdgeFromGenericEdge(Item.InclusionEdge, element)
         if edge:
             edge.updateEdge()
         return edge
 
-    def buildInputEdge(self, element):
+    def importInputEdge(self, element):
         """
         Build an Input edge using the given QDomElement.
         :type element: QDomElement
         :rtype: InputEdge
         """
-        edge = self.buildEdgeFromGenericEdge(Item.InputEdge, element)
+        edge = self.importEdgeFromGenericEdge(Item.InputEdge, element)
         if edge:
             edge.updateEdge()
         return edge
 
-    def buildMembershipEdge(self, element):
+    def importMembershipEdge(self, element):
         """
         Build a Membership edge using the given QDomElement.
         :type element: QDomElement
         :rtype: InputEdge
         """
-        edge = self.buildEdgeFromGenericEdge(Item.MembershipEdge, element)
+        edge = self.importEdgeFromGenericEdge(Item.MembershipEdge, element)
         if edge:
             edge.updateEdge()
         return edge
@@ -308,7 +304,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
     #   AUXILIARY METHODS
     #################################
 
-    def buildEdgeFromGenericEdge(self, item, element):
+    def importEdgeFromGenericEdge(self, item, element):
         """
         Build an edge using the given item type and QDomElement.
         :type item: Item
@@ -354,7 +350,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
 
         return None
 
-    def buildNodeFromGenericNode(self, item, element):
+    def importNodeFromGenericNode(self, item, element):
         """
         Build a node using the given item type and QDomElement.
         :type item: Item
@@ -363,7 +359,6 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         """
         data = element.firstChildElement('data')
         while not data.isNull():
-
             if data.attribute('key', '') == self.keys['node_key']:
                 genericNode = data.firstChildElement('y:GenericNode')
                 geometry = genericNode.firstChildElement('y:Geometry')
@@ -376,12 +371,10 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                 node.setText(nodeLabel.text())
                 node.setTextPos(self.parseLabelPos(geometry, nodeLabel))
                 return node
-
             data = data.nextSiblingElement('data')
-
         return None
 
-    def buildNodeFromShapeNode(self, item, element):
+    def importNodeFromShapeNode(self, item, element):
         """
         Build a node using the given item type and QDomElement.
         :type item: Item
@@ -390,7 +383,6 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         """
         data = element.firstChildElement('data')
         while not data.isNull():
-
             if data.attribute('key', '') == self.keys['node_key']:
                 shapeNode = data.firstChildElement('y:ShapeNode')
                 geometry = shapeNode.firstChildElement('y:Geometry')
@@ -410,9 +402,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                         # usually do not have any label in gephol documents built with yEd.
                         node.setTextPos(self.parseLabelPos(geometry, nodeLabel))
                 return node
-
             data = data.nextSiblingElement('data')
-
         return None
 
     def importPredicateMetaFromElement(self, element):
@@ -634,11 +624,11 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         """
         return File.GraphML
 
-    def load(self):
+    def run(self):
         """
-        Perform diagram import from .graphml file format and add the new generated diagram to the project
-        :raise DiagramNotFoundError: If the given path does not identify a .graphml module.
-        :raise DiagramNotValidError: If the given path identifies an invalid .graphml module.
+        Perform diagram import from GraphML file format and add the new generated diagram to the project
+        :raise DiagramNotFoundError: If the given path does not identify a GraphML diagram.
+        :raise DiagramNotValidError: If the given path identifies an invalid GraphML diagram.
         """
         LOGGER.info('Loading diagram: %s', self.path)
 
@@ -830,9 +820,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         LOGGER.debug('Refreshing diagram "%s" elements state', self.diagram.name)
 
         #############################################
-        # NOTIFY THAT THE DIAGRAM HAS BEEN LOADED
+        # GIVE FOCUS TO THE DIAGRAM
         #################################
 
-        self.session.sgnDiagramLoaded.emit(self.diagram)
-
-        return self.diagram
+        self.session.sgnFocusDiagram.emit(self.diagram)

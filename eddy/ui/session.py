@@ -133,10 +133,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     Additionally to built-in signals, this class emits:
 
     * sgnClosed: whenever the current session is closed.
-    * sgnDiagramLoaded: to notify that a diagram has been loaded.
     * sgnFocusDiagram: whenever a diagram is to be focused.
     * sgnFocusItem: whenever an item is to be focused.
-    * sgnLoadDiagram: whenever a diagram is to be loaded.
     * sgnPluginDisposed: to notify that a plugin has been destroyed.
     * sgnPluginStarted: to notify that a plugin startup sequence has been completed.
     * sgnProjectSaved: to notify that the current project has been saved.
@@ -148,10 +146,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnClosed = QtCore.pyqtSignal()
     sgnCheckForUpdate = QtCore.pyqtSignal()
     sgnDiagramFocused = QtCore.pyqtSignal('QGraphicsScene')
-    sgnDiagramLoaded = QtCore.pyqtSignal('QGraphicsScene')
     sgnFocusDiagram = QtCore.pyqtSignal('QGraphicsScene')
     sgnFocusItem = QtCore.pyqtSignal('QGraphicsItem')
-    sgnLoadDiagram = QtCore.pyqtSignal(str)
     sgnPluginDisposed = QtCore.pyqtSignal(str)
     sgnPluginStarted = QtCore.pyqtSignal(str)
     sgnProjectSaved = QtCore.pyqtSignal()
@@ -178,6 +174,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
         self.pmanager = PluginManager(self)
+        self.project = None
 
         #############################################
         # CONFIGURE SESSION
@@ -200,7 +197,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # LOAD THE GIVEN PROJECT
         #################################
 
-        self.project = self.createProjectLoader(File.Graphol, path, self).load()
+        worker = self.createProjectLoader(File.Graphol, path, self)
+        worker.run()
 
         #############################################
         # COMPLETE SESSION SETUP
@@ -869,7 +867,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.sgnCheckForUpdate, self.doCheckForUpdate)
         connect(self.sgnFocusDiagram, self.doFocusDiagram)
         connect(self.sgnFocusItem, self.doFocusItem)
-        connect(self.sgnLoadDiagram, self.doLoadDiagram)
         connect(self.sgnReady, self.doUpdateState)
         connect(self.sgnReady, self.onSessionReady)
         connect(self.sgnSaveProject, self.doSave)
@@ -1171,8 +1168,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.selectFile(self.project.name)
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
-                exporter = self.createProjectExporter(filetype, self.project, self)
-                exporter.export(expandPath(first(dialog.selectedFiles())))
+                worker = self.createProjectExporter(filetype, self.project, self)
+                worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):
@@ -1210,7 +1207,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        dialog.setNameFilters(self.diagramLoaderNameFilters(exclude={File.Graphol}))
+        dialog.setNameFilters(self.diagramLoaderNameFilters())
         if dialog.exec_():
             filetype = File.forValue(dialog.selectedNameFilter())
             selected = [x for x in dialog.selectedFiles() if File.forPath(x) is filetype and fexists(x)]
@@ -1220,8 +1217,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         for path in selected:
                             progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
                             loader = self.createDiagramLoader(filetype, path, self.project, self)
-                            loader.load()
-                            self.sgnFocusDiagram.emit(loader.diagram)
+                            loader.run()
                 except Exception as e:
                     msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -1277,29 +1273,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     for xnode, ynode in collection.items():
                         self.undostack.push(CommandNodeSwitchTo(xnode.diagram, xnode, ynode))
                     self.undostack.endMacro()
-
-    @QtCore.pyqtSlot(str)
-    def doLoadDiagram(self, path):
-        """
-        Load the given diagram and add it to the project.
-        :type path: str
-        """
-        if fexists(path):
-
-            if File.forPath(path) is File.Graphol:
-
-                try:
-                    loader = self.createDiagramLoader(File.Graphol, path, self.project, self)
-                    loader.load()
-                except Exception as e:
-                    msgbox = QtWidgets.QMessageBox(self)
-                    msgbox.setDetailedText(format_exception(e))
-                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-                    msgbox.setText('Eddy could not load the specified diagram: {0}!'.format(path))
-                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                    msgbox.setWindowTitle('Diagram load failed!')
-                    msgbox.exec_()
 
     @QtCore.pyqtSlot()
     def doLookupOccurrence(self):
@@ -1393,8 +1366,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
-            exporter = PrinterDiagramExporter(diagram, self)
-            exporter.export()
+            worker = PrinterDiagramExporter(diagram, self)
+            worker.run()
 
     @QtCore.pyqtSlot()
     def doPurge(self):
@@ -1519,8 +1492,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Save the current project.
         """
         try:
-            exporter = self.createProjectExporter(File.Graphol, self.project, self)
-            exporter.export()
+            worker = self.createProjectExporter(File.Graphol, self.project, self)
+            worker.run()
         except Exception as e:
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
@@ -1550,8 +1523,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.selectFile(rstrip(diagram.name, File.Graphol.extension))
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
-                exporter = self.createDiagramExporter(filetype, diagram, self)
-                exporter.export(expandPath(first(dialog.selectedFiles())))
+                worker = self.createDiagramExporter(filetype, diagram, self)
+                worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
     def doSelectAll(self):

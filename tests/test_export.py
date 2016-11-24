@@ -65,7 +65,7 @@ class ExportTestCase(EddyTestCase):
         self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
         # WHEN
         worker = GraphMLDiagramExporter(self.session.mdi.activeDiagram(), self.session)
-        worker.export('@tests/.tests/diagram.graphml')
+        worker.run('@tests/.tests/diagram.graphml')
         # THEN
         self.assertFileExists('@tests/.tests/diagram.graphml')
 
@@ -79,7 +79,7 @@ class ExportTestCase(EddyTestCase):
         self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
         # WHEN
         worker = PdfDiagramExporter(self.session.mdi.activeDiagram(), self.session)
-        worker.export(expandPath('@tests/.tests/diagram.pdf'))
+        worker.run(expandPath('@tests/.tests/diagram.pdf'))
         # THEN
         self.assertFileExists('@tests/.tests/diagram.pdf')
 

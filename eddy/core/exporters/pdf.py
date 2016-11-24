@@ -62,7 +62,15 @@ class PdfDiagramExporter(AbstractDiagramExporter):
     #   INTERFACE
     #################################
 
-    def export(self, path):
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.Pdf
+
+    def run(self, path):
         """
         Perform PDF document generation.
         :type path: str
@@ -91,11 +99,3 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 painter.end()
                 # OPEN THE DOCUMENT
                 openPath(path)
-
-    @classmethod
-    def filetype(cls):
-        """
-        Returns the type of the file that will be used for the export.
-        :return: File
-        """
-        return File.Pdf

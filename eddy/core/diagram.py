@@ -765,7 +765,7 @@ class DiagramMalformedError(RuntimeError):
         """
         Initialize the exception.
         :type item: AbstractItem
-        :type args: list
+        :type args: iterable
         :type kwargs: dict
         """
         super().__init__(*args, **kwargs)

@@ -190,8 +190,8 @@ class ProjectDialog(QtWidgets.QDialog):
         Accept the project form and creates a new empty project.
         """
         project = Project(self.path(), self.prefix(), self.iri(), OWL2Profile())
-        exporter = GrapholProjectExporter(project)
-        exporter.export()
+        worker = GrapholProjectExporter(project)
+        worker.run()
         super().accept()
 
     @QtCore.pyqtSlot()

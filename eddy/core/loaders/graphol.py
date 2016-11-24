@@ -488,12 +488,11 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         """
         return File.Graphol
 
-    def load(self):
+    def run(self):
         """
         Perform diagram import from Graphol file format and add it to the project.
         :raise DiagramNotFoundError: If the given path does not identify a Graphol module.
         :raise DiagramNotValidError: If the given path identifies an invalid Graphol module.
-        :rtype: Diagram
         """
         LOGGER.info('Loading diagram: %s', self.path)
 
@@ -594,14 +593,6 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         self.project.addDiagram(self.diagram)
 
         LOGGER.debug('Diagram "%s" added to project "%s"', self.diagram.name, self.project.name)
-
-        #############################################
-        # NOTIFY THAT THE DIAGRAM HAS BEEN LOADED
-        #################################
-
-        self.session.sgnDiagramLoaded.emit(self.diagram)
-
-        return self.diagram
 
 
 class GrapholProjectLoader_v1(AbstractProjectLoader):
@@ -806,8 +797,8 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
                 QtWidgets.QApplication.processEvents()
                 name = module.text()
                 path = os.path.join(self.project.path, name)
-                loader = GrapholDiagramLoader_v1(path, self.project, self.session)
-                loader.load()
+                worker = GrapholDiagramLoader_v1(path, self.project, self.session)
+                worker.run()
             except (DiagramNotFoundError, DiagramNotValidError) as e:
                 LOGGER.warning('Failed to load project diagram %s: %s', name, e)
             except Exception:
@@ -827,13 +818,12 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         """
         return File.Graphol
 
-    def load(self):
+    def run(self):
         """
         Perform project import (LEGACY MODE).
         :raise ProjectNotFoundError: If the given path does not identify a project.
         :raise ProjectNotValidError: If one of the project data file is missing or not readable.
         :raise ProjectStopLoadingError: If the use decides not to load the project.
-        :rtype: Project
         """
         #############################################
         # VALIDATE PROJECT
@@ -876,15 +866,19 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         self.importModulesFromXML()
         self.importMetaFromXML()
 
+        LOGGER.separator('-')
+
         #############################################
         # CLEANUP PROJECT DIRECTORY
         #################################
 
         rmdir(self.projectMainPath)
 
-        LOGGER.separator('-')
+        #############################################
+        # SET THE LOADED PROJECT IN THE CURRENT SESSION
+        #################################
 
-        return self.project
+        self.session.project = self.project
 
 
 class GrapholProjectLoader_v2(AbstractProjectLoader):
@@ -1434,9 +1428,9 @@ class GrapholProjectLoader_v2(AbstractProjectLoader):
         Create a Project using the @deprecated Graphol project loader (v1).
         """
         worker = GrapholProjectLoader_v1(self.path, self.session)
-        self.project = worker.load()
+        worker.run()
         worker = GrapholProjectExporter(self.project)
-        worker.export()
+        worker.run()
 
     def createPredicatesMeta(self):
         """
@@ -1502,12 +1496,11 @@ class GrapholProjectLoader_v2(AbstractProjectLoader):
         """
         return File.Graphol
 
-    def load(self):
+    def run(self):
         """
         Perform project import.
         :raise ProjectNotFoundError: If the given path does not identify a project.
         :raise ProjectNotValidError: If one of the project data file is missing or not readable.
-        :rtype: Project
         """
         try:
             self.createDomDocument()
@@ -1521,4 +1514,4 @@ class GrapholProjectLoader_v2(AbstractProjectLoader):
             self.projectRender()
             LOGGER.separator('-')
 
-        return self.project
+        self.session.project = self.project

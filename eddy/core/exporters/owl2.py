@@ -134,7 +134,15 @@ class OWLProjectExporter(AbstractProjectExporter, HasThreadingSystem):
     #   INTERFACE
     #################################
 
-    def export(self, path):
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.Owl
+
+    def run(self, path):
         """
         Perform OWL ontology generation.
         :type path: str
@@ -147,14 +155,6 @@ class OWLProjectExporter(AbstractProjectExporter, HasThreadingSystem):
             connect(worker.sgnCompleted, self.onSyntaxCheckCompleted)
             connect(worker.sgnSyntaxError, self.onSyntaxCheckErrored)
             self.startThread('syntaxCheck', worker)
-
-    @classmethod
-    def filetype(cls):
-        """
-        Returns the type of the file that will be used for the export.
-        :return: File
-        """
-        return File.Owl
 
 
 class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
