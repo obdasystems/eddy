@@ -268,6 +268,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         if i < len(self.items):
             self.i = i
             self.progressBar.setValue(self.i)
+            self.progressBar.update()
 
     @QtCore.pyqtSlot(str)
     def onSyntaxError(self, message):
