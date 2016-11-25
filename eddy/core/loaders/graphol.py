@@ -1429,7 +1429,7 @@ class GrapholProjectLoader_v2(AbstractProjectLoader):
         """
         worker = GrapholProjectLoader_v1(self.path, self.session)
         worker.run()
-        worker = GrapholProjectExporter(self.project)
+        worker = GrapholProjectExporter(self.session.project)
         worker.run()
 
     def createPredicatesMeta(self):
@@ -1484,6 +1484,12 @@ class GrapholProjectLoader_v2(AbstractProjectLoader):
         for item in self.project.items():
             item.updateEdgeOrNode()
 
+    def projectInitialize(self):
+        """
+        Initialize the Session Project to be the loaded one.
+        """
+        self.session.project = self.project
+
     #############################################
     #   INTERFACE
     #################################
@@ -1512,6 +1518,5 @@ class GrapholProjectLoader_v2(AbstractProjectLoader):
             self.createDiagrams()
             self.createPredicatesMeta()
             self.projectRender()
+            self.projectInitialize()
             LOGGER.separator('-')
-
-        self.session.project = self.project
