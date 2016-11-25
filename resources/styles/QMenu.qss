@@ -1,0 +1,66 @@
+/**************************************************************************/
+/*                                                                        */
+/*  Eddy: a graphical editor for the specification of Graphol ontologies  */
+/*  Copyright (C) 2015 Daniele Pantaleone <pantaleone@dis.uniroma1.it>    */
+/*                                                                        */
+/*  This program is free software: you can redistribute it and/or modify  */
+/*  it under the terms of the GNU General Public License as published by  */
+/*  the Free Software Foundation, either version 3 of the License, or     */
+/*  (at your option) any later version.                                   */
+/*                                                                        */
+/*  This program is distributed in the hope that it will be useful,       */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          */
+/*  GNU General Public License for more details.                          */
+/*                                                                        */
+/*  You should have received a copy of the GNU General Public License     */
+/*  along with this program. If not, see <http://www.gnu.org/licenses/>.  */
+/*                                                                        */
+/*  *********************                          *********************  */
+/*                                                                        */
+/*  Graphol is developed by members of the DASI-lab group of the          */
+/*  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       */
+/*  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ */
+/*                                                                        */
+/*     - Domenico Lembo <lembo@dis.uniroma1.it>                           */
+/*     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  */
+/*     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       */
+/*     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  */
+/*     - Marco Console <console@dis.uniroma1.it>                          */
+/*                                                                        */
+/**************************************************************************/
+
+QMenu {
+  border: 1px solid #A9A9A9;
+  background: #EDEDED;
+  margin: 0;
+  menu-scrollable: 0;
+}
+QMenu::icon {
+  margin: 5px;
+}
+QMenu::indicator {
+  width: 18px;
+  height: 18px;
+}
+QMenu::item  {
+  background: transparent;
+  border: 0 solid transparent;
+  color: #000000;
+  font-size: 12px;
+  margin: 0;
+  padding: 5px 30px 5px 30px;
+}
+QMenu::item:disabled {
+  background: transparent;
+  color: #C0C0C0;
+}
+QMenu::item:selected {
+  background: #42A5F5;
+  color: #000000;
+}
+QMenu::separator {
+  height: 1px;
+  background: #A9A9A9;
+  margin: 0;
+}

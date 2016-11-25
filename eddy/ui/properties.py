@@ -248,8 +248,9 @@ class NodeProperty(PropertyDialog):
         self.idLabel.setText('ID')
         self.idField = StringField(self)
         self.idField.setFont(Font('Roboto', 12))
-        self.idField.setReadOnly(True)
         self.idField.setFixedWidth(300)
+        self.idField.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.idField.setReadOnly(True)
         self.idField.setValue(self.node.id)
 
         self.typeLabel = QtWidgets.QLabel(self)
@@ -257,8 +258,9 @@ class NodeProperty(PropertyDialog):
         self.typeLabel.setText('Type')
         self.typeField = StringField(self)
         self.typeField.setFont(Font('Roboto', 12))
-        self.typeField.setReadOnly(True)
+        self.typeField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.typeField.setFixedWidth(300)
+        self.typeField.setReadOnly(True)
         self.typeField.setValue(node.shortName.capitalize())
 
         self.identityLabel = QtWidgets.QLabel(self)
@@ -266,8 +268,9 @@ class NodeProperty(PropertyDialog):
         self.identityLabel.setText('Identity')
         self.identityField = StringField(self)
         self.identityField.setFont(Font('Roboto', 12))
-        self.identityField.setReadOnly(True)
+        self.identityField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.identityField.setFixedWidth(300)
+        self.identityField.setReadOnly(True)
         self.identityField.setValue(self.node.identityName)
 
         self.neighboursLabel = QtWidgets.QLabel(self)
@@ -275,8 +278,9 @@ class NodeProperty(PropertyDialog):
         self.neighboursLabel.setText('Neighbours')
         self.neighboursField = IntegerField(self)
         self.neighboursField.setFont(Font('Roboto', 12))
-        self.neighboursField.setReadOnly(True)
+        self.neighboursField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.neighboursField.setFixedWidth(300)
+        self.neighboursField.setReadOnly(True)
         self.neighboursField.setValue(len(self.node.adjacentNodes()))
 
         self.generalWidget = QtWidgets.QWidget()

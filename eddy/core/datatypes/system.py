@@ -62,6 +62,7 @@ class File(Enum_):
     Owl = 'Web Ontology Language (*.owl)'
     Pdf = 'Portable Document Format (*.pdf)'
     Png = 'PNG (*.png)'
+    Qss = 'Qt Style Sheet (*.qss)'
     Spec = 'Plugin SPEC (*.spec)'
     Zip = 'ZIP (*.zip)'
     Xml = 'XML (*.xml)'

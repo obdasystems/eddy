@@ -289,52 +289,61 @@ class InfoWidget(QtWidgets.QScrollArea):
 
         self.setStyleSheet("""
         InfoWidget {
-        background: #FFFFFF;
+          background: #FFFFFF;
         }
         InfoWidget Header {
-        background: #5A5050;
-        padding-left: 4px;
-        color: #FFFFFF;
+          background: #5A5050;
+          padding-left: 4px;
+          color: #FFFFFF;
         }
         InfoWidget Key {
-        background: #BBDEFB;
-        border-bottom: 1px solid #BABABA;
-        padding-left: 4px;
+          background: #BBDEFB;
+          border-top: none;
+          border-right: none;
+          border-bottom: 1px solid #BBDEFB;
+          border-left: none;
+          padding: 0 0 0 4px;
         }
         InfoWidget Button,
+        InfoWidget Button:focus,
+        InfoWidget Button:hover,
+        InfoWidget Button:hover:focus,
+        InfoWidget Button:pressed,
+        InfoWidget Button:pressed:focus,
         InfoWidget Integer,
         InfoWidget String,
         InfoWidget Select,
         InfoWidget Parent {
-        background: #E3F2FD;
-        border-bottom: 1px solid #BABABA;
-        border-left: 1px solid #BABABA;
-        padding-left: 4px;
-        }
-        InfoWidget Button {
-        text-align:left;
+          background: #E3F2FD;
+          border-top: none;
+          border-right: none;
+          border-bottom: 1px solid #BBDEFB !important;
+          border-left: 1px solid #BBDEFB !important;
+          padding: 0 0 0 4px;
+          text-align:left;
         }
         InfoWidget Button::menu-indicator {
-        image: none;
+          image: none;
         }
         InfoWidget Select:!editable,
         InfoWidget Select::drop-down:editable {
-        background: #FFFFFF;
+          background: #FFFFFF;
         }
         InfoWidget Select:!editable:on,
         InfoWidget Select::drop-down:editable:on {
-        background: #FFFFFF;
+          background: #FFFFFF;
         }
         InfoWidget QCheckBox {
-        background: #FFFFFF;
-        spacing: 0;
-        margin-left: 4px;
-        margin-top: 2px;
+          background: #FFFFFF;
+          spacing: 0;
+          margin-left: 4px;
+          margin-top: 2px;
         }
         InfoWidget QCheckBox::indicator:disabled {
-        background-color: #BABABA;
+          background-color: #BABABA;
         }
         """)
+
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
 
@@ -637,30 +646,35 @@ class ProjectInfo(AbstractInfo):
         self.conceptsKey.setFont(Font('Roboto', 12))
         self.conceptsField = Integer(self)
         self.conceptsField.setFont(Font('Roboto', 12))
+        self.conceptsField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.conceptsField.setReadOnly(True)
 
         self.rolesKey = Key('Role', self)
         self.rolesKey.setFont(Font('Roboto', 12))
         self.rolesField = Integer(self)
         self.rolesField.setFont(Font('Roboto', 12))
+        self.rolesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.rolesField.setReadOnly(True)
 
         self.attributesKey = Key('Attribute', self)
         self.attributesKey.setFont(Font('Roboto', 12))
         self.attributesField = Integer(self)
         self.attributesField.setFont(Font('Roboto', 12))
+        self.attributesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.attributesField.setReadOnly(True)
 
         self.inclusionsKey = Key('Inclusion', self)
         self.inclusionsKey.setFont(Font('Roboto', 12))
         self.inclusionsField = Integer(self)
         self.inclusionsField.setFont(Font('Roboto', 12))
+        self.inclusionsField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.inclusionsField.setReadOnly(True)
 
         self.membershipKey = Key('Membership', self)
         self.membershipKey.setFont(Font('Roboto', 12))
         self.membershipField = Integer(self)
         self.membershipField.setFont(Font('Roboto', 12))
+        self.membershipField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.membershipField.setReadOnly(True)
 
         self.atomicPredHeader = Header('Atomic predicates', self)

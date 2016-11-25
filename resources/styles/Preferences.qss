@@ -1,0 +1,73 @@
+/**************************************************************************/
+/*                                                                        */
+/*  Eddy: a graphical editor for the specification of Graphol ontologies  */
+/*  Copyright (C) 2015 Daniele Pantaleone <pantaleone@dis.uniroma1.it>    */
+/*                                                                        */
+/*  This program is free software: you can redistribute it and/or modify  */
+/*  it under the terms of the GNU General Public License as published by  */
+/*  the Free Software Foundation, either version 3 of the License, or     */
+/*  (at your option) any later version.                                   */
+/*                                                                        */
+/*  This program is distributed in the hope that it will be useful,       */
+/*  but WITHOUT ANY WARRANTY; without even the implied warranty of        */
+/*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          */
+/*  GNU General Public License for more details.                          */
+/*                                                                        */
+/*  You should have received a copy of the GNU General Public License     */
+/*  along with this program. If not, see <http://www.gnu.org/licenses/>.  */
+/*                                                                        */
+/*  *********************                          *********************  */
+/*                                                                        */
+/*  Graphol is developed by members of the DASI-lab group of the          */
+/*  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       */
+/*  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it/ */
+/*                                                                        */
+/*     - Domenico Lembo <lembo@dis.uniroma1.it>                           */
+/*     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  */
+/*     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       */
+/*     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  */
+/*     - Marco Console <console@dis.uniroma1.it>                          */
+/*                                                                        */
+/**************************************************************************/
+
+PreferencesDialog QTabWidget::pane {
+  border: 1px solid transparent;
+}
+PreferencesDialog QTabBar::tab:top {
+  border: 1px solid #BABABA;
+  border-bottom: 0;
+  border-left: 0;
+  border-top: 0;
+  height: 24px;
+  padding: 0 10px;
+}
+PreferencesDialog QTabBar::tab:top:selected {
+  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0.0 #F8F8F8, stop: 0.3 #F4F4F4,
+    stop: 0.7 #F0F0F0, stop: 1.0 #EDEDED);
+}
+PreferencesDialog QTabBar::tab:top:!selected {
+  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0.0 #D0D0D0, stop: 0.3 #CCCCCC,
+    stop: 0.7 #CBCBCB, stop: 1.0 #C3C3C3);
+}
+PreferencesDialog QTabBar::tab:top:!last,
+PreferencesDialog QTabBar::tab:top:last,
+PreferencesDialog QTabBar::tab:top:only-one {
+  border: 1px solid #BABABA;
+  border-bottom: 0;
+  border-left: 0;
+  border-top: 0;
+}
+PreferencesDialog QComboBox:!editable,
+PreferencesDialog QComboBox::drop-down:editable {
+  background: #FFFFFF;
+}
+PreferencesDialog QComboBox:!editable:on,
+PreferencesDialog QComboBox::drop-down:editable:on {
+  background: #FFFFFF;
+}
+PreferencesDialog QComboBox {
+  background: #FFFFFF;
+  spacing: 0;
+}

@@ -35,13 +35,10 @@
 
 from PyQt5 import QtWidgets
 
-from eddy.core.functions.fsystem import fread
-from eddy.core.functions.path import expandPath
 
-
-class Clean(QtWidgets.QProxyStyle):
+class EddyProxyStyle(QtWidgets.QProxyStyle):
     """
-    Eddy clean style.
+    Extends QProxyStyle providing Eddy specific style.
     """
     PM = {
         QtWidgets.QStyle.PM_SmallIconSize: 18,
@@ -65,14 +62,6 @@ class Clean(QtWidgets.QProxyStyle):
         :rtype: int
         """
         try:
-            return Clean.PM[metric]
+            return EddyProxyStyle.PM[metric]
         except KeyError:
             return super().pixelMetric(metric, option, widget)
-
-    @property
-    def stylesheet(self):
-        """
-        Returns the stylesheet for this proxystyle.
-        :rtype: str
-        """
-        return fread(expandPath('@resources/styles/clean.qss'))

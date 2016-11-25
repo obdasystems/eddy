@@ -42,7 +42,8 @@ from PyQt5 import QtWidgets
 
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.datatypes.qt import Font
-from eddy.core.functions.fsystem import isdir
+from eddy.core.datatypes.system import File
+from eddy.core.functions.fsystem import isdir, fexists, fread
 from eddy.core.functions.misc import isEmpty, format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
@@ -55,7 +56,7 @@ from eddy.core.project import ProjectStopLoadingError
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
-from eddy.ui.style import Clean
+from eddy.ui.style import EddyProxyStyle
 from eddy.ui.workspace import WorkspaceDialog
 from eddy.ui.welcome import Welcome
 
@@ -213,9 +214,15 @@ class Eddy(QtWidgets.QApplication):
         # CONFIGURE LAYOUT
         #################################
 
-        clean = Clean('Fusion')
-        self.setStyle(clean)
-        self.setStyleSheet(clean.stylesheet)
+        buffer = ''
+        resources = expandPath('@resources/styles/')
+        for name in os.listdir(resources):
+            path = os.path.join(resources, name)
+            if fexists(path) and File.forPath(path) is File.Qss:
+                buffer += fread(path)
+
+        self.setStyle(EddyProxyStyle('Fusion'))
+        self.setStyleSheet(buffer)
 
         self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
