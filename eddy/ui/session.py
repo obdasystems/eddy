@@ -1896,8 +1896,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         progressBar.setToolTip('')
         progressBar.setVisible(False)
         self.addNotification(textwrap.dedent("""
-            A new version of {} is available for download: <b>{}</b><br/><br/>
-            [<a href="{}"><b>DOWNLOAD</b></a>]""".format(APPNAME, name, url)))
+            A new version of {} is available for download: <a href="{}"><b>{}</b></a>""".format(APPNAME, url, name)))
 
     #############################################
     #   EVENTS

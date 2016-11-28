@@ -92,7 +92,6 @@ class IndividualNode(AbstractResizableNode):
             QtCore.QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
         ])
 
-
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)

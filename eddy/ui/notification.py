@@ -42,7 +42,7 @@ from eddy.core.functions.signals import connect
 from eddy.core.timer import PausableTimer
 
 
-class NotificationPopup(QtWidgets.QWidget):
+class Notification(QtWidgets.QWidget):
     """
     Extends QtWidgets.QWidget providing a notification popup widget.
     """
@@ -108,7 +108,7 @@ class NotificationPopup(QtWidgets.QWidget):
     @property
     def session(self):
         """
-        Returns the reference to the active session (alias for NotificationPopup.parent()).
+        Returns the reference to the active session (alias for Notification.parent()).
         :rtype: Session
         """
         return self.parent()

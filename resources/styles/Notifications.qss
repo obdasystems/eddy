@@ -30,22 +30,22 @@
 /*                                                                        */
 /**************************************************************************/
 
-NotificationPopup {
+Notification {
   background: #FFFFFF;
 }
-NotificationPopup QPushButton,
-NotificationPopup QPushButton,
-NotificationPopup QPushButton:focus,
-NotificationPopup QPushButton:hover,
-NotificationPopup QPushButton:hover:focus,
-NotificationPopup QPushButton:pressed,
-NotificationPopup QPushButton:pressed:focus {
+Notification QPushButton,
+Notification QPushButton,
+Notification QPushButton:focus,
+Notification QPushButton:hover,
+Notification QPushButton:hover:focus,
+Notification QPushButton:pressed,
+Notification QPushButton:pressed:focus {
   border: 1px solid transparent;
   border-radius: 0;
   background: none;
   padding: 0;
 }
-NotificationPopup QPushButton:hover {
+Notification QPushButton:hover {
   border-color: #8A8A8A;
   border-radius: 0;
   background: qlineargradient(x1:0, y1 : 0, x2 : 0, y2 : 1,

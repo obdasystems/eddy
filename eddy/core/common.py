@@ -48,7 +48,7 @@ from eddy.core.output import getLogger
 from eddy.core.profiles.common import AbstractProfile
 from eddy.core.worker import AbstractWorker
 
-from eddy.ui.notification import NotificationPopup
+from eddy.ui.notification import Notification
 
 
 LOGGER = getLogger(__name__)
@@ -1167,7 +1167,7 @@ class HasNotificationSystem(object):
         :type kwargs: dict
         """
         super().__init__(**kwargs)
-        self._popupList = [NotificationPopup(self, i) for i in range(0, 8)]
+        self._popupList = [Notification(self, i) for i in range(0, 8)]
 
     def addNotification(self, message):
         """
