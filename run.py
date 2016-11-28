@@ -155,8 +155,7 @@ def main():
 
     global app
     app = Eddy(options, sys.argv)
-    if app.isAlreadyRunning():
-        app.routePacket(sys.argv)
+    if app.isRunning():
         sys.exit(0)
 
     LOGGER.separator(separator='-')

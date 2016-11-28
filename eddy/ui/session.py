@@ -43,7 +43,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME, ORGANIZATION, VERSION
+from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME
+from eddy import ORGANIZATION, VERSION, WORKSPACE
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
@@ -156,9 +157,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
 
-    def __init__(self, path, **kwargs):
+    def __init__(self, application, path, **kwargs):
         """
         Initialize the application main working session.
+        :type application: QApplication
         :type path: str
         :type kwargs: dict
         """
@@ -168,6 +170,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # INITIALIZE MAIN STUFF
         #################################
 
+        self.app = application
         self.clipboard = Clipboard(self)
         self.undostack = QtWidgets.QUndoStack(self)
         self.mdi = MdiArea(self)
@@ -212,7 +215,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.sgnReady.emit()
 
-        LOGGER.header('Session startup completed: %s v%s', APPNAME, VERSION)
+        LOGGER.header('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
 
     #############################################
     #   SESSION CONFIGURATION
@@ -307,7 +310,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             QtGui.QIcon(':/icons/24/ic_folder_open_black'), 'Open...',
             self, objectName='open', shortcut=QtGui.QKeySequence.Open,
             statusTip='Open a diagram and add it to the current project',
-            triggered=self.doOpen, enabled=False))
+            triggered=self.doOpen))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_close_black'), 'Close', self,
@@ -1298,10 +1301,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @QtCore.pyqtSlot()
     def doOpen(self):
         """
-        Open a document.
+        Open a project in a new session.
         """
-        # TODO: UPDATE
-        pass
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        workspace = settings.value('workspace/home', WORKSPACE, str)
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setDirectory(expandPath(workspace))
+        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
+        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
+            self.app.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
     def doOpenDialog(self):
@@ -1942,7 +1953,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnClosed.emit()
             closeEvent.accept()
 
-            LOGGER.header('Session shutdown completed: %s v%s', APPNAME, VERSION)
+            LOGGER.header('Session shutdown completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
 
     def keyPressEvent(self, keyEvent):
         """
@@ -1999,6 +2010,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         subwindow = self.mdi.addSubWindow(subwindow)
         subwindow.showMaximized()
         return subwindow
+
+    def save(self):
+        """
+        Save the current session state.
+        """
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('session/geometry', self.saveGeometry())
+        settings.setValue('session/state', self.saveState())
+        settings.sync()
 
     def setWindowTitle(self, project, diagram=None):
         """

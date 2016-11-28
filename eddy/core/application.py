@@ -41,12 +41,13 @@ from PyQt5 import QtNetwork
 from PyQt5 import QtWidgets
 
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
+from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.functions.fsystem import isdir, fexists, fread
-from eddy.core.functions.misc import isEmpty, format_exception
+from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
@@ -69,7 +70,6 @@ class Eddy(QtWidgets.QApplication):
     This class implements the main QtCore.Qt application.
     """
     sgnCreateSession = QtCore.pyqtSignal(str)
-    sgnMessageReceived = QtCore.pyqtSignal(str)
 
     def __init__(self, options, argv):
         """
@@ -79,51 +79,18 @@ class Eddy(QtWidgets.QApplication):
         """
         super().__init__(argv)
 
-        self.localServer = None
-        self.inputSocket = None
-        self.inputStream = None
-        self.outputSocket = QtNetwork.QLocalSocket()
-        self.outputSocket.connectToServer(APPID)
-        self.outputStream = None
-
-        self.pending = []
-        self.running = self.outputSocket.waitForConnected()
-        self.session = None
+        self.server = None
+        self.socket = QtNetwork.QLocalSocket()
+        self.socket.connectToServer(APPID)
+        self.running = self.socket.waitForConnected()
+        self.sessions = DistinctList()
         self.welcome = None
 
-        if self.isAlreadyRunning() and not options.tests:
-            # We allow to initialize multiple processes of Eddy only if we
-            # are running the test suite to speed up tests execution time,
-            # else we configure an output stream on which to route outgoing
-            # messages to the alive Eddy process that will handle them.
-            self.outputStream = QtCore.QTextStream(self.outputSocket)
-            self.outputStream.setCodec('UTF-8')
-        else:
-            # We are not running Eddy yet, so we initialize a QtNetwork.QLocalServer
-            # to intercept incoming messages from future instances of Eddy
-            # not to spawn multiple process.
-            self.localServer = QtNetwork.QLocalServer()
-            self.localServer.listen(APPID)
-            self.outputStream = None
-            self.outputSocket = None
-
-            connect(self.localServer.newConnection, self.doAcceptConnection)
-            connect(self.sgnMessageReceived, self.doReadMessage)
+        if not self.isRunning() or options.tests:
+            self.server = QtNetwork.QLocalServer()
+            self.server.listen(APPID)
+            self.socket = None
             connect(self.sgnCreateSession, self.doCreateSession)
-
-    #############################################
-    #   EVENTS
-    #################################
-
-    def event(self, event):
-        """
-        Executed when an event is received.
-        :type event: T <= QtCore.QEvent | QFileOpenEvent
-        """
-        if event.type() == QtCore.QEvent.FileOpen:
-            self.pending = [event.file()]
-            return True
-        return super().event(event)
 
     #############################################
     #   INTERFACE
@@ -166,12 +133,11 @@ class Eddy(QtWidgets.QApplication):
         else:
             # If we have some projects in our recent list, check whether they exists on the
             # filesystem. If they do not exists we remove them from our recent list.
-            recentList = []
+            projects = []
             for path in map(expandPath, settings.value('project/recent')):
-                if isdir(path) and path not in recentList:
-                    recentList.append(path)
-
-            settings.setValue('project/recent', recentList or examples)
+                if isdir(path) and path not in projects:
+                    projects.append(path)
+            settings.setValue('project/recent', projects or examples)
             settings.sync()
 
         #############################################
@@ -220,11 +186,9 @@ class Eddy(QtWidgets.QApplication):
             path = os.path.join(resources, name)
             if fexists(path) and File.forPath(path) is File.Qss:
                 buffer += fread(path)
-
+        self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
         self.setStyle(EddyProxyStyle('Fusion'))
         self.setStyleSheet(buffer)
-
-        self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
 
         #############################################
         # CLOSE THE SPLASH SCREEN
@@ -244,34 +208,12 @@ class Eddy(QtWidgets.QApplication):
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
 
-    def isAlreadyRunning(self):
+    def isRunning(self):
         """
         Returns True if there is already another instance of Eddy which is running, False otherwise.
         :rtype: bool
         """
         return self.running
-
-    def routePacket(self, argv):
-        """
-        Route input arguments to the already running Eddy process.
-        :type argv: list
-        :rtype: bool
-        """
-        if self.outputStream:
-            self.outputStream = self.outputStream << ' '.join(argv) << '\n'
-            self.outputStream.flush()
-            return self.outputSocket.waitForBytesWritten()
-        return False
-
-    def save(self):
-        """
-        Save the state of the current active session.
-        """
-        if self.session:
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            settings.setValue('session/geometry', self.session.saveGeometry())
-            settings.setValue('session/state', self.session.saveState())
-            settings.sync()
 
     def start(self, options):
         """
@@ -287,104 +229,101 @@ class Eddy(QtWidgets.QApplication):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot()
-    def doAcceptConnection(self):
-        """
-        Executed whenever a new connection needs to be established.
-        """
-        if self.inputSocket:
-            # If the input socket is already connected, disconnecting
-            # so we can set it to listen on the new pending connection.
-            disconnect(self.inputSocket.readyRead, self.onReadyRead)
-        # Accept a new connectiong pending on the local server.
-        self.inputSocket = self.localServer.nextPendingConnection()
-        if self.inputSocket:
-            # If we have a connection, setup the stream to accept packets.
-            self.inputStream = QtCore.QTextStream(self.inputSocket)
-            self.inputStream.setCodec('UTF-8')
-            connect(self.inputSocket.readyRead, self.onReadyRead)
-
     @QtCore.pyqtSlot(str)
     def doCreateSession(self, path):
         """
         Create a session using the given project path.
         :type path: str
         """
-        with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
-
-            try:
-                self.session = Session(path)
-            except ProjectStopLoadingError:
-                pass
-            except (ProjectNotFoundError, ProjectNotValidError, ProjectVersionError) as e:
-                LOGGER.warning('Failed to create session for project %s: %s', path, e)
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                msgbox.setText('Failed to create session for project: <b>{0}</b>!'.format(os.path.basename(path)))
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setDetailedText(format_exception(e))
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Project Error!')
-                msgbox.exec_()
-            except Exception as e:
-                raise e
-            else:
-                connect(self.session.sgnQuit, self.doQuit)
-                connect(self.session.sgnClosed, self.onSessionClosed)
-
-                settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-                recentList = settings.value('project/recent', None, str) or []
-
+        for session in self.sessions:
+            # Look among the active sessions and see if we already have
+            # a session loaded for the given project: if so, focus it.
+            if session.project.path == path:
+                session.show()
+                break
+        else:
+            # If we do not have a session for the given project we'll create one.
+            with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
+    
                 try:
-                    recentList.remove(path)
-                except ValueError:
+                    session = Session(self, path)
+                except ProjectStopLoadingError:
                     pass
-                finally:
-                    recentList.insert(0, path)
-                    recentList = recentList[:8]
-                    settings.setValue('project/recent', recentList)
-                    settings.sync()
-
-                try:
-                    self.welcome.close()
-                except (AttributeError, RuntimeError):
-                    pass
-                finally:
-                    self.session.show()
+                except (ProjectNotFoundError, ProjectNotValidError, ProjectVersionError) as e:
+                    LOGGER.warning('Failed to create session for project %s: %s', path, e)
+                    msgbox = QtWidgets.QMessageBox()
+                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                    msgbox.setText('Failed to create session for project: <b>{0}</b>!'.format(os.path.basename(path)))
+                    msgbox.setTextFormat(QtCore.Qt.RichText)
+                    msgbox.setDetailedText(format_exception(e))
+                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowTitle('Project Error!')
+                    msgbox.exec_()
+                except Exception as e:
+                    raise e
+                else:
+                    
+                    #############################################
+                    # UPDATE RECENT PROJECTS
+                    #################################
+    
+                    settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+                    projects = settings.value('project/recent', None, str) or []
+    
+                    try:
+                        projects.remove(path)
+                    except ValueError:
+                        pass
+                    finally:
+                        projects.insert(0, path)
+                        projects = projects[:8]
+                        settings.setValue('project/recent', projects)
+                        settings.sync()
+    
+                    #############################################
+                    # CLOSE THE WELCOME SCREEN IF NECESSARY
+                    #################################
+    
+                    try:
+                        self.welcome.close()
+                    except (AttributeError, RuntimeError):
+                        pass
+    
+                    #############################################
+                    # STARTUP THE SESSION
+                    #################################
+                    
+                    connect(session.sgnQuit, self.doQuit)
+                    connect(session.sgnClosed, self.onSessionClosed)
+                    self.sessions.append(session)
+                    session.show()
     
     @QtCore.pyqtSlot()
     def doQuit(self):
         """
         Quit Eddy.
         """
-        self.save()
+        for session in self.sessions:
+            session.save()
         self.quit()
-
-    @QtCore.pyqtSlot(str)
-    def doReadMessage(self, message):
-        """
-        Read a received message.
-        :type message: str
-        """
-        pass
-
-    @QtCore.pyqtSlot()
-    def onReadyRead(self):
-        """
-        Executed whenever we need to read a message.
-        """
-        while True:
-            message = self.inputStream.readLine()
-            if isEmpty(message):
-                break
-            self.sgnMessageReceived.emit(message)
 
     @QtCore.pyqtSlot()
     def onSessionClosed(self):
         """
         Quit Eddy.
         """
-        self.save()
-        self.welcome = Welcome(self)
-        self.welcome.show()
+        ## SAVE SESSION STATE
+        session = self.sender()
+        if session:
+            session.save()
+            self.sessions.remove(session)
+        ## CLEANUP POSSIBLE LEFTOVERS
+        self.sessions = DistinctList(filter(None, self.sessions))
+        ## SWITCH TO AN ACTIVE WINDOW OR WELCOME PANEL
+        if self.sessions:
+            session = self.sessions[-1]
+            session.show()
+        else:
+            self.welcome = Welcome(self)
+            self.welcome.show()

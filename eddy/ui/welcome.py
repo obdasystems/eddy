@@ -283,11 +283,10 @@ class Welcome(QtWidgets.QWidget):
         """
         dialog = QtWidgets.QFileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(self.workspace)
+        dialog.setDirectory(expandPath(self.workspace))
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
 
