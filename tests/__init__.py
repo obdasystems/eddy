@@ -142,10 +142,10 @@ class EddyTestCase(TestCase):
         self.eddy.configure(options)
         self.eddy.start(options)
         # WAIT FOR THE SESSION TO BE COMPLETELY INITIALIZED
-        QtTest.QTest.qWaitForWindowActive(self.eddy.session)
+        QtTest.QTest.qWaitForWindowActive(self.eddy.sessions[0])
         # SET SHORTCUTS
-        self.project = self.eddy.session.project
-        self.session = self.eddy.session
+        self.project = self.eddy.sessions[0].project
+        self.session = self.eddy.sessions[0]
 
     #############################################
     #   CUSTOM ASSERTIONS
