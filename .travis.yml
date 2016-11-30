@@ -18,10 +18,11 @@ language:
 python:
   - 3.4
 
-## Test only master branch
+## Test only master and dev branches
 branches:
   only:
     - master
+    - dev
 
 ## Prepare build environment
 before_install:

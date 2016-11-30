@@ -1,12 +1,16 @@
 ![Eddy](/resources/images/eddy_banner.png?raw=true)
 
-[![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=master)](https://travis-ci.org/danielepantaleone/eddy)
-[![GitHub issues](https://img.shields.io/github/issues/danielepantaleone/eddy.svg)](https://github.com/danielepantaleone/eddy/issues)
 [![Code Health](https://landscape.io/github/danielepantaleone/eddy/master/landscape.svg?style=flat)](https://landscape.io/github/danielepantaleone/eddy/master)
 [![Coverage Status](https://coveralls.io/repos/github/danielepantaleone/eddy/badge.svg?branch=master&bust=1)](https://coveralls.io/github/danielepantaleone/eddy?branch=master)
 [![Python version](https://img.shields.io/badge/python-3.4.4-blue.svg)](https://www.python.org)
+[![GitHub issues](https://img.shields.io/github/issues/danielepantaleone/eddy.svg)](https://github.com/danielepantaleone/eddy/issues)
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/danielepantaleone/eddy/master/LICENSE)
 [![Gitter chatroom](https://badges.gitter.im/danielepantaleone/eddy.svg)](https://gitter.im/danielepantaleone/eddy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+| Branch    | Status  |
+|-----------|---------------|
+| [master](https://github.com/danielepantaleone/eddy/tree/master)  |[![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=master)](https://travis-ci.org/danielepantaleone)|
+| [dev](https://github.com/danielepantaleone/eddy/tree/dev) |[![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=dev)](https://travis-ci.org/danielepantaleone)|
 
 Eddy is a graphical editor for the specification and visualization of Graphol ontologies. 
 Eddy features a design environment specifically thought out for generating Graphol ontologies through 
