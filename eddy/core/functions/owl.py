@@ -46,9 +46,7 @@ def OWLAnnotationText(content):
     :type content: str
     :rtype: str
     """
-    cleaned = content.replace('\n', '')
-    cleaned.strip()
-    return cleaned
+    return content.strip()
 
 
 def OWLFunctionalDocumentFilter(content):
