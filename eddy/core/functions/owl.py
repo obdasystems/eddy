@@ -46,8 +46,7 @@ def OWLAnnotationText(content):
     :type content: str
     :rtype: str
     """
-    cleaned = content.lower()
-    cleaned.replace('\n', '')
+    cleaned = content.replace('\n', '')
     cleaned.strip()
     return cleaned
 
