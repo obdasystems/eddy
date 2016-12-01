@@ -47,16 +47,21 @@ class CommandDiagramAdd(QtWidgets.QUndoCommand):
         :type project: Project
         """
         super().__init__("add diagram '{0}'".format(diagram.name))
-        self.diagram = diagram
         self.project = project
+        self.diagram = diagram
+        self.parents = dict(undo=diagram.parent(), redo=self.project)
 
     def redo(self):
         """redo the command"""
+        self.diagram.setParent(self.parents['redo'])
         self.project.addDiagram(self.diagram)
+        for item in self.project.items():
+            item.updateEdgeOrNode()
         self.project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
+        self.diagram.setParent(self.parents['undo'])
         self.project.removeDiagram(self.diagram)
         self.project.sgnUpdated.emit()
 
