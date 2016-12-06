@@ -345,13 +345,13 @@ class PluginManager(QtCore.QObject):
             plugin_spec_path = os.path.join(directory, 'plugin.spec')
             if fexists(plugin_spec_path):
                 try:
-                    LOGGER.debug('Found plugin .spec: %s', plugin_spec_path)
+                    #LOGGER.debug('Found plugin .spec: %s', plugin_spec_path)
                     plugin_spec = self.spec(fread(plugin_spec_path))
                     plugin_name = plugin_spec.get('plugin', 'id')
                     for extension in ('.pyc', '.pyo', '.py'):
                         plugin_path = os.path.join(directory, '%s%s' % (plugin_name, extension))
                         if fexists(plugin_path):
-                            LOGGER.debug('Found plugin module: %s', plugin_path)
+                            #LOGGER.debug('Found plugin module: %s', plugin_path)
                             plugin_module = SourceFileLoader(plugin_name, plugin_path).load_module()
                             plugin_class = self.find_class(plugin_module, plugin_name)
                             return plugin_spec, plugin_class
@@ -538,7 +538,7 @@ class PluginManager(QtCore.QObject):
         :type plugin: AbstractPlugin
         :rtype: bool
         """
-        LOGGER.debug('Starting plugin: %s v%s', plugin.name(), plugin.version())
+        LOGGER.info('Starting plugin: %s v%s', plugin.name(), plugin.version())
         try:
             plugin.start()
         except Exception:
