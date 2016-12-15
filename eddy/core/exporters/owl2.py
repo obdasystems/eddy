@@ -42,13 +42,13 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
-from eddy.core.common import HasThreadingSystem
+from eddy.core.common import HasThreadingSystem, HasWidgetSystem
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
-from eddy.core.exporters.common import AbstractProjectExporter
+from eddy.core.exporters.common import AbstractOntologyExporter
 from eddy.core.functions.fsystem import fwrite, fremove
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.misc import rstrip, postfix, format_exception
@@ -66,29 +66,10 @@ from eddy.ui.syntax import SyntaxValidationWorker
 
 LOGGER = getLogger(__name__)
 
-
-DefaultPrefixManager = autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
-FunctionalSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
-HashSet = autoclass('java.util.HashSet')
-IRI = autoclass('org.semanticweb.owlapi.model.IRI')
-LinkedList = autoclass('java.util.LinkedList')
-List = autoclass('java.util.List')
-ManchesterSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
-OWLAnnotationValue = autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
-OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
-OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
-OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
-OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
-RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
-PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
-Set = autoclass('java.util.Set')
-StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
-TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
-
         
-class OWLProjectExporter(AbstractProjectExporter, HasThreadingSystem):
+class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
     """
-    Extends AbstractProjectExporter with facilities to export a Graphol project into an OWL ontology.
+    Extends AbstractProjectExporter with facilities to export a Graphol project into a valid OWL 2 ontology.
     """
     def __init__(self, project, session=None):
         """
@@ -112,7 +93,7 @@ class OWLProjectExporter(AbstractProjectExporter, HasThreadingSystem):
         """
         self.progress.sleep()
         self.progress.close()
-        dialog = OWLProjectExporterDialog(self.project, self.path, self.session)
+        dialog = OWLOntologyExporterDialog(self.project, self.path, self.session)
         dialog.exec_()
 
     @QtCore.pyqtSlot(str)
@@ -159,7 +140,7 @@ class OWLProjectExporter(AbstractProjectExporter, HasThreadingSystem):
             self.startThread('syntaxCheck', worker)
 
 
-class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
+class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog providing the form used to perform Graphol -> OWL ontology translation.
     """
@@ -181,92 +162,99 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         # MAIN FORM AREA
         #################################
 
-        # SYNTAX
-        self.syntaxField = ComboBox(self)
+        ## SYNTAX
+        field = ComboBox(self)
         for syntax in OWLSyntax:
-            self.syntaxField.addItem(syntax.value, syntax)
-        self.syntaxField.setCurrentIndex(0)
-        self.syntaxField.setFont(Font('Roboto', 12))
-        self.syntaxField.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.syntaxLayout = QtWidgets.QVBoxLayout()
-        self.syntaxLayout.addWidget(self.syntaxField)
-        self.syntaxGroup = QtWidgets.QGroupBox('Syntax', self)
-        self.syntaxGroup.setLayout(self.syntaxLayout)
+            field.addItem(syntax.value, syntax)
+        field.setCurrentIndex(0)
+        field.setFont(Font('Roboto', 12))
+        field.setObjectName('syntax_field')
+        field.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.addWidget(field)
 
-        # AXIOMS
-        self.axiomsChecks = {x: CheckBox(x.value, self) for x in OWLAxiom}
-        for axiom, checkbox in self.axiomsChecks.items():
-            checkbox.clicked.connect(self.onAxiomCheckClicked)
-            checkbox.setChecked(False)
-            checkbox.setEnabled(False)
-        self.axiomsCheckBtn = QtWidgets.QPushButton('All', self, clicked=self.doCheckAxiomMarks)
-        self.axiomsClearBtn = QtWidgets.QPushButton('Clear', self, clicked=self.doCheckAxiomMarks)
-        self.axiomsNonLogicalLayout = QtWidgets.QGridLayout()
-        self.axiomsNonLogicalLayout.setColumnMinimumWidth(0, 230)
-        self.axiomsNonLogicalLayout.setColumnMinimumWidth(1, 230)
-        self.axiomsNonLogicalLayout.setColumnMinimumWidth(2, 230)
-        self.axiomsNonLogicalLayout.addWidget(self.axiomsChecks[OWLAxiom.Annotation], 0, 0)
-        self.axiomsNonLogicalLayout.addWidget(self.axiomsChecks[OWLAxiom.Declaration], 0, 1)
-        self.axiomsNonLogicalLayout.addWidget(QtWidgets.QWidget(self), 0, 2)
-        self.axiomsNonLogicalGroup = QtWidgets.QGroupBox('Non-Logical', self)
-        self.axiomsNonLogicalGroup.setLayout(self.axiomsNonLogicalLayout)
-        self.axiomsIntensionalLayout = QtWidgets.QGridLayout()
-        self.axiomsIntensionalLayout.setColumnMinimumWidth(0, 230)
-        self.axiomsIntensionalLayout.setColumnMinimumWidth(1, 230)
-        self.axiomsIntensionalLayout.setColumnMinimumWidth(2, 230)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.AsymmetricObjectProperty], 0, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyDomain], 1, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyRange], 2, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointClasses], 3, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointDataProperties], 4, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DisjointObjectProperties], 5, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentClasses], 6, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentDataProperties], 7, 0)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.EquivalentObjectProperties], 0, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.FunctionalDataProperty], 1, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.FunctionalObjectProperty], 2, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.InverseFunctionalObjectProperty], 3, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.InverseObjectProperties], 4, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.IrreflexiveObjectProperty], 5, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyDomain], 6, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyRange], 7, 1)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ReflexiveObjectProperty], 0, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubClassOf], 1, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubDataPropertyOf], 2, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SubObjectPropertyOf], 3, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.SymmetricObjectProperty], 4, 2)
-        self.axiomsIntensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.TransitiveObjectProperty], 5, 2)
-        self.axiomsIntensionalGroup = QtWidgets.QGroupBox('Intensional', self)
-        self.axiomsIntensionalGroup.setLayout(self.axiomsIntensionalLayout)
-        self.axiomsExtensionalLayout = QtWidgets.QGridLayout()
-        self.axiomsExtensionalLayout.setColumnMinimumWidth(0, 230)
-        self.axiomsExtensionalLayout.setColumnMinimumWidth(1, 230)
-        self.axiomsExtensionalLayout.setColumnMinimumWidth(2, 230)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ClassAssertion], 0, 0)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.DataPropertyAssertion], 1, 0)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.NegativeDataPropertyAssertion], 0, 1)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.NegativeObjectPropertyAssertion], 1, 1)
-        self.axiomsExtensionalLayout.addWidget(self.axiomsChecks[OWLAxiom.ObjectPropertyAssertion], 0, 2)
-        self.axiomsExtensionalGroup = QtWidgets.QGroupBox('Extensional', self)
-        self.axiomsExtensionalGroup.setLayout(self.axiomsExtensionalLayout)
-        self.axiomsLogicalLayout = QtWidgets.QVBoxLayout()
-        self.axiomsLogicalLayout.addWidget(self.axiomsIntensionalGroup)
-        self.axiomsLogicalLayout.addWidget(self.axiomsExtensionalGroup)
-        self.axiomsLogicalGroup = QtWidgets.QGroupBox('Logical', self)
-        self.axiomsLogicalGroup.setLayout(self.axiomsLogicalLayout)
-        self.axiomsTopLayout = QtWidgets.QVBoxLayout()
-        self.axiomsTopLayout.addWidget(self.axiomsNonLogicalGroup)
-        self.axiomsTopLayout.addWidget(self.axiomsLogicalGroup)
-        self.axiomsBottomLayout = QtWidgets.QHBoxLayout()
-        self.axiomsBottomLayout.setContentsMargins(0, 6, 0, 0)
-        self.axiomsBottomLayout.setAlignment(QtCore.Qt.AlignRight)
-        self.axiomsBottomLayout.addWidget(self.axiomsClearBtn, 0, QtCore.Qt.AlignRight)
-        self.axiomsBottomLayout.addWidget(self.axiomsCheckBtn, 0, QtCore.Qt.AlignRight)
-        self.axiomsLayout = QtWidgets.QVBoxLayout()
-        self.axiomsLayout.addLayout(self.axiomsTopLayout)
-        self.axiomsLayout.addLayout(self.axiomsBottomLayout)
-        self.axiomsGroup = QtWidgets.QGroupBox('OWL 2 Axioms To Export', self)
-        self.axiomsGroup.setLayout(self.axiomsLayout)
+        syntaxLayout = QtWidgets.QVBoxLayout()
+        syntaxLayout.addWidget(field)
+        syntaxGroup = QtWidgets.QGroupBox('Syntax', self)
+        syntaxGroup.setLayout(syntaxLayout)
+
+        ## AXIOMS
+        self.addWidget(QtWidgets.QPushButton('All', self,
+            clicked=self.doCheckAxiomMarks,
+            objectName='btn_check_all'))
+        self.addWidget(QtWidgets.QPushButton('Clear', self,
+            clicked=self.doCheckAxiomMarks,
+            objectName='btn_clear_all'))
+        for axiom in OWLAxiom:
+            self.addWidget(CheckBox(axiom.value, self,
+                enabled=False, objectName=axiom.value,
+                checked=False, clicked=self.onAxiomCheckClicked))
+
+        nonLogicalLayout = QtWidgets.QGridLayout()
+        nonLogicalLayout.setColumnMinimumWidth(0, 230)
+        nonLogicalLayout.setColumnMinimumWidth(1, 230)
+        nonLogicalLayout.setColumnMinimumWidth(2, 230)
+        nonLogicalLayout.addWidget(self.widget(OWLAxiom.Annotation.value), 0, 0)
+        nonLogicalLayout.addWidget(self.widget(OWLAxiom.Declaration.value), 0, 1)
+        nonLogicalLayout.addWidget(QtWidgets.QWidget(self), 0, 2)
+        nonLogicalGroup = QtWidgets.QGroupBox('Non-Logical', self)
+        nonLogicalGroup.setLayout(nonLogicalLayout)
+        intensionalLayout = QtWidgets.QGridLayout()
+        intensionalLayout.setColumnMinimumWidth(0, 230)
+        intensionalLayout.setColumnMinimumWidth(1, 230)
+        intensionalLayout.setColumnMinimumWidth(2, 230)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.AsymmetricObjectProperty.value), 0, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.DataPropertyDomain.value), 1, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.DataPropertyRange.value), 2, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.DisjointClasses.value), 3, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.DisjointDataProperties.value), 4, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.DisjointObjectProperties.value), 5, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.EquivalentClasses.value), 6, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.EquivalentDataProperties.value), 7, 0)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.EquivalentObjectProperties.value), 0, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.FunctionalDataProperty.value), 1, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.FunctionalObjectProperty.value), 2, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseFunctionalObjectProperty.value), 3, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseObjectProperties.value), 4, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.IrreflexiveObjectProperty.value), 5, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyDomain.value), 6, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyRange.value), 7, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.ReflexiveObjectProperty.value), 0, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SubClassOf.value), 1, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SubDataPropertyOf.value), 2, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SubObjectPropertyOf.value), 3, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SymmetricObjectProperty.value), 4, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.TransitiveObjectProperty.value), 5, 2)
+        intensionalGroup = QtWidgets.QGroupBox('Intensional', self)
+        intensionalGroup.setLayout(intensionalLayout)
+        extensionalLayout = QtWidgets.QGridLayout()
+        extensionalLayout.setColumnMinimumWidth(0, 230)
+        extensionalLayout.setColumnMinimumWidth(1, 230)
+        extensionalLayout.setColumnMinimumWidth(2, 230)
+        extensionalLayout.addWidget(self.widget(OWLAxiom.ClassAssertion.value), 0, 0)
+        extensionalLayout.addWidget(self.widget(OWLAxiom.DataPropertyAssertion.value), 1, 0)
+        extensionalLayout.addWidget(self.widget(OWLAxiom.NegativeDataPropertyAssertion.value), 0, 1)
+        extensionalLayout.addWidget(self.widget(OWLAxiom.NegativeObjectPropertyAssertion.value), 1, 1)
+        extensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyAssertion.value), 0, 2)
+        extensionalGroup = QtWidgets.QGroupBox('Extensional', self)
+        extensionalGroup.setLayout(extensionalLayout)
+        logicalLayout = QtWidgets.QVBoxLayout()
+        logicalLayout.addWidget(intensionalGroup)
+        logicalLayout.addWidget(extensionalGroup)
+        logicalGroup = QtWidgets.QGroupBox('Logical', self)
+        logicalGroup.setLayout(logicalLayout)
+        axiomsTopLayout = QtWidgets.QVBoxLayout()
+        axiomsTopLayout.addWidget(nonLogicalGroup)
+        axiomsTopLayout.addWidget(logicalGroup)
+        axiomsBottomLayout = QtWidgets.QHBoxLayout()
+        axiomsBottomLayout.setContentsMargins(0, 6, 0, 0)
+        axiomsBottomLayout.setAlignment(QtCore.Qt.AlignRight)
+        axiomsBottomLayout.addWidget(self.widget('btn_clear_all'), 0, QtCore.Qt.AlignRight)
+        axiomsBottomLayout.addWidget(self.widget('btn_check_all'), 0, QtCore.Qt.AlignRight)
+        axiomsLayout = QtWidgets.QVBoxLayout()
+        axiomsLayout.addLayout(axiomsTopLayout)
+        axiomsLayout.addLayout(axiomsBottomLayout)
+        axiomsGroup = QtWidgets.QGroupBox('OWL 2 Axioms To Export', self)
+        axiomsGroup.setLayout(axiomsLayout)
 
         # SPACER
         spacer = QtWidgets.QFrame()
@@ -283,46 +271,50 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         # BOTTOM AREA
         #################################
 
-        self.normalizationCheckBox = CheckBox('Normalize', self)
-        self.normalizationCheckBox.setChecked(False)
-        self.normalizationCheckBox.setFont(Font('Roboto', 12))
+        normalization = CheckBox('Normalize', self)
+        normalization.setChecked(False)
+        normalization.setFont(Font('Roboto', 12))
+        normalization.setObjectName('normalization')
+        self.addWidget(normalization)
 
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.confirmationBox.setFont(Font('Roboto', 12))
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setFont(Font('Roboto', 12))
+        confirmation.setObjectName('confirmation')
+        connect(confirmation.accepted, self.run)
+        connect(confirmation.rejected, self.reject)
+        self.addWidget(confirmation)
 
-        self.confirmationLayout = QtWidgets.QHBoxLayout()
-        self.confirmationLayout.setContentsMargins(0, 0, 0, 0)
-        self.confirmationLayout.addWidget(self.normalizationCheckBox, 0 , QtCore.Qt.AlignLeft)
-        self.confirmationLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
-        self.confirmationArea = QtWidgets.QWidget()
-        self.confirmationArea.setLayout(self.confirmationLayout)
+        confirmationLayout = QtWidgets.QHBoxLayout()
+        confirmationLayout.setContentsMargins(0, 0, 0, 0)
+        confirmationLayout.addWidget(self.widget('normalization'), 0 , QtCore.Qt.AlignLeft)
+        confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+        confirmationArea = QtWidgets.QWidget()
+        confirmationArea.setLayout(confirmationLayout)
 
         #############################################
         # CONFIGURE LAYOUT
         #################################
 
         for axiom in OWLAxiom.forProfile(self.project.profile.type()):
-            checkbox = self.axiomsChecks[axiom]
+            checkbox = self.widget(axiom.value)
             checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
             checkbox.setEnabled(True)
 
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.mainLayout.setContentsMargins(10, 10, 10, 10)
-        self.mainLayout.addWidget(self.syntaxGroup)
-        self.mainLayout.addWidget(self.axiomsGroup)
-        self.mainLayout.addWidget(spacer)
-        self.mainLayout.addWidget(self.progressBar)
-        self.mainLayout.addWidget(self.confirmationArea)
+        mainLayout = QtWidgets.QVBoxLayout()
+        mainLayout.setContentsMargins(10, 10, 10, 10)
+        mainLayout.addWidget(syntaxGroup)
+        mainLayout.addWidget(axiomsGroup)
+        mainLayout.addWidget(spacer)
+        mainLayout.addWidget(self.progressBar)
+        mainLayout.addWidget(confirmationArea)
 
         self.setFixedSize(self.sizeHint())
         self.setFont(Font('Roboto', 12))
+        self.setLayout(mainLayout)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('{} Export'.format(self.project.profile.name()))
-
-        connect(self.confirmationBox.accepted, self.run)
-        connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
     #   INTERFACE
@@ -333,21 +325,21 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         Returns the set of axioms that needs to be exported.
         :rtype: set
         """
-        return {axiom for axiom, checkbox in self.axiomsChecks.items() if checkbox.isChecked()}
+        return {axiom for axiom in OWLAxiom if self.widget(axiom.value).isChecked()}
 
     def normalize(self):
         """
         Returns whether the current ontolofy needs to be normalized, or not.
         :rtype: bool
         """
-        return self.normalizationCheckBox.isChecked()
+        return self.widget('normalization').isChecked()
 
     def syntax(self):
         """
         Returns the value of the OWL syntax field.
         :rtype: OWLSyntax
         """
-        return self.syntaxField.currentData()
+        return self.widget('syntax_field').currentData()
 
     #############################################
     #   PROPERTIES
@@ -370,18 +362,18 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Executed when an axiom checkbox is clicked.
         """
-        self.confirmationBox.setEnabled(any(x.isChecked() for x in self.axiomsChecks.values()))
+        self.widget('confirmation').setEnabled(any(x.isChecked() for x in (self.widget(k.value) for k in OWLAxiom)))
 
     @QtCore.pyqtSlot()
     def doCheckAxiomMarks(self):
         """
         Check axioms marks according to the action that triggered the slot.
         """
-        checked = self.sender() is self.axiomsCheckBtn
+        checked = self.sender() is self.widget('btn_check_all')
         for axiom in OWLAxiom.forProfile(self.project.profile.type()):
-            checkbox = self.axiomsChecks[axiom]
+            checkbox = self.widget(axiom.value)
             checkbox.setChecked(checked)
-        self.confirmationBox.setEnabled(checked)
+        self.widget('confirmation').setEnabled(checked)
 
     @QtCore.pyqtSlot(Exception)
     def onErrored(self, exception):
@@ -445,11 +437,11 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Executed whenever the translation starts.
         """
-        self.confirmationBox.setEnabled(False)
-        self.axiomsClearBtn.setEnabled(False)
-        self.axiomsCheckBtn.setEnabled(False)
+        self.widget('confirmation').setEnabled(False)
+        self.widget('btn_clear_all').setEnabled(False)
+        self.widget('btn_check_all').setEnabled(False)
         for axiom in OWLAxiom:
-            checkbox = self.axiomsChecks[axiom]
+            checkbox = self.widget(axiom.value)
             checkbox.setEnabled(False)
 
     @QtCore.pyqtSlot()
@@ -458,9 +450,9 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         Perform the Graphol -> OWL translation in a separate thread.
         """
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
-        worker = OWLProjectExporterWorker(self.project, self.path,
-            axioms=self.axioms(), normalize=self.normalize(),
-            syntax=self.syntax())
+        worker = OWLOntologyExporterWorker(self.project, self.path,
+           axioms=self.axioms(), normalize=self.normalize(),
+           syntax=self.syntax())
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
         connect(worker.sgnErrored, self.onErrored)
@@ -468,9 +460,9 @@ class OWLProjectExporterDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.startThread('OWL2Export', worker)
 
 
-class OWLProjectExporterWorker(AbstractWorker):
+class OWLOntologyExporterWorker(AbstractWorker):
     """
-    Extends QtCore.QObject providing a worker thread that will perform the OWL 2 ontology generation.
+    Extends AbstractWorker providing a worker thread that will perform the OWL 2 ontology generation.
     """
     sgnCompleted = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal(Exception)
@@ -484,6 +476,24 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type path: str
         """
         super().__init__()
+
+        self.DefaultPrefixManager = autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
+        self.FunctionalSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+        self.HashSet = autoclass('java.util.HashSet')
+        self.IRI = autoclass('org.semanticweb.owlapi.model.IRI')
+        self.LinkedList = autoclass('java.util.LinkedList')
+        self.List = autoclass('java.util.List')
+        self.ManchesterSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.OWLAnnotationValue = autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
+        self.OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
+        self.OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
+        self.OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
+        self.RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
+        self.Set = autoclass('java.util.Set')
+        self.StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
+        self.TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
         self.path = path
         self.project = project
@@ -525,42 +535,44 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type node: AbstractNode
         :rtype: OWLObject
         """
-        if node not in self._converted:
+        if node.diagram.name not in self._converted:
+            self._converted[node.diagram.name] = dict()
+        if node not in self._converted[node.diagram.name]:
             if node.type() is Item.ConceptNode:
-                self._converted[node] = self.getConcept(node)
+                self._converted[node.diagram.name][node.id] = self.getConcept(node)
             elif node.type() is Item.AttributeNode:
-                self._converted[node] = self.getAttribute(node)
+                self._converted[node.diagram.name][node.id] = self.getAttribute(node)
             elif node.type() is Item.RoleNode:
-                self._converted[node] = self.getRole(node)
+                self._converted[node.diagram.name][node.id] = self.getRole(node)
             elif node.type() is Item.ValueDomainNode:
-                self._converted[node] = self.getValueDomain(node)
+                self._converted[node.diagram.name][node.id] = self.getValueDomain(node)
             elif node.type() is Item.IndividualNode:
-                self._converted[node] = self.getIndividual(node)
+                self._converted[node.diagram.name][node.id] = self.getIndividual(node)
             elif node.type() is Item.FacetNode:
-                self._converted[node] = self.getFacet(node)
+                self._converted[node.diagram.name][node.id] = self.getFacet(node)
             elif node.type() is Item.RoleInverseNode:
-                self._converted[node] = self.getRoleInverse(node)
+                self._converted[node.diagram.name][node.id] = self.getRoleInverse(node)
             elif node.type() is Item.RoleChainNode:
-                self._converted[node] = self.getRoleChain(node)
+                self._converted[node.diagram.name][node.id] = self.getRoleChain(node)
             elif node.type() is Item.ComplementNode:
-                self._converted[node] = self.getComplement(node)
+                self._converted[node.diagram.name][node.id] = self.getComplement(node)
             elif node.type() is Item.EnumerationNode:
-                self._converted[node] = self.getEnumeration(node)
+                self._converted[node.diagram.name][node.id] = self.getEnumeration(node)
             elif node.type() is Item.IntersectionNode:
-                self._converted[node] = self.getIntersection(node)
+                self._converted[node.diagram.name][node.id] = self.getIntersection(node)
             elif node.type() in {Item.UnionNode, Item.DisjointUnionNode}:
-                self._converted[node] = self.getUnion(node)
+                self._converted[node.diagram.name][node.id] = self.getUnion(node)
             elif node.type() is Item.DatatypeRestrictionNode:
-                self._converted[node] = self.getDatatypeRestriction(node)
+                self._converted[node.diagram.name][node.id] = self.getDatatypeRestriction(node)
             elif node.type() is Item.PropertyAssertionNode:
-                self._converted[node] = self.getPropertyAssertion(node)
+                self._converted[node.diagram.name][node.id] = self.getPropertyAssertion(node)
             elif node.type() is Item.DomainRestrictionNode:
-                self._converted[node] = self.getDomainRestriction(node)
+                self._converted[node.diagram.name][node.id] = self.getDomainRestriction(node)
             elif node.type() is Item.RangeRestrictionNode:
-                self._converted[node] = self.getRangeRestriction(node)
+                self._converted[node.diagram.name][node.id] = self.getRangeRestriction(node)
             else:
                 raise ValueError('no conversion available for node %s' % node)
-        return self._converted[node]
+        return self._converted[node.diagram.name][node.id]
 
     def converted(self):
         """
@@ -591,100 +603,99 @@ class OWLProjectExporterWorker(AbstractWorker):
         :rtype: OWLDatatype
         """
         if datatype is Datatype.anyURI:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_ANY_URI').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_ANY_URI').getIRI())
         if datatype is Datatype.base64Binary:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_BASE_64_BINARY').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BASE_64_BINARY').getIRI())
         if datatype is Datatype.boolean:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_BOOLEAN').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BOOLEAN').getIRI())
         if datatype is Datatype.byte:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_BYTE').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BYTE').getIRI())
         if datatype is Datatype.dateTime:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DATE_TIME').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME').getIRI())
         if datatype is Datatype.dateTimeStamp:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP').getIRI())
         if datatype is Datatype.decimal:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DECIMAL').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DECIMAL').getIRI())
         if datatype is Datatype.double:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_DOUBLE').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DOUBLE').getIRI())
         if datatype is Datatype.float:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_FLOAT').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_FLOAT').getIRI())
         if datatype is Datatype.hexBinary:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_HEX_BINARY').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_HEX_BINARY').getIRI())
         if datatype is Datatype.int:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_INT').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INT').getIRI())
         if datatype is Datatype.integer:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_INTEGER').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INTEGER').getIRI())
         if datatype is Datatype.language:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_LANGUAGE').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LANGUAGE').getIRI())
         if datatype is Datatype.Literal:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDFS_LITERAL').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDFS_LITERAL').getIRI())
         if datatype is Datatype.long:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_LONG').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LONG').getIRI())
         if datatype is Datatype.Name:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NAME').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NAME').getIRI())
         if datatype is Datatype.NCName:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NCNAME').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NCNAME').getIRI())
         if datatype is Datatype.negativeInteger:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER').getIRI())
         if datatype is Datatype.NMTOKEN:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NMTOKEN').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NMTOKEN').getIRI())
         if datatype is Datatype.nonNegativeInteger:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER').getIRI())
         if datatype is Datatype.nonPositiveInteger:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER').getIRI())
         if datatype is Datatype.normalizedString:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_NORMALIZED_STRING').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NORMALIZED_STRING').getIRI())
         if datatype is Datatype.PlainLiteral:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDF_PLAIN_LITERAL').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_PLAIN_LITERAL').getIRI())
         if datatype is Datatype.positiveInteger:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER').getIRI())
         if datatype is Datatype.rational:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('OWL_RATIONAL').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_RATIONAL').getIRI())
         if datatype is Datatype.real:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('OWL_REAL').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_REAL').getIRI())
         if datatype is Datatype.short:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_SHORT').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_SHORT').getIRI())
         if datatype is Datatype.string:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_STRING').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_STRING').getIRI())
         if datatype is Datatype.token:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_TOKEN').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_TOKEN').getIRI())
         if datatype is Datatype.unsignedByte:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE').getIRI())
         if datatype is Datatype.unsignedInt:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_INT').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_INT').getIRI())
         if datatype is Datatype.unsignedLong:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_LONG').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_LONG').getIRI())
         if datatype is Datatype.unsignedShort:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT').getIRI())
         if datatype is Datatype.XMLLiteral:
-            return self.df.getOWLDatatype(OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
+            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
         raise ValueError('invalid datatype supplied: %s' % datatype)
     
-    @staticmethod
-    def getOWLApiFacet(facet):
+    def getOWLApiFacet(self, facet):
         """
         Returns the OWLFacet matching the given Facet.
         :type facet: Facet
         :rtype: OWLFacet
         """
         if facet is Facet.maxExclusive:
-            return OWLFacet.valueOf('MAX_EXCLUSIVE')
+            return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
         if facet is Facet.maxInclusive:
-            return OWLFacet.valueOf('MAX_INCLUSIVE')
+            return self.OWLFacet.valueOf('MAX_INCLUSIVE')
         if facet is Facet.minExclusive:
-            return OWLFacet.valueOf('MIN_EXCLUSIVE')
+            return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
         if facet is Facet.minInclusive:
-            return OWLFacet.valueOf('MIN_INCLUSIVE')
+            return self.OWLFacet.valueOf('MIN_INCLUSIVE')
         if facet is Facet.langRange:
-            return OWLFacet.valueOf('LANG_RANGE')
+            return self.OWLFacet.valueOf('LANG_RANGE')
         if facet is Facet.length:
-            return OWLFacet.valueOf('LENGTH')
+            return self.OWLFacet.valueOf('LENGTH')
         if facet is Facet.maxLength:
-            return OWLFacet.valueOf('MIN_LENGTH')
+            return self.OWLFacet.valueOf('MIN_LENGTH')
         if facet is Facet.minLength:
-            return OWLFacet.valueOf('MIN_LENGTH')
+            return self.OWLFacet.valueOf('MIN_LENGTH')
         if facet is Facet.pattern:
-            return OWLFacet.valueOf('PATTERN')
+            return self.OWLFacet.valueOf('PATTERN')
         raise ValueError('invalid facet supplied: %s' % facet)
 
     #############################################
@@ -720,9 +731,11 @@ class OWLProjectExporterWorker(AbstractWorker):
             raise DiagramMalformedError(node, 'too many operands')
         operand = first(incoming)
         if operand.identity() is Identity.Concept:
-            return self.df.getOWLObjectComplementOf(self.convert(operand))
+            conversion = self.convert(operand)
+            return self.df.getOWLObjectComplementOf(conversion)
         if operand.identity() is Identity.ValueDomain:
-            return self.df.getOWLDataComplementOf(self.convert(operand))
+            conversion = self.convert(operand)
+            return self.df.getOWLDataComplementOf(conversion)
         if operand.identity() is Identity.Role:
             return self.convert(operand)
         if operand.identity() is Identity.Attribute:
@@ -769,15 +782,16 @@ class OWLProjectExporterWorker(AbstractWorker):
         if not incoming:
             raise DiagramMalformedError(node, 'missing facet node(s)')
 
-        collection = HashSet()
-        for i in incoming:
-            collection.add(self.convert(i))
+        collection = self.HashSet()
+        for facet in incoming:
+            conversion = self.convert(facet)
+            collection.add(conversion)
 
         #############################################
         # BUILD DATATYPE RESTRICTION
         #################################
 
-        return self.df.getOWLDatatypeRestriction(de, cast(Set, collection))
+        return self.df.getOWLDatatypeRestriction(de, cast(self.Set, collection))
 
     def getDomainRestriction(self, node):
         """
@@ -817,7 +831,7 @@ class OWLProjectExporterWorker(AbstractWorker):
             if node.restriction() is Restriction.Forall:
                 return self.df.getOWLDataAllValuesFrom(dpe, dre)
             if node.restriction() is Restriction.Cardinality:
-                cardinalities = HashSet()
+                cardinalities = self.HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality:
@@ -827,7 +841,7 @@ class OWLProjectExporterWorker(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLDataIntersectionOf(cast(Set, cardinalities))
+                    return self.df.getOWLDataIntersectionOf(cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -856,7 +870,7 @@ class OWLProjectExporterWorker(AbstractWorker):
             if node.restriction() is Restriction.Forall:
                 return self.df.getOWLObjectAllValuesFrom(ope, ce)
             if node.restriction() is Restriction.Cardinality:
-                cardinalities = HashSet()
+                cardinalities = self.HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality:
@@ -866,7 +880,7 @@ class OWLProjectExporterWorker(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -880,12 +894,13 @@ class OWLProjectExporterWorker(AbstractWorker):
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() is Item.IndividualNode
-        individuals = HashSet()
-        for i in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            individuals.add(self.convert(i))
+        individuals = self.HashSet()
+        for individual in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+            conversion = self.convert(individual)
+            individuals.add(conversion)
         if individuals.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return self.df.getOWLObjectOneOf(cast(Set, individuals))
+        return self.df.getOWLObjectOneOf(cast(self.Set, individuals))
 
     def getFacet(self, node):
         """
@@ -920,16 +935,17 @@ class OWLProjectExporterWorker(AbstractWorker):
         """
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
-        collection = HashSet()
+        collection = self.HashSet()
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            collection.add(self.convert(operand))
+            conversion = self.convert(operand)
+            collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectIntersectionOf(cast(Set, collection))
-        return self.df.getOWLDataIntersectionOf(cast(Set, collection))
+            return self.df.getOWLObjectIntersectionOf(cast(self.Set, collection))
+        return self.df.getOWLDataIntersectionOf(cast(self.Set, collection))
 
     def getPropertyAssertion(self, node):
         """
@@ -939,11 +955,12 @@ class OWLProjectExporterWorker(AbstractWorker):
         """
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
-        collection = []
+        collection = list()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
             if operand.type() is not Item.IndividualNode:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            collection.append(self.convert(operand))
+            conversion = self.convert(operand)
+            collection.append(conversion)
         if len(collection) < 2:
             raise DiagramMalformedError(node, 'missing operand(s)')
         if len(collection) > 2:
@@ -997,7 +1014,7 @@ class OWLProjectExporterWorker(AbstractWorker):
             if node.restriction() is Restriction.Forall:
                 return self.df.getOWLObjectAllValuesFrom(ope, ce)
             if node.restriction() is Restriction.Cardinality:
-                cardinalities = HashSet()
+                cardinalities = self.HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality:
@@ -1007,7 +1024,7 @@ class OWLProjectExporterWorker(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -1031,14 +1048,15 @@ class OWLProjectExporterWorker(AbstractWorker):
         """
         if not node.inputs:
             raise DiagramMalformedError(node, 'missing operand(s)')
-        collection = LinkedList()
+        collection = self.LinkedList()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
             if operand.type() not in {Item.RoleNode, Item.RoleInverseNode}:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            collection.add(self.convert(operand))
+            conversion = self.convert(operand)
+            collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return cast(List, collection)
+        return cast(self.List, collection)
 
     def getRoleInverse(self, node):
         """
@@ -1061,16 +1079,17 @@ class OWLProjectExporterWorker(AbstractWorker):
         """
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
-        collection = HashSet()
+        collection = self.HashSet()
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            collection.add(self.convert(operand))
+            conversion = self.convert(operand)
+            collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectUnionOf(cast(Set, collection))
-        return self.df.getOWLDataUnionOf(cast(Set, collection))
+            return self.df.getOWLObjectUnionOf(cast(self.Set, collection))
+        return self.df.getOWLDataUnionOf(cast(self.Set, collection))
 
     def getValueDomain(self, node):
         """
@@ -1092,11 +1111,12 @@ class OWLProjectExporterWorker(AbstractWorker):
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
             if meta and not isEmpty(meta.get('description', '')):
-                props = self.df.getOWLAnnotationProperty(IRI.create("rdfs:comment"))
+                aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("rdfs:comment"))
                 value = self.df.getOWLLiteral(OWLAnnotationText(meta.get('description', '')))
-                value = cast(OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(props, value)
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(self.convert(node).getIRI(), annotation))
+                value = cast(self.OWLAnnotationValue, value)
+                annotation = self.df.getOWLAnnotation(aproperty, value)
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
 
     def createClassAssertionAxiom(self, edge):
         """
@@ -1104,7 +1124,9 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: MembershipEdge
         """
         if OWLAxiom.ClassAssertion in self.axiomsList:
-            self.addAxiom(self.df.getOWLClassAssertionAxiom(self.convert(edge.target), self.convert(edge.source)))
+            conversionA = self.convert(edge.target)
+            conversionB = self.convert(edge.source)
+            self.addAxiom(self.df.getOWLClassAssertionAxiom(conversionA, conversionB))
 
     def createDataPropertyAssertionAxiom(self, edge):
         """
@@ -1112,18 +1134,20 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: MembershipEdge
         """
         if OWLAxiom.DataPropertyAssertion in self.axiomsList:
-            operand1 = self.convert(edge.source)[0]
-            operand2 = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(self.convert(edge.target), operand1, operand2))
+            conversionA = self.convert(edge.target)
+            conversionB = self.convert(edge.source)[0]
+            conversionC = self.convert(edge.source)[1]
+            self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(conversionA, conversionB, conversionC))
 
     def createDataPropertyAxiom(self, node):
         """
         Generate OWL 2 Data Property specific axioms.
         :type node: AttributeNode
         """
-        if node.isFunctional():
-            if OWLAxiom.FunctionalDataProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(self.convert(node)))
+        if OWLAxiom.FunctionalDataProperty in self.axiomsList:
+            if node.isFunctional():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(conversion))
 
     def createDeclarationAxiom(self, node):
         """
@@ -1131,7 +1155,8 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type node: AbstractNode
         """
         if OWLAxiom.Declaration in self.axiomsList:
-            self.addAxiom(self.df.getOWLDeclarationAxiom(self.convert(node)))
+            conversion = self.convert(node)
+            self.addAxiom(self.df.getOWLDeclarationAxiom(conversion))
 
     def createDisjointClassesAxiom(self, node):
         """
@@ -1140,17 +1165,20 @@ class OWLProjectExporterWorker(AbstractWorker):
         """
         if OWLAxiom.DisjointClasses in self.axiomsList:
             if node.type() is Item.DisjointUnionNode:
-                collection = HashSet()
+                collection = self.HashSet()
                 for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
-                    collection.add(self.convert(operand))
-                self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(Set, collection)))
+                    conversion = self.convert(operand)
+                    collection.add(conversion)
+                self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection)))
             elif node.type() is Item.ComplementNode:
                 operand = first(node.incomingNodes(lambda x: x.type() is Item.InputEdge))
+                conversionA = self.convert(operand)
                 for included in node.adjacentNodes(lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}):
-                    collection = HashSet()
-                    collection.add(self.convert(operand))
-                    collection.add(self.convert(included))
-                    self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(Set, collection)))
+                    conversionB = self.convert(included)
+                    collection = self.HashSet()
+                    collection.add(conversionA)
+                    collection.add(conversionB)
+                    self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection)))
 
     def createDisjointDataPropertiesAxiom(self, edge):
         """
@@ -1158,10 +1186,12 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: InclusionEdge
         """
         if OWLAxiom.DisjointDataProperties in self.axiomsList:
-            collection = HashSet()
-            collection.add(self.convert(edge.source))
-            collection.add(self.convert(edge.target))
-            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(cast(Set, collection)))
+            conversionA = self.convert(edge.source)
+            conversionB = self.convert(edge.target)
+            collection = self.HashSet()
+            collection.add(conversionA)
+            collection.add(conversionB)
+            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(cast(self.Set, collection)))
 
     def createDisjointObjectPropertiesAxiom(self, edge):
         """
@@ -1169,10 +1199,12 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: InclusionEdge
         """
         if OWLAxiom.DisjointObjectProperties in self.axiomsList:
-            collection = HashSet()
-            collection.add(self.convert(edge.source))
-            collection.add(self.convert(edge.target))
-            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(cast(Set, collection)))
+            conversionA = self.convert(edge.source)
+            conversionB = self.convert(edge.target)
+            collection = self.HashSet()
+            collection.add(conversionA)
+            collection.add(conversionB)
+            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(cast(self.Set, collection)))
 
     def createEquivalentClassesAxiom(self, edge):
         """
@@ -1182,7 +1214,6 @@ class OWLProjectExporterWorker(AbstractWorker):
         if OWLAxiom.EquivalentClasses in self.axiomsList:
             if self.normalize:
                 for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
-
                     if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                         # If we have a domain/range restriction node as source for the inclusion
                         # we need to check whether the inclusion edge is just expressing an axiom
@@ -1191,26 +1222,33 @@ class OWLProjectExporterWorker(AbstractWorker):
                         # axiom because it would be redundant.
                         if not source.isRestrictionQualified() and source.restriction() is Restriction.Exists:
                             continue
-
                     if source.type() in {Item.DisjointUnionNode, Item.UnionNode}:
                         # (A OR B) ISA C needs to be normalized to (A ISA C) && (B ISA C)
                         f1 = lambda x: x.type() is Item.InputEdge
                         f2 = lambda x: x.identity() is Identity.Concept
                         for operand in source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                            self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(operand), self.convert(target)))
+                            conversionA = self.convert(operand)
+                            conversionB = self.convert(target)
+                            self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     elif edge.target.type() is Item.IntersectionNode:
                         # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
                         f1 = lambda x: x.type() is Item.InputEdge
                         f2 = lambda x: x.identity() is Identity.Concept
                         for operand in target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                            self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(source), self.convert(operand)))
+                            conversionA = self.convert(source)
+                            conversionB = self.convert(operand)
+                            self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     else:
-                        self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(source), self.convert(target)))
+                        conversionA = self.convert(source)
+                        conversionB = self.convert(target)
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             else:
-                collection = HashSet()
-                collection.add(self.convert(edge.source))
-                collection.add(self.convert(edge.target))
-                self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(Set, collection)))
+                conversionA = self.convert(edge.source)
+                conversionB = self.convert(edge.target)
+                collection = self.HashSet()
+                collection.add(conversionA)
+                collection.add(conversionB)
+                self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(self.Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
         """
@@ -1220,12 +1258,16 @@ class OWLProjectExporterWorker(AbstractWorker):
         if OWLAxiom.EquivalentDataProperties in self.axiomsList:
             if self.normalize:
                 for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
-                    self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(self.convert(source), self.convert(target)))
+                    conversionA = self.convert(source)
+                    conversionB = self.convert(target)
+                    self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
             else:
-                collection = HashSet()
-                collection.add(self.convert(edge.source))
-                collection.add(self.convert(edge.target))
-                self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(Set, collection)))
+                conversionA = self.convert(edge.source)
+                conversionB = self.convert(edge.target)
+                collection = self.HashSet()
+                collection.add(conversionA)
+                collection.add(conversionB)
+                self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(self.Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
         """
@@ -1235,12 +1277,16 @@ class OWLProjectExporterWorker(AbstractWorker):
         if OWLAxiom.EquivalentObjectProperties in self.axiomsList:
             if self.normalize:
                 for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
-                    self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(self.convert(source), self.convert(target)))
+                    conversionA = self.convert(source)
+                    conversionB = self.convert(target)
+                    self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
             else:
-                collection = HashSet()
-                collection.add(self.convert(edge.source))
-                collection.add(self.convert(edge.target))
-                self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(cast(Set, collection)))
+                conversionA = self.convert(edge.source)
+                conversionB = self.convert(edge.target)
+                collection = self.HashSet()
+                collection.add(conversionA)
+                collection.add(conversionB)
+                self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(cast(self.Set, collection)))
 
     def createInverseObjectPropertiesAxiom(self, edge):
         """
@@ -1256,7 +1302,9 @@ class OWLProjectExporterWorker(AbstractWorker):
             else:
                 forward = edge.source
                 inverse = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-            self.addAxiom(self.df.getOWLInverseObjectPropertiesAxiom(self.convert(forward), self.convert(inverse)))
+            conversionA = self.convert(forward)
+            conversionB = self.convert(inverse)
+            self.addAxiom(self.df.getOWLInverseObjectPropertiesAxiom(conversionA, conversionB))
 
     def createNegativeDataPropertyAssertionAxiom(self, edge):
         """
@@ -1266,10 +1314,10 @@ class OWLProjectExporterWorker(AbstractWorker):
         if OWLAxiom.NegativeDataPropertyAssertion in self.axiomsList:
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.identity() is Identity.Attribute
-            operand1 = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
-            operand2 = self.convert(edge.source)[0]
-            operand3 = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(operand1, operand2, operand3))
+            conversionA = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
+            conversionB = self.convert(edge.source)[0]
+            conversionC = self.convert(edge.source)[1]
+            self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(conversionA, conversionB, conversionC))
 
     def createNegativeObjectPropertyAssertionAxiom(self, edge):
         """
@@ -1279,37 +1327,44 @@ class OWLProjectExporterWorker(AbstractWorker):
         if OWLAxiom.NegativeObjectPropertyAssertion in self.axiomsList:
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.identity() is Identity.Role
-            operand1 = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
-            operand2 = self.convert(edge.source)[0]
-            operand3 = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(operand1, operand2, operand3))
+            conversionA = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
+            conversionB = self.convert(edge.source)[0]
+            conversionC = self.convert(edge.source)[1]
+            self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC))
 
     def createObjectPropertyAxiom(self, node):
         """
         Generate OWL 2 ObjectProperty specific axioms.
         :type node: RoleNode
         """
-        if node.isFunctional():
-            if OWLAxiom.FunctionalObjectProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLFunctionalObjectPropertyAxiom(self.convert(node)))
-        if node.isInverseFunctional():
-            if OWLAxiom.InverseFunctionalObjectProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLInverseFunctionalObjectPropertyAxiom(self.convert(node)))
-        if node.isAsymmetric():
-            if OWLAxiom.AsymmetricObjectProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLAsymmetricObjectPropertyAxiom(self.convert(node)))
-        if node.isIrreflexive():
-            if OWLAxiom.IrreflexiveObjectProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLIrreflexiveObjectPropertyAxiom(self.convert(node)))
-        if node.isReflexive():
-            if OWLAxiom.ReflexiveObjectProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLReflexiveObjectPropertyAxiom(self.convert(node)))
-        if node.isSymmetric():
-            if OWLAxiom.SymmetricObjectProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLSymmetricObjectPropertyAxiom(self.convert(node)))
-        if node.isTransitive():
-            if OWLAxiom.TransitiveObjectProperty in self.axiomsList:
-                self.addAxiom(self.df.getOWLTransitiveObjectPropertyAxiom(self.convert(node)))
+        if OWLAxiom.FunctionalObjectProperty in self.axiomsList:
+            if node.isFunctional():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLFunctionalObjectPropertyAxiom(conversion))
+        if OWLAxiom.InverseFunctionalObjectProperty in self.axiomsList:
+            if node.isInverseFunctional():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLInverseFunctionalObjectPropertyAxiom(conversion))
+        if OWLAxiom.AsymmetricObjectProperty in self.axiomsList:
+            if node.isAsymmetric():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLAsymmetricObjectPropertyAxiom(conversion))
+        if OWLAxiom.IrreflexiveObjectProperty in self.axiomsList:
+            if node.isIrreflexive():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLIrreflexiveObjectPropertyAxiom(conversion))
+        if OWLAxiom.ReflexiveObjectProperty in self.axiomsList:
+            if node.isReflexive():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLReflexiveObjectPropertyAxiom(conversion))
+        if OWLAxiom.SymmetricObjectProperty in self.axiomsList:
+            if node.isSymmetric():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLSymmetricObjectPropertyAxiom(conversion))
+        if OWLAxiom.TransitiveObjectProperty in self.axiomsList:
+            if node.isTransitive():
+                conversion = self.convert(node)
+                self.addAxiom(self.df.getOWLTransitiveObjectPropertyAxiom(conversion))
 
     def createObjectPropertyAssertionAxiom(self, edge):
         """
@@ -1317,9 +1372,10 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: MembershipEdge
         """
         if OWLAxiom.ObjectPropertyAssertion in self.axiomsList:
-            operand1 = self.convert(edge.source)[0]
-            operand2 = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(self.convert(edge.target), operand1, operand2))
+            conversionA = self.convert(edge.target)
+            conversionB = self.convert(edge.source)[0]
+            conversionC = self.convert(edge.source)[1]
+            self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC))
 
     def createPropertyDomainAxiom(self, node):
         """
@@ -1336,7 +1392,9 @@ class OWLProjectExporterWorker(AbstractWorker):
                     f4 = lambda x: x.type() is Item.EquivalenceEdge
                     f5 = lambda x: x.identity() is Identity.Concept
                     for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(self.convert(role), self.convert(concept)))
+                        conversionA = self.convert(role)
+                        conversionB = self.convert(concept)
+                        self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(conversionA, conversionB))
         if OWLAxiom.DataPropertyDomain in self.axiomsList:
             if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
                 f1 = lambda x: x.type() is Item.InputEdge
@@ -1347,7 +1405,9 @@ class OWLProjectExporterWorker(AbstractWorker):
                     f4 = lambda x: x.type() is Item.EquivalenceEdge
                     f5 = lambda x: x.identity() is Identity.Concept
                     for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        self.addAxiom(self.df.getOWLDataPropertyDomainAxiom(self.convert(attribute), self.convert(concept)))
+                        conversionA = self.convert(attribute)
+                        conversionB = self.convert(concept)
+                        self.addAxiom(self.df.getOWLDataPropertyDomainAxiom(conversionA, conversionB))
 
     def createPropertyRangeAxiom(self, node):
         """
@@ -1364,7 +1424,9 @@ class OWLProjectExporterWorker(AbstractWorker):
                     f4 = lambda x: x.type() is Item.EquivalenceEdge
                     f5 = lambda x: x.identity() is Identity.Concept
                     for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(self.convert(role), self.convert(concept)))
+                        conversionA = self.convert(role)
+                        conversionB = self.convert(concept)
+                        self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(conversionA, conversionB))
         if OWLAxiom.DataPropertyRange in self.axiomsList:
             if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
                 f1 = lambda x: x.type() is Item.InputEdge
@@ -1375,7 +1437,9 @@ class OWLProjectExporterWorker(AbstractWorker):
                     f4 = lambda x: x.type() is Item.EquivalenceEdge
                     f5 = lambda x: x.identity() is Identity.ValueDomain
                     for datatype in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(self.convert(attribute), self.convert(datatype)))
+                        conversionA = self.convert(attribute)
+                        conversionB = self.convert(datatype)
+                        self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(conversionA, conversionB))
 
     def createSubclassOfAxiom(self, edge):
         """
@@ -1405,15 +1469,21 @@ class OWLProjectExporterWorker(AbstractWorker):
                 f1 = lambda x: x.type() is Item.InputEdge
                 f2 = lambda x: x.identity() is Identity.Concept
                 for operand in edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                    self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(operand), self.convert(edge.target)))
+                    conversionA = self.convert(operand)
+                    conversionB = self.convert(edge.target)
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             elif edge.target.type() is Item.IntersectionNode and self.normalize:
                 # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
                 f1 = lambda x: x.type() is Item.InputEdge
                 f2 = lambda x: x.identity() is Identity.Concept
                 for operand in edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                    self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(operand)))
+                    conversionA = self.convert(edge.source)
+                    conversionB = self.convert(operand)
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             else:
-                self.addAxiom(self.df.getOWLSubClassOfAxiom(self.convert(edge.source), self.convert(edge.target)))
+                conversionA = self.convert(edge.source)
+                conversionB = self.convert(edge.target)
+                self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
 
     def createSubDataPropertyOfAxiom(self, edge):
         """
@@ -1421,7 +1491,9 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: InclusionEdge
         """
         if OWLAxiom.SubDataPropertyOf in self.axiomsList:
-            self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(self.convert(edge.source), self.convert(edge.target)))
+            conversionA = self.convert(edge.source)
+            conversionB = self.convert(edge.target)
+            self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
 
     def createSubObjectPropertyOfAxiom(self, edge):
         """
@@ -1429,7 +1501,9 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: InclusionEdge
         """
         if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
-            self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(self.convert(edge.source), self.convert(edge.target)))
+            conversionA = self.convert(edge.source)
+            conversionB = self.convert(edge.target)
+            self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
 
     def createSubPropertyChainOfAxiom(self, edge):
         """
@@ -1437,7 +1511,9 @@ class OWLProjectExporterWorker(AbstractWorker):
         :type edge: InclusionEdge
         """
         if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
-            self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(self.convert(edge.source), self.convert(edge.target)))
+            conversionA = self.convert(edge.source)
+            conversionB = self.convert(edge.target)
+            self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB))
 
     #############################################
     #   MAIN WORKER
@@ -1456,13 +1532,13 @@ class OWLProjectExporterWorker(AbstractWorker):
             # INITIALIZE ONTOLOGY
             #################################
 
-            self.man = OWLManager.createOWLOntologyManager()
+            self.man = self.OWLManager.createOWLOntologyManager()
             self.df = self.man.getOWLDataFactory()
-            self.ontology = self.man.createOntology(IRI.create(rstrip(self.project.iri, '#')))
-            self.pm = DefaultPrefixManager()
+            self.ontology = self.man.createOntology(self.IRI.create(rstrip(self.project.iri, '#')))
+            self.pm = self.DefaultPrefixManager()
             self.pm.setPrefix(self.project.prefix, postfix(self.project.iri, '#'))
 
-            cast(PrefixManager, self.pm)
+            cast(self.PrefixManager, self.pm)
 
             LOGGER.debug('Initialized OWL 2 Ontology: %s', rstrip(self.project.iri, '#'))
 
@@ -1498,7 +1574,7 @@ class OWLProjectExporterWorker(AbstractWorker):
                 elif node.type() is Item.RangeRestrictionNode:
                     self.createPropertyRangeAxiom(node)
 
-                if node.isPredicate():
+                if node.isMeta():
                     self.createAnnotationAssertionAxiom(node)
 
                 self.step(+1)
@@ -1606,16 +1682,16 @@ class OWLProjectExporterWorker(AbstractWorker):
             #################################
 
             if self.syntax is OWLSyntax.Functional:
-                DocumentFormat = FunctionalSyntaxDocumentFormat
+                DocumentFormat = self.FunctionalSyntaxDocumentFormat
                 DocumentFilter = OWLFunctionalDocumentFilter
             elif self.syntax is OWLSyntax.Manchester:
-                DocumentFormat = ManchesterSyntaxDocumentFormat
+                DocumentFormat = self.ManchesterSyntaxDocumentFormat
                 DocumentFilter = lambda x: x
             elif self.syntax is OWLSyntax.RDF:
-                DocumentFormat = RDFXMLDocumentFormat
+                DocumentFormat = self.RDFXMLDocumentFormat
                 DocumentFilter = lambda x: x
             elif self.syntax is OWLSyntax.Turtle:
-                DocumentFormat = TurtleDocumentFormat
+                DocumentFormat = self.TurtleDocumentFormat
                 DocumentFilter = lambda x: x
             else:
                 raise TypeError('unsupported syntax (%s)' % self.syntax)
@@ -1626,12 +1702,12 @@ class OWLProjectExporterWorker(AbstractWorker):
             ontoFormat = DocumentFormat()
             ontoFormat.copyPrefixesFrom(self.pm)
             # CREARE TARGET STREAM
-            stream = StringDocumentTarget()
-            stream = cast(OWLOntologyDocumentTarget, stream)
+            stream = self.StringDocumentTarget()
+            stream = cast(self.OWLOntologyDocumentTarget, stream)
             # SAVE THE ONTOLOGY TO DISK
             self.man.setOntologyFormat(self.ontology, ontoFormat)
             self.man.saveOntology(self.ontology, stream)
-            stream = cast(StringDocumentTarget, stream)
+            stream = cast(self.StringDocumentTarget, stream)
             string = DocumentFilter(stream.toString())
             fwrite(string, self.path)
             # REMOVE RANDOM FILES GENERATED BY OWL API
