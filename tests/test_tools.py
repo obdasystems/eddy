@@ -35,7 +35,7 @@
 
 import unittest
 
-from eddy.core.guid import GUID
+from eddy.core.generators import GUID
 
 
 class GUIDTestCase(unittest.TestCase):

@@ -46,7 +46,7 @@ from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import snap, partition, first
 from eddy.core.functions.signals import connect
-from eddy.core.guid import GUID
+from eddy.core.generators import GUID
 from eddy.core.items.factory import ItemFactory
 from eddy.core.output import getLogger
 

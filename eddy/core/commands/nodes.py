@@ -321,34 +321,37 @@ class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
-class CommandNodeChangeMeta(QtWidgets.QUndoCommand):
+class CommandNodeSetMeta(QtWidgets.QUndoCommand):
     """
-    This command is used to change predicate nodes metadata.
+    This command is used to set predicates meta.
     """
-    def __init__(self, diagram, node, undo, redo, name=None):
+    def __init__(self, project, item, predicate, undo, redo, name=None):
         """
         Initialize the command.
-        :type diagram: Diagram
-        :type node: AbstractNode
-        :type undo: PredicateMetadata
-        :type redo: PredicateMetadata
+        :type project: Project
+        :type item: Item
+        :type predicate: str
+        :type undo: dict
+        :type redo: dict
         :type name: str
         """
-        super().__init__(name or 'change {0} metadata'.format(node.name))
-        self.project = diagram.project
-        self.data = {'redo': redo, 'undo': undo}
-        self.node = node
+        super().__init__(name or 'set {0} meta'.format(predicate))
+        self._predicate = predicate
+        self._project = project
+        self._item = item
+        self._undo = undo
+        self._redo = redo
 
     def redo(self):
         """redo the command"""
-        self.project.setMeta(self.node.type(), self.node.text(), self.data['redo'])
-        for node in self.project.predicates(self.node.type(), self.node.text()):
+        self._project.setMeta(self._item, self._predicate, self._redo)
+        for node in self._project.predicates(self._item, self._predicate):
             node.updateNode(selected=node.isSelected())
 
     def undo(self):
         """undo the command"""
-        self.project.setMeta(self.node.type(), self.node.text(), self.data['undo'])
-        for node in self.project.predicates(self.node.type(), self.node.text()):
+        self._project.setMeta(self._item, self._predicate, self._undo)
+        for node in self._project.predicates(self._item, self._predicate):
             node.updateNode(selected=node.isSelected())
 
 

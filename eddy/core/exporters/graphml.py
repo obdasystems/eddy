@@ -49,7 +49,7 @@ LOGGER = getLogger(__name__)
 
 class GraphMLDiagramExporter(AbstractDiagramExporter):
     """
-    Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams in Graphml format.
+    Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams in GraphML format.
     """
     KeyNode = 'd0'
     KeyEdge = 'd1'
@@ -709,7 +709,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
     def run(self, path):
         """
-        Perform Graphml document generation.
+        Perform GraphML document generation.
         :type path: str
         """
         LOGGER.info('Exporting diagram %s to %s', self.diagram.name, path)

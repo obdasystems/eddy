@@ -50,16 +50,17 @@ from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.misc import snapF, isEmpty, rstrip, snap
 from eddy.core.functions.signals import connect
-from eddy.core.loaders.common import AbstractDiagramLoader
+from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.output import getLogger
+from eddy.core.project import Project, ProjectMergeWorker
 
 
 LOGGER = getLogger(__name__)
 
 
-class GraphMLDiagramLoader(AbstractDiagramLoader):
+class GraphMLOntologyLoader(AbstractOntologyLoader):
     """
-    Extends AbstractDiagramLoader with facilities to load diagrams from GraphML file format.
+    Extends AbstractOntologyLoader with facilities to load ontologies from GraphML file format.
     """
     def __init__(self, path, project, session):
         """
@@ -74,7 +75,9 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         self.edges = dict()
         self.nodes = dict()
         self.diagram = None
-        
+        self.document = None
+        self.nproject = None
+
         self.importFuncForItem = {
             Item.AttributeNode: self.importAttributeNode,
             Item.ComplementNode: self.importComplementNode,
@@ -245,7 +248,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         return self.importNodeFromShapeNode(Item.UnionNode, element)
 
     #############################################
-    #   NODES
+    #   EDGES
     #################################
 
     def importEquivalenceEdge(self, element):
@@ -415,7 +418,7 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
             try:
                 edge = self.edges[element.attribute('id')]
             except KeyError:
-                LOGGER.warning('Failed to import (inverse) functionality due to missing edge: %s', element.attribute('id'))
+                LOGGER.warning('Failed to import [inverse]Functionality due to missing edge: %s', element.attribute('id'))
             else:
                 data = element.firstChildElement('data')
                 while not data.isNull():
@@ -613,39 +616,160 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
                         node.label.setPos(pos)
 
     #############################################
-    #   INTERFACE
+    #   MAIN IMPORT
     #################################
 
-    @classmethod
-    def filetype(cls):
+    def createDomDocument(self):
         """
-        Returns the type of the file that will be used for the import.
-        :return: File
+        Create the QDomDocument from where to parse information.
         """
-        return File.GraphML
+        QtWidgets.QApplication.processEvents()
 
-    def run(self):
-        """
-        Perform diagram import from GraphML file format and add the new generated diagram to the project
-        :raise DiagramNotFoundError: If the given path does not identify a GraphML diagram.
-        :raise DiagramNotValidError: If the given path identifies an invalid GraphML diagram.
-        """
         LOGGER.info('Loading diagram: %s', self.path)
 
         if not fexists(self.path):
             raise DiagramNotFoundError('diagram not found: {0}'.format(self.path))
 
-        document = QtXml.QDomDocument()
-        if not document.setContent(fread(self.path)):
+        self.document = QtXml.QDomDocument()
+        if not self.document.setContent(fread(self.path)):
             raise DiagramNotValidError('could not parse diagram from {0}'.format(self.path))
 
-        root = document.documentElement()
+    def createDiagram(self):
+        """
+        Creates a diagram and reverse the content of the GraphML document in it.
+        """
+        LOGGER.debug('Initializing empty diagram with size: %s', Diagram.MaxSize)
+        name = os.path.basename(self.path)
+        name = rstrip(name, File.GraphML.extension)
+        self.diagram = Diagram.create(name, Diagram.MaxSize, self.nproject)
+
+        root = self.document.documentElement()
         graph = root.firstChildElement('graph')
+        e = graph.firstChildElement('node')
+        while not e.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                item = self.itemFromXmlNode(e)
+                if not item:
+                    raise DiagramParseError('could not identify item for XML node')
+                func = self.importFuncForItem[item]
+                node = func(e)
+                if not node:
+                    raise DiagramParseError('could not generate item for XML node')
+            except DiagramParseError as err:
+                LOGGER.warning('Failed to create node %s: %s', e.attribute('id'), err)
+            except Exception:
+                LOGGER.exception('Failed to create node %s', e.attribute('id'))
+            else:
+                self.diagram.addItem(node)
+                self.diagram.guid.update(node.id)
+                self.nodes[node.id] = node
+            finally:
+                e = e.nextSiblingElement('node')
 
-        #############################################
-        # READ NECESSARY DATA FROM DOCUMENT HEADER
-        #################################
+        LOGGER.debug('Loaded nodes: %s', len(self.nodes))
 
+        e = graph.firstChildElement('edge')
+        while not e.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                item = self.itemFromXmlNode(e)
+                if not item:
+                    raise DiagramParseError('could not identify item for XML node')
+                func = self.importFuncForItem[item]
+                edge = func(e)
+                if not edge:
+                    raise DiagramParseError('could not generate item for XML node')
+            except DiagramParseError as err:
+                LOGGER.warning('Failed to create edge %s: %s', e.attribute('id'), err)
+            except Exception:
+                LOGGER.exception('Failed to create edge %s', e.attribute('id'))
+            else:
+                self.diagram.addItem(edge)
+                self.diagram.guid.update(edge.id)
+                self.edges[edge.id] = edge
+            finally:
+                e = e.nextSiblingElement('edge')
+
+        LOGGER.debug('Loaded edges: %s', len(self.edges))
+
+        nodes = [n for n in self.nodes.values() if Identity.Neutral in n.identities()]
+        if nodes:
+            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
+            for node in nodes:
+                self.diagram.sgnNodeIdentification.emit(node)
+
+        LOGGER.debug('Diagram created: %s', self.diagram.name)
+
+        connect(self.diagram.sgnItemAdded, self.nproject.doAddItem)
+        connect(self.diagram.sgnItemRemoved, self.nproject.doRemoveItem)
+        connect(self.diagram.selectionChanged, self.session.doUpdateState)
+
+        self.nproject.addDiagram(self.diagram)
+
+        LOGGER.debug('Diagram "%s" added to project "%s"', self.diagram.name, self.nproject.name)
+
+    def createProject(self):
+        """
+        Create a new project.
+        """
+        self.nproject = Project(
+            name=rstrip(os.path.basename(self.path), File.GraphML.extension),
+            path=os.path.dirname(self.path),
+            profile=self.session.createProfile('OWL 2'),
+            session=self.session)
+
+        LOGGER.debug('Created project: %s', self.nproject.name)
+
+    def importPredicateMeta(self):
+        """
+        Import predicate metadata into the new project.
+        """
+        r = self.document.documentElement()
+        g = r.firstChildElement('graph')
+        e = g.firstChildElement('edge')
+        while not e.isNull():
+            QtWidgets.QApplication.processEvents()
+            self.importPredicateMetaFromElement(e)
+            e = e.nextSiblingElement('edge')
+
+        LOGGER.debug('Loaded predicate metadata from original diagram: %s', self.path)
+
+    def optimizeDiagram(self):
+        """
+        Perform geometrical optimizations on the loaded diagram.
+        """
+        ## CENTER THE DIAGRAM
+        R1 = self.diagram.sceneRect()
+        R2 = self.diagram.visibleRect(margin=0)
+        moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, Diagram.GridSize)
+        moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, Diagram.GridSize)
+        if moveX or moveY:
+            collection = [x for x in self.diagram.items() if x.isNode() or x.isEdge()]
+            for item in collection:
+                QtWidgets.QApplication.processEvents()
+                item.moveBy(moveX, moveY)
+            for item in collection:
+                QtWidgets.QApplication.processEvents()
+                item.updateEdgeOrNode()
+        ## RESIZE THE DIAGRAM
+        R3 = self.diagram.visibleRect(margin=20)
+        size = int(max(R3.width(), R3.height(), Diagram.MinSize))
+        self.diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
+        LOGGER.debug('Diagram resized: %s -> %s', Diagram.MaxSize, size)
+        ## OPTIMIZE NODE LABEL POSITIONS
+        for node in self.diagram.nodes():
+            QtWidgets.QApplication.processEvents()
+            self.optimizeLabelPos(node)
+        LOGGER.debug('Performed geometrical optimization on %s nodes', len(self.diagram.nodes()))
+
+    def parseDocumentMeta(self):
+        """
+        Read metadata from the open QDomDocument, necessary to parse the GraphML diagram structure.
+        """
+        QtWidgets.QApplication.processEvents()
+
+        root = self.document.documentElement()
         key = root.firstChildElement('key')
         while not key.isNull():
             if key.attribute('yfiles.type', '') == 'nodegraphics':
@@ -659,168 +783,45 @@ class GraphMLDiagramLoader(AbstractDiagramLoader):
         if not 'edge_key' in self.keys:
             raise DiagramNotValidError('could not parse edge keys from {0}'.format(self.path))
 
-        LOGGER.debug('Using node_key: %s', self.keys['node_key'])
-        LOGGER.debug('Using edge_key: %s', self.keys['edge_key'])
+        LOGGER.debug('Using node key: %s', self.keys['node_key'])
+        LOGGER.debug('Using edge key: %s', self.keys['edge_key'])
 
-        #############################################
-        # CREATE AN EMPTY DIAGRAM
-        #################################
+    def projectMerge(self):
+        """
+        Merge the loaded project with the one currently loaded in Eddy session.
+        """
+        worker = ProjectMergeWorker(self.project, self.nproject, self.session)
+        worker.run()
 
-        LOGGER.debug('Initialzing empty diagram with size: %s', Diagram.MaxSize)
-
-        name = os.path.basename(self.path)
-        name = rstrip(name, File.GraphML.extension)
-        self.diagram = Diagram.create(name, Diagram.MaxSize, self.project)
-
-        #############################################
-        # LOAD NODES
-        #################################
-
-        element = graph.firstChildElement('node')
-        while not element.isNull():
-
-            QtWidgets.QApplication.processEvents()
-
-            try:
-                item = self.itemFromXmlNode(element)
-                if not item:
-                    raise DiagramParseError('could not identify item for XML node')
-                func = self.importFuncForItem[item]
-                node = func(element)
-                if not node:
-                    raise DiagramParseError('could not generate item for XML node')
-            except DiagramParseError as e:
-                LOGGER.warning('Failed to create node %s: %s', element.attribute('id'), e)
-            except Exception:
-                LOGGER.exception('Failed to create node %s', element.attribute('id'))
-            else:
-                self.diagram.addItem(node)
-                self.diagram.guid.update(node.id)
-                self.nodes[node.id] = node
-            finally:
-                element = element.nextSiblingElement('node')
-
-        LOGGER.debug('Loaded nodes: %s', len(self.nodes))
-
-        #############################################
-        # LOAD EDGES
-        #################################
-
-        element = graph.firstChildElement('edge')
-        while not element.isNull():
-
-            QtWidgets.QApplication.processEvents()
-
-            try:
-                item = self.itemFromXmlNode(element)
-                if not item:
-                    raise DiagramParseError('could not identify item for XML node')
-                func = self.importFuncForItem[item]
-                edge = func(element)
-                if not edge:
-                    raise DiagramParseError('could not generate item for XML node')
-            except DiagramParseError as e:
-                LOGGER.warning('Failed to create edge %s: %s', element.attribute('id'), e)
-            except Exception:
-                LOGGER.exception('Failed to create edge %s', element.attribute('id'))
-            else:
-                self.diagram.addItem(edge)
-                self.diagram.guid.update(edge.id)
-                self.edges[edge.id] = edge
-            finally:
-                element = element.nextSiblingElement('edge')
-
-        LOGGER.debug('Loaded edges: %s', len(self.edges))
-
-        #############################################
-        # CENTER THE DIAGRAM
-        #################################
-
-        R1 = self.diagram.sceneRect()
-        R2 = self.diagram.visibleRect(margin=0)
-        moveX = snapF(((R1.right() - R2.right()) - (R2.left() - R1.left())) / 2, Diagram.GridSize)
-        moveY = snapF(((R1.bottom() - R2.bottom()) - (R2.top() - R1.top())) / 2, Diagram.GridSize)
-        if moveX or moveY:
-            collection = [x for x in self.diagram.items() if x.isNode() or x.isEdge()]
-            for item in collection:
-                QtWidgets.QApplication.processEvents()
-                item.moveBy(moveX, moveY)
-            for item in collection:
-                QtWidgets.QApplication.processEvents()
-                if item.isEdge():
-                    item.updateEdge()
-
-        #############################################
-        # RESIZE THE DIAGRAM
-        #################################
-
-        R3 = self.diagram.visibleRect(margin=20)
-        size = int(max(R3.width(), R3.height(), Diagram.MinSize))
-        self.diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
-
-        LOGGER.debug('Diagram resized: %s -> %s', Diagram.MaxSize, size)
-
-        #############################################
-        # IDENTIFY NODES
-        #################################
-
-        nodes = [n for n in self.nodes.values() if Identity.Neutral in n.identities()]
-        if nodes:
-            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
-            for node in nodes:
-                self.diagram.sgnNodeIdentification.emit(node)
-
-        #############################################
-        # CONFIGURE DIAGRAM SIGNALS
-        #################################
-
-        connect(self.diagram.sgnItemAdded, self.project.doAddItem)
-        connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
-        connect(self.diagram.selectionChanged, self.session.doUpdateState)
-
-        LOGGER.debug('Diagram created: %s', self.diagram.name)
-
-        #############################################
-        # ADD THE DIAGRAM TO THE PROJECT
-        #################################
-
-        self.project.addDiagram(self.diagram)
-
-        LOGGER.debug('Diagram "%s" added to project "%s"', self.diagram.name, self.project.name)
-
-        #############################################
-        # IMPORT PREDICATE METADATA
-        #################################
-
-        element = graph.firstChildElement('edge')
-        while not element.isNull():
-            QtWidgets.QApplication.processEvents()
-            self.importPredicateMetaFromElement(element)
-            element = element.nextSiblingElement('edge')
-
-        LOGGER.debug('Loaded predicate metadata from original diagram: %s', self.path)
-
-        #############################################
-        # PERFORM GEOMETRIC OPTIMIZATIONS
-        #################################
-
-        for node in self.diagram.nodes():
-            QtWidgets.QApplication.processEvents()
-            self.optimizeLabelPos(node)
-
-        LOGGER.debug('Performed geometrical optimization')
-
-        #############################################
-        # UPDATE GEOMETRY OF ALL THE SHAPES
-        #################################
-
-        for item in self.diagram.nodes() | self.diagram.edges():
+    def projectRender(self):
+        """
+        Render all the elements in the new project ontology.
+        """
+        LOGGER.debug('Refreshing project "%s" elements state', self.nproject.name)
+        for item in self.nproject.items():
             item.updateEdgeOrNode()
 
-        LOGGER.debug('Refreshing diagram "%s" elements state', self.diagram.name)
+    #############################################
+    #   INTERFACE
+    #################################
 
-        #############################################
-        # GIVE FOCUS TO THE DIAGRAM
-        #################################
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.GraphML
 
-        self.session.sgnFocusDiagram.emit(self.diagram)
+    def run(self):
+        """
+        Perform ontology import from GraphML file format and merge it with the current project.
+        """
+        self.createDomDocument()
+        self.parseDocumentMeta()
+        self.createProject()
+        self.createDiagram()
+        self.optimizeDiagram()
+        self.importPredicateMeta()
+        self.projectRender()
+        self.projectMerge()

@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
-from eddy.core.commands.nodes import CommandNodeChangeMeta
+from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
@@ -515,12 +515,16 @@ class PredicateNodeProperty(NodeProperty):
         Change the url and description of the node.
         :rtype: QUndoCommand
         """
-        meta = self.diagram.project.meta(self.node.type(), self.node.text())
-        copy = meta.copy()
-        copy['description'] = self.descriptionField.value()
-        copy['url'] = self.urlField.value()
-        if copy != meta:
-            return CommandNodeChangeMeta(self.diagram, self.node, meta, copy)
+        undo = self.diagram.project.meta(self.node.type(), self.node.text())
+        redo = undo.copy()
+        redo['description'] = self.descriptionField.value()
+        redo['url'] = self.urlField.value()
+        if redo != undo:
+            return CommandNodeSetMeta(
+                self.diagram.project,
+                self.node.type(),
+                self.node.text(),
+                undo, redo)
         return None
 
     def textChanged(self):

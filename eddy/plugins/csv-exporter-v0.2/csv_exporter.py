@@ -104,7 +104,7 @@ class CsvExporter(AbstractProjectExporter):
     #   INTERFACE
     #################################
 
-    def export(self, path):
+    def run(self, path):
         """
         Perform CSV file generation.
         :type path: str
@@ -114,7 +114,6 @@ class CsvExporter(AbstractProjectExporter):
 
         for node in self.project.predicates():
             if node.type() in collection:
-                # If there is no data for this predicate node, create a new entry.
                 if not node.text() in collection[node.type()]:
                     meta = self.project.meta(node.type(), node.text())
                     collection[node.type()][node.text()] = {
@@ -122,10 +121,8 @@ class CsvExporter(AbstractProjectExporter):
                         CsvExporter.KeyType: node.shortName,
                         CsvExporter.KeyDescription: meta.get('description', ''),
                         CsvExporter.KeyDiagrams: DistinctList()}
-                # Append the name of the diagram to the diagram list.
                 collection[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
 
-        # Collect data in a buffer.
         buffer = io.StringIO()
         writer = csv.writer(buffer)
         writer.writerow((self.KeyName, self.KeyType, self.KeyDescription, self.KeyDiagrams))
@@ -137,10 +134,8 @@ class CsvExporter(AbstractProjectExporter):
                 sorted(collection[j][i][self.KeyDiagrams]),
             ))
 
-        # Write to disk.
         fwrite(buffer.getvalue(), path)
 
-        # Open the document.
         openPath(path)
 
     @classmethod

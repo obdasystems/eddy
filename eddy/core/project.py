@@ -33,15 +33,22 @@
 ##########################################################################
 
 
-import os
-
 from PyQt5 import QtCore
 
+from eddy.core.commands.diagram import CommandDiagramAdd
+from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.datatypes.graphol import Item
-from eddy.core.functions.misc import rstrip
 from eddy.core.functions.path import expandPath
+from eddy.core.functions.signals import connect, disconnect
+from eddy.core.output import getLogger
+
+from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 
 
+LOGGER = getLogger(__name__)
+
+
+# PROJECT INDEX
 K_DIAGRAM = 'diagrams'
 K_EDGE = 'edges'
 K_ITEM = 'items'
@@ -49,6 +56,12 @@ K_META = 'meta'
 K_NODE = 'nodes'
 K_PREDICATE = 'predicates'
 K_TYPE = 'types'
+
+# PROJECT MERGE
+K_PROJECT = 'project'
+K_OTHER = 'other'
+K_REDO = 'redo'
+K_UNDO = 'undo'
 
 
 # noinspection PyTypeChecker
@@ -73,34 +86,23 @@ class Project(QtCore.QObject):
     sgnMetaRemoved = QtCore.pyqtSignal(Item, str)
     sgnUpdated = QtCore.pyqtSignal()
 
-    def __init__(self, path, prefix, iri, profile, session=None):
+    def __init__(self, **kwargs):
         """
         Initialize the graphol project.
-        :type path: str
-        :type prefix: str
-        :type iri: str
-        :type profile: AbstractProfile
-        :type session: Session
+        :type kwargs: dict
         """
-        super().__init__(session)
+        super().__init__(kwargs.get('session'))
         self.index = ProjectIndex()
-        self.iri = iri
-        self.path = expandPath(path)
-        self.prefix = prefix
-        self.profile = profile
+        self.iri = kwargs.get('iri', 'NULL')
+        self.name = kwargs.get('name')
+        self.path = expandPath(kwargs.get('path'))
+        self.prefix = kwargs.get('prefix', 'NULL')
+        self.profile = kwargs.get('profile')
         self.profile.setParent(self)
 
     #############################################
     #   PROPERTIES
     #################################
-
-    @property
-    def name(self):
-        """
-        Returns the name of the project.
-        :rtype: str
-        """
-        return os.path.basename(rstrip(self.path, os.path.sep, os.path.altsep))
 
     @property
     def session(self):
@@ -352,7 +354,7 @@ class ProjectIndex(dict):
                 if diagram.name not in self[K_NODE]:
                     self[K_NODE][diagram.name] = dict()
                 self[K_NODE][diagram.name][item.id] = item
-                if item.isPredicate():
+                if item.isMeta():
                     k = item.text()
                     if i not in self[K_PREDICATE]:
                         self[K_PREDICATE][i] = dict()
@@ -617,7 +619,7 @@ class ProjectIndex(dict):
                         del self[K_NODE][diagram.name][item.id]
                         if not self[K_NODE][diagram.name]:
                             del self[K_NODE][diagram.name]
-                if item.isPredicate():
+                if item.isMeta():
                     k = item.text()
                     if i in self[K_PREDICATE]:
                         if k in self[K_PREDICATE][i]:
@@ -668,6 +670,129 @@ class ProjectIndex(dict):
         return False
 
 
+class ProjectMergeWorker(QtCore.QObject):
+    """
+    Extends QObject with facilities to merge the content of 2 distinct projects.
+    """
+    def __init__(self, project, other, session):
+        """
+        Initialize the project merge worker.
+        :type project: Project
+        :type other: Project
+        :type session: Session
+        """
+        super().__init__(session)
+        self.commands = list()
+        self.project = project
+        self.other = other
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session (alias for ProjectMergeWorker.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def mergeDiagrams(self):
+        """
+        Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
+        """
+        for diagram in self.other.diagrams():
+            # We may be in the situation in which we are importing a diagram with name 'X'
+            # even though we already have a diagram 'X' in our project. Because we do not
+            # want to overwrite diagrams, we perform a rename of the diagram being imported,
+            # to be sure to have a unique diagram name, in the current project namespace.
+            occurrence = 1
+            name = diagram.name
+            while self.project.diagram(diagram.name):
+                diagram.name = '{0}_{1}'.format(name, occurrence)
+                occurrence += 1
+            ## SWITCH SIGNAL SLOTS
+            disconnect(diagram.sgnItemAdded, self.other.doAddItem)
+            disconnect(diagram.sgnItemRemoved, self.other.doRemoveItem)
+            connect(diagram.sgnItemAdded, self.project.doAddItem)
+            connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
+            ## MERGE THE DIAGRAM IN THE CURRENT PROJECT
+            self.commands.append(CommandDiagramAdd(diagram, self.project))
+
+    def mergeMeta(self):
+        """
+        Perform the merge of predicates metadata.
+        """
+        conflicts = dict()
+        resolutions = dict()
+
+        for item, name in self.other.metas():
+            if not self.project.predicates(item, name):
+                ## NO PREDICATE => NO CONFLICT
+                undo = self.project.meta(item, name)
+                redo = self.other.meta(item, name)
+                self.commands.append(CommandNodeSetMeta(self.project, item, name, undo, redo))
+            else:
+                ## CHECK FOR POSSIBLE CONFLICTS
+                metap = self.project.meta(item, name)
+                metao = self.other.meta(item, name)
+                if metap != metao:
+                    if item not in conflicts:
+                        conflicts[item] = dict()
+                    conflicts[item][name] = {K_PROJECT: metap.copy(), K_OTHER: metao.copy()}
+                    if item not in resolutions:
+                        resolutions[item] = dict()
+                    resolutions[item][name] = metap.copy()
+
+        ## RESOLVE CONFLICTS
+        for item in conflicts:
+            for name in conflicts[item]:
+                metap = conflicts[item][name][K_PROJECT]
+                metao = conflicts[item][name][K_OTHER]
+                ## RESOLVE DOCUMENTATION CONFLICTS
+                docp = metap.get('description', '')
+                doco = metao.get('description', '')
+                if docp != doco:
+                    resolver = PredicateDocumentationConflictResolver(item, name, docp, doco)
+                    if resolver.exec_() == PredicateDocumentationConflictResolver.Rejected:
+                        raise ProjectStopImportingError
+                    resolutions[item][name]['description'] = resolver.result()
+
+        for item in resolutions:
+            for name in resolutions[item]:
+                undo = self.project.meta(item, name)
+                redo = resolutions[item][name]
+                self.commands.append(CommandNodeSetMeta(self.project, item, name, undo, redo))
+
+    def mergeFinished(self):
+        """
+        Completes the merge by executing the commands in the buffer on the undostack.
+        """
+        if self.commands:
+            self.session.undostack.beginMacro('import project "{0}" into "{1}"'.format(self.other.name, self.project.name))
+            for command in self.commands:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
+    def run(self):
+        """
+        Perform the merge of the 2 projects.
+        """
+        try:
+            LOGGER.info('Performing project import: %s <- %s...', self.project.name, self.other.name)
+            self.mergeMeta()
+            self.mergeDiagrams()
+        except ProjectStopImportingError:
+            pass
+        else:
+            self.mergeFinished()
+
+
 class ProjectNotFoundError(RuntimeError):
     """
     Raised whenever we are not able to find a project given its path.
@@ -682,15 +807,22 @@ class ProjectNotValidError(RuntimeError):
     pass
 
 
-class ProjectVersionError(RuntimeError):
+class ProjectStopLoadingError(RuntimeError):
     """
-    Raised whenever we have a project version mismatch.
+    Used to signal that a project loading needs to be interrupted.
     """
     pass
 
 
-class ProjectStopLoadingError(RuntimeError):
+class ProjectStopImportingError(RuntimeError):
     """
-    Used to signal that a project loading needs to be interrupted.
+    Used to signal that a project import needs to be interrupted.
+    """
+    pass
+
+
+class ProjectVersionError(RuntimeError):
+    """
+    Raised whenever we have a project version mismatch.
     """
     pass

@@ -70,8 +70,7 @@ class GUID(QtCore.QObject):
     @staticmethod
     def parse(uid):
         """
-        Parse the given unique id returning a tuple in the format (prefix, value).
-        :raise ValueError: if the given value has an invalid format.
+        Parse the given unique id returning a tuple in the format (prefix -> str, value -> int).
         :type uid: str
         :rtype: tuple
         """
@@ -83,7 +82,6 @@ class GUID(QtCore.QObject):
     def update(self, uid):
         """
         Update the last incremental value according to the given id.
-        :raise ValueError: if the given value has an invalid format.
         :type uid: str
         """
         prefix, value = self.parse(uid)

@@ -39,8 +39,10 @@ from PyQt5 import QtCore
 
 from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.exporters.common import AbstractDiagramExporter
+from eddy.core.exporters.common import AbstractOntologyExporter
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.loaders.common import AbstractDiagramLoader
+from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
@@ -490,7 +492,7 @@ class HasDiagramExportSystem(object):
         """
         exporter = self.diagramExporter(filetype)
         if not exporter:
-            raise ValueError("missing diagram exporter for filetype %s", filetype.value)
+            raise ValueError("missing diagram exporter for filetype %s" % filetype.value)
         return exporter(diagram, session)
 
     def diagramExporter(self, filetype):
@@ -555,8 +557,130 @@ class HasDiagramExportSystem(object):
         :type exporter: class
         :rtype: class
         """
+        exporter = self._diagramExporterDict.pop(exporter.filetype())
         self._diagramExporterList.remove(exporter)
-        del self._diagramExporterDict[exporter.filetype()]
+        return exporter
+
+
+class HasOntologyExportSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve Ontology exporters.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._ontologyExporterDict = {}
+        self._ontologyExporterList = []
+
+    def addOntologyExporter(self, exporter):
+        """
+        Add an ontology exporter class to the set.
+        :type exporter: class
+        """
+        if not issubclass(exporter, AbstractOntologyExporter):
+            raise ValueError("ontology exporter must be subclass of eddy.core.exporters.common.AbstractOntologyExporter")
+        filetype = exporter.filetype()
+        if filetype in self._ontologyExporterDict:
+            raise ValueError("duplicate ontology exporter found for filetype %s" % filetype.value)
+        self._ontologyExporterList.append(exporter)
+        self._ontologyExporterDict[filetype] = exporter
+        #LOGGER.debug("Added ontology ontology %s -> %s", exporter.__name__, filetype.value)
+
+    def addOntologyExporters(self, exporters):
+        """
+        Add the given group of ontology exporter classes to the set.
+        :type exporters: T <= list|tuple
+        """
+        for exporter in exporters:
+            self.addOntologyExporter(exporter)
+
+    def clearOntologyExporters(self):
+        """
+        Remove all the ontology exporters.
+        """
+        self._ontologyExporterDict.clear()
+        self._ontologyExporterList.clear()
+
+    def createOntologyExporter(self, filetype, project, session=None):
+        """
+        Creates an instance of an ontology exporter for the given filetype.
+        :type filetype: File
+        :type project: Project
+        :type session: Session
+        :rtype: AbstractOntologyExporter
+        """
+        exporter = self.ontologyExporter(filetype)
+        if not exporter:
+            raise ValueError("missing ontology exporter for filetype %s" % filetype.value)
+        return exporter(project, session)
+
+    def insertOntologyExporter(self, exporter, before):
+        """
+        Insert the given ontology exporter class before the given one.
+        :type exporter: class
+        :type before: class
+        """
+        if not issubclass(exporter, AbstractOntologyExporter):
+            raise ValueError("ontology exporter must be subclass of eddy.core.exporters.common.AbstractOntologyExporter")
+        filetype1 = exporter.filetype()
+        # filetype2 = before.filetype()
+        if filetype1 in self._ontologyExporterDict:
+            raise ValueError("duplicate ontology exporter found for filetype %s" % filetype1.value)
+        self._ontologyExporterList.insert(self._ontologyExporterList.index(before), exporter)
+        self._ontologyExporterDict[filetype1] = exporter
+        # LOGGER.debug("Added ontology exporter %s -> %s before ontology exporter %s -> %s",
+        #              exporter.__name__, filetype.value,
+        #              before.__name__, filetype1.value)
+
+    def insertOntologyExporters(self, exporters, before):
+        """
+        Insert the given group of ontology exporter classes before the given one.
+        :type exporters: T <= list|tuple
+        :type before: class
+        """
+        for exporter in exporters:
+            self.insertOntologyExporter(exporter, before)
+
+    def ontologyExporter(self, filetype):
+        """
+        Returns the reference to a ontology exporter class given a filetype.
+        :type filetype: File
+        :rtype: class
+        """
+        return self._ontologyExporterDict.get(filetype, None)
+
+    def ontologyExporterNameFilters(self, exclude=None):
+        """
+        Returns the list of ontology exporter name filters.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.ontologyExporters(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
+    def ontologyExporters(self, exclude=None):
+        """
+        Returns the list of ontology exporter classes.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = self._ontologyExporterList
+        if exclude:
+            collection = [x for x in collection if x.filetype() not in exclude]
+        return sorted(collection, key=lambda x: x.filetype())
+
+    def removeOntologyExporter(self, exporter):
+        """
+        Removes the given ontology exporter class from the set.
+        :type exporter: class
+        :rtype: class
+        """
+        exporter = self._ontologyExporterDict.pop(exporter.filetype())
+        self._ontologyExporterList.remove(exporter)
         return exporter
 
 
@@ -612,7 +736,7 @@ class HasProjectExportSystem(object):
         """
         exporter = self.projectExporter(filetype)
         if not exporter:
-            raise ValueError("missing project exporter for filetype %s", filetype.value)
+            raise ValueError("missing project exporter for filetype %s" % filetype.value)
         return exporter(project, session)
 
     def insertProjectExporter(self, exporter, before):
@@ -677,8 +801,8 @@ class HasProjectExportSystem(object):
         :type exporter: class
         :rtype: class
         """
+        exporter = self._projectExporterDict.pop(exporter.filetype())
         self._projectExporterList.remove(exporter)
-        del self._projectExporterDict[exporter.filetype()]
         return exporter
 
 
@@ -735,7 +859,7 @@ class HasDiagramLoadSystem(object):
         """
         loader = self.diagramLoader(filetype)
         if not loader:
-            raise ValueError("missing diagram loader for filetype %s", filetype.value)
+            raise ValueError("missing diagram loader for filetype %s" % filetype.value)
         return loader(path, project, session)
 
     def diagramLoader(self, filetype):
@@ -800,8 +924,131 @@ class HasDiagramLoadSystem(object):
         :type loader: class
         :rtype: class
         """
+        loader = self._diagramLoaderDict.pop(loader.filetype())
         self._diagramLoaderList.remove(loader)
-        del self._diagramLoaderDict[loader.filetype()]
+        return loader
+
+
+class HasOntologyLoadSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve Ontology loaders.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._ontologyLoaderDict = {}
+        self._ontologyLoaderList = []
+
+    def addOntologyLoader(self, loader):
+        """
+        Add a ontology loader class to the set.
+        :type loader: class
+        """
+        if not issubclass(loader, AbstractOntologyLoader):
+            raise ValueError("ontology loader must be subclass of eddy.core.loaders.common.AbstractOntologyLoader")
+        filetype = loader.filetype()
+        if filetype in self._ontologyLoaderDict:
+            raise ValueError("duplicate ontology loader found for filetype %s" % filetype.value)
+        self._ontologyLoaderList.append(loader)
+        self._ontologyLoaderDict[filetype] = loader
+        #LOGGER.debug("Added ontology loader %s -> %s", loader.__name__, filetype.value)
+
+    def addOntologyLoaders(self, loaders):
+        """
+        Add the given group of ontology loader classes to the set.
+        :type loaders: T <= list|tuple
+        """
+        for loader in loaders:
+            self.addOntologyLoader(loader)
+
+    def clearOntologyLoaders(self):
+        """
+        Remove all the ontology loaders.
+        """
+        self._ontologyLoaderDict.clear()
+        self._ontologyLoaderList.clear()
+
+    def createOntologyLoader(self, filetype, path, project, session=None):
+        """
+        Creates an instance of a ontology loader for the given filetype.
+        :type filetype: File
+        :type path: str
+        :type project: Project
+        :type session: Session
+        :rtype: AbstractOntologyLoader
+        """
+        loader = self.ontologyLoader(filetype)
+        if not loader:
+            raise ValueError("missing ontology loader for filetype %s" % filetype.value)
+        return loader(path, project, session)
+
+    def ontologyLoader(self, filetype):
+        """
+        Returns the reference to a ontology loader class given a filetype.
+        :type filetype: File
+        :rtype: class
+        """
+        return self._ontologyLoaderDict.get(filetype, None)
+
+    def ontologyLoaderNameFilters(self, exclude=None):
+        """
+        Returns the list of ontology loader name filters.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = [x.filetype() for x in self.ontologyLoaders(exclude)]
+        collection = [x.value for x in collection]
+        return collection
+
+    def ontologyLoaders(self, exclude=None):
+        """
+        Returns the list of ontology loader classes.
+        :type exclude: T <= list|tuple|set
+        :rtype: list
+        """
+        collection = self._ontologyLoaderList
+        if exclude:
+            collection = [x for x in collection if x.filetype() not in exclude]
+        return sorted(collection, key=lambda x: x.filetype())
+
+    def insertOntologyLoader(self, loader, before):
+        """
+        Insert the given ontology loader class before the given one.
+        :type loader: class
+        :type before: class
+        """
+        if not issubclass(loader, AbstractOntologyLoader):
+            raise ValueError("ontology loader must be subclass of eddy.core.loaders.common.AbstractOntologyLoader")
+        filetype1 = loader.filetype()
+        # filetype2 = before.filetype()
+        if filetype1 in self._ontologyLoaderDict:
+            raise ValueError("duplicate ontology loader found for filetype %s" % filetype1.value)
+        self._ontologyLoaderList.insert(self._ontologyLoaderList.index(before), loader)
+        self._ontologyLoaderDict[filetype1] = loader
+        # LOGGER.debug("Added ontology loader %s -> %s before ontology loader %s -> %s",
+        #              loader.__name__, filetype.value,
+        #              before.__name__, filetype1.value)
+
+    def insertOntologyLoaders(self, loaders, before):
+        """
+        Insert the given group of ontology loader classes before the given one.
+        :type loaders: T <= list|tuple
+        :type before: class
+        """
+        for loader in loaders:
+            self.insertOntologyLoader(loader, before)
+
+    def removeOntologyLoader(self, loader):
+        """
+        Removes the given ontology loader class from the set.
+        :type loader: class
+        :rtype: class
+        """
+        loader = self._ontologyLoaderDict.pop(loader.filetype())
+        self._ontologyLoaderList.remove(loader)
         return loader
 
 
@@ -857,7 +1104,7 @@ class HasProjectLoadSystem(object):
         """
         loader = self.projectLoader(filetype)
         if not loader:
-            raise ValueError("missing project loader for filetype %s", filetype.value)
+            raise ValueError("missing project loader for filetype %s" % filetype.value)
         return loader(path, session)
 
     def insertProjectLoader(self, loader, before):
@@ -922,8 +1169,8 @@ class HasProjectLoadSystem(object):
         :type loader: class
         :rtype: class
         """
+        loader = self._projectLoaderDict.pop(loader.filetype())
         self._projectLoaderList.remove(loader)
-        del self._projectLoaderDict[loader.filetype()]
         return loader
 
 

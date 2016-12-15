@@ -52,14 +52,14 @@ from eddy.core.project import Project
 from eddy.ui.fields import StringField
 
 
-class ProjectDialog(QtWidgets.QDialog):
+class NewProjectDialog(QtWidgets.QDialog):
     """
-    This class is used to display a modal window to enter project specific data.
+    This class is used to display a modal window to enter new project specific data.
     """
     def __init__(self, parent=None):
         """
         Initialize the project dialog.
-        :type parent: QtWidgets.QWidget
+        :type parent: QWidget
         """
         super().__init__(parent)
 
@@ -79,7 +79,6 @@ class ProjectDialog(QtWidgets.QDialog):
         self.nameField.setFont(Font('Roboto', 12))
         self.nameField.setMinimumWidth(400)
         self.nameField.setMaxLength(64)
-        connect(self.nameField.textChanged, self.onNameFieldChanged)
 
         self.prefixLabel = QtWidgets.QLabel(self)
         self.prefixLabel.setFont(Font('Roboto', 12))
@@ -95,9 +94,10 @@ class ProjectDialog(QtWidgets.QDialog):
         self.iriField.setFont(Font('Roboto', 12))
         self.iriField.setMinimumWidth(400)
 
-        connect(self.iriField.textChanged, self.doProjectPathValidate)
-        connect(self.nameField.textChanged, self.doProjectPathValidate)
-        connect(self.prefixField.textChanged, self.doProjectPathValidate)
+        connect(self.prefixField.textChanged, self.doAcceptForm)
+        connect(self.iriField.textChanged, self.doAcceptForm)
+        connect(self.nameField.textChanged, self.doAcceptForm)
+        connect(self.nameField.textChanged, self.onNameFieldChanged)
 
         self.pathLabel = QtWidgets.QLabel(self)
         self.pathLabel.setFont(Font('Roboto', 12))
@@ -142,11 +142,11 @@ class ProjectDialog(QtWidgets.QDialog):
         self.caption.setProperty('class', 'invalid')
         self.caption.setVisible(False)
 
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.mainLayout.addWidget(self.formWidget)
-        self.mainLayout.addWidget(self.caption)
-        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
+        self.gridLayout = QtWidgets.QVBoxLayout(self)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.addWidget(self.formWidget)
+        self.gridLayout.addWidget(self.caption)
+        self.gridLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
         self.setFixedSize(self.sizeHint())
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -165,6 +165,13 @@ class ProjectDialog(QtWidgets.QDialog):
         :rtype: str
         """
         return self.iriField.value()
+
+    def name(self):
+        """
+        Returns the value of the name field (trimmed).
+        :rtype: str
+        """
+        return self.nameField.value()
 
     def path(self):
         """
@@ -189,13 +196,13 @@ class ProjectDialog(QtWidgets.QDialog):
         """
         Accept the project form and creates a new empty project.
         """
-        project = Project(self.path(), self.prefix(), self.iri(), OWL2Profile())
+        project = Project(name=self.name(), path=self.path(), prefix=self.prefix(), iri=self.iri(), profile=OWL2Profile())
         worker = GrapholProjectExporter(project)
         worker.run()
         super().accept()
 
     @QtCore.pyqtSlot()
-    def doProjectPathValidate(self):
+    def doAcceptForm(self):
         """
         Validate project settings.
         """
@@ -206,18 +213,15 @@ class ProjectDialog(QtWidgets.QDialog):
         # CHECK NAME
         #################################
 
-        name = self.nameField.value()
-        path = self.pathField.value()
-
-        if not name:
+        if not self.name():
             caption = ''
             enabled = False
         else:
-            if isdir(path):
-                caption = "Project '{0}' already exists!".format(name)
+            if isdir(self.path()):
+                caption = "Project '{0}' already exists!".format(self.name())
                 enabled = False
-            elif not isPathValid(path):
-                caption = "'{0}' is not a valid project name!".format(name)
+            elif not isPathValid(self.path()):
+                caption = "'{0}' is not a valid project name!".format(self.name())
                 enabled = False
 
         #############################################
@@ -225,7 +229,7 @@ class ProjectDialog(QtWidgets.QDialog):
         #################################
 
         if enabled:
-            if not self.prefixField.value():
+            if not self.prefix():
                 caption = ''
                 enabled = False
 
@@ -234,7 +238,7 @@ class ProjectDialog(QtWidgets.QDialog):
         #################################
 
         if enabled:
-            if not self.iriField.value():
+            if not self.iri():
                 caption = ''
                 enabled = False
 

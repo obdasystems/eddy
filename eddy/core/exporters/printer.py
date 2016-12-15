@@ -59,7 +59,7 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
     def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
-        In this particular case we don't have any type, so we return None
+        In this particular case we don't have any type, so we return None.
         :return: File
         """
         return None

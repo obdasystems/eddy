@@ -62,3 +62,31 @@ QPushButton:disabled {
     stop: 0.0 #FDFDFD, stop: 0.3 #F8F8F8,
     stop: 0.7 #EDEDED, stop: 1.0 #EBEBEB);
 }
+QPushButton.flat,
+QPushButton.flat:focus,
+QPushButton.flat:pressed,
+QPushButton.flat:pressed:focus,
+QPushButton.flat:hover,
+QPushButton.flat:hover:focus {
+  background: #a1a1a1;
+  border: 0;
+  color: #000000;
+  text-transform: uppercase;
+}
+QPushButton.flat:disabled {
+  color: #A9A9A9;
+  background: #777777;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+QPushButton.blue,
+QPushButton.blue:focus,
+QPushButton.blue:pressed,
+QPushButton.blue:pressed:focus {
+  background: #42A5F5;
+}
+QPushButton.blue:hover,
+QPushButton.blue:hover:focus {
+  background: #68bdff;
+}

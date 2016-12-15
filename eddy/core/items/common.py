@@ -42,9 +42,9 @@ from PyQt5 import QtWidgets
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
-from eddy.core.datatypes.qt import Font
 
 
 class DiagramItemMixin:
@@ -93,8 +93,16 @@ class DiagramItemMixin:
     def isLabel(self):
         """
         Returns True if this element is a label, False otherwise.
+        :rtype: bool
         """
         return self.type() is Item.Label
+
+    def isMeta(self):
+        """
+        Returns True iff if this element may have meta, False otherwise.
+        :rtype: bool
+        """
+        return False
 
     def isNode(self):
         """

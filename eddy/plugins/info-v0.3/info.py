@@ -41,7 +41,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes import CommandNodeChangeMeta
+from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.commands.project import CommandProjectSetProfile
@@ -427,8 +427,6 @@ class InfoWidget(QtWidgets.QScrollArea):
                             show = self.infoRoleNode
                         elif item.type() is Item.AttributeNode:
                             show = self.infoAttributeNode
-                        elif item.type() is Item.IndividualNode and item.identity() is Identity.Value:
-                            show = self.infoValueNode
                         else:
                             show = self.infoPredicateNode
                     else:
@@ -1046,13 +1044,18 @@ class AttributeNodeInfo(PredicateNodeInfo):
         sender = self.sender()
         checked = sender.isChecked()
         key = sender.property('key')
-        meta = self.project.meta(self.node.type(), self.node.text())
-        copy = meta.copy()
-        copy[key] = checked
-        if copy != meta:
+        undo = self.project.meta(self.node.type(), self.node.text())
+        redo = undo.copy()
+        redo[key] = checked
+        if redo != undo:
             prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
             name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
-            self.session.undostack.push(CommandNodeChangeMeta(self.node.diagram, self.node, meta, copy, name))
+            self.session.undostack.push(
+                CommandNodeSetMeta(
+                    self.project,
+                    self.node.type(),
+                    self.node.text(),
+                    undo, redo, name))
 
     #############################################
     #   INTERFACE
@@ -1164,13 +1167,18 @@ class RoleNodeInfo(PredicateNodeInfo):
         sender = self.sender()
         checked = sender.isChecked()
         key = sender.property('key')
-        meta = self.project.meta(self.node.type(), self.node.text())
-        copy = meta.copy()
-        copy[key] = checked
-        if copy != meta:
+        undo = self.project.meta(self.node.type(), self.node.text())
+        redo = undo.copy()
+        redo[key] = checked
+        if redo != undo:
             prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
             name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
-            self.session.undostack.push(CommandNodeChangeMeta(self.node.diagram, self.node, meta, copy, name))
+            self.session.undostack.push(
+                CommandNodeSetMeta(
+                    self.project,
+                    self.node.type(),
+                    self.node.text(),
+                    undo, redo, name))
 
     #############################################
     #   INTERFACE

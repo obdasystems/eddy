@@ -119,7 +119,43 @@ class AbstractDiagramLoader(AbstractLoader):
     def run(self):
         """
         Perform the load of the diagram and add it to the project.
-        :rtype: Diagram
+        """
+        pass
+
+
+class AbstractOntologyLoader(AbstractLoader):
+    """
+    Extends AbstractLoader providing the base class for all the Ontology loaders.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, path, project, session):
+        """
+        Initialize the AbstractOntologyLoader.
+        :type path: str
+        :type project: Project
+        :type session: Session
+        """
+        super().__init__(path, session)
+        self.project = project
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    @abstractmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        pass
+
+    @abstractmethod
+    def run(self):
+        """
+        Perform the load of the ontology and the merge with the current project.
         """
         pass
 
@@ -154,6 +190,6 @@ class AbstractProjectLoader(AbstractLoader):
     @abstractmethod
     def run(self):
         """
-        Perform the load.
+        Perform the load of the project and set is as Session project
         """
         pass

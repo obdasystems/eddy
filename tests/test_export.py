@@ -39,7 +39,7 @@ from tests import EddyTestCase
 
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
-from eddy.core.exporters.owl2 import OWLProjectExporterWorker
+from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
@@ -89,10 +89,10 @@ class ExportTestCase(EddyTestCase):
 
     def test_export_project_to_owl_without_normalization(self):
         # WHEN
-        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-            axioms={x for x in OWLAxiom},
-            normalize=False,
-            syntax=OWLSyntax.Functional)
+        worker = OWLOntologyExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
+                                           axioms={x for x in OWLAxiom},
+                                           normalize=False,
+                                           syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
@@ -184,10 +184,10 @@ class ExportTestCase(EddyTestCase):
 
     def test_export_project_to_owl_with_normalization(self):
         # WHEN
-        worker = OWLProjectExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-            axioms={x for x in OWLAxiom},
-            normalize=True,
-            syntax=OWLSyntax.Functional)
+        worker = OWLOntologyExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
+                                           axioms={x for x in OWLAxiom},
+                                           normalize=True,
+                                           syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')

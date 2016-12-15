@@ -66,6 +66,8 @@ from eddy.core.common import HasDiagramExportSystem
 from eddy.core.common import HasDiagramLoadSystem
 from eddy.core.common import HasMenuSystem
 from eddy.core.common import HasNotificationSystem
+from eddy.core.common import HasOntologyExportSystem
+from eddy.core.common import HasOntologyLoadSystem
 from eddy.core.common import HasPluginSystem
 from eddy.core.common import HasProfileSystem
 from eddy.core.common import HasProjectExportSystem
@@ -81,17 +83,18 @@ from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
-from eddy.core.exporters.owl2 import OWLProjectExporter
+from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory
 from eddy.core.functions.fsystem import fexists
-from eddy.core.functions.misc import first, format_exception, rstrip
+from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.path import shortPath
 from eddy.core.functions.signals import connect
-from eddy.core.loaders.graphml import GraphMLDiagramLoader
+from eddy.core.loaders.graphml import GraphMLOntologyLoader
+from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
@@ -126,9 +129,9 @@ LOGGER = getLogger(__name__)
 
 
 class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
-              HasDiagramExportSystem, HasProjectExportSystem, HasDiagramLoadSystem,
-              HasProjectLoadSystem, HasProfileSystem, HasThreadingSystem,
-              HasNotificationSystem, QtWidgets.QMainWindow):
+    HasDiagramExportSystem, HasOntologyExportSystem, HasProjectExportSystem,
+    HasDiagramLoadSystem, HasOntologyLoadSystem, HasProjectLoadSystem,
+    HasProfileSystem, HasThreadingSystem, HasNotificationSystem, QtWidgets.QMainWindow):
     """
     Extends QtWidgets.QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
@@ -215,7 +218,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.sgnReady.emit()
 
-        LOGGER.header('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
+        LOGGER.info('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
 
     #############################################
     #   SESSION CONFIGURATION
@@ -629,14 +632,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(PdfDiagramExporter)
+        self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholProjectExporter)
-        self.addProjectExporter(OWLProjectExporter)
 
     def initLoaders(self):
         """
         Initialize diagram and project loaders.
         """
-        self.addDiagramLoader(GraphMLDiagramLoader)
+        self.addOntologyLoader(GraphMLOntologyLoader)
+        self.addOntologyLoader(GrapholOntologyLoader_v2)
         self.addProjectLoader(GrapholProjectLoader_v2)
 
     def initMenus(self):
@@ -838,7 +842,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Load and initialize application plugins.
         """
-        LOGGER.header('Loading plugins')
+        LOGGER.info('Loading plugins...')
 
         #############################################
         # SEARCH PLUGINS
@@ -1166,12 +1170,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(self.projectExporterNameFilters(exclude={File.Graphol}))
+            dialog.setNameFilters(sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol})))
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
-                worker = self.createProjectExporter(filetype, self.project, self)
+                worker = self.createOntologyExporter(filetype, self.project, self)
                 worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot('QGraphicsScene')
@@ -1203,14 +1207,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @QtCore.pyqtSlot()
     def doImport(self):
         """
-        Import a document from a different file format.
+        Import an ontology into the currently active Project.
         """
         dialog = QtWidgets.QFileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        dialog.setNameFilters(self.diagramLoaderNameFilters())
+        dialog.setNameFilters(self.ontologyLoaderNameFilters())
         if dialog.exec_():
             filetype = File.forValue(dialog.selectedNameFilter())
             selected = [x for x in dialog.selectedFiles() if File.forPath(x) is filetype and fexists(x)]
@@ -1219,8 +1223,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     with BusyProgressDialog(parent=self) as progress:
                         for path in selected:
                             progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
-                            loader = self.createDiagramLoader(filetype, path, self.project, self)
-                            loader.run()
+                            worker = self.createOntologyLoader(filetype, path, self.project, self)
+                            worker.run()
                 except Exception as e:
                     msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -1230,8 +1234,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                     msgbox.setWindowTitle('Import failed!')
                     msgbox.exec_()
-                finally:
-                    self.sgnSaveProject.emit()
 
     @QtCore.pyqtSlot()
     def doInvertRole(self):
@@ -1531,7 +1533,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(self.diagramExporterNameFilters())
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            dialog.selectFile(rstrip(diagram.name, File.Graphol.extension))
+            dialog.selectFile(diagram.name)
             if dialog.exec_():
                 filetype = File.forValue(dialog.selectedNameFilter())
                 worker = self.createDiagramExporter(filetype, diagram, self)
@@ -1953,7 +1955,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnClosed.emit()
             closeEvent.accept()
 
-            LOGGER.header('Session shutdown completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
+            LOGGER.info('Session shutdown completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
 
     def keyPressEvent(self, keyEvent):
         """

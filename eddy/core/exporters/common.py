@@ -72,7 +72,7 @@ class AbstractExporter(QtCore.QObject):
     def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
-        :return: File
+        :rtype: File
         """
         pass
 
@@ -93,7 +93,7 @@ class AbstractDiagramExporter(AbstractExporter):
 
     def __init__(self, diagram, session):
         """
-        Initialize the AbstractExporter.
+        Initialize the AbstractDiagramExporter.
         :type diagram: Diagram
         :type session: Session
         """
@@ -109,7 +109,44 @@ class AbstractDiagramExporter(AbstractExporter):
     def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
-        :return: File
+        :rtype: File
+        """
+        pass
+
+    @abstractmethod
+    def run(self, path):
+        """
+        Perform the export.
+        :type path: str
+        """
+        pass
+
+
+class AbstractOntologyExporter(AbstractExporter):
+    """
+    Extends AbstractExporter providing the base class for all the Ontology exporters.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, project, session):
+        """
+        Initialize the AbstractOntologyExporter.
+        :type project: Project
+        :type session: Session
+        """
+        super().__init__(session)
+        self.project = project
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    @abstractmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :rtype: File
         """
         pass
 
@@ -130,7 +167,7 @@ class AbstractProjectExporter(AbstractExporter):
 
     def __init__(self, project, session):
         """
-        Initialize the AbstractExporter.
+        Initialize the AbstractProjectExporter.
         :type project: Project
         :type session: Session
         """
@@ -146,7 +183,7 @@ class AbstractProjectExporter(AbstractExporter):
     def filetype(cls):
         """
         Returns the type of the file that will be used for the export.
-        :return: File
+        :rtype: File
         """
         pass
 

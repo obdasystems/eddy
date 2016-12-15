@@ -49,7 +49,7 @@ from eddy.core.functions.path import compressPath, isSubPath
 from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
 from eddy.core.functions.signals import connect
 
-from eddy.ui.project import ProjectDialog
+from eddy.ui.project import NewProjectDialog
 
 
 class Welcome(QtWidgets.QWidget):
@@ -272,8 +272,8 @@ class Welcome(QtWidgets.QWidget):
         """
         Bring up a modal window used to create a new project.
         """
-        form = ProjectDialog(self)
-        if form.exec_() == ProjectDialog.Accepted:
+        form = NewProjectDialog(self)
+        if form.exec_() == NewProjectDialog.Accepted:
             self.sgnCreateSession.emit(expandPath(form.pathField.value()))
 
     @QtCore.pyqtSlot()
