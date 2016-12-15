@@ -50,7 +50,7 @@ from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class CsvExporterPlugin(AbstractPlugin):

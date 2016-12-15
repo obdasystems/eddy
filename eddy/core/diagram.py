@@ -51,7 +51,7 @@ from eddy.core.items.factory import ItemFactory
 from eddy.core.output import getLogger
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class Diagram(QtWidgets.QGraphicsScene):

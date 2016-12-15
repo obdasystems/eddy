@@ -42,7 +42,7 @@ from eddy.core.output import getLogger
 from eddy.core.datatypes.qt import Font
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class LogDialog(QtWidgets.QDialog):

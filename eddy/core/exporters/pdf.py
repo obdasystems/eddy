@@ -44,7 +44,7 @@ from eddy.core.functions.path import openPath
 from eddy.core.output import getLogger
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class PdfDiagramExporter(AbstractDiagramExporter):

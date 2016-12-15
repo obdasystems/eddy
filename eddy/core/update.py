@@ -43,7 +43,7 @@ from eddy.core.output import getLogger
 from eddy.core.worker import AbstractWorker
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class UpdateCheckWorker(AbstractWorker):

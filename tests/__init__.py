@@ -36,6 +36,7 @@
 import jnius_config
 import os
 import sys
+import threading
 
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.fsystem import cpdir, isdir, mkdir, rmdir, fexists
@@ -80,8 +81,37 @@ from PyQt5 import QtTest
 
 from eddy import APPNAME, ORGANIZATION, WORKSPACE
 from eddy.core.application import Eddy
+from eddy.core.output import getLogger
 from eddy.ui import fonts_rc
 from eddy.ui import images_rc
+
+
+testcase_lock = threading.Lock()
+
+
+class LoggingDisabled(object):
+    """
+    context manager that temporarily disable logging.
+    USAGE:
+        with LoggingDisabled():
+            # do stuff
+    """
+    DISABLED = False
+
+    def __init__(self):
+        self.nested = LoggingDisabled.DISABLED
+
+    def __enter__(self):
+        if not self.nested:
+            Logger = getLogger()
+            Logger.disabled = True
+            LoggingDisabled.DISABLED = True
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.nested:
+            Logger = getLogger()
+            Logger.disabled = False
+            LoggingDisabled.DISABLED = False
 
 
 class EddyTestCase(TestCase):
@@ -96,6 +126,10 @@ class EddyTestCase(TestCase):
         """
         Initialize test case environment.
         """
+        # ACQUIRE LOCK AND FLUSH STREAMS
+        testcase_lock.acquire()
+        sys.stderr.flush()
+        sys.stdout.flush()
         # MAKE SURE TO USE CORRECT SETTINGS
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('workspace/home', WORKSPACE)
@@ -119,6 +153,10 @@ class EddyTestCase(TestCase):
         self.eddy.quit()
         # REMOVE TEST DIRECTORY
         rmdir('@tests/.tests/')
+        # RELEASE LOCK AND FLUSH STREAMS
+        sys.stderr.flush()
+        sys.stdout.flush()
+        testcase_lock.release()
 
     #############################################
     #   INTERFACE
@@ -138,14 +176,15 @@ class EddyTestCase(TestCase):
         parser.add_argument('--tests', dest='tests', action='store_true')
         parser.add_argument('--open', dest='open', default=None)
         options, _ = parser.parse_known_args(args=arguments)
-        self.eddy = Eddy(options, arguments)
-        self.eddy.configure(options)
-        self.eddy.start(options)
-        # WAIT FOR THE SESSION TO BE COMPLETELY INITIALIZED
-        QtTest.QTest.qWaitForWindowActive(self.eddy.sessions[0])
-        # SET SHORTCUTS
-        self.project = self.eddy.sessions[0].project
-        self.session = self.eddy.sessions[0]
+        with LoggingDisabled():
+            self.eddy = Eddy(options, arguments)
+            self.eddy.configure(options)
+            self.eddy.start(options)
+            # WAIT FOR THE SESSION TO BE COMPLETELY INITIALIZED
+            QtTest.QTest.qWaitForWindowActive(self.eddy.sessions[0])
+            # SET SHORTCUTS
+            self.project = self.eddy.sessions[0].project
+            self.session = self.eddy.sessions[0]
 
     #############################################
     #   CUSTOM ASSERTIONS

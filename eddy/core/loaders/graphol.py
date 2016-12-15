@@ -65,7 +65,7 @@ from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class GrapholDiagramLoader_v1(AbstractDiagramLoader):

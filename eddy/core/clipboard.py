@@ -39,7 +39,7 @@ from eddy.core.commands.common import CommandItemsAdd
 from eddy.core.output import getLogger
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class Clipboard(QtCore.QObject):

@@ -55,7 +55,7 @@ from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.output import getLogger
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):

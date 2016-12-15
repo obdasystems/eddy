@@ -53,7 +53,7 @@ from eddy.core.worker import AbstractWorker
 from eddy.ui.notification import Notification
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class HasActionSystem(object):

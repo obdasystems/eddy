@@ -64,7 +64,7 @@ from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationWorker
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
         
 class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):

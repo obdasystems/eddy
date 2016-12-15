@@ -101,7 +101,7 @@ app = None
 msgbox = None
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 def base_except_hook(exc_type, exc_value, exc_traceback):

@@ -125,7 +125,7 @@ _MACOS = sys.platform.startswith('darwin')
 _WIN32 = sys.platform.startswith('win32')
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,

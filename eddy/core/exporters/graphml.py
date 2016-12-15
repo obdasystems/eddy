@@ -44,7 +44,7 @@ from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class GraphMLDiagramExporter(AbstractDiagramExporter):

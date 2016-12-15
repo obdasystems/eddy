@@ -51,7 +51,7 @@ from eddy.core.datatypes.qt import Font
 
 from eddy.ui.fields import StringField
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class PluginInstallDialog(QtWidgets.QDialog):

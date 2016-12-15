@@ -62,7 +62,7 @@ from eddy.ui.workspace import WorkspaceDialog
 from eddy.ui.welcome import Welcome
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class Eddy(QtWidgets.QApplication):

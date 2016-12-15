@@ -45,7 +45,7 @@ from eddy.core.output import getLogger
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 # PROJECT INDEX

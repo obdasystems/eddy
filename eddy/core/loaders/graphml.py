@@ -55,7 +55,7 @@ from eddy.core.output import getLogger
 from eddy.core.project import Project, ProjectMergeWorker
 
 
-LOGGER = getLogger(__name__)
+LOGGER = getLogger()
 
 
 class GraphMLOntologyLoader(AbstractOntologyLoader):
