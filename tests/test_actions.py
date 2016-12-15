@@ -39,7 +39,7 @@ from eddy.core.functions.misc import first
 from eddy.core.datatypes.graphol import Item
 
 
-class BuiltInActionsTestCase(EddyTestCase):
+class ActionsTestCase(EddyTestCase):
     """
     Tests for built-in actions.
     """
