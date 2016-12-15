@@ -18,6 +18,18 @@ language:
 python:
   - 3.4
 
+# Jobs environment variables
+env:
+  matrix:
+    - TEST=actions
+    - TEST=datatypes
+    - TEST=diagram
+    - TEST=export
+    - TEST=functions
+    - TEST=palette
+    - TEST=profiles
+    - TEST=tools
+
 ## Test only master and dev branches
 branches:
   only:
@@ -40,7 +52,7 @@ before_script:
 
 ## Run automated tests using nose
 script:
-  - nosetests --where=tests --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc
+  - nosetests --tests=tests/test_${TEST}.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc
 
 # Report tests coverage
 after_success:
