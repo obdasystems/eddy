@@ -90,9 +90,7 @@ class ExportTestCase(EddyTestCase):
     def test_export_project_to_owl_without_normalization(self):
         # WHEN
         worker = OWLOntologyExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-                                           axioms={x for x in OWLAxiom},
-                                           normalize=False,
-                                           syntax=OWLSyntax.Functional)
+           axioms={x for x in OWLAxiom}, normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
@@ -130,7 +128,7 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(DataProperty(test:name))', content)
         self.assertIn('Declaration(Datatype(xsd:string))', content)
         self.assertIn('Declaration(AnnotationProperty(<rdfs:comment>))', content)
-        self.assertIn('AnnotationAssertion(<rdfs:comment> test:Person "a human being"^^xsd:string)', content)
+        self.assertIn('AnnotationAssertion(<rdfs:comment> test:Person "A human being"^^xsd:string)', content)
         self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
         self.assertIn('SubClassOf(test:Father test:Male)', content)
         self.assertIn('SubClassOf(test:Mother test:Female)', content)
@@ -185,9 +183,7 @@ class ExportTestCase(EddyTestCase):
     def test_export_project_to_owl_with_normalization(self):
         # WHEN
         worker = OWLOntologyExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-                                           axioms={x for x in OWLAxiom},
-                                           normalize=True,
-                                           syntax=OWLSyntax.Functional)
+           axioms={x for x in OWLAxiom}, normalize=True, syntax=OWLSyntax.Functional)
         worker.run()
         # THEN
         self.assertFileExists('@tests/.tests/test_project_1.owl')
@@ -225,7 +221,7 @@ class ExportTestCase(EddyTestCase):
         self.assertIn('Declaration(DataProperty(test:name))', content)
         self.assertIn('Declaration(Datatype(xsd:string))', content)
         self.assertIn('Declaration(AnnotationProperty(<rdfs:comment>))', content)
-        self.assertIn('AnnotationAssertion(<rdfs:comment> test:Person "a human being"^^xsd:string)', content)
+        self.assertIn('AnnotationAssertion(<rdfs:comment> test:Person "A human being"^^xsd:string)', content)
         self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
         self.assertIn('SubClassOf(test:Father test:Male)', content)
         self.assertIn('SubClassOf(test:Mother test:Female)', content)
