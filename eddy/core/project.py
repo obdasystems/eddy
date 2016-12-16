@@ -354,7 +354,7 @@ class ProjectIndex(dict):
                 if diagram.name not in self[K_NODE]:
                     self[K_NODE][diagram.name] = dict()
                 self[K_NODE][diagram.name][item.id] = item
-                if item.isMeta():
+                if item.isPredicate():
                     k = item.text()
                     if i not in self[K_PREDICATE]:
                         self[K_PREDICATE][i] = dict()
@@ -619,7 +619,7 @@ class ProjectIndex(dict):
                         del self[K_NODE][diagram.name][item.id]
                         if not self[K_NODE][diagram.name]:
                             del self[K_NODE][diagram.name]
-                if item.isMeta():
+                if item.isPredicate():
                     k = item.text()
                     if i in self[K_PREDICATE]:
                         if k in self[K_PREDICATE][i]:
