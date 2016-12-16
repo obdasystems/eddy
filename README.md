@@ -5,7 +5,8 @@
 [![Python version](https://img.shields.io/badge/python-3.4.4-blue.svg)](https://www.python.org)
 [![GitHub issues](https://img.shields.io/github/issues/danielepantaleone/eddy.svg)](https://github.com/danielepantaleone/eddy/issues)
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/danielepantaleone/eddy/master/LICENSE)
-[![Gitter chatroom](https://badges.gitter.im/danielepantaleone/eddy.svg)](https://gitter.im/danielepantaleone/eddy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Download eddy](https://img.shields.io/sourceforge/dt/eddy-editor.svg)](https://sourceforge.net/projects/eddy-editor/files/latest/download)
+[![Gitter](https://img.shields.io/gitter/room/danielepantaleone/eddy.svg)](https://gitter.im/danielepantaleone/eddy)
 
 | Branch    | Status  |
 |-----------|---------------|
