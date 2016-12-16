@@ -44,6 +44,10 @@ from eddy.core.functions.misc import postfix
 from eddy.core.functions.fsystem import fwrite, mkdir
 from eddy.core.output import getLogger
 from eddy.core.project import Project
+from eddy.core.project import K_DESCRIPTION, K_URL
+from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
+from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
+from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 
 
 LOGGER = getLogger()
@@ -137,10 +141,10 @@ class GrapholProjectExporter(AbstractProjectExporter):
         element = self.document.createElement('predicate')
         element.setAttribute('type', self.itemToXml[item])
         element.setAttribute('name', name)
-        description = self.document.createElement('description')
-        description.appendChild(self.document.createTextNode(meta.get('description', '')))
-        url = self.document.createElement('url')
-        url.appendChild(self.document.createTextNode(meta.get('url', '')))
+        description = self.document.createElement(K_DESCRIPTION)
+        description.appendChild(self.document.createTextNode(meta.get(K_DESCRIPTION, '')))
+        url = self.document.createElement(K_URL)
+        url.appendChild(self.document.createTextNode(meta.get(K_URL, '')))
         element.appendChild(url)
         element.appendChild(description)
         return element
@@ -154,8 +158,8 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         element = self.exportPredicateMeta(item, name)
         meta = self.project.meta(item, name)
-        functional = self.document.createElement('functional')
-        functional.appendChild(self.document.createTextNode(str(int(meta.get('functional', False)))))
+        functional = self.document.createElement(K_FUNCTIONAL)
+        functional.appendChild(self.document.createTextNode(str(int(meta.get(K_FUNCTIONAL, False)))))
         element.appendChild(functional)
         return element
     
@@ -168,20 +172,20 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         element = self.exportPredicateMeta(item, name)
         meta = self.project.meta(item, name)
-        functional = self.document.createElement('functional')
-        functional.appendChild(self.document.createTextNode(str(int(meta.get('functional', False)))))
-        inverseFunctional = self.document.createElement('inverseFunctional')
-        inverseFunctional.appendChild(self.document.createTextNode(str(int(meta.get('inverseFunctional', False)))))
-        asymmetric = self.document.createElement('asymmetric')
-        asymmetric.appendChild(self.document.createTextNode(str(int(meta.get('asymmetric', False)))))
-        irreflexive = self.document.createElement('irreflexive')
-        irreflexive.appendChild(self.document.createTextNode(str(int(meta.get('irreflexive', False)))))
-        reflexive = self.document.createElement('reflexive')
-        reflexive.appendChild(self.document.createTextNode(str(int(meta.get('reflexive', False)))))
-        symmetric = self.document.createElement('symmetric')
-        symmetric.appendChild(self.document.createTextNode(str(int(meta.get('symmetric', False)))))
-        transitive = self.document.createElement('transitive')
-        transitive.appendChild(self.document.createTextNode(str(int(meta.get('transitive', False)))))
+        functional = self.document.createElement(K_FUNCTIONAL)
+        functional.appendChild(self.document.createTextNode(str(int(meta.get(K_FUNCTIONAL, False)))))
+        inverseFunctional = self.document.createElement(K_INVERSE_FUNCTIONAL)
+        inverseFunctional.appendChild(self.document.createTextNode(str(int(meta.get(K_INVERSE_FUNCTIONAL, False)))))
+        asymmetric = self.document.createElement(K_ASYMMETRIC)
+        asymmetric.appendChild(self.document.createTextNode(str(int(meta.get(K_ASYMMETRIC, False)))))
+        irreflexive = self.document.createElement(K_IRREFLEXIVE)
+        irreflexive.appendChild(self.document.createTextNode(str(int(meta.get(K_IRREFLEXIVE, False)))))
+        reflexive = self.document.createElement(K_REFLEXIVE)
+        reflexive.appendChild(self.document.createTextNode(str(int(meta.get(K_REFLEXIVE, False)))))
+        symmetric = self.document.createElement(K_SYMMETRIC)
+        symmetric.appendChild(self.document.createTextNode(str(int(meta.get(K_SYMMETRIC, False)))))
+        transitive = self.document.createElement(K_TRANSITIVE)
+        transitive.appendChild(self.document.createTextNode(str(int(meta.get(K_TRANSITIVE, False)))))
         element.appendChild(functional)
         element.appendChild(inverseFunctional)
         element.appendChild(asymmetric)

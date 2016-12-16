@@ -42,6 +42,9 @@ from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
+from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
+from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 
 
 class RoleNode(AbstractResizableNode):
@@ -150,7 +153,7 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['asymmetric']
+            return self.project.meta(self.type(), self.text())[K_ASYMMETRIC]
         except (AttributeError, KeyError):
             return False
 
@@ -160,7 +163,7 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['functional'] and \
+            return self.project.meta(self.type(), self.text())[K_FUNCTIONAL] and \
                    self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
@@ -171,7 +174,7 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['inverseFunctional'] and \
+            return self.project.meta(self.type(), self.text())[K_INVERSE_FUNCTIONAL] and \
                    self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
@@ -182,7 +185,7 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['irreflexive']
+            return self.project.meta(self.type(), self.text())[K_IRREFLEXIVE]
         except (AttributeError, KeyError):
             return False
 
@@ -192,7 +195,7 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['reflexive'] and \
+            return self.project.meta(self.type(), self.text())[K_REFLEXIVE] and \
                    self.project.profile.type() is not OWLProfile.OWL2RL
         except (AttributeError, KeyError):
             return False
@@ -203,7 +206,7 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['symmetric']
+            return self.project.meta(self.type(), self.text())[K_SYMMETRIC]
         except (AttributeError, KeyError):
             return False
 
@@ -213,7 +216,7 @@ class RoleNode(AbstractResizableNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['transitive'] and \
+            return self.project.meta(self.type(), self.text())[K_TRANSITIVE] and \
                    self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
@@ -563,7 +566,7 @@ class RoleNode(AbstractResizableNode):
         :type asymmetric: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['asymmetric'] = bool(asymmetric)
+        meta[K_ASYMMETRIC] = bool(asymmetric)
         self.project.setMeta(self.type(), self.text(), meta)
 
     def setFunctional(self, functional):
@@ -572,7 +575,7 @@ class RoleNode(AbstractResizableNode):
         :type functional: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['functional'] = bool(functional)
+        meta[K_FUNCTIONAL] = bool(functional)
         self.project.setMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
             node.updateNode(functional=functional, selected=node.isSelected())
@@ -590,7 +593,7 @@ class RoleNode(AbstractResizableNode):
         :type inverseFunctional: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['inverseFunctional'] = bool(inverseFunctional)
+        meta[K_INVERSE_FUNCTIONAL] = bool(inverseFunctional)
         self.project.setMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
             node.updateNode(inverseFunctional=inverseFunctional, selected=node.isSelected())
@@ -601,7 +604,7 @@ class RoleNode(AbstractResizableNode):
         :type irreflexive: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['irreflexive'] = bool(irreflexive)
+        meta[K_IRREFLEXIVE] = bool(irreflexive)
         self.project.setMeta(self.type(), self.text(), meta)
 
     def setReflexive(self, reflexive):
@@ -610,7 +613,7 @@ class RoleNode(AbstractResizableNode):
         :type reflexive: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['reflexive'] = bool(reflexive)
+        meta[K_REFLEXIVE] = bool(reflexive)
         self.project.setMeta(self.type(), self.text(), meta)
 
     def setSymmetric(self, symmetric):
@@ -619,7 +622,7 @@ class RoleNode(AbstractResizableNode):
         :type symmetric: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['symmetric'] = bool(symmetric)
+        meta[K_SYMMETRIC] = bool(symmetric)
         self.project.setMeta(self.type(), self.text(), meta)
 
     def setTransitive(self, transitive):
@@ -628,7 +631,7 @@ class RoleNode(AbstractResizableNode):
         :type transitive: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['transitive'] = bool(transitive)
+        meta[K_TRANSITIVE] = bool(transitive)
         self.project.setMeta(self.type(), self.text(), meta)
 
     def setText(self, text):

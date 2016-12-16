@@ -41,6 +41,7 @@ from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.project import K_FUNCTIONAL
 
 
 class AttributeNode(AbstractNode):
@@ -125,7 +126,7 @@ class AttributeNode(AbstractNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())['functional'] and \
+            return self.project.meta(self.type(), self.text())[K_FUNCTIONAL] and \
                    self.project.profile.type() is not OWLProfile.OWL2QL
         except (AttributeError, KeyError):
             return False
@@ -172,7 +173,7 @@ class AttributeNode(AbstractNode):
         :type functional: bool
         """
         meta = self.project.meta(self.type(), self.text())
-        meta['functional'] = bool(functional)
+        meta[K_FUNCTIONAL] = bool(functional)
         self.project.setMeta(self.type(), self.text(), meta)
         for node in self.project.predicates(self.type(), self.text()):
             node.updateNode(functional=functional, selected=node.isSelected())

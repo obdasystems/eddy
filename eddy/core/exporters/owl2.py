@@ -57,6 +57,7 @@ from eddy.core.functions.owl import OWLFunctionalDocumentFilter
 from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
+from eddy.core.project import K_DESCRIPTION
 from eddy.core.worker import AbstractWorker
 
 from eddy.ui.fields import ComboBox, CheckBox
@@ -1110,9 +1111,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
         """
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
-            if meta and not isEmpty(meta.get('description', '')):
+            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
                 aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("rdfs:comment"))
-                value = self.df.getOWLLiteral(OWLAnnotationText(meta.get('description', '')))
+                value = self.df.getOWLLiteral(OWLAnnotationText(meta.get(K_DESCRIPTION, '')))
                 value = cast(self.OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(aproperty, value)
                 conversion = self.convert(node)

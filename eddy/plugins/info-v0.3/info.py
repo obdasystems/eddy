@@ -45,12 +45,15 @@ from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.commands.project import CommandProjectSetProfile
-from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import Facet, Datatype, OWLProfile
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
+from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
+from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
+from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 from eddy.core.regex import RE_CAMEL_SPACE
 
 from eddy.ui.dock import DockWidget
@@ -1027,7 +1030,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
         self.functBox.setFont(Font('Roboto', 12))
-        self.functBox.setProperty('key', 'functional')
+        self.functBox.setProperty('key', K_FUNCTIONAL)
         connect(self.functBox.clicked, self.flagChanged)
 
         self.predPropLayout.addRow(self.functKey, functParent)
@@ -1090,7 +1093,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
         self.functBox.setFont(Font('Roboto', 12))
-        self.functBox.setProperty('key', 'functional')
+        self.functBox.setProperty('key', K_FUNCTIONAL)
         connect(self.functBox.clicked, self.flagChanged)
 
         self.invFunctKey = Key('Inv. Funct.', self)
@@ -1099,7 +1102,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.invFunctBox = CheckBox(invFunctParent)
         self.invFunctBox.setCheckable(True)
         self.invFunctBox.setFont(Font('Roboto', 12))
-        self.invFunctBox.setProperty('key', 'inverseFunctional')
+        self.invFunctBox.setProperty('key', K_INVERSE_FUNCTIONAL)
         connect(self.invFunctBox.clicked, self.flagChanged)
 
         self.asymmetricKey = Key('Asymmetric', self)
@@ -1108,7 +1111,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.asymmetricBox = CheckBox(asymmetricParent)
         self.asymmetricBox.setCheckable(True)
         self.asymmetricBox.setFont(Font('Roboto', 12))
-        self.asymmetricBox.setProperty('key', 'asymmetric')
+        self.asymmetricBox.setProperty('key', K_ASYMMETRIC)
         connect(self.asymmetricBox.clicked, self.flagChanged)
 
         self.irreflexiveKey = Key('Irreflexive', self)
@@ -1117,7 +1120,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.irreflexiveBox = CheckBox(irreflexiveParent)
         self.irreflexiveBox.setCheckable(True)
         self.irreflexiveBox.setFont(Font('Roboto', 12))
-        self.irreflexiveBox.setProperty('key', 'irreflexive')
+        self.irreflexiveBox.setProperty('key', K_IRREFLEXIVE)
         connect(self.irreflexiveBox.clicked, self.flagChanged)
 
         self.reflexiveKey = Key('Reflexive', self)
@@ -1126,7 +1129,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.reflexiveBox = CheckBox(reflexiveParent)
         self.reflexiveBox.setCheckable(True)
         self.reflexiveBox.setFont(Font('Roboto', 12))
-        self.reflexiveBox.setProperty('key', 'reflexive')
+        self.reflexiveBox.setProperty('key', K_REFLEXIVE)
         connect(self.reflexiveBox.clicked, self.flagChanged)
 
         self.symmetricKey = Key('Symmetric', self)
@@ -1135,7 +1138,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.symmetricBox = CheckBox(symmetricParent)
         self.symmetricBox.setCheckable(True)
         self.symmetricBox.setFont(Font('Roboto', 12))
-        self.symmetricBox.setProperty('key', 'symmetric')
+        self.symmetricBox.setProperty('key', K_SYMMETRIC)
         connect(self.symmetricBox.clicked, self.flagChanged)
 
         self.transitiveKey = Key('Transitive', self)
@@ -1144,7 +1147,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.transitiveBox = CheckBox(transitiveParent)
         self.transitiveBox.setCheckable(True)
         self.transitiveBox.setFont(Font('Roboto', 12))
-        self.transitiveBox.setProperty('key', 'transitive')
+        self.transitiveBox.setProperty('key', K_TRANSITIVE)
         connect(self.transitiveBox.clicked, self.flagChanged)
 
         self.predPropLayout.addRow(self.functKey, functParent)

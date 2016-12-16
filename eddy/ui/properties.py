@@ -51,6 +51,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
+from eddy.core.project import K_DESCRIPTION, K_URL
 
 from eddy.ui.fields import IntegerField, StringField, TextField
 from eddy.ui.fields import CheckBox, ComboBox, SpinBox
@@ -444,7 +445,7 @@ class PredicateNodeProperty(NodeProperty):
         self.urlField = StringField(self)
         self.urlField.setFixedWidth(300)
         self.urlField.setFont(Font('Roboto', 12))
-        self.urlField.setValue(meta.get('url', ''))
+        self.urlField.setValue(meta.get(K_URL, ''))
 
         self.descriptionLabel = QtWidgets.QLabel(self)
         self.descriptionLabel.setFont(Font('Roboto', 12))
@@ -452,7 +453,7 @@ class PredicateNodeProperty(NodeProperty):
         self.descriptionField = TextField(self)
         self.descriptionField.setFixedSize(300, 160)
         self.descriptionField.setFont(Font('Roboto', 12))
-        self.descriptionField.setValue(meta.get('description', ''))
+        self.descriptionField.setValue(meta.get(K_DESCRIPTION, ''))
 
         self.generalLayout.addRow(self.urlLabel, self.urlField)
         self.generalLayout.addRow(self.descriptionLabel, self.descriptionField)
@@ -517,8 +518,8 @@ class PredicateNodeProperty(NodeProperty):
         """
         undo = self.diagram.project.meta(self.node.type(), self.node.text())
         redo = undo.copy()
-        redo['description'] = self.descriptionField.value()
-        redo['url'] = self.urlField.value()
+        redo[K_DESCRIPTION] = self.descriptionField.value()
+        redo[K_URL] = self.urlField.value()
         if redo != undo:
             return CommandNodeSetMeta(
                 self.diagram.project,

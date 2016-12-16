@@ -63,6 +63,10 @@ from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
+from eddy.core.project import K_DESCRIPTION, K_URL
+from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
+from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
+from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 
 
 LOGGER = getLogger()
@@ -665,7 +669,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         :rtype: dict
         """
         meta = self.importPredicateMetadata(element)
-        meta['functional'] = bool(int(element.firstChildElement('functional').text()))
+        meta[K_FUNCTIONAL] = bool(int(element.firstChildElement(K_FUNCTIONAL).text()))
         return meta
 
     def importPredicateMetadata(self, element):
@@ -677,8 +681,8 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         item = self.itemFromXml[element.attribute('type')]
         name = element.attribute('name')
         meta = self.project.meta(item, name)
-        meta['description'] = element.firstChildElement('description').text()
-        meta['url'] = element.firstChildElement('url').text()
+        meta[K_DESCRIPTION] = element.firstChildElement(K_DESCRIPTION).text()
+        meta[K_URL] = element.firstChildElement(K_URL).text()
         return meta
 
     def importRoleMetadata(self, element):
@@ -688,13 +692,13 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         :rtype: dict
         """
         meta = self.importPredicateMetadata(element)
-        meta['functional'] = bool(int( element.firstChildElement('functional').text()))
-        meta['inverseFunctional'] = bool(int(element.firstChildElement('inverseFunctional').text()))
-        meta['asymmetric'] = bool(int(element.firstChildElement('asymmetric').text()))
-        meta['irreflexive'] = bool(int(element.firstChildElement('irreflexive').text()))
-        meta['reflexive'] = bool(int(element.firstChildElement('reflexive').text()))
-        meta['symmetric'] = bool(int(element.firstChildElement('symmetric').text()))
-        meta['transitive'] = bool(int(element.firstChildElement('transitive').text()))
+        meta[K_FUNCTIONAL] = bool(int( element.firstChildElement(K_FUNCTIONAL).text()))
+        meta[K_INVERSE_FUNCTIONAL] = bool(int(element.firstChildElement(K_INVERSE_FUNCTIONAL).text()))
+        meta[K_ASYMMETRIC] = bool(int(element.firstChildElement(K_ASYMMETRIC).text()))
+        meta[K_IRREFLEXIVE] = bool(int(element.firstChildElement(K_IRREFLEXIVE).text()))
+        meta[K_REFLEXIVE] = bool(int(element.firstChildElement(K_REFLEXIVE).text()))
+        meta[K_SYMMETRIC] = bool(int(element.firstChildElement(K_SYMMETRIC).text()))
+        meta[K_TRANSITIVE] = bool(int(element.firstChildElement(K_TRANSITIVE).text()))
         return meta
 
     #############################################
@@ -731,12 +735,9 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         profile = self.session.createProfile(profileName)
         LOGGER.debug('Loaded ontology profile: %s', profile.name())
         self.project = Project(
-            name=os.path.basename(path),
-            path=path,
-            prefix=prefix,
-            iri=iri,
-            profile=profile,
-            session=self.session)
+            name=os.path.basename(path), 
+            path=path, prefix=prefix, iri=iri,
+            profile=profile, session=self.session)
 
     def importMetaFromXML(self):
         """
@@ -956,7 +957,7 @@ class GrapholLoaderMixin_v2(object):
         :rtype: dict
         """
         meta = self.importPredicateMeta(e)
-        meta['functional'] = bool(int(e.firstChildElement('functional').text()))
+        meta[K_FUNCTIONAL] = bool(int(e.firstChildElement(K_FUNCTIONAL).text()))
         return meta
 
     def importPredicateMeta(self, e):
@@ -968,8 +969,8 @@ class GrapholLoaderMixin_v2(object):
         item = self.itemFromXml[e.attribute('type')]
         name = e.attribute('name')
         meta = self.nproject.meta(item, name)
-        meta['description'] = e.firstChildElement('description').text()
-        meta['url'] = e.firstChildElement('url').text()
+        meta[K_DESCRIPTION] = e.firstChildElement(K_DESCRIPTION).text()
+        meta[K_URL] = e.firstChildElement(K_URL).text()
         return meta
 
     def importRoleMeta(self, e):
@@ -979,13 +980,13 @@ class GrapholLoaderMixin_v2(object):
         :rtype: dict
         """
         meta = self.importPredicateMeta(e)
-        meta['functional'] = bool(int(e.firstChildElement('functional').text()))
-        meta['inverseFunctional'] = bool(int(e.firstChildElement('inverseFunctional').text()))
-        meta['asymmetric'] = bool(int(e.firstChildElement('asymmetric').text()))
-        meta['irreflexive'] = bool(int(e.firstChildElement('irreflexive').text()))
-        meta['reflexive'] = bool(int(e.firstChildElement('reflexive').text()))
-        meta['symmetric'] = bool(int(e.firstChildElement('symmetric').text()))
-        meta['transitive'] = bool(int(e.firstChildElement('transitive').text()))
+        meta[K_FUNCTIONAL] = bool(int(e.firstChildElement(K_FUNCTIONAL).text()))
+        meta[K_INVERSE_FUNCTIONAL] = bool(int(e.firstChildElement(K_INVERSE_FUNCTIONAL).text()))
+        meta[K_ASYMMETRIC] = bool(int(e.firstChildElement(K_ASYMMETRIC).text()))
+        meta[K_IRREFLEXIVE] = bool(int(e.firstChildElement(K_IRREFLEXIVE).text()))
+        meta[K_REFLEXIVE] = bool(int(e.firstChildElement(K_REFLEXIVE).text()))
+        meta[K_SYMMETRIC] = bool(int(e.firstChildElement(K_SYMMETRIC).text()))
+        meta[K_TRANSITIVE] = bool(int(e.firstChildElement(K_TRANSITIVE).text()))
         return meta
 
     #############################################

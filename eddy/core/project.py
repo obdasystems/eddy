@@ -42,6 +42,7 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
 
+from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 
 
@@ -51,17 +52,32 @@ LOGGER = getLogger()
 # PROJECT INDEX
 K_DIAGRAM = 'diagrams'
 K_EDGE = 'edges'
-K_ITEM = 'items'
+K_ITEMS = 'items'
 K_META = 'meta'
 K_NODE = 'nodes'
 K_PREDICATE = 'predicates'
 K_TYPE = 'types'
 
 # PROJECT MERGE
-K_PROJECT = 'project'
-K_OTHER = 'other'
+K_CURRENT = 'current'
+K_FINAL = 'final'
+K_IMPORTING = 'importing'
 K_REDO = 'redo'
 K_UNDO = 'undo'
+K_ITEM = 'item'
+K_NAME = 'name'
+K_PROPERTY = 'property'
+
+# PREDICATES META KEYS
+K_DESCRIPTION = 'description'
+K_URL = 'url'
+K_FUNCTIONAL = 'functional'
+K_ASYMMETRIC = 'asymmetric'
+K_INVERSE_FUNCTIONAL = 'inverseFunctional'
+K_IRREFLEXIVE = 'irreflexive'
+K_REFLEXIVE = 'reflexive'
+K_SYMMETRIC = 'symmetric'
+K_TRANSITIVE = 'transitive'
 
 
 # noinspection PyTypeChecker
@@ -317,7 +333,7 @@ class ProjectIndex(dict):
         super().__init__(self)
         self[K_DIAGRAM] = dict()
         self[K_EDGE] = dict()
-        self[K_ITEM] = dict()
+        self[K_ITEMS] = dict()
         self[K_NODE] = dict()
         self[K_PREDICATE] = dict()
         self[K_TYPE] = dict()
@@ -341,10 +357,10 @@ class ProjectIndex(dict):
         :rtype: bool
         """
         i = item.type()
-        if diagram.name not in self[K_ITEM]:
-            self[K_ITEM][diagram.name] = dict()
-        if item.id not in self[K_ITEM][diagram.name]:
-            self[K_ITEM][diagram.name][item.id] = item
+        if diagram.name not in self[K_ITEMS]:
+            self[K_ITEMS][diagram.name] = dict()
+        if item.id not in self[K_ITEMS][diagram.name]:
+            self[K_ITEMS][diagram.name][item.id] = item
             if diagram.name not in self[K_TYPE]:
                 self[K_TYPE][diagram.name] = dict()
             if i not in self[K_TYPE][diagram.name]:
@@ -419,8 +435,8 @@ class ProjectIndex(dict):
         Returns True if the Project Index contains no element, False otherwise.
         :rtype: bool
         """
-        for i in self[K_ITEM]:
-            for _ in self[K_ITEM][i]:
+        for i in self[K_ITEMS]:
+            for _ in self[K_ITEMS][i]:
                 return False
         return True
 
@@ -432,7 +448,7 @@ class ProjectIndex(dict):
         :rtype: AbstractItem
         """
         try:
-            return self[K_ITEM][diagram.name][iid]
+            return self[K_ITEMS][diagram.name][iid]
         except KeyError:
             return None
 
@@ -461,8 +477,8 @@ class ProjectIndex(dict):
         """
         try:
             if not diagram:
-                return set.union(*(set(self[K_ITEM][i].values()) for i in self[K_ITEM]))
-            return set(self[K_ITEM][diagram.name].values())
+                return set.union(*(set(self[K_ITEMS][i].values()) for i in self[K_ITEMS]))
+            return set(self[K_ITEMS][diagram.name].values())
         except (KeyError, TypeError):
             return set()
 
@@ -601,11 +617,11 @@ class ProjectIndex(dict):
         :rtype: bool
         """
         i = item.type()
-        if diagram.name in self[K_ITEM]:
-            if item.id in self[K_ITEM][diagram.name]:
-                del self[K_ITEM][diagram.name][item.id]
-                if not self[K_ITEM][diagram.name]:
-                    del self[K_ITEM][diagram.name]
+        if diagram.name in self[K_ITEMS]:
+            if item.id in self[K_ITEMS][diagram.name]:
+                del self[K_ITEMS][diagram.name][item.id]
+                if not self[K_ITEMS][diagram.name]:
+                    del self[K_ITEMS][diagram.name]
             if diagram.name in self[K_TYPE]:
                 if i in self[K_TYPE][diagram.name]:
                     self[K_TYPE][diagram.name][i] -= {item}
@@ -739,30 +755,65 @@ class ProjectMergeWorker(QtCore.QObject):
                 self.commands.append(CommandNodeSetMeta(self.project, item, name, undo, redo))
             else:
                 ## CHECK FOR POSSIBLE CONFLICTS
-                metap = self.project.meta(item, name)
-                metao = self.other.meta(item, name)
-                if metap != metao:
+                metac = self.project.meta(item, name)
+                metai = self.other.meta(item, name)
+                if metac != metai:
                     if item not in conflicts:
                         conflicts[item] = dict()
-                    conflicts[item][name] = {K_PROJECT: metap.copy(), K_OTHER: metao.copy()}
+                    conflicts[item][name] = {K_CURRENT: metac.copy(), K_IMPORTING: metai.copy()}
                     if item not in resolutions:
                         resolutions[item] = dict()
-                    resolutions[item][name] = metap.copy()
+                    resolutions[item][name] = metac.copy()
 
         ## RESOLVE CONFLICTS
+        aconflicts = []
         for item in conflicts:
             for name in conflicts[item]:
-                metap = conflicts[item][name][K_PROJECT]
-                metao = conflicts[item][name][K_OTHER]
+                metac = conflicts[item][name][K_CURRENT]
+                metai = conflicts[item][name][K_IMPORTING]
                 ## RESOLVE DOCUMENTATION CONFLICTS
-                docp = metap.get('description', '')
-                doco = metao.get('description', '')
-                if docp != doco:
-                    resolver = PredicateDocumentationConflictResolver(item, name, docp, doco)
+                docc = metac.get(K_DESCRIPTION, '')
+                doci = metai.get(K_DESCRIPTION, '')
+                if docc != doci:
+                    resolver = PredicateDocumentationConflictResolver(item, name, docc, doci)
                     if resolver.exec_() == PredicateDocumentationConflictResolver.Rejected:
                         raise ProjectStopImportingError
-                    resolutions[item][name]['description'] = resolver.result()
+                    resolutions[item][name][K_DESCRIPTION] = resolver.result()
+                ## COLLECT ASSERTIONS CONFLICTS FOR ATTRIBUTES
+                if item is Item.AttributeNode:
+                    vc = metac.get(K_FUNCTIONAL, False)
+                    vi = metai.get(K_FUNCTIONAL, False)
+                    if vc != vi:
+                        aconflicts.append({
+                            K_ITEM: item,
+                            K_NAME: name,
+                            K_PROPERTY: K_FUNCTIONAL,
+                            K_CURRENT: vc,
+                            K_IMPORTING: vi
+                        })
+                ## COLLECT ASSERTIONS CONFLICTS FOR ROLES
+                if item is Item.RoleNode:
+                    for k in (K_ASYMMETRIC, K_INVERSE_FUNCTIONAL, K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE):
+                        vc = metac.get(k, False)
+                        vi = metai.get(k, False)
+                        if vc != vi:
+                            aconflicts.append({
+                                K_ITEM: item,
+                                K_NAME: name,
+                                K_PROPERTY: k,
+                                K_CURRENT: vc,
+                                K_IMPORTING: vi
+                            })
 
+        ## RESOLVE BOOLEAN PROPERTIES CONFLICTS
+        if aconflicts:
+            resolver = PredicateBooleanConflictResolver(aconflicts)
+            if resolver.exec_() == PredicateBooleanConflictResolver.Rejected:
+                raise ProjectStopImportingError
+            for e in resolver.results():
+                resolutions[e[K_ITEM]][e[K_NAME]][e[K_PROPERTY]] = e[K_FINAL]
+
+        ## GENERATE UNDOCOMMANDS FOR RESOLUTIONS
         for item in resolutions:
             for name in resolutions[item]:
                 undo = self.project.meta(item, name)

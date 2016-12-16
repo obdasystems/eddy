@@ -48,6 +48,7 @@ from eddy.core.functions.owl import OWLShortIRI
 from eddy.core.functions.path import openPath
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
+from eddy.core.project import K_DESCRIPTION
 
 
 LOGGER = getLogger()
@@ -119,7 +120,7 @@ class CsvExporter(AbstractProjectExporter):
                     collection[node.type()][node.text()] = {
                         CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
                         CsvExporter.KeyType: node.shortName,
-                        CsvExporter.KeyDescription: meta.get('description', ''),
+                        CsvExporter.KeyDescription: meta.get(K_DESCRIPTION, ''),
                         CsvExporter.KeyDiagrams: DistinctList()}
                 collection[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
 
