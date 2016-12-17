@@ -1055,7 +1055,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # RUN THE UPDATE CHECK WORKER IN A THREAD
         try:
             settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-            channel = Channel.forValue(settings.value('update/channel', channel, str))
+            channel = Channel.valueOf(settings.value('update/channel', channel, str))
         except TypeError:
             pass
         finally:
@@ -1196,7 +1196,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             if dialog.exec_():
-                filetype = File.forValue(dialog.selectedNameFilter())
+                filetype = File.valueOf(dialog.selectedNameFilter())
                 worker = self.createOntologyExporter(filetype, self.project, self)
                 worker.run(expandPath(first(dialog.selectedFiles())))
 
@@ -1238,7 +1238,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters(self.ontologyLoaderNameFilters())
         if dialog.exec_():
-            filetype = File.forValue(dialog.selectedNameFilter())
+            filetype = File.valueOf(dialog.selectedNameFilter())
             selected = [x for x in dialog.selectedFiles() if File.forPath(x) is filetype and fexists(x)]
             if selected:
                 try:
@@ -1557,7 +1557,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(diagram.name)
             if dialog.exec_():
-                filetype = File.forValue(dialog.selectedNameFilter())
+                filetype = File.valueOf(dialog.selectedNameFilter())
                 worker = self.createDiagramExporter(filetype, diagram, self)
                 worker.run(expandPath(first(dialog.selectedFiles())))
 

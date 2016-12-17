@@ -112,7 +112,7 @@ class IndividualNode(AbstractResizableNode):
         """
         match = RE_VALUE.match(self.text())
         if match:
-            return Datatype.forValue(match.group('datatype'))
+            return Datatype.valueOf(match.group('datatype'))
         return None
 
     @property

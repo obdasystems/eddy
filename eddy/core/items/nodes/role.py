@@ -665,7 +665,7 @@ class RoleNode(AbstractResizableNode):
         Returns the special type of this node.
         :rtype: Special
         """
-        return Special.forValue(self.text())
+        return Special.valueOf(self.text())
 
     def text(self):
         """

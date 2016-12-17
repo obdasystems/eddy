@@ -65,7 +65,7 @@ class UnsupportedSpecialOnRoleAndAttributeNode(ProfileNodeRule):
     """
     def __call__(self, node):
         if node.type() in {Item.AttributeNode, Item.RoleNode}:
-            if Special.forValue(node.text()) is not None:
+            if Special.valueOf(node.text()) is not None:
                 raise ProfileError('Usage of {} {} is forbidden in OWL 2 RL'.format(node.text(), node.shortName))
 
 
@@ -83,7 +83,7 @@ class EquivalenceBetweenConceptExpressionRule(ProfileEdgeRule):
                 for node in (source, target):
                     # TOP concept cannot be part of concept equivalence in OWL 2 RL.
                     if node.type() is Item.ConceptNode:
-                        if Special.forValue(node.text()) is Special.Top:
+                        if Special.valueOf(node.text()) is Special.Top:
                             raise ProfileError('Equivalence in presence of a TOP concept is forbidden in OWL 2 RL')
                     # Complement nodes cannot be part of concept equivalence in OWL 2 RL.
                     elif node.type() is Item.ComplementNode:
@@ -123,7 +123,7 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
 
                 # TOP concept cannot be source of concept inclusion in OWL 2 RL.
                 if source.type() is Item.ConceptNode:
-                    if Special.forValue(source.text()) is Special.Top:
+                    if Special.valueOf(source.text()) is Special.Top:
                         raise ProfileError('Inclusion with a TOP concept as source is forbidden in OWL 2 RL')
                 # Complement nodes cannot be source of concept inclusion in OWL 2 RL.
                 elif source.type() is Item.ComplementNode:
@@ -140,7 +140,7 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
 
                 # TOP concept cannot be target of concept inclusion in OWL 2 RL.
                 if target.type() is Item.ConceptNode:
-                    if Special.forValue(target.text()) is Special.Top:
+                    if Special.valueOf(target.text()) is Special.Top:
                         raise ProfileError('Inclusion with a TOP concept as target is forbidden in OWL 2 RL')
                 # Enumeration nodes cannot be target of concept inclusion in OWL 2 RL.
                 elif target.type() is Item.EnumerationNode:

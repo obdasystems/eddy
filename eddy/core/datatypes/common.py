@@ -44,7 +44,7 @@ class Enum_(Enum):
     __metaclass__  = ABCMeta
 
     @classmethod
-    def forValue(cls, value):
+    def valueOf(cls, value):
         """
         Returns the Enum_ entry matching the given value.
         :type value: str
@@ -66,7 +66,7 @@ class IntEnum_(IntEnum):
     __metaclass__  = ABCMeta
 
     @classmethod
-    def forValue(cls, value):
+    def valueOf(cls, value):
         """
         Returns the IntEnum_ entry matching the given value.
         :type value: T <= int | str | Item

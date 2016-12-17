@@ -106,7 +106,7 @@ class FacetNode(AbstractNode):
         Returns the facet associated with this node.
         :rtype: Facet
         """
-        return Facet.forValue(self.labelA.text())
+        return Facet.valueOf(self.labelA.text())
 
     @property
     def value(self):
@@ -331,14 +331,14 @@ class FacetNode(AbstractNode):
         """
         match = RE_FACET.match(text)
         if match:
-            self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
+            self.labelA.setText((Facet.valueOf(match.group('facet')) or Facet.length).value)
             self.labelB.setText('"{0}"'.format(match.group('value')))
             self.updateNode()
         else:
             # USE THE OLD VALUE-RESTRICTION PATTERN
             match = RE_VALUE_RESTRICTION.match(text)
             if match:
-                self.labelA.setText((Facet.forValue(match.group('facet')) or Facet.length).value)
+                self.labelA.setText((Facet.valueOf(match.group('facet')) or Facet.length).value)
                 self.labelB.setText('"{0}"'.format(match.group('value')))
                 self.updateNode()
 

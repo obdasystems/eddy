@@ -1222,7 +1222,7 @@ class HasProfileSystem(object):
         :type project: Project
         :rtype: AbstractProfile
         """
-        profile = self.profile(OWLProfile.forValue(name_or_type))
+        profile = self.profile(OWLProfile.valueOf(name_or_type))
         if not profile:
             LOGGER.warning("Missing profile %s: defaulting to OWL 2", name_or_type)
             profile = self.profile(OWLProfile.OWL2)
@@ -1257,7 +1257,7 @@ class HasProfileSystem(object):
         :type name_or_type: T <= OWLProfile|str
         :rtype: class
         """
-        return self._profileDict.get(OWLProfile.forValue(name_or_type), None)
+        return self._profileDict.get(OWLProfile.valueOf(name_or_type), None)
 
     def profiles(self):
         """

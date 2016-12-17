@@ -181,7 +181,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain'):
             snapToGrid = self.session.action('toggle_grid').isChecked()
-            node = self.factory.create(Item.forValue(dropEvent.mimeData().text()))
+            node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             self.session.undostack.push(CommandNodeAdd(self, node))
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
@@ -208,7 +208,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 #################################
 
                 snapToGrid = self.session.action('toggle_grid').isChecked()
-                node = self.factory.create(Item.forValue(self.modeParam))
+                node = self.factory.create(Item.valueOf(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
                 self.session.undostack.push(CommandNodeAdd(self, node))
                 self.sgnItemInsertionCompleted.emit(node, mouseEvent.modifiers())
@@ -221,7 +221,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
                 node = first(self.items(mousePos, edges=False))
                 if node:
-                    edge = self.factory.create(Item.forValue(self.modeParam), source=node)
+                    edge = self.factory.create(Item.valueOf(self.modeParam), source=node)
                     edge.updateEdge(target=mousePos)
                     self.mp_Edge = edge
                     self.addItem(edge)

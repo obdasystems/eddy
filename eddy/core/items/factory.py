@@ -94,7 +94,7 @@ class ItemFactory(QtCore.QObject):
         :type item: Item
         :rtype: class 
         """
-        item = Item.forValue(item)
+        item = Item.valueOf(item)
         if item is Item.AttributeNode:
             return AttributeNode
         if item is Item.ComplementNode:

@@ -79,7 +79,7 @@ class ValueDomainNode(AbstractNode):
         Returns the datatype associated with this node.
         :rtype: Datatype
         """
-        return Datatype.forValue(self.text())
+        return Datatype.valueOf(self.text())
 
     #############################################
     #   INTERFACE
@@ -166,7 +166,7 @@ class ValueDomainNode(AbstractNode):
         Set the label text.
         :type text: str
         """
-        datatype = Datatype.forValue(text) or Datatype.string
+        datatype = Datatype.valueOf(text) or Datatype.string
         self.label.setText(datatype.value)
         self.updateNode()
 
