@@ -164,73 +164,75 @@ class CommandNodeMove(QtWidgets.QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
-    def __init__(self, diagram, data):
+    def __init__(self, diagram, undo, redo):
         """
         Initialize the command.
         :type diagram: Diagram
-        :type data: dict
+        :type undo: dict
+        :type redo: dict
         """
-        self.data = data
-        self.diagram = diagram
-        self.edges = set()
+        self._diagram = diagram
+        self._edges = set()
+        self._redo = redo
+        self._undo = undo
+        
+        for node in self._redo['nodes']:
+            self._edges |= node.edges
 
-        for node in data['redo']['nodes']:
-            self.edges |= node.edges
-
-        if len(data['redo']['nodes']) != 1:
-            name = 'move {0} nodes'.format(len(data['redo']['nodes']))
+        if len(self._redo['nodes']) != 1:
+            name = 'move {0} nodes'.format(len(self._redo['nodes']))
         else:
-            name = 'move {0}'.format(first(data['redo']['nodes'].keys()).name)
+            name = 'move {0}'.format(first(self._redo['nodes'].keys()).name)
 
         super().__init__(name)
 
     def redo(self):
         """redo the command"""
         # Turn off caching.
-        for edge in self.edges:
+        for edge in self._edges:
             edge.setCacheMode(AbstractItem.NoCache)
         # Update edges breakpoints.
-        for edge, breakpoints in self.data['redo']['edges'].items():
+        for edge, breakpoints in self._redo['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # Update nodes positions.
-        for node, data in self.data['redo']['nodes'].items():
+        for node, data in self._redo['nodes'].items():
             node.setPos(data['pos'])
             # Update edge anchors.
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
         # Update edges.
-        for edge in self.edges:
+        for edge in self._edges:
             edge.updateEdge()
         # Turn on caching.
-        for edge in self.edges:
+        for edge in self._edges:
             edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
         # Emit updated signal.
-        self.diagram.sgnUpdated.emit()
+        self._diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         # Turn off caching.
-        for edge in self.edges:
+        for edge in self._edges:
             edge.setCacheMode(AbstractItem.NoCache)
         # Update edges breakpoints.
-        for edge, breakpoints in self.data['undo']['edges'].items():
+        for edge, breakpoints in self._undo['edges'].items():
             for i in range(len(breakpoints)):
                 edge.breakpoints[i] = breakpoints[i]
         # Update nodes positions.
-        for node, data in self.data['undo']['nodes'].items():
+        for node, data in self._undo['nodes'].items():
             node.setPos(data['pos'])
             # Update edge anchors.
             for edge, pos in data['anchors'].items():
                 node.setAnchor(edge, pos)
         # Update edges.
-        for edge in self.edges:
+        for edge in self._edges:
             edge.updateEdge()
         # Turn caching ON.
-        for edge in self.edges:
+        for edge in self._edges:
             edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
         # Emit updated signal.
-        self.diagram.sgnUpdated.emit()
+        self._diagram.sgnUpdated.emit()
 
 
 class CommandNodeSwitchTo(QtWidgets.QUndoCommand):

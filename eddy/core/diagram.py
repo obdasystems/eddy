@@ -66,6 +66,7 @@ class Diagram(QtWidgets.QGraphicsScene):
     * sgnUpdated: whenever the Diagram has been updated in any of its parts.
     """
     GridSize = 10
+    KeyMoveFactor = 10
     MinSize = 2000
     MaxSize = 1000000
     SelectionRadius = 4
@@ -301,22 +302,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                                     if self.mp_Node:
                                         self.mp_NodePos = self.mp_Node.pos()
                                         self.mp_Pos = mousePos
-                                        self.mp_Data = {
-                                            'nodes': {
-                                                node: {
-                                                    'anchors': {k: v for k, v in node.anchors.items()},
-                                                    'pos': node.pos(),
-                                                } for node in selected},
-                                            'edges': {}
-                                        }
-                                        # Figure out if the nodes we are moving are sharing edges:
-                                        # if that's the case, move the edge together with the nodes
-                                        # (which actually means moving the edge breakpoints).
-                                        for node in self.mp_Data['nodes']:
-                                            for edge in node.edges:
-                                                if edge not in self.mp_Data['edges']:
-                                                    if edge.other(node).isSelected():
-                                                        self.mp_Data['edges'][edge] = edge.breakpoints[:]
+                                        self.mp_Data = self.setupMove(selected)
 
     def mouseMoveEvent(self, mouseEvent):
         """
@@ -465,13 +451,11 @@ class Diagram(QtWidgets.QGraphicsScene):
                 #################################
 
                 if self.isLabelMove():
-
                     pos = self.mp_Label.pos()
                     if self.mp_LabelPos != pos:
                         item = self.mp_Label.parentItem()
                         command = CommandLabelMove(self, item, self.mp_LabelPos, pos)
                         self.session.undostack.push(command)
-
                     self.setMode(DiagramMode.Idle)
 
             elif self.mode is DiagramMode.NodeMove:
@@ -481,22 +465,10 @@ class Diagram(QtWidgets.QGraphicsScene):
                 #################################
 
                 if self.isNodeMove():
-
                     pos = self.mp_Node.pos()
                     if self.mp_NodePos != pos:
-                        data = {
-                            'undo': self.mp_Data,
-                            'redo': {
-                                'nodes': {
-                                    node: {
-                                        'anchors': {k: v for k, v in node.anchors.items()},
-                                        'pos': node.pos(),
-                                    } for node in self.mp_Data['nodes']},
-                                'edges': {x: x.breakpoints[:] for x in self.mp_Data['edges']}
-                            }
-                        }
-                        self.session.undostack.push(CommandNodeMove(self, data))
-
+                        moveData = self.completeMove(self.mp_Data)
+                        self.session.undostack.push(CommandNodeMove(self, self.mp_Data, moveData))
                     self.setMode(DiagramMode.Idle)
 
         elif mouseButton == QtCore.Qt.RightButton:
@@ -609,6 +581,23 @@ class Diagram(QtWidgets.QGraphicsScene):
         super().addItem(item)
         if item.isNode():
             item.updateNode()
+
+    @staticmethod
+    def completeMove(moveData, offset=QtCore.QPointF(0, 0)):
+        """
+        Complete item movement, given initializated data for a collection of selected nodes.
+        :type moveData: dict
+        :type offset: QPointF
+        :rtype: dict
+        """
+        return {
+            'nodes': {
+                node: {
+                    'anchors': {k: v + offset for k, v in node.anchors.items()},
+                    'pos': node.pos() + offset,
+                } for node in moveData['nodes']},
+            'edges': {x: [p + offset for p in x.breakpoints[:]] for x in moveData['edges']}
+        }
 
     def edge(self, eid):
         """
@@ -736,6 +725,33 @@ class Diagram(QtWidgets.QGraphicsScene):
             self.mode = mode
             self.modeParam = param
             self.sgnModeChanged.emit(mode)
+
+    @staticmethod
+    def setupMove(selected):
+        """
+        Compute necessary data to initialize item movement, given a collection of selected nodes.
+        :type selected: T <= list | tuple
+        :rtype: dict
+        """
+        # Initialize movement data considering only
+        # nodes which are involved in the selection.
+        moveData = {
+            'nodes': {
+                node: {
+                    'anchors': {k: v for k, v in node.anchors.items()},
+                    'pos': node.pos(),
+                } for node in selected},
+            'edges': {}
+        }
+        # Figure out if the nodes we are moving are sharing edges:
+        # if that's the case, move the edge together with the nodes
+        # (which actually means moving the edge breakpoints).
+        for node in moveData['nodes']:
+            for edge in node.edges:
+                if edge not in moveData['edges']:
+                    if edge.other(node).isSelected():
+                        moveData['edges'][edge] = edge.breakpoints[:]
+        return moveData
 
     def visibleRect(self, margin=0):
         """

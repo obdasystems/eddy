@@ -403,23 +403,10 @@ class NodeProperty(PropertyDialog):
         yPos = clamp(self.yField.value(), rect.top(), rect.bottom())
         pos1 = self.node.pos()
         pos2 = QtCore.QPointF(xPos, yPos)
-
         if pos1 != pos2:
-
-            node = self.node
-            data = {
-                'redo': {
-                    'nodes': {node: {'anchors': {k: v + pos2 - pos1 for k, v in node.anchors.items()}, 'pos': pos2}},
-                    'edges': {},
-                },
-                'undo': {
-                    'nodes': {node: {'anchors': {k: v for k, v in node.anchors.items()}, 'pos': pos1}},
-                    'edges': {}
-                }
-            }
-
-            return CommandNodeMove(self.diagram, data)
-
+            initData = self.diagram.setupMove([self.node])
+            moveData = self.diagram.completeMove(initData, pos2 - pos1)
+            return CommandNodeMove(self.diagram, initData, moveData)
         return None
 
 

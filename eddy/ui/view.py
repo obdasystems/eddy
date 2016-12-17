@@ -37,6 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.diagram import Diagram
 from eddy.core.functions.geometry import midpoint
@@ -131,6 +132,7 @@ class DiagramView(QtWidgets.QGraphicsView):
     #   EVENTS
     #################################
 
+    # noinspection PyTypeChecker
     def keyPressEvent(self, keyEvent):
         """
         Executed when a combination of key is pressed.
@@ -138,24 +140,57 @@ class DiagramView(QtWidgets.QGraphicsView):
         """
         key = keyEvent.key()
         modifiers = keyEvent.modifiers()
+        if self.diagram.mode is DiagramMode.Idle:
 
-        if self.diagram.mode is DiagramMode.Idle and \
-            modifiers & QtCore.Qt.ControlModifier and \
+            if modifiers & QtCore.Qt.ControlModifier and \
                 key in {QtCore.Qt.Key_Minus, QtCore.Qt.Key_Plus, QtCore.Qt.Key_0}:
 
-            #############################################
-            # ZOOM SHORTCUT
-            #################################
+                #############################################
+                # ZOOM SHORTCUT
+                #################################
 
-            zoom = DiagramView.ZoomDefault
-            if key in {QtCore.Qt.Key_Minus, QtCore.Qt.Key_Plus}:
-                zoom = self.zoom
-                zoom += +DiagramView.ZoomStep if key == QtCore.Qt.Key_Plus else -DiagramView.ZoomStep
-                zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
+                zoom = DiagramView.ZoomDefault
+                if key in {QtCore.Qt.Key_Minus, QtCore.Qt.Key_Plus}:
+                    zoom = self.zoom
+                    zoom += +DiagramView.ZoomStep if key == QtCore.Qt.Key_Plus else -DiagramView.ZoomStep
+                    zoom = clamp(zoom, DiagramView.ZoomMin, DiagramView.ZoomMax)
 
-            if zoom != self.zoom:
-                self.scaleView(zoom)
+                if zoom != self.zoom:
+                    self.scaleView(zoom)
 
+            else:
+
+                #############################################
+                # NODE MOVEMENT
+                #################################
+
+                # NOTE: while usually node movement is handled in the Diagram class,
+                # movements performed using the keyboard needs to be handled right here.
+                # The reason behind is that keyboard arrows are used to scroll the DiagramView
+                # viewport, we if we intercept the event in the Diagram class (by calling
+                # super().keyPressEvent()) to perform the node move, we will also see the
+                # viewport moving, and this is not the desired behavior. We intercept the
+                # event here instead and perform the node move.
+
+                selected = self.diagram.selectedNodes()
+                if selected:
+                    if key in {QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right}:
+                        self.diagram.setMode(DiagramMode.NodeMove)
+                        offset = QtCore.QPointF(0, 0)
+                        if keyEvent.key() == QtCore.Qt.Key_Up:
+                            offset += QtCore.QPointF(0, -Diagram.KeyMoveFactor)
+                        if keyEvent.key() == QtCore.Qt.Key_Down:
+                            offset += QtCore.QPointF(0, +Diagram.KeyMoveFactor)
+                        if keyEvent.key() == QtCore.Qt.Key_Left:
+                            offset += QtCore.QPointF(-Diagram.KeyMoveFactor, 0)
+                        if keyEvent.key() == QtCore.Qt.Key_Right:
+                            offset += QtCore.QPointF(+Diagram.KeyMoveFactor, 0)
+                        initData = self.diagram.setupMove(selected)
+                        moveData = self.diagram.completeMove(initData, offset)
+                        self.session.undostack.push(CommandNodeMove(self.diagram, initData, moveData))
+                        self.diagram.setMode(DiagramMode.Idle)
+                else:
+                    super().keyPressEvent(keyEvent)
         else:
             super().keyPressEvent(keyEvent)
 
