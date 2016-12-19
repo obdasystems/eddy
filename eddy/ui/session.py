@@ -1161,7 +1161,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.selectFile(self.project.name)
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
-                worker = self.createOntologyExporter(filetype, self.project, self)
+                try:
+                    worker = self.createOntologyExporter(filetype, self.project, self)
+                except ValueError:
+                    worker = self.createProjectExporter(filetype, self.project, self)
                 worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot('QGraphicsScene')
