@@ -285,6 +285,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doCheckForUpdate)
         self.addAction(action)
 
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        collection = settings.value('project/recent', None, str) or []
+        collection = collection[:5]
+        group = QtWidgets.QActionGroup(self, objectName='recent_projects')
+        for i, path in enumerate(collection, start=1):
+            action = QtWidgets.QAction('{0}. {1}'.format(i, os.path.basename(path)), group, triggered=self.doOpenRecent)
+            action.setData(path)
+            group.addAction(action)
+        self.addAction(group)
+
         if _MACOS:
             self.action('about').setIcon(QtGui.QIcon())
             self.action('open_preferences').setIcon(QtGui.QIcon())
@@ -661,6 +671,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addSeparator()
         menu.addAction(self.action('import'))
         menu.addAction(self.action('export'))
+        menu.addSeparator()
+        for action in self.action('recent_projects').actions():
+            menu.addAction(action)
         menu.addSeparator()
         menu.addAction(self.action('print'))
         menu.addSeparator()
@@ -1305,6 +1318,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.app.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
+
+    @QtCore.pyqtSlot()
+    def doOpenRecent(self):
+        """
+        Open a recent project in a new session.
+        """
+        action = self.sender()
+        path = expandPath(action.data())
+        if path != expandPath(self.project.path):
+            self.app.sgnCreateSession.emit(expandPath(action.data()))
 
     @QtCore.pyqtSlot()
     def doOpenDialog(self):
