@@ -1159,6 +1159,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setNameFilters(sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol})))
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
+            dialog.selectNameFilter(File.Owl.value)
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
                 try:
@@ -1523,6 +1524,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setNameFilters(self.diagramExporterNameFilters())
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(diagram.name)
+            dialog.selectNameFilter(File.Pdf.value)
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
                 worker = self.createDiagramExporter(filetype, diagram, self)
