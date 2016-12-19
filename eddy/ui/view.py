@@ -173,22 +173,21 @@ class DiagramView(QtWidgets.QGraphicsView):
                 # event here instead and perform the node move.
 
                 selected = self.diagram.selectedNodes()
-                if selected:
-                    if key in {QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right}:
-                        self.diagram.setMode(DiagramMode.NodeMove)
-                        offset = QtCore.QPointF(0, 0)
-                        if keyEvent.key() == QtCore.Qt.Key_Up:
-                            offset += QtCore.QPointF(0, -Diagram.KeyMoveFactor)
-                        if keyEvent.key() == QtCore.Qt.Key_Down:
-                            offset += QtCore.QPointF(0, +Diagram.KeyMoveFactor)
-                        if keyEvent.key() == QtCore.Qt.Key_Left:
-                            offset += QtCore.QPointF(-Diagram.KeyMoveFactor, 0)
-                        if keyEvent.key() == QtCore.Qt.Key_Right:
-                            offset += QtCore.QPointF(+Diagram.KeyMoveFactor, 0)
-                        initData = self.diagram.setupMove(selected)
-                        moveData = self.diagram.completeMove(initData, offset)
-                        self.session.undostack.push(CommandNodeMove(self.diagram, initData, moveData))
-                        self.diagram.setMode(DiagramMode.Idle)
+                if selected and key in {QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right}:
+                    self.diagram.setMode(DiagramMode.NodeMove)
+                    offset = QtCore.QPointF(0, 0)
+                    if keyEvent.key() == QtCore.Qt.Key_Up:
+                        offset += QtCore.QPointF(0, -Diagram.KeyMoveFactor)
+                    if keyEvent.key() == QtCore.Qt.Key_Down:
+                        offset += QtCore.QPointF(0, +Diagram.KeyMoveFactor)
+                    if keyEvent.key() == QtCore.Qt.Key_Left:
+                        offset += QtCore.QPointF(-Diagram.KeyMoveFactor, 0)
+                    if keyEvent.key() == QtCore.Qt.Key_Right:
+                        offset += QtCore.QPointF(+Diagram.KeyMoveFactor, 0)
+                    initData = self.diagram.setupMove(selected)
+                    moveData = self.diagram.completeMove(initData, offset)
+                    self.session.undostack.push(CommandNodeMove(self.diagram, initData, moveData))
+                    self.diagram.setMode(DiagramMode.Idle)
                 else:
                     super().keyPressEvent(keyEvent)
         else:
