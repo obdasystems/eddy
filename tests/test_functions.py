@@ -43,6 +43,7 @@ from eddy.core.functions.misc import isEmpty, rangeF, snapF
 from eddy.core.functions.misc import clamp, first, last, lstrip, rstrip
 from eddy.core.functions.geometry import angle, distance, projection
 from eddy.core.functions.geometry import intersection, midpoint
+from eddy.core.functions.owl import OWLText, OWLShortIRI
 from eddy.core.functions.path import compressPath
 
 
@@ -147,3 +148,11 @@ class FunctionsTestCase(unittest.TestCase):
     def test_snapF_with_skip(self):
         self.assertEqual(8.0, snapF(value=8.0, size=10.0, perform=False))
         self.assertEqual(6.0, snapF(value=6.0, size=10.0, perform=False))
+
+    def test_owl_short_iri(self):
+        self.assertEqual('prefix:this_is_my_content', OWLShortIRI('prefix', 'this_is my content'))
+        self.assertEqual('prefix:this_is_my_content', OWLShortIRI('prefix', 'this\n\nis_my content'))
+
+    def test_owl_text(self):
+        self.assertEqual('this_is_a_long_string', OWLText('this_is_a\nlong _string'))
+        self.assertEqual('this_is_another_long_string', OWLText('this is another\n\nlong string'))
