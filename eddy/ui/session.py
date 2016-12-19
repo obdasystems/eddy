@@ -220,28 +220,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         LOGGER.info('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
 
-        # from eddy.ui.resolvers import PredicateBooleanConflictResolver
-        #
-        # collection = [
-        #     {'item': Item.RoleNode, 'name': 'ha_targa', 'property': 'functional', 'current': True, 'importing': False},
-        #     {'item': Item.RoleNode, 'name': 'ha_stato_di_servizio', 'property': 'functional', 'current': False, 'importing': True},
-        #     {'item': Item.RoleNode, 'name': 'esiste', 'property': 'inverseFunctional', 'current': False, 'importing': True},
-        #     {'item': Item.RoleNode, 'name': 'convoca', 'property': 'symmetric', 'current': True, 'importing': False},
-        #     {'item': Item.RoleNode, 'name': 'est_proprietario_di', 'property': 'transitive', 'current': False, 'importing': True},
-        #     {'item': Item.AttributeNode, 'name': 'codice_fiscale', 'property': 'symmetric', 'current': True, 'importing': False},
-        #     {'item': Item.AttributeNode, 'name': 'partita_iva', 'property': 'irreflexive', 'current': True, 'importing': False},
-        #     {'item': Item.RoleNode, 'name': 'ha_voglia', 'property': 'functional', 'current': True, 'importing': False},
-        #     {'item': Item.RoleNode, 'name': 'est_dottorando_di', 'property': 'functional', 'current': False, 'importing': True},
-        #     {'item': Item.RoleNode, 'name': 'ha_genitore', 'property': 'inverseFunctional', 'current': False, 'importing': True},
-        #     {'item': Item.RoleNode, 'name': 'est_genitore_di', 'property': 'symmetric', 'current': True, 'importing': False},
-        #     {'item': Item.RoleNode, 'name': 'corre', 'property': 'transitive', 'current': False, 'importing': True},
-        #     {'item': Item.AttributeNode, 'name': 'nome', 'property': 'symmetric', 'current': True, 'importing': False},
-        #     {'item': Item.AttributeNode, 'name': 'cognome', 'property': 'irreflexive', 'current': True, 'importing': False},
-        # ]
-        #
-        # resolver = PredicateBooleanConflictResolver(collection)
-        # resolver.exec_()
-
     #############################################
     #   SESSION CONFIGURATION
     #################################

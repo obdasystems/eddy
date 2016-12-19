@@ -35,6 +35,7 @@
 
 ## CONFIGURATION
 DOWNLOADS="~/Downloads"
+JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
 QT_HOME="~/Qt/5.7/clang_64"
 VIRTUALENV="~/python34"
 
@@ -96,7 +97,7 @@ cd eddy
 git submodule update --init --recursive
 mkdir "${DOWNLOADS}/eddy/resources/java"
 ## ADD JRE 1.8
-cp -R /Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/jre/ "${DOWNLOADS}/eddy/resources/java"
+cp -R "${JAVA_HOME}/jre/" "${DOWNLOADS}/eddy/resources/java"
 ## CLEANUP
 cd ${DOWNLOADS}
 sudo rm -rf sip-4.18.1*
