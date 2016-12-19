@@ -154,5 +154,6 @@ class FunctionsTestCase(unittest.TestCase):
         self.assertEqual('prefix:this_is_my_content', OWLShortIRI('prefix', 'this\n\nis_my content'))
 
     def test_owl_text(self):
+        self.assertEqual('this_is_a_long_string', OWLText('this_is_a_long_string'))
         self.assertEqual('this_is_a_long_string', OWLText('this_is_a\nlong _string'))
         self.assertEqual('this_is_another_long_string', OWLText('this is another\n\nlong string'))
