@@ -49,6 +49,7 @@ from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
+from eddy.core.plugin import PluginManager
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
@@ -189,6 +190,12 @@ class Eddy(QtWidgets.QApplication):
         self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
         self.setStyle(EddyProxyStyle('Fusion'))
         self.setStyleSheet(buffer)
+
+        #############################################
+        # LOOKUP PLUGINS
+        #################################
+
+        PluginManager.scan('@plugins/', '@home/plugins/')
 
         #############################################
         # CLOSE THE SPLASH SCREEN

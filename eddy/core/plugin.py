@@ -266,6 +266,8 @@ class PluginManager(QtCore.QObject):
     """
     Plugin manager class which takes case of performing some specific operations on plugins.
     """
+    info = []
+
     def __init__(self, session):
         """
         Initialize the plugin manager.
@@ -331,7 +333,8 @@ class PluginManager(QtCore.QObject):
         """
         return getattr(module, '%sPlugin' % ''.join(i.title() for i in list(filter(None, re.split("[_\-]+", name)))))
 
-    def import_plugin_from_directory(self, directory):
+    @classmethod
+    def import_plugin_from_directory(cls, directory):
         """
         Import a plugin from the given directory:
         * Lookup for the plugin .spec configuration file.
@@ -346,21 +349,22 @@ class PluginManager(QtCore.QObject):
             if fexists(plugin_spec_path):
                 try:
                     #LOGGER.debug('Found plugin .spec: %s', plugin_spec_path)
-                    plugin_spec = self.spec(fread(plugin_spec_path))
+                    plugin_spec = PluginManager.spec(fread(plugin_spec_path))
                     plugin_name = plugin_spec.get('plugin', 'id')
                     for extension in ('.pyc', '.pyo', '.py'):
                         plugin_path = os.path.join(directory, '%s%s' % (plugin_name, extension))
                         if fexists(plugin_path):
                             #LOGGER.debug('Found plugin module: %s', plugin_path)
                             plugin_module = SourceFileLoader(plugin_name, plugin_path).load_module()
-                            plugin_class = self.find_class(plugin_module, plugin_name)
+                            plugin_class = PluginManager.find_class(plugin_module, plugin_name)
                             return plugin_spec, plugin_class
                     else:
                         raise PluginError('missing plugin module: %s.py(c|o)' % os.path.join(directory, plugin_name))
                 except Exception as e:
                     LOGGER.exception('Failed to import plugin: %s', e)
 
-    def import_plugin_from_zip(self, archive):
+    @classmethod
+    def import_plugin_from_zip(cls, archive):
         """
         Import a plugin from the given zip archive:
         * Lookup for the plugin .spec configuration file.
@@ -368,6 +372,7 @@ class PluginManager(QtCore.QObject):
         * Search for the class implementing the plugin.
         * Import the plugin module.
         :type archive: str
+        :rtype: tuple
         """
         if fexists(archive) and File.forPath(archive) is File.Zip:
             zf = ZipFile(archive)
@@ -377,7 +382,7 @@ class PluginManager(QtCore.QObject):
                     try:
                         LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, file_or_directory))
                         plugin_spec_content = zf.read(file_or_directory).decode('utf8')
-                        plugin_spec = self.spec(plugin_spec_content)
+                        plugin_spec = PluginManager.spec(plugin_spec_content)
                         plugin_name = plugin_spec.get('plugin', 'id')
                         plugin_zip_base_path = rstrip(file_or_directory, 'plugin.spec')
                         plugin_abs_base_path = os.path.join(archive, plugin_zip_base_path)
@@ -388,25 +393,24 @@ class PluginManager(QtCore.QObject):
                             if plugin_zip_module_path in zf_name_list:
                                 LOGGER.debug('Found plugin module: %s', os.path.join(archive, plugin_zip_module_path))
                                 plugin_module = zipimporter(plugin_abs_base_path).load_module(plugin_name)
-                                plugin_class = self.find_class(plugin_module, plugin_name)
+                                plugin_class = PluginManager.find_class(plugin_module, plugin_name)
                                 return plugin_spec, plugin_class
                         else:
                             raise PluginError('missing plugin module: %s.py(c|o)' % plugin_abs_module_base_path)
                     except Exception as e:
                         LOGGER.exception('Failed to import plugin: %s', e)
 
-    def init(self, info):
+    def init(self):
         """
         Initialize previously looked up plugins returning the list of successfully initialized plugins.
-        :type info: list
         :rtype: list
         """
-        if not info:
+        if not PluginManager.info:
             LOGGER.info('No plugin to be initialized')
             return []
 
-        LOGGER.info('Loading %s plugin(s):', len(info))
-        for entry in info:
+        LOGGER.info('Loading %s plugin(s):', len(PluginManager.info))
+        for entry in PluginManager.info:
             plugin_author = entry[0].get('plugin', 'author', fallback='<unknown>')
             plugin_contact = entry[0].get('plugin', 'contact', fallback='<unknown>')
             plugin_name = entry[0].get('plugin', 'name')
@@ -415,7 +419,7 @@ class PluginManager(QtCore.QObject):
 
         pluginsList = []
         pluginsLoadedSet = set()
-        for entry in info:
+        for entry in PluginManager.info:
             plugin_id = entry[0].get('plugin', 'id')
             plugin_name = entry[0].get('plugin', 'name')
             plugin_version = entry[0].get('plugin', 'version')
@@ -502,20 +506,21 @@ class PluginManager(QtCore.QObject):
         else:
             return plugin_spec
 
-    def lookup(self, base):
+    @classmethod
+    def scan(cls, *args):
         """
-        Lookup for a plugin in the given base path.
-        :type base: str
-        :rtype: list
+        Scan the given paths looking for plugins.
+        :type args: tuple
         """
         info = []
-        if isdir(base):
-            LOGGER.info('Looking for plugins in %s', base)
-            for file_or_directory in os.listdir(base):
-                file_or_directory_path = os.path.join(base, file_or_directory)
-                info.append(self.import_plugin_from_directory(file_or_directory_path))
-                info.append(self.import_plugin_from_zip(file_or_directory_path))
-        return list(filter(None, info))
+        for base in map(expandPath, args):
+            if isdir(base):
+                LOGGER.info('Looking for plugins in %s', base)
+                for file_or_directory in os.listdir(base):
+                    file_or_directory_path = os.path.join(base, file_or_directory)
+                    info.append(PluginManager.import_plugin_from_directory(file_or_directory_path))
+                    info.append(PluginManager.import_plugin_from_zip(file_or_directory_path))
+        PluginManager.info = list(filter(None, info))
 
     @classmethod
     def spec(cls, content):

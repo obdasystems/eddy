@@ -842,21 +842,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Load and initialize application plugins.
         """
-        LOGGER.info('Loading plugins...')
-
-        #############################################
-        # SEARCH PLUGINS
-        #################################
-
-        info = []
-        for path in ('@plugins/', '@home/plugins/'):
-            info.extend(self.pmanager.lookup(expandPath(path)))
-
-        #############################################
-        # INITIALIZE PLUGINS
-        #################################
-
-        self.addPlugins(self.pmanager.init(info))
+        self.addPlugins(self.pmanager.init())
 
     def initProfiles(self):
         """
