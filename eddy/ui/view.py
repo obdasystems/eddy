@@ -239,19 +239,21 @@ class DiagramView(QtWidgets.QGraphicsView):
 
         if mouseButtons & QtCore.Qt.RightButton:
 
-            if (mouseEvent.pos() - self.mp_Pos).manhattanLength() >= QtWidgets.QApplication.startDragDistance():
+            if self.mp_Pos is not None:
 
-                #############################################
-                # SCENE DRAG
-                #################################
+                if (mousePos - self.mp_Pos).manhattanLength() >= QtWidgets.QApplication.startDragDistance():
 
-                if self.diagram.mode is not DiagramMode.SceneDrag:
-                    self.diagram.setMode(DiagramMode.SceneDrag)
-                    viewport.setCursor(QtCore.Qt.ClosedHandCursor)
+                    #############################################
+                    # SCENE DRAG
+                    #################################
 
-                mousePos /= self.zoom
-                mousePressPos = self.mp_Pos / self.zoom
-                self.centerOn(self.mp_CenterPos - mousePos + mousePressPos)
+                    if self.diagram.mode is not DiagramMode.SceneDrag:
+                        self.diagram.setMode(DiagramMode.SceneDrag)
+                        viewport.setCursor(QtCore.Qt.ClosedHandCursor)
+
+                    mousePos /= self.zoom
+                    mousePressPos = self.mp_Pos / self.zoom
+                    self.centerOn(self.mp_CenterPos - mousePos + mousePressPos)
 
         else:
 
