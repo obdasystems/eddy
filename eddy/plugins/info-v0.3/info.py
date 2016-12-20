@@ -45,6 +45,7 @@ from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.commands.project import CommandProjectSetProfile
+from eddy.core.commands.project import CommandProjectSetVersion
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import Facet, Datatype, OWLProfile
 from eddy.core.datatypes.qt import BrushIcon, Font
@@ -613,6 +614,13 @@ class ProjectInfo(AbstractInfo):
         """
         super().__init__(session, parent)
 
+        self.versionKey = Key('Version', self)
+        self.versionKey.setFont(Font('Roboto', 12))
+        self.versionField = String(self)
+        self.versionField.setFont(Font('Roboto', 12))
+        self.versionField.setReadOnly(False)
+        connect(self.versionField.editingFinished, self.versionEditingFinished)
+
         self.prefixKey = Key('Prefix', self)
         self.prefixKey.setFont(Font('Roboto', 12))
         self.prefixField = String(self)
@@ -639,6 +647,7 @@ class ProjectInfo(AbstractInfo):
 
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
+        self.ontologyPropLayout.addRow(self.versionKey, self.versionField)
         self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
@@ -740,6 +749,16 @@ class ProjectInfo(AbstractInfo):
             self.session.undostack.push(CommandProjectSetProfile(self.project, self.project.profile.name(), profile))
         self.profileField.clearFocus()
 
+    @QtCore.pyqtSlot()
+    def versionEditingFinished(self):
+        """
+        Executed whenever we finish to edit the ontology prefix
+        """
+        version = self.versionField.value()
+        if self.project.version != version:
+            self.session.undostack.push(CommandProjectSetVersion(self.project, self.project.version, version))
+        self.iriField.clearFocus()
+
     #############################################
     #   INTERFACE
     #################################
@@ -758,6 +777,11 @@ class ProjectInfo(AbstractInfo):
         self.iriField.home(True)
         self.iriField.clearFocus()
         self.iriField.deselect()
+
+        self.versionField.setValue(project.version)
+        self.versionField.home(True)
+        self.versionField.clearFocus()
+        self.versionField.deselect()
 
         for i in range(self.profileField.count()):
             if self.profileField.itemText(i) == self.project.profile.name():

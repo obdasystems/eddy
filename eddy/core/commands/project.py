@@ -49,19 +49,20 @@ class CommandProjectSetIRI(QtWidgets.QUndoCommand):
         :type undo: str
         :type redo: str
         """
-        super().__init__("set project IRI to '{0}'".format(redo))
-        self.project = project
-        self.data = {'undo': undo, 'redo': redo}
+        super().__init__("set ontology IRI to '{0}'".format(redo))
+        self._project = project
+        self._undo = undo
+        self._redo = redo
 
     def redo(self):
         """redo the command"""
-        self.project.iri = self.data['redo']
-        self.project.sgnUpdated.emit()
+        self._project.iri = self._redo
+        self._project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        self.project.iri = self.data['undo']
-        self.project.sgnUpdated.emit()
+        self._project.iri = self._undo
+        self._project.sgnUpdated.emit()
 
 
 class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
@@ -75,19 +76,47 @@ class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
         :type undo: str
         :type redo: str
         """
-        super().__init__("set project prefix to '{0}'".format(redo))
-        self.project = project
-        self.data = {'undo': undo, 'redo': redo}
+        super().__init__("set ontology prefix to '{0}'".format(redo))
+        self._project = project
+        self._undo = undo
+        self._redo = redo
 
     def redo(self):
         """redo the command"""
-        self.project.prefix = self.data['redo']
-        self.project.sgnUpdated.emit()
+        self._project.prefix = self._redo
+        self._project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        self.project.prefix = self.data['undo']
-        self.project.sgnUpdated.emit()
+        self._project.prefix = self._undo
+        self._project.sgnUpdated.emit()
+
+
+class CommandProjectSetVersion(QtWidgets.QUndoCommand):
+    """
+    This command is used to set the version of an ontology.
+    """
+    def __init__(self, project, undo, redo):
+        """
+        Initialize the command.
+        :type project: Project
+        :type undo: str
+        :type redo: str
+        """
+        super().__init__("set ontology version to '{0}'".format(redo))
+        self._project = project
+        self._undo = undo
+        self._redo = redo
+
+    def redo(self):
+        """redo the command"""
+        self._project.version = self._redo
+        self._project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self._project.version = self._undo
+        self._project.sgnUpdated.emit()
 
 
 class CommandProjectSetProfile(QtWidgets.QUndoCommand):
