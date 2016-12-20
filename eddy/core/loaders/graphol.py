@@ -1452,6 +1452,7 @@ class GrapholLoaderMixin_v2(object):
             path=os.path.dirname(self.path),
             prefix=parse(tag='prefix'),
             iri=parse(tag='iri'),
+            version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile(parse('profile', 'OWL 2')),
             session=self.session)
 

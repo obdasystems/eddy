@@ -116,6 +116,7 @@ class Project(QtCore.QObject):
         self.prefix = kwargs.get('prefix', 'NULL')
         self.profile = kwargs.get('profile')
         self.profile.setParent(self)
+        self.version = kwargs.get('version', '1.0')
 
     #############################################
     #   PROPERTIES

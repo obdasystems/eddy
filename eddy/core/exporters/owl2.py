@@ -311,11 +311,11 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         mainLayout.addWidget(self.progressBar)
         mainLayout.addWidget(confirmationArea)
 
+        self.setLayout(mainLayout)
         self.setFixedSize(self.sizeHint())
         self.setFont(Font('Roboto', 12))
-        self.setLayout(mainLayout)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle('{} Export'.format(self.project.profile.name()))
+        self.setWindowTitle('{0} Export'.format(self.project.profile.name()))
 
     #############################################
     #   INTERFACE
@@ -489,6 +489,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
         self.OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
         self.OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.OWLOntologyID = autoclass('org.semanticweb.owlapi.model.OWLOntologyID')
         self.OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
         self.RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
         self.PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
@@ -1533,15 +1534,18 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # INITIALIZE ONTOLOGY
             #################################
 
+            ontologyIRI = rstrip(self.project.iri, '#')
+            versionIRI = '{0}/{1}'.format(ontologyIRI, self.project.version)
+            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI))
             self.man = self.OWLManager.createOWLOntologyManager()
             self.df = self.man.getOWLDataFactory()
-            self.ontology = self.man.createOntology(self.IRI.create(rstrip(self.project.iri, '#')))
+            self.ontology = self.man.createOntology(ontologyID)
             self.pm = self.DefaultPrefixManager()
-            self.pm.setPrefix(self.project.prefix, postfix(self.project.iri, '#'))
+            self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
 
             cast(self.PrefixManager, self.pm)
 
-            LOGGER.debug('Initialized OWL 2 Ontology: %s', rstrip(self.project.iri, '#'))
+            LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
             #############################################
             # NODES PRE-PROCESSING
