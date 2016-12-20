@@ -178,7 +178,7 @@ class ExportTestCase(EddyTestCase):
         self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                           'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
         # AND
-        self.assertLen(60, content)
+        self.assertLen(61, content)
 
     def test_export_project_to_owl_with_normalization(self):
         # WHEN
@@ -271,4 +271,4 @@ class ExportTestCase(EddyTestCase):
         self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                           'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
         # AND
-        self.assertLen(67, content)
+        self.assertLen(68, content)
