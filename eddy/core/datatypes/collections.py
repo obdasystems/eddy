@@ -42,7 +42,7 @@ class DistinctList(list):
         Initialize the DistinctList.
         :type collection: iterable
         """
-        super().__init__()
+        super(DistinctList, self).__init__()
         if collection:
             for item in collection:
                 self.append(item)
@@ -53,7 +53,7 @@ class DistinctList(list):
         :type p_object: mixed
         """
         if p_object not in self:
-            super().append(p_object)
+            super(DistinctList, self).append(p_object)
 
     def extend(self, iterable):
         """
@@ -74,7 +74,7 @@ class DistinctList(list):
             if index2 < index:
                 index -= 1
             self.remove(p_object)
-        super().insert(index, p_object)
+        super(DistinctList, self).insert(index, p_object)
 
     def remove(self, p_object):
         """
@@ -82,7 +82,7 @@ class DistinctList(list):
         :type p_object: mixed
         """
         try:
-            super().remove(p_object)
+            super(DistinctList, self).remove(p_object)
         except ValueError:
             pass
 
@@ -131,9 +131,9 @@ class DistinctList(list):
     def __getitem__(self, p_object):
         """ x.__getitem__(y) <==> x[y] """
         if isinstance(p_object, slice):
-            return DistinctList([super().__getitem__(x) for x in range(*p_object.indices(len(self)))])
+            return DistinctList([super(DistinctList, self).__getitem__(x) for x in range(*p_object.indices(len(self)))])
         else:
-            return super().__getitem__(p_object)
+            return super(DistinctList, self).__getitem__(p_object)
 
     def __getslice__(self, i, j):
         """
