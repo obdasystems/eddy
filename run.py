@@ -162,6 +162,7 @@ def main():
     LOGGER.frame('%s v%s', APPNAME, VERSION, separator='|')
     LOGGER.frame(COPYRIGHT, separator='|')
     LOGGER.separator(separator='-')
+    LOGGER.frame('OS: %s %s', platform.system(), platform.release(), separator='|')
     LOGGER.frame('Python version: %s', platform.python_version(), separator='|')
     LOGGER.frame('Qt version: %s', QtCore.QT_VERSION_STR, separator='|')
     LOGGER.frame('PyQt version: %s', Qt.PYQT_VERSION_STR, separator='|')
