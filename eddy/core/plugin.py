@@ -380,7 +380,7 @@ class PluginManager(QtCore.QObject):
             for file_or_directory in zf_name_list:
                 if file_or_directory.endswith('plugin.spec'):
                     try:
-                        LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, file_or_directory))
+                        #LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, file_or_directory))
                         plugin_spec_content = zf.read(file_or_directory).decode('utf8')
                         plugin_spec = PluginManager.spec(plugin_spec_content)
                         plugin_name = plugin_spec.get('plugin', 'id')
@@ -391,7 +391,7 @@ class PluginManager(QtCore.QObject):
                         for extension in ('.pyc', '.pyo', '.py'):
                             plugin_zip_module_path = '%s%s' % (plugin_zip_module_base_path, extension)
                             if plugin_zip_module_path in zf_name_list:
-                                LOGGER.debug('Found plugin module: %s', os.path.join(archive, plugin_zip_module_path))
+                                #LOGGER.debug('Found plugin module: %s', os.path.join(archive, plugin_zip_module_path))
                                 plugin_module = zipimporter(plugin_abs_base_path).load_module(plugin_name)
                                 plugin_class = PluginManager.find_class(plugin_module, plugin_name)
                                 return plugin_spec, plugin_class
