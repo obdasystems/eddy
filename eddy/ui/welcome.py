@@ -57,6 +57,7 @@ class Welcome(QtWidgets.QWidget):
     This class is used to display the welcome screen of Eddy.
     """
     sgnCreateSession = QtCore.pyqtSignal(str)
+    sgnOpenProject = QtCore.pyqtSignal(str)
 
     def __init__(self, application, parent=None):
         """
@@ -68,6 +69,7 @@ class Welcome(QtWidgets.QWidget):
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
+        self.pending = False
         self.workspace = settings.value('workspace/home', WORKSPACE, str)
 
         #############################################
@@ -85,7 +87,7 @@ class Welcome(QtWidgets.QWidget):
         for path in settings.value('project/recent', None, str) or []:
             project = ProjectBlock(path, self.innerWidgetL)
             connect(project.sgnDeleteProject, self.doDeleteProject)
-            connect(project.sgnOpenProject, self.doOpenRecentProject)
+            connect(project.sgnOpenProject, self.doOpenProject)
             self.innerLayoutL.addWidget(project, 0, QtCore.Qt.AlignTop)
 
         #############################################
@@ -132,7 +134,7 @@ class Welcome(QtWidgets.QWidget):
         self.buttonOpenProject.setIcon(QtGui.QIcon(':/icons/24/ic_folder_open_black'))
         self.buttonOpenProject.setIconSize(QtCore.QSize(24, 24))
         self.buttonOpenProject.setText('Open project')
-        connect(self.buttonOpenProject.clicked, self.doOpenProject)
+        connect(self.buttonOpenProject.clicked, self.doOpen)
 
         self.buttonHelp = PHCQToolButton(self)
         self.buttonHelp.setFont(Font('Roboto', 12))
@@ -189,7 +191,9 @@ class Welcome(QtWidgets.QWidget):
         self.setFixedSize(720, 400)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Welcome to {0}'.format(APPNAME))
+        
         connect(self.sgnCreateSession, application.doCreateSession)
+        connect(self.sgnOpenProject, self.doOpenProject)
 
         desktop = QtWidgets.QDesktopWidget()
         screen = desktop.screenGeometry()
@@ -264,7 +268,7 @@ class Welcome(QtWidgets.QWidget):
                 for path in recentList:
                     project = ProjectBlock(path, self.innerWidgetL)
                     connect(project.sgnDeleteProject, self.doDeleteProject)
-                    connect(project.sgnOpenProject, self.doOpenRecentProject)
+                    connect(project.sgnOpenProject, self.doOpenProject)
                     self.innerLayoutL.addWidget(project, 0, QtCore.Qt.AlignTop)
 
     @QtCore.pyqtSlot()
@@ -277,7 +281,7 @@ class Welcome(QtWidgets.QWidget):
             self.sgnCreateSession.emit(expandPath(form.pathField.value()))
 
     @QtCore.pyqtSlot()
-    def doOpenProject(self):
+    def doOpen(self):
         """
         Bring up a modal window used to open a project.
         """
@@ -288,15 +292,17 @@ class Welcome(QtWidgets.QWidget):
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
-            self.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
+            self.sgnOpenProject.emit(first(dialog.selectedFiles()))
 
     @QtCore.pyqtSlot(str)
-    def doOpenRecentProject(self, path):
+    def doOpenProject(self, path):
         """
         Open a recent project in a new session of Eddy.
         :type path: str
         """
-        self.sgnCreateSession.emit(expandPath(path))
+        if not self.pending:
+            self.pending = True
+            self.sgnCreateSession.emit(expandPath(path))
 
     @QtCore.pyqtSlot()
     def doOpenURL(self):
