@@ -41,7 +41,7 @@ cd ~
 mkdir "${BUILDS_DIR}"
 
 # Install Qt5
-sudo apt-add-repository ppa:beineri/opt-qt57-trusty -y
+sudo apt-add-repository ppa:beineri/opt-qt571-trusty -y
 sudo apt-get update
 sudo apt-get install qt-latest
 sudo apt-get install mercurial
@@ -62,9 +62,9 @@ make
 sudo make install
 
 # Install PyQt5
-curl -L -o "${BUILDS_DIR}/pyqt.tar.gz" "http://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.7/PyQt5_gpl-5.7.tar.gz"
+curl -L -o "${BUILDS_DIR}/pyqt.tar.gz" "https://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.7.1/PyQt5_gpl-5.7.1.tar.gz?"
 tar xzf "${BUILDS_DIR}/pyqt.tar.gz" -C "${BUILDS_DIR}" --keep-newer-files
-cd "${BUILDS_DIR}/PyQt5_gpl-5.7"
+cd "${BUILDS_DIR}/PyQt5_gpl-5.7.1"
 python configure.py --confirm-license --no-designer-plugin -e QtCore -e QtGui -e QtWidgets -e QtPrintSupport -e QtXml -e QtTest -e QtNetwork
 make
 sudo make install
