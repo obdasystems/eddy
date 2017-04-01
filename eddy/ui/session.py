@@ -1300,6 +1300,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             size = settings.value('diagram/size', 5000, int)
             name = form.nameField.value()
             diagram = Diagram.create(name, size, self.project)
+            connect(diagram.sgnItemAdded, self.project.doAddItem)
+            connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
+            connect(diagram.selectionChanged, self.doUpdateState)
             self.undostack.push(CommandDiagramAdd(diagram, self.project))
             self.sgnFocusDiagram.emit(diagram)
 

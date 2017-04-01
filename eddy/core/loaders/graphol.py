@@ -793,11 +793,11 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
 
         root = self.modulesDocument.documentElement()
         modules = root.firstChildElement('modules')
-        module = modules.firstChildElement('module')
-        while not module.isNull():
+        mod = modules.firstChildElement('module')
+        while not mod.isNull():
             try:
                 QtWidgets.QApplication.processEvents()
-                name = module.text()
+                name = mod.text()
                 path = os.path.join(self.project.path, name)
                 worker = GrapholDiagramLoader_v1(path, self.project, self.session)
                 worker.run()
@@ -806,7 +806,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
             except Exception:
                 LOGGER.exception('Failed to load diagram module %s', name)
             finally:
-                module = module.nextSiblingElement('module')
+                mod = mod.nextSiblingElement('module')
 
     #############################################
     #   INTERFACE

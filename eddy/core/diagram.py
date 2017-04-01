@@ -173,6 +173,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         else:
             dragEvent.ignore()
 
+    # noinspection PyTypeChecker
     def dropEvent(self, dropEvent):
         """
         Executed when a dragged element is dropped on the diagram.
@@ -190,6 +191,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         else:
             dropEvent.ignore()
 
+    # noinspection PyTypeChecker
     def mousePressEvent(self, mouseEvent):
         """
         Executed when a mouse button is clicked on the scene.
@@ -753,6 +755,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                         moveData['edges'][edge] = edge.breakpoints[:]
         return moveData
 
+    # noinspection PyTypeChecker
     def visibleRect(self, margin=0):
         """
         Returns a rectangle matching the area of visible items.

@@ -106,7 +106,6 @@ class Project(QtCore.QObject):
     def __init__(self, **kwargs):
         """
         Initialize the graphol project.
-        :type kwargs: dict
         """
         super().__init__(kwargs.get('session'))
         self.index = ProjectIndex()
