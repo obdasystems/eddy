@@ -3,7 +3,7 @@
 ##########################################################################
 #                                                                        #
 #  Eddy: a graphical editor for the specification of Graphol ontologies  #
-#  Copyright (C) 2015 Daniele Pantaleone <pantaleone@dis.uniroma1.it>    #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
 #                                                                        #
 #  This program is free software: you can redistribute it and/or modify  #
 #  it under the terms of the GNU General Public License as published by  #
@@ -36,7 +36,7 @@
 __appname__ = 'Eddy'
 __author__ = 'Daniele Pantaleone'
 __copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__email__ = 'pantaleone@dis.uniroma1.it'
+__email__ = 'danielepantaleone@me.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'
 __status__ = 'Beta'
