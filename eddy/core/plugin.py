@@ -324,14 +324,14 @@ class PluginManager(QtCore.QObject):
             return True
 
     @classmethod
-    def find_class(cls, module, name):
+    def find_class(cls, mod, name):
         """
         Find and returns the reference to the plugin class in the given module.
-        :type module: module
+        :type mod: module
         :type name: str
         :rtype: class
         """
-        return getattr(module, '%sPlugin' % ''.join(i.title() for i in list(filter(None, re.split("[_\-]+", name)))))
+        return getattr(mod, '%sPlugin' % ''.join(i.title() for i in list(filter(None, re.split("[_\-]+", name)))))
 
     @classmethod
     def import_plugin_from_directory(cls, directory):
@@ -510,7 +510,6 @@ class PluginManager(QtCore.QObject):
     def scan(cls, *args):
         """
         Scan the given paths looking for plugins.
-        :type args: tuple
         """
         info = []
         for base in map(expandPath, args):
