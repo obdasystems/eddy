@@ -35,7 +35,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARENT_DIR="$(dirname "${SCRIPT_DIR}")"
-VIRTUAL_ENV="${HOME}/python344"
+VIRTUAL_ENV="${HOME}/python34"
 
 source "${VIRTUAL_ENV}/bin/activate"
 pyrcc5 "${PARENT_DIR}/eddy/ui/fonts.qrc" -o "${PARENT_DIR}/eddy/ui/fonts_rc.py"
