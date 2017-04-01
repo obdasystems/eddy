@@ -34,7 +34,6 @@ env:
 branches:
   only:
     - master
-    - dev
 
 ## Prepare build environment
 before_install:

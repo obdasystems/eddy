@@ -54,9 +54,9 @@ source /opt/qt57/bin/qt57-env.sh
 #sudo apt-get install oracle-java8-set-default -y
 
 # Install Sip
-curl -L -o "${BUILDS_DIR}/sip.tar.gz" "http://downloads.sourceforge.net/project/pyqt/sip/sip-4.18.1/sip-4.18.1.tar.gz"
+curl -L -o "${BUILDS_DIR}/sip.tar.gz" "https://downloads.sourceforge.net/project/pyqt/sip/sip-4.19.2/sip-4.19.2.tar.gz"
 tar xzf "${BUILDS_DIR}/sip.tar.gz" -C "${BUILDS_DIR}" --keep-newer-files
-cd "${BUILDS_DIR}/sip-4.18.1"
+cd "${BUILDS_DIR}/sip-4.19.2"
 python configure.py
 make
 sudo make install
