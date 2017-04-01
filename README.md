@@ -11,7 +11,6 @@
 | Branch    | Status  |
 |-----------|---------------|
 | [master](https://github.com/danielepantaleone/eddy/tree/master)  |[![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=master)](https://travis-ci.org/danielepantaleone/eddy)|
-| [dev](https://github.com/danielepantaleone/eddy/tree/dev) |[![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=dev)](https://travis-ci.org/danielepantaleone/eddy)|
 
 Eddy is a graphical editor for the specification and visualization of Graphol ontologies. 
 Eddy features a design environment specifically thought out for generating Graphol ontologies through 
