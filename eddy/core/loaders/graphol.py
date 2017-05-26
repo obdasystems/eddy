@@ -943,6 +943,7 @@ class GrapholLoaderMixin_v2(object):
         self.importMetaFuncForItem = {
             Item.AttributeNode: self.importAttributeMeta,
             Item.ConceptNode: self.importPredicateMeta,
+            Item.IndividualNode: self.importPredicateMeta,
             Item.RoleNode: self.importRoleMeta,
         }
 

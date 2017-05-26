@@ -123,6 +123,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         self.exportMetaFuncForItem = {
             Item.AttributeNode: self.exportAttributeMeta,
             Item.ConceptNode: self.exportPredicateMeta,
+            Item.IndividualNode: self.exportPredicateMeta,
             Item.RoleNode: self.exportRoleMeta,
         }
 
