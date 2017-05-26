@@ -756,8 +756,8 @@ class ProjectMergeWorker(QtCore.QObject):
         for item, name in self.other.metas():
             if not self.project.predicates(item, name):
                 ## NO PREDICATE => NO CONFLICT
-                undo = self.project.meta(item, name)
-                redo = self.other.meta(item, name)
+                undo = self.project.meta(item, name).copy()
+                redo = self.other.meta(item, name).copy()
                 self.commands.append(CommandNodeSetMeta(self.project, item, name, undo, redo))
             else:
                 ## CHECK FOR POSSIBLE CONFLICTS
@@ -842,8 +842,8 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         try:
             LOGGER.info('Performing project import: %s <- %s...', self.project.name, self.other.name)
-            self.mergeMeta()
             self.mergeDiagrams()
+            self.mergeMeta()
         except ProjectStopImportingError:
             pass
         else:
