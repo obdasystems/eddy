@@ -45,7 +45,7 @@ class OutputHandler(logging.Logger):
     """
     Custom logging output handler class.
     """
-    HeadLength = 92
+    HeadLength = 92 
     Stream = io.StringIO()
 
     #############################################
