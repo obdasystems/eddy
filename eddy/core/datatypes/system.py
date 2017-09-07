@@ -63,7 +63,8 @@ class File(Enum_):
     Pdf = 'Portable Document Format (*.pdf)'
     Png = 'PNG (*.png)'
     Qss = 'Qt Style Sheet (*.qss)'
-    Spec = 'Plugin SPEC (*.spec)'
+    Spec_p = 'Plugin SPEC (*.spec)'
+    Spec_r = 'Reasoner SPEC (*.spec)'
     Zip = 'ZIP (*.zip)'
     Xml = 'XML (*.xml)'
 

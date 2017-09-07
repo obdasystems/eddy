@@ -400,11 +400,13 @@ class PluginManager(QtCore.QObject):
                     except Exception as e:
                         LOGGER.exception('Failed to import plugin: %s', e)
 
-    def init(self):
+    def init(self, **kwargs):
         """
         Initialize previously looked up plugins returning the list of successfully initialized plugins.
         :rtype: list
         """
+        skip_list = kwargs.get('skip_list', [])
+
         if not PluginManager.info:
             LOGGER.info('No plugin to be initialized')
             return []
@@ -415,7 +417,13 @@ class PluginManager(QtCore.QObject):
             plugin_contact = entry[0].get('plugin', 'contact', fallback='<unknown>')
             plugin_name = entry[0].get('plugin', 'name')
             plugin_version = entry[0].get('plugin', 'version')
-            LOGGER.info('* %s v%s (%s - %s)', plugin_name, plugin_version, plugin_author, plugin_contact)
+            plugin_id = entry[0].get('plugin', 'id')
+
+            if plugin_id in skip_list:
+                skip_list_msg = '*** Will be skipped (not installed) ***'
+            else:
+                skip_list_msg = ''
+            LOGGER.info('* %s v%s (%s - %s)', plugin_name, plugin_version, plugin_author, plugin_contact + skip_list_msg)
 
         pluginsList = []
         pluginsLoadedSet = set()
@@ -423,17 +431,21 @@ class PluginManager(QtCore.QObject):
             plugin_id = entry[0].get('plugin', 'id')
             plugin_name = entry[0].get('plugin', 'name')
             plugin_version = entry[0].get('plugin', 'version')
-            if plugin_id not in pluginsLoadedSet:
-                try:
-                    LOGGER.info('Loading plugin: %s v%s', plugin_name, plugin_version)
-                    plugin = self.create(entry[1], entry[0])
-                except Exception:
-                    LOGGER.exception('Failed to load plugin: %s v%s', plugin_name, plugin_version)
-                else:
-                    pluginsList.append(plugin)
-                    pluginsLoadedSet.add(plugin.id())
+
+            if plugin_id in skip_list:
+                LOGGER.warning('Loading plugin: %s v%s -> skipped: plugin in skip_list', plugin_name, plugin_version)
             else:
-                LOGGER.warning('Loading plugin: %s v%s -> skipped: plugin already loaded', plugin_name, plugin_version)
+                if plugin_id not in pluginsLoadedSet:
+                    try:
+                        LOGGER.info('Loading plugin: %s v%s', plugin_name, plugin_version)
+                        plugin = self.create(entry[1], entry[0])
+                    except Exception:
+                        LOGGER.exception('Failed to load plugin: %s v%s', plugin_name, plugin_version)
+                    else:
+                        pluginsList.append(plugin)
+                        pluginsLoadedSet.add(plugin.id())
+                else:
+                    LOGGER.warning('Loading plugin: %s v%s -> skipped: plugin already loaded', plugin_name, plugin_version)
 
         started = []
         for plugin in pluginsList:
@@ -565,6 +577,65 @@ class PluginManager(QtCore.QObject):
             elif fexists(path):
                 fremove(path)
 
+    def dispose_and_remove_plugin_from_session(self, **kwargs):
+        """
+        checks if the plugin is installed
+         if yes, method disposes and removes it from the session (does not uninstall)
+        :param plugin_id: 
+        :return:bool 
+        """
+        plugin_to_dispose_and_remove = kwargs.get('plugin', None)
+        plugin_id_to_dispose_and_remove = kwargs.get('plugin_id', None)
+
+        installed_plugins = self.session.plugins()
+
+        for p in installed_plugins:
+
+            plugin_id = p.id()
+
+            if plugin_id == plugin_id_to_dispose_and_remove:
+
+                plugin_to_dispose_and_remove = p
+                break
+
+        if plugin_to_dispose_and_remove is not None:
+
+            disposed = self.session.pmanager.dispose(plugin_to_dispose_and_remove)
+
+            if disposed:
+
+                self.session.removePlugin(plugin_to_dispose_and_remove)
+                LOGGER.info('plugin disposed and removed from session')
+
+    def create_add_and_start_plugin(self, plugin_id_inp):
+
+        """
+        dispose and remove in case plugin is already installed
+        """
+        plugins_info = self.session.pmanager.info
+        installed_plugins = self.session.plugins()
+
+        installed_plugin_ids = []
+
+        for p in installed_plugins:
+
+            plugin_id = p.id()
+            installed_plugin_ids.append(plugin_id)
+
+        if plugin_id_inp in installed_plugin_ids:
+
+            self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id=plugin_id_inp)
+
+        for entry in plugins_info:
+
+            plugin_id = entry[0].get('plugin', 'id')
+
+            if plugin_id == plugin_id_inp:
+
+                plugin_to_create_add_and_start = self.session.pmanager.create(entry[1], entry[0])
+                started = self.session.pmanager.start(plugin_to_create_add_and_start)
+                #LOGGER.info('>> plugin_started? ', started)
+                self.session.addPlugin(plugin_to_create_add_and_start)
 
 class PluginError(RuntimeError):
     """

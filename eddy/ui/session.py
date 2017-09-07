@@ -69,6 +69,7 @@ from eddy.core.common import HasNotificationSystem
 from eddy.core.common import HasOntologyExportSystem
 from eddy.core.common import HasOntologyLoadSystem
 from eddy.core.common import HasPluginSystem
+from eddy.core.common import HasReasoningSystem
 from eddy.core.common import HasProfileSystem
 from eddy.core.common import HasProjectExportSystem
 from eddy.core.common import HasProjectLoadSystem
@@ -98,6 +99,7 @@ from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
+from eddy.core.reasoner import ReasonerManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
@@ -117,25 +119,24 @@ from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
+from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.view import DiagramView
 
+from eddy.core.items.common import AbstractItem
 
 _LINUX = sys.platform.startswith('linux')
 _MACOS = sys.platform.startswith('darwin')
 _WIN32 = sys.platform.startswith('win32')
 
-
 LOGGER = getLogger()
 
-
-class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
-    HasDiagramExportSystem, HasOntologyExportSystem, HasProjectExportSystem,
-    HasDiagramLoadSystem, HasOntologyLoadSystem, HasProjectLoadSystem,
-    HasProfileSystem, HasThreadingSystem, HasNotificationSystem, QtWidgets.QMainWindow):
+class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
+              HasDiagramExportSystem, HasOntologyExportSystem, HasProjectExportSystem,
+              HasDiagramLoadSystem, HasOntologyLoadSystem, HasProjectLoadSystem,
+              HasProfileSystem, HasThreadingSystem, HasNotificationSystem, QtWidgets.QMainWindow):
     """
     Extends QtWidgets.QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
-
     * sgnClosed: whenever the current session is closed.
     * sgnFocusDiagram: whenever a diagram is to be focused.
     * sgnFocusItem: whenever an item is to be focused.
@@ -160,6 +161,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
 
+    sgnReasonerDisposed = QtCore.pyqtSignal(str)
+    sgnReasonerStarted = QtCore.pyqtSignal(str)
+
     def __init__(self, application, path, **kwargs):
         """
         Initialize the application main working session.
@@ -180,11 +184,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
         self.pmanager = PluginManager(self)
+
+        self.rmanager = ReasonerManager(self)  # written by ASHWIN RAVISHANKAR
+
         self.project = None
 
         #############################################
         # CONFIGURE SESSION
         #################################
+
+        self.initReasoners()  # written by ASHWIN RAVISHANKAR
 
         self.initPre()
         self.initActions()
@@ -228,6 +237,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Configure application built-in actions.
         """
+
         #############################################
         # APPLICATION GENERIC
         #################################
@@ -376,7 +386,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_spellcheck_black'), 'Run syntax check',
             self, objectName='syntax_check', triggered=self.doSyntaxCheck,
-            statusTip='Run syntax validation according to the selected profile'))
+            statusTip='Run syntax validation according to the selected profile', enabled=False))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run reasoner for active ontology',
+            self, objectName='ontology_consistency_check', triggered=self.doOntologyConsistencyCheck,
+            statusTip='Run Reasoner', enabled=False))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_refresh_black'),
+            'Reset changes made by the reasoner for the diagram (decolour red nodes in background) and reset inconsistent/unsatisfiable nodes data',
+            self, objectName='decolour_nodes', triggered=self.BackgrounddeColourNodesAndEdges,
+            statusTip='(decolour the nodes)', enabled=False))
 
         #############################################
         # DIAGRAM SPECIFIC
@@ -555,8 +576,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         group = QtWidgets.QActionGroup(self, objectName='restriction')
         for restriction in Restriction:
             action = QtWidgets.QAction(restriction.value, group,
-                objectName=restriction.name, checkable=True,
-                triggered=self.doSetPropertyRestriction)
+                                       objectName=restriction.name, checkable=True,
+                                       triggered=self.doSetPropertyRestriction)
             action.setData(restriction)
             group.addAction(action)
         self.addAction(group)
@@ -568,8 +589,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         group = QtWidgets.QActionGroup(self, objectName='switch_restriction')
         for k, v in data.items():
             action = QtWidgets.QAction(v, group,
-                objectName=k.name, checkable=True,
-                triggered=self.doSwitchRestrictionNode)
+                                       objectName=k.name, checkable=True,
+                                       triggered=self.doSwitchRestrictionNode)
             action.setData(k)
             group.addAction(action)
         self.addAction(group)
@@ -581,8 +602,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         group = QtWidgets.QActionGroup(self, objectName='datatype')
         for datatype in Datatype:
             action = QtWidgets.QAction(datatype.value, group,
-                objectName=datatype.name, checkable=True,
-                triggered=self.doSetDatatype)
+                                       objectName=datatype.name, checkable=True,
+                                       triggered=self.doSetDatatype)
             action.setData(datatype)
             group.addAction(action)
         self.addAction(group)
@@ -594,8 +615,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         group = QtWidgets.QActionGroup(self, objectName='switch_individual')
         for identity in (Identity.Individual, Identity.Value):
             action = QtWidgets.QAction(identity.value, group,
-                objectName=identity.name, checkable=True,
-                triggered=self.doSetIndividualAs)
+                                       objectName=identity.name, checkable=True,
+                                       triggered=self.doSetIndividualAs)
             action.setData(identity)
             group.addAction(action)
         self.addAction(group)
@@ -607,8 +628,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         group = QtWidgets.QActionGroup(self, objectName='facet')
         for facet in Facet:
             action = QtWidgets.QAction(facet.value, group,
-                objectName=facet.name, checkable=True,
-                triggered=self.doSetFacet)
+                                       objectName=facet.name, checkable=True,
+                                       triggered=self.doSetFacet)
             action.setData(facet)
             group.addAction(action)
         self.addAction(group)
@@ -630,8 +651,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         group = QtWidgets.QActionGroup(self, objectName='switch_operator')
         for k, v in data.items():
             action = QtWidgets.QAction(v, group,
-                objectName=k.name, checkable=True,
-                triggered=self.doSwitchOperatorNode)
+                                       objectName=k.name, checkable=True,
+                                       triggered=self.doSwitchOperatorNode)
             action.setData(k)
             group.addAction(action)
         self.addAction(group)
@@ -712,6 +733,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addAction(self.widget('editor_toolbar').toggleViewAction())
         menu.addAction(self.widget('graphol_toolbar').toggleViewAction())
         menu.addAction(self.widget('view_toolbar').toggleViewAction())
+
+        menu.addAction(self.widget('reasoner_toolbar').toggleViewAction()) # ASHWIN RAVISHANKAR
+
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('\u200CView', objectName='view')
@@ -850,12 +874,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addWidget(QtWidgets.QToolBar('Editor', objectName='editor_toolbar'))
         self.addWidget(QtWidgets.QToolBar('View', objectName='view_toolbar'))
         self.addWidget(QtWidgets.QToolBar('Graphol', objectName='graphol_toolbar'))
+        self.addWidget(QtWidgets.QToolBar('Reasoner', objectName='reasoner_toolbar'))
 
     def initPlugins(self):
         """
         Load and initialize application plugins.
         """
-        self.addPlugins(self.pmanager.init())
+        skip_list = ['IUN_explorer','Explanation_explorer','Unsatisfiable_Entity_Explorer','check_for_consistency']
+        self.addPlugins(self.pmanager.init(skip_list=skip_list))
 
     def initProfiles(self):
         """
@@ -936,10 +962,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         toolbar.addWidget(self.widget('profile_switch'))
         toolbar.addAction(self.action('syntax_check'))
 
+        toolbar = self.widget('reasoner_toolbar')
+        toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
+        toolbar.addWidget(self.widget('select_reasoner'))
+        toolbar.addAction(self.action('ontology_consistency_check'))
+        toolbar.addAction(self.action('decolour_nodes'))
+
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('document_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('view_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('graphol_toolbar'))
+        self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
 
     def initWidgets(self):
         """
@@ -963,12 +996,34 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(combobox.activated, self.doSetProfile)
         self.addWidget(combobox)
 
+        reasoner_names = []
+
+        for entry in ReasonerManager.info:
+
+            reasoner_name = entry[0].get('reasoner', 'name')
+            reasoner_names.append(reasoner_name)
+
+        combobox_2 = ComboBox(objectName='select_reasoner')
+        combobox_2.setEditable(False)
+        combobox_2.setFont(Font('Roboto', 12))
+        combobox_2.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox_2.setScrollEnabled(False)
+        combobox_2.setStatusTip('Select one of any available reasoners')
+        combobox_2.addItems(reasoner_names)
+        combobox_2.setEnabled(False)
+        connect(combobox_2.activated, self.doSelectReasoner)
+        self.addWidget(combobox_2)
+
         progressBar = QtWidgets.QProgressBar(objectName='progress_bar')
         progressBar.setContentsMargins(0, 0, 0, 0)
         progressBar.setFixedSize(222, 14)
         progressBar.setRange(0, 0)
         progressBar.setVisible(False)
         self.addWidget(progressBar)
+
+    def initReasoners(self):
+
+        self.addReasoners(self.rmanager.init())
 
     #############################################
     #   SLOTS
@@ -1169,7 +1224,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol})))
+            dialog.setNameFilters(
+                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol})))
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
@@ -1243,6 +1299,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Swap the direction of all the occurrences of the selected role.
         """
+
         def invert(item):
             """
             Invert the type of a node.
@@ -1421,9 +1478,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                                 if node.adjacentNodes(filter_on_nodes=lambda x: x not in items):
                                     continue
                         purge.add(node)
-            collection = list(items|purge)
+            collection = list(items | purge)
             if collection:
-                collection.extend([x for item in collection if item.isNode() for x in item.edges if x not in collection])
+                collection.extend(
+                    [x for item in collection if item.isNode() for x in item.edges if x not in collection])
                 self.undostack.push(CommandItemsRemove(diagram, collection))
 
     @QtCore.pyqtSlot()
@@ -1461,8 +1519,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
             node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
-                 dialog = RefactorNameForm(node, self)
-                 dialog.exec_()
+                dialog = RefactorNameForm(node, self)
+                dialog.exec_()
 
     @QtCore.pyqtSlot()
     def doRelocateLabel(self):
@@ -1592,7 +1650,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.endMacro()
                 else:
                     self.undostack.push(first(commands))
-            
+
     @QtCore.pyqtSlot()
     def doSetNodeBrush(self):
         """
@@ -1811,6 +1869,75 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.exec_()
 
     @QtCore.pyqtSlot()
+    def doSelectReasoner(self):
+        """
+        Set the currently used project profile.
+        """
+        widget = self.widget('select_reasoner')
+        reasoner = widget.currentText()
+
+        print('doSelectReasoner(self):  selected-',reasoner)
+
+        """
+        if self.project.profile.name() != reasoner:
+            self.undostack.push(CommandProjectSetProfile(self.project, self.project.profile.name(), profile))
+        widget.clearFocus()
+        """
+        widget.clearFocus()
+
+    @QtCore.pyqtSlot()
+    def doOntologyConsistencyCheck(self):
+        """
+        Perform Ontology Consistency checking on the active ontology/diagram.
+        """
+        dialog = OntologyConsistencyCheckDialog(self.project, self)
+        dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def BackgrounddeColourNodesAndEdges(self,**kwargs):
+
+        call_update_node = kwargs.get('call_updateNode',True)
+        call_ClearInconsistentEntitiesAndDiagItemsData = kwargs.get('call_ClearInconsistentEntitiesAndDiagItemsData',True)
+
+        brush = QtGui.QBrush(QtCore.Qt.NoBrush)
+
+        all_nodes = list(self.project.nodes())
+        all_edges = list(self.project.edges())
+
+        for node in all_nodes:
+
+            node.selection.setBrush(brush)
+            node.setCacheMode(AbstractItem.NoCache)
+            node.setCacheMode(AbstractItem.DeviceCoordinateCache)
+            node.update(node.boundingRect())
+
+            if call_update_node is True:
+                node.updateNode()
+
+        for edge in all_edges:
+
+            edge.selection.setBrush(brush)
+            edge.setCacheMode(AbstractItem.NoCache)
+            edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
+            edge.update(edge.boundingRect())
+
+        if call_ClearInconsistentEntitiesAndDiagItemsData:
+            self.ClearInconsistentEntitiesAndDiagItemsData()
+
+    @QtCore.pyqtSlot()
+    def ClearInconsistentEntitiesAndDiagItemsData(self):
+
+        self.project.inconsistent_ontology = None
+        self.project.explanations_for_inconsistency = []
+
+        self.project.unsatisfiable_classes = []
+        self.project.nodesofunsatisfiable_classes = []
+        self.project.explanations_for_unsatisfiable_classes = []
+
+        self.project.get_axioms_of_explanation_to_display_in_widget = []
+        self.project.nodesoredges_of_axioms_to_display_in_widget = []
+
+    @QtCore.pyqtSlot()
     def doToggleGrid(self):
         """
         Toggle snap to grid setting and viewport display.
@@ -1879,6 +2006,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
 
+        if self.mdi.activeDiagram():
+
+            self.widget('select_reasoner').setEnabled(not isProjectEmpty)
+            self.action('decolour_nodes').setEnabled(not isProjectEmpty)
+            self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
+
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):
         """
@@ -1944,7 +2077,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Save changes?')
-            msgbox.setStandardButtons(QtWidgets.QMessageBox.Cancel|QtWidgets.QMessageBox.No|QtWidgets.QMessageBox.Yes)
+            msgbox.setStandardButtons(
+                QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
             msgbox.setText('Your project contains unsaved changes. Do you want to save?')
             msgbox.exec_()
             if msgbox.result() == QtWidgets.QMessageBox.Cancel:

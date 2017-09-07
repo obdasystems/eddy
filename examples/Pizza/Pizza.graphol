@@ -2,22 +2,23 @@
 <graphol version="2">
   <ontology>
     <name>Pizza</name>
+    <version>1.0</version>
     <prefix>pizza</prefix>
     <iri>http://www.dis.uniroma1.it/~graphol/pizza</iri>
     <profile>OWL 2</profile>
   </ontology>
   <predicates>
-    <predicate type="attribute" name="calories">
+    <predicate name="calories" type="attribute">
       <url></url>
       <description></description>
       <functional>1</functional>
     </predicate>
-    <predicate type="attribute" name="depth">
+    <predicate name="depth" type="attribute">
       <url></url>
       <description></description>
       <functional>1</functional>
     </predicate>
-    <predicate type="role" name="hasTopping">
+    <predicate name="hasTopping" type="role">
       <url></url>
       <description></description>
       <functional>0</functional>
@@ -28,7 +29,7 @@
       <symmetric>0</symmetric>
       <transitive>0</transitive>
     </predicate>
-    <predicate type="role" name="hasBase">
+    <predicate name="hasBase" type="role">
       <url></url>
       <description></description>
       <functional>1</functional>
@@ -41,639 +42,702 @@
     </predicate>
   </predicates>
   <diagrams>
-    <diagram width="5000" name="Pizza" height="5000">
-      <node type="concept" color="#fcfcfc" id="n30">
-        <geometry width="135" x="560" y="160" height="65"/>
-        <label width="90" x="560" y="160" height="23">CheeseTopping</label>
+    <diagram name="Pizza_2" width="5000" height="5000">
+      <node id="n8" color="#fcfcfc" type="complement">
+        <geometry y="100" x="-1470" width="50" height="30"/>
+        <label y="100" x="-1470" width="25" height="23">not</label>
       </node>
-      <node type="disjoint-union" color="#000000" id="n26">
-        <geometry width="50" x="-1180" y="320" height="30"/>
+      <node id="n9" color="#fcfcfc" type="individual">
+        <geometry y="410" x="-1470" width="60" height="-60"/>
+        <label y="410" x="-1470" width="26" height="23">def</label>
       </node>
-      <node type="disjoint-union" color="#000000" id="n3">
-        <geometry width="50" x="-60" y="0" height="30"/>
+      <node id="n6" color="#fcfcfc" type="concept">
+        <geometry y="100" x="-1290" width="145" height="65"/>
+        <label y="100" x="-1290" width="90" height="23">good for health</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n5">
-        <geometry width="20" x="140" y="-40" height="20"/>
-        <label width="39" x="140" y="-62" height="23">exists</label>
+      <node id="n1" color="#fcfcfc" type="concept">
+        <geometry y="410" x="-1110" width="135" height="60"/>
+        <label y="410" x="-1110" width="60" height="23">American</label>
       </node>
-      <node type="role" color="#fcfcfc" id="n43">
-        <geometry width="70" x="-180" y="460" height="50"/>
-        <label width="70" x="-183" y="420" height="23">hasTopping</label>
+      <node id="n3" color="#fcfcfc" type="concept">
+        <geometry y="290" x="-1470" width="135" height="65"/>
+        <label y="290" x="-1470" width="35" height="23">chilly</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n15">
-        <geometry width="20" x="-400" y="-100" height="20"/>
-        <label width="39" x="-368" y="-100" height="23">exists</label>
+      <node id="n0" color="#fcfcfc" type="concept">
+        <geometry y="410" x="-790" width="135" height="65"/>
+        <label y="410" x="-790" width="94" height="23">VegetarianPizza</label>
       </node>
-      <node type="role" color="#fcfcfc" id="n49">
-        <geometry width="95" x="760" y="-620" height="65"/>
-        <label width="70" x="760" y="-620" height="23">hasTopping</label>
+      <node id="n2" color="#fcfcfc" type="individual">
+        <geometry y="240" x="-1110" width="60" height="-60"/>
+        <label y="240" x="-1110" width="28" height="23">abc</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n35">
-        <geometry width="135" x="1300" y="360" height="65"/>
-        <label width="77" x="1300" y="360" height="23">OliveTopping</label>
+      <node id="n4" color="#fcfcfc" type="concept">
+        <geometry y="100" x="-1650" width="135" height="65"/>
+        <label y="100" x="-1650" width="110" height="23">not good for health</label>
       </node>
-      <node type="value-domain" color="#fcfcfc" id="n6">
-        <geometry width="90" x="420" y="-40" height="40"/>
-        <label width="60" x="420" y="-40" height="23">xsd:string</label>
+      <edge source="n9" target="n3" id="e7" type="membership">
+        <point y="410" x="-1470"/>
+        <point y="290" x="-1470"/>
+      </edge>
+      <edge source="n6" target="n8" id="e5" type="input">
+        <point y="100" x="-1290"/>
+        <point y="100" x="-1470"/>
+      </edge>
+      <edge source="n3" target="n6" id="e3" type="inclusion">
+        <point y="290" x="-1470"/>
+        <point y="100" x="-1290"/>
+      </edge>
+      <edge source="n2" target="n1" id="e8" type="membership">
+        <point y="240" x="-1110"/>
+        <point y="410" x="-1110"/>
+      </edge>
+      <edge source="n3" target="n4" id="e2" type="inclusion">
+        <point y="290" x="-1470"/>
+        <point y="100" x="-1650"/>
+      </edge>
+      <edge source="n4" target="n8" id="e6" type="inclusion">
+        <point y="100" x="-1650"/>
+        <point y="100" x="-1470"/>
+      </edge>
+      <edge source="n1" target="n0" id="e0" type="inclusion">
+        <point y="410" x="-1110"/>
+        <point y="410" x="-790"/>
+        <point y="441" x="-791"/>
+      </edge>
+    </diagram>
+    <diagram name="Pizza" width="5000" height="5000">
+      <node id="n4" color="#fcfcfc" type="attribute">
+        <geometry y="-40" x="220" width="20" height="20"/>
+        <label y="-62" x="220" width="39" height="23">depth</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n27">
-        <geometry width="135" x="760" y="-100" height="65"/>
-        <label width="79" x="760" y="-100" height="23">PizzaTopping</label>
+      <node id="n7" color="#000000" type="range-restriction">
+        <geometry y="-40" x="300" width="20" height="20"/>
+        <label y="-62" x="300" width="40" height="23">exists</label>
       </node>
-      <node type="complement" color="#fcfcfc" id="n22">
-        <geometry width="50" x="-820" y="300" height="30"/>
-        <label width="25" x="-820" y="300" height="23">not</label>
+      <node id="n44" color="#fcfcfc" type="domain-restriction">
+        <geometry y="460" x="-280" width="20" height="20"/>
+        <label y="460" x="-311" width="40" height="23">exists</label>
       </node>
-      <node type="union" color="#fcfcfc" id="n21">
-        <geometry width="50" x="-940" y="40" height="30"/>
-        <label width="18" x="-940" y="40" height="23">or</label>
+      <node id="n71" color="#000000" type="range-restriction">
+        <geometry y="-680" x="100" width="20" height="20"/>
+        <label y="-702" x="100" width="40" height="23">exists</label>
       </node>
-      <node type="union" color="#fcfcfc" id="n42">
-        <geometry width="50" x="1320" y="520" height="30"/>
-        <label width="18" x="1320" y="520" height="23">or</label>
+      <node id="n45" color="#fcfcfc" type="domain-restriction">
+        <geometry y="560" x="-180" width="20" height="20"/>
+        <label y="582" x="-178" width="30" height="23">(-,1)</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n38">
-        <geometry width="187" x="840" y="360" height="65"/>
-        <label width="76" x="840" y="360" height="23">HamTopping</label>
+      <node id="n13" color="#fcfcfc" type="intersection">
+        <geometry y="-100" x="-700" width="50" height="30"/>
+        <label y="-100" x="-700" width="29" height="23">and</label>
       </node>
-      <node type="range-restriction" color="#000000" id="n77">
-        <geometry width="20" x="-580" y="-560" height="20"/>
-        <label width="39" x="-580" y="-582" height="23">exists</label>
+      <node id="n70" color="#fcfcfc" type="intersection">
+        <geometry y="180" x="-1580" width="50" height="30"/>
+        <label y="180" x="-1580" width="29" height="23">and</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n29">
-        <geometry width="135" x="360" y="160" height="65"/>
-        <label width="79" x="360" y="160" height="23">SpicyTopping</label>
+      <node id="n51" color="#fcfcfc" type="concept">
+        <geometry y="-560" x="-940" width="135" height="65"/>
+        <label y="-560" x="-940" width="36" height="23">Food</label>
       </node>
-      <node type="range-restriction" color="#000000" id="n10">
-        <geometry width="20" x="220" y="-380" height="20"/>
-        <label width="39" x="220" y="-402" height="23">exists</label>
+      <node id="n47" color="#fcfcfc" type="role">
+        <geometry y="-560" x="100" width="95" height="65"/>
+        <label y="-582" x="187" width="84" height="23">hasIngredient</label>
       </node>
-      <node type="intersection" color="#fcfcfc" id="n13">
-        <geometry width="50" x="-700" y="-100" height="30"/>
-        <label width="27" x="-700" y="-100" height="23">and</label>
+      <node id="n49" color="#fcfcfc" type="role">
+        <geometry y="-620" x="760" width="95" height="65"/>
+        <label y="-620" x="760" width="72" height="23">hasTopping</label>
       </node>
-      <node type="range-restriction" color="#000000" id="n50">
-        <geometry width="20" x="760" y="-500" height="20"/>
-        <label width="39" x="792" y="-500" height="23">exists</label>
+      <node id="n52" color="#000000" type="disjoint-union">
+        <geometry y="-240" x="-940" width="50" height="30"/>
       </node>
-      <node type="disjoint-union" color="#000000" id="n33">
-        <geometry width="50" x="760" y="20" height="30"/>
+      <node id="n26" color="#000000" type="disjoint-union">
+        <geometry y="320" x="-1180" width="50" height="30"/>
       </node>
-      <node type="concept" color="#fcfcfc" id="n32">
-        <geometry width="135" x="960" y="160" height="65"/>
-        <label width="78" x="960" y="160" height="23">MeatTopping</label>
+      <node id="n20" color="#fcfcfc" type="concept">
+        <geometry y="180" x="-700" width="135" height="65"/>
+        <label y="180" x="-700" width="94" height="23">VegetarianPizza</label>
       </node>
-      <node type="attribute" color="#fcfcfc" id="n4">
-        <geometry width="20" x="220" y="-40" height="20"/>
-        <label width="38" x="220" y="-62" height="23">depth</label>
+      <node id="n15" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-100" x="-400" width="20" height="20"/>
+        <label y="-100" x="-368" width="40" height="23">exists</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n65">
-        <geometry width="135" x="-1220" y="-100" height="65"/>
-        <label width="93" x="-1220" y="-100" height="23">InterestingPizza</label>
+      <node id="n25" color="#fcfcfc" type="concept">
+        <geometry y="460" x="-1020" width="135" height="60"/>
+        <label y="460" x="-1020" width="60" height="23">American</label>
       </node>
-      <node type="range-restriction" color="#000000" id="n7">
-        <geometry width="20" x="300" y="-40" height="20"/>
-        <label width="39" x="300" y="-62" height="23">exists</label>
+      <node id="n2" color="#fcfcfc" type="concept">
+        <geometry y="80" x="60" width="135" height="65"/>
+        <label y="80" x="60" width="117" height="23">ThinAndCrispyBase</label>
       </node>
-      <node type="complement" color="#fcfcfc" id="n14">
-        <geometry width="50" x="-540" y="-100" height="30"/>
-        <label width="25" x="-540" y="-100" height="23">not</label>
+      <node id="n37" color="#fcfcfc" type="concept">
+        <geometry y="360" x="1460" width="135" height="65"/>
+        <label y="360" x="1460" width="92" height="23">TomatoTopping</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n37">
-        <geometry width="135" x="1460" y="360" height="65"/>
-        <label width="92" x="1460" y="360" height="23">TomatoTopping</label>
+      <node id="n68" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-540" x="840" width="20" height="20"/>
+        <label y="-540" x="865" width="30" height="23">(3,-)</label>
       </node>
-      <node type="role" color="#fcfcfc" id="n47">
-        <geometry width="95" x="100" y="-560" height="65"/>
-        <label width="80" x="187" y="-582" height="23">hasIngredient</label>
+      <node id="n5" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-40" x="140" width="20" height="20"/>
+        <label y="-62" x="140" width="40" height="23">exists</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n75">
-        <geometry width="20" x="-780" y="-560" height="20"/>
-        <label width="39" x="-780" y="-582" height="23">exists</label>
+      <node id="n42" color="#fcfcfc" type="union">
+        <geometry y="520" x="1320" width="50" height="30"/>
+        <label y="520" x="1320" width="19" height="23">or</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n25">
-        <geometry width="135" x="-1020" y="460" height="60"/>
-        <label width="59" x="-1020" y="460" height="23">American</label>
+      <node id="n16" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-380" x="-20" width="20" height="20"/>
+        <label y="-402" x="-20" width="40" height="23">exists</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n17">
-        <geometry width="135" x="-1420" y="180" height="65"/>
-        <label width="75" x="-1420" y="180" height="23">CheesyPizza</label>
+      <node id="n14" color="#fcfcfc" type="complement">
+        <geometry y="-100" x="-540" width="50" height="30"/>
+        <label y="-100" x="-540" width="25" height="23">not</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n34">
-        <geometry width="135" x="1380" y="160" height="65"/>
-        <label width="104" x="1380" y="160" height="23">VegetableTopping</label>
+      <node id="n67" color="#fcfcfc" type="concept">
+        <geometry y="-100" x="-1480" width="135" height="65"/>
+        <label y="-100" x="-1480" width="62" height="23">IceCream</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n20">
-        <geometry width="135" x="-700" y="180" height="65"/>
-        <label width="94" x="-700" y="180" height="23">VegetarianPizza</label>
+      <node id="n69" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-280" x="520" width="20" height="20"/>
+        <label y="-280" x="550" width="40" height="23">exists</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n69">
-        <geometry width="20" x="520" y="-280" height="20"/>
-        <label width="39" x="550" y="-280" height="23">exists</label>
+      <node id="n24" color="#fcfcfc" type="concept">
+        <geometry y="460" x="-1180" width="135" height="65"/>
+        <label y="460" x="-1180" width="72" height="23">Napoletana</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n28">
-        <geometry width="135" x="560" y="360" height="65"/>
-        <label width="109" x="560" y="360" height="23">MozzarellaTopping</label>
+      <node id="n40" color="#000000" type="disjoint-union">
+        <geometry y="260" x="960" width="50" height="30"/>
       </node>
-      <node type="concept" color="#fcfcfc" id="n24">
-        <geometry width="135" x="-1180" y="460" height="65"/>
-        <label width="69" x="-1180" y="460" height="23">Napoletana</label>
+      <node id="n34" color="#fcfcfc" type="concept">
+        <geometry y="160" x="1380" width="135" height="65"/>
+        <label y="160" x="1380" width="106" height="23">VegetableTopping</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n0">
-        <geometry width="135" x="-60" y="-100" height="65"/>
-        <label width="63" x="-60" y="-100" height="23">PizzaBase</label>
+      <node id="n21" color="#fcfcfc" type="union">
+        <geometry y="40" x="-940" width="50" height="30"/>
+        <label y="40" x="-940" width="19" height="23">or</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n73">
-        <geometry width="20" x="940" y="-460" height="20"/>
-        <label width="39" x="908" y="-461" height="23">exists</label>
+      <node id="n3" color="#000000" type="disjoint-union">
+        <geometry y="0" x="-60" width="50" height="30"/>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n68">
-        <geometry width="20" x="840" y="-540" height="20"/>
-        <label width="28" x="865" y="-540" height="23">(3,-)</label>
+      <node id="n35" color="#fcfcfc" type="concept">
+        <geometry y="360" x="1300" width="135" height="65"/>
+        <label y="360" x="1300" width="78" height="23">OliveTopping</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n39">
-        <geometry width="213" x="1080" y="360" height="65"/>
-        <label width="151" x="1080" y="360" height="23">PepperoniSausageTopping</label>
+      <node id="n50" color="#000000" type="range-restriction">
+        <geometry y="-500" x="760" width="20" height="20"/>
+        <label y="-500" x="792" width="40" height="23">exists</label>
       </node>
-      <node type="intersection" color="#fcfcfc" id="n70">
-        <geometry width="50" x="-1580" y="180" height="30"/>
-        <label width="27" x="-1580" y="180" height="23">and</label>
+      <node id="n46" color="#fcfcfc" type="domain-restriction">
+        <geometry y="660" x="-60" width="20" height="20"/>
+        <label y="683" x="-59" width="35" height="23">forall</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n19">
-        <geometry width="135" x="-940" y="180" height="65"/>
-        <label width="69" x="-940" y="180" height="23">MeatyPizza</label>
+      <node id="n74" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-380" x="1060" width="20" height="20"/>
+        <label y="-380" x="1028" width="40" height="23">exists</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n67">
-        <geometry width="135" x="-1480" y="-100" height="65"/>
-        <label width="58" x="-1480" y="-100" height="23">IceCream</label>
+      <node id="n43" color="#fcfcfc" type="role">
+        <geometry y="460" x="-180" width="70" height="50"/>
+        <label y="420" x="-183" width="72" height="23">hasTopping</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n74">
-        <geometry width="20" x="1060" y="-380" height="20"/>
-        <label width="39" x="1028" y="-380" height="23">exists</label>
+      <node id="n28" color="#fcfcfc" type="concept">
+        <geometry y="360" x="560" width="135" height="65"/>
+        <label y="360" x="560" width="108" height="23">MozzarellaTopping</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n31">
-        <geometry width="135" x="760" y="160" height="65"/>
-        <label width="75" x="760" y="160" height="23">FruitTopping</label>
+      <node id="n41" color="#000000" type="disjoint-union">
+        <geometry y="260" x="1380" width="50" height="30"/>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n72">
-        <geometry width="20" x="760" y="-740" height="20"/>
-        <label width="39" x="760" y="-762" height="23">exists</label>
+      <node id="n33" color="#000000" type="disjoint-union">
+        <geometry y="20" x="760" width="50" height="30"/>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n45">
-        <geometry width="20" x="-180" y="560" height="20"/>
-        <label width="28" x="-178" y="582" height="23">(-,1)</label>
+      <node id="n0" color="#fcfcfc" type="concept">
+        <geometry y="-100" x="-60" width="135" height="65"/>
+        <label y="-100" x="-60" width="65" height="23">PizzaBase</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n51">
-        <geometry width="135" x="-940" y="-560" height="65"/>
-        <label width="34" x="-940" y="-560" height="23">Food</label>
+      <node id="n30" color="#fcfcfc" type="concept">
+        <geometry y="160" x="560" width="135" height="65"/>
+        <label y="160" x="560" width="95" height="23">CheeseTopping</label>
       </node>
-      <node type="range-restriction" color="#000000" id="n71">
-        <geometry width="20" x="100" y="-680" height="20"/>
-        <label width="39" x="100" y="-702" height="23">exists</label>
+      <node id="n72" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-740" x="760" width="20" height="20"/>
+        <label y="-762" x="760" width="40" height="23">exists</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n23">
-        <geometry width="135" x="-1340" y="460" height="65"/>
-        <label width="98" x="-1340" y="460" height="23">QuattroFormaggi</label>
+      <node id="n73" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-460" x="940" width="20" height="20"/>
+        <label y="-461" x="908" width="40" height="23">exists</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n2">
-        <geometry width="135" x="60" y="80" height="65"/>
-        <label width="112" x="60" y="80" height="23">ThinAndCrispyBase</label>
+      <node id="n65" color="#fcfcfc" type="concept">
+        <geometry y="-100" x="-1220" width="135" height="65"/>
+        <label y="-100" x="-1220" width="94" height="23">InterestingPizza</label>
       </node>
-      <node type="role" color="#fcfcfc" id="n9">
-        <geometry width="95" x="100" y="-380" height="65"/>
-        <label width="53" x="100" y="-380" height="23">hasBase</label>
+      <node id="n19" color="#fcfcfc" type="concept">
+        <geometry y="180" x="-940" width="135" height="65"/>
+        <label y="180" x="-940" width="67" height="23">MeatyPizza</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n1">
-        <geometry width="135" x="-180" y="80" height="65"/>
-        <label width="82" x="-180" y="80" height="23">DeepPanBase</label>
+      <node id="n10" color="#000000" type="range-restriction">
+        <geometry y="-380" x="220" width="20" height="20"/>
+        <label y="-402" x="220" width="40" height="23">exists</label>
       </node>
-      <node type="disjoint-union" color="#000000" id="n52">
-        <geometry width="50" x="-940" y="-240" height="30"/>
+      <node id="n18" color="#fcfcfc" type="concept">
+        <geometry y="180" x="-1180" width="135" height="65"/>
+        <label y="180" x="-1180" width="77" height="23">NamedPizza</label>
       </node>
-      <node type="attribute" color="#fcfcfc" id="n76">
-        <geometry width="20" x="-680" y="-560" height="20"/>
-        <label width="50" x="-680" y="-582" height="23">calories</label>
+      <node id="n29" color="#fcfcfc" type="concept">
+        <geometry y="160" x="360" width="135" height="65"/>
+        <label y="160" x="360" width="80" height="23">SpicyTopping</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n18">
-        <geometry width="135" x="-1180" y="180" height="65"/>
-        <label width="75" x="-1180" y="180" height="23">NamedPizza</label>
+      <node id="n75" color="#fcfcfc" type="domain-restriction">
+        <geometry y="-560" x="-780" width="20" height="20"/>
+        <label y="-582" x="-780" width="40" height="23">exists</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n16">
-        <geometry width="20" x="-20" y="-380" height="20"/>
-        <label width="39" x="-20" y="-402" height="23">exists</label>
+      <node id="n39" color="#fcfcfc" type="concept">
+        <geometry y="360" x="1080" width="213" height="65"/>
+        <label y="360" x="1080" width="158" height="23">PepperoniSausageTopping</label>
       </node>
-      <node type="value-domain" color="#fcfcfc" id="n78">
-        <geometry width="90" x="-440" y="-560" height="40"/>
-        <label width="60" x="-440" y="-560" height="23">xsd:string</label>
+      <node id="n9" color="#fcfcfc" type="role">
+        <geometry y="-380" x="100" width="95" height="65"/>
+        <label y="-380" x="100" width="58" height="23">hasBase</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n46">
-        <geometry width="20" x="-60" y="660" height="20"/>
-        <label width="35" x="-59" y="683" height="23">forall</label>
+      <node id="n22" color="#fcfcfc" type="complement">
+        <geometry y="300" x="-820" width="50" height="30"/>
+        <label y="300" x="-820" width="25" height="23">not</label>
       </node>
-      <node type="domain-restriction" color="#fcfcfc" id="n44">
-        <geometry width="20" x="-280" y="460" height="20"/>
-        <label width="39" x="-311" y="460" height="23">exists</label>
+      <node id="n78" color="#fcfcfc" type="value-domain">
+        <geometry y="-560" x="-440" width="90" height="40"/>
+        <label y="-560" x="-440" width="61" height="23">xsd:string</label>
       </node>
-      <node type="concept" color="#fcfcfc" id="n12">
-        <geometry width="160" x="-940" y="-100" height="65"/>
-        <label width="36" x="-940" y="-100" height="23">Pizza</label>
+      <node id="n17" color="#fcfcfc" type="concept">
+        <geometry y="180" x="-1420" width="135" height="65"/>
+        <label y="180" x="-1420" width="78" height="23">CheesyPizza</label>
       </node>
-      <node type="disjoint-union" color="#000000" id="n41">
-        <geometry width="50" x="1380" y="260" height="30"/>
+      <node id="n1" color="#fcfcfc" type="concept">
+        <geometry y="80" x="-180" width="135" height="65"/>
+        <label y="80" x="-180" width="89" height="23">DeepPanBase</label>
       </node>
-      <node type="disjoint-union" color="#000000" id="n40">
-        <geometry width="50" x="960" y="260" height="30"/>
+      <node id="n77" color="#000000" type="range-restriction">
+        <geometry y="-560" x="-580" width="20" height="20"/>
+        <label y="-582" x="-580" width="40" height="23">exists</label>
       </node>
-      <edge type="inclusion" target="n12" id="e57" source="n65">
-        <point x="-1220" y="-100"/>
-        <point x="-940" y="-100"/>
-      </edge>
-      <edge type="inclusion" target="n51" id="e69" source="n72">
-        <point x="760" y="-740"/>
-        <point x="-960" y="-740"/>
-        <point x="-960" y="-560"/>
-      </edge>
-      <edge type="inclusion" target="n34" id="e37" source="n41">
-        <point x="1380" y="260"/>
-        <point x="1380" y="160"/>
-      </edge>
-      <edge type="input" target="n3" id="e1" source="n2">
-        <point x="60" y="80"/>
-        <point x="60" y="0"/>
-        <point x="-60" y="0"/>
-      </edge>
-      <edge type="equivalence" target="n5" id="e3" source="n0">
-        <point x="-20" y="-80"/>
-        <point x="80" y="-80"/>
-        <point x="80" y="-40"/>
-        <point x="140" y="-40"/>
-      </edge>
-      <edge type="equivalence" target="n75" id="e83" source="n51">
-        <point x="-940" y="-560"/>
-        <point x="-780" y="-560"/>
-      </edge>
-      <edge type="input" target="n74" id="e75" source="n37">
-        <point x="1500" y="360"/>
-        <point x="1500" y="-300"/>
-        <point x="1060" y="-300"/>
-        <point x="1060" y="-380"/>
-      </edge>
-      <edge type="input" target="n40" id="e33" source="n38">
-        <point x="840" y="360"/>
-        <point x="840" y="260"/>
-        <point x="960" y="260"/>
-      </edge>
-      <edge type="inclusion" target="n30" id="e26" source="n28">
-        <point x="560" y="360"/>
-        <point x="560" y="160"/>
-      </edge>
-      <edge type="input" target="n13" id="e10" source="n14">
-        <point x="-540" y="-100"/>
-        <point x="-700" y="-100"/>
-      </edge>
-      <edge type="input" target="n33" id="e29" source="n31">
-        <point x="760" y="160"/>
-        <point x="760" y="20"/>
-      </edge>
-      <edge type="input" target="n69" id="e62" source="n49">
-        <point x="760" y="-620"/>
-        <point x="520" y="-480"/>
-        <point x="520" y="-280"/>
-      </edge>
-      <edge type="input" target="n52" id="e58" source="n67">
-        <point x="-1480" y="-100"/>
-        <point x="-1480" y="-240"/>
-        <point x="-940" y="-240"/>
-      </edge>
-      <edge type="input" target="n21" id="e18" source="n17">
-        <point x="-1420" y="180"/>
-        <point x="-1420" y="40"/>
-        <point x="-940" y="40"/>
-      </edge>
-      <edge type="input" target="n77" id="e85" source="n76">
-        <point x="-680" y="-560"/>
-        <point x="-580" y="-560"/>
-      </edge>
-      <edge type="input" target="n70" id="e65" source="n69">
-        <point x="520" y="-280"/>
-        <point x="-1640" y="-280"/>
-        <point x="-1640" y="180"/>
-        <point x="-1580" y="180"/>
-      </edge>
-      <edge type="equivalence" target="n20" id="e19" source="n13">
-        <point x="-700" y="-100"/>
-        <point x="-700" y="180"/>
-      </edge>
-      <edge type="inclusion" target="n47" id="e49" source="n9">
-        <point x="100" y="-380"/>
-        <point x="100" y="-560"/>
-      </edge>
-      <edge type="input" target="n21" id="e15" source="n19">
-        <point x="-940" y="180"/>
-        <point x="-940" y="40"/>
-      </edge>
-      <edge type="input" target="n72" id="e68" source="n49">
-        <point x="760" y="-620"/>
-        <point x="760" y="-740"/>
-      </edge>
-      <edge type="input" target="n21" id="e16" source="n20">
-        <point x="-740" y="180"/>
-        <point x="-740" y="40"/>
-        <point x="-940" y="40"/>
-      </edge>
-      <edge type="input" target="n44" id="e81" source="n30">
-        <point x="520" y="160"/>
-        <point x="520" y="300"/>
-        <point x="-280" y="300"/>
-        <point x="-280" y="460"/>
-      </edge>
-      <edge type="input" target="n50" id="e51" source="n49">
-        <point x="760" y="-620"/>
-        <point x="760" y="-500"/>
-      </edge>
-      <edge type="input" target="n42" id="e38" source="n39">
-        <point x="1080" y="360"/>
-        <point x="1080" y="520"/>
-        <point x="1320" y="520"/>
-      </edge>
-      <edge type="equivalence" target="n16" id="e13" source="n12">
-        <point x="-880" y="-100"/>
-        <point x="-880" y="-380"/>
-        <point x="-20" y="-380"/>
-      </edge>
-      <edge type="equivalence" target="n17" id="e63" source="n70">
-        <point x="-1580" y="180"/>
-        <point x="-1420" y="180"/>
-      </edge>
-      <edge type="input" target="n21" id="e17" source="n18">
-        <point x="-1180" y="180"/>
-        <point x="-1180" y="100"/>
-        <point x="-940" y="40"/>
-      </edge>
-      <edge type="input" target="n70" id="e64" source="n12">
-        <point x="-980" y="-100"/>
-        <point x="-980" y="0"/>
-        <point x="-1580" y="0"/>
-        <point x="-1580" y="180"/>
-      </edge>
-      <edge type="input" target="n26" id="e24" source="n24">
-        <point x="-1180" y="460"/>
-        <point x="-1180" y="320"/>
-      </edge>
-      <edge type="input" target="n15" id="e80" source="n32">
-        <point x="920" y="160"/>
-        <point x="920" y="220"/>
-        <point x="-400" y="220"/>
-        <point x="-400" y="-100"/>
-      </edge>
-      <edge type="input" target="n41" id="e35" source="n35">
-        <point x="1300" y="360"/>
-        <point x="1300" y="260"/>
-        <point x="1380" y="260"/>
-      </edge>
-      <edge type="input" target="n69" id="e61" source="n30">
-        <point x="520" y="160"/>
-        <point x="520" y="-280"/>
-      </edge>
-      <edge type="input" target="n46" id="e43" source="n43">
-        <point x="-180" y="460"/>
-        <point x="-60" y="460"/>
-        <point x="-60" y="660"/>
-      </edge>
-      <edge type="input" target="n52" id="e56" source="n0">
-        <point x="-60" y="-100"/>
-        <point x="-60" y="-200"/>
-        <point x="-840" y="-200"/>
-        <point x="-940" y="-240"/>
-      </edge>
-      <edge type="inclusion" target="n0" id="e8" source="n10">
-        <point x="220" y="-380"/>
-        <point x="220" y="-120"/>
-        <point x="-20" y="-120"/>
-      </edge>
-      <edge type="inclusion" target="n74" id="e77" source="n25">
-        <point x="-980" y="460"/>
-        <point x="-980" y="700"/>
-        <point x="1620" y="700"/>
-        <point x="1620" y="-380"/>
-        <point x="1060" y="-380"/>
-      </edge>
-      <edge type="input" target="n33" id="e28" source="n30">
-        <point x="560" y="160"/>
-        <point x="560" y="60"/>
-        <point x="760" y="20"/>
-      </edge>
-      <edge type="input" target="n68" id="e59" source="n49">
-        <point x="760" y="-620"/>
-        <point x="840" y="-540"/>
-      </edge>
-      <edge type="inclusion" target="n45" id="e44" source="n24">
-        <point x="-1180" y="460"/>
-        <point x="-1180" y="560"/>
-        <point x="-180" y="560"/>
-      </edge>
-      <edge type="inclusion" target="n22" id="e20" source="n19">
-        <point x="-940" y="180"/>
-        <point x="-940" y="300"/>
-        <point x="-820" y="300"/>
-      </edge>
-      <edge type="input" target="n73" id="e76" source="n39">
-        <point x="1140" y="360"/>
-        <point x="1140" y="-260"/>
-        <point x="940" y="-260"/>
-        <point x="940" y="-460"/>
-      </edge>
-      <edge type="inclusion" target="n12" id="e14" source="n21">
-        <point x="-940" y="40"/>
-        <point x="-940" y="-100"/>
-      </edge>
-      <edge type="inclusion" target="n73" id="e78" source="n25">
-        <point x="-1000" y="460"/>
-        <point x="-1000" y="740"/>
-        <point x="1660" y="740"/>
-        <point x="1660" y="-460"/>
-        <point x="940" y="-460"/>
-      </edge>
-      <edge type="input" target="n22" id="e21" source="n20">
-        <point x="-700" y="180"/>
-        <point x="-700" y="300"/>
-        <point x="-820" y="300"/>
-      </edge>
-      <edge type="input" target="n75" id="e84" source="n76">
-        <point x="-680" y="-560"/>
-        <point x="-780" y="-560"/>
-      </edge>
-      <edge type="inclusion" target="n51" id="e53" source="n52">
-        <point x="-940" y="-240"/>
-        <point x="-940" y="-560"/>
-      </edge>
-      <edge type="input" target="n44" id="e42" source="n43">
-        <point x="-180" y="460"/>
-        <point x="-280" y="460"/>
-      </edge>
-      <edge type="input" target="n33" id="e27" source="n29">
-        <point x="360" y="160"/>
-        <point x="360" y="20"/>
-        <point x="760" y="20"/>
-      </edge>
-      <edge type="input" target="n40" id="e34" source="n39">
-        <point x="1080" y="360"/>
-        <point x="1080" y="260"/>
-        <point x="960" y="260"/>
-      </edge>
-      <edge type="inclusion" target="n27" id="e52" source="n50">
-        <point x="760" y="-500"/>
-        <point x="760" y="-100"/>
-      </edge>
-      <edge type="input" target="n42" id="e39" source="n34">
-        <point x="1380" y="160"/>
-        <point x="1560" y="160"/>
-        <point x="1560" y="520"/>
-        <point x="1320" y="520"/>
-      </edge>
-      <edge type="input" target="n33" id="e70" source="n34">
-        <point x="1380" y="160"/>
-        <point x="1380" y="20"/>
-        <point x="760" y="20"/>
-      </edge>
-      <edge type="input" target="n10" id="e7" source="n9">
-        <point x="100" y="-380"/>
-        <point x="220" y="-380"/>
-      </edge>
-      <edge type="input" target="n7" id="e5" source="n4">
-        <point x="220" y="-40"/>
-        <point x="300" y="-40"/>
-      </edge>
-      <edge type="input" target="n15" id="e79" source="n49">
-        <point x="760" y="-620"/>
-        <point x="460" y="-480"/>
-        <point x="460" y="-160"/>
-        <point x="-400" y="-160"/>
-        <point x="-400" y="-100"/>
-      </edge>
-      <edge type="input" target="n41" id="e36" source="n37">
-        <point x="1460" y="360"/>
-        <point x="1460" y="260"/>
-        <point x="1380" y="260"/>
-      </edge>
-      <edge type="inclusion" target="n51" id="e67" source="n71">
-        <point x="100" y="-680"/>
-        <point x="-920" y="-680"/>
-        <point x="-920" y="-560"/>
-      </edge>
-      <edge type="inclusion" target="n78" id="e82" source="n77">
-        <point x="-580" y="-560"/>
-        <point x="-440" y="-560"/>
-      </edge>
-      <edge type="input" target="n14" id="e11" source="n15">
-        <point x="-400" y="-100"/>
-        <point x="-540" y="-100"/>
-      </edge>
-      <edge type="input" target="n26" id="e25" source="n25">
-        <point x="-1020" y="460"/>
-        <point x="-1020" y="320"/>
-        <point x="-1180" y="320"/>
-      </edge>
-      <edge type="input" target="n71" id="e66" source="n47">
-        <point x="100" y="-560"/>
-        <point x="100" y="-680"/>
-      </edge>
-      <edge type="inclusion" target="n46" id="e47" source="n25">
-        <point x="-1060" y="460"/>
-        <point x="-1060" y="660"/>
-        <point x="-60" y="660"/>
-      </edge>
-      <edge type="input" target="n5" id="e4" source="n4">
-        <point x="220" y="-40"/>
-        <point x="140" y="-40"/>
-      </edge>
-      <edge type="inclusion" target="n44" id="e45" source="n23">
-        <point x="-1340" y="460"/>
-        <point x="-1340" y="780"/>
-        <point x="-280" y="780"/>
-        <point x="-280" y="460"/>
-      </edge>
-      <edge type="input" target="n3" id="e0" source="n1">
-        <point x="-180" y="80"/>
-        <point x="-180" y="0"/>
-        <point x="-60" y="0"/>
-      </edge>
-      <edge type="input" target="n33" id="e30" source="n32">
-        <point x="960" y="160"/>
-        <point x="960" y="60"/>
-        <point x="760" y="20"/>
-      </edge>
-      <edge type="inclusion" target="n32" id="e32" source="n40">
-        <point x="960" y="260"/>
-        <point x="960" y="160"/>
-      </edge>
-      <edge type="input" target="n26" id="e23" source="n23">
-        <point x="-1340" y="460"/>
-        <point x="-1340" y="320"/>
-        <point x="-1180" y="320"/>
-      </edge>
-      <edge type="input" target="n73" id="e71" source="n49">
-        <point x="760" y="-620"/>
-        <point x="940" y="-560"/>
-        <point x="940" y="-460"/>
-      </edge>
-      <edge type="equivalence" target="n0" id="e2" source="n3">
-        <point x="-60" y="0"/>
-        <point x="-60" y="-100"/>
-      </edge>
-      <edge type="inclusion" target="n68" id="e60" source="n65">
-        <point x="-1220" y="-100"/>
-        <point x="-1220" y="-320"/>
-        <point x="840" y="-320"/>
-        <point x="840" y="-540"/>
-      </edge>
-      <edge type="input" target="n52" id="e54" source="n12">
-        <point x="-940" y="-100"/>
-        <point x="-940" y="-240"/>
-      </edge>
-      <edge type="inclusion" target="n27" id="e31" source="n33">
-        <point x="760" y="20"/>
-        <point x="760" y="-100"/>
-      </edge>
-      <edge type="inclusion" target="n47" id="e50" source="n49">
-        <point x="760" y="-620"/>
-        <point x="180" y="-620"/>
-        <point x="100" y="-560"/>
-      </edge>
-      <edge type="input" target="n74" id="e74" source="n49">
-        <point x="760" y="-620"/>
-        <point x="1060" y="-560"/>
-        <point x="1060" y="-380"/>
-      </edge>
-      <edge type="input" target="n13" id="e9" source="n12">
-        <point x="-940" y="-100"/>
-        <point x="-700" y="-100"/>
-      </edge>
-      <edge type="inclusion" target="n6" id="e6" source="n7">
-        <point x="300" y="-40"/>
-        <point x="420" y="-40"/>
-      </edge>
-      <edge type="input" target="n16" id="e12" source="n9">
-        <point x="100" y="-380"/>
-        <point x="-20" y="-380"/>
-      </edge>
-      <edge type="input" target="n45" id="e41" source="n43">
-        <point x="-180" y="460"/>
-        <point x="-180" y="560"/>
-      </edge>
-      <edge type="input" target="n46" id="e48" source="n42">
-        <point x="1320" y="520"/>
-        <point x="1320" y="660"/>
-        <point x="-60" y="660"/>
-      </edge>
-      <edge type="equivalence" target="n18" id="e22" source="n26">
-        <point x="-1180" y="320"/>
-        <point x="-1180" y="180"/>
-      </edge>
-      <edge type="input" target="n52" id="e55" source="n27">
-        <point x="720" y="-100"/>
-        <point x="720" y="-240"/>
-        <point x="-940" y="-240"/>
+      <node id="n6" color="#fcfcfc" type="value-domain">
+        <geometry y="-40" x="420" width="90" height="40"/>
+        <label y="-40" x="420" width="61" height="23">xsd:string</label>
+      </node>
+      <node id="n32" color="#fcfcfc" type="concept">
+        <geometry y="160" x="960" width="135" height="65"/>
+        <label y="160" x="960" width="77" height="23">MeatTopping</label>
+      </node>
+      <node id="n23" color="#fcfcfc" type="concept">
+        <geometry y="460" x="-1340" width="135" height="65"/>
+        <label y="460" x="-1340" width="101" height="23">QuattroFormaggi</label>
+      </node>
+      <node id="n12" color="#fcfcfc" type="concept">
+        <geometry y="-100" x="-940" width="160" height="65"/>
+        <label y="-100" x="-940" width="36" height="23">Pizza</label>
+      </node>
+      <node id="n31" color="#fcfcfc" type="concept">
+        <geometry y="160" x="760" width="135" height="65"/>
+        <label y="160" x="760" width="75" height="23">FruitTopping</label>
+      </node>
+      <node id="n27" color="#fcfcfc" type="concept">
+        <geometry y="-100" x="760" width="135" height="65"/>
+        <label y="-100" x="760" width="79" height="23">PizzaTopping</label>
+      </node>
+      <node id="n76" color="#fcfcfc" type="attribute">
+        <geometry y="-560" x="-680" width="20" height="20"/>
+        <label y="-582" x="-680" width="52" height="23">calories</label>
+      </node>
+      <node id="n38" color="#fcfcfc" type="concept">
+        <geometry y="360" x="840" width="187" height="65"/>
+        <label y="360" x="840" width="78" height="23">HamTopping</label>
+      </node>
+      <edge source="n19" target="n21" id="e15" type="input">
+        <point y="180" x="-940"/>
+        <point y="40" x="-940"/>
+      </edge>
+      <edge source="n49" target="n69" id="e62" type="input">
+        <point y="-620" x="760"/>
+        <point y="-480" x="520"/>
+        <point y="-280" x="520"/>
+      </edge>
+      <edge source="n28" target="n30" id="e26" type="inclusion">
+        <point y="360" x="560"/>
+        <point y="160" x="560"/>
+      </edge>
+      <edge source="n49" target="n74" id="e74" type="input">
+        <point y="-620" x="760"/>
+        <point y="-560" x="1060"/>
+        <point y="-380" x="1060"/>
+      </edge>
+      <edge source="n20" target="n22" id="e21" type="input">
+        <point y="180" x="-700"/>
+        <point y="300" x="-700"/>
+        <point y="300" x="-820"/>
+      </edge>
+      <edge source="n29" target="n33" id="e27" type="input">
+        <point y="160" x="360"/>
+        <point y="20" x="360"/>
+        <point y="20" x="760"/>
+      </edge>
+      <edge source="n21" target="n12" id="e14" type="inclusion">
+        <point y="40" x="-940"/>
+        <point y="-100" x="-940"/>
+      </edge>
+      <edge source="n25" target="n73" id="e78" type="inclusion">
+        <point y="460" x="-1000"/>
+        <point y="740" x="-1000"/>
+        <point y="740" x="1660"/>
+        <point y="-460" x="1660"/>
+        <point y="-460" x="940"/>
+      </edge>
+      <edge source="n70" target="n17" id="e63" type="equivalence">
+        <point y="180" x="-1580"/>
+        <point y="180" x="-1420"/>
+      </edge>
+      <edge source="n20" target="n21" id="e16" type="input">
+        <point y="180" x="-740"/>
+        <point y="40" x="-740"/>
+        <point y="40" x="-940"/>
+      </edge>
+      <edge source="n13" target="n20" id="e19" type="equivalence">
+        <point y="-100" x="-700"/>
+        <point y="180" x="-700"/>
+      </edge>
+      <edge source="n0" target="n5" id="e3" type="equivalence">
+        <point y="-80" x="-20"/>
+        <point y="-80" x="80"/>
+        <point y="-40" x="80"/>
+        <point y="-40" x="140"/>
+      </edge>
+      <edge source="n33" target="n27" id="e31" type="inclusion">
+        <point y="20" x="760"/>
+        <point y="-100" x="760"/>
+      </edge>
+      <edge source="n3" target="n0" id="e2" type="equivalence">
+        <point y="0" x="-60"/>
+        <point y="-100" x="-60"/>
+      </edge>
+      <edge source="n9" target="n10" id="e7" type="input">
+        <point y="-380" x="100"/>
+        <point y="-380" x="220"/>
+      </edge>
+      <edge source="n35" target="n41" id="e35" type="input">
+        <point y="360" x="1300"/>
+        <point y="260" x="1300"/>
+        <point y="260" x="1380"/>
+      </edge>
+      <edge source="n49" target="n50" id="e51" type="input">
+        <point y="-620" x="760"/>
+        <point y="-500" x="760"/>
+      </edge>
+      <edge source="n39" target="n40" id="e34" type="input">
+        <point y="360" x="1080"/>
+        <point y="260" x="1080"/>
+        <point y="260" x="960"/>
+      </edge>
+      <edge source="n40" target="n32" id="e32" type="inclusion">
+        <point y="260" x="960"/>
+        <point y="160" x="960"/>
+      </edge>
+      <edge source="n52" target="n51" id="e53" type="inclusion">
+        <point y="-240" x="-940"/>
+        <point y="-560" x="-940"/>
+      </edge>
+      <edge source="n30" target="n33" id="e28" type="input">
+        <point y="160" x="560"/>
+        <point y="60" x="560"/>
+        <point y="20" x="760"/>
+      </edge>
+      <edge source="n9" target="n16" id="e12" type="input">
+        <point y="-380" x="100"/>
+        <point y="-380" x="-20"/>
+      </edge>
+      <edge source="n14" target="n13" id="e10" type="input">
+        <point y="-100" x="-540"/>
+        <point y="-100" x="-700"/>
+      </edge>
+      <edge source="n2" target="n3" id="e1" type="input">
+        <point y="80" x="60"/>
+        <point y="0" x="60"/>
+        <point y="0" x="-60"/>
+      </edge>
+      <edge source="n51" target="n75" id="e83" type="equivalence">
+        <point y="-560" x="-940"/>
+        <point y="-560" x="-780"/>
+      </edge>
+      <edge source="n49" target="n15" id="e79" type="input">
+        <point y="-620" x="760"/>
+        <point y="-480" x="460"/>
+        <point y="-160" x="460"/>
+        <point y="-160" x="-400"/>
+        <point y="-100" x="-400"/>
+      </edge>
+      <edge source="n37" target="n41" id="e36" type="input">
+        <point y="360" x="1460"/>
+        <point y="260" x="1460"/>
+        <point y="260" x="1380"/>
+      </edge>
+      <edge source="n12" target="n13" id="e9" type="input">
+        <point y="-100" x="-940"/>
+        <point y="-100" x="-700"/>
+      </edge>
+      <edge source="n34" target="n33" id="e70" type="input">
+        <point y="160" x="1380"/>
+        <point y="20" x="1380"/>
+        <point y="20" x="760"/>
+      </edge>
+      <edge source="n43" target="n46" id="e43" type="input">
+        <point y="460" x="-180"/>
+        <point y="460" x="-60"/>
+        <point y="660" x="-60"/>
+      </edge>
+      <edge source="n49" target="n47" id="e50" type="inclusion">
+        <point y="-620" x="760"/>
+        <point y="-620" x="180"/>
+        <point y="-560" x="100"/>
+      </edge>
+      <edge source="n39" target="n73" id="e76" type="input">
+        <point y="360" x="1140"/>
+        <point y="-260" x="1140"/>
+        <point y="-260" x="940"/>
+        <point y="-460" x="940"/>
+      </edge>
+      <edge source="n25" target="n74" id="e77" type="inclusion">
+        <point y="460" x="-980"/>
+        <point y="700" x="-980"/>
+        <point y="700" x="1620"/>
+        <point y="-380" x="1620"/>
+        <point y="-380" x="1060"/>
+      </edge>
+      <edge source="n42" target="n46" id="e48" type="input">
+        <point y="520" x="1320"/>
+        <point y="660" x="1320"/>
+        <point y="660" x="-60"/>
+      </edge>
+      <edge source="n0" target="n52" id="e56" type="input">
+        <point y="-100" x="-60"/>
+        <point y="-200" x="-60"/>
+        <point y="-200" x="-840"/>
+        <point y="-240" x="-940"/>
+      </edge>
+      <edge source="n49" target="n73" id="e71" type="input">
+        <point y="-620" x="760"/>
+        <point y="-560" x="940"/>
+        <point y="-460" x="940"/>
+      </edge>
+      <edge source="n39" target="n42" id="e38" type="input">
+        <point y="360" x="1080"/>
+        <point y="520" x="1080"/>
+        <point y="520" x="1320"/>
+      </edge>
+      <edge source="n32" target="n33" id="e30" type="input">
+        <point y="160" x="960"/>
+        <point y="60" x="960"/>
+        <point y="20" x="760"/>
+      </edge>
+      <edge source="n72" target="n51" id="e69" type="inclusion">
+        <point y="-740" x="760"/>
+        <point y="-740" x="-960"/>
+        <point y="-560" x="-960"/>
+      </edge>
+      <edge source="n23" target="n26" id="e23" type="input">
+        <point y="460" x="-1340"/>
+        <point y="320" x="-1340"/>
+        <point y="320" x="-1180"/>
+      </edge>
+      <edge source="n65" target="n12" id="e57" type="inclusion">
+        <point y="-100" x="-1220"/>
+        <point y="-100" x="-940"/>
+      </edge>
+      <edge source="n25" target="n26" id="e25" type="input">
+        <point y="460" x="-1020"/>
+        <point y="320" x="-1020"/>
+        <point y="320" x="-1180"/>
+      </edge>
+      <edge source="n32" target="n15" id="e80" type="input">
+        <point y="160" x="920"/>
+        <point y="220" x="920"/>
+        <point y="220" x="-400"/>
+        <point y="-100" x="-400"/>
+      </edge>
+      <edge source="n34" target="n42" id="e39" type="input">
+        <point y="160" x="1380"/>
+        <point y="160" x="1560"/>
+        <point y="520" x="1560"/>
+        <point y="520" x="1320"/>
+      </edge>
+      <edge source="n76" target="n75" id="e84" type="input">
+        <point y="-560" x="-680"/>
+        <point y="-560" x="-780"/>
+      </edge>
+      <edge source="n10" target="n0" id="e8" type="inclusion">
+        <point y="-380" x="220"/>
+        <point y="-120" x="220"/>
+        <point y="-120" x="-20"/>
+      </edge>
+      <edge source="n31" target="n33" id="e29" type="input">
+        <point y="160" x="760"/>
+        <point y="20" x="760"/>
+      </edge>
+      <edge source="n4" target="n5" id="e4" type="input">
+        <point y="-40" x="220"/>
+        <point y="-40" x="140"/>
+      </edge>
+      <edge source="n4" target="n7" id="e5" type="input">
+        <point y="-40" x="220"/>
+        <point y="-40" x="300"/>
+      </edge>
+      <edge source="n50" target="n27" id="e52" type="inclusion">
+        <point y="-500" x="760"/>
+        <point y="-100" x="760"/>
+      </edge>
+      <edge source="n24" target="n26" id="e24" type="input">
+        <point y="460" x="-1180"/>
+        <point y="320" x="-1180"/>
+      </edge>
+      <edge source="n71" target="n51" id="e67" type="inclusion">
+        <point y="-680" x="100"/>
+        <point y="-680" x="-920"/>
+        <point y="-560" x="-920"/>
+      </edge>
+      <edge source="n19" target="n22" id="e20" type="inclusion">
+        <point y="180" x="-940"/>
+        <point y="300" x="-940"/>
+        <point y="300" x="-820"/>
+      </edge>
+      <edge source="n18" target="n21" id="e17" type="input">
+        <point y="180" x="-1180"/>
+        <point y="100" x="-1180"/>
+        <point y="40" x="-940"/>
+      </edge>
+      <edge source="n49" target="n68" id="e59" type="input">
+        <point y="-620" x="760"/>
+        <point y="-540" x="840"/>
+      </edge>
+      <edge source="n17" target="n21" id="e18" type="input">
+        <point y="180" x="-1420"/>
+        <point y="40" x="-1420"/>
+        <point y="40" x="-940"/>
+      </edge>
+      <edge source="n76" target="n77" id="e85" type="input">
+        <point y="-560" x="-680"/>
+        <point y="-560" x="-580"/>
+      </edge>
+      <edge source="n43" target="n45" id="e41" type="input">
+        <point y="460" x="-180"/>
+        <point y="560" x="-180"/>
+      </edge>
+      <edge source="n1" target="n3" id="e0" type="input">
+        <point y="80" x="-180"/>
+        <point y="0" x="-180"/>
+        <point y="0" x="-60"/>
+      </edge>
+      <edge source="n15" target="n14" id="e11" type="input">
+        <point y="-100" x="-400"/>
+        <point y="-100" x="-540"/>
+      </edge>
+      <edge source="n49" target="n72" id="e68" type="input">
+        <point y="-620" x="760"/>
+        <point y="-740" x="760"/>
+      </edge>
+      <edge source="n27" target="n52" id="e55" type="input">
+        <point y="-100" x="720"/>
+        <point y="-240" x="720"/>
+        <point y="-240" x="-940"/>
+      </edge>
+      <edge source="n25" target="n46" id="e47" type="inclusion">
+        <point y="460" x="-1060"/>
+        <point y="660" x="-1060"/>
+        <point y="660" x="-60"/>
+      </edge>
+      <edge source="n12" target="n52" id="e54" type="input">
+        <point y="-100" x="-940"/>
+        <point y="-240" x="-940"/>
+      </edge>
+      <edge source="n65" target="n68" id="e60" type="inclusion">
+        <point y="-100" x="-1220"/>
+        <point y="-320" x="-1220"/>
+        <point y="-320" x="840"/>
+        <point y="-540" x="840"/>
+      </edge>
+      <edge source="n24" target="n45" id="e44" type="inclusion">
+        <point y="460" x="-1180"/>
+        <point y="560" x="-1180"/>
+        <point y="560" x="-180"/>
+      </edge>
+      <edge source="n41" target="n34" id="e37" type="inclusion">
+        <point y="260" x="1380"/>
+        <point y="160" x="1380"/>
+      </edge>
+      <edge source="n67" target="n52" id="e58" type="input">
+        <point y="-100" x="-1480"/>
+        <point y="-240" x="-1480"/>
+        <point y="-240" x="-940"/>
+      </edge>
+      <edge source="n26" target="n18" id="e22" type="equivalence">
+        <point y="320" x="-1180"/>
+        <point y="180" x="-1180"/>
+      </edge>
+      <edge source="n30" target="n69" id="e61" type="input">
+        <point y="160" x="520"/>
+        <point y="-280" x="520"/>
+      </edge>
+      <edge source="n12" target="n70" id="e64" type="input">
+        <point y="-100" x="-980"/>
+        <point y="0" x="-980"/>
+        <point y="0" x="-1580"/>
+        <point y="180" x="-1580"/>
+      </edge>
+      <edge source="n43" target="n44" id="e42" type="input">
+        <point y="460" x="-180"/>
+        <point y="460" x="-280"/>
+      </edge>
+      <edge source="n23" target="n44" id="e45" type="inclusion">
+        <point y="460" x="-1340"/>
+        <point y="780" x="-1340"/>
+        <point y="780" x="-280"/>
+        <point y="460" x="-280"/>
+      </edge>
+      <edge source="n77" target="n78" id="e82" type="inclusion">
+        <point y="-560" x="-580"/>
+        <point y="-560" x="-440"/>
+      </edge>
+      <edge source="n12" target="n16" id="e13" type="equivalence">
+        <point y="-100" x="-880"/>
+        <point y="-380" x="-880"/>
+        <point y="-380" x="-20"/>
+      </edge>
+      <edge source="n69" target="n70" id="e65" type="input">
+        <point y="-280" x="520"/>
+        <point y="-280" x="-1640"/>
+        <point y="180" x="-1640"/>
+        <point y="180" x="-1580"/>
+      </edge>
+      <edge source="n38" target="n40" id="e33" type="input">
+        <point y="360" x="840"/>
+        <point y="260" x="840"/>
+        <point y="260" x="960"/>
+      </edge>
+      <edge source="n9" target="n47" id="e49" type="inclusion">
+        <point y="-380" x="100"/>
+        <point y="-560" x="100"/>
+      </edge>
+      <edge source="n37" target="n74" id="e75" type="input">
+        <point y="360" x="1500"/>
+        <point y="-300" x="1500"/>
+        <point y="-300" x="1060"/>
+        <point y="-380" x="1060"/>
+      </edge>
+      <edge source="n47" target="n71" id="e66" type="input">
+        <point y="-560" x="100"/>
+        <point y="-680" x="100"/>
+      </edge>
+      <edge source="n7" target="n6" id="e6" type="inclusion">
+        <point y="-40" x="300"/>
+        <point y="-40" x="420"/>
+      </edge>
+      <edge source="n30" target="n44" id="e81" type="input">
+        <point y="160" x="520"/>
+        <point y="300" x="520"/>
+        <point y="300" x="-280"/>
+        <point y="460" x="-280"/>
       </edge>
     </diagram>
   </diagrams>

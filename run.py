@@ -33,7 +33,7 @@
 #                                                                        #
 ##########################################################################
 
-
+import time
 import platform
 import os
 import sys
@@ -78,24 +78,21 @@ if _LINUX:
 if hasattr(sys, 'frozen'):
     os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')
 
-
 from PyQt5 import Qt
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-
 from argparse import ArgumentParser
 from sip import SIP_VERSION_STR
-
 from eddy import APPNAME, COPYRIGHT, VERSION, BUG_TRACKER
+
 from eddy.core.application import Eddy
+
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
-
 from eddy.ui import fonts_rc
 from eddy.ui import images_rc
-
 
 app = None
 msgbox = None
@@ -144,6 +141,9 @@ def main():
     """
     Application entry point.
     """
+
+    #self.Reasoner = autoclass('org.semanticweb.HermiT.Reasoner')
+
     parser = ArgumentParser()
     parser.add_argument('--nosplash', dest='nosplash', action='store_true')
     parser.add_argument('--tests', dest='tests', action='store_true')
@@ -172,7 +172,6 @@ def main():
     app.configure(options)
     app.start(options)
     sys.exit(app.exec_())
-
 
 if __name__ == '__main__':
     main()

@@ -271,6 +271,9 @@ class AbstractEdge(AbstractItem):
         :type breakpoint: int
         :type anchor: AbstractNode
         """
+
+        edge_in_axiom = kwargs.get('edge_in_axiom', None)
+
         if selected is None:
             selected = self.isSelected()
         if visible is None:
@@ -296,6 +299,8 @@ class AbstractEdge(AbstractItem):
             bpBrush = QtGui.QBrush(QtGui.QColor(66, 165, 245, 255))
             bpPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
             selectionBrush = QtGui.QBrush(QtGui.QColor(248, 255, 72, 255))
+            if edge_in_axiom is True:
+                selectionBrush = QtGui.QBrush(QtGui.QColor(72, 72, 248, 255))
         else:
             apBrush = QtGui.QBrush(QtCore.Qt.NoBrush)
             apPen = QtGui.QPen(QtCore.Qt.NoPen)

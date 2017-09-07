@@ -56,6 +56,102 @@ from eddy.ui.notification import Notification
 LOGGER = getLogger()
 
 
+class HasReasoningSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve reasoners.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._reasonerDict = {}
+        self._reasonerList = []
+
+    def addReasoner(self, reasoner):
+        """
+        Add a reasoner to the set.
+        :type reasoner: AbstractReasoner
+        :rtype: AbstractReasoner
+        """
+        if isEmpty(reasoner.objectName()):
+            raise ValueError("missing objectName in %s" % reasoner.__class__.__name__)
+        if reasoner.objectName() in self._reasonerDict:
+            raise ValueError("duplicate reasoner found: %s" % reasoner.objectName())
+        self._reasonerList.append(reasoner)
+        self._reasonerDict[reasoner.objectName()] = reasoner
+        # LOGGER.debug("Added %s(%s)", reasoner.__class__.__name__, reasoner.objectName())
+        return reasoner
+
+    def addReasoners(self, reasoners):
+        """
+        Add the given group of reasoners to the set.
+        :type reasoners: T <= list|tuple
+        """
+        for reasoner in reasoners:
+            self.addReasoner(reasoner)
+
+    def clearReasoners(self):
+        """
+        Remove all the reasoners.
+        """
+        self._reasonerDict.clear()
+        self._reasonerList.clear()
+
+    def insertReasoner(self, widget, before):
+        """
+        Insert the given reasoner before the given one.
+        :type widget: AbstractReasoner
+        :type before: AbstractReasoner
+        :rtype: AbstractReasoner
+        """
+        if isEmpty(widget.objectName()):
+            raise ValueError("missing objectName in %s" % widget.__class__.__name__)
+        if widget.objectName() in self._reasonerDict:
+            raise ValueError("duplicate reasoner found: %s" % widget.objectName())
+        self._reasonerList.insert(self._reasonerList.index(before), widget)
+        self._reasonerDict[widget.objectName()] = widget
+        # LOGGER.debug("Added %s(%s) before %s(%s)",
+        #              reasoner.__class__.__name__, reasoner.objectName(),
+        #              before.__class__.__name__, before.objectName())
+        return widget
+
+    def insertReasoners(self, reasoners, before):
+        """
+        Insert the given group of reasoners before the given one.
+        :type reasoners: T <= list|tuple
+        :type before: AbstractReasoner
+        """
+        for reasoner in reasoners:
+            self.insertReasoner(reasoner, before)
+
+    def reasoner(self, objectName):
+        """
+        Returns the reference to a reasoner given it's objectName.
+        :type objectName: str
+        :rtype: AbstractReasoner
+        """
+        return self._reasonerDict.get(objectName, None)
+
+    def reasoners(self):
+        """
+        Returns the list of reasoners.
+        :rtype: list
+        """
+        return self._reasonerList
+
+    def removeReasoner(self, reasoner):
+        """
+        Removes the given reasoner from the set.
+        :type reasoner: AbstractReasoner
+        :rtype: AbstractReasoner
+        """
+        self._reasonerList.remove(reasoner)
+        del self._reasonerDict[reasoner.objectName()]
+        return reasoner
+
+
 class HasActionSystem(object):
     """
     Mixin which adds the ability to store and retrieve actions.
@@ -271,6 +367,7 @@ class HasPluginSystem(object):
             raise ValueError("missing objectName in %s" % plugin.__class__.__name__)
         if plugin.objectName() in self._pluginDict:
             raise ValueError("duplicate plugin found: %s" % plugin.objectName())
+
         self._pluginList.append(plugin)
         self._pluginDict[plugin.objectName()] = plugin
         # LOGGER.debug("Added %s(%s)", plugin.__class__.__name__, plugin.objectName())

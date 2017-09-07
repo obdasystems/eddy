@@ -32,6 +32,7 @@
 #                                                                        #
 ##########################################################################
 
+import time
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -307,6 +308,7 @@ class SyntaxValidationWorker(AbstractWorker):
         """
         Main worker.
         """
+
         errorMsg = None
         while self.i < len(self.items):
 

@@ -117,6 +117,16 @@ class Project(QtCore.QObject):
         self.profile.setParent(self)
         self.version = kwargs.get('version', '1.0')
 
+        ###  variables controlled by reasoners  ###
+        self.ontology_OWL = None
+        self.axioms_to_nodes_edges_mapping = None
+        self.inconsistent_ontology = None
+        self.explanations_for_inconsistency = []
+        self.unsatisfiable_classes = []
+        self.nodesofunsatisfiable_classes = []
+        self.explanations_for_unsatisfiable_classes = []
+        self.get_axioms_of_explanation_to_display_in_widget = []
+        self.nodesoredges_of_axioms_to_display_in_widget = []
     #############################################
     #   PROPERTIES
     #################################
@@ -756,8 +766,8 @@ class ProjectMergeWorker(QtCore.QObject):
         for item, name in self.other.metas():
             if not self.project.predicates(item, name):
                 ## NO PREDICATE => NO CONFLICT
-                undo = self.project.meta(item, name).copy()
-                redo = self.other.meta(item, name).copy()
+                undo = self.project.meta(item, name)
+                redo = self.other.meta(item, name)
                 self.commands.append(CommandNodeSetMeta(self.project, item, name, undo, redo))
             else:
                 ## CHECK FOR POSSIBLE CONFLICTS
@@ -842,8 +852,8 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         try:
             LOGGER.info('Performing project import: %s <- %s...', self.project.name, self.other.name)
-            self.mergeDiagrams()
             self.mergeMeta()
+            self.mergeDiagrams()
         except ProjectStopImportingError:
             pass
         else:

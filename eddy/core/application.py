@@ -50,6 +50,7 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
+from eddy.core.reasoner import ReasonerManager
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
@@ -62,6 +63,7 @@ from eddy.ui.style import EddyProxyStyle
 from eddy.ui.workspace import WorkspaceDialog
 from eddy.ui.welcome import Welcome
 
+import jnius_config
 
 LOGGER = getLogger()
 
@@ -196,6 +198,12 @@ class Eddy(QtWidgets.QApplication):
         #################################
 
         PluginManager.scan('@plugins/', '@home/plugins/')
+
+        #############################################
+        # LOOKUP REASONERS
+        #################################
+
+        ReasonerManager.scan('@reasoners/', '@home/reasoners/')
 
         #############################################
         # CLOSE THE SPLASH SCREEN

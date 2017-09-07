@@ -32,7 +32,7 @@
 #                                                                        #
 ##########################################################################
 
-
+from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
@@ -49,6 +49,7 @@ from eddy.core.functions.signals import connect
 from eddy.core.generators import GUID
 from eddy.core.items.factory import ItemFactory
 from eddy.core.output import getLogger
+from eddy.core.items.common import AbstractItem
 
 
 LOGGER = getLogger()
@@ -78,6 +79,8 @@ class Diagram(QtWidgets.QGraphicsScene):
     sgnNodeIdentification = QtCore.pyqtSignal('QGraphicsItem')
     sgnUpdated = QtCore.pyqtSignal()
 
+    blue_brush = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
+
     def __init__(self, name, parent):
         """
         Initialize the diagram.
@@ -106,6 +109,22 @@ class Diagram(QtWidgets.QGraphicsScene):
         connect(self.sgnItemAdded, self.onItemAdded)
         connect(self.sgnItemRemoved, self.onItemRemoved)
         connect(self.sgnNodeIdentification, self.doNodeIdentification)
+
+
+    def colour_items_in_case_of_inconsistency(self):
+
+        for entity in self.project.nodesofunsatisfiable_classes:
+
+            for node in entity:
+                # node.selection.setBrush(self.brush)
+                node.updateNode(valid=False)
+
+        for node_or_edge in self.project.nodesoredges_of_axioms_to_display_in_widget:
+
+            node_or_edge.selection.setBrush(self.blue_brush)
+            node_or_edge.setCacheMode(AbstractItem.NoCache)
+            node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
+            node_or_edge.update(node_or_edge.boundingRect())
 
     #############################################
     #   FACTORY
@@ -197,6 +216,8 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when a mouse button is clicked on the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
+        self.colour_items_in_case_of_inconsistency()
+
         mouseModifiers = mouseEvent.modifiers()
         mouseButtons = mouseEvent.buttons()
         mousePos = mouseEvent.scenePos()
@@ -269,7 +290,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                                 # use the parent item as placeholder for the selection.
                                 parent = item.parentItem()
                                 items = self.items(mousePos)
-                                item =  parent if parent in items else None
+                                item = parent if parent in items else None
 
                             if item:
 
@@ -400,6 +421,8 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when the mouse is released from the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
+        self.colour_items_in_case_of_inconsistency()
+
         mouseModifiers = mouseEvent.modifiers()
         mouseButton = mouseEvent.button()
         mousePos = mouseEvent.scenePos()
