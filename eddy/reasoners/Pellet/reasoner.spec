@@ -31,8 +31,8 @@
 ##########################################################################
 
 [reasoner]
-author: Ashwin Ravishankar
-contact: ashwingoldfish@yahoo.co.in
+author: XYZ
+contact: XYZ
 id: Pellet
 name: Pellet
 version: 0.1
