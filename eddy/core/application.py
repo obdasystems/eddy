@@ -205,6 +205,8 @@ class Eddy(QtWidgets.QApplication):
 
         ReasonerManager.scan('@reasoners/', '@home/reasoners/')
 
+
+
         #############################################
         # CLOSE THE SPLASH SCREEN
         #################################

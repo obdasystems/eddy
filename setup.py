@@ -160,6 +160,7 @@ class BuildExe(cx_Freeze.build_exe):
         super().run()
         self.execute(self.make_dist, ())
         self.execute(self.make_plugins, ())
+        self.execute(self.make_reasoners, ())
         self.execute(self.make_win32, ())
         self.execute(self.make_linux, ())
         self.execute(self.make_clean, ())
@@ -214,6 +215,32 @@ class BuildExe(cx_Freeze.build_exe):
                                         fremove(new_path)
                                     else:
                                         arcname = os.path.join(file_or_directory, os.path.relpath(path, plugin))
+                                        zipf.write(path, arcname)
+
+    def make_reasoners(self):
+        """
+        Package built-in reasoners into ZIP archives.
+        """
+        if isdir('@reasoners/'):
+            mkdir(os.path.join(self.build_exe, 'reasoners'))
+            for file_or_directory in os.listdir(expandPath('@reasoners/')):
+                reasoner = os.path.join(expandPath('@reasoners/'), file_or_directory)
+                if isdir(reasoner):
+                    distutils.log.info('packaging reasoner: %s', file_or_directory)
+                    zippath = os.path.join(self.build_exe, 'reasoners', '%s.zip' % file_or_directory)
+                    with zipfile.ZipFile(zippath, 'w', zipfile.ZIP_STORED) as zipf:
+                        for root, dirs, files in os.walk(reasoner):
+                            if not root.endswith('__pycache__'):
+                                for filename in files:
+                                    path = expandPath(os.path.join(root, filename))
+                                    if path.endswith('.py'):
+                                        new_path = '%s.pyc' % rstrip(path, '.py')
+                                        py_compile.compile(path, new_path)
+                                        arcname = os.path.join(file_or_directory, os.path.relpath(new_path, reasoner))
+                                        zipf.write(new_path, arcname)
+                                        fremove(new_path)
+                                    else:
+                                        arcname = os.path.join(file_or_directory, os.path.relpath(path, reasoner))
                                         zipf.write(path, arcname)
 
     def make_installer(self):

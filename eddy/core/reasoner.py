@@ -513,8 +513,13 @@ class ReasonerManager(QtCore.QObject):
         """
         Scan the given paths looking for reasoners.
         """
+        LOGGER.info('def scan(cls, *args):')
+
         info = []
         for base in map(expandPath, args):
+
+            print('base - ',base)
+
             if isdir(base):
                 LOGGER.info('Looking for reasoners in %s', base)
                 for file_or_directory in os.listdir(base):
@@ -522,6 +527,10 @@ class ReasonerManager(QtCore.QObject):
                     info.append(ReasonerManager.import_reasoner_from_directory(file_or_directory_path))
                     info.append(ReasonerManager.import_reasoner_from_zip(file_or_directory_path))
         ReasonerManager.info = list(filter(None, info))
+
+        print ('info = ', info)
+
+        LOGGER.info('def scan(cls, *args): END')
 
     @classmethod
     def spec(cls, content):
