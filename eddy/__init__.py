@@ -34,13 +34,13 @@
 
 
 __appname__ = 'Eddy'
-__author__ = 'Daniele Pantaleone'
+__author__ = 'Daniele Pantaleone' + 'Ashwin Ravishankar'
 __copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'
+__email__ = 'danielepantaleone@me.com'+'ashwingoldfish@yahoo.co.in'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'
 __status__ = 'Beta'
-__version__ = '0.11'
+__version__ = '0.13'
 
 
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"

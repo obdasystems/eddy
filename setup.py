@@ -600,7 +600,6 @@ excludes = [
 includes = [
     # QT MODULES
     'PyQt5.QtCore',
-    'PyQt5.QtDBus',
     'PyQt5.QtGui',
     'PyQt5.QtPrintSupport',
     'PyQt5.QtNetwork',
@@ -616,6 +615,9 @@ includes = [
     'uritemplate',
     'verlib',
 ]
+
+if not WIN32:
+    includes.append('PyQt5.QtDBus')
 
 include_files = [
     (requests.certs.where(), 'cacert.pem'),
