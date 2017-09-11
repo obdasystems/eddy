@@ -296,23 +296,24 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
     def reason_over_ontology(self):
 
-        LOGGER.info('reason_over_ontology(self):')
+        file_writer = open('workfile', 'w')
+
+        print('reason_over_ontology(self):')
+        file_writer.write('reason_over_ontology(self):\n')
 
         worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
-
-
 
         dict = worker.refined_axiom_to_node_or_edge
         ontology = worker.ontology
 
         if ontology is None:
 
-            LOGGER.info('ontology is None')
+            print('ontology is None')
 
         else:
 
-            LOGGER.info('ontology is not None')
+            print('ontology is not None')
 
         self.project.axioms_to_nodes_edges_mapping = dict
         self.project.ontology_OWL = ontology
@@ -322,30 +323,50 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         hermit = self.Reasoner(configuration, ontology);
         ontology_IRI = ontology.getOntologyID().getOntologyIRI().get();
 
+
+
         try:
 
-            LOGGER.info('try part...')
+            print('try part...')
+            file_writer.write('try part...\n')
 
             hermit.precomputeInferences()
 
+            print('hermit.precomputeInferences() complete')
+            file_writer.write('hermit.precomputeInferences() complete\n')
+
             emptyNode = hermit.getUnsatisfiableClasses()
 
+            print('emptyNode = hermit.getUnsatisfiableClasses() complete')
+            file_writer.write('emptyNode = hermit.getUnsatisfiableClasses() complete\n')
+
             cast(self.Node,emptyNode)
+
+            print('cast(self.Node,emptyNode) complete')
+            file_writer.write('cast(self.Node,emptyNode) complete\n')
 
             if hermit.isConsistent() is True:
                 self.project.inconsistent_ontology = False
             else:
-                LOGGER.info('ontology is inconsistent however exception was not thrown')
+                print('ontology is inconsistent however exception was not thrown')
+                file_writer.write('ontology is inconsistent however exception was not thrown\n')
                 sys.exit(0)
+
 
             factory = self.ReasonerFactory()
             bbe = self.BlackBoxExplanation(ontology, factory, hermit)
+
+            print('cast(self.Node,emptyNode) complete')
+            file_writer.write('cast(self.Node,emptyNode) complete\n')
 
             entities_of_emptyNode = emptyNode.getEntities()
             entities_of_emptyNode_itr = entities_of_emptyNode.iterator()
 
             unsatisfiable_classes_string = []
             explanations_for_all_unsatisfiable_classs = []
+
+            print('while loop')
+            file_writer.write('while loop\n')
 
             while entities_of_emptyNode_itr.hasNext():
 
@@ -372,31 +393,45 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
                     explanations_for_all_unsatisfiable_classs.append(explanations_for_unsatisfiable_class)
 
+            print('while loop END')
+            file_writer.write('while loop END\n')
+
             self.project.unsatisfiable_classes = unsatisfiable_classes_string
             self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_classs
 
             print('self.project.unsatisfiable_classes',self.project.unsatisfiable_classes)
             print('self.project.explanations_for_unsatisfiable_classes', self.project.explanations_for_unsatisfiable_classes)
-
             print('len(self.project.unsatisfiable_classes)',len(self.project.unsatisfiable_classes))
             print('len(explanations_for_all_unsatisfiable_classs)',len(explanations_for_all_unsatisfiable_classs))
+
+            file_writer.write('self.project.unsatisfiable_classes\n')
+            file_writer.write('self.project.explanations_for_unsatisfiable_classes\n')
+            file_writer.write('len(self.project.unsatisfiable_classes)\n')
+            file_writer.write('len(explanations_for_all_unsatisfiable_classs)\n')
 
             if len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classs):
                 print('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classs):')
                 print('self.project.unsatisfiable_classes',self.project.unsatisfiable_classes)
                 print('self.project.explanations_for_unsatisfiable_classes',self.project.explanations_for_unsatisfiable_classes)
 
+                file_writer.write('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classs):\n')
+                file_writer.write('self.project.unsatisfiable_classes\n')
+                file_writer.write('self.project.explanations_for_unsatisfiable_classes\n')
+
                 sys.exit(0)
 
         except Exception as e:
 
-            LOGGER.info('Exception as e: -',e)
+            print('Exception as e: -',e)
+            file_writer.write('Exception as e: -\n')
 
             if str(e) == self.InconsistentOntologyException_string:
 
                 self.project.inconsistent_ontology = True
 
                 print("Ontology is inconsistent!\n")
+                file_writer.write("Ontology is inconsistent!\n")
+
                 factory = self.ReasonerFactory()
                 ecf = self.InconsistentOntologyExplanationGeneratorFactory(factory, 0)
                 generator = ecf.createExplanationGenerator(ontology)
@@ -416,7 +451,10 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
                     ex.printStackTrace()
 
-        LOGGER.info('reason_over_ontology(self): END')
+        print('reason_over_ontology(self): END')
+        file_writer.write('reason_over_ontology(self): END\n')
+
+        file_writer.close()
 
     @QtCore.pyqtSlot()
     def run(self):
