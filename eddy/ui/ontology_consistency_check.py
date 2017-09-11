@@ -330,28 +330,28 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         try:
 
             print('try part...')
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('try part...\n')
             file_writer.close()
 
             hermit.precomputeInferences()
 
             print('hermit.precomputeInferences() complete')
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('hermit.precomputeInferences() complete\n')
             file_writer.close()
 
             emptyNode = hermit.getUnsatisfiableClasses()
 
             print('emptyNode = hermit.getUnsatisfiableClasses() complete')
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('emptyNode = hermit.getUnsatisfiableClasses() complete\n')
             file_writer.close()
 
             cast(self.Node,emptyNode)
 
             print('cast(self.Node,emptyNode) complete')
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('cast(self.Node,emptyNode) complete\n')
             file_writer.close()
 
@@ -359,7 +359,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 self.project.inconsistent_ontology = False
             else:
                 print('ontology is inconsistent however exception was not thrown')
-                file_writer = open('workfile', 'w')
+                file_writer = open('workfile', 'a')
                 file_writer.write('ontology is inconsistent however exception was not thrown\n')
                 file_writer.close()
                 sys.exit(0)
@@ -369,7 +369,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             bbe = self.BlackBoxExplanation(ontology, factory, hermit)
 
             print('cast(self.Node,emptyNode) complete')
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('cast(self.Node,emptyNode) complete\n')
             file_writer.close()
 
@@ -380,7 +380,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             explanations_for_all_unsatisfiable_classs = []
 
             print('while loop')
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('while loop\n')
             file_writer.close()
 
@@ -410,7 +410,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                     explanations_for_all_unsatisfiable_classs.append(explanations_for_unsatisfiable_class)
 
             print('while loop END')
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('while loop END\n')
             file_writer.close()
 
@@ -422,7 +422,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             print('len(self.project.unsatisfiable_classes)',len(self.project.unsatisfiable_classes))
             print('len(explanations_for_all_unsatisfiable_classs)',len(explanations_for_all_unsatisfiable_classs))
 
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('self.project.unsatisfiable_classes\n')
             file_writer.write('self.project.explanations_for_unsatisfiable_classes\n')
             file_writer.write('len(self.project.unsatisfiable_classes)\n')
@@ -444,7 +444,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         except Exception as e:
 
             print('Exception as e: -',e)
-            file_writer = open('workfile', 'w')
+            file_writer = open('workfile', 'a')
             file_writer.write('Exception as e: -\n')
             file_writer.close()
 
@@ -476,7 +476,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                     ex.printStackTrace()
 
         print('reason_over_ontology(self): END')
-        file_writer = open('workfile', 'w')
+        file_writer = open('workfile', 'a')
         file_writer.write('reason_over_ontology(self): END\n')
         file_writer.close()
 
