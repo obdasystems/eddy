@@ -299,6 +299,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         print('reason_over_ontology(self):')
         LOGGER.info('reason_over_ontology(self):')
 
+        """
+        
         #file_writer = open('workfile', 'w')
         LOGGER.info('reason_over_ontology(self):')
         #file_writer.close()
@@ -352,7 +354,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             #file_writer = open('workfile', 'a')
             #file_writer.write('emptyNode = hermit.getUnsatisfiableClasses() complete\n')
             #file_writer.close()
-            """
+            
             cast(self.Node,emptyNode)
 
             print('cast(self.Node,emptyNode) complete')
@@ -450,7 +452,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 sys.exit(0)
 
             #file_writer.close()
-            """
+            
 
             LOGGER.info('end of try part')
 
@@ -491,6 +493,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 except Exception as ex:
 
                     ex.printStackTrace()
+        
+        """
 
         print('reason_over_ontology(self): END')
         LOGGER.info('reason_over_ontology(self): END')
