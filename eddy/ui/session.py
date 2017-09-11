@@ -1394,9 +1394,14 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Open a dialog window by initializing it using the class stored in action data.
         """
+
         action = self.sender()
         dialog = action.data()
         window = dialog(self)
+
+        window.hide()
+        window.setWindowModality(QtCore.Qt.NonModal)
+        window.show()
         window.exec_()
 
     @QtCore.pyqtSlot()

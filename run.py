@@ -33,7 +33,6 @@
 #                                                                        #
 ##########################################################################
 
-import time
 import platform
 import os
 import sys
@@ -141,9 +140,6 @@ def main():
     """
     Application entry point.
     """
-
-    #self.Reasoner = autoclass('org.semanticweb.HermiT.Reasoner')
-
     parser = ArgumentParser()
     parser.add_argument('--nosplash', dest='nosplash', action='store_true')
     parser.add_argument('--tests', dest='tests', action='store_true')
