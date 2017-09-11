@@ -352,7 +352,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             #file_writer = open('workfile', 'a')
             #file_writer.write('emptyNode = hermit.getUnsatisfiableClasses() complete\n')
             #file_writer.close()
-
+            """
             cast(self.Node,emptyNode)
 
             print('cast(self.Node,emptyNode) complete')
@@ -371,7 +371,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 #file_writer.close()
                 sys.exit(0)
 
-            """
+            
             factory = self.ReasonerFactory()
             bbe = self.BlackBoxExplanation(ontology, factory, hermit)
 
