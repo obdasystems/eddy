@@ -296,10 +296,12 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
     def reason_over_ontology(self):
 
-        file_writer = open('workfile', 'w')
+
 
         print('reason_over_ontology(self):')
+        file_writer = open('workfile', 'w')
         file_writer.write('reason_over_ontology(self):\n')
+        file_writer.close()
 
         worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
@@ -328,28 +330,38 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         try:
 
             print('try part...')
+            file_writer = open('workfile', 'w')
             file_writer.write('try part...\n')
+            file_writer.close()
 
             hermit.precomputeInferences()
 
             print('hermit.precomputeInferences() complete')
+            file_writer = open('workfile', 'w')
             file_writer.write('hermit.precomputeInferences() complete\n')
+            file_writer.close()
 
             emptyNode = hermit.getUnsatisfiableClasses()
 
             print('emptyNode = hermit.getUnsatisfiableClasses() complete')
+            file_writer = open('workfile', 'w')
             file_writer.write('emptyNode = hermit.getUnsatisfiableClasses() complete\n')
+            file_writer.close()
 
             cast(self.Node,emptyNode)
 
             print('cast(self.Node,emptyNode) complete')
+            file_writer = open('workfile', 'w')
             file_writer.write('cast(self.Node,emptyNode) complete\n')
+            file_writer.close()
 
             if hermit.isConsistent() is True:
                 self.project.inconsistent_ontology = False
             else:
                 print('ontology is inconsistent however exception was not thrown')
+                file_writer = open('workfile', 'w')
                 file_writer.write('ontology is inconsistent however exception was not thrown\n')
+                file_writer.close()
                 sys.exit(0)
 
 
@@ -357,7 +369,9 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             bbe = self.BlackBoxExplanation(ontology, factory, hermit)
 
             print('cast(self.Node,emptyNode) complete')
+            file_writer = open('workfile', 'w')
             file_writer.write('cast(self.Node,emptyNode) complete\n')
+            file_writer.close()
 
             entities_of_emptyNode = emptyNode.getEntities()
             entities_of_emptyNode_itr = entities_of_emptyNode.iterator()
@@ -366,7 +380,9 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             explanations_for_all_unsatisfiable_classs = []
 
             print('while loop')
+            file_writer = open('workfile', 'w')
             file_writer.write('while loop\n')
+            file_writer.close()
 
             while entities_of_emptyNode_itr.hasNext():
 
@@ -394,7 +410,9 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                     explanations_for_all_unsatisfiable_classs.append(explanations_for_unsatisfiable_class)
 
             print('while loop END')
+            file_writer = open('workfile', 'w')
             file_writer.write('while loop END\n')
+            file_writer.close()
 
             self.project.unsatisfiable_classes = unsatisfiable_classes_string
             self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_classs
@@ -404,6 +422,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             print('len(self.project.unsatisfiable_classes)',len(self.project.unsatisfiable_classes))
             print('len(explanations_for_all_unsatisfiable_classs)',len(explanations_for_all_unsatisfiable_classs))
 
+            file_writer = open('workfile', 'w')
             file_writer.write('self.project.unsatisfiable_classes\n')
             file_writer.write('self.project.explanations_for_unsatisfiable_classes\n')
             file_writer.write('len(self.project.unsatisfiable_classes)\n')
@@ -420,16 +439,21 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
                 sys.exit(0)
 
+            file_writer.close()
+
         except Exception as e:
 
             print('Exception as e: -',e)
+            file_writer = open('workfile', 'w')
             file_writer.write('Exception as e: -\n')
+            file_writer.close()
 
             if str(e) == self.InconsistentOntologyException_string:
 
                 self.project.inconsistent_ontology = True
 
                 print("Ontology is inconsistent!\n")
+                file_writer = open('workfile', 'w')
                 file_writer.write("Ontology is inconsistent!\n")
 
                 factory = self.ReasonerFactory()
@@ -452,8 +476,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                     ex.printStackTrace()
 
         print('reason_over_ontology(self): END')
+        file_writer = open('workfile', 'w')
         file_writer.write('reason_over_ontology(self): END\n')
-
         file_writer.close()
 
     @QtCore.pyqtSlot()
