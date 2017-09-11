@@ -46,11 +46,8 @@ class OutputHandler(logging.Logger):
     Custom logging output handler class.
     """
     HeadLength = 92
-    #Stream = io.StringIO()
-
-    Stream=open("logger_file.txt", "a", encoding="utf-8")
-
-
+    Stream = io.StringIO()
+    #Stream=open("logger_file.txt", "a", encoding="utf-8")
 
     #############################################
     #   AUXILIARY METHODS

@@ -296,8 +296,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
     def reason_over_ontology(self):
 
-
-
         print('reason_over_ontology(self):')
         LOGGER.info('reason_over_ontology(self):')
 
@@ -373,7 +371,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 #file_writer.close()
                 sys.exit(0)
 
-
+            """
             factory = self.ReasonerFactory()
             bbe = self.BlackBoxExplanation(ontology, factory, hermit)
 
@@ -452,6 +450,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 sys.exit(0)
 
             #file_writer.close()
+            """
 
             LOGGER.info('end of try part')
 
