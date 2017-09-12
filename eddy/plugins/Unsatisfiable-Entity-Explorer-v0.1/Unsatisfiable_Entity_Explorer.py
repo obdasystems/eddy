@@ -378,9 +378,6 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
 
             if item and item.data():
 
-                print('type(item)',type(item))
-                print('type(item.data())', type(item.data()))
-
                 if (str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
                     self.sgnStringDoubleClicked.emit(item.data())
                 elif (str(type(item.data())) == '<class \'list\'>') or (str(type(item.data())) == 'list'):
@@ -399,9 +396,6 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
 
             if item and item.data():
-
-                print('type(item)',type(item))
-                print('type(item.data())', type(item.data()))
 
                 if (str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
                     self.sgnStringClicked.emit(item.data())
@@ -551,8 +545,6 @@ class UnsatisfiableEntityExplorerView(QtWidgets.QTreeView):
                 index = self.model().mapToSource(index)
                 item = model.itemFromIndex(index)
                 node_or_axiom = item.data()
-
-                #print('type(node_or_axiom)',type(node_or_axiom))
 
                 if node_or_axiom and 'eddy.core.items.nodes' in str(type(node_or_axiom)):
                     self.widget.sgnItemRightClicked.emit(node_or_axiom)

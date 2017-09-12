@@ -33,7 +33,7 @@ class HermitReasoner(AbstractReasoner, HasThreadingSystem):
     def onErrored(self, exception):
         """
         """
-        print('exception occured -',exception)
+        LOGGER.info('exception occured -')
 
 
     #############################################

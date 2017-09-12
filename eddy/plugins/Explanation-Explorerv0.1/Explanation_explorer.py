@@ -87,15 +87,15 @@ class ExplanationExplorerPlugin(AbstractPlugin):
             q_item = widget.model.item(r, 0)
             nodes_and_edges = self.project.axioms_to_nodes_edges_mapping[q_item.text()]
 
-            nodes_to_add_in_widget = []
-            edges_to_add_in_widget = []
+            nodes_to_add_in_widget = set()
+            edges_to_add_in_widget = set()
 
             for ne in nodes_and_edges:
 
                 if 'eddy.core.items.nodes' in str(type(ne)):
-                    nodes_to_add_in_widget.append(ne)
+                    nodes_to_add_in_widget.add(ne)
                 elif 'eddy.core.items.edges' in str(type(ne)):
-                    edges_to_add_in_widget.append(ne)
+                    edges_to_add_in_widget.add(ne)
                 else:
                     pass
 
@@ -548,13 +548,11 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
                 model = self.model().sourceModel()
                 index = self.model().mapToSource(index)
                 item = model.itemFromIndex(index)
-                node_or_edge = item.data()
+                node_edge_or_axiom = item.data()
 
-                #print('type(item.data())',type(item.data()))
-
-                if node_or_edge and 'eddy.core.items.edges' not in str(type(item.data())):
-                    self.widget.sgnItemRightClicked.emit(node_or_edge)
-                    menu = self.session.mf.create(node_or_edge.diagram, [node_or_edge])
+                if 'eddy.core.items.nodes' in str(type(item.data())):
+                    self.widget.sgnItemRightClicked.emit(node_edge_or_axiom)
+                    menu = self.session.mf.create(node_edge_or_axiom.diagram, [node_edge_or_axiom])
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)

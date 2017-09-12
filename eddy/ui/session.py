@@ -1880,14 +1880,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         widget = self.widget('select_reasoner')
         reasoner = widget.currentText()
-
-        print('doSelectReasoner(self):  selected-',reasoner)
-
-        """
-        if self.project.profile.name() != reasoner:
-            self.undostack.push(CommandProjectSetProfile(self.project, self.project.profile.name(), profile))
-        widget.clearFocus()
-        """
         widget.clearFocus()
 
     @QtCore.pyqtSlot()
