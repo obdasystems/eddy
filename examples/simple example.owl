@@ -1,0 +1,18 @@
+Prefix(:=<urn:absolute:1#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(Ashwin:=<1#>)
+
+Ontology(<urn:absolute:1>
+
+<urn:absolute:1/1.0>
+Declaration(Class(Ashwin:Lazy_person))
+Declaration(Class(Ashwin:M_S_Graduate))
+Declaration(NamedIndividual(Ashwin:Ashwin))
+DisjointClasses(Ashwin:Lazy_person Ashwin:M_S_Graduate)
+ClassAssertion(Ashwin:Lazy_person Ashwin:Ashwin)
+ClassAssertion(Ashwin:M_S_Graduate Ashwin:Ashwin)
+)
