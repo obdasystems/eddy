@@ -153,7 +153,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('Unsatisfiable_Entity_Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
+        widget = DockWidget('Unsatisfiable Entity Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
         widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('Unsatisfiable_Entity_Explorer_dock')
         widget.setWidget(self.widget('Unsatisfiable_Entity_Explorer'))
