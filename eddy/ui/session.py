@@ -389,13 +389,13 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='Run syntax validation according to the selected profile', enabled=False))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run reasoner for active ontology',
+            QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',
             self, objectName='ontology_consistency_check', triggered=self.doOntologyConsistencyCheck,
             statusTip='Run Reasoner', enabled=False))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_refresh_black'),
-            'Reset changes made by the reasoner for the diagram (decolour red nodes in background) and reset inconsistent/unsatisfiable nodes data',
+            'Reset consistency check',
             self, objectName='decolour_nodes', triggered=self.BackgrounddeColourNodesAndEdges,
             statusTip='(decolour the nodes)', enabled=False))
 
@@ -747,6 +747,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         menu = QtWidgets.QMenu('Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
+        menu.addAction(self.action('ontology_consistency_check'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Tools', objectName='tools')
@@ -880,7 +881,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Load and initialize application plugins.
         """
-        skip_list = ['IUN_explorer','Explanation_explorer','Unsatisfiable_Entity_Explorer','check_for_consistency']
+        skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer']
         self.addPlugins(self.pmanager.init(skip_list=skip_list))
 
     def initProfiles(self):
