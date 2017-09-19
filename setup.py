@@ -32,7 +32,7 @@
 #                                                                        #
 ##########################################################################
 
-
+import shutil
 import cx_Freeze
 import distutils.core
 import distutils.log
@@ -57,7 +57,6 @@ from eddy.core.functions.path import expandPath
 
 from PyQt5 import QtCore
 
-
 ###################################
 # SETUP CONSTANTS DECLARATION
 ###########################
@@ -68,6 +67,12 @@ MACOS = sys.platform.startswith('darwin')
 WIN32 = sys.platform.startswith('win32')
 
 BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
+
+# remove build directory if it exists.
+# It might cause problems otherwise as files would be stored due to previous runs.
+if isdir(BUILD_DIR):
+    shutil.rmtree(BUILD_DIR)
+
 DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
 DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), platform.machine().lower())
 DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)

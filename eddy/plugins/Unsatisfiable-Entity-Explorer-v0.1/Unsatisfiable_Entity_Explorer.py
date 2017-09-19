@@ -88,7 +88,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
             for p in self.project.nodes():
 
-                if (p.text() is not None) and (processed_txt_uc in p.text()):
+                if (p.text() is not None) and ((processed_txt_uc in p.text()) or (processed_txt_uc.replace('_',' ')) in p.text()):
 
                     temp.append(p)
 
@@ -166,7 +166,6 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         # CONFIGURE SIGNALS
         self.debug('Configuring session specific signals')
-        #connect(self.session.sgnReady, self.onSessionReady)
 
         self.onSessionReady()
 
