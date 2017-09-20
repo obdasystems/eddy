@@ -315,7 +315,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         self.manager = self.OWLManager.createOWLOntologyManager()
         configuration = self.Configuration();
         hermit = self.Reasoner(configuration, ontology);
-        #ontology_IRI = ontology.getOntologyID().getOntologyIRI().get();
 
         try:
 

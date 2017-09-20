@@ -127,6 +127,8 @@ class Project(QtCore.QObject):
         self.explanations_for_unsatisfiable_classes = []
         self.get_axioms_of_explanation_to_display_in_widget = []
         self.nodesoredges_of_axioms_to_display_in_widget = []
+        self.converted_nodes = dict()
+
     #############################################
     #   PROPERTIES
     #################################

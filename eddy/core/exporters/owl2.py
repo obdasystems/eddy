@@ -3454,6 +3454,8 @@ class OWLOntologyFetcher:
                 self.convert(node,[])
                 self.step(+1)
 
+            self.project.converted_nodes = self._converted
+
             LOGGER.debug('Pre-processed %s nodes into OWL 2 expressions', len(self.converted()))
 
             #############################################

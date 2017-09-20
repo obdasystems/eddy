@@ -62,6 +62,35 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
+    def checkmatchforOWLtermandnodename(self,OWL_term_1,OWL_term_2):
+
+        #it should not be a complement of a class; i.e. the raw term should start with <
+
+        if (OWL_term_1[0] is '<') and (OWL_term_2[0] is '<'):
+
+            if OWL_term_1 == OWL_term_2:
+
+                return True
+
+        return False
+
+    def getOWLtermfornode(self,node):
+
+        # looks up the dict for the raw term and then..
+        # returns the string portion without the IRI and special characters
+
+        for diag, val_in_diag in self.project.converted_nodes.items():
+            for nd in val_in_diag:
+                java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
+                cast(autoclass(java_class), val_in_diag[nd])
+                #print('diagram-', diag,'    node_id-',nd,'    java_class.tostring()-', val_in_diag[nd].toString())
+
+                if nd is node.id:
+
+                    return val_in_diag[nd].toString()
+
+        return None
+
     @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
@@ -70,7 +99,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         # CONNECT TO PROJECT SPECIFIC SIGNALS
         widget = self.widget('Unsatisfiable_Entity_Explorer')
         self.debug('Connecting to project: %s', self.project.name)
-        connect(self.project.sgnItemAdded, widget.doAddNode)
+        #connect(self.project.sgnItemAdded, widget.doAddNode)
         connect(self.project.sgnItemRemoved, widget.doRemoveNode)
         # FILL IN UnsatisfiableEntitiesExplorer WITH DATA
         connect(self.sgnFakeItemAdded, widget.doAddNode)
@@ -78,18 +107,23 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         unsatisfiable_nodes_in_diagram = []
 
+        for diag, val_in_diag in self.project.converted_nodes.items():
+            for nd in val_in_diag:
+                java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
+                cast(autoclass(java_class), val_in_diag[nd])
+                print('diagram-', diag,'    node_id-',nd,'    java_class.tostring()-', val_in_diag[nd].toString())
+
         for uc in self.project.unsatisfiable_classes:
 
-            processed_txt_uc = uc.replace(self.project.iri+'#','')
-            processed_txt_uc = processed_txt_uc.replace('<','')
-            processed_txt_uc = processed_txt_uc.replace('>', '')
-
+            #OWL_term_for_uc = uc
             temp = []
 
             for p in self.project.nodes():
 
-                if (p.text() is not None) and ((processed_txt_uc in p.text()) or (processed_txt_uc.replace('_',' ')) in p.text()):
+                OWL_term_for_p = self.getOWLtermfornode(p)
+                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
 
+                if match is True:
                     temp.append(p)
 
             unsatisfiable_nodes_in_diagram.append(temp)
@@ -97,18 +131,14 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         self.project.nodesofunsatisfiable_classes = unsatisfiable_nodes_in_diagram
 
         count = 0
-
         for entity in unsatisfiable_nodes_in_diagram:
-
             for node in entity:
 
                 self.sgnFakeItemAdded.emit(node.diagram, node)
                 node.updateNode(valid=False)
 
             explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
-
             self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
-
             count = count + 1
 
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
