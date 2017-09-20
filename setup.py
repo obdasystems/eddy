@@ -69,7 +69,7 @@ WIN32 = sys.platform.startswith('win32')
 BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
 
 # remove build directory if it exists.
-# It might cause problems otherwise as files would be stored due to previous runs.
+# It might cause problems otherwise as files would be present from the previous runs.
 if isdir(BUILD_DIR):
     shutil.rmtree(BUILD_DIR)
 
