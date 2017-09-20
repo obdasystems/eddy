@@ -66,8 +66,11 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         #it should not be a complement of a class; i.e. the raw term should start with <
 
-        if (OWL_term_1[0] is '<') and (OWL_term_2[0] is '<'):
+        if (OWL_term_1 is None) or (OWL_term_2 is None):
 
+            return False
+
+        if (OWL_term_1[0] is '<') and (OWL_term_2[0] is '<'):
             if OWL_term_1 == OWL_term_2:
 
                 return True
@@ -81,13 +84,13 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         for diag, val_in_diag in self.project.converted_nodes.items():
             for nd in val_in_diag:
-                java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
-                cast(autoclass(java_class), val_in_diag[nd])
-                #print('diagram-', diag,'    node_id-',nd,'    java_class.tostring()-', val_in_diag[nd].toString())
 
-                if nd is node.id:
+                if val_in_diag[nd] is not None:
+                    java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
+                    cast(autoclass(java_class), val_in_diag[nd])
 
-                    return val_in_diag[nd].toString()
+                    if nd is node.id:
+                        return val_in_diag[nd].toString()
 
         return None
 
@@ -107,12 +110,6 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         unsatisfiable_nodes_in_diagram = []
 
-        for diag, val_in_diag in self.project.converted_nodes.items():
-            for nd in val_in_diag:
-                java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
-                cast(autoclass(java_class), val_in_diag[nd])
-                print('diagram-', diag,'    node_id-',nd,'    java_class.tostring()-', val_in_diag[nd].toString())
-
         for uc in self.project.unsatisfiable_classes:
 
             #OWL_term_for_uc = uc
@@ -122,7 +119,6 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
                 OWL_term_for_p = self.getOWLtermfornode(p)
                 match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
-
                 if match is True:
                     temp.append(p)
 
