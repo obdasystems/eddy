@@ -4,6 +4,12 @@ verlib>=0.1
 natsort>=5.0.1
 requests==2.11.1
 
+# Works perfectly for
+#Cython==0.23.4
+#verlib==0.1
+#natsort==5.0.1
+#certainly gives an error if either one or both of {Cython,natsort} are upgraded.
+
 # Pre-releases
 --pre github3.py
 
