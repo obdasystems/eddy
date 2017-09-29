@@ -3598,6 +3598,8 @@ class OWLOntologyFetcher:
                 refined_value = set()
 
                 for v in value:
+                    if 'list' in str(type(v)):
+                        print('v - ',v)
                     refined_value.add(v)
 
                 list_of_nodes_in_value = []

@@ -120,13 +120,18 @@ class Project(QtCore.QObject):
         ###  variables controlled by reasoners  ###
         self.ontology_OWL = None
         self.axioms_to_nodes_edges_mapping = None
-        self.inconsistent_ontology = None
-        self.explanations_for_inconsistency = []
+
         self.unsatisfiable_classes = []
-        self.nodesofunsatisfiable_classes = []
         self.explanations_for_unsatisfiable_classes = []
-        self.get_axioms_of_explanation_to_display_in_widget = []
-        self.nodesoredges_of_axioms_to_display_in_widget = []
+
+        self.inconsistent_ontology = None
+        self.explanations_for_inconsistent_ontology = []
+
+        self.uc_as_input_for_explanation_explorer = None
+        self.nodes_of_unsatisfiable_classes = []
+        self.nodes_or_edges_of_axioms_to_display_in_widget = []
+        self.nodes_or_edges_of_explanations_to_display_in_widget = []
+
         self.converted_nodes = dict()
 
     #############################################

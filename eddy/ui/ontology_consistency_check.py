@@ -90,18 +90,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
 
-        self.project.axioms_to_nodes_edges_mapping = None
-        self.project.ontology_OWL = None
-
-        self.project.inconsistent_ontology = None
-        self.project.explanations_for_inconsistency = []
-
-        self.project.unsatisfiable_classes = []
-        self.project.nodesofunsatisfiable_classes = []
-        self.project.explanations_for_unsatisfiable_classes = []
-
-        self.project.get_axioms_of_explanation_to_display_in_widget = []
-        self.project.nodesoredges_of_axioms_to_display_in_widget = []
+        self.session.ClearInconsistentEntitiesAndDiagItemsData()
 
         self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,call_ClearInconsistentEntitiesAndDiagItemsData=False)
     #############################################
@@ -337,7 +326,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             entities_of_emptyNode_itr = entities_of_emptyNode.iterator()
 
             unsatisfiable_classes_string = []
-            explanations_for_all_unsatisfiable_classs = []
+            explanations_for_all_unsatisfiable_classes = []
 
             while entities_of_emptyNode_itr.hasNext():
 
@@ -348,26 +337,31 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
                     unsatisfiable_classes_string.append(cl.toString())
 
+                    explanations_for_unsatisfiable_class = []
+                    axioms_of_explanations = []
+
                     expl_raw = bbe.getExplanation(cl)
-                    itr = expl_raw.iterator()
+                    axioms_itr = expl_raw.iterator()
                     count = 0
 
-                    explanations_for_unsatisfiable_class=[]
+                    # this jar gives only 1 explanation per class
+                    explanations_for_unsatisfiable_class.append(expl_raw)
 
-                    while itr.hasNext():
+                    #get axioms for the explanation
+                    while axioms_itr.hasNext():
 
                         count = count + 1
-                        axiom_raw = itr.next()
+                        axiom_raw = axioms_itr.next()
                         cast(self.OWLAxiom, axiom_raw)
 
-                        explanations_for_unsatisfiable_class.append(axiom_raw.toString())
+                        axioms_of_explanations.append(axiom_raw.toString())
 
-                    explanations_for_all_unsatisfiable_classs.append(explanations_for_unsatisfiable_class)
+                    explanations_for_all_unsatisfiable_classes.append(explanations_for_unsatisfiable_class)
 
             self.project.unsatisfiable_classes = unsatisfiable_classes_string
-            self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_classs
+            self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_classes
 
-            if len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classs):
+            if len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classes):
 
                 LOGGER.info('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classs)')
 
@@ -392,7 +386,20 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                     while explanations_itr.hasNext():
 
                         explanation = explanations_itr.next()
-                        self.project.explanations_for_inconsistency.append(explanation)
+                        self.project.explanations_for_inconsistent_ontology.append(explanation)
+                        """
+                        axioms_of_explanation = []
+                        axioms_of_explanation_raw = explanation.getAxioms();
+                        axioms_itr = axioms_of_explanation_raw.iterator()
+                        
+                        
+                        while axioms_itr.hasNext():
+
+                            axiom_raw = axioms_itr.next()
+                            cast(self.OWLAxiom, axiom_raw)
+
+                            axioms_of_explanation.append(axiom_raw.toString())
+                        """
 
                 except Exception as ex:
 
@@ -420,6 +427,72 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
 
 class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
+
+    sgnWork = QtCore.pyqtSignal()
+
+    def __init__(self, project, path, session):
+        super().__init__(session)
+
+        self.msgbox_done = QtWidgets.QMessageBox(self, objectName='msgbox_done')
+
+        self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.msgbox_done.setWindowTitle('Ontology consistency check complete')
+        self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.NoButton)
+        self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
+        self.msgbox_done.setText('Ontology is inconsistent.\n The link(s) for the explanation(s) are displayed below.\n You may choose to display one explanation at a time in the Explanation\
+                                             Explorer in the bottom-right portion of the screen.\
+                                             To reset the background colouring of the nodes in the diagram, press the Reset button in the toolbar')
+
+        self.addWidget(self.msgbox_done)
+
+        self.messageBoxLayout = QtWidgets.QVBoxLayout()
+        self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
+        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
+        self.messageBoxLayout.addWidget(self.widget('msgbox_done'))
+
+        self.messageBoxArea = QtWidgets.QWidget()
+        self.messageBoxArea.setLayout(self.messageBoxLayout)
+
+        self.confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmation.addButton(QtWidgets.QDialogButtonBox.Close)
+        self.confirmation.setFont(Font('Roboto', 12))
+        self.confirmation.setObjectName('confirmation')
+
+        connect(self.confirmation.rejected, self.close)
+
+        self.addWidget(self.confirmation)
+
+        self.confirmationLayout = QtWidgets.QHBoxLayout()
+        self.confirmationLayout.setContentsMargins(0, 0, 0, 0)
+        self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+
+        self.confirmationArea = QtWidgets.QWidget()
+        self.confirmationArea.setLayout(self.confirmationLayout)
+
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout.addWidget(self.messageBoxArea)
+        self.mainLayout.addWidget(self.confirmationArea)
+
+        self.setLayout(self.mainLayout)
+        self.setFont(Font('Roboto', 12))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('Ontology consistency check complete')
+
+        self.setWindowFlags(QtCore.Qt.Window)
+
+        self.hide()
+        self.setWindowModality(QtCore.Qt.NonModal)
+        self.show()
+
+        self.project = project
+        self.session = session
+
+        self.setLayout(self.mainLayout)
+
+        self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
+
+#executed if the explanation buttons needs to be displayed in the message box.
+class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
 
     sgnWork = QtCore.pyqtSignal()
 

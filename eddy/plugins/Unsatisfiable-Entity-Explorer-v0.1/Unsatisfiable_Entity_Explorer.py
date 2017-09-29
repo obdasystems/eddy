@@ -67,12 +67,10 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         #it should not be a complement of a class; i.e. the raw term should start with <
 
         if (OWL_term_1 is None) or (OWL_term_2 is None):
-
             return False
 
         if (OWL_term_1[0] is '<') and (OWL_term_2[0] is '<'):
             if OWL_term_1 == OWL_term_2:
-
                 return True
 
         return False
@@ -111,12 +109,10 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         unsatisfiable_nodes_in_diagram = []
 
         for uc in self.project.unsatisfiable_classes:
-
             #OWL_term_for_uc = uc
             temp = []
 
             for p in self.project.nodes():
-
                 OWL_term_for_p = self.getOWLtermfornode(p)
                 match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
                 if match is True:
@@ -124,10 +120,9 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
             unsatisfiable_nodes_in_diagram.append(temp)
 
-        self.project.nodesofunsatisfiable_classes = unsatisfiable_nodes_in_diagram
+        self.project.nodes_of_unsatisfiable_classes = unsatisfiable_nodes_in_diagram
 
-        count = 0
-        for entity in unsatisfiable_nodes_in_diagram:
+        for count,entity in enumerate(unsatisfiable_nodes_in_diagram):
             for node in entity:
 
                 self.sgnFakeItemAdded.emit(node.diagram, node)
@@ -135,7 +130,6 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
             explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
             self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
-            count = count + 1
 
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
         disconnect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
@@ -208,13 +202,13 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
     sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsItem')
     sgnItemRightClicked = QtCore.pyqtSignal('QGraphicsItem')
 
-    sgnStringClicked = QtCore.pyqtSignal(str)
-    sgnStringDoubleClicked = QtCore.pyqtSignal(str)
-    sgnStringRightClicked = QtCore.pyqtSignal(str)
+    sgnStringClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnStringDoubleClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnStringRightClicked = QtCore.pyqtSignal('QStandardItem')
 
-    sgnListClicked = QtCore.pyqtSignal(list)
-    sgnListDoubleClicked = QtCore.pyqtSignal(list)
-    sgnListRightClicked = QtCore.pyqtSignal(list)
+    sgnListClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnListDoubleClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnListRightClicked = QtCore.pyqtSignal('QStandardItem')
 
     def __init__(self, plugin):
         """
@@ -323,10 +317,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
     def doAddExplanation_old(self, node, explanation):
 
         if explanation is not None:
-
             exp_to_add = QtGui.QStandardItem(explanation)
             exp_to_add.setData(explanation)
-
             parent = self.parentFor(node)
             parent.appendRow(exp_to_add)
 
@@ -334,10 +326,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
     def doAddExplanation(self, node, explanation):
 
         if explanation is not None and len(explanation)>0:
-
-            exp_to_add = QtGui.QStandardItem('<Explanation> \n**(click to open Explanation Explorer)')
+            exp_to_add = QtGui.QStandardItem('<Explanation(s)> \n**(click to open Explanation Explorer)')
             exp_to_add.setData(explanation)
-
             parent = self.parentFor(node)
             parent.appendRow(exp_to_add)
 
@@ -353,6 +343,7 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKey(node))
                 parent.setIcon(self.iconFor(node))
+                parent.setData(node)
                 self.model.appendRow(parent)
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
             child = QtGui.QStandardItem(self.childKey(diagram, node))
@@ -360,10 +351,12 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
             parent.appendRow(child)
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
-    def start_explanation_explorer(self, data=None):
+    def start_explanation_explorer(self, item=None):
+
+        parent = item.parent()
 
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
-        self.project.get_axioms_of_explanation_to_display_in_widget = data
+        self.project.uc_as_input_for_explanation_explorer = parent.text()
         self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
 
     @QtCore.pyqtSlot(str)
@@ -404,9 +397,9 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
             if item and item.data():
 
                 if (str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
-                    self.sgnStringDoubleClicked.emit(item.data())
+                    self.sgnStringDoubleClicked.emit(item)
                 elif (str(type(item.data())) == '<class \'list\'>') or (str(type(item.data())) == 'list'):
-                    self.sgnListDoubleClicked.emit(item.data())
+                    self.sgnListDoubleClicked.emit(item)
                 else:
                     self.sgnItemDoubleClicked.emit(item.data())
 
@@ -423,9 +416,9 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
             if item and item.data():
 
                 if (str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
-                    self.sgnStringClicked.emit(item.data())
+                    self.sgnStringClicked.emit(item)
                 elif (str(type(item.data())) == '<class \'list\'>') or (str(type(item.data())) == 'list'):
-                    self.sgnListClicked.emit(item.data())
+                    self.sgnListClicked.emit(item)
                 else:
                     self.sgnItemClicked.emit(item.data())
 
