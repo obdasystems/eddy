@@ -100,9 +100,9 @@ QT_LIB_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibrariesPath)
 QT_PLUGINS_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
 
 #the path for the below 3 variables depends on the folder layout of Qt in the system
-#QT_BASE_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/'
-#QT_LIB_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/lib/'
-#QT_PLUGINS_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/plugins/'
+QT_BASE_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/'
+QT_LIB_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/lib/'
+QT_PLUGINS_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/plugins/'
 
 ###################################
 # CUSTOM COMMANDS IMPLEMENTATION
