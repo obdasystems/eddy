@@ -69,6 +69,23 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         if (OWL_term_1 is None) or (OWL_term_2 is None):
             return False
 
+        if str(type(OWL_term_1)) == '<class \'list\'>':
+
+            for t1 in OWL_term_1:
+
+                if str(type(OWL_term_2)) == '<class \'list\'>':
+
+                    for t2 in OWL_term_2:
+                        if (t1[0] is '<') and (t2[0] is '<'):
+                            if t1 == t2:
+                                return True
+
+                else:
+
+                    if (t1[0] is '<') and (t2[0] is '<'):
+                        if t1 == t2:
+                            return True
+
         if (OWL_term_1[0] is '<') and (OWL_term_2[0] is '<'):
             if OWL_term_1 == OWL_term_2:
                 return True
@@ -82,12 +99,22 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         for diag, val_in_diag in self.project.converted_nodes.items():
             for nd in val_in_diag:
+                if (val_in_diag[nd] is not None) and (nd is node.id):
+                    if str(type(val_in_diag[nd])) == '<class \'list\'>':
 
-                if val_in_diag[nd] is not None:
-                    java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
-                    cast(autoclass(java_class), val_in_diag[nd])
+                        return_list = []
+                        for ele in val_in_diag[nd]:
 
-                    if nd is node.id:
+                            java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
+                            cast(autoclass(java_class), ele)
+
+                            return_list.append(ele.toString())
+
+                        return return_list
+                    else:
+                        java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
+                        cast(autoclass(java_class), val_in_diag[nd])
+
                         return val_in_diag[nd].toString()
 
         return None
