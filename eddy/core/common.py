@@ -1417,20 +1417,20 @@ class HasThreadingSystem(object):
         :type worker: QtCore.QObject
         """
         if not isinstance(worker, AbstractWorker):
-            raise ValueError('worker class must be subclass of eddy.core.threading.AbstractWorker')
+            raise ValueError('[THREADS] worker class must be subclass of eddy.core.threading.AbstractWorker')
         if name not in self._threads and name not in self._workers:
-            #LOGGER.debug("Requested threaded execution of worker instance: %s", worker.__class__.__name__)
+            LOGGER.debug("[THREADS] Requested threaded execution of worker instance: %s", worker.__class__.__name__)
             # START THE WORKER THREAD
             qthread = QtCore.QThread()
             qthread.setObjectName(name)
-            #LOGGER.debug("Moving worker '%s' in a new thread '%s'", worker.__class__.__name__, name)
+            LOGGER.debug("[THREADS] Moving worker '%s' in a new thread '%s'", worker.__class__.__name__, name)
             worker.moveToThread(qthread)
             connect(qthread.finished, self.onQThreadFinished)
             connect(qthread.finished, qthread.deleteLater)
             connect(worker.finished, qthread.quit)
             connect(worker.finished, worker.deleteLater)
             connect(qthread.started, worker.run)
-            #LOGGER.debug("Starting thread: %s", name)
+            LOGGER.debug("[THREADS] Starting thread: %s", name)
             qthread.start()
             # STORE LOCALLY
             self._started[name] = time.monotonic()
@@ -1441,7 +1441,7 @@ class HasThreadingSystem(object):
         """
         Stops all the running threads.
         """
-        LOGGER.debug('Terminating running thread(s)...')
+        LOGGER.debug('[THREADS] Terminating running thread(s)...')
         for name in [name for name in self._threads.keys()]:
             self.stopThread(name)
 
@@ -1456,14 +1456,14 @@ class HasThreadingSystem(object):
                 name = name_or_qthread.objectName()
             if name in self._threads:
                 try:
-                    #LOGGER.debug("Terminate thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
+                    LOGGER.debug("[THREADS] Terminate thread: %s (runtime=%.2fms)", name, time.monotonic() - self._started[name])
                     qthread = self._threads[name]
                     qthread.quit()
                     if not qthread.wait(2000):
                         qthread.terminate()
                         qthread.wait()
                 except Exception as e:
-                    LOGGER.exception('Thread shutdown could not be completed: %s', e)
+                    LOGGER.exception('[THREADS] Thread shutdown could not be completed: %s', e)
                 del self._threads[name]
             if name in self._workers:
                 del self._workers[name]
