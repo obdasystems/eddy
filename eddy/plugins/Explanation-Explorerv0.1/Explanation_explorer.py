@@ -65,6 +65,38 @@ class ExplanationExplorerPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
+    def getOWLtermfornode(self, node_name):
+
+        # looks up the dict for the raw term and then..
+        # returns the string portion without the IRI and special characters
+
+        node_ids = set()
+
+        for p in self.project.nodes():
+            if p.text() == node_name:
+                node_ids.add(p.id)
+
+        for diag, val_in_diag in self.project.converted_nodes.items():
+            for nd in val_in_diag:
+                if (val_in_diag[nd] is not None) and (nd in node_ids):
+                    if str(type(val_in_diag[nd])) == '<class \'list\'>':
+
+                        return_list = []
+                        for ele in val_in_diag[nd]:
+                            java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
+                            cast(autoclass(java_class), ele)
+
+                            return_list.append(ele.toString())
+
+                        return return_list
+                    else:
+                        java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
+                        cast(autoclass(java_class), val_in_diag[nd])
+
+                        return val_in_diag[nd].toString()
+
+        return None
+
     @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
@@ -89,7 +121,10 @@ class ExplanationExplorerPlugin(AbstractPlugin):
             explanations_for_widget = self.project.explanations_for_inconsistent_ontology
         else:
             explanations = self.project.explanations_for_unsatisfiable_classes
-            index_uc = self.project.unsatisfiable_classes.index('<'+self.project.iri+'#'+self.project.uc_as_input_for_explanation_explorer+'>')
+
+            OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(self.project.uc_as_input_for_explanation_explorer)
+
+            index_uc = self.project.unsatisfiable_classes.index(OWL_term_uc_as_input_for_explanation_explorer)
             explanations_for_widget = explanations[index_uc]
 
         for explanation_count, e in enumerate(explanations_for_widget):

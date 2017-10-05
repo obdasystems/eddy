@@ -48,7 +48,7 @@ from eddy.core.datatypes.owl import OWLAxiom,OWLSyntax
 from eddy.core.worker import AbstractWorker
 from jnius import autoclass, cast, detach
 
-import sys,math
+import sys,math, threading
 
 
 LOGGER = getLogger()
@@ -101,11 +101,14 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Gracefully quits working thread.
         """
+        print('>>> OntologyConsistencyCheckDialog dispose')
         if self.workerThread:
             self.workerThread.quit()
+            print('self.workerThread.quit()')
             if not self.workerThread.wait(2000):
                 self.workerThread.terminate()
                 self.workerThread.wait()
+        print('>>> OntologyConsistencyCheckDialog dispose END')
 
     #############################################
     #   PROPERTIES
@@ -128,7 +131,9 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         Executed when the dialog is closed.
         :type closeEvent: QCloseEvent
         """
+        print('>>> OntologyConsistencyCheckDialog closeEvent')
         self.dispose()
+        print('>>> OntologyConsistencyCheckDialog closeEvent END')
 
     def showEvent(self, showEvent):
         """
@@ -148,6 +153,8 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         Perform on or more advancements step in the validation procedure.
         """
         # RUN THE WORKER
+        print('>>> OntologyConsistencyCheckDialog doWork')
+
         worker = OntologyConsistencyCheckWorker(self.project,self.session)
         connect(worker.sgnBusy, self.displaybusydialog)
         connect(worker.sgnAllOK, self.onPerfectOntology)
@@ -155,14 +162,19 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         connect(worker.sgnUnsatisfiableClasses, self.onUnsatisfiableClasses)
         self.startThread('OntologyConsistencyCheck', worker)
 
+        threads = threading.enumerate()
+        print('len(threads) - ', len(threads))
+        for t in threads:
+            print('t.getName() - ', t.getName())
+
+        print('>>> OntologyConsistencyCheckDialog doWork END')
+
     @QtCore.pyqtSlot(bool)
     def displaybusydialog(self, activate):
 
         if activate is True:
-
             self.msgbox_busy.exec_()
             self.close()
-
         if activate is False:
             self.msgbox_busy.close()
 
@@ -196,6 +208,10 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         Executed when there is atleast 1 unsatisfiable class
         :type message: str
         """
+
+        print('>>>  OntologyConsistencyCheckDialog onUnsatisfiableClasses')
+
+
         self.msgbox_done = QtWidgets.QMessageBox(self)
         self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_done.setWindowTitle('Ontology consistency check complete')
@@ -209,8 +225,10 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.session.pmanager.create_add_and_start_plugin('Unsatisfiable_Entity_Explorer')
 
+        print('>>>  OntologyConsistencyCheckDialog onUnsatisfiableClasses END')
 
-class OntologyConsistencyCheckWorker(AbstractWorker):
+
+class OntologyConsistencyCheckWorker(AbstractWorker, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtCore.QObject providing a worker thread that will perform the project Ontology Consistency check
     """
@@ -282,7 +300,14 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         """
         return {axiom for axiom in OWLAxiom}
 
+    @QtCore.pyqtSlot()
+    def onCompleted(self):
+
+        self.accept()
+
     def reason_over_ontology(self):
+
+        print('>>> OntologyConsistencyCheckWorker reason_over_ontology')
 
         worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
@@ -291,11 +316,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         ontology = worker.ontology
 
         if ontology is None:
-
-            LOGGER.info('ontology is None')
-
+            LOGGER.warning('ontology is None')
         else:
-
             LOGGER.info('ontology is not None')
 
         self.project.axioms_to_nodes_edges_mapping = dict
@@ -308,9 +330,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         try:
 
             hermit.precomputeInferences()
-
             emptyNode = hermit.getUnsatisfiableClasses()
-
             cast(self.Node,emptyNode)
 
             if hermit.isConsistent() is True:
@@ -320,7 +340,10 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 sys.exit(0)
 
             factory = self.ReasonerFactory()
+
+            print('>>> bbe')
             bbe = self.BlackBoxExplanation(ontology, factory, hermit)
+            print('>>> bbe END')
 
             entities_of_emptyNode = emptyNode.getEntities()
             entities_of_emptyNode_itr = entities_of_emptyNode.iterator()
@@ -364,10 +387,16 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             if len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classes):
 
                 LOGGER.info('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classs)')
-
                 sys.exit(0)
 
+            bbe.dispose();
+            hermit.flush();
+            hermit.dispose();
+
         except Exception as e:
+
+            hermit.flush();
+            hermit.dispose();
 
             if str(e) == self.InconsistentOntologyException_string:
 
@@ -387,29 +416,20 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
                         explanation = explanations_itr.next()
                         self.project.explanations_for_inconsistent_ontology.append(explanation)
-                        """
-                        axioms_of_explanation = []
-                        axioms_of_explanation_raw = explanation.getAxioms();
-                        axioms_itr = axioms_of_explanation_raw.iterator()
-                        
-                        
-                        while axioms_itr.hasNext():
-
-                            axiom_raw = axioms_itr.next()
-                            cast(self.OWLAxiom, axiom_raw)
-
-                            axioms_of_explanation.append(axiom_raw.toString())
-                        """
 
                 except Exception as ex:
 
                     ex.printStackTrace()
+
+        print('>>> OntologyConsistencyCheckWorker reason_over_ontology END')
 
     @QtCore.pyqtSlot()
     def run(self):
         """
         Main worker.
         """
+        print('>>> OntologyConsistencyCheckWorker run')
+
         self.sgnBusy.emit(True)
 
         self.reason_over_ontology()
@@ -425,6 +445,9 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             else:
                 self.sgnAllOK.emit()
 
+        self.finished.emit()
+
+        print('>>> OntologyConsistencyCheckWorker run END')
 
 class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
 
