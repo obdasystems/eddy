@@ -1930,12 +1930,14 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         self.project.unsatisfiable_classes = []
         self.project.explanations_for_unsatisfiable_classes = []
+        self.project.bottom_data_property = []
+        self.project.bottom_object_property = []
 
         self.project.inconsistent_ontology = None
         self.project.explanations_for_inconsistent_ontology = []
 
         self.project.uc_as_input_for_explanation_explorer = None
-        self.project.nodes_of_unsatisfiable_classes = []
+        self.project.nodes_of_unsatisfiable_entities = []
         self.project.nodes_or_edges_of_axioms_to_display_in_widget = []
         self.project.nodes_or_edges_of_explanations_to_display_in_widget = []
 

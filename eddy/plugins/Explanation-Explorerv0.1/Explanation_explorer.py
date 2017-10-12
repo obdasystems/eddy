@@ -65,37 +65,49 @@ class ExplanationExplorerPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
+
     def getOWLtermfornode(self, node_name):
 
         # looks up the dict for the raw term and then..
         # returns the string portion without the IRI and special characters
 
-        node_ids = set()
+        return_result = []
 
-        for p in self.project.nodes():
-            if p.text() == node_name:
-                node_ids.add(p.id)
+        for diag_name, val_in_diag in self.project.converted_nodes.items():
 
-        for diag, val_in_diag in self.project.converted_nodes.items():
-            for nd in val_in_diag:
-                if (val_in_diag[nd] is not None) and (nd in node_ids):
-                    if str(type(val_in_diag[nd])) == '<class \'list\'>':
+            diagrams = self.project.diagrams()
 
-                        return_list = []
-                        for ele in val_in_diag[nd]:
-                            java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
-                            cast(autoclass(java_class), ele)
+            for d in diagrams:
+                if d.name == diag_name:
+                    node_ids = set()
 
-                            return_list.append(ele.toString())
+                    for p in self.project.nodes(d):
+                        if p.text() == node_name:
+                            node_ids.add(p.id)
 
-                        return return_list
-                    else:
-                        java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
-                        cast(autoclass(java_class), val_in_diag[nd])
+                    for nd in val_in_diag:
+                        if (val_in_diag[nd] is not None) and (nd in node_ids):
+                            if str(type(val_in_diag[nd])) == '<class \'list\'>':
 
-                        return val_in_diag[nd].toString()
+                                return_list = []
+                                for ele in val_in_diag[nd]:
+                                    java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
+                                    cast(autoclass(java_class), ele)
+                                    return_list.append(ele.toString())
+                                #return return_list
+                                return_result.append(return_list)
 
-        return None
+                            else:
+                                java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
+                                cast(autoclass(java_class), val_in_diag[nd])
+                                #return val_in_diag[nd].toString()
+                                return_result.append(val_in_diag[nd].toString())
+
+        if len(return_result) != 1:
+            print('return_result = ',return_result)
+            sys.exit(0)
+
+        return return_result[0]
 
     @QtCore.pyqtSlot()
     def onSessionReady(self):
@@ -121,14 +133,11 @@ class ExplanationExplorerPlugin(AbstractPlugin):
             explanations_for_widget = self.project.explanations_for_inconsistent_ontology
         else:
             explanations = self.project.explanations_for_unsatisfiable_classes
-
             OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(self.project.uc_as_input_for_explanation_explorer)
-
             index_uc = self.project.unsatisfiable_classes.index(OWL_term_uc_as_input_for_explanation_explorer)
             explanations_for_widget = explanations[index_uc]
 
         for explanation_count, e in enumerate(explanations_for_widget):
-
             self.sgnFakeExplanationAdded.emit(str(explanation_count+1))
 
         for explanation_count, e in enumerate(explanations_for_widget):
@@ -432,7 +441,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
             node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node_or_edge.update(node_or_edge.boundingRect())
 
-        for entity in self.project.nodes_of_unsatisfiable_classes:
+        for entity in self.project.nodes_of_unsatisfiable_entities:
 
             for node in entity:
                 # node.selection.setBrush(self.brush)

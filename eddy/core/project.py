@@ -123,12 +123,14 @@ class Project(QtCore.QObject):
 
         self.unsatisfiable_classes = []
         self.explanations_for_unsatisfiable_classes = []
+        self.bottom_data_property = []
+        self.bottom_object_property = []
 
         self.inconsistent_ontology = None
         self.explanations_for_inconsistent_ontology = []
 
         self.uc_as_input_for_explanation_explorer = None
-        self.nodes_of_unsatisfiable_classes = []
+        self.nodes_of_unsatisfiable_entities = []
         self.nodes_or_edges_of_axioms_to_display_in_widget = []
         self.nodes_or_edges_of_explanations_to_display_in_widget = []
 
@@ -160,6 +162,19 @@ class Project(QtCore.QObject):
             for item in diagram.items():
                 if item.isNode() or item.isEdge():
                     diagram.sgnItemAdded.emit(diagram, item)
+
+    def diagram_from_its_name(self, d_name):
+        """
+        Retrieves a diagram given its id.
+        :type did: str
+        :rtype: Diagram
+        """
+        diags = self.diagrams()
+
+        for d in diags:
+            if d.name == d_name:
+                return d
+        return None
 
     def diagram(self, did):
         """

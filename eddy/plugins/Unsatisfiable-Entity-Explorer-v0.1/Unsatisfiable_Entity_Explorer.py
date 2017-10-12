@@ -133,7 +133,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         connect(self.sgnFakeItemAdded, widget.doAddNode)
         connect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
 
-        unsatisfiable_nodes_in_diagram = []
+        classes_only_unsatisfiable_nodes_in_diagram = []
 
         for uc in self.project.unsatisfiable_classes:
             #OWL_term_for_uc = uc
@@ -145,11 +145,38 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
                 if match is True:
                     temp.append(p)
 
+            classes_only_unsatisfiable_nodes_in_diagram.append(temp)
+
+        unsatisfiable_nodes_in_diagram = []
+
+        for uc in self.project.bottom_data_property:
+            #OWL_term_for_uc = uc
+            temp = []
+
+            for p in self.project.nodes():
+                OWL_term_for_p = self.getOWLtermfornode(p)
+                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
+                if match is True:
+                    temp.append(p)
+
             unsatisfiable_nodes_in_diagram.append(temp)
 
-        self.project.nodes_of_unsatisfiable_classes = unsatisfiable_nodes_in_diagram
+        for uc in self.project.bottom_object_property:
+            #OWL_term_for_uc = uc
+            temp = []
 
-        for count,entity in enumerate(unsatisfiable_nodes_in_diagram):
+            for p in self.project.nodes():
+                OWL_term_for_p = self.getOWLtermfornode(p)
+                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
+                if match is True:
+                    temp.append(p)
+
+            unsatisfiable_nodes_in_diagram.append(temp)
+
+        self.project.nodes_of_unsatisfiable_entities = unsatisfiable_nodes_in_diagram
+
+
+        for count,entity in enumerate(classes_only_unsatisfiable_nodes_in_diagram):
             for node in entity:
 
                 self.sgnFakeItemAdded.emit(node.diagram, node)
@@ -157,6 +184,11 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
             explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
             self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
+
+        for entity in unsatisfiable_nodes_in_diagram:
+            for node in entity:
+                self.sgnFakeItemAdded.emit(node.diagram, node)
+                node.updateNode(valid=False)
 
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
         disconnect(self.sgnFakeExplanationAdded, widget.doAddExplanation)

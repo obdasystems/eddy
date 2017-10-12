@@ -128,7 +128,7 @@ class Diagram(QtWidgets.QGraphicsScene):
             node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node_or_edge.update(node_or_edge.boundingRect())
 
-        for entity in self.project.nodes_of_unsatisfiable_classes:
+        for entity in self.project.nodes_of_unsatisfiable_entities:
 
             for node in entity:
                 # node.selection.setBrush(self.brush)
