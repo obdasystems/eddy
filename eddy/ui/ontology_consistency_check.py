@@ -54,7 +54,7 @@ import sys,math, threading
 LOGGER = getLogger()
 
 
-class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
+class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog with facilities to perform Ontology Consistency check
     """
@@ -76,10 +76,36 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_busy.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_busy.setWindowTitle('Please Wait!')
         #self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.Close)
-        #self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.NoButton)
+        self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.NoButton)
         self.msgbox_busy.setText('Checking consistency of ontology')
         self.msgbox_busy.setTextFormat(QtCore.Qt.RichText)
+        ####################################################
 
+        self.addWidget(self.msgbox_busy)
+
+        self.messageBoxLayout = QtWidgets.QVBoxLayout()
+        self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
+        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
+        self.messageBoxLayout.addWidget(self.widget('msgbox_busy'))
+
+        self.messageBoxArea = QtWidgets.QWidget()
+        self.messageBoxArea.setLayout(self.messageBoxLayout)
+
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout.addWidget(self.messageBoxArea)
+
+        self.setLayout(self.mainLayout)
+        self.setFont(Font('Roboto', 12))
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('Please Wait!')
+
+        self.setWindowFlags(QtCore.Qt.Window)
+
+        self.hide()
+        self.setWindowModality(QtCore.Qt.NonModal)
+        self.show()
+
+        ######################################################
         self.msgbox_done = QtWidgets.QMessageBox(self)
         self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_done.setWindowTitle('Ontology consistency check complete')
@@ -87,6 +113,10 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
 
         connect(self.sgnWork, self.doWork)
+
+        self.sgnWork.emit()
+
+        #self.doWork()
 
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
@@ -143,12 +173,13 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
     #   SLOTS
     #################################
 
-
     @QtCore.pyqtSlot()
     def doWork(self):
         """
         Perform on or more advancements step in the validation procedure.
         """
+        print('doWork >>>')
+
         worker = OntologyConsistencyCheckWorker(self.project,self.session)
         connect(worker.sgnBusy, self.displaybusydialog)
         connect(worker.sgnAllOK, self.onPerfectOntology)
@@ -156,13 +187,17 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         connect(worker.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
         self.startThread('OntologyConsistencyCheck', worker)
 
+        print('doWork >>> END')
+
     @QtCore.pyqtSlot(bool)
     def displaybusydialog(self, activate):
         if activate is True:
-            self.msgbox_busy.exec_()
+            pass
+            #self.msgbox_busy.exec_()
             #self.close() giuliuo
         if activate is False:
-            self.msgbox_busy.close()
+            pass
+            #self.msgbox_busy.close()
             #self.msgbox_busy.close() giulio
 
     @QtCore.pyqtSlot()
@@ -191,6 +226,8 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         dialog_2 = InconsistentOntologyDialog(self.project,None,self.session)
         dialog_2.exec_()
+
+        self.close()
 
         # self.msgbox_busy.close() giulio
 
@@ -282,6 +319,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker, HasThreadingSystem, HasWidg
         self.accept()
 
     def reason_over_ontology(self):
+
+        print('reason_over_ontology >>>')
 
         worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
@@ -433,18 +472,19 @@ class OntologyConsistencyCheckWorker(AbstractWorker, HasThreadingSystem, HasWidg
 
                     ex.printStackTrace()
 
+        print('reason_over_ontology >>> END')
 
     @QtCore.pyqtSlot()
     def run(self):
         """
         Main worker.
         """
-        self.sgnBusy.emit(True)
+        #self.sgnBusy.emit(True)
 
         self.reason_over_ontology()
         detach()
 
-        self.sgnBusy.emit(False)
+        #self.sgnBusy.emit(False)
 
         if self.project.inconsistent_ontology is True:
             self.sgnOntologyInconsistency.emit()

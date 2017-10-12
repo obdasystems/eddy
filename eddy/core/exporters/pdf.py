@@ -75,7 +75,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         Perform PDF document generation.
         :type path: str
         """
-        shape = self.diagram.visibleRect(margin=20)
+        shape = self.diagram.visibleRect(margin=220)
         if shape:
             LOGGER.info('Exporting diagram %s to %s', self.diagram.name, path)
             printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)

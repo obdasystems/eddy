@@ -68,7 +68,7 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
         """
         Print the diagram.
         """
-        shape = self.diagram.visibleRect(margin=20)
+        shape = self.diagram.visibleRect(margin=220)
         if shape:
             printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
             printer.setOutputFormat(QtPrintSupport.QPrinter.NativeFormat)
