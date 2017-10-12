@@ -95,8 +95,6 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,call_ClearInconsistentEntitiesAndDiagItemsData=False)
 
-
-
     #############################################
     #   INTERFACE
     #################################
@@ -162,8 +160,10 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
     def displaybusydialog(self, activate):
         if activate is True:
             self.msgbox_busy.exec_()
+            #self.close() giuliuo
         if activate is False:
             self.msgbox_busy.close()
+            #self.msgbox_busy.close() giulio
 
     @QtCore.pyqtSlot()
     def onPerfectOntology(self):
@@ -179,15 +179,20 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
         self.msgbox_done.setText('Ontology is consistent and  all classes are satisfiable')
         self.msgbox_done.exec_()
+        #self.msgbox_busy.close() giulio
         self.close()
+        # no close giulio
 
     @QtCore.pyqtSlot()
     def onOntologicalInconsistency(self):
 
+        # no hide giulio
         self.hide()
 
         dialog_2 = InconsistentOntologyDialog(self.project,None,self.session)
         dialog_2.exec_()
+
+        # self.msgbox_busy.close() giulio
 
     @QtCore.pyqtSlot()
     def onUnsatisfiableEntities(self):
@@ -204,7 +209,9 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setText('Ontology is consistent however some class(es) are unsatisfiable.\n See Unsatisfiable Entity Explorer for details.\n\
                                  To reset the background colouring of the nodes in the diagram, press the Reset button in the toolbar')
         self.msgbox_done.exec_()
+        # self.msgbox_busy.close() giulio
         self.close()
+        # no close giulio
 
         self.session.pmanager.create_add_and_start_plugin('Unsatisfiable_Entity_Explorer')
 
@@ -515,6 +522,7 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidge
 
         self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
 
+        #self.close() giulio
 #executed if the explanation buttons needs to be displayed in the message box.
 class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
 
