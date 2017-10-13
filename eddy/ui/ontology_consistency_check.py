@@ -241,7 +241,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.session.pmanager.create_add_and_start_plugin('Unsatisfiable_Entity_Explorer')
 
 
-class OntologyConsistencyCheckWorker(AbstractWorker, HasThreadingSystem, HasWidgetSystem):
+class OntologyConsistencyCheckWorker(AbstractWorker):
     """
     Extends QtCore.QObject providing a worker thread that will perform the project Ontology Consistency check
     """
