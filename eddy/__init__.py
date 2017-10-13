@@ -40,7 +40,7 @@ __email__ = 'danielepantaleone@me.com'+'ashwingoldfish@yahoo.co.in'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'
 __status__ = 'Beta'
-__version__ = '0.13_'
+__version__ = '0.13'
 
 
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"

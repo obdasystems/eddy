@@ -74,9 +74,11 @@ class UpdateCheckWorker(AbstractWorker):
         update_url = None  # Store update HTML url, i.e: http://github.com/...
         try:
             LOGGER.info('Connecting to GitHub to retrieve update information (channel: %s)', self.channel.value)
-            #github = GitHub(token='6a417ccfe9a7c526598e77a74cbf1cba6e688f0e')
-           #repository = github.repository('danielepantaleone', 'eddy')
-            github = GitHub(token='b184808b028f5598363c3cf8db9e3c5a10ec3447')
+            #github = GitHub(token='6a417ccfe9a7c526598e77a74cbf1cba6e688f0e')  dp
+            #repository = github.repository('danielepantaleone', 'eddy')
+            #github = GitHub(token='b184808b028f5598363c3cf8db9e3c5a10ec3447') ashwin
+            github = GitHub(token='a6bc0707678ea3c6993d38b74b78abca7ed4c18e')
+
             repository = github.repository('ashwingoldfish', 'eddy')
             for release in repository.releases():
                 if self.channel is Channel.Beta or not release.prerelease:
