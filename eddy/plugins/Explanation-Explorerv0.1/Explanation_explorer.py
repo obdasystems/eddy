@@ -104,8 +104,18 @@ class ExplanationExplorerPlugin(AbstractPlugin):
                                 return_result.append(val_in_diag[nd].toString())
 
         if len(return_result) != 1:
-            print('return_result = ',return_result)
-            sys.exit(0)
+
+            set_of_return_result = set()
+
+            for r in return_result:
+                set_of_return_result.add(r)
+
+            if len(set_of_return_result) !=1:
+
+                print('return_result = ',return_result)
+                sys.exit(0)
+            else:
+                return list(set_of_return_result)[0]
 
         return return_result[0]
 

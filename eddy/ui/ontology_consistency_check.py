@@ -54,7 +54,7 @@ import sys,math, threading
 LOGGER = getLogger()
 
 
-class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
+class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     Extends QtWidgets.QDialog with facilities to perform Ontology Consistency check
     """
@@ -75,18 +75,16 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem, HasW
         self.msgbox_busy = QtWidgets.QMessageBox(self, objectName='msgbox_busy')
         self.msgbox_busy.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_busy.setWindowTitle('Please Wait!')
-        #self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.NoButton)
         self.msgbox_busy.setText('Checking consistency of ontology')
         self.msgbox_busy.setTextFormat(QtCore.Qt.RichText)
         ####################################################
 
-        self.addWidget(self.msgbox_busy)
-
         self.messageBoxLayout = QtWidgets.QVBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
         self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
-        self.messageBoxLayout.addWidget(self.widget('msgbox_busy'))
+        #self.messageBoxLayout.addWidget(self.widget('msgbox_busy'))
+        self.messageBoxLayout.addWidget(self.msgbox_busy)
 
         self.messageBoxArea = QtWidgets.QWidget()
         self.messageBoxArea.setLayout(self.messageBoxLayout)
@@ -113,16 +111,11 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem, HasW
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
 
         connect(self.sgnWork, self.doWork)
-
         self.sgnWork.emit()
-
-        #self.doWork()
 
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
-
         self.session.ClearInconsistentEntitiesAndDiagItemsData()
-
         self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,call_ClearInconsistentEntitiesAndDiagItemsData=False)
 
     #############################################
@@ -178,16 +171,12 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem, HasW
         """
         Perform on or more advancements step in the validation procedure.
         """
-        print('doWork >>>')
-
         worker = OntologyConsistencyCheckWorker(self.project,self.session)
         connect(worker.sgnBusy, self.displaybusydialog)
         connect(worker.sgnAllOK, self.onPerfectOntology)
         connect(worker.sgnOntologyInconsistency, self.onOntologicalInconsistency)
         connect(worker.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
         self.startThread('OntologyConsistencyCheck', worker)
-
-        print('doWork >>> END')
 
     @QtCore.pyqtSlot(bool)
     def displaybusydialog(self, activate):
@@ -228,7 +217,6 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem, HasW
         dialog_2.exec_()
 
         self.close()
-
         # self.msgbox_busy.close() giulio
 
     @QtCore.pyqtSlot()
@@ -319,8 +307,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker, HasThreadingSystem, HasWidg
         self.accept()
 
     def reason_over_ontology(self):
-
-        print('reason_over_ontology >>>')
 
         worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
@@ -472,8 +458,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker, HasThreadingSystem, HasWidg
 
                     ex.printStackTrace()
 
-        print('reason_over_ontology >>> END')
-
     @QtCore.pyqtSlot()
     def run(self):
         """
@@ -497,7 +481,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker, HasThreadingSystem, HasWidg
         self.finished.emit()
 
 
-class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
+class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
 
     sgnWork = QtCore.pyqtSignal()
 
@@ -514,12 +498,13 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidge
                                              Explorer in the bottom-right portion of the screen.\
                                              To reset the background colouring of the nodes in the diagram, press the Reset button in the toolbar')
 
-        self.addWidget(self.msgbox_done)
+        #self.addWidget(self.msgbox_done)
 
-        self.messageBoxLayout = QtWidgets.QVBoxLayout()
+        self.messageBoxLayout = QtWidgets.QHBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
         self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
-        self.messageBoxLayout.addWidget(self.widget('msgbox_done'))
+        #self.messageBoxLayout.addWidget(self.widget('msgbox_done'))
+        self.messageBoxLayout.addWidget(self.msgbox_done)
 
         self.messageBoxArea = QtWidgets.QWidget()
         self.messageBoxArea.setLayout(self.messageBoxLayout)
@@ -531,11 +516,12 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidge
 
         connect(self.confirmation.rejected, self.close)
 
-        self.addWidget(self.confirmation)
+        #self.addWidget(self.confirmation)
 
         self.confirmationLayout = QtWidgets.QHBoxLayout()
         self.confirmationLayout.setContentsMargins(0, 0, 0, 0)
-        self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+        #self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+        self.confirmationLayout.addWidget(self.confirmation)
 
         self.confirmationArea = QtWidgets.QWidget()
         self.confirmationArea.setLayout(self.confirmationLayout)
@@ -564,7 +550,7 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidge
 
         #self.close() giulio
 #executed if the explanation buttons needs to be displayed in the message box.
-class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
+class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem):
 
     sgnWork = QtCore.pyqtSignal()
 
@@ -584,7 +570,7 @@ class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem, HasWid
 
         self.addWidget(self.msgbox_done)
 
-        self.messageBoxLayout = QtWidgets.QVBoxLayout()
+        self.messageBoxLayout = QtWidgets.QHBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
         self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
         self.messageBoxLayout.addWidget(self.widget('msgbox_done'))
