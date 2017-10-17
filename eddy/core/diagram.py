@@ -79,8 +79,8 @@ class Diagram(QtWidgets.QGraphicsScene):
     sgnNodeIdentification = QtCore.pyqtSignal('QGraphicsItem')
     sgnUpdated = QtCore.pyqtSignal()
 
-    blue_brush = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
-    light_red_brush = QtGui.QBrush(QtGui.QColor(250,150,150, 160))
+    brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
+    brush_light_red = QtGui.QBrush(QtGui.QColor(250,150,150, 100))
 
     def __init__(self, name, parent):
         """
@@ -116,14 +116,14 @@ class Diagram(QtWidgets.QGraphicsScene):
 
         for node_or_edge in self.project.nodes_or_edges_of_explanations_to_display_in_widget:
 
-            node_or_edge.selection.setBrush(self.light_red_brush)
+            node_or_edge.selection.setBrush(self.brush_light_red)
             node_or_edge.setCacheMode(AbstractItem.NoCache)
             node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node_or_edge.update(node_or_edge.boundingRect())
 
         for node_or_edge in self.project.nodes_or_edges_of_axioms_to_display_in_widget:
 
-            node_or_edge.selection.setBrush(self.blue_brush)
+            node_or_edge.selection.setBrush(self.brush_blue)
             node_or_edge.setCacheMode(AbstractItem.NoCache)
             node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node_or_edge.update(node_or_edge.boundingRect())

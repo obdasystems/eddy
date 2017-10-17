@@ -289,7 +289,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
 
     sgnColourItem = QtCore.pyqtSignal('QStandardItem')
 
-    brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 160))
+    brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 100))
     brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
     no_brush = QtGui.QBrush(QtCore.Qt.NoBrush)
 
