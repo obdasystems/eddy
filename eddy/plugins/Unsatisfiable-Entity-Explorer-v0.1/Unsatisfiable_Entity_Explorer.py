@@ -37,6 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.output import getLogger
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
@@ -48,6 +49,8 @@ from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
 
 from jnius import autoclass, cast, detach
+
+LOGGER = getLogger()
 
 class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
     """
@@ -119,6 +122,43 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         return None
 
+    def get_list_of_nodes_in_diagram_from_OWL_terms(self,input_list):
+
+        return_list = []
+
+        for uc in input_list:
+            #OWL_term_for_uc = uc
+            temp = []
+
+            for p in self.project.nodes():
+                OWL_term_for_p = self.getOWLtermfornode(p)
+                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
+                if match is True:
+                    temp.append(p)
+
+            return_list.append(temp)
+
+        return return_list
+
+    def add_unsatisfiable_nodes_in_widget(self,input_list,inp_type):
+
+        for count,entity in enumerate(input_list):
+            for node in entity:
+
+                self.sgnFakeItemAdded.emit(node.diagram, node)
+                node.updateNode(valid=False)
+
+            if inp_type=='unsatisfiable_classes':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
+            elif inp_type=='unsatisfiable_attributes':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_attributes[count]
+            elif inp_type=='unsatisfiable_roles':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_roles[count]
+            else:
+                LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
+
+            self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
+
     @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
@@ -133,62 +173,17 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         connect(self.sgnFakeItemAdded, widget.doAddNode)
         connect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
 
-        classes_only_unsatisfiable_nodes_in_diagram = []
+        classes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_classes)
+        attributes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_attributes)
+        roles_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_roles)
 
-        for uc in self.project.unsatisfiable_classes:
-            #OWL_term_for_uc = uc
-            temp = []
+        self.add_unsatisfiable_nodes_in_widget(classes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_classes')
+        self.add_unsatisfiable_nodes_in_widget(attributes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_attributes')
+        self.add_unsatisfiable_nodes_in_widget(roles_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_roles')
 
-            for p in self.project.nodes():
-                OWL_term_for_p = self.getOWLtermfornode(p)
-                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
-                if match is True:
-                    temp.append(p)
-
-            classes_only_unsatisfiable_nodes_in_diagram.append(temp)
-
-        unsatisfiable_nodes_in_diagram = []
-
-        for uc in self.project.bottom_data_property:
-            #OWL_term_for_uc = uc
-            temp = []
-
-            for p in self.project.nodes():
-                OWL_term_for_p = self.getOWLtermfornode(p)
-                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
-                if match is True:
-                    temp.append(p)
-
-            unsatisfiable_nodes_in_diagram.append(temp)
-
-        for uc in self.project.bottom_object_property:
-            #OWL_term_for_uc = uc
-            temp = []
-
-            for p in self.project.nodes():
-                OWL_term_for_p = self.getOWLtermfornode(p)
-                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
-                if match is True:
-                    temp.append(p)
-
-            unsatisfiable_nodes_in_diagram.append(temp)
-
-        self.project.nodes_of_unsatisfiable_entities = unsatisfiable_nodes_in_diagram
-
-
-        for count,entity in enumerate(classes_only_unsatisfiable_nodes_in_diagram):
-            for node in entity:
-
-                self.sgnFakeItemAdded.emit(node.diagram, node)
-                node.updateNode(valid=False)
-
-            explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
-            self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
-
-        for entity in unsatisfiable_nodes_in_diagram:
-            for node in entity:
-                self.sgnFakeItemAdded.emit(node.diagram, node)
-                node.updateNode(valid=False)
+        self.project.nodes_of_unsatisfiable_entities.extend(classes_only_unsatisfiable_nodes_in_diagram)
+        self.project.nodes_of_unsatisfiable_entities.extend(attributes_only_unsatisfiable_nodes_in_diagram)
+        self.project.nodes_of_unsatisfiable_entities.extend(roles_only_unsatisfiable_nodes_in_diagram)
 
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
         disconnect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
@@ -415,7 +410,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         parent = item.parent()
 
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
-        self.project.uc_as_input_for_explanation_explorer = parent.text()
+        #self.project.uc_as_input_for_explanation_explorer = parent.text()
+        self.project.uc_as_input_for_explanation_explorer = str(parent.data())
         self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
 
     @QtCore.pyqtSlot(str)

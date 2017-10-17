@@ -123,8 +123,10 @@ class Project(QtCore.QObject):
 
         self.unsatisfiable_classes = []
         self.explanations_for_unsatisfiable_classes = []
-        self.bottom_data_property = []
-        self.bottom_object_property = []
+        self.unsatisfiable_attributes = []
+        self.explanations_for_unsatisfiable_attributes = []
+        self.unsatisfiable_roles = []
+        self.explanations_for_unsatisfiable_roles = []
 
         self.inconsistent_ontology = None
         self.explanations_for_inconsistent_ontology = []

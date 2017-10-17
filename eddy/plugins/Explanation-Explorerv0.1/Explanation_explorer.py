@@ -37,6 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.output import getLogger
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
@@ -51,6 +52,9 @@ from eddy.ui.fields import StringField
 import inspect
 import sys
 from jnius import autoclass, cast, detach
+
+
+LOGGER = getLogger()
 
 
 class ExplanationExplorerPlugin(AbstractPlugin):
@@ -112,7 +116,7 @@ class ExplanationExplorerPlugin(AbstractPlugin):
 
             if len(set_of_return_result) !=1:
 
-                print('return_result = ',return_result)
+                LOGGER.error('error in module getOWLtermfornode; return_result = ',return_result)
                 sys.exit(0)
             else:
                 return list(set_of_return_result)[0]
@@ -133,7 +137,7 @@ class ExplanationExplorerPlugin(AbstractPlugin):
         connect(self.sgnFakeItemAdded, widget.doAddNodeOREdge)
 
         if len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:
-            print('Error, len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:')
+            LOGGER.error('Error, len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:')
             sys.exit(0)
 
         explanations_for_widget = None
@@ -142,10 +146,21 @@ class ExplanationExplorerPlugin(AbstractPlugin):
         if len(self.project.explanations_for_inconsistent_ontology) > 0:
             explanations_for_widget = self.project.explanations_for_inconsistent_ontology
         else:
-            explanations = self.project.explanations_for_unsatisfiable_classes
-            OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(self.project.uc_as_input_for_explanation_explorer)
-            index_uc = self.project.unsatisfiable_classes.index(OWL_term_uc_as_input_for_explanation_explorer)
-            explanations_for_widget = explanations[index_uc]
+            if 'ConceptNode' in self.project.uc_as_input_for_explanation_explorer:
+                unsatisfiable_entity = self.project.unsatisfiable_classes
+                explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_classes
+            elif 'AttributeNode' in self.project.uc_as_input_for_explanation_explorer:
+                unsatisfiable_entity = self.project.unsatisfiable_attributes
+                explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_attributes
+            elif 'RoleNode' in self.project.uc_as_input_for_explanation_explorer:
+                unsatisfiable_entity = self.project.unsatisfiable_roles
+                explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_roles
+
+            sub_string = self.project.uc_as_input_for_explanation_explorer.split(':')
+
+            OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(sub_string[1])
+            index_uc = unsatisfiable_entity.index(OWL_term_uc_as_input_for_explanation_explorer)
+            explanations_for_widget = explanations_unsatisfiable_entity[index_uc]
 
         for explanation_count, e in enumerate(explanations_for_widget):
             self.sgnFakeExplanationAdded.emit(str(explanation_count+1))
@@ -171,7 +186,7 @@ class ExplanationExplorerPlugin(AbstractPlugin):
                 q_exp_items = widget.model.findItems('Explanation - '+str(explanation_count+1), flags=QtCore.Qt.MatchExactly, column=0)
 
                 if len(q_exp_items) !=1:
-                    print('multiple or 0 QStandardItems found for q_exp_item')
+                    LOGGER.error('multiple or 0 QStandardItems found for q_exp_item')
                     sys.exit(0)
 
                 cast(autoclass('org.semanticweb.owlapi.model.OWLAxiom'), axiom_e)

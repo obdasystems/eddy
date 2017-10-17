@@ -1930,8 +1930,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         self.project.unsatisfiable_classes = []
         self.project.explanations_for_unsatisfiable_classes = []
-        self.project.bottom_data_property = []
-        self.project.bottom_object_property = []
+        self.project.unsatisfiable_attributes = []
+        self.project.explanations_for_unsatisfiable_attributes = []
+        self.project.unsatisfiable_roles = []
+        self.project.explanations_for_unsatisfiable_roles = []
 
         self.project.inconsistent_ontology = None
         self.project.explanations_for_inconsistent_ontology = []

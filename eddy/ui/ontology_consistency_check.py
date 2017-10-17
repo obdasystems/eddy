@@ -271,6 +271,10 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         self.Explanation = autoclass('org.semanticweb.owl.explanation.api.Explanation')
         self.ExplanationGenerator = autoclass('org.semanticweb.owl.explanation.api.ExplanationGenerator')
         self.InconsistentOntologyExplanationGeneratorFactory = autoclass('org.semanticweb.owl.explanation.impl.blackbox.checker.InconsistentOntologyExplanationGeneratorFactory')
+        # self.BlackBoxExplanation = autoclass('com.clarkparsia.owlapi.explanation.BlackBoxExplanation')
+        self.SilentExplanationProgressMonitor = autoclass('com.clarkparsia.owlapi.explanation.util.SilentExplanationProgressMonitor')
+        #self.ExplanationProgressMonitor = autoclass('com.clarkparsia.owlapi.explanation.util.*')
+        self.DefaultExplanationGenerator = autoclass('com.clarkparsia.owlapi.explanation.DefaultExplanationGenerator')
         self.OWLFunctionalSyntaxFactory = autoclass('org.semanticweb.owlapi.apibinding.OWLFunctionalSyntaxFactory')
         self.OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
         self.IRI = autoclass('org.semanticweb.owlapi.model.IRI')
@@ -282,16 +286,17 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         self.OWLEntity = autoclass('org.semanticweb.owlapi.model.OWLEntity')
         self.OWLNamedIndividual = autoclass('org.semanticweb.owlapi.model.OWLNamedIndividual')
         self.OWLObjectProperty = autoclass('org.semanticweb.owlapi.model.OWLObjectProperty')
+        self.OWLObjectPropertyExpression = autoclass('org.semanticweb.owlapi.model.OWLObjectPropertyExpression')
         self.OWLOntology = autoclass('org.semanticweb.owlapi.model.OWLOntology')
         self.OWLOntologyCreationException = autoclass('org.semanticweb.owlapi.model.OWLOntologyCreationException')
         self.OWLOntologyManager = autoclass('org.semanticweb.owlapi.model.OWLOntologyManager')
-        self.OWLSubClassOfAxiom = autoclass('org.semanticweb.owlapi.model.OWLSubClassOfAxiom')
+        #self.OWLSubClassOfAxiom = autoclass('org.semanticweb.owlapi.model.OWLSubClassOfAxiom')
         self.InconsistentOntologyException = autoclass('org.semanticweb.owlapi.reasoner.InconsistentOntologyException')
         self.Node = autoclass('org.semanticweb.owlapi.reasoner.Node')
-        self.BlackBoxExplanation = autoclass('com.clarkparsia.owlapi.explanation.BlackBoxExplanation')
-        self.OWLDataProperty = autoclass('org.semanticweb.owlapi.model.OWLDataProperty')
-        self.OWLObjectPropertyExpression = autoclass('org.semanticweb.owlapi.model.OWLObjectPropertyExpression')
+
         self.InconsistentOntologyException_string = 'JVM exception occurred: Inconsistent ontology'
+        #self.java_null = autoclass('java.lang.NullPointerException')
+        self.java_null = autoclass('java.util.Objects')
 
 
     def axioms(self):
@@ -305,6 +310,101 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
     def onCompleted(self):
 
         self.accept()
+
+    def fetch_axioms_and_set_variables(self,bottom_entity_node,java_class):
+
+        entities_of_bottom_entity_node = bottom_entity_node.getEntities()
+        entities_of_bottom_entity_node_itr = entities_of_bottom_entity_node.iterator()
+
+        unsatisfiable_entities_string = []
+        explanations_for_all_unsatisfiable_entities = []
+
+        while entities_of_bottom_entity_node_itr.hasNext():
+
+            unsatisfiable_entity = entities_of_bottom_entity_node_itr.next()
+            cast(java_class, unsatisfiable_entity)
+
+            if self.project.iri in unsatisfiable_entity.toString():
+
+                unsatisfiable_entities_string.append(unsatisfiable_entity.toString())
+
+                explanations_for_unsatisfiable_entity = []
+                axioms_of_explanations = []
+
+                if java_class == self.OWLClass:
+                    axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLNothing());
+
+                elif java_class == self.OWLDataProperty:
+                    exists_for_some_values = self.OWLFunctionalSyntaxFactory.DataSomeValuesFrom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.TopDatatype());
+                    #cast(self.OWLDataSomeValuesFrom,exists_for_some_values)
+                    axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_values, self.OWLFunctionalSyntaxFactory.OWLNothing());
+
+                elif java_class == self.OWLObjectPropertyExpression:
+                    exists_for_some_objects = self.OWLFunctionalSyntaxFactory.ObjectSomeValuesFrom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLThing());
+                    #cast(self.OWLObjectSomeValuesFrom,exists_for_some_objects)
+                    axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_objects, self.OWLFunctionalSyntaxFactory.OWLNothing());
+
+                else:
+                    LOGGER.error('invalid unsatisfiable entity')
+                    sys.exit(0)
+
+                #cast(self.OWLAxiom,axiom_err)
+                axiom_err_sc = axiom_err.getSubClass()
+
+                explanations_raw = self.generator_unsatisfiable_entities.getExplanations(axiom_err_sc)
+                explanations_raw_itr = explanations_raw.iterator()
+
+                while (explanations_raw_itr.hasNext()):
+
+                    expl_raw = explanations_raw_itr.next()
+                    explanations_for_unsatisfiable_entity.append(expl_raw)
+
+                    axioms_of_expl = []
+                    axioms_itr = expl_raw.iterator()
+
+                    # get axioms for the explanation
+                    while axioms_itr.hasNext():
+                        axiom_raw = axioms_itr.next()
+                        #cast(self.OWLAxiom, axiom_raw)
+                        axioms_of_expl.append(axiom_raw.toString())
+
+                    axioms_of_explanations.append(axioms_of_expl)
+
+                explanations_for_all_unsatisfiable_entities.append(explanations_for_unsatisfiable_entity)
+
+        if java_class == self.OWLClass:
+        
+            self.project.unsatisfiable_classes = unsatisfiable_entities_string
+            self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_entities
+
+            if len(self.project.unsatisfiable_classes) != len(self.project.explanations_for_unsatisfiable_classes):
+                LOGGER.info('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classes)')
+                sys.exit(0)
+        
+        elif java_class == self.OWLDataProperty:
+
+            self.project.unsatisfiable_attributes = unsatisfiable_entities_string
+            self.project.explanations_for_unsatisfiable_attributes = explanations_for_all_unsatisfiable_entities
+
+            if len(self.project.unsatisfiable_attributes) != len(self.project.explanations_for_unsatisfiable_attributes):
+                LOGGER.info(
+                    'len(self.project.unsatisfiable_attributes) != len(explanations_for_all_unsatisfiable_attributes)')
+                sys.exit(0)
+        
+        elif java_class == self.OWLObjectPropertyExpression:
+
+            self.project.unsatisfiable_roles = unsatisfiable_entities_string
+            self.project.explanations_for_unsatisfiable_roles = explanations_for_all_unsatisfiable_entities
+
+            if len(self.project.unsatisfiable_roles) != len(self.project.explanations_for_unsatisfiable_roles):
+                LOGGER.info(
+                    'len(self.project.unsatisfiable_roles) != len(explanations_for_all_unsatisfiable_roles)')
+                sys.exit(0)
+        
+        else:
+            
+            LOGGER.error('invalid unsatisfiable entity')
+            sys.exit(0)
 
     def reason_over_ontology(self):
 
@@ -325,6 +425,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         self.manager = self.OWLManager.createOWLOntologyManager()
         configuration = self.Configuration();
         hermit = self.Reasoner(configuration, ontology);
+        progressMonitor = self.SilentExplanationProgressMonitor()
 
         try:
 
@@ -338,95 +439,17 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
             factory = self.ReasonerFactory()
 
-            #UnsatisfiableClasses
-            emptyNode = hermit.getUnsatisfiableClasses()
-            cast(self.Node,emptyNode)
+            self.generator_unsatisfiable_entities = self.DefaultExplanationGenerator(self.manager, factory, ontology, hermit, progressMonitor)
 
-            bbe = self.BlackBoxExplanation(ontology, factory, hermit)
+            #BottomClass
+            bottom_class_node = hermit.getBottomClassNode();
+            bottom_data_property_node = hermit.getBottomDataPropertyNode();
+            bottom_object_property_node = hermit.getBottomObjectPropertyNode();
 
-            entities_of_emptyNode = emptyNode.getEntities()
-            entities_of_emptyNode_itr = entities_of_emptyNode.iterator()
+            self.fetch_axioms_and_set_variables(bottom_class_node,self.OWLClass)
+            self.fetch_axioms_and_set_variables(bottom_data_property_node, self.OWLDataProperty)
+            self.fetch_axioms_and_set_variables(bottom_object_property_node, self.OWLObjectPropertyExpression)
 
-            unsatisfiable_classes_string = []
-            explanations_for_all_unsatisfiable_classes = []
-
-            while entities_of_emptyNode_itr.hasNext():
-
-                cl = entities_of_emptyNode_itr.next()
-                cast(self.OWLClass, cl)
-
-                if self.project.iri in cl.toString():
-
-                    unsatisfiable_classes_string.append(cl.toString())
-
-                    explanations_for_unsatisfiable_class = []
-                    axioms_of_explanations = []
-
-                    expl_raw = bbe.getExplanation(cl)
-                    axioms_itr = expl_raw.iterator()
-                    count = 0
-
-                    # this jar gives only 1 explanation per class
-                    explanations_for_unsatisfiable_class.append(expl_raw)
-
-                    #get axioms for the explanation
-                    while axioms_itr.hasNext():
-
-                        count = count + 1
-                        axiom_raw = axioms_itr.next()
-                        cast(self.OWLAxiom, axiom_raw)
-
-                        axioms_of_explanations.append(axiom_raw.toString())
-
-                    explanations_for_all_unsatisfiable_classes.append(explanations_for_unsatisfiable_class)
-
-            self.project.unsatisfiable_classes = unsatisfiable_classes_string
-            self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_classes
-
-            if len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classes):
-
-                LOGGER.info('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classs)')
-                sys.exit(0)
-
-            #BottomDataProperty
-            bottom_data_property = hermit.getBottomDataPropertyNode();
-            cast(self.Node, bottom_data_property)
-
-            entities_of_bottom_data_property = bottom_data_property.getEntities()
-            entities_of_bottom_data_property_itr = entities_of_bottom_data_property.iterator()
-
-            bottom_data_property_string = []
-
-            while entities_of_bottom_data_property_itr.hasNext():
-
-                bdp = entities_of_bottom_data_property_itr.next()
-                cast(self.OWLDataProperty, bdp)
-
-                if self.project.iri in bdp.toString():
-                    bottom_data_property_string.append(bdp.toString())
-
-            self.project.bottom_data_property = bottom_data_property_string
-
-            #bottom_object_property
-            bottom_object_property = hermit.getBottomObjectPropertyNode();
-            cast(self.Node, bottom_object_property)
-
-            entities_of_bottom_object_property = bottom_object_property.getEntities()
-            entities_of_bottom_object_property_itr = entities_of_bottom_object_property.iterator()
-
-            bottom_object_property_string = []
-
-            while entities_of_bottom_object_property_itr.hasNext():
-
-                bdp = entities_of_bottom_object_property_itr.next()
-                cast(self.OWLObjectPropertyExpression, bdp)
-
-                if self.project.iri in bdp.toString():
-                    bottom_object_property_string.append(bdp.toString())
-
-            self.project.bottom_object_property = bottom_object_property_string
-
-            bbe.dispose();
             hermit.flush();
             hermit.dispose();
 
@@ -458,6 +481,10 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
                     ex.printStackTrace()
 
+            else:
+
+                LOGGER.error(str(e))
+
     @QtCore.pyqtSlot()
     def run(self):
         """
@@ -473,7 +500,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         if self.project.inconsistent_ontology is True:
             self.sgnOntologyInconsistency.emit()
         else:
-            if len(self.project.unsatisfiable_classes) or len(self.project.bottom_data_property) or len(self.project.bottom_object_property):
+            if len(self.project.unsatisfiable_classes) or len(self.project.unsatisfiable_attributes) or len(self.project.unsatisfiable_roles):
                 self.sgnUnsatisfiableEntities.emit()
             else:
                 self.sgnAllOK.emit()
