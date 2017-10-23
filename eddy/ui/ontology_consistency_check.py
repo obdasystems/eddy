@@ -82,7 +82,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.messageBoxLayout = QtWidgets.QVBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
-        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
+        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignCenter)
         #self.messageBoxLayout.addWidget(self.widget('msgbox_busy'))
         self.messageBoxLayout.addWidget(self.msgbox_busy)
 
@@ -97,7 +97,15 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Please Wait!')
 
-        self.setWindowFlags(QtCore.Qt.Window)
+        if sys.platform.startswith('linux'):
+
+            size = self.msgbox_busy.size()
+            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
+            top = (desktopsize.height()/2) - (size.height()/2)
+            left = (desktopsize.width() / 2) - (size.width() / 2)
+            self.move(left,top)
+
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint)
 
         self.hide()
         self.setWindowModality(QtCore.Qt.NonModal)
@@ -202,22 +210,29 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
         self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
         self.msgbox_done.setText('Ontology is consistent and  all classes are satisfiable')
-        self.msgbox_done.exec_()
-        #self.msgbox_busy.close() giulio
+
+        if sys.platform.startswith('linux'):
+
+            size = self.msgbox_done.size()
+            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
+            top = (desktopsize.height()/2) - (size.height()/2)
+            left = (desktopsize.width() / 2) - (size.width() / 2)
+            self.msgbox_done.move(left,top)
+
         self.close()
-        # no close giulio
+
+        self.msgbox_done.exec_()
+
 
     @QtCore.pyqtSlot()
     def onOntologicalInconsistency(self):
 
-        # no hide giulio
         self.hide()
 
         dialog_2 = InconsistentOntologyDialog(self.project,None,self.session)
         dialog_2.exec_()
 
         self.close()
-        # self.msgbox_busy.close() giulio
 
     @QtCore.pyqtSlot()
     def onUnsatisfiableEntities(self):
@@ -233,10 +248,18 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
         self.msgbox_done.setText('Ontology is consistent however some class(es) are unsatisfiable.\n See Unsatisfiable Entity Explorer for details.\n\
                                  To reset the background colouring of the nodes in the diagram, press the Reset button in the toolbar')
-        self.msgbox_done.exec_()
-        # self.msgbox_busy.close() giulio
+
+        if sys.platform.startswith('linux'):
+
+            size = self.msgbox_done.size()
+            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
+            top = (desktopsize.height()/2) - (size.height()/2)
+            left = (desktopsize.width() / 2) - (size.width() / 2)
+            self.msgbox_done.move(left,top)
+
         self.close()
-        # no close giulio
+
+        self.msgbox_done.exec_()
 
         self.session.pmanager.create_add_and_start_plugin('Unsatisfiable_Entity_Explorer')
 
@@ -527,9 +550,11 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         #self.addWidget(self.msgbox_done)
 
+
+
         self.messageBoxLayout = QtWidgets.QHBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
-        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
+        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignCenter)
         #self.messageBoxLayout.addWidget(self.widget('msgbox_done'))
         self.messageBoxLayout.addWidget(self.msgbox_done)
 
@@ -547,7 +572,7 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.confirmationLayout = QtWidgets.QHBoxLayout()
         self.confirmationLayout.setContentsMargins(0, 0, 0, 0)
-        #self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+        #self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignCenter)
         self.confirmationLayout.addWidget(self.confirmation)
 
         self.confirmationArea = QtWidgets.QWidget()
@@ -562,7 +587,15 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Ontology consistency check complete')
 
-        self.setWindowFlags(QtCore.Qt.Window)
+        #self.setWindowFlags(QtCore.Qt.Window) no full screen option
+
+        if sys.platform.startswith('linux'):
+
+            size = self.size()
+            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
+            top = (desktopsize.height()/2) - (size.height()/2)
+            left = (desktopsize.width() / 2) - (size.width() / 2)
+            self.move(left,top)
 
         self.hide()
         self.setWindowModality(QtCore.Qt.NonModal)
@@ -595,11 +628,19 @@ class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem):
                                  Explorer in the bottom-right portion of the screen.\
                                  To reset the background colouring of the nodes in the diagram, press the Reset button in the toolbar')
 
+        if sys.platform.startswith('linux'):
+
+            size = self.size()
+            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
+            top = (desktopsize.height()/2) - (size.height()/2)
+            left = (desktopsize.width() / 2) - (size.width() / 2)
+            self.move(left,top)
+
         self.addWidget(self.msgbox_done)
 
         self.messageBoxLayout = QtWidgets.QHBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
-        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignRight)
+        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignCenter)
         self.messageBoxLayout.addWidget(self.widget('msgbox_done'))
 
         self.messageBoxArea = QtWidgets.QWidget()
@@ -616,7 +657,7 @@ class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem):
 
         self.confirmationLayout = QtWidgets.QHBoxLayout()
         self.confirmationLayout.setContentsMargins(0, 0, 0, 0)
-        self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+        self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignCenter)
 
         self.confirmationArea = QtWidgets.QWidget()
         self.confirmationArea.setLayout(self.confirmationLayout)
@@ -633,7 +674,7 @@ class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem):
         self.explanationButtonsLayout = QtWidgets.QHBoxLayout()
         self.explanationButtonsArea = QtWidgets.QWidget()
 
-        self.setWindowFlags(QtCore.Qt.Window)
+        #self.setWindowFlags(QtCore.Qt.Window)
 
         self.hide()
         self.setWindowModality(QtCore.Qt.NonModal)
