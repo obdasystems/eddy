@@ -45,11 +45,12 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import rangeF
 
 
-COPYRIGHT = 'Copyright © 2015-2017 Sapienza Università di Roma\n' \
-            'Copyright © 2017 OBDA Systems srl'
-LICENSE = 'Licensed under the GNU General Public License v3'
-CREDITS = 'Eddy is developed by Daniele Pantaleone,\n' \
-          'Domenico Lembo, Valerio Santarelli, Domenico Fabio Savo'
+COPYRIGHT = '  Copyright © 2015-2017 Sapienza Università di Roma\n' \
+            '          Copyright © 2017 OBDA Systems srl'
+LICENSE =   '   Licensed under the GNU General Public License v3'
+CREDITS =   '      Eddy is developed by Daniele Pantaleone,\n' \
+            '        Ashwin Ravishankar, Giulio Ganino,\n' \
+            'Domenico Lembo, Valerio Santarelli, Domenico Fabio Savo'
 
 
 class Splash(QtWidgets.QSplashScreen):
@@ -153,11 +154,11 @@ class Splash(QtWidgets.QSplashScreen):
         # COPYRIGHT
         painter.setFont(self.font3)
         painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
-        painter.drawText(QtCore.QRect(0 + self.__spaceX, 230 + self.__spaceY, 360, 40), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, COPYRIGHT)
+        painter.drawText(QtCore.QRect(0 + self.__spaceX, 220 + self.__spaceY, 360, 40), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, COPYRIGHT)
         # CREDITS
         painter.setFont(self.font3)
         painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
-        painter.drawText(QtCore.QRect(0 + self.__spaceX, 262 + self.__spaceY, 360, 80), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, CREDITS)
+        painter.drawText(QtCore.QRect(0 + self.__spaceX, 252 + self.__spaceY, 360, 80), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, CREDITS)
         # LICENSE
         painter.setFont(self.font3)
         painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
