@@ -123,8 +123,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
-        self.session.ClearInconsistentEntitiesAndDiagItemsData()
-        self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,call_ClearInconsistentEntitiesAndDiagItemsData=False)
+        self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,call_ClearInconsistentEntitiesAndDiagItemsData=True)
 
     #############################################
     #   INTERFACE
@@ -319,7 +318,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
         self.InconsistentOntologyException_string = 'JVM exception occurred: Inconsistent ontology'
         #self.java_null = autoclass('java.lang.NullPointerException')
-        self.java_null = autoclass('java.util.Objects')
+        #self.java_null = autoclass('java.util.Objects')
 
 
     def axioms(self):
@@ -550,8 +549,6 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         #self.addWidget(self.msgbox_done)
 
-
-
         self.messageBoxLayout = QtWidgets.QHBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
         self.messageBoxLayout.setAlignment(QtCore.Qt.AlignCenter)
@@ -609,6 +606,8 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
 
         #self.close() giulio
+
+
 #executed if the explanation buttons needs to be displayed in the message box.
 class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem):
 

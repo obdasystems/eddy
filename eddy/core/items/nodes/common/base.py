@@ -564,7 +564,6 @@ class AbstractResizableNode(AbstractNode):
             brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160)) if valid else QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
 
         self.background.setBrush(brush)
-        #self.selection.setBrush(brush)
 
         # ANCHOR POINTS (POSITION) -> NB: SHAPE IS IN THE EDGES
         if anchors is not None:

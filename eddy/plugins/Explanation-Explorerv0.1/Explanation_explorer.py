@@ -69,7 +69,6 @@ class ExplanationExplorerPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
-
     def getOWLtermfornode(self, node_name):
 
         # looks up the dict for the raw term and then..
@@ -139,8 +138,6 @@ class ExplanationExplorerPlugin(AbstractPlugin):
         if len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:
             LOGGER.error('Error, len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:')
             sys.exit(0)
-
-        explanations_for_widget = None
 
         #choose the explanation
         if len(self.project.explanations_for_inconsistent_ontology) > 0:
@@ -288,10 +285,6 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
     sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
 
     sgnColourItem = QtCore.pyqtSignal('QStandardItem')
-
-    brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 100))
-    brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
-    no_brush = QtGui.QBrush(QtCore.Qt.NoBrush)
 
     def __init__(self, plugin):
         """
@@ -452,25 +445,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
                     if 'eddy.core.items' in str(type(node_or_edge)):
                         self.project.nodes_or_edges_of_explanations_to_display_in_widget.append(node_or_edge)
 
-        for node_or_edge in self.project.nodes_or_edges_of_explanations_to_display_in_widget:
-
-            node_or_edge.selection.setBrush(self.brush_light_red)
-            node_or_edge.setCacheMode(AbstractItem.NoCache)
-            node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
-            node_or_edge.update(node_or_edge.boundingRect())
-
-        for node_or_edge in self.project.nodes_or_edges_of_axioms_to_display_in_widget:
-
-            node_or_edge.selection.setBrush(self.brush_blue)
-            node_or_edge.setCacheMode(AbstractItem.NoCache)
-            node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
-            node_or_edge.update(node_or_edge.boundingRect())
-
-        for entity in self.project.nodes_of_unsatisfiable_entities:
-
-            for node in entity:
-                # node.selection.setBrush(self.brush)
-                node.updateNode(valid=False)
+        self.project.colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology()
 
     @QtCore.pyqtSlot(str)
     def doAddExplanation(self,explanation_number):

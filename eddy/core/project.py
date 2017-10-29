@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore,QtGui
 
 from eddy.core.commands.diagram import CommandDiagramAdd
 from eddy.core.commands.nodes import CommandNodeSetMeta
@@ -42,6 +42,7 @@ from eddy.core.functions.owl import OWLText
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
+from eddy.core.items.common import AbstractItem
 
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
@@ -137,6 +138,35 @@ class Project(QtCore.QObject):
         self.nodes_or_edges_of_explanations_to_display_in_widget = []
 
         self.converted_nodes = dict()
+
+        self.brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
+        self.brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 100))
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
+
+        for node_or_edge in self.nodes_or_edges_of_explanations_to_display_in_widget:
+
+            node_or_edge.selection.setBrush(self.brush_light_red)
+            node_or_edge.setCacheMode(AbstractItem.NoCache)
+            node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
+            node_or_edge.update(node_or_edge.boundingRect())
+
+        for node_or_edge in self.nodes_or_edges_of_axioms_to_display_in_widget:
+
+            node_or_edge.selection.setBrush(self.brush_blue)
+            node_or_edge.setCacheMode(AbstractItem.NoCache)
+            node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
+            node_or_edge.update(node_or_edge.boundingRect())
+
+        for entity in self.nodes_of_unsatisfiable_entities:
+
+            for node in entity:
+                # node.selection.setBrush(self.brush)
+                node.updateNode(valid=False)
 
     #############################################
     #   PROPERTIES

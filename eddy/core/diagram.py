@@ -79,9 +79,6 @@ class Diagram(QtWidgets.QGraphicsScene):
     sgnNodeIdentification = QtCore.pyqtSignal('QGraphicsItem')
     sgnUpdated = QtCore.pyqtSignal()
 
-    brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
-    brush_light_red = QtGui.QBrush(QtGui.QColor(250,150,150, 100))
-
     def __init__(self, name, parent):
         """
         Initialize the diagram.
@@ -110,29 +107,6 @@ class Diagram(QtWidgets.QGraphicsScene):
         connect(self.sgnItemAdded, self.onItemAdded)
         connect(self.sgnItemRemoved, self.onItemRemoved)
         connect(self.sgnNodeIdentification, self.doNodeIdentification)
-
-
-    def colour_items_in_case_of_inconsistency(self):
-
-        for node_or_edge in self.project.nodes_or_edges_of_explanations_to_display_in_widget:
-
-            node_or_edge.selection.setBrush(self.brush_light_red)
-            node_or_edge.setCacheMode(AbstractItem.NoCache)
-            node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
-            node_or_edge.update(node_or_edge.boundingRect())
-
-        for node_or_edge in self.project.nodes_or_edges_of_axioms_to_display_in_widget:
-
-            node_or_edge.selection.setBrush(self.brush_blue)
-            node_or_edge.setCacheMode(AbstractItem.NoCache)
-            node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
-            node_or_edge.update(node_or_edge.boundingRect())
-
-        for entity in self.project.nodes_of_unsatisfiable_entities:
-
-            for node in entity:
-                # node.selection.setBrush(self.brush)
-                node.updateNode(valid=False)
 
     #############################################
     #   FACTORY
@@ -224,7 +198,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when a mouse button is clicked on the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.colour_items_in_case_of_inconsistency()
+        self.project.colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology()
 
         mouseModifiers = mouseEvent.modifiers()
         mouseButtons = mouseEvent.buttons()
@@ -429,7 +403,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when the mouse is released from the scene.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.colour_items_in_case_of_inconsistency()
+        self.project.colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology()
 
         mouseModifiers = mouseEvent.modifiers()
         mouseButton = mouseEvent.button()
