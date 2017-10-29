@@ -364,7 +364,6 @@ class AbstractNode(AbstractItem):
         :type selected: bool
         :type valid: bool
         """
-        node_in_axiom = kwargs.get('node_in_axiom', None)
 
         # ITEM SELECTION (BRUSH)
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
@@ -378,8 +377,6 @@ class AbstractNode(AbstractItem):
             brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
             if valid:
                 brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160))
-        if node_in_axiom is True:
-            brush = QtGui.QBrush(QtGui.QColor(173, 43, 63, 160))
 
         self.background.setBrush(brush)
 
@@ -565,10 +562,6 @@ class AbstractResizableNode(AbstractNode):
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if valid is not None:
             brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160)) if valid else QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
-
-        node_in_axiom = kwargs.get('node_in_axiom',False)
-        if node_in_axiom is True:
-            brush = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
 
         self.background.setBrush(brush)
         #self.selection.setBrush(brush)
