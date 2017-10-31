@@ -380,7 +380,16 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
     def doAddExplanation(self, node, explanation):
 
         if explanation is not None and len(explanation)>0:
-            exp_to_add = QtGui.QStandardItem('<Explanation(s)> \n**(click to open Explanation Explorer)')
+            exp_to_add = QtGui.QStandardItem()
+            exp_to_add.setText('<Explanation(s)> \n**(click to open Explanation Explorer)')
+
+            font = QtGui.QFont()
+            font.setBold(True)
+            font.setItalic(True)
+            font.setUnderline(True)
+
+            exp_to_add.setFont(font)
+
             exp_to_add.setData(explanation)
             parent = self.parentFor(node)
             parent.appendRow(exp_to_add)
