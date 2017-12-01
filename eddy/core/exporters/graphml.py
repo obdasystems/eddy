@@ -42,7 +42,7 @@ from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
-from eddy.core.project import K_DESCRIPTION, K_URL
+from eddy.core.project import K_DESCRIPTION, K_IRI
 
 
 LOGGER = getLogger()
@@ -54,7 +54,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
     """
     KeyNode = 'd0'
     KeyEdge = 'd1'
-    KeyUrl = 'd2'
+    KeyIri = 'd2'
     KeyDescription = 'd3'
 
     def __init__(self, diagram, session):
@@ -102,7 +102,9 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type node: AttributeNode
         :rtype: QDomElement
         """
-        return self.exportGenericNode(node, 'com.yworks.entityRelationship.attribute')
+        element = self.exportGenericNode(node, 'com.yworks.entityRelationship.attribute')
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportComplementNode(self, node):
         """
@@ -118,7 +120,9 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type node: ConceptNode
         :rtype: QDomElement
         """
-        return self.exportGenericNode(node, 'com.yworks.entityRelationship.small_entity')
+        element = self.exportGenericNode(node, 'com.yworks.entityRelationship.small_entity')
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportDatatypeRestrictionNode(self, node):
         """
@@ -167,7 +171,9 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type node: IndividualNode
         :rtype: QDomElement
         """
-        return self.exportShapeNode(node, 'octagon')
+        element = self.exportShapeNode(node, 'octagon')
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportIntersectionNode(self, node):
         """
@@ -200,7 +206,9 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type node: RoleNode
         :rtype: QDomElement
         """
-        return self.exportGenericNode(node, 'com.yworks.entityRelationship.relationship')
+        element = self.exportGenericNode(node, 'com.yworks.entityRelationship.relationship')
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportRoleChainNode(self, node):
         """
@@ -373,17 +381,22 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         dataNode.appendChild(genericNode)
 
         #############################################
-        # DATA [URL]
+        # DATA [IRI]
         #################################
 
         meta = self.diagram.project.meta(node.type(), node.text())
-        wikiURL = '../wiki/{0}'.format(node.text())
-        if not isEmpty(meta.get(K_URL, '')):
-            wikiURL = meta.get(K_URL, '')
+        wikiIRI = '../wiki/{0}'.format(node.text())
 
-        dataURL = self.document.createElement('data')
-        dataURL.setAttribute('key', GraphMLDiagramExporter.KeyUrl)
-        dataURL.appendChild(self.document.createTextNode(wikiURL))
+        #if (node.type() is node.ConceptNode) or (node.type() is node.AttributeNode) or (node.type() is node.RoleNode) or (node.type() is node.IndividualNode):
+            #if node.iri is not None:
+                #wikiIRI = node.iri
+        #else:
+        if not isEmpty(meta.get(K_IRI, '')):
+            wikiIRI = meta.get(K_IRI, '')
+
+        dataIRI = self.document.createElement('data')
+        dataIRI.setAttribute('key', GraphMLDiagramExporter.KeyIri)
+        dataIRI.appendChild(self.document.createTextNode(wikiIRI))
 
         #############################################
         # DATA [DESCRIPTION]
@@ -400,7 +413,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         elem = self.document.createElement('node')
         elem.setAttribute('id', node.id)
         elem.appendChild(dataNode)
-        elem.appendChild(dataURL)
+        elem.appendChild(dataIRI)
         elem.appendChild(dataWIKI)
 
         return elem
@@ -743,10 +756,10 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         root.appendChild(key)
 
         key = self.document.createElement('key')
-        key.setAttribute('attr.name', K_URL)
+        key.setAttribute('attr.name', K_IRI)
         key.setAttribute('attr.type', 'string')
         key.setAttribute('for', 'node')
-        key.setAttribute('id', GraphMLDiagramExporter.KeyUrl)
+        key.setAttribute('id', GraphMLDiagramExporter.KeyIri)
         root.appendChild(key)
 
         key = self.document.createElement('key')

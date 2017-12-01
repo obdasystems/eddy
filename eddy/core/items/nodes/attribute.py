@@ -41,7 +41,7 @@ from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.project import K_FUNCTIONAL
+from eddy.core.project import K_FUNCTIONAL, K_IRI
 
 
 class AttributeNode(AbstractNode):
@@ -70,6 +70,7 @@ class AttributeNode(AbstractNode):
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
 
+        self.iri = None
     #############################################
     #   INTERFACE
     #################################

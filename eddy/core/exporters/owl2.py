@@ -716,7 +716,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLTopDataProperty()
         if node.special() is Special.Bottom:
             return self.df.getOWLBottomDataProperty()
-        return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        #return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        return self.df.getOWLDataProperty(node.iri)
 
     def getComplement(self, node):
         """
@@ -756,7 +757,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLThing()
         if node.special() is Special.Bottom:
             return self.df.getOWLNothing()
-        return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        #return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        return self.df.getOWLClass(node.iri)
+
 
     def getDatatypeRestriction(self, node):
         """
@@ -926,10 +929,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: OWLNamedIndividual
         """
         if node.identity() is Identity.Individual:
-            return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            #return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            return self.df.getOWLNamedIndividual(node.iri)
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
+
 
     def getIntersection(self, node):
         """
@@ -1042,7 +1047,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLTopObjectProperty()
         elif node.special() is Special.Bottom:
             return self.df.getOWLBottomObjectProperty()
-        return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        #return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        return self.df.getOWLObjectProperty(node.iri)
 
     def getRoleChain(self, node):
         """
@@ -2011,7 +2017,8 @@ class OWLOntologyFetcher:
             return self.df.getOWLTopDataProperty()
         if node.special() is Special.Bottom:
             return self.df.getOWLBottomDataProperty()
-        return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        #return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        return self.df.getOWLDataProperty(node.iri)
 
     def getComplement(self, node, conversion_trace):
         """
@@ -2076,7 +2083,8 @@ class OWLOntologyFetcher:
             return self.df.getOWLThing()
         if node.special() is Special.Bottom:
             return self.df.getOWLNothing()
-        return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        #return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        return self.df.getOWLClass(node.iri)
 
     def getDatatypeRestriction(self, node, conversion_trace):
         """
@@ -2272,7 +2280,8 @@ class OWLOntologyFetcher:
         :rtype: OWLNamedIndividual
         """
         if node.identity() is Identity.Individual:
-            return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            #return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            return self.df.getOWLNamedIndividual(node.iri)
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
@@ -2401,7 +2410,8 @@ class OWLOntologyFetcher:
             return self.df.getOWLTopObjectProperty()
         elif node.special() is Special.Bottom:
             return self.df.getOWLBottomObjectProperty()
-        return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        #return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+        return self.df.getOWLObjectProperty(node.iri)
 
     def getRoleChain(self, node, conversion_trace):
         """

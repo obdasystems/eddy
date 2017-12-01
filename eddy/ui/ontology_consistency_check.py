@@ -76,37 +76,37 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_busy.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_busy.setWindowTitle('Please Wait!')
         self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.NoButton)
-        self.msgbox_busy.setText('Checking consistency of ontology')
+        self.msgbox_busy.setText('Running reasoner  (Please Wait!)')
         self.msgbox_busy.setTextFormat(QtCore.Qt.RichText)
+
+        self.status_bar = QtWidgets.QStatusBar()
+        self.status_bar.setMinimumWidth(350)
         ####################################################
 
         self.messageBoxLayout = QtWidgets.QVBoxLayout()
         self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
         self.messageBoxLayout.setAlignment(QtCore.Qt.AlignCenter)
-        #self.messageBoxLayout.addWidget(self.widget('msgbox_busy'))
+
         self.messageBoxLayout.addWidget(self.msgbox_busy)
+        self.messageBoxLayout.addWidget(self.status_bar)
 
         self.messageBoxArea = QtWidgets.QWidget()
         self.messageBoxArea.setLayout(self.messageBoxLayout)
-
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.mainLayout.addWidget(self.messageBoxArea)
 
         self.setLayout(self.mainLayout)
+
+        if sys.platform.startswith('linux'):
+            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
+            top = (desktopsize.height() / 2) - (self.height() / 2)
+            left = (desktopsize.width() / 2) - (self.width() / 2)
+            self.move(left, top)
+
         self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Please Wait!')
-
-        if sys.platform.startswith('linux'):
-
-            size = self.msgbox_busy.size()
-            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
-            top = (desktopsize.height()/2) - (size.height()/2)
-            left = (desktopsize.width() / 2) - (size.width() / 2)
-            self.move(left,top)
-
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint)
-
         self.hide()
         self.setWindowModality(QtCore.Qt.NonModal)
         self.show()
@@ -178,7 +178,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Perform on or more advancements step in the validation procedure.
         """
-        worker = OntologyConsistencyCheckWorker(self.project,self.session)
+        worker = OntologyConsistencyCheckWorker(self.status_bar,self.project,self.session)
         connect(worker.sgnBusy, self.displaybusydialog)
         connect(worker.sgnAllOK, self.onPerfectOntology)
         connect(worker.sgnOntologyInconsistency, self.onOntologicalInconsistency)
@@ -272,7 +272,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
     sgnOntologyInconsistency = QtCore.pyqtSignal()
     sgnUnsatisfiableEntities = QtCore.pyqtSignal()
 
-    def __init__(self, project, session):
+    def __init__(self, status_bar, project, session):
         """
         Initialize the syntax validation worker.
         :type current: int
@@ -282,6 +282,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         super().__init__()
         self.project = project
         self.session = session
+        self.status_bar = status_bar
 
         self.Iterator = autoclass('java.util.Iterator')
         self.String = autoclass('java.lang.String')
@@ -334,6 +335,17 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         self.accept()
 
     def fetch_axioms_and_set_variables(self,bottom_entity_node,java_class):
+
+        self.status_bar.showMessage('Ontology is inconsistent; Fetching explanations for the same')
+
+        if java_class == self.OWLClass:
+            self.status_bar.showMessage('Fetching explanations for unsatisfiable class(es)')
+        elif java_class == self.OWLDataProperty:
+            self.status_bar.showMessage('Fetching explanations for unsatisfiable attribute(s)')
+        elif java_class == self.OWLObjectPropertyExpression:
+            self.status_bar.showMessage('Fetching explanations for unsatisfiable role(s)')
+        else:
+            self.status_bar.showMessage('')
 
         entities_of_bottom_entity_node = bottom_entity_node.getEntities()
         entities_of_bottom_entity_node_itr = entities_of_bottom_entity_node.iterator()
@@ -430,6 +442,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
     def reason_over_ontology(self):
 
+        self.status_bar.showMessage('Fetching ontology')
+
         worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
 
@@ -448,6 +462,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         configuration = self.Configuration();
         hermit = self.Reasoner(configuration, ontology);
         progressMonitor = self.SilentExplanationProgressMonitor()
+
+        self.status_bar.showMessage('Running reasoner over ontology')
 
         try:
 
@@ -481,6 +497,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             hermit.dispose();
 
             if str(e) == self.InconsistentOntologyException_string:
+
+                self.status_bar.showMessage('Ontology is inconsistent; Fetching explanations for the same')
 
                 self.project.inconsistent_ontology = True
 

@@ -45,6 +45,7 @@ from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.regex import RE_VALUE
+from eddy.core.project import K_IRI
 
 
 class IndividualNode(AbstractResizableNode):
@@ -100,7 +101,9 @@ class IndividualNode(AbstractResizableNode):
         self.updateNode()
         self.updateTextPos()
 
-    #############################################
+        self.iri = None
+
+        #############################################
     #   PROPERTIES
     #################################
 

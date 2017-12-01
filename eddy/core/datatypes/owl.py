@@ -245,3 +245,23 @@ class OWLSyntax(Enum_):
     Manchester = 'Manchester OWL syntax'
     RDF = 'RDF/XML syntax for OWL'
     Turtle = 'Turtle syntax'
+
+@unique
+class OWLStandardIRIPrefixPairs(Enum_):
+
+    rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+    rdfs = 'http://www.w3.org/2000/01/rdf-schema#'
+    xsd = 'http://www.w3.org/2001/XMLSchema#'
+    owl = 'http://www.w3.org/2002/07/owl#'
+
+
+
+class OWLStandardIRIPrefixPairsDict():
+
+    std_IRI_prefix_dict = dict()
+
+    std_IRI_prefix_dict['rdf'] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+    std_IRI_prefix_dict['rdfs'] = 'http://www.w3.org/2000/01/rdf-schema#'
+    std_IRI_prefix_dict['xsd'] = 'http://www.w3.org/2001/XMLSchema#'
+    std_IRI_prefix_dict['owl'] = 'http://www.w3.org/2002/07/owl#'
+

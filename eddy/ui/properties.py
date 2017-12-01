@@ -51,7 +51,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
-from eddy.core.project import K_DESCRIPTION, K_URL
+from eddy.core.project import K_DESCRIPTION, K_IRI
 
 from eddy.ui.fields import IntegerField, StringField, TextField
 from eddy.ui.fields import CheckBox, ComboBox, SpinBox
@@ -426,13 +426,18 @@ class PredicateNodeProperty(NodeProperty):
 
         meta = diagram.project.meta(node.type(), node.text())
 
-        self.urlLabel = QtWidgets.QLabel(self)
-        self.urlLabel.setFont(Font('Roboto', 12))
-        self.urlLabel.setText('URL')
-        self.urlField = StringField(self)
-        self.urlField.setFixedWidth(300)
-        self.urlField.setFont(Font('Roboto', 12))
-        self.urlField.setValue(meta.get(K_URL, ''))
+        self.iriLabel = QtWidgets.QLabel(self)
+        self.iriLabel.setFont(Font('Roboto', 12))
+        self.iriLabel.setText('IRI')
+        self.iriField = StringField(self)
+        self.iriField.setFixedWidth(300)
+        self.iriField.setFont(Font('Roboto', 12))
+        self.iriField.setValue(meta.get(K_IRI, ''))
+        if node.iri is not None:
+            self.iriField.setValue(node.iri)
+        else:
+            self.iriField.setValue(meta.get(K_IRI, ''))
+        self.iriField.setReadOnly(True)
 
         self.descriptionLabel = QtWidgets.QLabel(self)
         self.descriptionLabel.setFont(Font('Roboto', 12))
@@ -442,7 +447,7 @@ class PredicateNodeProperty(NodeProperty):
         self.descriptionField.setFont(Font('Roboto', 12))
         self.descriptionField.setValue(meta.get(K_DESCRIPTION, ''))
 
-        self.generalLayout.addRow(self.urlLabel, self.urlField)
+        self.generalLayout.addRow(self.iriLabel, self.iriField)
         self.generalLayout.addRow(self.descriptionLabel, self.descriptionField)
 
         #############################################
@@ -500,13 +505,14 @@ class PredicateNodeProperty(NodeProperty):
 
     def metaDataChanged(self):
         """
-        Change the url and description of the node.
+        Change the iri and description of the node.
         :rtype: QUndoCommand
         """
         undo = self.diagram.project.meta(self.node.type(), self.node.text())
         redo = undo.copy()
         redo[K_DESCRIPTION] = self.descriptionField.value()
-        redo[K_URL] = self.urlField.value()
+        redo[K_IRI] = self.iriField.value()
+        self.node.iri = self.iriField.value()
         if redo != undo:
             return CommandNodeSetMeta(
                 self.diagram.project,

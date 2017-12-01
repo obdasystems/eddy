@@ -44,7 +44,7 @@ from eddy.core.functions.misc import postfix
 from eddy.core.functions.fsystem import fwrite, mkdir
 from eddy.core.output import getLogger
 from eddy.core.project import Project
-from eddy.core.project import K_DESCRIPTION, K_URL
+from eddy.core.project import K_DESCRIPTION, K_IRI
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -144,9 +144,9 @@ class GrapholProjectExporter(AbstractProjectExporter):
         element.setAttribute('name', name)
         description = self.document.createElement(K_DESCRIPTION)
         description.appendChild(self.document.createTextNode(meta.get(K_DESCRIPTION, '')))
-        url = self.document.createElement(K_URL)
-        url.appendChild(self.document.createTextNode(meta.get(K_URL, '')))
-        element.appendChild(url)
+        iri = self.document.createElement(K_IRI)
+        iri.appendChild(self.document.createTextNode(meta.get(K_IRI, '')))
+        element.appendChild(iri)
         element.appendChild(description)
         return element
 
@@ -206,7 +206,9 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :type node: AttributeNode
         :rtype: QDomElement
         """
-        return self.exportLabelNode(node)
+        element = self.exportLabelNode(node)
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportComplementNode(self, node):
         """
@@ -222,7 +224,9 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :type node: ConceptNode
         :rtype: QDomElement
         """
-        return self.exportLabelNode(node)
+        element = self.exportLabelNode(node)
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportDatatypeRestrictionNode(self, node):
         """
@@ -279,7 +283,9 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :type node: IndividualNode
         :rtype: QDomElement
         """
-        return self.exportLabelNode(node)
+        element = self.exportLabelNode(node)
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportIntersectionNode(self, node):
         """
@@ -313,7 +319,9 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :type node: RoleNode
         :rtype: QDomElement
         """
-        return self.exportLabelNode(node)
+        element = self.exportLabelNode(node)
+        element.setAttribute('IRI',node.iri)
+        return element
 
     def exportRoleChainNode(self, node):
         """

@@ -111,7 +111,9 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :type element: QDomElement
         :rtype: AttributeNode
         """
-        return self.importNodeFromGenericNode(Item.AttributeNode, element)
+        imported_item =  self.importNodeFromGenericNode(Item.AttributeNode, element)
+        imported_item.iri = element.attribute('IRI',None)
+        return imported_item
 
     def importComplementNode(self, element):
         """
@@ -127,7 +129,10 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :type element: QDomElement
         :rtype: ConceptNode
         """
-        return self.importNodeFromGenericNode(Item.ConceptNode, element)
+        #return self.importNodeFromGenericNode(Item.ConceptNode, element)
+        imported_item =  self.importNodeFromGenericNode(Item.ConceptNode, element)
+        imported_item.iri = element.attribute('IRI',None)
+        return imported_item
 
     def importDatatypeRestrictionNode(self, element):
         """
@@ -189,7 +194,10 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :type element: QDomElement
         :rtype: IndividualNode
         """
-        return self.importNodeFromShapeNode(Item.IndividualNode, element)
+        #return self.importNodeFromShapeNode(Item.IndividualNode, element)
+        imported_item =  self.importNodeFromShapeNode(Item.IndividualNode, element)
+        imported_item.iri = element.attribute('IRI',None)
+        return imported_item
 
     def importIntersectionNode(self, element):
         """
@@ -213,7 +221,10 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :type element: QDomElement
         :rtype: RoleNode
         """
-        return self.importNodeFromGenericNode(Item.RoleNode, element)
+        #return self.importNodeFromGenericNode(Item.RoleNode, element)
+        imported_item = self.importNodeFromGenericNode(Item.RoleNode, element)
+        imported_item.iri = element.attribute('IRI', None)
+        return imported_item
 
     def importRoleChainNode(self, element):
         """
@@ -695,7 +706,7 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
 
         nodes = [n for n in self.nodes.values() if Identity.Neutral in n.identities()]
         if nodes:
-            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
+            LOGGER.debug('Loaders >> Graphml >> Running identification algorithm for %s nodes', len(nodes))
             for node in nodes:
                 self.diagram.sgnNodeIdentification.emit(node)
 

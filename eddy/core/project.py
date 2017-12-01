@@ -35,6 +35,7 @@
 
 from PyQt5 import QtCore,QtGui
 
+from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramAdd
 from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.datatypes.graphol import Item
@@ -72,7 +73,7 @@ K_PROPERTY = 'property'
 
 # PREDICATES META KEYS
 K_DESCRIPTION = 'description'
-K_URL = 'url'
+K_IRI = 'iri'
 K_FUNCTIONAL = 'functional'
 K_ASYMMETRIC = 'asymmetric'
 K_INVERSE_FUNCTIONAL = 'inverseFunctional'
@@ -142,9 +143,47 @@ class Project(QtCore.QObject):
         self.brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
         self.brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 100))
 
-    #############################################
-    #   PROPERTIES
-    #################################
+        ############  variables for IRI-prefixes management #############
+
+        self.IRI_prefixes_dict = dict()
+        self.IRI_nodes_dict = dict()
+
+    def addIRIPrefixEntry(self,iri, prefix):
+
+        error_msg = ''
+
+        if iri is '':
+            error_msg = 'IRI field is blank'
+        if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.items()[1]:
+            error_msg = 'Cannot modify standard IRI(s)'
+        if iri is self.project.iri:
+            error_msg = 'Please use Info Widget to modify project IRI'
+        if prefix is OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.items()[0]:
+            error_msg = 'Cannot modify standard prefix(es)'
+        if prefix is self.project.prefix:
+            error_msg = 'Please use Info Widget to modify project prefix'
+
+        if error_msg is not '':
+            LOGGER.error(error_msg)
+            return
+
+
+    def removeIRIPrefixEntry(self,iri, prefix):
+
+        ### cannot remove standart IRI ###
+        if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.items()[1]:
+            LOGGER.error('cannot remove standard IRI')
+        ### cannot remove standart prefixes ###
+        if prefix in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.items()[0]:
+            LOGGER.error('cannot remove standard prefixes')
+
+        ### cannot remove standart IRI ###
+        if self.iri is iri:
+            LOGGER.error('cannot remove project IRI')
+        ### cannot remove standart prefixes ###
+        if prefix is  self.project.prefix:
+            LOGGER.error('cannot remove project prefix')
+
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 
