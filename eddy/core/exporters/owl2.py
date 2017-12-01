@@ -65,6 +65,7 @@ from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationWorker
 
 
+
 LOGGER = getLogger()
 
 
@@ -280,6 +281,12 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         normalization.setObjectName('normalization')
         self.addWidget(normalization)
 
+        exportRichText = CheckBox('Annotation in Rich Text', self)
+        exportRichText.setChecked(False)
+        exportRichText.setFont(Font('Roboto', 12))
+        exportRichText.setObjectName('exportRichText')
+        self.addWidget(exportRichText)
+
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
@@ -292,6 +299,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         confirmationLayout = QtWidgets.QHBoxLayout()
         confirmationLayout.setContentsMargins(0, 0, 0, 0)
         confirmationLayout.addWidget(self.widget('normalization'), 0, QtCore.Qt.AlignLeft)
+        confirmationLayout.addWidget(self.widget('exportRichText'), 0, QtCore.Qt.AlignLeft)
         confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
         confirmationArea = QtWidgets.QWidget()
         confirmationArea.setLayout(confirmationLayout)
@@ -332,10 +340,18 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
 
     def normalize(self):
         """
-        Returns whether the current ontolofy needs to be normalized, or not.
+        Returns whether the current ontology needs to be normalized, or not.
         :rtype: bool
         """
         return self.widget('normalization').isChecked()
+
+    def exportInRichText(self):
+        """
+        Returns whether the current ontology needs to be exported, or not in Rich Text
+        :rtype: bool
+        """
+        return self.widget('exportRichText').isChecked()
+
 
     def syntax(self):
         """
@@ -455,7 +471,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
         worker = OWLOntologyExporterWorker(self.project, self.path,
                                            axioms=self.axioms(), normalize=self.normalize(),
-                                           syntax=self.syntax())
+                                           syntax=self.syntax(), export=self.exportInRichText())
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
         connect(worker.sgnErrored, self.onErrored)
@@ -503,6 +519,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.project = project
         self.axiomsList = kwargs.get('axioms', set())
         self.normalize = kwargs.get('normalize', False)
+        self.export= kwargs.get('export', False)
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
 
         self._axioms = set()
@@ -716,8 +733,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLTopDataProperty()
         if node.special() is Special.Bottom:
             return self.df.getOWLBottomDataProperty()
-        #return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-        return self.df.getOWLDataProperty(node.iri)
+        if node.iri is not None:
+            return self.df.getOWLDataProperty(node.iri)
+        else:
+            return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
 
     def getComplement(self, node):
         """
@@ -757,9 +776,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLThing()
         if node.special() is Special.Bottom:
             return self.df.getOWLNothing()
-        #return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-        return self.df.getOWLClass(node.iri)
-
+        if node.iri is not None:
+            return self.df.getOWLClass(node.iri)
+        else:
+            return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
 
     def getDatatypeRestriction(self, node):
         """
@@ -929,12 +949,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: OWLNamedIndividual
         """
         if node.identity() is Identity.Individual:
-            #return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-            return self.df.getOWLNamedIndividual(node.iri)
+            if node.iri is not None:
+                return self.df.getOWLNamedIndividual(node.iri)
+            else:
+                return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
-
 
     def getIntersection(self, node):
         """
@@ -1047,8 +1068,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLTopObjectProperty()
         elif node.special() is Special.Bottom:
             return self.df.getOWLBottomObjectProperty()
-        #return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-        return self.df.getOWLObjectProperty(node.iri)
+        if node.iri is not None:
+            return self.df.getOWLObjectProperty(node.iri)
+        else:
+            return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
 
     def getRoleChain(self, node):
         """
@@ -1115,18 +1138,193 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
     def createAnnotationAssertionAxiom(self, node):
         """
-        Generate a OWL 2 annotation axiom.
+        Generate a OWL 2 annotation axiom as rdfs:comment.
         :type node: AbstractNode
         """
+        text = QtWidgets.QTextEdit()
+
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("rdfs:comment"))
-                value = self.df.getOWLLiteral(OWLAnnotationText(meta.get(K_DESCRIPTION, '')))
+
+                aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
+                text.setText(meta.get(K_DESCRIPTION, ''))
+
+                value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
                 value = cast(self.OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(aproperty, value)
                 conversion = self.convert(node)
                 self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+                text.clear()
+
+    def createAnnotationAssertionAxiomRichVersion(self, node):
+        """
+        Generate a OWL 2 annotation in Rich Text Format.
+        :type node: AbstractNode
+        """
+
+        if OWLAxiom.Annotation in self.axiomsList:
+            meta = self.project.meta(node.type(), node.text())
+            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
+
+                if (node.type() == Item.IndividualNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
+
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    convHTML = QtWidgets.QTextBrowser()
+                    convHTML.setHtml(strDescription)
+                    strDescriptionHTML = convHTML.toHtml()
+                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body','<OntologyDescription')
+                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
+
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                elif (node.type() == Item.ConceptNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
+
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    convHTML = QtWidgets.QTextBrowser()
+                    convHTML.setHtml(strDescription)
+                    strDescriptionHTML = convHTML.toHtml()
+                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
+                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
+
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                elif (node.type() == Item.AttributeNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
+
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    convHTML = QtWidgets.QTextBrowser()
+                    convHTML.setHtml(strDescription)
+                    strDescriptionHTML = convHTML.toHtml()
+                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
+                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
+
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                elif (node.type() == Item.RoleNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    convHTML = QtWidgets.QTextBrowser()
+                    convHTML.setHtml(strDescription)
+                    strDescriptionHTML = convHTML.toHtml()
+                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
+                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
+
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                else:
+                    raise ValueError('no conversion of description is available for node %s' % node)
+
+
+    def createAnnotationAssertionAxiomPlainMastroVersion(self, node):
+
+        """
+        Generate a OWL 2 annotation in Plain Text Format for Mastro.
+        :type node: AbstractNode
+        """
+
+        if OWLAxiom.Annotation in self.axiomsList:
+            meta = self.project.meta(node.type(), node.text())
+            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
+
+                if (node.type() == Item.IndividualNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
+
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    strPlain = QtWidgets.QTextEdit()
+                    strPlain.setHtml(strDescription)
+                    descPlain= strPlain.toPlainText()
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                elif (node.type() == Item.ConceptNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
+
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    strPlain = QtWidgets.QTextEdit()
+                    strPlain.setHtml(strDescription)
+                    descPlain= strPlain.toPlainText()
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                elif (node.type() == Item.AttributeNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
+
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    strPlain = QtWidgets.QTextEdit()
+                    strPlain.setHtml(strDescription)
+                    descPlain= strPlain.toPlainText()
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                elif (node.type() == Item.RoleNode):
+
+                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
+
+                    strDescription = meta.get(K_DESCRIPTION, '')
+                    strPlain = QtWidgets.QTextEdit()
+                    strPlain.setHtml(strDescription)
+                    descPlain= strPlain.toPlainText()
+
+                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
+                    value = cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+
+                else:
+                    raise ValueError('no conversion of description is available for node %s' % node)
+
+
 
     def createClassAssertionAxiom(self, edge):
         """
@@ -1543,13 +1741,17 @@ class OWLOntologyExporterWorker(AbstractWorker):
             #################################
 
             ontologyIRI = rstrip(self.project.iri, '#')
+            mastroIRI = rstrip('http://www.obdasystems.com/mastrostudio', '#')
             versionIRI = '{0}/{1}'.format(ontologyIRI, self.project.version)
             ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI))
             self.man = self.OWLManager.createOWLOntologyManager()
             self.df = self.man.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
             self.pm = self.DefaultPrefixManager()
+
             self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+            if self.export:
+                self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
 
             cast(self.PrefixManager, self.pm)
 
@@ -1588,7 +1790,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     self.createPropertyRangeAxiom(node)
 
                 if node.isMeta():
-                    self.createAnnotationAssertionAxiom(node)
+                    if self.export:
+                        self.createAnnotationAssertionAxiomRichVersion(node)
+                    else:
+                        self.createAnnotationAssertionAxiom(node)
+
 
                 self.step(+1)
 
@@ -2017,8 +2223,10 @@ class OWLOntologyFetcher:
             return self.df.getOWLTopDataProperty()
         if node.special() is Special.Bottom:
             return self.df.getOWLBottomDataProperty()
-        #return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-        return self.df.getOWLDataProperty(node.iri)
+        if node.iri is not None:
+            return self.df.getOWLDataProperty(node.iri)
+        else:
+            return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
 
     def getComplement(self, node, conversion_trace):
         """
@@ -2083,8 +2291,10 @@ class OWLOntologyFetcher:
             return self.df.getOWLThing()
         if node.special() is Special.Bottom:
             return self.df.getOWLNothing()
-        #return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-        return self.df.getOWLClass(node.iri)
+        if node.iri is not None:
+            return self.df.getOWLClass(node.iri)
+        else:
+            return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
 
     def getDatatypeRestriction(self, node, conversion_trace):
         """
@@ -2280,8 +2490,10 @@ class OWLOntologyFetcher:
         :rtype: OWLNamedIndividual
         """
         if node.identity() is Identity.Individual:
-            #return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-            return self.df.getOWLNamedIndividual(node.iri)
+            if node.iri is not None:
+                return self.df.getOWLNamedIndividual(node.iri)
+            else:
+                return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
@@ -2410,8 +2622,10 @@ class OWLOntologyFetcher:
             return self.df.getOWLTopObjectProperty()
         elif node.special() is Special.Bottom:
             return self.df.getOWLBottomObjectProperty()
-        #return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
-        return self.df.getOWLObjectProperty(node.iri)
+        if node.iri is not None:
+            return self.df.getOWLObjectProperty(node.iri)
+        else:
+            return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
 
     def getRoleChain(self, node, conversion_trace):
         """
@@ -2510,7 +2724,6 @@ class OWLOntologyFetcher:
                 dict_entry.append(node)
                 dict_entry.extend(conversion_trace)
                 self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
     def createClassAssertionAxiom(self, edge):
         """
         Generate a OWL 2 ClassAssertion axiom.

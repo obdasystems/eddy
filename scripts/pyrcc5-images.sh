@@ -39,3 +39,5 @@ VIRTUAL_ENV="${HOME}/python34"
 
 source "${VIRTUAL_ENV}/bin/activate"
 pyrcc5 "${PARENT_DIR}/eddy/ui/images.qrc" -o "${PARENT_DIR}/eddy/ui/images_rc.py"
+#C:\Users\Ashwin\PycharmProjects\eddy_from_github\eddy\ui > {type the command which is below}
+#pyrcc5 "images.qrc" -o "images_rc.py"

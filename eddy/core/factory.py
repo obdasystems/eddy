@@ -52,6 +52,9 @@ from eddy.ui.properties import PredicateNodeProperty
 from eddy.ui.properties import ValueDomainNodeProperty
 from eddy.ui.properties import ValueNodeProperty
 
+from eddy.ui.description import NodeDescription
+
+
 
 class MenuFactory(QtCore.QObject):
     """
@@ -193,6 +196,7 @@ class MenuFactory(QtCore.QObject):
         menu.addAction(self.session.action('send_to_back'))
         menu.addSeparator()
         menu.addAction(self.session.action('node_properties'))
+        menu.addSeparator()
         return menu
 
     def buildPredicateNodeMenu(self, diagram, node):
@@ -219,6 +223,8 @@ class MenuFactory(QtCore.QObject):
         for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
             self.customMenu['occurrences'].addAction(action)
         menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
+        # ADD DESCRIPTION LINK TO THE MENU OF PREDICATE NODE
+        menu.addAction(self.session.action('node_description'))
         return menu
 
     def buildAttributeNodeMenu(self, diagram, node):
@@ -439,6 +445,9 @@ class MenuFactory(QtCore.QObject):
         for a in self.session.action('switch_individual').actions():
             a.setChecked(a.data() is node.identity())
             a.setVisible(a.data() is Identity.Individual and instance or a.data() is Identity.Value and value)
+
+        #ADD DESCRIPTION LINK TO THE MENU OF INDIVIDUAL NODE
+        menu.addAction(self.session.action('node_description'))
 
         #############################################
         # END CONSTRAIN IDENTITY SWITCH
@@ -783,3 +792,51 @@ class PropertyFactory(QtCore.QObject):
                 properties = NodeProperty(diagram, node, self.session)
         properties.setFixedSize(properties.sizeHint())
         return properties
+
+class DescriptionFactory(QtCore.QObject):
+    """
+    This class can be used to produce description dialog windows.
+    """
+    def __init__(self, session):
+        """
+        Initialize the factory.
+        :type session: Session
+        """
+        super().__init__(session)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        """
+        Returns the project loaded in the active session (alias for DescriptionFactory.session.project).
+        :rtype: Project
+        """
+        return self.session.project
+
+    @property
+    def session(self):
+        """
+        Returns the active session (alias for DescriptionFactory.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def create(self, diagram, node=None):
+        """
+        Build and return a description dialog according to the given parameters.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        :rtype: QDialog
+        """
+        description = NodeDescription(diagram, node, self.session)
+
+        description.setFixedSize(description.sizeHint())
+
+        return description

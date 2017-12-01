@@ -51,7 +51,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
-from eddy.core.project import K_DESCRIPTION, K_IRI
+from eddy.core.project import K_IRI
 
 from eddy.ui.fields import IntegerField, StringField, TextField
 from eddy.ui.fields import CheckBox, ComboBox, SpinBox
@@ -112,7 +112,7 @@ class DiagramProperty(PropertyDialog):
         self.nodesLabel = QtWidgets.QLabel(self)
         self.nodesLabel.setFont(Font('Roboto', 12))
         self.nodesLabel.setText('N° nodes')
-        self.nodesField = IntegerField(self)
+        self.nodesField = IntegerField (self)
         self.nodesField.setFixedWidth(300)
         self.nodesField.setFont(Font('Roboto', 12))
         self.nodesField.setReadOnly(True)
@@ -353,6 +353,7 @@ class NodeProperty(PropertyDialog):
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
 
+
         #############################################
         # MAIN WIDGET
         #################################
@@ -433,22 +434,15 @@ class PredicateNodeProperty(NodeProperty):
         self.iriField.setFixedWidth(300)
         self.iriField.setFont(Font('Roboto', 12))
         self.iriField.setValue(meta.get(K_IRI, ''))
+        self.iriField.setReadOnly(True)
+
         if node.iri is not None:
             self.iriField.setValue(node.iri)
         else:
             self.iriField.setValue(meta.get(K_IRI, ''))
-        self.iriField.setReadOnly(True)
 
-        self.descriptionLabel = QtWidgets.QLabel(self)
-        self.descriptionLabel.setFont(Font('Roboto', 12))
-        self.descriptionLabel.setText('Description')
-        self.descriptionField = TextField(self)
-        self.descriptionField.setFixedSize(300, 160)
-        self.descriptionField.setFont(Font('Roboto', 12))
-        self.descriptionField.setValue(meta.get(K_DESCRIPTION, ''))
 
         self.generalLayout.addRow(self.iriLabel, self.iriField)
-        self.generalLayout.addRow(self.descriptionLabel, self.descriptionField)
 
         #############################################
         # LABEL TAB
@@ -505,12 +499,11 @@ class PredicateNodeProperty(NodeProperty):
 
     def metaDataChanged(self):
         """
-        Change the iri and description of the node.
+        Change the iri of the node.
         :rtype: QUndoCommand
         """
         undo = self.diagram.project.meta(self.node.type(), self.node.text())
         redo = undo.copy()
-        redo[K_DESCRIPTION] = self.descriptionField.value()
         redo[K_IRI] = self.iriField.value()
         self.node.iri = self.iriField.value()
         if redo != undo:
@@ -540,7 +533,7 @@ class PredicateNodeProperty(NodeProperty):
 
 class OrderedInputNodeProperty(NodeProperty):
     """
-    This class implements the propertiy dialog for constructor nodes having incoming input edges
+    This class implements the property dialog for constructor nodes having incoming input edges
     numbered according to source nodes partecipations to the axiom (Role chain and Property assertion).
     """
     def __init__(self, diagram, node, session):

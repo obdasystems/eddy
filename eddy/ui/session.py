@@ -87,7 +87,7 @@ from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
-from eddy.core.factory import MenuFactory, PropertyFactory
+from eddy.core.factory import MenuFactory, PropertyFactory, DescriptionFactory
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF
@@ -183,6 +183,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.mdi = MdiArea(self)
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
+        self.df = DescriptionFactory(self)
         self.pmanager = PluginManager(self)
 
         self.rmanager = ReasonerManager(self)  # written by ASHWIN RAVISHANKAR
@@ -500,6 +501,11 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             triggered=self.doOpenNodeProperties))
 
         self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_node_description'), 'Description',
+            self, objectName='node_description',
+            triggered=self.doOpenNodeDescription))
+
+        self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
             self, objectName='refactor_name',
             triggered=self.doRefactorName))
@@ -522,6 +528,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             triggered=self.doSetNodeSpecial)
         action.setData(Special.Bottom)
         self.addAction(action)
+
+
 
         style = self.style()
         isize = style.pixelMetric(QtWidgets.QStyle.PM_ToolBarIconSize)
@@ -1439,6 +1447,19 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             if node:
                 properties = self.pf.create(diagram, node)
                 properties.exec_()
+
+    @QtCore.pyqtSlot()
+    def doOpenNodeDescription(self):
+        """
+        Executed when node description needs to be displayed.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            node = first(diagram.selectedNodes())
+            if node:
+                description = self.df.create(diagram, node)
+                description.exec()
 
     @QtCore.pyqtSlot()
     def doPaste(self):
