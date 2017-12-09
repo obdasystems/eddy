@@ -63,7 +63,7 @@ from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_DESCRIPTION, K_IRI
+from eddy.core.project import K_DESCRIPTION, K_IRI, K_PREFIX
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -154,7 +154,14 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        node.iri = e.attribute('IRI',None)
+
+        node.iri = e.attribute('IRI', '')
+        node.prefix = e.attribute('PREFIX', '')
+        node.remaining_characters = e.attribute('remaining_characters', '')
+
+        if node.remaining_characters is '':
+            node.remaining_characters = None
+
         return node
 
     def importComplementNode(self, e):
@@ -177,7 +184,11 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        node.iri = e.attribute('IRI')
+
+        node.iri = e.attribute('IRI', '')
+        node.prefix = e.attribute('PREFIX', '')
+        node.remaining_characters = e.attribute('remaining_characters', '')
+
         return node
 
     def importDatatypeRestrictionNode(self, e):
@@ -238,7 +249,11 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        node.iri = e.attribute('IRI', None)
+
+        node.iri = e.attribute('IRI', '')
+        node.prefix = e.attribute('PREFIX', '')
+        node.remaining_characters = e.attribute('remaining_characters', '')
+
         return node
 
     def importIntersectionNode(self, e):
@@ -283,7 +298,11 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
-        node.iri = e.attribute('IRI', None)
+
+        node.iri = e.attribute('IRI', '')
+        node.prefix = e.attribute('PREFIX', '')
+        node.remaining_characters = e.attribute('remaining_characters', '')
+
         return node
 
     def importRoleChainNode(self, e):
@@ -688,6 +707,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         meta = self.project.meta(item, name)
         meta[K_DESCRIPTION] = element.firstChildElement(K_DESCRIPTION).text()
         meta[K_IRI] = element.firstChildElement(K_IRI).text()
+        meta[K_PREFIX] = element.firstChildElement(K_PREFIX).text()
         return meta
 
     def importRoleMetadata(self, element):
@@ -977,7 +997,7 @@ class GrapholLoaderMixin_v2(object):
         meta = self.nproject.meta(item, name)
         meta[K_DESCRIPTION] = e.firstChildElement(K_DESCRIPTION).text()
         meta[K_IRI] = e.firstChildElement(K_IRI).text()
-
+        meta[K_PREFIX] = e.firstChildElement(K_PREFIX).text()
         return meta
 
     def importRoleMeta(self, e):
@@ -1012,7 +1032,11 @@ class GrapholLoaderMixin_v2(object):
         n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
-        n.iri = e.attribute('IRI', None)
+
+        n.iri = e.attribute('IRI', '')
+        n.prefix = e.attribute('PREFIX', '')
+        n.remaining_characters = e.attribute('remaining_characters', '')
+
         return n
 
     def importComplementNode(self, d, e):
@@ -1036,7 +1060,11 @@ class GrapholLoaderMixin_v2(object):
         n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
-        n.iri = e.attribute('IRI',None)
+
+        n.iri = e.attribute('IRI', '')
+        n.prefix = e.attribute('PREFIX', '')
+        n.remaining_characters = e.attribute('remaining_characters', '')
+
         return n
 
     def importDatatypeRestrictionNode(self, d, e):
@@ -1103,7 +1131,11 @@ class GrapholLoaderMixin_v2(object):
         n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
-        n.iri = e.attribute('IRI', None)
+
+        n.iri = e.attribute('IRI', '')
+        n.prefix = e.attribute('PREFIX', '')
+        n.remaining_characters = e.attribute('remaining_characters', '')
+
         return n
 
     def importIntersectionNode(self, d, e):
@@ -1152,7 +1184,11 @@ class GrapholLoaderMixin_v2(object):
         n.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
-        n.iri = e.attribute('IRI', None)
+
+        n.iri = e.attribute('IRI', '')
+        n.prefix = e.attribute('PREFIX', '')
+        n.remaining_characters = e.attribute('remaining_characters', '')
+
         return n
 
     def importRoleChainNode(self, d, e):

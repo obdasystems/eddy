@@ -98,6 +98,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         # EMIT UPDATED SIGNAL
         self.diagram.sgnUpdated.emit()
 
+
     def undo(self):
         """undo the command"""
         meta = None

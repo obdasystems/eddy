@@ -734,9 +734,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if node.special() is Special.Bottom:
             return self.df.getOWLBottomDataProperty()
         if node.iri is not None:
-            return self.df.getOWLDataProperty(node.iri)
+            if node.prefix is not None:
+                self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                return self.df.getOWLDataProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+            else:
+                return self.df.getOWLDataProperty(self.IRI.create(node.iri+'#'+node.remaining_characters))
         else:
-            return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
 
     def getComplement(self, node):
         """
@@ -777,9 +781,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if node.special() is Special.Bottom:
             return self.df.getOWLNothing()
         if node.iri is not None:
-            return self.df.getOWLClass(node.iri)
+            if node.prefix is not None:
+                self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                return self.df.getOWLClass(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+            else:
+                return self.df.getOWLClass(self.IRI.create(node.iri+'#'+node.remaining_characters))
         else:
-            return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
 
     def getDatatypeRestriction(self, node):
         """
@@ -950,9 +958,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
         """
         if node.identity() is Identity.Individual:
             if node.iri is not None:
-                return self.df.getOWLNamedIndividual(node.iri)
+                if node.prefix is not None:
+                    self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                    return self.df.getOWLNamedIndividual(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+                else:
+                    return self.df.getOWLNamedIndividual(self.IRI.create(node.iri+'#'+node.remaining_characters))
             else:
-                return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+                return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
@@ -1069,9 +1081,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
         elif node.special() is Special.Bottom:
             return self.df.getOWLBottomObjectProperty()
         if node.iri is not None:
-            return self.df.getOWLObjectProperty(node.iri)
+            if node.prefix is not None:
+                self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                return self.df.getOWLObjectProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+            else:
+                return self.df.getOWLObjectProperty(self.IRI.create(node.iri+'#'+node.remaining_characters))
         else:
-            return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
 
     def getRoleChain(self, node):
         """
@@ -1750,6 +1766,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.pm = self.DefaultPrefixManager()
 
             self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+
+
+
             if self.export:
                 self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
 
@@ -1920,6 +1939,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # COPY PREFIXES
             ontoFormat = DocumentFormat()
             ontoFormat.copyPrefixesFrom(self.pm)
+
             # CREARE TARGET STREAM
             stream = self.StringDocumentTarget()
             stream = cast(self.OWLOntologyDocumentTarget, stream)
@@ -2224,9 +2244,13 @@ class OWLOntologyFetcher:
         if node.special() is Special.Bottom:
             return self.df.getOWLBottomDataProperty()
         if node.iri is not None:
-            return self.df.getOWLDataProperty(node.iri)
+            if node.prefix is not None:
+                self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                return self.df.getOWLDataProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+            else:
+                return self.df.getOWLDataProperty(self.IRI.create(node.iri+'#'+node.remaining_characters))
         else:
-            return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            return self.df.getOWLDataProperty(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
 
     def getComplement(self, node, conversion_trace):
         """
@@ -2292,9 +2316,14 @@ class OWLOntologyFetcher:
         if node.special() is Special.Bottom:
             return self.df.getOWLNothing()
         if node.iri is not None:
-            return self.df.getOWLClass(node.iri)
+            if node.prefix is not None:
+                self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                return self.df.getOWLClass(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+            else:
+                return self.df.getOWLClass(self.IRI.create(node.iri+'#'+node.remaining_characters))
         else:
-            return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            print(node.id,'-',node.remaining_characters)
+            return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
 
     def getDatatypeRestriction(self, node, conversion_trace):
         """
@@ -2491,9 +2520,13 @@ class OWLOntologyFetcher:
         """
         if node.identity() is Identity.Individual:
             if node.iri is not None:
-                return self.df.getOWLNamedIndividual(node.iri)
+                if node.prefix is not None:
+                    self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                    return self.df.getOWLNamedIndividual(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+                else:
+                    return self.df.getOWLNamedIndividual(self.IRI.create(node.iri+'#'+node.remaining_characters))
             else:
-                return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+                return self.df.getOWLNamedIndividual(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
@@ -2623,9 +2656,13 @@ class OWLOntologyFetcher:
         elif node.special() is Special.Bottom:
             return self.df.getOWLBottomObjectProperty()
         if node.iri is not None:
-            return self.df.getOWLObjectProperty(node.iri)
+            if node.prefix is not None:
+                self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
+                return self.df.getOWLObjectProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
+            else:
+                return self.df.getOWLObjectProperty(self.IRI.create(node.iri+'#'+node.remaining_characters))
         else:
-            return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.text()), self.pm)
+            return self.df.getOWLObjectProperty(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
 
     def getRoleChain(self, node, conversion_trace):
         """

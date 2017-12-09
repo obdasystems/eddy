@@ -42,7 +42,7 @@ from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
-from eddy.core.project import K_DESCRIPTION, K_IRI
+from eddy.core.project import K_DESCRIPTION, K_IRI, K_PREFIX
 
 
 LOGGER = getLogger()
@@ -54,8 +54,9 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
     """
     KeyNode = 'd0'
     KeyEdge = 'd1'
-    KeyIri = 'd2'
-    KeyDescription = 'd3'
+    KeyPrefix = 'd2'
+    KeyIri = 'd3'
+    KeyDescription = 'd4'
 
     def __init__(self, diagram, session):
         """
@@ -103,7 +104,18 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportGenericNode(node, 'com.yworks.entityRelationship.attribute')
-        element.setAttribute('IRI',node.iri)
+
+        if node.prefix is None:
+            element.setAttribute('PREFIX', '')
+        else:
+            element.setAttribute('PREFIX', node.prefix)
+
+        if node.iri is None:
+            element.setAttribute('IRI', '')
+        else:
+            element.setAttribute('IRI',node.iri)
+
+        element.setAttribute('remaining_characters', node.remaining_characters)
         return element
 
     def exportComplementNode(self, node):
@@ -121,7 +133,18 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportGenericNode(node, 'com.yworks.entityRelationship.small_entity')
-        element.setAttribute('IRI',node.iri)
+
+        if node.prefix is None:
+            element.setAttribute('PREFIX', '')
+        else:
+            element.setAttribute('PREFIX', node.prefix)
+
+        if node.iri is None:
+            element.setAttribute('IRI', '')
+        else:
+            element.setAttribute('IRI',node.iri)
+
+        element.setAttribute('remaining_characters', node.remaining_characters)
         return element
 
     def exportDatatypeRestrictionNode(self, node):
@@ -172,7 +195,18 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportShapeNode(node, 'octagon')
-        element.setAttribute('IRI',node.iri)
+
+        if node.prefix is None:
+            element.setAttribute('PREFIX', '')
+        else:
+            element.setAttribute('PREFIX', node.prefix)
+
+        if node.iri is None:
+            element.setAttribute('IRI', '')
+        else:
+            element.setAttribute('IRI',node.iri)
+
+        element.setAttribute('remaining_characters', node.remaining_characters)
         return element
 
     def exportIntersectionNode(self, node):
@@ -207,7 +241,18 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportGenericNode(node, 'com.yworks.entityRelationship.relationship')
-        element.setAttribute('IRI',node.iri)
+
+        if node.prefix is None:
+            element.setAttribute('PREFIX', '')
+        else:
+            element.setAttribute('PREFIX', node.prefix)
+
+        if node.iri is None:
+            element.setAttribute('IRI', '')
+        else:
+            element.setAttribute('IRI',node.iri)
+
+        element.setAttribute('remaining_characters', node.remaining_characters)
         return element
 
     def exportRoleChainNode(self, node):
@@ -381,16 +426,22 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         dataNode.appendChild(genericNode)
 
         #############################################
-        # DATA [IRI]
+        # DATA [IRI/PREFIX]
         #################################
 
         meta = self.diagram.project.meta(node.type(), node.text())
+
+        wikiPREFIX = '../wiki/{0}'.format(node.text())
+
+        if not isEmpty(meta.get(K_PREFIX, '')):
+            wikiPREFIX = meta.get(K_PREFIX, '')
+
+        dataPREFIX = self.document.createElement('data')
+        dataPREFIX.setAttribute('key', GraphMLDiagramExporter.KeyPrefix)
+        dataPREFIX.appendChild(self.document.createTextNode(wikiPREFIX))
+
         wikiIRI = '../wiki/{0}'.format(node.text())
 
-        #if (node.type() is node.ConceptNode) or (node.type() is node.AttributeNode) or (node.type() is node.RoleNode) or (node.type() is node.IndividualNode):
-            #if node.iri is not None:
-                #wikiIRI = node.iri
-        #else:
         if not isEmpty(meta.get(K_IRI, '')):
             wikiIRI = meta.get(K_IRI, '')
 
@@ -413,6 +464,7 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         elem = self.document.createElement('node')
         elem.setAttribute('id', node.id)
         elem.appendChild(dataNode)
+        elem.appendChild(dataPREFIX)
         elem.appendChild(dataIRI)
         elem.appendChild(dataWIKI)
 
@@ -753,6 +805,13 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         key.setAttribute('for', 'edge')
         key.setAttribute('id', GraphMLDiagramExporter.KeyEdge)
         key.setAttribute('yfiles.type', 'edgegraphics')
+        root.appendChild(key)
+
+        key = self.document.createElement('key')
+        key.setAttribute('attr.name', K_PREFIX)
+        key.setAttribute('attr.type', 'string')
+        key.setAttribute('for', 'node')
+        key.setAttribute('id', GraphMLDiagramExporter.KeyPrefix)
         root.appendChild(key)
 
         key = self.document.createElement('key')

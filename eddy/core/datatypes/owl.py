@@ -260,8 +260,8 @@ class OWLStandardIRIPrefixPairsDict():
 
     std_IRI_prefix_dict = dict()
 
-    std_IRI_prefix_dict['rdf'] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-    std_IRI_prefix_dict['rdfs'] = 'http://www.w3.org/2000/01/rdf-schema#'
-    std_IRI_prefix_dict['xsd'] = 'http://www.w3.org/2001/XMLSchema#'
-    std_IRI_prefix_dict['owl'] = 'http://www.w3.org/2002/07/owl#'
+    std_IRI_prefix_dict['http://www.w3.org/1999/02/22-rdf-syntax-ns#'] = 'rdf'
+    std_IRI_prefix_dict['http://www.w3.org/2000/01/rdf-schema#'] = 'rdfs'
+    std_IRI_prefix_dict['http://www.w3.org/2001/XMLSchema#'] = 'xsd'
+    std_IRI_prefix_dict['http://www.w3.org/2002/07/owl#'] = 'owl'
 

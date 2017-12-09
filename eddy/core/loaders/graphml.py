@@ -112,7 +112,14 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :rtype: AttributeNode
         """
         imported_item =  self.importNodeFromGenericNode(Item.AttributeNode, element)
-        imported_item.iri = element.attribute('IRI',None)
+
+        imported_item.prefix = element.attribute('PREFIX','')
+        imported_item.iri = element.attribute('IRI','')
+        imported_item.remaining_characters = element.attribute('remaining_characters','')
+
+        if imported_item.remaining_characters is '':
+            imported_item.remaining_characters = None
+
         return imported_item
 
     def importComplementNode(self, element):
@@ -131,7 +138,11 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         """
         #return self.importNodeFromGenericNode(Item.ConceptNode, element)
         imported_item =  self.importNodeFromGenericNode(Item.ConceptNode, element)
-        imported_item.iri = element.attribute('IRI',None)
+
+        imported_item.prefix = element.attribute('PREFIX','')
+        imported_item.iri = element.attribute('IRI','')
+        imported_item.remaining_characters = element.attribute('remaining_characters','')
+
         return imported_item
 
     def importDatatypeRestrictionNode(self, element):
@@ -196,7 +207,11 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         """
         #return self.importNodeFromShapeNode(Item.IndividualNode, element)
         imported_item =  self.importNodeFromShapeNode(Item.IndividualNode, element)
-        imported_item.iri = element.attribute('IRI',None)
+
+        imported_item.prefix = element.attribute('PREFIX','')
+        imported_item.iri = element.attribute('IRI','')
+        imported_item.remaining_characters = element.attribute('remaining_characters','')
+
         return imported_item
 
     def importIntersectionNode(self, element):
@@ -223,7 +238,11 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         """
         #return self.importNodeFromGenericNode(Item.RoleNode, element)
         imported_item = self.importNodeFromGenericNode(Item.RoleNode, element)
-        imported_item.iri = element.attribute('IRI', None)
+
+        imported_item.prefix = element.attribute('PREFIX','')
+        imported_item.iri = element.attribute('IRI','')
+        imported_item.remaining_characters = element.attribute('remaining_characters','')
+
         return imported_item
 
     def importRoleChainNode(self, element):

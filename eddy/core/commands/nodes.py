@@ -323,6 +323,86 @@ class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
 
+class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
+
+    def __init__(self, node, undo, redo):
+
+        super().__init__('set remaining characters of the node {0} from {1} to {1}'.format(node.id, undo, redo))
+        self.node = node
+        self.redo = redo
+        self.undo = undo
+
+    def redo(self):
+        """redo the command"""
+        self.node.remaining_characters = self.redo
+
+    def undo(self):
+        """undo the command"""
+        self.node.remaining_characters = self.undo
+
+class CommandNodeSetIRIandPrefix(QtWidgets.QUndoCommand):
+
+    def __init__(self, project, node, undo_iri, redo_iri, undo_prefix, redo_prefix):
+
+        super().__init__('switch iri from {0} to {1} and prefix from {2} to {3}'.format(undo_iri, redo_iri, undo_prefix, redo_prefix))
+
+        self.project = project
+        self.node = node
+        self.undo_iri = undo_iri
+        self.undo_prefix = undo_prefix
+        self.redo_iri = redo_iri
+        self.redo_prefix = redo_prefix
+
+    def redo(self):
+        """redo the command"""
+        self.node.iri = self.redo_iri
+        self.node.prefix = self.redo_prefix
+
+        #set label as well
+        iri_is_default = False
+        prefix_is_default = False
+
+        if (self.node.iri is self.project.iri):  # default IRI
+            iri_is_default = True
+        if (self.node.prefix is self.project.prefix):  # default prefix
+            prefix_is_default = True
+        if iri_is_default and self.node.prefix is '':
+            prefix_is_default = True
+
+        if iri_is_default:
+            self.node.setText('default:' + self.node.remaining_characters)
+        else:
+            if self.node.prefix is not '':
+                self.node.setText(self.node.prefix + ':' + self.node.remaining_characters)
+            else:
+                self.node.setText(self.node.iri + '#' + self.node.remaining_characters)
+
+
+
+    def undo(self):
+        """undo the command"""
+        self.node.iri = self.undo_iri
+        self.node.prefix = self.undo_prefix
+
+        # set label as well
+        iri_is_default = False
+        prefix_is_default = False
+
+        if (self.node.iri is self.project.iri):  # default IRI
+            iri_is_default = True
+        if (self.node.prefix is self.project.prefix):  # default prefix
+            prefix_is_default = True
+        if iri_is_default and self.node.prefix is '':
+            prefix_is_default = True
+
+        if iri_is_default:
+            self.node.setText('default:' + self.node.remaining_characters)
+        else:
+            if self.node.prefix is not '':
+                self.node.setText(self.node.prefix + ':' + self.node.remaining_characters)
+            else:
+                self.node.setText(self.node.iri + '#' + self.node.remaining_characters)
+
 class CommandNodeSetMeta(QtWidgets.QUndoCommand):
     """
     This command is used to set predicates meta.
@@ -356,7 +436,6 @@ class CommandNodeSetMeta(QtWidgets.QUndoCommand):
         for node in self._project.predicates(self._item, self._predicate):
             node.updateNode(selected=node.isSelected())
 
-
 class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
@@ -384,7 +463,6 @@ class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
         self.node.inputs = self.inputs['undo']
         self.node.updateEdges()
         self.diagram.sgnUpdated.emit()
-
 
 class CommandNodeSetBrush(QtWidgets.QUndoCommand):
     """

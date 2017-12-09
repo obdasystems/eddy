@@ -49,6 +49,7 @@ class CommandProjectSetIRI(QtWidgets.QUndoCommand):
         :type undo: str
         :type redo: str
         """
+        print('CommandProjectSetIRI >>> init')
         super().__init__("set ontology IRI to '{0}'".format(redo))
         self._project = project
         self._undo = undo
@@ -56,11 +57,13 @@ class CommandProjectSetIRI(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
+        print('CommandProjectSetIRI >>> redo')
         self._project.iri = self._redo
         self._project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
+        print('CommandProjectSetIRI >>> undo')
         self._project.iri = self._undo
         self._project.sgnUpdated.emit()
 
@@ -76,6 +79,7 @@ class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
         :type undo: str
         :type redo: str
         """
+        print('CommandProjectSetPrefix >>> init')
         super().__init__("set ontology prefix to '{0}'".format(redo))
         self._project = project
         self._undo = undo
@@ -83,11 +87,13 @@ class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
+        print('CommandProjectSetPrefix >>> redo')
         self._project.prefix = self._redo
         self._project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
+        print('CommandProjectSetPrefix >>> undo')
         self._project.prefix = self._undo
         self._project.sgnUpdated.emit()
 

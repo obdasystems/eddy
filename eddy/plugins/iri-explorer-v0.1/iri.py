@@ -46,14 +46,21 @@ from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
+from eddy.core.datatypes.graphol import Item
+from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 from eddy.core.regex import RE_CAMEL_SPACE
+from eddy.core.output import getLogger
 
 from eddy.ui.dock import DockWidget
 from eddy.ui.fields import IntegerField, StringField
 from eddy.ui.fields import CheckBox, ComboBox
+
+
+LOGGER = getLogger()
+
 
 class IriPlugin(AbstractPlugin):
     """
@@ -82,7 +89,15 @@ class IriPlugin(AbstractPlugin):
     @QtCore.pyqtSlot()
     def onSessionReady(self):
 
-        self.widget('iri').run()
+        widget = self.widget('iri')
+
+        connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, widget.FillTableWithIRIPrefixNodesDictionaryKeysAndValues)
+
+        connect(self.project.sgnIRIPrefixNodeEntryAdded, widget.entry_ADD_ok)
+        connect(self.project.sgnIRIPrefixNodeEntryRemoved, widget.entry_REMOVE_OK)
+        connect(self.project.sgnIRIPrefixNodeEntryIgnored, widget.entry_NOT_OK)
+
+        widget.run()
 
     @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
     def onSubWindowActivated(self, subwindow):
@@ -104,6 +119,7 @@ class IriPlugin(AbstractPlugin):
         self.debug('Disconnecting from active session')
         disconnect(self.session.sgnReady, self.onSessionReady)
         disconnect(self.session.mdi.subWindowActivated, self.onSubWindowActivated)
+
 
         # REMOVE DOCKING AREA WIDGET MENU ENTRY
         self.debug('Removing docking area widget toggle from "view" menu')
@@ -184,15 +200,18 @@ class IriWidget(QtWidgets.QScrollArea):
 
         #############
 
-        self.tableheader_prefix = Header('Prefix', self)
-        self.tableheader_iri = Header('IRI', self)
+        self.tableheader_prefixes = Header('Prefix', self)
+        self.tableheader_iri = Header(' IRI  ', self)
+        self.tableheader_nodes = Header('Nodes ', self)
+
 
         self.horizontalbox = QtWidgets.QHBoxLayout(self)   #to be added to main layout
         self.horizontalbox.setAlignment(QtCore.Qt.AlignTop)
         self.horizontalbox.setContentsMargins(0, 0, 0, 0)
         self.horizontalbox.setSpacing(0)
         self.horizontalbox.addWidget(self.tableheader_iri)
-        self.horizontalbox.addWidget(self.tableheader_prefix)
+        self.horizontalbox.addWidget(self.tableheader_prefixes)
+        self.horizontalbox.addWidget(self.tableheader_nodes)
 
         #############
 
@@ -202,9 +221,12 @@ class IriWidget(QtWidgets.QScrollArea):
         self.entry_button.setText('Add entry to the table')
         self.remove_entry_button = QtWidgets.QPushButton()
         self.remove_entry_button.setText('Remove entry from table')
+        self.dictionary_display_button = QtWidgets.QPushButton()
+        self.dictionary_display_button.setText('Display dictionary')
 
-        connect(self.entry_button.pressed, self.process_entry_from_textbox_for_button_add)
-        connect(self.remove_entry_button.pressed, self.process_entry_from_textbox_for_button_remove)
+        connect(self.entry_button.pressed, self.process_entry_from_textboxes_for_button_add)
+        connect(self.remove_entry_button.pressed, self.process_entry_from_textboxes_for_button_remove)
+        connect(self.dictionary_display_button.pressed, self.display_IRIPrefixesNodesDict)
 
         self.prefix_input_box = StringField(self)
         self.prefix_input_box.setPlaceholderText('Enter Prefix')
@@ -226,6 +248,7 @@ class IriWidget(QtWidgets.QScrollArea):
         self.verticalbox.addWidget(self.prefix_input_box)
         self.verticalbox.addWidget(self.entry_button)
         self.verticalbox.addWidget(self.remove_entry_button)
+        self.verticalbox.addWidget(self.dictionary_display_button)
         self.verticalbox.addWidget(self.entry_status)
 
         #############
@@ -233,6 +256,7 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table = QtWidgets.QTableWidget(self)
         self.table.setContentsMargins(0, 0, 0, 0)
         self.table.horizontalHeader().setVisible(False)
+        self.table.verticalHeader().setVisible(False)
 
         self.horizontalbox_3 = QtWidgets.QHBoxLayout(self)    #to be added to main layout
         self.horizontalbox_3.setAlignment(QtCore.Qt.AlignTop)
@@ -267,6 +291,10 @@ class IriWidget(QtWidgets.QScrollArea):
 
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
+
+        self.ENTRY_REMOVE_OK_var = False
+        self.ENTRY_ADD_OK_var = False
+        self.ENTRY_IGNORE_var = False
 
     #############################################
     #   PROPERTIES
@@ -306,228 +334,48 @@ class IriWidget(QtWidgets.QScrollArea):
     ###############################
     #
     ###############################
+    @QtCore.pyqtSlot(str, str, AbstractNode)
+    def entry_ADD_ok(self,iri,prefix,node):
 
-    def update_table_data(self):
+        self.ENTRY_ADD_OK_var = True
+        if node is None:
+            print('entry_ADD_ok(self): ', iri, ',', prefix,',None')
+        else:
+            print('entry_ADD_ok(self): ',iri,',',prefix,',',node)
 
-        print('*************            update_table_data           ************')
+    @QtCore.pyqtSlot(str, str, AbstractNode,str)
+    def entry_REMOVE_OK(self,iri,prefix,node,message):
 
-        self.table.clear()
-        self.table.setRowCount(0)
+        self.ENTRY_REMOVE_OK_var = True
+        if node is None:
+            print('entry_REMOVE_ok(self): ', iri, ',', prefix,',None ',message)
+        else:
+            print('entry_REMOVE_ok(self): ',iri,',',prefix,',',node,',',message)
 
-        prefix_iri_dict = dict()
-        """
-        for prefix,iri in self.project.prefix_IRI_dictionary.items():
+    @QtCore.pyqtSlot(str, str, AbstractNode, str)
+    def entry_NOT_OK(self,iri,prefix,node,message):
 
-            if iri in prefix_iri_dict.keys():
-                corr_prefixes = prefix_iri_dict.get(iri)
-                corr_prefixes.add(prefix)
-                prefix_iri_dict[iri] = corr_prefixes
-            else:
-                new_set = set()
-                new_set.add(prefix)
-                prefix_iri_dict[iri] = new_set
-        """
-        for iri_to_add_table,prefixes_to_add_table in prefix_iri_dict.items():
+        if node is None:
+            print('entry_NOT_OK(self): ', iri, ',', prefix,',None ',message)
+        else:
+            print('entry_NOT_OK(self): ',iri,',',prefix,',',node,',',message)
 
-            print('iri_to_add_table', iri_to_add_table)
-            print('prefixes_to_add_table',prefixes_to_add_table)
+    def display_IRIPrefixesNodesDict(self):
 
+        self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
 
-            item_iri = QtWidgets.QTableWidgetItem()
-            item_iri.setText(iri_to_add_table)
-            item_iri.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
+    #not used
+    def FillTableWithStandardIRIsAndStandardPrefixes(self):
 
+        print('>>>  fill_table_with_standard_iris_and_standard_prefixes')
 
-            prefix_str_widget = QtWidgets.QTextEdit()
-
-            prefixes_str = ''
-            for count,i in enumerate(list(prefixes_to_add_table)):
-                if count == 0:
-                    prefixes_str = prefixes_str + i
-                else:
-                    prefixes_str = prefixes_str+'\n'+i
-
-            print('prefixes_str',prefixes_str)
-
-            item_prefixes = QtWidgets.QTableWidgetItem()
-            item_prefixes.setText(prefixes_str)
-            item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled)
-
-            print('item_iri',item_iri)
-            print('item_prefixes', item_prefixes)
-            print('self.table.rowCount()', self.table.rowCount())
-
-            self.table.setRowCount(self.table.rowCount() + 1)
-            self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
-            self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
-            self.table.resizeRowToContents(self.table.rowCount() - 1)
-
-
-        print('*************            update_table_data  END         ************')
-
-    def process_entry_from_textbox_for_button_remove(self):
-
-        """
-        nodes = self.project.nodes()
-        for n in nodes:
-            if n.id == 'n6':
-                print('self.project.node(test,n6).iri',n.iri)
-                return
-        """
-
-        prefix = self.prefix_input_box.text()
-        iri = self.iri_input_box.text()
-        
-        if (iri is '') and (prefix is ''):
-            self.entry_status.showMessage('IRI & prefix fields are blank', 5000)
-            return
-
-        if iri in self.standard_IRIs:
-            self.entry_status.showMessage('Cannot modify standard IRI(s)', 5000)
-            return
-
-        if iri is self.project.iri:
-            self.entry_status.showMessage('Please use Info Widget to modify project IRI', 5000)
-            return
-
-        self.project.removeIRIPrefixEntry(iri, prefix)
-
-        """
-        for r in self.table.rowCount():
-
-            iri_entry = self.table.item(r,0)
-            prefix_entries = self.table.item(r,1)
-
-            if prefix is '':
-                self.table.removeRow(r)
-                r=r-1
-            else:
-                #delete[IRI-Prefix] pair
-                if len(list(prefix_entries)) == 1:
-                    self.table.removeRow(r)
-                    r = r - 1
-                elif len(list(prefix_entries)) > 1:
-                    prefix_entries = prefix_entries.replace(prefix+'\n','')
-                    self.table.setItem(r,1,prefix_entries)
-        """
-
-    def process_entry_from_textbox_for_button_add(self):
-
-        prefix = self.prefix_input_box.text()
-        iri = self.iri_input_box.text()
-        """
-        nodes = self.project.nodes()
-
-        for n in nodes:
-            if n.id == prefix:
-                n.iri = iri
-        return
-        """
-
-        if iri is '':
-            self.entry_status.showMessage('IRI field is blank', 5000)
-            return
-
-        if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.items()[1]:
-            self.entry_status.showMessage('Cannot modify standard IRI(s)', 5000)
-            return
-
-        if iri is self.project.iri:
-            self.entry_status.showMessage('Please use Info Widget to modify project IRI', 5000)
-            return
-
-        if prefix is OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.items()[0]:
-            self.entry_status.showMessage('Cannot modify standard prefix(es)', 5000)
-            return
-
-        if prefix is self.project.prefix:
-            self.entry_status.showMessage('Please use Info Widget to modify project prefix', 5000)
-            return
-
-        self.project.addIRIPrefixEntry(iri, prefix)
-
-        #self.update_table_data()
-
-        """
-        print('dict')
-
-        for key_prefix,value_iri in self.project.prefix_IRI_dictionary.items():
-            print('key_prefix',key_prefix)
-            print('value_iri',value_iri)
-
-        print('dict END')
-        """
-
-        """
-        self.prefix_input_box.clear()
-        self.iri_input_box.clear()
-
-
-        item_prefix = QtWidgets.QTableWidgetItem()
-        item_prefix.setText(prefix)
-        item_prefix.setFlags(QtCore.Qt.ItemIsEnabled)
-
-        item_iri = QtWidgets.QTableWidgetItem()
-        item_iri.setText(iri)
-        item_iri.setFlags(QtCore.Qt.ItemIsEnabled)
-
-        print('self.table.rowCount()',self.table.rowCount())
-
-        self.table.setRowCount(self.table.rowCount() + 1)
-
-
-        self.table.setItem(self.table.rowCount()-1,0,item_prefix)
-        self.table.setItem(self.table.rowCount()-1,1,item_iri)
-        
-        #self.redraw()
-
-        print('self.table.rowCount()', self.table.rowCount())
-        
-        self.entry_status.showMessage('Entry added to the table', 5000)
-        """
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def redraw(self):
-        """
-        Redraw the content of the widget.
-        """
-        print('IriWidget >>> def redraw(self):')
-
-        width = self.width()
-        scrollbar = self.verticalScrollBar()
-        if scrollbar.isVisible():
-            width -= scrollbar.width()
-        #widget = self.table
-        #widget.setFixedWidth(width)
-        #sizeHint = widget.sizeHint()
-        #height = sizeHint.height()
-        sizeHint = self.table.sizeHint()
-        height = sizeHint.height()
-        print('width - ',width)
-        print('height - ', height)
-        self.table.setFixedWidth(width)
-        self.table.setFixedHeight(clamp(height, 0))
-        self.table.setColumnWidth(0,math.floor(width/2)-6)
-        self.table.setColumnWidth(1,math.floor(width/2)-6)
-        print('IriWidget >>> def redraw(self): END')
-
-    def run(self):
-        """
-        Set the current stacked widget.
-        """
-
-        self.table.setRowCount(0)
-        self.table.setColumnCount(2)
-
-        ##########   +[std_IRI-std-Prefix]  ###############
-
-        for std_prefix,std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.items():
+        for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
 
             item_std_iri = QtWidgets.QTableWidgetItem()
             item_std_iri.setText(std_iri)
             item_std_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+
+            std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
 
             item_std_prefix = QtWidgets.QTableWidgetItem()
             item_std_prefix.setText(std_prefix)
@@ -537,45 +385,183 @@ class IriWidget(QtWidgets.QScrollArea):
 
             self.table.setItem(self.table.rowCount() - 1, 0, item_std_iri)
             self.table.setItem(self.table.rowCount() - 1, 1, item_std_prefix)
-            self.table.resizeRowToContents(self.table.rowCount() - 1)
+            #self.table.resizeRowToContents(self.table.rowCount() - 1)
 
-        ################     +[project_IRI-project_prefix]          ################
+        print('>>>  fill_table_with_standard_iris_and_standard_prefixes     END')
 
-        item_project_iri = QtWidgets.QTableWidgetItem()
-        item_project_iri.setText(self.project.iri)
-        item_project_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+    @QtCore.pyqtSlot()
+    def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
 
-        item_std_prefix = QtWidgets.QTableWidgetItem()
-        item_std_prefix.setText(self.project.prefix)
-        item_std_prefix.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues')
+        # first delete all entries from the dictionary id present
+        # add standard IRIs
+        # add key value pairs from dict
+        self.table.clear()
+        self.table.setRowCount(0)
 
-        self.table.setRowCount(self.table.rowCount() + 1)
+        #self.FillTableWithStandardIRIsAndStandardPrefixes()
 
-        self.table.setItem(self.table.rowCount() - 1, 0, item_project_iri)
-        self.table.setItem(self.table.rowCount() - 1, 1, item_std_prefix)
-        self.table.resizeRowToContents(self.table.rowCount() - 1)
 
-        ###############       +[IRI-Set(prefix)] from self.project.IRI_prefixes_dict        ##############
 
-        for iri,prefixes in self.project.IRI_prefixes_dict:
+        for iri in self.project.IRI_prefixes_nodes_dict.keys():
 
             item_iri = QtWidgets.QTableWidgetItem(iri)
             item_iri.setText(iri)
             item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
 
-            item_prefix = QtWidgets.QTableWidgetItem()
-            item_prefix.setText(str(prefixes))
-            item_prefix.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+            item_prefixes = QtWidgets.QTableWidgetItem()
+            if len(prefixes) is 0:
+                item_prefixes.setText('-')
+            else:
+                item_prefixes.setText(str(prefixes))
+            item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+
+            nodes = self.project.IRI_prefixes_nodes_dict[iri][1]
+            item_nodes = QtWidgets.QTableWidgetItem()
+            nds_ids = set()
+            for n in nodes:
+                nds_ids.add(n.id)
+            if len(nds_ids) is 0:
+                item_nodes.setText('-')
+            else:
+                item_nodes.setText(str(nds_ids))
+            item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
 
             self.table.setRowCount(self.table.rowCount() + 1)
 
-            self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
-            self.table.setItem(self.table.rowCount() - 1, 1, item_prefix)
+            self.table.setItem(self.table.rowCount()-1, 0, item_iri)
+            self.table.setItem(self.table.rowCount()-1, 1, item_prefixes)
+            self.table.setItem(self.table.rowCount()-1, 2, item_nodes)
             self.table.resizeRowToContents(self.table.rowCount() - 1)
 
-        ##############################################################################
+        print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues      END')
 
-        #self.redraw()
+    def process_entry_from_textboxes_for_button_remove(self):
+
+        prefix = self.prefix_input_box.text()
+        iri = self.iri_input_box.text()
+
+        Duplicate_IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
+
+        self.project.removeIRIPrefixNodeEntry(Duplicate_IRI_prefixes_nodes_dict, iri, prefix, None)
+
+        if self.ENTRY_REMOVE_OK_var is True:
+
+            self.ENTRY_REMOVE_OK_var = False
+
+            self.project.IRI_prefixes_nodes_dict.clear()
+            self.project.copy_IRI_prefixes_nodes_dictionaries(Duplicate_IRI_prefixes_nodes_dict,
+                                                              self.project.IRI_prefixes_nodes_dict)
+
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
+
+    def process_entry_from_textboxes_for_button_add(self):
+
+        prefix = self.prefix_input_box.text()
+        iri = self.iri_input_box.text()
+
+        Duplicate_IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
+
+        self.project.addIRIPrefixNodeEntry(Duplicate_IRI_prefixes_nodes_dict, iri, prefix, None)
+
+        if self.ENTRY_ADD_OK_var is True:
+
+            self.ENTRY_ADD_OK_var = False
+
+            self.project.IRI_prefixes_nodes_dict.clear()
+            self.project.copy_IRI_prefixes_nodes_dictionaries(Duplicate_IRI_prefixes_nodes_dict,
+                                                              self.project.IRI_prefixes_nodes_dict)
+
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def redraw(self):
+        """
+        Redraw the content of the widget.
+        """
+        width = self.width()
+        scrollbar = self.verticalScrollBar()
+        if scrollbar.isVisible():
+            width -= scrollbar.width()
+        sizeHint = self.table.sizeHint()
+        height = sizeHint.height()
+        self.table.setFixedWidth(width)
+        self.table.setFixedHeight(clamp(height, 0))
+
+        self.table.setColumnWidth(0,self.width()/3)
+        self.table.setColumnWidth(1,self.width()/3)
+        self.table.setColumnWidth(2,self.width()/3)
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        """
+        Set the current stacked widget.
+        """
+
+        self.table.setRowCount(0)
+        self.table.setColumnCount(3)
+
+        #self.FillTableWithStandardIRIsAndStandardPrefixes()
+        """
+        ########### temporarly add [iri,prefix,node] to self.projet.IRI_prefixes_nodes_dict
+        print('temporarly add [iri,prefix,node] to self.projet.IRI_prefixes_nodes_dict')
+
+        project_prefixes = set()
+        project_prefixes.add(self.project.prefix)
+        values = []
+        values.append(project_prefixes)
+        values.append(set())
+        self.project.IRI_prefixes_nodes_dict[self.project.iri] = values
+
+
+        
+        for n in self.project.nodes():
+            print(n.id,',',n.type)
+            if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
+                if n.iri is not None:
+                    if n.iri is '':
+                        n.iri = self.project.iri
+                    if (n.prefix is '') and (n.iri is self.project.iri):
+                        n.prefix = self.project.prefix
+
+                    if n.iri is self.project.iri:
+                        self.project.IRI_prefixes_nodes_dict[n.iri][0].add(n.prefix)
+                        self.project.IRI_prefixes_nodes_dict[n.iri][1].add(n)
+
+                    if n.iri in self.project.IRI_prefixes_nodes_dict:
+                        if (n.prefix in self.project.IRI_prefixes_nodes_dict[n.iri][0]) and (n in self.project.IRI_prefixes_nodes_dict[n.iri][1]):
+                            pass
+                        else:
+                            self.project.IRI_prefixes_nodes_dict[n.iri][0].add(n.prefix)
+                            self.project.IRI_prefixes_nodes_dict[n.iri][1].add(n)
+                    else:
+                        values = []
+                        prefixes = set()
+                        prefixes.add(n.prefix)
+                        nds = set()
+                        nds.add(n)
+                        values.append(prefixes)
+                        values.append(nds)
+                        self.project.IRI_prefixes_nodes_dict[n.iri] = values
+                        print('entry made in dict')
+                else:
+                    LOGGER.error('iri is None')
+
+        print('temporarly add [iri,prefix,node] to self.projet.IRI_prefixes_nodes_dict >>>>>>>>>  END')
+        """
+        ###############       END     ##############
+
+        print('self.table.rowCount()',self.table.rowCount())
+
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
+
+        ##############################################################################
+        self.redraw()
+
 
 
 
