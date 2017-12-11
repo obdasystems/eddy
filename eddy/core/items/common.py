@@ -45,6 +45,10 @@ from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
+from eddy.core.output import getLogger
+
+
+LOGGER = getLogger()
 
 
 class DiagramItemMixin:
@@ -260,6 +264,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self._alignment = QtCore.Qt.AlignCenter
         self._editable = bool(editable)
         self._movable = bool(movable)
+        self._parent = parent
+
         super().__init__(parent)
         self.focusInData = None
         self.template = template
@@ -366,6 +372,24 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         """
         if self.isEditable():
             super().mouseDoubleClickEvent(mouseEvent)
+
+            current_text = self.text()
+            last_hash = current_text.rfind('#')
+            last_colon = current_text.rfind(':')
+
+            prev_rc = None
+
+            if last_colon == -1:
+                if last_hash == -1:
+                    LOGGER.error('# or : not found in node.text()')
+                else:
+                    # hash is present ^^ colon is absent
+                    prev_rc = self.text()[last_hash + 1:len(self.text())]
+            else:
+                # colon is present
+                prev_rc = self.text()[last_colon + 1:len(self.text())]
+
+            self.setText(prev_rc)
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
             self.setFocus()
 
@@ -381,6 +405,22 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type charsRemoved: int
         :type charsAdded: int
         """
+        if self._parent.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
+            current_text = self.text()
+            last_hash = current_text.rfind('#')
+            last_colon = current_text.rfind(':')
+
+            if last_colon == -1:
+                if last_hash == -1:
+                    rc_text = self.text()
+                else:
+                    # hash is present ^^ colon is absent
+                    rc_text = self.text()[last_hash + 1:len(self.text())]
+            else:
+                # colon is present
+                rc_text = self.text()[last_colon + 1:len(self.text())]
+
+            self._parent.remaining_characters = rc_text
         self.setAlignment(self.alignment())
 
     #############################################

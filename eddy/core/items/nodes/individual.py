@@ -96,14 +96,15 @@ class IndividualNode(AbstractResizableNode):
         self.background = Polygon(createPolygon(w + 8, h + 8))
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
-        self.label = NodeLabel(template=':individual', pos=self.center, parent=self, editable=False)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.updateNode()
-        self.updateTextPos()
 
         self.iri = ''
         self.prefix = ''
         self.remaining_characters = 'individual'
+
+        self.label = NodeLabel(template='individual', pos=self.center, parent=self, editable=True)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.updateNode()
+        self.updateTextPos()
 
         #############################################
     #   PROPERTIES

@@ -432,8 +432,10 @@ class MenuFactory(QtCore.QObject):
             value = enumeration.identity() is Identity.ValueDomain or num < 2
 
         assertion = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4))
+        print('assertion',assertion)
         if assertion:
             operand = first(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6))
+            print('operand', operand)
             if operand:
                 if operand.identity() is Identity.Role:
                     value = False
@@ -441,6 +443,8 @@ class MenuFactory(QtCore.QObject):
                     num = len(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
                     instance = instance and (node.identity() is Identity.Individual or num < 2)
                     value = value and (node.identity() is Identity.Value or num < 2)
+
+                    print('num,instance,value',num,',',instance,',',value)
 
         for a in self.session.action('switch_individual').actions():
             a.setChecked(a.data() is node.identity())

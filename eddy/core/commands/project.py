@@ -55,6 +55,7 @@ class CommandProjectSetIRI(QtWidgets.QUndoCommand):
         self._undo = undo
         self._redo = redo
 
+
     def redo(self):
         """redo the command"""
         print('CommandProjectSetIRI >>> redo')

@@ -180,6 +180,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         worker = OntologyConsistencyCheckWorker(self.status_bar,self.project,self.session)
         connect(worker.sgnBusy, self.displaybusydialog)
+        connect(worker.sgnError, self.onErrorInExec)
         connect(worker.sgnAllOK, self.onPerfectOntology)
         connect(worker.sgnOntologyInconsistency, self.onOntologicalInconsistency)
         connect(worker.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
@@ -197,9 +198,31 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
             #self.msgbox_busy.close() giulio
 
     @QtCore.pyqtSlot()
+    def onErrorInExec(self):
+
+        self.msgbox_error = QtWidgets.QMessageBox(self)
+        self.msgbox_error.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.msgbox_error.setWindowTitle('Error!')
+        self.msgbox_error.setStandardButtons(QtWidgets.QMessageBox.Close)
+        self.msgbox_error.setTextFormat(QtCore.Qt.RichText)
+        self.msgbox_error.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+        self.msgbox_error.setText('An error occured, please see the LOGGER')
+
+        if sys.platform.startswith('linux'):
+            size = self.msgbox_error.size()
+            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
+            top = (desktopsize.height() / 2) - (size.height() / 2)
+            left = (desktopsize.width() / 2) - (size.width() / 2)
+            self.msgbox_error.move(left, top)
+
+        self.close()
+
+        self.msgbox_error.exec_()
+
+    @QtCore.pyqtSlot()
     def onPerfectOntology(self):
         """
-        Executed when a syntax error is detected.
+        Executed when ontology is perfect
         :type message: str
         """
         self.msgbox_done = QtWidgets.QMessageBox(self)
@@ -271,6 +294,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
     sgnAllOK = QtCore.pyqtSignal()
     sgnOntologyInconsistency = QtCore.pyqtSignal()
     sgnUnsatisfiableEntities = QtCore.pyqtSignal()
+    sgnError = QtCore.pyqtSignal()
 
     def __init__(self, status_bar, project, session):
         """
@@ -522,7 +546,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                     ex.printStackTrace()
 
             else:
-
+                self.project.inconsistent_ontology = None
                 LOGGER.error(str(e))
 
     @QtCore.pyqtSlot()
@@ -536,17 +560,18 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         detach()
 
         #self.sgnBusy.emit(False)
-
-        if self.project.inconsistent_ontology is True:
-            self.sgnOntologyInconsistency.emit()
-        else:
-            if len(self.project.unsatisfiable_classes) or len(self.project.unsatisfiable_attributes) or len(self.project.unsatisfiable_roles):
-                self.sgnUnsatisfiableEntities.emit()
+        if self.project.inconsistent_ontology is not None:
+            if self.project.inconsistent_ontology is True:
+                self.sgnOntologyInconsistency.emit()
             else:
-                self.sgnAllOK.emit()
+                if len(self.project.unsatisfiable_classes) or len(self.project.unsatisfiable_attributes) or len(self.project.unsatisfiable_roles):
+                    self.sgnUnsatisfiableEntities.emit()
+                else:
+                    self.sgnAllOK.emit()
 
-        self.finished.emit()
-
+            self.finished.emit()
+        else:
+            self.sgnError.emit()
 
 class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
 

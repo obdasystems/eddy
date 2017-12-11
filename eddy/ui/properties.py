@@ -646,7 +646,6 @@ class PredicateNodeProperty(NodeProperty):
         unprocessed_new_text = self.textField.value().strip()
         unprocessed_new_text = unprocessed_new_text if not isEmpty(unprocessed_new_text) else self.node.label.template
 
-
         new_rc = ''
 
         for c in unprocessed_new_text:
@@ -673,8 +672,6 @@ class PredicateNodeProperty(NodeProperty):
                 #hash is present ^^ colon is absent
                 iri_to_set = self.node.text()[0:last_hash+1]
                 prev_rc = self.node.text()[last_hash+1:len(self.node.text())]
-
-
         else:
             #colon is present
             prefix_to_set = self.node.text()[0:last_colon+1]

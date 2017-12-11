@@ -229,12 +229,12 @@ class Project(QtCore.QObject):
                 #change it to prefix:concept or iri#concept
 
                 if node.prefix is not '':
-                    node.setText(node.prefix+node.text())
+                    node.setText(node.prefix + ':' + node.text())
                 else:
                     if node.iri is self.iri:
-                        node.setText(self.prefix + node.text())
+                        node.setText(self.prefix + ':' + node.text())
                     else:
-                        node.setText(node.iri + node.text())
+                        node.setText(node.iri + '#' + node.text())
 
                 if node.iri in self.IRI_prefixes_nodes_dict.keys():
                     self.IRI_prefixes_nodes_dict[node.iri][0].add(node.prefix)

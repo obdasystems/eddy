@@ -67,12 +67,14 @@ class AttributeNode(AbstractNode):
         self.background = Polygon(QtCore.QRectF(-14, -14, 28, 28))
         self.selection = Polygon(QtCore.QRectF(-14, -14, 28, 28))
         self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
-        self.label = NodeLabel(template=':attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self, editable=False)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
         self.iri = ''
         self.prefix = ''
         self.remaining_characters = 'attribute'
+
+        self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self,
+                               editable=True)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
     #############################################
     #   INTERFACE
