@@ -48,5 +48,6 @@ RE_OWL_INVALID_CHAR = re.compile("""[\W]""") # identify OWL invalid characters
 RE_OWL_ONTOLOGY_FUNCTIONAL_TAG = re.compile("""^Ontology\s*\(.*$""") # identify OWL ontology tag in Functional OWL
 RE_OWL_ONTOLOGY_MANCHESTER_TAG = re.compile("""^Ontology:\s*.*$""") # identify OWL ontology tag in Mancherster OWL
 RE_OWL_ONTOLOGY_TURTLE_TAG = re.compile("""^.*owl:Ontology.*$""") # identify OWL ontology tag in Turtle OWL
-RE_VALUE = re.compile("""^"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize string into literal + datatype
+RE_VALUE_WITH_IRI_OR_PREFIX = re.compile("""^(?P<iri_or_prefix>.+(:|#))\"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize string into literal + datatype
+RE_VALUE_WITHOUT_IRI_OR_PREFIX = re.compile("""^"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize string into literal + datatype
 RE_VALUE_RESTRICTION = re.compile("""^(?P<facet>.*)\s*"(?P<value>.*)"\^\^(?P<datatype>.*)$""") # tokenize value restriction

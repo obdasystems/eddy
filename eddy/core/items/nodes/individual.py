@@ -44,8 +44,7 @@ from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.regex import RE_VALUE
-from eddy.core.project import K_IRI
+from eddy.core.regex import RE_VALUE_WITHOUT_IRI_OR_PREFIX, RE_VALUE_WITH_IRI_OR_PREFIX
 
 
 class IndividualNode(AbstractResizableNode):
@@ -111,23 +110,45 @@ class IndividualNode(AbstractResizableNode):
     #################################
 
     @property
-    def datatype(self):
+    def datatype_with_iri_or_prefix(self):
         """
         Returns the datatype associated with this node.
         :rtype: Datatype
         """
-        match = RE_VALUE.match(self.text())
+        match = RE_VALUE_WITH_IRI_OR_PREFIX.match(self.text())
         if match:
             return Datatype.valueOf(match.group('datatype'))
         return None
 
     @property
-    def value(self):
+    def datatype_without_iri_or_prefix(self):
+        """
+        Returns the datatype associated with this node.
+        :rtype: Datatype
+        """
+        match = RE_VALUE_WITHOUT_IRI_OR_PREFIX.match(self.text())
+        if match:
+            return Datatype.valueOf(match.group('datatype'))
+        return None
+
+    @property
+    def value_with_iri_or_prefix(self):
         """
         Returns the value value associated with this node.
         :rtype: str
         """
-        match = RE_VALUE.match(self.text())
+        match = RE_VALUE_WITH_IRI_OR_PREFIX.match(self.text())
+        if match:
+            return match.group('value')
+        return None
+
+    @property
+    def value_without_iri_or_prefix(self):
+        """
+        Returns the value value associated with this node.
+        :rtype: str
+        """
+        match = RE_VALUE_WITHOUT_IRI_OR_PREFIX.match(self.text())
         if match:
             return match.group('value')
         return None
@@ -179,12 +200,15 @@ class IndividualNode(AbstractResizableNode):
         polygon = self.polygon.geometry()
         return polygon[self.IndexTR].y() - polygon[self.IndexBR].y()
 
-    def identity(self):
+    def identity(self,with_iri_or_prefix=True):
         """
         Returns the identity of the current node.
         :rtype: Identity
         """
-        match = RE_VALUE.match(self.text())
+        if with_iri_or_prefix is True:
+            match = RE_VALUE_WITH_IRI_OR_PREFIX.match(self.text())
+        else:
+            match = RE_VALUE_WITHOUT_IRI_OR_PREFIX.match(self.text())
         if match:
             return Identity.Value
         return Identity.Individual
@@ -655,12 +679,15 @@ class IndividualNode(AbstractResizableNode):
         """
         pass
 
-    def setText(self, text):
+    def setText(self, text, with_iri_or_prefix=True):
         """
         Set the label text: will additionally block label editing if a literal is being.
         :type text: str
         """
-        self.label.setEditable(RE_VALUE.match(text) is None)
+        if with_iri_or_prefix is True:
+            self.label.setEditable(RE_VALUE_WITH_IRI_OR_PREFIX.match(text) is None)
+        else:
+            self.label.setEditable(RE_VALUE_WITHOUT_IRI_OR_PREFIX.match(text) is None)
         self.label.setText(text)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
 

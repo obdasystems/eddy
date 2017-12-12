@@ -38,7 +38,7 @@ from PyQt5 import QtCore,QtGui,QtWidgets
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramAdd
 from eddy.core.commands.nodes import CommandNodeSetMeta
-from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.functions.owl import OWLText
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
@@ -172,7 +172,11 @@ class Project(QtCore.QObject):
         for n in self.nodes():
             if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (
                 n.Type is Item.RoleNode):
-                print(n.type(), ',', n.id, ',', n.iri, ',', n.prefix, ',', n.remaining_characters)
+
+                if (n.Type is Item.IndividualNode):
+                    print(n.type(), ',', n.id, ',', n.iri, ',', n.prefix, ',', n.remaining_characters,',', n.identity())
+                else:
+                    print(n.type(), ',', n.id, ',', n.iri, ',', n.prefix, ',', n.remaining_characters)
 
     def init_IRI_prefixes_nodes_dict_with_std_data(self):
 
@@ -199,20 +203,35 @@ class Project(QtCore.QObject):
 
         print('add_item_to_IRI_prefixes_nodes_dict >>>',item)
 
-        print(str(type(item)))
-        print('ConceptNode' in str(type(item)))
+        print('str(type(item))' ,str(type(item)))
 
         if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
 
             node = item
-            print('ConceptNode' in str(type(node)))
+            print('str(type(node)', str(type(node)))
 
             if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+
+                print('item.type()',item.type())
+                print('item.type() is Item.IndividualNode??? -',item.type() is Item.IndividualNode)
+
+                if (item.type() is Item.IndividualNode):
+
+                    print('**************')
+
+                    print('item.identity(with_iri_or_prefix=False)',item.identity(with_iri_or_prefix=False))
+
+                    if (item.identity(with_iri_or_prefix=False) is Identity.Value):
+
+                        print('item.datatype(with_iri_or_prefix=False)',item.datatype_without_iri_or_prefix)
+                        print('item.value()',item.value_without_iri_or_prefix)
+
+                    print('**************')
 
                 print('self.iri', self.iri)
                 print('self.prefix', self.prefix)
 
-                print('node.iri',node.iri)
+                print('node.iri', node.iri)
 
                 if node.iri is '':
                     node.iri = self.iri
@@ -225,8 +244,8 @@ class Project(QtCore.QObject):
 
                 print('node.prefix', node.prefix)
 
-                #initial text of label is :Concept etc
-                #change it to prefix:concept or iri#concept
+                # initial text of label is :Concept etc
+                # change it to prefix:concept or iri#concept
 
                 if node.prefix is not '':
                     node.setText(node.prefix + ':' + node.text())
