@@ -201,7 +201,7 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
 
-        print('add_item_to_IRI_prefixes_nodes_dict >>>',item)
+        print('     add_item_to_IRI_prefixes_nodes_dict         >>>',item)
 
         print('str(type(item))' ,str(type(item)))
 
@@ -219,17 +219,45 @@ class Project(QtCore.QObject):
 
                     print('**************')
 
-                    print('item.identity(with_iri_or_prefix=False)',item.identity(with_iri_or_prefix=False))
+                    print('item.identity()',item.identity())
 
-                    if (item.identity(with_iri_or_prefix=False) is Identity.Value):
+                    if (item.identity() is Identity.Value):
 
-                        print('item.datatype(with_iri_or_prefix=False)',item.datatype_without_iri_or_prefix)
-                        print('item.value()',item.value_without_iri_or_prefix)
+                        print('item.datatype',item.datatype)
+                        print('item.datatype.value', item.datatype.value)
+                        print('item.value',item.value)
+
+                        print('node.iri', node.iri)
+                        print('node.prefix',node.prefix)
+
+
+                        node.prefix = item.datatype.value[0:item.datatype.value.index(':')]
+                        node.remaining_characters = item.datatype.value[item.datatype.value.index(':')+1:len(item.datatype.value)]
+                        node.iri = None
+
+                        for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                            std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
+                            if std_prefix == node.prefix:
+                                node.iri = std_iri
+
+                        if node.iri is None:
+                            LOGGER.error('*****************   failed to assign iri to node   *******************')
+                            return
+
+                        self.IRI_prefixes_nodes_dict[node.iri][0].add(node.prefix)
+                        self.IRI_prefixes_nodes_dict[node.iri][1].add(node)
+                        self.sgnIRIPrefixNodeDictionaryUpdated.emit()
+
+                        print('node.iri', node.iri)
+                        print('node.prefix', node.prefix)
+                        print('node.remaining_characters',node.remaining_characters)
+
+
+                        print('     add_item_to_IRI_prefixes_nodes_dict     >>>  END(2)', item)
+                        return
+
 
                     print('**************')
-
-                print('self.iri', self.iri)
-                print('self.prefix', self.prefix)
 
                 print('node.iri', node.iri)
 
@@ -270,11 +298,12 @@ class Project(QtCore.QObject):
                     self.IRI_prefixes_nodes_dict[node.iri] = values
                     self.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
-        print('add_item_to_IRI_prefixes_nodes_dict >>>  END',item)
+        print('     add_item_to_IRI_prefixes_nodes_dict     >>>  END',item)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
 
+        print('     remove_item_from_IRI_prefixes_nodes_dict        >>>',node)
         #remove the node in all the indices of the dictionary
 
         corr_iris = []
@@ -288,6 +317,8 @@ class Project(QtCore.QObject):
             self.sgnIRIPrefixNodeDictionaryUpdated.emit()
         else:
             LOGGER.warning('node is not present in the dictionary')
+
+        print('     remove_item_from_IRI_prefixes_nodes_dict    END    >>>',node)
 
     def copy_IRI_prefixes_nodes_dictionaries(self, from_dict, to_dict):
 
@@ -312,7 +343,7 @@ class Project(QtCore.QObject):
 
     def addIRIPrefixNodeEntry_OnlyNode(self, dictionary, iri, prefix='', node='', **kwargs):
 
-        print('>>> addIRIPrefixNodeEntry_OnlyNode',iri,',',prefix,',',node.id)
+        print('         >>> addIRIPrefixNodeEntry_OnlyNode',iri,',',prefix,',',node.id)
 
         iri_added = kwargs.get('iri_added',False)
         prefix_added = kwargs.get('prefix_added',False)
@@ -348,7 +379,7 @@ class Project(QtCore.QObject):
                     self.sgnIRIPrefixNodeEntryAdded.emit(iri, prefix, None)
                     return dictionary
 
-        print('>>> addIRIPrefixNodeEntry_OnlyNode END')
+        print('         >>> addIRIPrefixNodeEntry_OnlyNode END')
 
     def addIRIPrefixNodeEntry(self, dictionary, iri, prefix='', node=''):
 
@@ -452,7 +483,7 @@ class Project(QtCore.QObject):
 
     def removeIRIPrefixNodeEntry_OnlyNode(self, dictionary, iri, prefix, node):
 
-        print('>>> removeIRIPrefixNodeEntry_OnlyNode',iri,',',prefix,',',node.id)
+        print('         >>> removeIRIPrefixNodeEntry_OnlyNode',iri,',',prefix,',',node.id)
 
         if node in dictionary[iri][1]:
             dictionary[iri][1].remove(node)
@@ -460,7 +491,7 @@ class Project(QtCore.QObject):
         else:
             self.sgnIRIPrefixNodeEntryIgnored.emit(iri, prefix, None, 'Error! node is not present in the list')
 
-        print('>>> removeIRIPrefixNodeEntry_OnlyNode END')
+        print('         >>> removeIRIPrefixNodeEntry_OnlyNode END')
 
     def removeIRIPrefixNodeEntry(self, dictionary, iri, prefix, node):
 

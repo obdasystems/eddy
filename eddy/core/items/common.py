@@ -278,6 +278,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         document = self.document()
         connect(document.contentsChange[int, int, int], self.onContentsChanged)
 
+        self.old_text = None
+
     #############################################
     #   EVENTS
     #################################
@@ -299,7 +301,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
     def focusOutEvent(self, focusEvent):
         """
-        Executed when the text item lose the focus.
+        Executed when the text item loses the focus.
         :type focusEvent: QFocusEvent
         """
         if self.diagram.mode is DiagramMode.LabelEdit:
@@ -325,6 +327,10 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 node = self.parentItem()
                 command = CommandLabelChange(self.diagram, node, focusInData, currentData)
                 self.session.undostack.push(command)
+
+            else:
+                self.setText(self.old_text)
+                self.old_text = None
 
             self.focusInData = None
             self.setSelectedText(False)
@@ -373,9 +379,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         if self.isEditable():
             super().mouseDoubleClickEvent(mouseEvent)
 
-            current_text = self.text()
-            last_hash = current_text.rfind('#')
-            last_colon = current_text.rfind(':')
+            self.old_text = self.text()
+            last_hash = self.old_text.rfind('#')
+            last_colon = self.old_text.rfind(':')
 
             prev_rc = None
 
@@ -406,7 +412,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type charsAdded: int
         """
         if self._parent.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
+
             current_text = self.text()
+
             last_hash = current_text.rfind('#')
             last_colon = current_text.rfind(':')
 
@@ -421,6 +429,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 rc_text = self.text()[last_colon + 1:len(self.text())]
 
             self._parent.remaining_characters = rc_text
+
         self.setAlignment(self.alignment())
 
     #############################################

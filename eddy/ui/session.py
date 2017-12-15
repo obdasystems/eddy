@@ -57,6 +57,7 @@ from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.commands.nodes import CommandNodeSetRemainingCharacters, CommandNodeSetIRIandPrefix
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
@@ -1736,7 +1737,22 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                     if node.identity() is Identity.Value:
                         data = node.label.template
                         name = 'change {0} to {1}'.format(node.text(), data)
-                        self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
+
+                        commands = []
+
+                        commands.append(CommandNodeSetIRIandPrefix(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix))
+                        commands.append(CommandNodeSetRemainingCharacters(node,node.remaining_characters,data))
+                        commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+
+                        if any(commands):
+                            self.undostack.beginMacro('edit {0} properties'.format(node.name))
+                            for command in commands:
+                                if command:
+                                    self.undostack.push(command)
+                            self.undostack.endMacro()
+
+                        #self.undostack.push(commands[0],commands[1],commands[2])
+
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()

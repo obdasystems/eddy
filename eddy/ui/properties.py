@@ -643,6 +643,7 @@ class PredicateNodeProperty(NodeProperty):
         Change the label of the node.
         :rtype: list
         """
+        print('         textChanged     >>>')
         unprocessed_new_text = self.textField.value().strip()
         unprocessed_new_text = unprocessed_new_text if not isEmpty(unprocessed_new_text) else self.node.label.template
 
@@ -687,7 +688,7 @@ class PredicateNodeProperty(NodeProperty):
             else:
                 new_text_to_set = prefix_to_set + new_rc
 
-            print('new_text_to_set',new_text_to_set)
+            print('new_text_to_set', new_text_to_set)
 
             return_list = []
 
@@ -697,14 +698,15 @@ class PredicateNodeProperty(NodeProperty):
                 project = self.diagram.project
 
                 return_list.extend(CommandNodeSetRemainingCharacters(n, prev_rc, new_rc) for n in
-                        project.predicates(item, name))
+                                   project.predicates(item, name))
                 return_list.extend(CommandLabelChange(n.diagram, n, n.text(), new_text_to_set) for n in
-                        project.predicates(item, name))
+                                   project.predicates(item, name))
                 return return_list
 
             return_list.append(CommandNodeSetRemainingCharacters(self.node, prev_rc, new_rc))
             return_list.append(CommandLabelChange(self.diagram, self.node, self.node.text(), new_text_to_set))
             return return_list
+
 
         """
         if self.node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
