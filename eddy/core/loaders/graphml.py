@@ -117,9 +117,6 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         imported_item.iri = element.attribute('IRI','')
         imported_item.remaining_characters = element.attribute('remaining_characters','')
 
-        if imported_item.remaining_characters is '':
-            imported_item.remaining_characters = None
-
         return imported_item
 
     def importComplementNode(self, element):

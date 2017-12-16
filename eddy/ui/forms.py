@@ -40,16 +40,22 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.commands.nodes import CommandNodeSetRemainingCharacters, CommandNodeSetIRIandPrefix, CommandNodeSetIRIPrefixAndRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Identity
-from eddy.core.datatypes.owl import Datatype
+from eddy.core.datatypes.owl import Datatype, OWLStandardIRIPrefixPairsDict
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
+from eddy.core.output import getLogger
+
 
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import IntegerField
 from eddy.ui.fields import StringField
+
+
+LOGGER = getLogger()
 
 
 class CardinalityRestrictionForm(QtWidgets.QDialog):
@@ -389,16 +395,51 @@ class ValueForm(QtWidgets.QDialog):
         """
         Accepts the form and set the new value.
         """
+        print('>>>          ValueForm (accept)')
         node = self.node
         diagram = node.diagram
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
         data = node.compose(value, datatype)
+        print('data',data)
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
-            self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
+            #self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
+
+            new_prefix = datatype.value[0:datatype.value.index(':')]
+            new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
+            new_iri = None
+
+            for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
+                if std_prefix == new_prefix:
+                    new_iri = std_iri
+
+            if new_iri is None:
+                LOGGER.error('*****************   failed to assign iri to node   *******************')
+                return
+
+            print('node.prefix - new_prefix',node.prefix,'-',new_prefix)
+            print('node.iri - new_iri',node.iri,'-',new_iri)
+            print('node.remaining_characters - new_remaining_characters',node.remaining_characters,'-',new_remaining_characters)
+            print('data=',data)
+
+            commands = []
+
+            commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+            commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project, node, node.iri, new_iri, node.prefix, new_prefix, node.remaining_characters, new_remaining_characters))
+            commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+
+            if any(commands):
+                self.session.undostack.beginMacro('edit {0} properties'.format(node))
+                for command in commands:
+                    if command:
+                        self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+
         super().accept()
 
+        print('>>>          ValueForm (accept) END')
 
 class AbstractDiagramForm(QtWidgets.QDialog):
     """

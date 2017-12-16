@@ -38,6 +38,36 @@ from PyQt5 import QtWidgets
 from eddy.core.datatypes.graphol import Item
 
 
+class CommandProjectSetIRIandPrefix(QtWidgets.QUndoCommand):
+    """
+    This command is used to set the IRI and prefix of a project.
+    """
+
+    def __init__(self, project, undo_iri, redo_iri, undo_prefix, redo_prefix):
+        super().__init__("set ontology IRI from {0} to {1} and ontology prefix from {2} to {3}".format(undo_iri, redo_iri, undo_prefix, redo_prefix))
+        self.undo_iri = undo_iri
+        self.redo_iri = redo_iri
+        self.undo_prefix = undo_prefix
+        self.redo_prefix = redo_prefix
+        self.project = project
+
+
+
+    def redo(self):
+        """redo the command"""
+        print('CommandProjectSetIRI >>> redo')
+        self.project.iri = self.redo_iri
+        self.project.prefix = self.redo_prefix
+        self.project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        print('CommandProjectSetIRI >>> undo')
+        self.project.iri = self.undo_iri
+        self.project.prefix = self.undo_prefix
+        self.project.sgnUpdated.emit()
+
+
 class CommandProjectSetIRI(QtWidgets.QUndoCommand):
     """
     This command is used to set the IRI of a project.

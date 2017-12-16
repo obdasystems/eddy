@@ -79,17 +79,17 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
                 if str(type(OWL_term_2)) == '<class \'list\'>':
 
                     for t2 in OWL_term_2:
-                        if (t1[0] is '<') and (t2[0] is '<'):
+                        if (t1[0] == '<') and (t2[0] == '<'):
                             if t1 == t2:
                                 return True
 
                 else:
 
-                    if (t1[0] is '<') and (t2[0] is '<'):
+                    if (t1[0] == '<') and (t2[0] == '<'):
                         if t1 == t2:
                             return True
 
-        if (OWL_term_1[0] is '<') and (OWL_term_2[0] is '<'):
+        if (OWL_term_1[0] == '<') and (OWL_term_2[0] == '<'):
             if OWL_term_1 == OWL_term_2:
                 return True
 
@@ -102,7 +102,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         for diag, val_in_diag in self.project.converted_nodes.items():
             for nd in val_in_diag:
-                if (val_in_diag[nd] is not None) and (nd is node.id):
+                if (val_in_diag[nd] is not None) and (nd == node.id):
                     if str(type(val_in_diag[nd])) == '<class \'list\'>':
 
                         return_list = []

@@ -45,7 +45,7 @@ from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
-from eddy.core.project import K_IRI
+
 
 class RoleNode(AbstractResizableNode):
     """

@@ -159,9 +159,6 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.prefix = e.attribute('PREFIX', '')
         node.remaining_characters = e.attribute('remaining_characters', '')
 
-        if node.remaining_characters is '':
-            node.remaining_characters = None
-
         return node
 
     def importComplementNode(self, e):

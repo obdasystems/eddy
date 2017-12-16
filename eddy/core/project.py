@@ -45,6 +45,7 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode
+from eddy.core.commands.labels import GenerateNewLabel
 
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
@@ -74,8 +75,11 @@ K_PROPERTY = 'property'
 
 # PREDICATES META KEYS
 K_DESCRIPTION = 'description'
+
 K_IRI = 'iri'
 K_PREFIX = 'prefix'
+K_REMAININGCHARACTERS = 'remaining_characters'
+
 K_FUNCTIONAL = 'functional'
 K_ASYMMETRIC = 'asymmetric'
 K_INVERSE_FUNCTIONAL = 'inverseFunctional'
@@ -201,7 +205,7 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
 
-        print('     add_item_to_IRI_prefixes_nodes_dict         >>>',item)
+        print('>>>     add_item_to_IRI_prefixes_nodes_dict         ',item)
 
         print('str(type(item))' ,str(type(item)))
 
@@ -223,65 +227,41 @@ class Project(QtCore.QObject):
 
                     if (item.identity() is Identity.Value):
 
-                        print('item.datatype',item.datatype)
-                        print('item.datatype.value', item.datatype.value)
-                        print('item.value',item.value)
-
-                        print('node.iri', node.iri)
-                        print('node.prefix',node.prefix)
-
-
-                        node.prefix = item.datatype.value[0:item.datatype.value.index(':')]
-                        node.remaining_characters = item.datatype.value[item.datatype.value.index(':')+1:len(item.datatype.value)]
-                        node.iri = None
-
-                        for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                            std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
-                            if std_prefix == node.prefix:
-                                node.iri = std_iri
-
-                        if node.iri is None:
-                            LOGGER.error('*****************   failed to assign iri to node   *******************')
-                            return
-
+                        """
                         self.IRI_prefixes_nodes_dict[node.iri][0].add(node.prefix)
                         self.IRI_prefixes_nodes_dict[node.iri][1].add(node)
                         self.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
-                        print('node.iri', node.iri)
-                        print('node.prefix', node.prefix)
-                        print('node.remaining_characters',node.remaining_characters)
-
-
                         print('     add_item_to_IRI_prefixes_nodes_dict     >>>  END(2)', item)
                         return
-
+                        """
 
                     print('**************')
 
                 print('node.iri', node.iri)
 
-                if node.iri is '':
+                if node.iri == '':
                     node.iri = self.iri
 
                 print('node.iri', node.iri)
                 print('node.prefix', node.prefix)
 
-                if (node.iri is self.iri) and (node.prefix is ''):
+                if (node.iri == self.iri) and (node.prefix == ''):
                     node.prefix = self.prefix
 
                 print('node.prefix', node.prefix)
 
-                # initial text of label is :Concept etc
+                # initial text of label is Concept etc
                 # change it to prefix:concept or iri#concept
 
-                if node.prefix is not '':
-                    node.setText(node.prefix + ':' + node.text())
-                else:
-                    if node.iri is self.iri:
-                        node.setText(self.prefix + ':' + node.text())
-                    else:
-                        node.setText(node.iri + '#' + node.text())
+                label_for_node = GenerateNewLabel(diagram.project,node.iri,node.prefix,node.remaining_characters).return_label()
+
+                """
+                if node.text() in {'concept', 'attribute', 'role', 'individual'}:
+                    print('label reset/ old_text -',node.text())
+                    node.setText(label_for_node)
+                """
+                node.setText(label_for_node)
 
                 if node.iri in self.IRI_prefixes_nodes_dict.keys():
                     self.IRI_prefixes_nodes_dict[node.iri][0].add(node.prefix)
@@ -298,12 +278,12 @@ class Project(QtCore.QObject):
                     self.IRI_prefixes_nodes_dict[node.iri] = values
                     self.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
-        print('     add_item_to_IRI_prefixes_nodes_dict     >>>  END',item)
+        print('>>>     add_item_to_IRI_prefixes_nodes_dict       END',item)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
 
-        print('     remove_item_from_IRI_prefixes_nodes_dict        >>>',node)
+        print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
         #remove the node in all the indices of the dictionary
 
         corr_iris = []
@@ -318,7 +298,7 @@ class Project(QtCore.QObject):
         else:
             LOGGER.warning('node is not present in the dictionary')
 
-        print('     remove_item_from_IRI_prefixes_nodes_dict    END    >>>',node)
+        print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
     def copy_IRI_prefixes_nodes_dictionaries(self, from_dict, to_dict):
 
@@ -341,9 +321,12 @@ class Project(QtCore.QObject):
 
         return to_dict
 
-    def addIRIPrefixNodeEntry_OnlyNode(self, dictionary, iri, prefix='', node='', **kwargs):
+    def addIRIPrefixNodeEntry_OnlyNode(self, dictionary, iri, prefix, node, **kwargs):
 
-        print('         >>> addIRIPrefixNodeEntry_OnlyNode',iri,',',prefix,',',node.id)
+        if node is None:
+            print('         >>> addIRIPrefixNodeEntry_OnlyNode', iri, ',', prefix, ', node=None', )
+        else:
+            print('         >>> addIRIPrefixNodeEntry_OnlyNode',iri,',',prefix,',',node.id)
 
         iri_added = kwargs.get('iri_added',False)
         prefix_added = kwargs.get('prefix_added',False)
@@ -351,7 +334,7 @@ class Project(QtCore.QObject):
         if prefix is None:
             prefix = ''
 
-        if ((node is not '') and (node is not None)):
+        if ((node != '') and (node is not None)):
             if node in dictionary[iri][1]:
                 if (prefix_added is False) and (iri_added is False):
                     self.sgnIRIPrefixNodeEntryIgnored.emit(iri, prefix, node, '[IRI-prefix-node] mapping already exists')
@@ -363,7 +346,7 @@ class Project(QtCore.QObject):
                 dictionary[iri][1].add(node)
                 self.sgnIRIPrefixNodeEntryAdded.emit(iri, prefix, node)
                 return dictionary
-        elif (node is '') or (node is None):
+        elif (node == '') or (node is None):
             if prefix is not '':
                 if (prefix_added is False) and (iri_added is False):
                     self.sgnIRIPrefixNodeEntryIgnored.emit(iri, prefix, None, '[IRI-prefix] mapping already exists')
@@ -381,7 +364,7 @@ class Project(QtCore.QObject):
 
         print('         >>> addIRIPrefixNodeEntry_OnlyNode END')
 
-    def addIRIPrefixNodeEntry(self, dictionary, iri, prefix='', node=''):
+    def addIRIPrefixNodeEntry(self, dictionary, iri, prefix, node):
 
         if node is None:
             print('>>> addIRIPrefixNodeEntry', iri, ',', prefix, ', None')
@@ -392,7 +375,7 @@ class Project(QtCore.QObject):
             LOGGER.error('iri is None')
             return
 
-        if (iri is ''):
+        if (iri == ''):
             iri = self.iri
 
         ### cannot add standart IRI ###
@@ -411,11 +394,11 @@ class Project(QtCore.QObject):
         iri_is_default = False
         prefix_is_default = False
 
-        if (iri is self.iri): #default IRI
+        if (iri == self.iri): #default IRI
             iri_is_default = True
-        if (prefix is self.prefix): # default prefix
+        if (prefix == self.prefix): # default prefix
             prefix_is_default = True
-        if iri_is_default and prefix is '':
+        if iri_is_default and prefix == '':
             prefix_is_default = True
 
         if (iri_is_default is True) and (prefix_is_default is False):
@@ -434,7 +417,7 @@ class Project(QtCore.QObject):
             print('prefixes_in_dict',prefixes_in_dict)
 
             if iri in IRIs:   #IRI is present
-                if ((prefix is not None) and (prefix is not '')):  # E. str for prefix
+                if ((prefix is not None) and (prefix != '')):  # E. str for prefix
                     if (prefix in prefixes_in_dict): # prefix is present
                         #case 1
                         #E.[IRI-prefix]|E.[[IRI'-prefix]^[IRI-''|prefix']]
@@ -453,7 +436,7 @@ class Project(QtCore.QObject):
                         # case 4 prefix=None is absent # E.[IRI-prefix']
                         self.addIRIPrefixNodeEntry_OnlyNode(dictionary, iri, prefix, node) # case 3|4
             else: #IRI is absent
-                if ((prefix is not None) and (prefix is not '')):  # E. str for prefix
+                if ((prefix is not None) and (prefix != '')):  # E. str for prefix
                     if (prefix in prefixes_in_dict): # prefix is present
                         # case 1
                         # E. [IRI'-prefix]
@@ -504,7 +487,7 @@ class Project(QtCore.QObject):
         # prefix [None|E.str] ^^ [present|absent]
         # node [none|E.str_present|E.str_absent]
 
-        if iri is '':
+        if iri == '':
             iri = self.iri
 
         ### cannot remove standart IRI ###
@@ -527,18 +510,18 @@ class Project(QtCore.QObject):
         iri_is_default = False
         prefix_is_default = False
 
-        if (iri is self.iri):  # default IRI
+        if (iri == self.iri):  # default IRI
             iri_is_default = True
-        if (prefix is self.prefix):  # default prefix
+        if (prefix == self.prefix):  # default prefix
             prefix_is_default = True
-        if iri_is_default and ((prefix is '') or (prefix is None)):
+        if iri_is_default and ((prefix == '') or (prefix is None)):
             prefix_is_default = True
 
         if (iri_is_default is True) and (prefix_is_default is True) and (node is None):
             self.sgnIRIPrefixNodeEntryIgnored.emit(iri, prefix, None, 'Cannot remove project IRI and project prefix. Please use info widget')
             return dictionary
 
-        if (prefix is '') and (len(dictionary[iri][1]) >= 1):
+        if (prefix == '') and (len(dictionary[iri][1]) >= 1):
             if node is None:
                 self.sgnIRIPrefixNodeEntryIgnored.emit(iri, prefix, None,
                                                    'Cannot remove this IRI because there are nodes present in this project with this IRI.')
@@ -547,7 +530,7 @@ class Project(QtCore.QObject):
                 #remove only the node
                 self.removeIRIPrefixNodeEntry_OnlyNode(dictionary, iri, prefix, node)
 
-        elif (prefix is '') and (len(dictionary[iri][1]) == 0):
+        elif (prefix == '') and (len(dictionary[iri][1]) == 0):
             if node is None:
                 popped_element = dictionary.pop(iri)
                 self.sgnIRIPrefixNodeEntryRemoved.emit(iri, prefix, None, 'IRI removed-'+str(popped_element))
@@ -555,7 +538,7 @@ class Project(QtCore.QObject):
                 # node has to be none because len(dictionary[iri][1]) == 0
                 self.sgnIRIPrefixNodeEntryIgnored.emit(iri, prefix, None, 'Error! node is not present in the list')
 
-        elif (prefix is not ''):
+        elif (prefix != ''):
             if node is None:
                 if prefix in dictionary[iri][0]:
                     dictionary[iri][0].remove(prefix)
@@ -1378,7 +1361,7 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
     def __init__(self, project, dict_old_val, dict_new_val):
 
-        print('CommandProjetSetIRIPrefixesNodesDict >>> __init__')
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  __init__')
 
         super().__init__('update dictionary')
 
@@ -1387,15 +1370,19 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.dict_new_val = dict_new_val
 
     def redo(self):
-        print('CommandProjetSetIRIPrefixesNodesDict >>> redo')
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_new_val,self.project.IRI_prefixes_nodes_dict)
         self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
+
     def undo(self):
-        print('CommandProjetSetIRIPrefixesNodesDict >>> undo')
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_old_val,self.project.IRI_prefixes_nodes_dict)
         self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
+
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')

@@ -57,7 +57,7 @@ from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes import CommandNodeSetRemainingCharacters, CommandNodeSetIRIandPrefix
+from eddy.core.commands.nodes import CommandNodeSetRemainingCharacters, CommandNodeSetIRIandPrefix, CommandNodeSetIRIPrefixAndRemainingCharacters
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
@@ -1726,6 +1726,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         Set an invididual node either to Individual or Value.
         Will bring up the Value Form if needed.
         """
+        print('>>>      Session (doSetIndividualAs)')
+
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1738,24 +1740,31 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                         data = node.label.template
                         name = 'change {0} to {1}'.format(node.text(), data)
 
+                        print('old_rc, new_rc',node.remaining_characters,',',data)
+
                         commands = []
 
-                        commands.append(CommandNodeSetIRIandPrefix(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix))
-                        commands.append(CommandNodeSetRemainingCharacters(node,node.remaining_characters,data))
+                        commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+                        commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix,node.remaining_characters,data))
                         commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
                         if any(commands):
-                            self.undostack.beginMacro('edit {0} properties'.format(node.name))
+                            self.undostack.beginMacro('edit {0} properties'.format(node))
                             for command in commands:
                                 if command:
                                     self.undostack.push(command)
                             self.undostack.endMacro()
 
-                        #self.undostack.push(commands[0],commands[1],commands[2])
+                        #commands.append(CommandNodeSetIRIandPrefix(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix))
+                        #commands.append(CommandNodeSetRemainingCharacters(node,node.remaining_characters,data))
+                        #commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
+
+
+        print('>>>      Session (doSetIndividualAs) END')
 
     @QtCore.pyqtSlot()
     def doSetNodeSpecial(self):

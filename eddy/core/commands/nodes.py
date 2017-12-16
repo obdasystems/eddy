@@ -322,6 +322,38 @@ class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
         self.diagram.sgnItemRemoved.emit(self.diagram, self.node['redo'])
         self.diagram.sgnUpdated.emit()
 
+class CommandNodeSetIRIPrefixAndRemainingCharacters(QtWidgets.QUndoCommand):
+
+    def __init__(self, project, node, undo_iri, redo_iri, undo_prefix, redo_prefix, undo_remaining_characters, redo_remaining_characters):
+
+        super().__init__('switch iri from {0} to {1} ,prefix from {2} to {3} and remaining characters from {4} to {5}'.format(undo_iri, redo_iri, undo_prefix, redo_prefix, undo_remaining_characters, redo_remaining_characters))
+
+        self.project = project
+        self.node = node
+        self.undo_iri = undo_iri
+        self.undo_prefix = undo_prefix
+        self.undo_remaining_characters = undo_remaining_characters
+        self.redo_iri = redo_iri
+        self.redo_prefix = redo_prefix
+        self.redo_remaining_characters = redo_remaining_characters
+
+    def redo(self):
+        """redo the command"""
+
+        print('>>>          CommandNodeSetIRIPrefixAndRemainingCharacters (redo)')
+
+        self.node.iri = self.redo_iri
+        self.node.prefix = self.redo_prefix
+        self.node.remaining_characters = self.redo_remaining_characters
+
+    def undo(self):
+        """undo the command"""
+        print('>>>          CommandNodeSetIRIPrefixAndRemainingCharacters (undo)')
+
+        self.node.iri = self.undo_iri
+        self.node.prefix = self.undo_prefix
+        self.node.remaining_characters = self.undo_remaining_characters
+
 
 class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
@@ -344,6 +376,8 @@ class CommandNodeSetIRIandPrefix(QtWidgets.QUndoCommand):
 
     def __init__(self, project, node, undo_iri, redo_iri, undo_prefix, redo_prefix):
 
+        print('>>>          CommandNodeSetIRIandPrefix')
+
         super().__init__('switch iri from {0} to {1} and prefix from {2} to {3}'.format(undo_iri, redo_iri, undo_prefix, redo_prefix))
 
         self.project = project
@@ -355,53 +389,19 @@ class CommandNodeSetIRIandPrefix(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
+
+        print('>>>          CommandNodeSetIRIandPrefix (redo)')
+
         self.node.iri = self.redo_iri
         self.node.prefix = self.redo_prefix
 
-        #set label as well
-        iri_is_default = False
-        prefix_is_default = False
-
-        if (self.node.iri is self.project.iri):  # default IRI
-            iri_is_default = True
-        if (self.node.prefix is self.project.prefix):  # default prefix
-            prefix_is_default = True
-        if iri_is_default and self.node.prefix is '':
-            prefix_is_default = True
-
-        if iri_is_default:
-            self.node.setText('default:' + self.node.remaining_characters)
-        else:
-            if self.node.prefix is not '':
-                self.node.setText(self.node.prefix + ':' + self.node.remaining_characters)
-            else:
-                self.node.setText(self.node.iri + '#' + self.node.remaining_characters)
-
-
-
     def undo(self):
         """undo the command"""
+        print('>>>          CommandNodeSetIRIandPrefix (undo)')
+
         self.node.iri = self.undo_iri
         self.node.prefix = self.undo_prefix
 
-        # set label as well
-        iri_is_default = False
-        prefix_is_default = False
-
-        if (self.node.iri is self.project.iri):  # default IRI
-            iri_is_default = True
-        if (self.node.prefix is self.project.prefix):  # default prefix
-            prefix_is_default = True
-        if iri_is_default and self.node.prefix is '':
-            prefix_is_default = True
-
-        if iri_is_default:
-            self.node.setText('default:' + self.node.remaining_characters)
-        else:
-            if self.node.prefix is not '':
-                self.node.setText(self.node.prefix + ':' + self.node.remaining_characters)
-            else:
-                self.node.setText(self.node.iri + '#' + self.node.remaining_characters)
 
 class CommandNodeSetMeta(QtWidgets.QUndoCommand):
     """

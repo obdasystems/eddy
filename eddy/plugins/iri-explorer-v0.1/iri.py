@@ -89,7 +89,7 @@ class IriPlugin(AbstractPlugin):
     @QtCore.pyqtSlot()
     def onSessionReady(self):
 
-        widget = self.widget('iri')
+        widget = self.widget('developers_iri')
 
         connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, widget.FillTableWithIRIPrefixNodesDictionaryKeysAndValues)
 
@@ -138,16 +138,16 @@ class IriPlugin(AbstractPlugin):
         # INITIALIZE THE WIDGET
         self.debug('Creating iri widget')
         widget = IriWidget(self)
-        widget.setObjectName('iri')
+        widget.setObjectName('developers_iri')
         self.addWidget(widget)
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('Iri', QtGui.QIcon(':/icons/18/ic_info_outline_black'), self.session)
+        widget = DockWidget('developers_Iri', QtGui.QIcon(':/icons/18/ic_info_outline_black'), self.session)
         widget.installEventFilter(self)
         widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('iri_dock')
-        widget.setWidget(self.widget('iri'))
+        widget.setWidget(self.widget('developers_iri'))
         self.addWidget(widget)
 
         # CREATE ENTRY IN VIEW MENU
@@ -399,10 +399,6 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table.clear()
         self.table.setRowCount(0)
 
-        #self.FillTableWithStandardIRIsAndStandardPrefixes()
-
-
-
         for iri in self.project.IRI_prefixes_nodes_dict.keys():
 
             item_iri = QtWidgets.QTableWidgetItem(iri)
@@ -411,7 +407,7 @@ class IriWidget(QtWidgets.QScrollArea):
 
             prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
             item_prefixes = QtWidgets.QTableWidgetItem()
-            if len(prefixes) is 0:
+            if len(prefixes) == 0:
                 item_prefixes.setText('-')
             else:
                 item_prefixes.setText(str(prefixes))
@@ -422,7 +418,7 @@ class IriWidget(QtWidgets.QScrollArea):
             nds_ids = set()
             for n in nodes:
                 nds_ids.add(n.id)
-            if len(nds_ids) is 0:
+            if len(nds_ids) == 0:
                 item_nodes.setText('-')
             else:
                 item_nodes.setText(str(nds_ids))
@@ -505,54 +501,6 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table.setRowCount(0)
         self.table.setColumnCount(3)
 
-        #self.FillTableWithStandardIRIsAndStandardPrefixes()
-        """
-        ########### temporarly add [iri,prefix,node] to self.projet.IRI_prefixes_nodes_dict
-        print('temporarly add [iri,prefix,node] to self.projet.IRI_prefixes_nodes_dict')
-
-        project_prefixes = set()
-        project_prefixes.add(self.project.prefix)
-        values = []
-        values.append(project_prefixes)
-        values.append(set())
-        self.project.IRI_prefixes_nodes_dict[self.project.iri] = values
-
-
-        
-        for n in self.project.nodes():
-            print(n.id,',',n.type)
-            if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
-                if n.iri is not None:
-                    if n.iri is '':
-                        n.iri = self.project.iri
-                    if (n.prefix is '') and (n.iri is self.project.iri):
-                        n.prefix = self.project.prefix
-
-                    if n.iri is self.project.iri:
-                        self.project.IRI_prefixes_nodes_dict[n.iri][0].add(n.prefix)
-                        self.project.IRI_prefixes_nodes_dict[n.iri][1].add(n)
-
-                    if n.iri in self.project.IRI_prefixes_nodes_dict:
-                        if (n.prefix in self.project.IRI_prefixes_nodes_dict[n.iri][0]) and (n in self.project.IRI_prefixes_nodes_dict[n.iri][1]):
-                            pass
-                        else:
-                            self.project.IRI_prefixes_nodes_dict[n.iri][0].add(n.prefix)
-                            self.project.IRI_prefixes_nodes_dict[n.iri][1].add(n)
-                    else:
-                        values = []
-                        prefixes = set()
-                        prefixes.add(n.prefix)
-                        nds = set()
-                        nds.add(n)
-                        values.append(prefixes)
-                        values.append(nds)
-                        self.project.IRI_prefixes_nodes_dict[n.iri] = values
-                        print('entry made in dict')
-                else:
-                    LOGGER.error('iri is None')
-
-        print('temporarly add [iri,prefix,node] to self.projet.IRI_prefixes_nodes_dict >>>>>>>>>  END')
-        """
         ###############       END     ##############
 
         print('self.table.rowCount()',self.table.rowCount())

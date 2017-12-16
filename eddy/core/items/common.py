@@ -420,7 +420,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
             if last_colon == -1:
                 if last_hash == -1:
-                    rc_text = self.text()
+                    rc_text = None
                 else:
                     # hash is present ^^ colon is absent
                     rc_text = self.text()[last_hash + 1:len(self.text())]
@@ -428,7 +428,10 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 # colon is present
                 rc_text = self.text()[last_colon + 1:len(self.text())]
 
-            self._parent.remaining_characters = rc_text
+            if rc_text is None:
+                LOGGER.error('IRI or prefix not present in the label')
+            else:
+                self._parent.remaining_characters = rc_text
 
         self.setAlignment(self.alignment())
 
