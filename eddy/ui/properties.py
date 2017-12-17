@@ -581,8 +581,6 @@ class PredicateNodeProperty(NodeProperty):
             # perform transaction on duplicate dict.
             # if successful, original_dict = duplicate_dict
             # else duplicate_dict = original_dict
-
-
             Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
                                                                                  dict())
 
@@ -632,86 +630,7 @@ class PredicateNodeProperty(NodeProperty):
         self.metaDataChanged_IGNORE_var = False
 
         return None
-    """
-    def metaDataChanged(self):
 
-        #Change the iri/prefix of the node.
-        #:rtype: QUndoCommand
-        
-        undo = self.diagram.project.meta(self.node.type(), self.node.text())
-        redo = undo.copy()
-
-        redo[K_IRI] = self.iriField.value()
-        redo[K_PREFIX] = self.prefixField.value()
-
-        if redo != undo:
-
-            connect(self.project.sgnIRIPrefixNodeEntryAdded, self.metaDataChanged_ADD_OK)
-            connect(self.project.sgnIRIPrefixNodeEntryRemoved, self.metaDataChanged_REMOVE_OK)
-            connect(self.project.sgnIRIPrefixNodeEntryIgnored, self.metaDataChanged_IGNORE)
-
-            #check for conflict in prefixes
-            #transaction = remove(old) + add(new)
-            #perform transaction on duplicate dict.
-            # if successful, original_dict = duplicate_dict
-            # else duplicate_dict = original_dict
-
-
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-            self.project.removeIRIPrefixNodeEntry(Duplicate_dict_1,self.node.iri,self.node.prefix,self.node)
-            self.project.addIRIPrefixNodeEntry(Duplicate_dict_1,self.iriField.value(),self.prefixField.value(),self.node)
-
-
-            if (self.metaDataChanged_REMOVE_OK_var is True) and (self.metaDataChanged_ADD_OK_var is True):
-
-                return_list = []
-
-                self.metaDataChanged_REMOVE_OK_var = False
-                self.metaDataChanged_ADD_OK_var = False
-                self.metaDataChanged_IGNORE_var = False
-
-                #self.project.IRI_prefixes_nodes_dict.clear()
-                #self.project.copy_IRI_prefixes_nodes_dictionaries(Duplicate_IRI_prefixes_nodes_dict,self.project.IRI_prefixes_nodes_dict)
-
-                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-                return_list.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1))
-
-                # all ok->
-                if self.iriField.value() is '':
-                    #self.node.iri = self.project.iri
-                    new_iri = self.project.iri
-                else:
-                    #self.node.iri = self.iriField.value()
-                    new_iri = self.iriField.value()
-
-                if (self.prefixField.value() is '') and ((self.iriField.value() is '') or (self.iriField.value() is self.project.iri)):
-                    #self.node.prefix = self.project.prefix
-                    new_prefix = self.project.prefix
-                else:
-                    #self.node.prefix = self.prefixField.value()
-                    new_prefix = self.prefixField.value()
-
-                return_list.append(CommandNodeSetIRIandPrefix(self.diagram.project, self.node,self.node.iri,new_iri,self.node.prefix,new_prefix))
-
-                #self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
-
-                return_list.append(CommandNodeSetMeta(self.diagram.project, self.node.type(), self.node.text(), undo, redo))
-
-                return return_list
-                #return CommandNodeSetMeta(self.diagram.project, self.node.type(), self.node.text(), undo, redo)
-
-            else:
-
-                LOGGER.warning('redo != undo but transaction was not executed correctly')
-
-        self.metaDataChanged_REMOVE_OK_var = False
-        self.metaDataChanged_ADD_OK_var = False
-        self.metaDataChanged_IGNORE_var = False
-
-        return None
-    """
     @QtCore.pyqtSlot(str,str,AbstractNode,str)
     def metaDataChanged_REMOVE_OK(self,iri,prefix,node,message):
 
@@ -742,76 +661,6 @@ class PredicateNodeProperty(NodeProperty):
                 print('metaDataChanged_IGNORE >',iri,'-',prefix,'-',node.id,'-',message)
         self.metaDataChanged_IGNORE_var = True
 
-    def textChanged(self):
-        """
-        Change the label of the node.
-        :rtype: list
-        """
-        print('         textChanged     >>>')
-        unprocessed_new_text = self.textField.value().strip()
-        unprocessed_new_text = unprocessed_new_text if not isEmpty(unprocessed_new_text) else self.node.label.template
-
-        new_rc = ''
-
-        for c in unprocessed_new_text:
-            if c == '':
-                pass
-            elif (not c.isalnum()):
-                new_rc = new_rc+'_'
-            else:
-                new_rc = new_rc+c
-
-        print('new_rc',new_rc)
-
-        last_hash = self.node.text().rfind('#')
-        last_colon = self.node.text().rfind(':')
-
-        prev_rc = None
-        iri_to_set = None
-        prefix_to_set = None
-
-        if last_colon == -1:
-            if last_hash == -1:
-                LOGGER.error('# or : not found in node.text()')
-            else:
-                #hash is present ^^ colon is absent
-                iri_to_set = self.node.text()[0:last_hash+1]
-                prev_rc = self.node.text()[last_hash+1:len(self.node.text())]
-        else:
-            #colon is present
-            prefix_to_set = self.node.text()[0:last_colon+1]
-            prev_rc = self.node.text()[last_colon+1:len(self.node.text())]
-
-            print('prefix_to_set',prefix_to_set)
-            print('prev_rc',prev_rc)
-
-        if prev_rc != new_rc:
-
-            if prefix_to_set is None:
-                new_text_to_set = iri_to_set + new_rc
-            else:
-                new_text_to_set = prefix_to_set + new_rc
-
-            print('new_text_to_set', new_text_to_set)
-
-            return_list = []
-
-            if self.refactorField.isChecked():
-                item = self.node.type()
-                name = self.node.text()
-                project = self.diagram.project
-
-                return_list.extend(CommandNodeSetRemainingCharacters(n, prev_rc, new_rc) for n in
-                                   project.predicates(item, name))
-                return_list.extend(CommandLabelChange(n.diagram, n, n.text(), new_text_to_set) for n in
-                                   project.predicates(item, name))
-                return return_list
-
-            return_list.append(CommandNodeSetRemainingCharacters(self.node, prev_rc, new_rc))
-            return_list.append(CommandLabelChange(self.diagram, self.node, self.node.text(), new_text_to_set))
-            return return_list
-
-        return [None]
 
 
 class OrderedInputNodeProperty(NodeProperty):
