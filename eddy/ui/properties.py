@@ -52,7 +52,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
-from eddy.core.project import K_IRI, K_PREFIX, K_REMAININGCHARACTERS
+#from eddy.core.project import K_IRI, K_PREFIX, K_REMAININGCHARACTERS
 from eddy.core.output import getLogger
 from eddy.core.items.nodes.common.base import AbstractNode
 
@@ -440,10 +440,10 @@ class PredicateNodeProperty(NodeProperty):
         self.prefixField.setFixedWidth(300)
         self.prefixField.setFont(Font('Roboto', 12))
 
-        if node.prefix is not None:
-            self.prefixField.setValue(node.prefix)
-        else:
-            self.prefixField.setValue(meta.get(K_PREFIX, ''))
+        #if node.prefix is not None:
+        self.prefixField.setValue(node.prefix)
+        #else:
+            #self.prefixField.setValue(meta.get(K_PREFIX, ''))
 
         self.iriLabel = QtWidgets.QLabel(self)
         self.iriLabel.setFont(Font('Roboto', 12))
@@ -452,10 +452,10 @@ class PredicateNodeProperty(NodeProperty):
         self.iriField.setFixedWidth(300)
         self.iriField.setFont(Font('Roboto', 12))
 
-        if node.iri is not None:
-            self.iriField.setValue(node.iri)
-        else:
-            self.iriField.setValue(meta.get(K_IRI, ''))
+        #if node.iri is not None:
+        self.iriField.setValue(node.iri)
+        #else:
+            #self.iriField.setValue(meta.get(K_IRI, ''))
 
         #self.generalLayout.addRow(self.prefixLabel, self.prefixField)
         #self.generalLayout.addRow(self.iriLabel, self.iriField)
@@ -471,10 +471,10 @@ class PredicateNodeProperty(NodeProperty):
         self.textField.setFixedWidth(300)
         self.textField.setFont(Font('Roboto', 12))
         if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
-            if node.remaining_characters is not None:
-                self.textField.setValue(node.remaining_characters)
-            else:
-                self.iriField.setValue(meta.get(K_REMAININGCHARACTERS, ''))
+            #if node.remaining_characters is not None:
+            self.textField.setValue(node.remaining_characters)
+            #else:
+                #self.iriField.setValue(meta.get(K_REMAININGCHARACTERS, ''))
         else:
             self.textField.setValue(self.node.text())
 
@@ -548,11 +548,11 @@ class PredicateNodeProperty(NodeProperty):
         Change the iri/prefix of the node.
         :rtype: List
         """
-        undo = self.diagram.project.meta(self.node.type(), self.node.text())
-        redo = undo.copy()
+        #undo = self.diagram.project.meta(self.node.type(), self.node.text())
+        #redo = undo.copy()
 
-        redo[K_IRI] = self.iriField.value()
-        redo[K_PREFIX] = self.prefixField.value()
+        #redo[K_IRI] = self.iriField.value()
+        #redo[K_PREFIX] = self.prefixField.value()
 
         unprocessed_new_text = self.textField.value().strip()
         unprocessed_new_text = unprocessed_new_text if not isEmpty(unprocessed_new_text) else self.node.label.template
@@ -567,9 +567,9 @@ class PredicateNodeProperty(NodeProperty):
             else:
                 new_rc = new_rc+c
 
-        redo[K_REMAININGCHARACTERS] = new_rc
+        #redo[K_REMAININGCHARACTERS] = new_rc
 
-        if (redo[K_IRI]!=self.node.iri) or (redo[K_PREFIX]!=self.node.prefix) or (redo[K_REMAININGCHARACTERS]!=self.node.remaining_characters):
+        if (self.iriField.value()!=self.node.iri) or (self.prefixField.value()!=self.node.prefix) or (unprocessed_new_text!=self.node.remaining_characters):
         #if redo != undo:
 
             connect(self.project.sgnIRIPrefixNodeEntryAdded, self.metaDataChanged_ADD_OK)
@@ -617,7 +617,7 @@ class PredicateNodeProperty(NodeProperty):
                 return_list.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, self.node, self.node.iri, new_iri,
                                                               self.node.prefix, new_prefix, self.node.remaining_characters, new_rc))
                 return_list.append(CommandLabelChange(self.diagram, self.node, self.node.text(), new_text_to_set))
-                return_list.append(CommandNodeSetMeta(self.diagram.project, self.node.type(), self.node.text(), undo, redo))
+                #return_list.append(CommandNodeSetMeta(self.diagram.project, self.node.type(), self.node.text(), undo, redo))
 
                 return return_list
 

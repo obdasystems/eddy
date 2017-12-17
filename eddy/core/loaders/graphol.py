@@ -63,7 +63,7 @@ from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_DESCRIPTION, K_IRI, K_PREFIX
+from eddy.core.project import K_DESCRIPTION
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -703,8 +703,8 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         name = element.attribute('name')
         meta = self.project.meta(item, name)
         meta[K_DESCRIPTION] = element.firstChildElement(K_DESCRIPTION).text()
-        meta[K_IRI] = element.firstChildElement(K_IRI).text()
-        meta[K_PREFIX] = element.firstChildElement(K_PREFIX).text()
+        #meta[K_IRI] = element.firstChildElement(K_IRI).text()
+        #meta[K_PREFIX] = element.firstChildElement(K_PREFIX).text()
         return meta
 
     def importRoleMetadata(self, element):
@@ -993,8 +993,8 @@ class GrapholLoaderMixin_v2(object):
         name = e.attribute('name')
         meta = self.nproject.meta(item, name)
         meta[K_DESCRIPTION] = e.firstChildElement(K_DESCRIPTION).text()
-        meta[K_IRI] = e.firstChildElement(K_IRI).text()
-        meta[K_PREFIX] = e.firstChildElement(K_PREFIX).text()
+        #meta[K_IRI] = e.firstChildElement(K_IRI).text()
+        #meta[K_PREFIX] = e.firstChildElement(K_PREFIX).text()
         return meta
 
     def importRoleMeta(self, e):

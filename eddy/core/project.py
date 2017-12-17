@@ -76,9 +76,9 @@ K_PROPERTY = 'property'
 # PREDICATES META KEYS
 K_DESCRIPTION = 'description'
 
-K_IRI = 'iri'
-K_PREFIX = 'prefix'
-K_REMAININGCHARACTERS = 'remaining_characters'
+#K_IRI = 'iri'
+#K_PREFIX = 'prefix'
+#K_REMAININGCHARACTERS = 'remaining_characters'
 
 K_FUNCTIONAL = 'functional'
 K_ASYMMETRIC = 'asymmetric'

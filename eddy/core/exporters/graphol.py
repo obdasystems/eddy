@@ -44,7 +44,7 @@ from eddy.core.functions.misc import postfix
 from eddy.core.functions.fsystem import fwrite, mkdir
 from eddy.core.output import getLogger
 from eddy.core.project import Project
-from eddy.core.project import K_DESCRIPTION, K_IRI, K_PREFIX
+from eddy.core.project import K_DESCRIPTION
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -144,6 +144,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         element.setAttribute('name', name)
         description = self.document.createElement(K_DESCRIPTION)
         description.appendChild(self.document.createTextNode(meta.get(K_DESCRIPTION, '')))
+        """
         prefix = self.document.createElement(K_PREFIX)
         prefix.appendChild(self.document.createTextNode(meta.get(K_PREFIX, '')))
         element.appendChild(prefix)
@@ -151,6 +152,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         iri.appendChild(self.document.createTextNode(meta.get(K_IRI, '')))
         element.appendChild(prefix)
         element.appendChild(iri)
+        """
         element.appendChild(description)
         return element
 
@@ -212,17 +214,10 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         element = self.exportLabelNode(node)
 
-        if node.prefix is None:
-            element.setAttribute('PREFIX', '')
-        else:
-            element.setAttribute('PREFIX', node.prefix)
-
-        if node.iri is None:
-            element.setAttribute('IRI', '')
-        else:
-            element.setAttribute('IRI',node.iri)
-
+        element.setAttribute('PREFIX', node.prefix)
+        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
+
         return element
 
     def exportComplementNode(self, node):
@@ -241,17 +236,10 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         element = self.exportLabelNode(node)
 
-        if node.prefix is None:
-            element.setAttribute('PREFIX', '')
-        else:
-            element.setAttribute('PREFIX', node.prefix)
-
-        if node.iri is None:
-            element.setAttribute('IRI', '')
-        else:
-            element.setAttribute('IRI',node.iri)
-
+        element.setAttribute('PREFIX', node.prefix)
+        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
+
         return element
 
     def exportDatatypeRestrictionNode(self, node):
@@ -311,17 +299,10 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         element = self.exportLabelNode(node)
 
-        if node.prefix is None:
-            element.setAttribute('PREFIX', '')
-        else:
-            element.setAttribute('PREFIX', node.prefix)
-
-        if node.iri is None:
-            element.setAttribute('IRI', '')
-        else:
-            element.setAttribute('IRI',node.iri)
-
+        element.setAttribute('PREFIX', node.prefix)
+        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
+
         return element
 
     def exportIntersectionNode(self, node):
@@ -358,17 +339,10 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         element = self.exportLabelNode(node)
 
-        if node.prefix is None:
-            element.setAttribute('PREFIX', '')
-        else:
-            element.setAttribute('PREFIX', node.prefix)
-
-        if node.iri is None:
-            element.setAttribute('IRI', '')
-        else:
-            element.setAttribute('IRI',node.iri)
-
+        element.setAttribute('PREFIX', node.prefix)
+        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
+
         return element
 
     def exportRoleChainNode(self, node):
