@@ -39,11 +39,11 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.project import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.labels import CommandLabelChange, GenerateNewLabel
 from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
-from eddy.core.commands.nodes import CommandNodeSetMeta, CommandNodeSetIRIandPrefix, CommandNodeSetRemainingCharacters, CommandNodeSetIRIPrefixAndRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandNodeSetIRIPrefixAndRemainingCharacters
 from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
@@ -52,7 +52,6 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
-#from eddy.core.project import K_IRI, K_PREFIX, K_REMAININGCHARACTERS
 from eddy.core.output import getLogger
 from eddy.core.items.nodes.common.base import AbstractNode
 
@@ -958,6 +957,8 @@ class ValueNodeProperty(NodeProperty):
         """
         super().__init__(diagram, node, session)
 
+        self.node = node
+
         #############################################
         # VALUE TAB
         #################################
@@ -1004,7 +1005,12 @@ class ValueNodeProperty(NodeProperty):
         """
         Executed when the dialog is accepted.
         """
-        commands = [self.positionChanged(), self.valueChanged()]
+        commands = [self.positionChanged()]
+        commands_value_changed = self.valueChanged()
+
+        if commands_value_changed is not None:
+            commands.extend(commands_value_changed)
+
         if any(commands):
             self.session.undostack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
@@ -1026,5 +1032,21 @@ class ValueNodeProperty(NodeProperty):
         value = self.valueField.value()
         data = self.node.compose(value, datatype)
         if self.node.text() != data:
-            return CommandLabelChange(self.diagram, self.node, self.node.text(), data)
+            commands = []
+
+            new_prefix = datatype.value[0:datatype.value.index(':')]
+            new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
+            new_iri = None
+
+            for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
+                if std_prefix == new_prefix:
+                    new_iri = std_iri
+
+            commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
+            commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,self.node,self.node.iri,new_iri,self.node.prefix,new_prefix,self.node.remaining_characters,new_remaining_characters))
+            commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
+
+            return commands
+
         return None

@@ -119,7 +119,10 @@ class InputConceptToRestrictionNodeRule(ProfileEdgeRule):
                     # as source for a concept expression inclusion, and if so, deny the connection
                     # because OWL 2 QL admits concept inclusion sourcing only from unqualified role
                     # restrictions (we need to skip TOP though, since it won't be qualified then).
-                    if Special.valueOf(source.text()) is not Special.Top:
+                    if (Special.valueOf(source.text()) is not Special.Top) and \
+                        (Special.valueOf(source.text()) is not Special.TopConcept) and \
+                        (Special.valueOf(source.text()) is not Special.TopRole) and\
+                        (Special.valueOf(source.text()) is not Special.TopAttribute):
                         # We found an outgoing inclusion edge and our restriction filler is not TOP.
                         if target.outgoingNodes(filter_on_edges=lambda x: x.type() is Item.InclusionEdge):
                             raise ProfileError('Inclusion with a qualified {} as source is forbidden in OWL 2 QL'.format(target.shortName))

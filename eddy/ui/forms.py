@@ -40,7 +40,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.nodes import CommandNodeSetRemainingCharacters, CommandNodeSetIRIandPrefix, CommandNodeSetIRIPrefixAndRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandNodeSetIRIPrefixAndRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.owl import Datatype, OWLStandardIRIPrefixPairsDict

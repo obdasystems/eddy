@@ -39,6 +39,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.commands.nodes_2 import CommandNodeSetIRIPrefixAndRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
@@ -46,6 +47,8 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
+from eddy.core.regex import RE_VALUE
+from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 
 
 LOGGER = getLogger()
@@ -325,9 +328,39 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
             if focusInData and focusInData != currentData:
                 node = self.parentItem()
-                command = CommandLabelChange(self.diagram, node, focusInData, currentData)
-                self.session.undostack.push(command)
 
+                match = RE_VALUE.match(currentData)
+
+                command_1 = CommandLabelChange(self.diagram, node, focusInData, currentData)
+                command_3 = CommandLabelChange(self.diagram, node, focusInData, currentData)
+
+                if match:
+                    new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
+                    new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
+                    new_iri = None
+
+                    for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                        std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
+                        if std_prefix == new_prefix:
+                            new_iri = std_iri
+
+                    command_2 = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, node.iri, new_iri, node.prefix, new_prefix, node.remaining_characters, new_remaining_characters)
+
+                else:
+                    command_2 = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, node.iri, node.iri, node.prefix, node.prefix, node.remaining_characters, currentData)
+
+                commands = []
+
+                commands.append(command_1)
+                commands.append(command_2)
+                commands.append(command_3)
+
+                if any(commands):
+                    self.session.undostack.beginMacro('edit {0} properties'.format(node))
+                    for command in commands:
+                        if command:
+                            self.session.undostack.push(command)
+                    self.session.undostack.endMacro()
             else:
                 self.setText(self.old_text)
                 self.old_text = None
@@ -415,23 +448,29 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
             current_text = self.text()
 
-            last_hash = current_text.rfind('#')
-            last_colon = current_text.rfind(':')
+            if (self._parent.type() is Item.IndividualNode) and (self._parent.value is not None):
 
-            if last_colon == -1:
-                if last_hash == -1:
-                    rc_text = None
+                pass
+
+            else:
+
+                last_hash = current_text.rfind('#')
+                last_colon = current_text.rfind(':')
+
+                if last_colon == -1:
+                    if last_hash == -1:
+                        rc_text = None
+                    else:
+                        # hash is present ^^ colon is absent
+                        rc_text = self.text()[last_hash + 1:len(self.text())]
                 else:
-                    # hash is present ^^ colon is absent
-                    rc_text = self.text()[last_hash + 1:len(self.text())]
-            else:
-                # colon is present
-                rc_text = self.text()[last_colon + 1:len(self.text())]
+                    # colon is present
+                    rc_text = self.text()[last_colon + 1:len(self.text())]
 
-            if rc_text is None:
-                LOGGER.error('IRI or prefix not present in the label')
-            else:
-                self._parent.remaining_characters = rc_text
+                if rc_text is None:
+                    pass
+                else:
+                    self._parent.remaining_characters = rc_text
 
         self.setAlignment(self.alignment())
 

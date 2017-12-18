@@ -164,4 +164,11 @@ class Special(Enum_):
     This class defines special nodes types.
     """
     Top = 'TOP'
+    TopConcept = 'owl:Thing'
+    TopAttribute = 'owl:TopDataProperty'
+    TopRole = 'owl:TopObjectProperty'
+
     Bottom = 'BOTTOM'
+    BottomConcept = 'owl:Nothing'
+    BottomAttribute = 'owl:BottomDataProperty'
+    BottomRole = 'owl:BottomObjectProperty'

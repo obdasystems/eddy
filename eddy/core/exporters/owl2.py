@@ -729,12 +729,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :type node: AttributeNode
         :rtype: OWLDataProperty
         """
-        if node.special() is Special.Top:
+        if (node.special() is Special.TopAttribute) or (node.special() is Special.Top):
             return self.df.getOWLTopDataProperty()
-        if node.special() is Special.Bottom:
+        if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
             return self.df.getOWLBottomDataProperty()
-        if node.iri is not None:
-            if node.prefix is not None:
+        if node.iri != '':
+            if node.prefix != '':
                 self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                 return self.df.getOWLDataProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
             else:
@@ -776,12 +776,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :type node: ConceptNode
         :rtype: OWLClass
         """
-        if node.special() is Special.Top:
+        if (node.special() is Special.Top) or (node.special() is Special.TopConcept):
             return self.df.getOWLThing()
-        if node.special() is Special.Bottom:
+        if (node.special() is Special.Bottom) or (node.special() is Special.BottomConcept):
             return self.df.getOWLNothing()
-        if node.iri is not None:
-            if node.prefix is not None:
+        if node.iri != '':
+            if node.prefix != '':
                 self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                 return self.df.getOWLClass(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
             else:
@@ -957,8 +957,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: OWLNamedIndividual
         """
         if node.identity() is Identity.Individual:
-            if node.iri is not None:
-                if node.prefix is not None:
+            if node.iri != '':
+                if node.prefix != '':
                     self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                     return self.df.getOWLNamedIndividual(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
                 else:
@@ -1076,12 +1076,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :type node: RoleNode
         :rtype: OWLObjectProperty
         """
-        if node.special() is Special.Top:
+        if (node.special() is Special.Top) or (node.special() is Special.TopRole):
             return self.df.getOWLTopObjectProperty()
-        elif node.special() is Special.Bottom:
+        if (node.special() is Special.Bottom) or ((node.special() is Special.BottomRole)):
             return self.df.getOWLBottomObjectProperty()
-        if node.iri is not None:
-            if node.prefix is not None:
+        if node.iri != '':
+            if node.prefix != '':
                 self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                 return self.df.getOWLObjectProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
             else:
@@ -2239,12 +2239,12 @@ class OWLOntologyFetcher:
         :type node: AttributeNode
         :rtype: OWLDataProperty
         """
-        if node.special() is Special.Top:
+        if (node.special() is Special.TopAttribute) or (node.special() is Special.Top):
             return self.df.getOWLTopDataProperty()
-        if node.special() is Special.Bottom:
+        if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
             return self.df.getOWLBottomDataProperty()
-        if node.iri is not None:
-            if node.prefix is not None:
+        if node.iri != '':
+            if node.prefix != '':
                 self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                 return self.df.getOWLDataProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
             else:
@@ -2311,18 +2311,17 @@ class OWLOntologyFetcher:
         :type node: ConceptNode
         :rtype: OWLClass
         """
-        if node.special() is Special.Top:
+        if (node.special() is Special.Top) or (node.special() is Special.TopConcept):
             return self.df.getOWLThing()
-        if node.special() is Special.Bottom:
+        if (node.special() is Special.Bottom) or (node.special() is Special.BottomConcept):
             return self.df.getOWLNothing()
-        if node.iri is not None:
-            if node.prefix is not None:
+        if node.iri != '':
+            if node.prefix != '':
                 self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                 return self.df.getOWLClass(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
             else:
                 return self.df.getOWLClass(self.IRI.create(node.iri+'#'+node.remaining_characters))
         else:
-            print(node.id,'-',node.remaining_characters)
             return self.df.getOWLClass(OWLShortIRI(self.project.prefix, node.remaining_characters), self.pm)
 
     def getDatatypeRestriction(self, node, conversion_trace):
@@ -2519,8 +2518,8 @@ class OWLOntologyFetcher:
         :rtype: OWLNamedIndividual
         """
         if node.identity() is Identity.Individual:
-            if node.iri is not None:
-                if node.prefix is not None:
+            if node.iri != '':
+                if node.prefix != '':
                     self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                     return self.df.getOWLNamedIndividual(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
                 else:
@@ -2651,12 +2650,12 @@ class OWLOntologyFetcher:
         :type node: RoleNode
         :rtype: OWLObjectProperty
         """
-        if node.special() is Special.Top:
+        if (node.special() is Special.Top) or (node.special() is Special.TopRole):
             return self.df.getOWLTopObjectProperty()
-        elif node.special() is Special.Bottom:
+        if (node.special() is Special.Bottom) or ((node.special() is Special.BottomRole)):
             return self.df.getOWLBottomObjectProperty()
-        if node.iri is not None:
-            if node.prefix is not None:
+        if node.iri != '':
+            if node.prefix != '':
                 self.pm.setPrefix(node.prefix, postfix(node.iri, '#'))
                 return self.df.getOWLObjectProperty(OWLShortIRI(node.prefix, node.remaining_characters), self.pm)
             else:

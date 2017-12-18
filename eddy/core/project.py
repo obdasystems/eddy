@@ -209,6 +209,8 @@ class Project(QtCore.QObject):
 
         print('str(type(item))' ,str(type(item)))
 
+        flag = True
+
         if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
 
             node = item
@@ -228,13 +230,25 @@ class Project(QtCore.QObject):
                     if (item.identity() is Identity.Value):
 
                         """
-                        self.IRI_prefixes_nodes_dict[node.iri][0].add(node.prefix)
-                        self.IRI_prefixes_nodes_dict[node.iri][1].add(node)
-                        self.sgnIRIPrefixNodeDictionaryUpdated.emit()
+                        datatype = node.datatype
 
-                        print('     add_item_to_IRI_prefixes_nodes_dict     >>>  END(2)', item)
-                        return
+                        new_prefix = datatype.value[0:datatype.value.index(':')]
+                        new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
+                        new_iri = None
+
+                        for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                            std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
+                            if std_prefix == new_prefix:
+                                new_iri = std_iri
+
+                        node.iri = new_iri
+                        node.prefix = new_prefix
+                        node.remaining_characters = new_remaining_characters
+
+                        flag = False
                         """
+
+                        flag = False
 
                     print('**************')
 
@@ -254,14 +268,22 @@ class Project(QtCore.QObject):
                 # initial text of label is Concept etc
                 # change it to prefix:concept or iri#concept
 
-                label_for_node = GenerateNewLabel(diagram.project,node.iri,node.prefix,node.remaining_characters).return_label()
+                if flag is True:
 
-                """
-                if node.text() in {'concept', 'attribute', 'role', 'individual'}:
-                    print('label reset/ old_text -',node.text())
+                    label_for_node = GenerateNewLabel(diagram.project, node.iri, node.prefix,
+                                                      node.remaining_characters).return_label()
+
+                    """
+                    if node.text() in {'concept', 'attribute', 'role', 'individual'}:
+                        print('label reset/ old_text -',node.text())
+                        node.setText(label_for_node)
+                    """
+                    print('node.text()', node.text())
+
                     node.setText(label_for_node)
-                """
-                node.setText(label_for_node)
+
+                    print('node.text()', node.text())
+
 
                 if node.iri in self.IRI_prefixes_nodes_dict.keys():
                     self.IRI_prefixes_nodes_dict[node.iri][0].add(node.prefix)
@@ -1386,3 +1408,5 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
+
+

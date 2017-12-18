@@ -57,7 +57,7 @@ from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes import CommandNodeSetRemainingCharacters, CommandNodeSetIRIandPrefix, CommandNodeSetIRIPrefixAndRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandNodeSetIRIPrefixAndRemainingCharacters
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
@@ -79,7 +79,7 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import Datatype, Facet
+from eddy.core.datatypes.owl import Datatype, Facet, OWLStandardIRIPrefixPairsDict
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
@@ -1755,10 +1755,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                                     self.undostack.push(command)
                             self.undostack.endMacro()
 
-                        #commands.append(CommandNodeSetIRIandPrefix(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix))
-                        #commands.append(CommandNodeSetRemainingCharacters(node,node.remaining_characters,data))
-                        #commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
-
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
@@ -1782,7 +1778,34 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 data = special.value
                 if node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
-                    self.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
+
+                    new_iri = 'http://www.w3.org/2002/07/owl'
+                    new_prefix = 'owl'
+
+                    if node.type() is Item.ConceptNode:
+                        new_rc_lst = ['Nothing','Thing']
+                    if node.type() is Item.RoleNode:
+                        new_rc_lst = ['BottomObjectProperty','TopObjectProperty']
+                    if node.type() is Item.AttributeNode:
+                        new_rc_lst = ['BottomDataProperty','TopDataProperty']
+
+                    if data == 'TOP':
+                        new_rc = new_rc_lst[1]
+                    elif data == 'BOTTOM':
+                        new_rc = new_rc_lst[0]
+
+                    commands = []
+
+                    commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+                    commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(diagram.project,node,node.iri,new_iri,node.prefix,new_prefix,node.remaining_characters,new_rc))
+                    commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+
+                    if any(commands):
+                        self.undostack.beginMacro('edit {0} doSetNodeSpecial'.format(node))
+                        for command in commands:
+                            if command:
+                                self.undostack.push(command)
+                        self.undostack.endMacro()
 
     @QtCore.pyqtSlot()
     def doSetDatatype(self):

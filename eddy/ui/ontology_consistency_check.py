@@ -342,8 +342,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         self.Node = autoclass('org.semanticweb.owlapi.reasoner.Node')
 
         self.InconsistentOntologyException_string = 'JVM exception occurred: Inconsistent ontology'
-        #self.java_null = autoclass('java.lang.NullPointerException')
-        #self.java_null = autoclass('java.util.Objects')
 
 
     def axioms(self):
@@ -382,53 +380,63 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             unsatisfiable_entity = entities_of_bottom_entity_node_itr.next()
             cast(java_class, unsatisfiable_entity)
 
-            if self.project.iri in unsatisfiable_entity.toString():
+            print('unsatisfiable_entity.toString()',unsatisfiable_entity.toString())
 
-                unsatisfiable_entities_string.append(unsatisfiable_entity.toString())
+            #if self.project.iri in unsatisfiable_entity.toString():
 
-                explanations_for_unsatisfiable_entity = []
-                axioms_of_explanations = []
 
-                if java_class == self.OWLClass:
-                    axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLNothing());
+            unsatisfiable_entities_string.append(unsatisfiable_entity.toString())
 
-                elif java_class == self.OWLDataProperty:
-                    exists_for_some_values = self.OWLFunctionalSyntaxFactory.DataSomeValuesFrom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.TopDatatype());
-                    #cast(self.OWLDataSomeValuesFrom,exists_for_some_values)
-                    axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_values, self.OWLFunctionalSyntaxFactory.OWLNothing());
+            explanations_for_unsatisfiable_entity = []
+            axioms_of_explanations = []
 
-                elif java_class == self.OWLObjectPropertyExpression:
-                    exists_for_some_objects = self.OWLFunctionalSyntaxFactory.ObjectSomeValuesFrom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLThing());
-                    #cast(self.OWLObjectSomeValuesFrom,exists_for_some_objects)
-                    axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_objects, self.OWLFunctionalSyntaxFactory.OWLNothing());
+            if java_class == self.OWLClass:
+                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(unsatisfiable_entity,
+                                                                                   self.OWLFunctionalSyntaxFactory.OWLNothing());
 
-                else:
-                    LOGGER.error('invalid unsatisfiable entity')
-                    sys.exit(0)
+            elif java_class == self.OWLDataProperty:
+                exists_for_some_values = self.OWLFunctionalSyntaxFactory.DataSomeValuesFrom(unsatisfiable_entity,
+                                                                                            self.OWLFunctionalSyntaxFactory.TopDatatype());
+                # cast(self.OWLDataSomeValuesFrom,exists_for_some_values)
+                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_values,
+                                                                                   self.OWLFunctionalSyntaxFactory.OWLNothing());
 
-                #cast(self.OWLAxiom,axiom_err)
-                axiom_err_sc = axiom_err.getSubClass()
+            elif java_class == self.OWLObjectPropertyExpression:
+                exists_for_some_objects = self.OWLFunctionalSyntaxFactory.ObjectSomeValuesFrom(unsatisfiable_entity,
+                                                                                               self.OWLFunctionalSyntaxFactory.OWLThing());
+                # cast(self.OWLObjectSomeValuesFrom,exists_for_some_objects)
+                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_objects,
+                                                                                   self.OWLFunctionalSyntaxFactory.OWLNothing());
 
-                explanations_raw = self.generator_unsatisfiable_entities.getExplanations(axiom_err_sc)
-                explanations_raw_itr = explanations_raw.iterator()
+            else:
+                LOGGER.error('invalid unsatisfiable entity')
+                sys.exit(0)
 
-                while (explanations_raw_itr.hasNext()):
+            # cast(self.OWLAxiom,axiom_err)
+            axiom_err_sc = axiom_err.getSubClass()
 
-                    expl_raw = explanations_raw_itr.next()
-                    explanations_for_unsatisfiable_entity.append(expl_raw)
+            explanations_raw = self.generator_unsatisfiable_entities.getExplanations(axiom_err_sc)
+            explanations_raw_itr = explanations_raw.iterator()
 
-                    axioms_of_expl = []
-                    axioms_itr = expl_raw.iterator()
+            while (explanations_raw_itr.hasNext()):
 
-                    # get axioms for the explanation
-                    while axioms_itr.hasNext():
-                        axiom_raw = axioms_itr.next()
-                        #cast(self.OWLAxiom, axiom_raw)
-                        axioms_of_expl.append(axiom_raw.toString())
+                expl_raw = explanations_raw_itr.next()
+                explanations_for_unsatisfiable_entity.append(expl_raw)
 
-                    axioms_of_explanations.append(axioms_of_expl)
+                axioms_of_expl = []
+                axioms_itr = expl_raw.iterator()
 
-                explanations_for_all_unsatisfiable_entities.append(explanations_for_unsatisfiable_entity)
+                # get axioms for the explanation
+                while axioms_itr.hasNext():
+                    axiom_raw = axioms_itr.next()
+                    # cast(self.OWLAxiom, axiom_raw)
+                    axioms_of_expl.append(axiom_raw.toString())
+
+                axioms_of_explanations.append(axioms_of_expl)
+
+            explanations_for_all_unsatisfiable_entities.append(explanations_for_unsatisfiable_entity)
+
+
 
         if java_class == self.OWLClass:
         
@@ -463,6 +471,10 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             
             LOGGER.error('invalid unsatisfiable entity')
             sys.exit(0)
+
+        print('self.project.unsatisfiable_classes',self.project.unsatisfiable_classes)
+        print('self.project.unsatisfiable_roles', self.project.unsatisfiable_roles)
+        print('self.project.unsatisfiable_attributes', self.project.unsatisfiable_attributes)
 
     def reason_over_ontology(self):
 

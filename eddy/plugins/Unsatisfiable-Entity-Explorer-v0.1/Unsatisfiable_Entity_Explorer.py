@@ -143,21 +143,24 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
     def add_unsatisfiable_nodes_in_widget(self,input_list,inp_type):
 
         for count,entity in enumerate(input_list):
+
+            print('entity',entity)
+
             for node in entity:
 
                 self.sgnFakeItemAdded.emit(node.diagram, node)
                 node.updateNode(valid=False)
 
-            if inp_type=='unsatisfiable_classes':
-                explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
-            elif inp_type=='unsatisfiable_attributes':
-                explanation_for_node = self.project.explanations_for_unsatisfiable_attributes[count]
-            elif inp_type=='unsatisfiable_roles':
-                explanation_for_node = self.project.explanations_for_unsatisfiable_roles[count]
-            else:
-                LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
+                if inp_type=='unsatisfiable_classes':
+                    explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
+                elif inp_type=='unsatisfiable_attributes':
+                    explanation_for_node = self.project.explanations_for_unsatisfiable_attributes[count]
+                elif inp_type=='unsatisfiable_roles':
+                    explanation_for_node = self.project.explanations_for_unsatisfiable_roles[count]
+                else:
+                    LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
 
-            self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
+                self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
 
     @QtCore.pyqtSlot()
     def onSessionReady(self):
@@ -176,6 +179,9 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         classes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_classes)
         attributes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_attributes)
         roles_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_roles)
+
+        print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
+
 
         self.add_unsatisfiable_nodes_in_widget(classes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_classes')
         self.add_unsatisfiable_nodes_in_widget(attributes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_attributes')

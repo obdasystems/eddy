@@ -137,7 +137,10 @@ class RestrictionNode(AbstractNode):
             collection = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
             if len(collection) >= 2:
                 node = first(collection, filter_on_item=f4)
-                if node and Special.valueOf(node.text()) is not Special.Top:
+                if (node and Special.valueOf(node.text()) is not Special.Top) and \
+                   (node and Special.valueOf(node.text()) is not Special.TopConcept) and \
+                   (node and Special.valueOf(node.text()) is not Special.TopAttribute) and \
+                   (node and Special.valueOf(node.text()) is not Special.TopRole):
                     return True
             # CHECK FOR ATTRIBUTE QUALIFIED RESTRICTION
             return len(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)) >= 2

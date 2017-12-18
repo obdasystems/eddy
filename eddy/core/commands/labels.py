@@ -37,6 +37,7 @@ from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Identity, Item
 
+
 class GenerateNewLabel():
     #Generate a new label for a non value node
     def __init__(self, project, iri, prefix, remaining_characters):
@@ -52,13 +53,13 @@ class GenerateNewLabel():
 
         if self.prefix_to_set == '':
             if self.iri_to_set == self.project.iri:
-                return_label=self.project.prefix+':'+self.rc_to_set
+                return_label = self.project.prefix + ':' + self.rc_to_set
             else:
-                return_label=self.iri_to_set+'#'+self.rc_to_set
+                return_label = self.iri_to_set + '#' + self.rc_to_set
         else:
-            return_label=self.prefix_to_set + ':' + self.rc_to_set
+            return_label = self.prefix_to_set + ':' + self.rc_to_set
 
-        print('return_label',return_label)
+        print('return_label', return_label)
 
         return return_label
 
@@ -66,7 +67,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
     """
     This command is used to edit items' labels.
     """
-    def __init__(self, diagram, item, undo, redo, refactor=False, name=None):
+    def __init__(self, diagram, item, undo, redo, refactor=False, name=None, undo_rc=None, redo_rc=None):
         """
         Initialize the command.
         :type diagram: Diagram
@@ -83,9 +84,17 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         self.data = {'undo': undo, 'redo': redo}
         self.item = item
 
+        self.undo_rc = undo_rc
+        self.redo_rc = redo_rc
+
     def redo(self):
         """redo the command"""
         print('>>>          CommandLabelChange (redo)')
+
+        # SET REMAINING CHARACTERS
+        if (self.redo_rc is not None):
+            self.item.remaining_characters = self.redo_rc
+
         meta = None
         # BACKUP METADATA
         if self.item.isNode() and self.refactor:
@@ -130,6 +139,10 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         print('>>>          CommandLabelChange (undo)')
 
+        # SET REMAINING CHARACTERS
+        if (self.undo_rc is not None):
+            self.item.remaining_characters = self.undo_rc
+
         meta = None
         # BACKUP METADATA
         if self.item.isNode() and self.refactor:
@@ -168,6 +181,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         self.diagram.sgnUpdated.emit()
 
         print('>>>          CommandLabelChange (undo) END')
+
 
 class CommandLabelMove(QtWidgets.QUndoCommand):
     """
