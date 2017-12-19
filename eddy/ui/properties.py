@@ -610,13 +610,23 @@ class PredicateNodeProperty(NodeProperty):
                 else:
                     new_prefix = self.prefixField.value()
 
-                new_text_to_set = GenerateNewLabel(self.project, new_iri, new_prefix, new_rc).return_label()
+                print('new_iri',new_iri)
+                print('new_prefix',new_prefix)
+                print('new_rc',new_rc)
 
-                return_list.append(CommandLabelChange(self.diagram, self.node, self.node.text(), new_text_to_set))
-                return_list.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, self.node, self.node.iri, new_iri,
-                                                              self.node.prefix, new_prefix, self.node.remaining_characters, new_rc))
-                return_list.append(CommandLabelChange(self.diagram, self.node, self.node.text(), new_text_to_set))
-                #return_list.append(CommandNodeSetMeta(self.diagram.project, self.node.type(), self.node.text(), undo, redo))
+                if self.refactorField.isChecked():
+                    for n in self.project.nodes():
+                        if n.text() == self.node.text():
+                            #return_list.append(CommandLabelChange(n.diagram, n, n.text(), new_text_to_set))
+                            return_list.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, n,\
+                               n.iri, new_iri, n.prefix, new_prefix, n.remaining_characters, new_rc))
+                            #return_list.append(CommandLabelChange(n.diagram, n, n.text(), new_text_to_set))
+                else:
+                    #return_list.append(CommandLabelChange(self.diagram, self.node, self.node.text(), new_text_to_set))
+                    return_list.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, self.node,\
+                            self.node.iri, new_iri, self.node.prefix, new_prefix, self.node.remaining_characters, new_rc))
+                    #return_list.append(CommandLabelChange(self.diagram, self.node, self.node.text(), new_text_to_set))
+                    #return_list.append(CommandNodeSetMeta(self.diagram.project, self.node.type(), self.node.text(), undo, redo))
 
                 return return_list
 
@@ -1032,7 +1042,6 @@ class ValueNodeProperty(NodeProperty):
         value = self.valueField.value()
         data = self.node.compose(value, datatype)
         if self.node.text() != data:
-            commands = []
 
             new_prefix = datatype.value[0:datatype.value.index(':')]
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
@@ -1043,10 +1052,11 @@ class ValueNodeProperty(NodeProperty):
                 if std_prefix == new_prefix:
                     new_iri = std_iri
 
-            commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
-            commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,self.node,self.node.iri,new_iri,self.node.prefix,new_prefix,self.node.remaining_characters,new_remaining_characters))
-            commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
+            #commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
+            #commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,self.node,self.node.iri,new_iri,self.node.prefix,new_prefix,self.node.remaining_characters,new_remaining_characters))
+            #commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
 
-            return commands
+            return CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,self.node,self.node.iri,new_iri,self.node.prefix,\
+            new_prefix,self.node.remaining_characters,new_remaining_characters,new_label_undo=self.node.text(),new_label_redo=data)
 
         return None

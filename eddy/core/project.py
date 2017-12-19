@@ -265,6 +265,8 @@ class Project(QtCore.QObject):
 
                 print('node.prefix', node.prefix)
 
+                print('node.remaining_characters',node.remaining_characters)
+
                 # initial text of label is Concept etc
                 # change it to prefix:concept or iri#concept
 

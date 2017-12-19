@@ -659,6 +659,9 @@ class IndividualNode(AbstractResizableNode):
         Set the label text: will additionally block label editing if a literal is being.
         :type text: str
         """
+        print('Individial >> def setText >> ')
+        print('text',text)
+        print('RE_VALUE.match(text)',RE_VALUE.match(text))
         self.label.setEditable(RE_VALUE.match(text) is None)
         self.label.setText(text)
         self.label.setAlignment(QtCore.Qt.AlignCenter)

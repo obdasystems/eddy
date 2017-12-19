@@ -67,7 +67,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
     """
     This command is used to edit items' labels.
     """
-    def __init__(self, diagram, item, undo, redo, refactor=False, name=None, undo_rc=None, redo_rc=None):
+    def __init__(self, diagram, item, undo, redo, refactor=False, name=None):
         """
         Initialize the command.
         :type diagram: Diagram
@@ -84,16 +84,9 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         self.data = {'undo': undo, 'redo': redo}
         self.item = item
 
-        self.undo_rc = undo_rc
-        self.redo_rc = redo_rc
-
     def redo(self):
         """redo the command"""
         print('>>>          CommandLabelChange (redo)')
-
-        # SET REMAINING CHARACTERS
-        if (self.redo_rc is not None):
-            self.item.remaining_characters = self.redo_rc
 
         meta = None
         # BACKUP METADATA
@@ -136,12 +129,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
     def undo(self):
         """undo the command"""
-
         print('>>>          CommandLabelChange (undo)')
-
-        # SET REMAINING CHARACTERS
-        if (self.undo_rc is not None):
-            self.item.remaining_characters = self.undo_rc
 
         meta = None
         # BACKUP METADATA

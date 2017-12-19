@@ -36,10 +36,11 @@
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.commands.labels import CommandLabelChange, GenerateNewLabel
 
 class CommandNodeSetIRIPrefixAndRemainingCharacters(QtWidgets.QUndoCommand):
 
-    def __init__(self, project, node, undo_iri, redo_iri, undo_prefix, redo_prefix, undo_remaining_characters, redo_remaining_characters):
+    def __init__(self, project, node, undo_iri, redo_iri, undo_prefix, redo_prefix, undo_remaining_characters, redo_remaining_characters, new_label_undo=None, new_label_redo=None):
 
         super().__init__('switch iri from {0} to {1} ,prefix from {2} to {3} and remaining characters from {4} to {5}'.format(undo_iri, redo_iri, undo_prefix, redo_prefix, undo_remaining_characters, redo_remaining_characters))
 
@@ -51,6 +52,8 @@ class CommandNodeSetIRIPrefixAndRemainingCharacters(QtWidgets.QUndoCommand):
         self.redo_iri = redo_iri
         self.redo_prefix = redo_prefix
         self.redo_remaining_characters = redo_remaining_characters
+        self.new_label_to_set_redo = new_label_redo
+        self.new_label_to_set_undo = new_label_undo
 
     def redo(self):
         """redo the command"""
@@ -66,6 +69,16 @@ class CommandNodeSetIRIPrefixAndRemainingCharacters(QtWidgets.QUndoCommand):
         else:
             self.node.label._editable = True
 
+        if self.new_label_to_set_redo is not None:
+            new_text = self.new_label_to_set_redo
+        else:
+            new_text = GenerateNewLabel(self.project,self.redo_iri,self.redo_prefix,\
+                                        self.redo_remaining_characters).return_label()
+
+        print('new_text',new_text)
+
+        CommandLabelChange(self.node.diagram,self.node,self.node.text(),new_text).redo()
+
     def undo(self):
         """undo the command"""
         print('>>>          CommandNodeSetIRIPrefixAndRemainingCharacters (undo)')
@@ -79,51 +92,10 @@ class CommandNodeSetIRIPrefixAndRemainingCharacters(QtWidgets.QUndoCommand):
         else:
             self.node.label._editable = True
 
+        if self.new_label_to_set_undo is not None:
+            old_text = self.new_label_to_set_undo
+        else:
+            old_text = GenerateNewLabel(self.project,self.undo_iri,self.undo_prefix,\
+                                        self.undo_remaining_characters).return_label()
 
-class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
-
-    def __init__(self, node, undo, redo):
-
-        super().__init__('set remaining characters of the node {0} from {1} to {1}'.format(node.id, undo, redo))
-        self.node = node
-        self.redo = redo
-        self.undo = undo
-
-    def redo(self):
-        """redo the command"""
-        self.node.remaining_characters = self.redo
-
-    def undo(self):
-        """undo the command"""
-        self.node.remaining_characters = self.undo
-
-
-class CommandNodeSetIRIandPrefix(QtWidgets.QUndoCommand):
-
-    def __init__(self, project, node, undo_iri, redo_iri, undo_prefix, redo_prefix):
-
-        print('>>>          CommandNodeSetIRIandPrefix')
-
-        super().__init__('switch iri from {0} to {1} and prefix from {2} to {3}'.format(undo_iri, redo_iri, undo_prefix, redo_prefix))
-
-        self.project = project
-        self.node = node
-        self.undo_iri = undo_iri
-        self.undo_prefix = undo_prefix
-        self.redo_iri = redo_iri
-        self.redo_prefix = redo_prefix
-
-    def redo(self):
-        """redo the command"""
-
-        print('>>>          CommandNodeSetIRIandPrefix (redo)')
-
-        self.node.iri = self.redo_iri
-        self.node.prefix = self.redo_prefix
-
-    def undo(self):
-        """undo the command"""
-        print('>>>          CommandNodeSetIRIandPrefix (undo)')
-
-        self.node.iri = self.undo_iri
-        self.node.prefix = self.undo_prefix
+        CommandLabelChange(self.node.diagram, self.node, self.node.text(), old_text).redo()

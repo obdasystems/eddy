@@ -1738,22 +1738,18 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 if action.data() is Identity.Individual:
                     if node.identity() is Identity.Value:
                         data = node.label.template
+
                         name = 'change {0} to {1}'.format(node.text(), data)
 
                         print('old_rc, new_rc',node.remaining_characters,',',data)
 
-                        commands = []
+                        #commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+                        #commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix,node.remaining_characters,data))
+                        #commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
-                        commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
-                        commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix,node.remaining_characters,data))
-                        commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+                        self.undostack.push(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,node,node.iri,\
+                        self.project.iri,node.prefix,self.project.prefix,node.remaining_characters,data, new_label_undo=node.text(),new_label_redo=data))
 
-                        if any(commands):
-                            self.undostack.beginMacro('edit {0} properties'.format(node))
-                            for command in commands:
-                                if command:
-                                    self.undostack.push(command)
-                            self.undostack.endMacro()
 
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)

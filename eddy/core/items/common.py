@@ -331,8 +331,10 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                 match = RE_VALUE.match(currentData)
 
-                command_1 = CommandLabelChange(self.diagram, node, focusInData, currentData)
-                command_3 = CommandLabelChange(self.diagram, node, focusInData, currentData)
+                #command_1 = CommandLabelChange(self.diagram, node, focusInData, currentData)
+                #command_3 = CommandLabelChange(self.diagram, node, focusInData, currentData)
+
+                print('match = RE_VALUE.match(currentData)',match)
 
                 if match:
                     new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
@@ -344,23 +346,14 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                         if std_prefix == new_prefix:
                             new_iri = std_iri
 
-                    command_2 = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, node.iri, new_iri, node.prefix, new_prefix, node.remaining_characters, new_remaining_characters)
-
+                    command = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, \
+                            node.iri, new_iri, node.prefix, new_prefix, node.remaining_characters, new_remaining_characters, new_label_undo=node.text(),new_label_redo=currentData)
                 else:
-                    command_2 = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, node.iri, node.iri, node.prefix, node.prefix, node.remaining_characters, currentData)
+                    command = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, \
+                                        node.iri, node.iri, node.prefix, node.prefix, node.remaining_characters, currentData)
 
-                commands = []
+                self.session.undostack.push(command)
 
-                commands.append(command_1)
-                commands.append(command_2)
-                commands.append(command_3)
-
-                if any(commands):
-                    self.session.undostack.beginMacro('edit {0} properties'.format(node))
-                    for command in commands:
-                        if command:
-                            self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
             else:
                 self.setText(self.old_text)
                 self.old_text = None
@@ -413,9 +406,13 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             super().mouseDoubleClickEvent(mouseEvent)
 
             self.old_text = self.text()
+
+            prev_rc = self._parent.remaining_characters
+            """
+            
             last_hash = self.old_text.rfind('#')
             last_colon = self.old_text.rfind(':')
-
+            
             prev_rc = None
 
             if last_colon == -1:
@@ -424,26 +421,19 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 else:
                     # hash is present ^^ colon is absent
                     prev_rc = self.text()[last_hash + 1:len(self.text())]
+                    
             else:
                 # colon is present
                 prev_rc = self.text()[last_colon + 1:len(self.text())]
+            
+            """
 
             self.setText(prev_rc)
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
             self.setFocus()
 
-    #############################################
-    #   SLOTS
-    #################################
+    def SetRemainingCharactersOfNode(self):
 
-    @QtCore.pyqtSlot(int, int, int)
-    def onContentsChanged(self, position, charsRemoved, charsAdded):
-        """
-        Executed whenever the content of the text item changes.
-        :type position: int
-        :type charsRemoved: int
-        :type charsAdded: int
-        """
         if self._parent.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
 
             current_text = self.text()
@@ -457,21 +447,41 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 last_hash = current_text.rfind('#')
                 last_colon = current_text.rfind(':')
 
-                if last_colon == -1:
-                    if last_hash == -1:
+                print('current_text',current_text)
+                print('last_hash',last_hash)
+                print('last_colon',last_colon)
+
+                prefix = self._parent.prefix
+                iri = self._parent.iri
+
+
+                if (prefix is None) or (prefix == ''):
+                    if (iri is None) or (iri == ''):
                         rc_text = None
                     else:
                         # hash is present ^^ colon is absent
-                        rc_text = self.text()[last_hash + 1:len(self.text())]
+                        rc_text = self.text()[last_hash+1 : len(self.text())]
                 else:
                     # colon is present
-                    rc_text = self.text()[last_colon + 1:len(self.text())]
+                    rc_text = self.text()[last_colon+1 : len(self.text())]
 
                 if rc_text is None:
                     pass
                 else:
+                    print('rc_text',rc_text)
                     self._parent.remaining_characters = rc_text
+    #############################################
+    #   SLOTS
+    #################################
 
+    @QtCore.pyqtSlot(int, int, int)
+    def onContentsChanged(self, position, charsRemoved, charsAdded):
+        """
+        Executed whenever the content of the text item changes.
+        :type position: int
+        :type charsRemoved: int
+        :type charsAdded: int
+        """
         self.setAlignment(self.alignment())
 
     #############################################
