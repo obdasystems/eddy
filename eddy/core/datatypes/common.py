@@ -55,8 +55,14 @@ class Enum_(Enum):
             return value
         if value:
             for x in cls:
-                if x.value.strip() == value.strip():
-                    return x
+                if str(type(x.value)) == '<class \'dict\'>':
+                    for k in x.value.keys():
+                        v=x.value[k]
+                        if v.strip() == value.strip():
+                            return x
+                else:
+                    if x.value.strip() == value.strip():
+                        return x
         return None
 
 

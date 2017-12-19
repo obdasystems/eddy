@@ -729,7 +729,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :type node: AttributeNode
         :rtype: OWLDataProperty
         """
-        if (node.special() is Special.TopAttribute) or (node.special() is Special.Top):
+        if (node.special() is Special.Top) or (node.special() is Special.TopAttribute):
             return self.df.getOWLTopDataProperty()
         if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
             return self.df.getOWLBottomDataProperty()
@@ -2239,7 +2239,7 @@ class OWLOntologyFetcher:
         :type node: AttributeNode
         :rtype: OWLDataProperty
         """
-        if (node.special() is Special.TopAttribute) or (node.special() is Special.Top):
+        if (node.special() is Special.Top) or (node.special() is Special.TopAttribute):
             return self.df.getOWLTopDataProperty()
         if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
             return self.df.getOWLBottomDataProperty()

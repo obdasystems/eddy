@@ -69,10 +69,12 @@ class ExplanationExplorerPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
-    def getOWLtermfornode(self, node_name):
+    def getOWLtermfornode(self, node_names):
 
         # looks up the dict for the raw term and then..
         # returns the string portion without the IRI and special characters
+
+        print('getOWLtermfornode    >>>     node_names',node_names)
 
         return_result = []
 
@@ -85,8 +87,10 @@ class ExplanationExplorerPlugin(AbstractPlugin):
                     node_ids = set()
 
                     for p in self.project.nodes(d):
-                        if p.text() == node_name:
+                        if p.text() in node_names:
                             node_ids.add(p.id)
+
+                    print('getOWLtermfornode >>> ',node_ids)
 
                     for nd in val_in_diag:
                         if (val_in_diag[nd] is not None) and (nd in node_ids):
@@ -153,9 +157,20 @@ class ExplanationExplorerPlugin(AbstractPlugin):
                 unsatisfiable_entity = self.project.unsatisfiable_roles
                 explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_roles
 
+            print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
+
             sub_string = self.project.uc_as_input_for_explanation_explorer.split(':')
 
-            OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(sub_string[1])
+            str_inp = self.project.uc_as_input_for_explanation_explorer.replace(sub_string[0]+':', '')
+            str_inp = str_inp.replace(':'+sub_string[len(sub_string) - 1], '')
+
+            print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
+            print('str_inp',str_inp)
+
+            inp_lst = []
+            inp_lst.append(str_inp)
+
+            OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(inp_lst)
             index_uc = unsatisfiable_entity.index(OWL_term_uc_as_input_for_explanation_explorer)
             explanations_for_widget = explanations_unsatisfiable_entity[index_uc]
 

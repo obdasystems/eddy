@@ -55,7 +55,6 @@ from eddy.ui.properties import ValueNodeProperty
 from eddy.ui.description import NodeDescription
 
 
-
 class MenuFactory(QtCore.QObject):
     """
     This class can be used to produce diagram items contextual menus.
@@ -796,6 +795,7 @@ class PropertyFactory(QtCore.QObject):
                 properties = NodeProperty(diagram, node, self.session)
         properties.setFixedSize(properties.sizeHint())
         return properties
+
 
 class DescriptionFactory(QtCore.QObject):
     """

@@ -51,7 +51,7 @@ class ConceptNode(AbstractResizableNode):
     Identities = {Identity.Concept}
     Type = Item.ConceptNode
 
-    def __init__(self, width=110, height=50, brush=None, **kwargs):
+    def __init__(self, width=110, height=50, brush=None, iri='', prefix = '', remaining_characters='concept',**kwargs):
         """
         Initialize the node.
         :type width: int
@@ -67,9 +67,9 @@ class ConceptNode(AbstractResizableNode):
         self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
-        self.iri = ''
-        self.prefix = ''
-        self.remaining_characters = 'concept'
+        self.iri = iri
+        self.prefix = prefix
+        self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='concept', pos=self.center, parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
@@ -96,7 +96,7 @@ class ConceptNode(AbstractResizableNode):
             'id': self.id,
             'brush': self.brush(),
             'height': self.height(),
-            'width': self.width()
+            'width': self.width(), 'iri': self.iri, 'prefix': self.prefix, 'remaining_characters': self.remaining_characters
         })
         node.setPos(self.pos())
         node.setText(self.text())

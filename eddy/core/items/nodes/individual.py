@@ -66,7 +66,7 @@ class IndividualNode(AbstractResizableNode):
     Identities = {Identity.Individual, Identity.Value}
     Type = Item.IndividualNode
 
-    def __init__(self, width=60, height=60, brush=None, **kwargs):
+    def __init__(self, width=60, height=60, brush=None, iri='', prefix = '', remaining_characters='individual',**kwargs):
         """
         Initialize the node.
         :type width: int
@@ -96,9 +96,9 @@ class IndividualNode(AbstractResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-        self.iri = ''
-        self.prefix = ''
-        self.remaining_characters = 'individual'
+        self.iri = iri
+        self.prefix = prefix
+        self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='individual', pos=self.center, parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
@@ -163,7 +163,7 @@ class IndividualNode(AbstractResizableNode):
             'id': self.id,
             'brush': self.brush(),
             'height': self.height(),
-            'width': self.width()
+            'width': self.width(), 'iri': self.iri, 'prefix': self.prefix, 'remaining_characters': self.remaining_characters
         })
         node.setPos(self.pos())
         node.setText(self.text())

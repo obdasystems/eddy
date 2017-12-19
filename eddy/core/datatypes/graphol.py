@@ -164,11 +164,69 @@ class Special(Enum_):
     This class defines special nodes types.
     """
     Top = 'TOP'
-    TopConcept = 'owl:Thing'
-    TopAttribute = 'owl:TopDataProperty'
-    TopRole = 'owl:TopObjectProperty'
+
+    #TopConcept = 'owl:Thing | owl:thing'
+    TopConcept = {}
+    TopConcept[1] = 'owl:Thing'
+    TopConcept[2] = 'owl:thing'
+
+    #TopAttribute = 'owl:TopDataProperty | owl:topDataProperty | owl:topdataproperty'
+    TopAttribute = {}
+    TopAttribute[1] = 'owl:TopDataProperty'
+    TopAttribute[2] = 'owl:topDataProperty'
+    TopAttribute[3] = 'owl:topdataproperty'
+
+    #TopRole = 'owl:TopObjectProperty | owl:topObjectProperty | owl:topobjectproperty'
+    TopRole = {}
+    TopRole[1] = 'owl:TopObjectProperty'
+    TopRole[2] = 'owl:topObjectProperty'
+    TopRole[3] = 'owl:topobjectproperty'
+
+
+    AllTopEntities = 'TOP | owl:Thing | owl:thing | owl:TopDataProperty | owl:topDataProperty | owl:topdataproperty | \
+    #                 owl:TopObjectProperty | owl:topObjectProperty | owl:topobjectproperty'
 
     Bottom = 'BOTTOM'
-    BottomConcept = 'owl:Nothing'
-    BottomAttribute = 'owl:BottomDataProperty'
-    BottomRole = 'owl:BottomObjectProperty'
+
+    BottomConcept = {}
+    #BottomConcept = 'owl:Nothing | owl:nothing'
+    BottomConcept[1] = 'owl:Nothing'
+    BottomConcept[2] = 'owl:nothing'
+
+
+    #BottomAttribute = 'owl:BottomDataProperty | owl:bottomDataProperty | owl:bottomdataproperty'
+    BottomAttribute = {}
+    BottomAttribute[1] = 'owl:BottomDataProperty'
+    BottomAttribute[2] = 'owl:bottomDataProperty'
+    BottomAttribute[3] = 'owl:bottomdataproperty'
+
+    #BottomRole = 'owl:BottomObjectProperty | owl:bottomObjectProperty | owl:bottomobjectproperty'
+    BottomRole = {}
+    BottomRole[1] = 'owl:BottomObjectProperty'
+    BottomRole[2] = 'owl:bottomObjectProperty'
+    BottomRole[3] = 'owl:bottomobjectproperty'
+
+    AllBottomEntities = 'BOTTOM | owl:Nothing | owl:nothing | owl:BottomDataProperty | owl:bottomDataProperty | \
+    #                   owl:bottomdataproperty | owl:BottomObjectProperty | owl:bottomObjectProperty | owl:bottomobjectproperty'
+
+    def return_group(input):
+
+        if (input is Special.TopConcept):
+            return ['owl:Thing','owl:thing']
+        if (input is Special.TopAttribute):
+            return ['owl:TopDataProperty', 'owl:topDataProperty', 'owl:topdataproperty']
+        if (input is Special.TopRole):
+            return ['owl:TopObjectProperty','owl:topObjectProperty','owl:topobjectproperty']
+        if (input is Special.AllTopEntities):
+            return ['TOP','owl:Thing','owl:thing','owl:TopDataProperty','owl:topDataProperty','owl:topdataproperty', \
+                      'owl:TopObjectProperty', 'owl:topObjectProperty', 'owl:topobjectproperty']
+
+        if (input is Special.BottomConcept):
+            return ['owl:Nothing','owl:nothing']
+        if (input is Special.BottomAttribute):
+            return ['owl:BottomDataProperty','owl:bottomDataProperty','owl:bottomdataproperty']
+        if (input is Special.BottomRole):
+            return ['owl:BottomObjectProperty','owl:bottomObjectProperty','owl:bottomobjectproperty']
+        if (input is Special.AllBottomEntities):
+            return ['BOTTOM','owl:Nothing','owl:nothing','owl:BottomDataProperty','owl:bottomDataProperty',\
+                 'owl:bottomdataproperty','owl:BottomObjectProperty','owl:bottomObjectProperty','owl:bottomobjectproperty']

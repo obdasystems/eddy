@@ -44,13 +44,16 @@ from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
+from eddy.core.datatypes.graphol import Special
 
 from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
 
 from jnius import autoclass, cast, detach
 
+
 LOGGER = getLogger()
+
 
 class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
     """
@@ -59,7 +62,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
     sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnFakeExplanationAdded = QtCore.pyqtSignal('QGraphicsItem',list)
 
-    brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
+    #brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
 
     #############################################
     #   SLOTS
@@ -92,6 +95,13 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         if (OWL_term_1[0] == '<') and (OWL_term_2[0] == '<'):
             if OWL_term_1 == OWL_term_2:
                 return True
+
+        top_and_bottom_entities = []
+        top_and_bottom_entities.extend(Special.return_group(Special.AllTopEntities))
+        top_and_bottom_entities.extend(Special.return_group(Special.AllBottomEntities))
+
+        if (OWL_term_1 in top_and_bottom_entities) and (OWL_term_1 == OWL_term_2):
+            return True
 
         return False
 
@@ -129,38 +139,32 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         for uc in input_list:
             #OWL_term_for_uc = uc
             temp = []
-
             for p in self.project.nodes():
                 OWL_term_for_p = self.getOWLtermfornode(p)
                 match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
                 if match is True:
                     temp.append(p)
-
             return_list.append(temp)
-
         return return_list
 
     def add_unsatisfiable_nodes_in_widget(self,input_list,inp_type):
 
         for count,entity in enumerate(input_list):
 
-            print('entity',entity)
-
             for node in entity:
 
                 self.sgnFakeItemAdded.emit(node.diagram, node)
-                node.updateNode(valid=False)
 
-                if inp_type=='unsatisfiable_classes':
-                    explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
-                elif inp_type=='unsatisfiable_attributes':
-                    explanation_for_node = self.project.explanations_for_unsatisfiable_attributes[count]
-                elif inp_type=='unsatisfiable_roles':
-                    explanation_for_node = self.project.explanations_for_unsatisfiable_roles[count]
-                else:
-                    LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
+            if inp_type == 'unsatisfiable_classes':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
+            elif inp_type == 'unsatisfiable_attributes':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_attributes[count]
+            elif inp_type == 'unsatisfiable_roles':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_roles[count]
+            else:
+                LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
 
-                self.sgnFakeExplanationAdded.emit(node,explanation_for_node)
+            self.sgnFakeExplanationAdded.emit(entity[0],explanation_for_node)
 
     @QtCore.pyqtSlot()
     def onSessionReady(self):
@@ -170,7 +174,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         # CONNECT TO PROJECT SPECIFIC SIGNALS
         widget = self.widget('Unsatisfiable_Entity_Explorer')
         self.debug('Connecting to project: %s', self.project.name)
-        #connect(self.project.sgnItemAdded, widget.doAddNode)
+        connect(self.project.sgnItemAdded, widget.doAddNode)
         connect(self.project.sgnItemRemoved, widget.doRemoveNode)
         # FILL IN UnsatisfiableEntitiesExplorer WITH DATA
         connect(self.sgnFakeItemAdded, widget.doAddNode)
@@ -180,16 +184,32 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         attributes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_attributes)
         roles_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_roles)
 
-        print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
+        [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in classes_only_unsatisfiable_nodes_in_diagram]
+        [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in attributes_only_unsatisfiable_nodes_in_diagram]
+        [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in roles_only_unsatisfiable_nodes_in_diagram]
 
+        temp = []
+
+        for n in self.project.nodes_of_unsatisfiable_entities:
+
+            sub_string = str(n).split(':')
+
+            str_to_append = str(n).replace(sub_string[0]+':', '')
+            str_to_append = str_to_append.replace(':'+sub_string[len(sub_string)-1], '')
+
+            temp.append(str_to_append)
+
+        self.project.nodes_of_unsatisfiable_entities.extend(temp)
+
+        print('self.project.nodes_of_unsatisfiable_entities',self.project.nodes_of_unsatisfiable_entities)
+
+        print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
+        print('attributes_only_unsatisfiable_nodes_in_diagram', attributes_only_unsatisfiable_nodes_in_diagram)
+        print('roles_only_unsatisfiable_nodes_in_diagram', roles_only_unsatisfiable_nodes_in_diagram)
 
         self.add_unsatisfiable_nodes_in_widget(classes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_classes')
         self.add_unsatisfiable_nodes_in_widget(attributes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_attributes')
         self.add_unsatisfiable_nodes_in_widget(roles_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_roles')
-
-        self.project.nodes_of_unsatisfiable_entities.extend(classes_only_unsatisfiable_nodes_in_diagram)
-        self.project.nodes_of_unsatisfiable_entities.extend(attributes_only_unsatisfiable_nodes_in_diagram)
-        self.project.nodes_of_unsatisfiable_entities.extend(roles_only_unsatisfiable_nodes_in_diagram)
 
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
         disconnect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
@@ -335,6 +355,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
 
         connect(self.sgnListClicked, self.start_explanation_explorer)
         connect(self.sgnListDoubleClicked, self.start_explanation_explorer)
+
+        self.brush_orange = QtGui.QBrush(QtGui.QColor(255, 165, 0, 160))
     #############################################
     #   PROPERTIES
     #################################
@@ -407,18 +429,40 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
-        if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
-            parent = self.parentFor(node)
-            if not parent:
-                parent = QtGui.QStandardItem(self.parentKey(node))
-                parent.setIcon(self.iconFor(node))
-                parent.setData(node)
-                self.model.appendRow(parent)
+        print('doAddNode    >>>     node',node)
+
+        sub_string = str(node).split(':')
+
+        short_str = str(node).replace(sub_string[0] + ':', '')
+        short_str = short_str.replace(':' + sub_string[len(sub_string) - 1], '')
+
+        if (node not in self.project.nodes_of_unsatisfiable_entities) and (short_str in self.project.nodes_of_unsatisfiable_entities):
+            self.project.nodes_of_unsatisfiable_entities.append(node)
+
+        if (node in self.project.nodes_of_unsatisfiable_entities) or (short_str in self.project.nodes_of_unsatisfiable_entities):
+            if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+                parent = self.parentFor(node)
+                if not parent:
+                    parent = QtGui.QStandardItem(self.parentKey(node))
+                    parent.setIcon(self.iconFor(node))
+                    parent.setData(node)
+                    self.model.appendRow(parent)
+                    self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+                child = QtGui.QStandardItem(self.childKey(diagram, node))
+                child.setData(node)
+                parent.appendRow(child)
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-            child = QtGui.QStandardItem(self.childKey(diagram, node))
-            child.setData(node)
-            parent.appendRow(child)
-            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+
+                node.selection.setBrush(self.brush_orange)
+                #node.updateNode(valid=False)
+                # FORCE CACHE REGENERATION
+                node.setCacheMode(node.NoCache)
+                node.setCacheMode(node.DeviceCoordinateCache)
+
+                # SCHEDULE REPAINT
+                node.update(node.boundingRect())
+        else:
+            print('node not in self.project.nodes_of_unsatisfiable_entities:',node)
 
     def start_explanation_explorer(self, item=None):
 
@@ -427,6 +471,7 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
         #self.project.uc_as_input_for_explanation_explorer = parent.text()
         self.project.uc_as_input_for_explanation_explorer = str(parent.data())
+        print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
         self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
 
     @QtCore.pyqtSlot(str)
@@ -445,6 +490,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
+        print('doRemoveNode >>>')
+        print('node',node)
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
             parent = self.parentFor(node)
             if parent:

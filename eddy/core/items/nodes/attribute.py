@@ -53,7 +53,7 @@ class AttributeNode(AbstractNode):
     Identities = {Identity.Attribute}
     Type = Item.AttributeNode
 
-    def __init__(self, width=20, height=20, brush=None, **kwargs):
+    def __init__(self, width=20, height=20, brush=None, iri='', prefix = '', remaining_characters='attribute',**kwargs):
         """
         Initialize the node.
         :type width: int
@@ -68,9 +68,9 @@ class AttributeNode(AbstractNode):
         self.selection = Polygon(QtCore.QRectF(-14, -14, 28, 28))
         self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
 
-        self.iri = ''
-        self.prefix = ''
-        self.remaining_characters = 'attribute'
+        self.iri = iri
+        self.prefix = prefix
+        self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self,
                                editable=True)
@@ -96,7 +96,7 @@ class AttributeNode(AbstractNode):
             'id': self.id,
             'brush': self.brush(),
             'height': self.height(),
-            'width': self.width()
+            'width': self.width(), 'iri': self.iri, 'prefix': self.prefix, 'remaining_characters': self.remaining_characters
         })
         node.setPos(self.pos())
         node.setText(self.text())

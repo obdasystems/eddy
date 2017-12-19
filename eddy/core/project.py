@@ -153,7 +153,7 @@ class Project(QtCore.QObject):
 
         self.brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
         self.brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 100))
-
+        self.brush_orange = QtGui.QBrush(QtGui.QColor(255, 165, 0, 160))
         ############  variables for IRI-prefixes management #############
 
         self.IRI_prefixes_nodes_dict = dict()
@@ -589,11 +589,17 @@ class Project(QtCore.QObject):
             node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node_or_edge.update(node_or_edge.boundingRect())
 
-        for entity in self.nodes_of_unsatisfiable_entities:
+        for node_or_str in self.nodes_of_unsatisfiable_entities:
 
-            for node in entity:
-                # node.selection.setBrush(self.brush)
-                node.updateNode(valid=False)
+            if str(type(node_or_str)) != '<class \'str\'>':
+
+                node_or_str.selection.setBrush(self.brush_orange)
+                # node.updateNode(valid=False)
+                node_or_str.setCacheMode(node_or_str.NoCache)
+                node_or_str.setCacheMode(node_or_str.DeviceCoordinateCache)
+
+                # SCHEDULE REPAINT
+                node_or_str.update(node_or_str.boundingRect())
 
         for d in self.diagrams():
             self.diagram(d.name).sgnUpdated.emit()

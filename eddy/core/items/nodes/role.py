@@ -62,7 +62,7 @@ class RoleNode(AbstractResizableNode):
     Identities = {Identity.Role}
     Type = Item.RoleNode
 
-    def __init__(self, width=70, height=50, brush=None, **kwargs):
+    def __init__(self, width=70, height=50, brush=None, iri='', prefix = '', remaining_characters='role', **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -90,9 +90,9 @@ class RoleNode(AbstractResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-        self.iri = ''
-        self.prefix = ''
-        self.remaining_characters = 'role'
+        self.iri = iri
+        self.prefix = prefix
+        self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='role', pos=self.center, parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
@@ -121,7 +121,7 @@ class RoleNode(AbstractResizableNode):
             'id': self.id,
             'brush': self.brush(),
             'height': self.height(),
-            'width': self.width()
+            'width': self.width(), 'iri': self.iri, 'prefix': self.prefix, 'remaining_characters': self.remaining_characters
         })
         node.setPos(self.pos())
         node.setText(self.text())

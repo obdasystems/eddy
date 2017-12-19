@@ -473,8 +473,11 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             sys.exit(0)
 
         print('self.project.unsatisfiable_classes',self.project.unsatisfiable_classes)
+        print('self.project.explanations_for_unsatisfiable_classes',self.project.explanations_for_unsatisfiable_classes)
         print('self.project.unsatisfiable_roles', self.project.unsatisfiable_roles)
+        print('self.project.explanations_for_unsatisfiable_roles',self.project.explanations_for_unsatisfiable_roles)
         print('self.project.unsatisfiable_attributes', self.project.unsatisfiable_attributes)
+        print('self.project.explanations_for_unsatisfiable_attributes',self.project.explanations_for_unsatisfiable_attributes)
 
     def reason_over_ontology(self):
 
