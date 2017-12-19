@@ -49,7 +49,7 @@ from eddy.core.datatypes.graphol import Special
 from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
 
-from jnius import autoclass, cast, detach
+
 
 
 LOGGER = getLogger()
@@ -105,33 +105,6 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         return False
 
-    def getOWLtermfornode(self,node):
-
-        # looks up the dict for the raw term and then..
-        # returns the string portion without the IRI and special characters
-
-        for diag, val_in_diag in self.project.converted_nodes.items():
-            for nd in val_in_diag:
-                if (val_in_diag[nd] is not None) and (nd == node.id):
-                    if str(type(val_in_diag[nd])) == '<class \'list\'>':
-
-                        return_list = []
-                        for ele in val_in_diag[nd]:
-
-                            java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
-                            cast(autoclass(java_class), ele)
-
-                            return_list.append(ele.toString())
-
-                        return return_list
-                    else:
-                        java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
-                        cast(autoclass(java_class), val_in_diag[nd])
-
-                        return val_in_diag[nd].toString()
-
-        return None
-
     def get_list_of_nodes_in_diagram_from_OWL_terms(self,input_list):
 
         return_list = []
@@ -140,7 +113,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
             #OWL_term_for_uc = uc
             temp = []
             for p in self.project.nodes():
-                OWL_term_for_p = self.getOWLtermfornode(p)
+                OWL_term_for_p = self.project.getOWLtermfornode(p)
                 match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
                 if match is True:
                     temp.append(p)

@@ -49,7 +49,7 @@ from eddy.core.commands.labels import GenerateNewLabel
 
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
-
+from jnius import autoclass, cast, detach
 
 LOGGER = getLogger()
 
@@ -605,6 +605,34 @@ class Project(QtCore.QObject):
 
         for d in self.diagrams():
             self.diagram(d.name).sgnUpdated.emit()
+
+    def getOWLtermfornode(self, node):
+
+        # looks up the dict for the raw term and then..
+        # returns the string portion without the IRI and special characters
+
+        for diag, val_in_diag in self.converted_nodes.items():
+            for nd in val_in_diag:
+                if (val_in_diag[nd] is not None) and (nd == node.id):
+                    if str(type(val_in_diag[nd])) == '<class \'list\'>':
+
+                        return_list = []
+                        for ele in val_in_diag[nd]:
+                            java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
+                            cast(autoclass(java_class), ele)
+                            detach()
+
+                            return_list.append(ele.toString())
+
+                        return return_list
+                    else:
+                        java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
+                        cast(autoclass(java_class), val_in_diag[nd])
+                        detach()
+
+                        return val_in_diag[nd].toString()
+
+        return None
 
     #############################################
     #   PROPERTIES

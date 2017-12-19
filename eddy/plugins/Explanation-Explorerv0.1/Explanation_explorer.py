@@ -68,7 +68,7 @@ class ExplanationExplorerPlugin(AbstractPlugin):
     #############################################
     #   SLOTS
     #################################
-
+    """
     def getOWLtermfornode(self, node_names):
 
         # looks up the dict for the raw term and then..
@@ -125,7 +125,7 @@ class ExplanationExplorerPlugin(AbstractPlugin):
                 return list(set_of_return_result)[0]
 
         return return_result[0]
-
+    """
     @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
@@ -159,18 +159,16 @@ class ExplanationExplorerPlugin(AbstractPlugin):
 
             print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
 
-            sub_string = self.project.uc_as_input_for_explanation_explorer.split(':')
-
-            str_inp = self.project.uc_as_input_for_explanation_explorer.replace(sub_string[0]+':', '')
-            str_inp = str_inp.replace(':'+sub_string[len(sub_string) - 1], '')
-
             print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
-            print('str_inp',str_inp)
 
-            inp_lst = []
-            inp_lst.append(str_inp)
+            inp_node = None
 
-            OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(inp_lst)
+            for n in self.project.nodes():
+                if str(n) == self.project.uc_as_input_for_explanation_explorer:
+                    inp_node = n
+
+            #OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(inp_lst)
+            OWL_term_uc_as_input_for_explanation_explorer = self.project.getOWLtermfornode(inp_node)
             index_uc = unsatisfiable_entity.index(OWL_term_uc_as_input_for_explanation_explorer)
             explanations_for_widget = explanations_unsatisfiable_entity[index_uc]
 
