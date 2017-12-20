@@ -79,7 +79,7 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import Datatype, Facet, OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.owl import Datatype, Facet
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
@@ -120,6 +120,7 @@ from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
+from eddy.ui.prefix_explorer import PrefixExplorerDialog
 from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.view import DiagramView
 
@@ -396,10 +397,14 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='Run Reasoner', enabled=False))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_refresh_black'),
-            'Reset consistency check',
+            QtGui.QIcon(':/icons/24/ic_refresh_black'), 'Reset consistency check',
             self, objectName='decolour_nodes', triggered=self.BackgrounddeColourNodesAndEdges,
             statusTip='(decolour the nodes)', enabled=False))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_refresh_black'), 'Open Prefix Explorer',
+            self, objectName='open_prefix_explorer', enabled=True,
+            statusTip='Open Prefix Explorer', triggered=self.doOpenPrefixExplorer))
 
         #############################################
         # DIAGRAM SPECIFIC
@@ -751,6 +756,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('toggle_grid'))
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
+        menu.addSeparator()
+        menu.addAction(self.action('open_prefix_explorer'))
         menu.addSeparator()
         self.addMenu(menu)
 
@@ -1957,6 +1964,15 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         dialog.exec_()
 
     @QtCore.pyqtSlot()
+    def doOpenPrefixExplorer(self):
+        """
+        Perform Ontology Consistency checking on the active ontology/diagram.
+        """
+        dialog = PrefixExplorerDialog(self.project, self)
+        dialog.exec_()
+
+
+    @QtCore.pyqtSlot()
     def BackgrounddeColourNodesAndEdges(self,**kwargs):
 
         call_update_node = kwargs.get('call_updateNode',True)
@@ -1986,6 +2002,11 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         if call_ClearInconsistentEntitiesAndDiagItemsData:
             self.ClearInconsistentEntitiesAndDiagItemsData()
+
+        diags = self.project.diagrams()
+
+        for d in diags:
+            d.sgnUpdated.emit()
 
     @QtCore.pyqtSlot()
     def ClearInconsistentEntitiesAndDiagItemsData(self):

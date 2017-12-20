@@ -143,7 +143,7 @@ class IriPlugin(AbstractPlugin):
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('developers_Iri', QtGui.QIcon(':/icons/18/ic_info_outline_black'), self.session)
+        widget = DockWidget('developers_Prefix-Iri Explorer', QtGui.QIcon(':/icons/18/ic_info_outline_black'), self.session)
         widget.installEventFilter(self)
         widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('iri_dock')

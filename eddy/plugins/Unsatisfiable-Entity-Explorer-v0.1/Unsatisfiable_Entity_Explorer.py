@@ -434,6 +434,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
 
                 # SCHEDULE REPAINT
                 node.update(node.boundingRect())
+
+                node.diagram.sgnUpdated.emit()
         else:
             print('node not in self.project.nodes_of_unsatisfiable_entities:',node)
 
@@ -466,6 +468,9 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         print('doRemoveNode >>>')
         print('node',node)
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+
+            if node in self.project.nodes_of_unsatisfiable_entities:
+                self.project.nodes_of_unsatisfiable_entities.remove(node)
             parent = self.parentFor(node)
             if parent:
                 child = self.childFor(parent, diagram, node)
@@ -566,9 +571,12 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         :rtype: QtGui.QStandardItem
         """
         for i in self.model.findItems(self.parentKey(node), QtCore.Qt.MatchExactly):
-            n = i.child(0).data()
-            if node.type() is n.type():
+            #n = i.child(0).data()
+            if i.text() == node.text():
                 return i
+            #if str(type(n)) != '<class \'list\'>':
+            #if node.type() is n.type():
+                #return i
         return None
 
     @staticmethod

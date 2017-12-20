@@ -465,7 +465,7 @@ class PredicateNodeProperty(NodeProperty):
 
         self.textLabel = QtWidgets.QLabel(self)
         self.textLabel.setFont(Font('Roboto', 12))
-        self.textLabel.setText('Remaining characters')
+        self.textLabel.setText('Label')
         self.textField = StringField(self)
         self.textField.setFixedWidth(300)
         self.textField.setFont(Font('Roboto', 12))
