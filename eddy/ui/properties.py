@@ -432,6 +432,7 @@ class PredicateNodeProperty(NodeProperty):
 
         meta = diagram.project.meta(node.type(), node.text())
 
+        """
         self.prefixLabel = QtWidgets.QLabel(self)
         self.prefixLabel.setFont(Font('Roboto', 12))
         self.prefixLabel.setText('PREFIX')
@@ -443,7 +444,7 @@ class PredicateNodeProperty(NodeProperty):
         self.prefixField.setValue(node.prefix)
         #else:
             #self.prefixField.setValue(meta.get(K_PREFIX, ''))
-
+        """
         self.iriLabel = QtWidgets.QLabel(self)
         self.iriLabel.setFont(Font('Roboto', 12))
         self.iriLabel.setText('IRI')
@@ -568,7 +569,8 @@ class PredicateNodeProperty(NodeProperty):
 
         #redo[K_REMAININGCHARACTERS] = new_rc
 
-        if (self.iriField.value()!=self.node.iri) or (self.prefixField.value()!=self.node.prefix) or (unprocessed_new_text!=self.node.remaining_characters):
+        #if (self.iriField.value()!=self.node.iri) or (self.prefixField.value()!=self.node.prefix) or (unprocessed_new_text!=self.node.remaining_characters):
+        if (self.iriField.value() != self.node.iri) or (unprocessed_new_text != self.node.remaining_characters):
         #if redo != undo:
 
             connect(self.project.sgnIRIPrefixNodeEntryAdded, self.metaDataChanged_ADD_OK)
@@ -583,9 +585,10 @@ class PredicateNodeProperty(NodeProperty):
             Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
                                                                                  dict())
 
+            new_prefix = get_new_prefix
+
             self.project.removeIRIPrefixNodeEntry(Duplicate_dict_1, self.node.iri, self.node.prefix, self.node)
-            self.project.addIRIPrefixNodeEntry(Duplicate_dict_1, self.iriField.value(), self.prefixField.value(),
-                                               self.node)
+            self.project.addIRIPrefixNodeEntry(Duplicate_dict_1, self.iriField.value(), new_prefix, self.node)
 
             if (self.metaDataChanged_REMOVE_OK_var is True) and (self.metaDataChanged_ADD_OK_var is True):
 
@@ -603,13 +606,13 @@ class PredicateNodeProperty(NodeProperty):
                     new_iri = self.project.iri
                 else:
                     new_iri = self.iriField.value()
-
+                """
                 if (self.prefixField.value() == '') and (
                     (self.iriField.value() == '') or (self.iriField.value() == self.project.iri)):
                     new_prefix = self.project.prefix
                 else:
                     new_prefix = self.prefixField.value()
-
+                """
                 print('new_iri',new_iri)
                 print('new_prefix',new_prefix)
                 print('new_rc',new_rc)

@@ -69,7 +69,6 @@ class AttributeNode(AbstractNode):
         self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
 
         self.iri = iri
-        self.prefix = prefix
         self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self,

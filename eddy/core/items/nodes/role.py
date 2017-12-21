@@ -91,7 +91,6 @@ class RoleNode(AbstractResizableNode):
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
         self.iri = iri
-        self.prefix = prefix
         self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='role', pos=self.center, parent=self, editable=True)

@@ -32,11 +32,6 @@
 #                                                                        #
 ##########################################################################
 
-import math
-
-from abc import ABCMeta, abstractmethod
-from operator import attrgetter
-
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
@@ -46,12 +41,7 @@ from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
-from eddy.core.datatypes.graphol import Item
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
-from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
-from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.core.output import getLogger
 
 from eddy.ui.dock import DockWidget

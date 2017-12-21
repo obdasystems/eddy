@@ -68,7 +68,6 @@ class ConceptNode(AbstractResizableNode):
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
         self.iri = iri
-        self.prefix = prefix
         self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='concept', pos=self.center, parent=self, editable=True)
