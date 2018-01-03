@@ -39,7 +39,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.nodes_2 import CommandNodeSetIRIPrefixAndRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
@@ -331,10 +332,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                 match = RE_VALUE.match(currentData)
 
-                #command_1 = CommandLabelChange(self.diagram, node, focusInData, currentData)
-                #command_3 = CommandLabelChange(self.diagram, node, focusInData, currentData)
-
                 print('match = RE_VALUE.match(currentData)',match)
+
+                commands = []
 
                 if match:
                     new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
@@ -346,13 +346,29 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                         if std_prefix == new_prefix:
                             new_iri = std_iri
 
-                    command = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, \
-                            node.iri, new_iri, node.prefix, new_prefix, node.remaining_characters, new_remaining_characters, new_label_undo=node.text(),new_label_redo=currentData)
-                else:
-                    command = CommandNodeSetIRIPrefixAndRemainingCharacters(self.diagram.project, node, \
-                                        node.iri, node.iri, node.prefix, node.prefix, node.remaining_characters, currentData)
+                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                        self.project.IRI_prefixes_nodes_dict, dict())
+                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                        self.project.IRI_prefixes_nodes_dict, dict())
 
-                self.session.undostack.push(command)
+                    old_iri = node.IRI(self.project)
+
+                    Duplicate_dict_1[old_iri][1].remove(node)
+                    Duplicate_dict_1[new_iri][1].add(node)
+
+                    commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1))
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.diagram.project))
+                    commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
+                else:
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData, node, self.diagram.project))
+
+                if any(commands):
+                    self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))
+                    for command in commands:
+                        if command:
+                            self.session.undostack.push(command)
+                    self.session.undostack.endMacro()
 
             else:
                 self.setText(self.old_text)
@@ -451,8 +467,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 print('last_hash',last_hash)
                 print('last_colon',last_colon)
 
-                prefix = self._parent.prefix
-                iri = self._parent.iri
+                prefix = self._parent.prefix(self.project)
+                iri = self._parent.IRI(self.project)
 
 
                 if (prefix is None) or (prefix == ''):

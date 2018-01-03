@@ -34,68 +34,63 @@
 
 
 from PyQt5 import QtWidgets
-
-from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.labels import CommandLabelChange, GenerateNewLabel
 
-class CommandNodeSetIRIPrefixAndRemainingCharacters(QtWidgets.QUndoCommand):
 
-    def __init__(self, project, node, undo_iri, redo_iri, undo_prefix, redo_prefix, undo_remaining_characters, redo_remaining_characters, new_label_undo=None, new_label_redo=None):
+class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
-        super().__init__('switch iri from {0} to {1} ,prefix from {2} to {3} and remaining characters from {4} to {5}'.format(undo_iri, redo_iri, undo_prefix, redo_prefix, undo_remaining_characters, redo_remaining_characters))
+    def __init__(self, project, dict_old_val, dict_new_val):
+
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  __init__')
+
+        super().__init__('update dictionary')
 
         self.project = project
+        self.dict_old_val = dict_old_val
+        self.dict_new_val = dict_new_val
+
+    def redo(self):
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
+
+        self.project.IRI_prefixes_nodes_dict.clear()
+        self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_new_val,dict())
+        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
+
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
+
+    def undo(self):
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo)')
+
+        self.project.IRI_prefixes_nodes_dict.clear()
+        self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_old_val,dict())
+        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
+
+        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
+
+
+class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
+    def __init__(self, rc_undo, rc_redo, node, project):
+        """
+        Initialize the command.
+        :type diagram: Diagram
+        :type node: AbstractNode
+        """
+        super().__init__('add {0}'.format(node.name))
+        self.rc_undo = rc_undo
+        self.rc_redo = rc_redo
         self.node = node
-        self.undo_iri = undo_iri
-        self.undo_prefix = undo_prefix
-        self.undo_remaining_characters = undo_remaining_characters
-        self.redo_iri = redo_iri
-        self.redo_prefix = redo_prefix
-        self.redo_remaining_characters = redo_remaining_characters
-        self.new_label_to_set_redo = new_label_redo
-        self.new_label_to_set_undo = new_label_undo
+        self.project = project
 
     def redo(self):
         """redo the command"""
-
-        print('>>>          CommandNodeSetIRIPrefixAndRemainingCharacters (redo)')
-
-        self.node.iri = self.redo_iri
-        self.node.prefix = self.redo_prefix
-        self.node.remaining_characters = self.redo_remaining_characters
-
-        if self.node.iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-            self.node.label._editable = False
-        else:
-            self.node.label._editable = True
-
-        if self.new_label_to_set_redo is not None:
-            new_text = self.new_label_to_set_redo
-        else:
-            new_text = GenerateNewLabel(self.project,self.redo_iri,self.redo_prefix,\
-                                        self.redo_remaining_characters).return_label()
-
-        print('new_text',new_text)
-
-        CommandLabelChange(self.node.diagram,self.node,self.node.text(),new_text).redo()
+        self.node.remaining_characters = self.rc_redo
+        old_text = self.node.text()
+        new_text = GenerateNewLabel(self.project, self.node).return_label()
+        CommandLabelChange(self.node.diagram, self.node, old_text, new_text).redo()
 
     def undo(self):
         """undo the command"""
-        print('>>>          CommandNodeSetIRIPrefixAndRemainingCharacters (undo)')
-
-        self.node.iri = self.undo_iri
-        self.node.prefix = self.undo_prefix
-        self.node.remaining_characters = self.undo_remaining_characters
-
-        if self.node.iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-            self.node.label._editable = False
-        else:
-            self.node.label._editable = True
-
-        if self.new_label_to_set_undo is not None:
-            old_text = self.new_label_to_set_undo
-        else:
-            old_text = GenerateNewLabel(self.project,self.undo_iri,self.undo_prefix,\
-                                        self.undo_remaining_characters).return_label()
-
-        CommandLabelChange(self.node.diagram, self.node, self.node.text(), old_text).redo()
+        self.node.remaining_characters = self.rc_undo
+        new_text = self.node.text()
+        old_text = GenerateNewLabel(self.project, self.node).return_label()
+        CommandLabelChange(self.node.diagram, self.node, old_text, new_text).undo()

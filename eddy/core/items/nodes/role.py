@@ -62,7 +62,7 @@ class RoleNode(AbstractResizableNode):
     Identities = {Identity.Role}
     Type = Item.RoleNode
 
-    def __init__(self, width=70, height=50, brush=None, iri='', prefix = '', remaining_characters='role', **kwargs):
+    def __init__(self, width=70, height=50, brush=None, remaining_characters='role', **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -90,13 +90,53 @@ class RoleNode(AbstractResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-        self.iri = iri
         self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='role', pos=self.center, parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
+
+    def IRI(self,project):
+        """
+        Returns the datatype associated with this node.
+        :rtype: str || 'Error multiple IRIS-'* | None | a single iri
+        """
+        iris = []
+
+        #print('self',self)
+        for iri in project.IRI_prefixes_nodes_dict.keys():
+            nodes = project.IRI_prefixes_nodes_dict[iri][1]
+            if (self in nodes) or (str(self) in str(nodes)):
+                iris.append(iri)
+
+        if len(iris) == 1:
+            return iris[0]
+        if len(iris) == 0:
+            return None
+
+        return str('Error multiple IRIS-'+iris)
+
+    def prefix(self,project):
+        """
+        Returns the value value associated with this node.
+        :rtype: str ||  'Error multiple IRIS-'* | None | a single prefix
+        """
+        iri = self.IRI(project)
+
+        if iri is None:
+            return None
+        if 'Error multiple IRIS-' in iri:
+            return iri
+
+        prefixes = project.IRI_prefixes_nodes_dict[iri][0]
+
+        if len(prefixes) == 0:
+            return None
+
+        sorted_lst = sorted(list(prefixes))
+
+        return sorted_lst[0]
 
     #############################################
     #   INTERFACE
@@ -120,7 +160,8 @@ class RoleNode(AbstractResizableNode):
             'id': self.id,
             'brush': self.brush(),
             'height': self.height(),
-            'width': self.width(), 'iri': self.iri, 'prefix': self.prefix, 'remaining_characters': self.remaining_characters
+            'width': self.width(),
+            'remaining_characters': self.remaining_characters,
         })
         node.setPos(self.pos())
         node.setText(self.text())

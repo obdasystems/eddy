@@ -104,9 +104,6 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportGenericNode(node, 'com.yworks.entityRelationship.attribute')
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element
@@ -126,9 +123,6 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportGenericNode(node, 'com.yworks.entityRelationship.small_entity')
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI', node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element
@@ -181,9 +175,6 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportShapeNode(node, 'octagon')
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI', node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element
@@ -220,9 +211,6 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         element = self.exportGenericNode(node, 'com.yworks.entityRelationship.relationship')
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI', node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element

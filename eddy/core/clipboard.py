@@ -35,9 +35,10 @@
 
 from PyQt5 import QtCore
 
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.common import CommandItemsAdd
 from eddy.core.output import getLogger
-
+from eddy.core.datatypes.graphol import Item
 
 LOGGER = getLogger()
 
@@ -145,7 +146,6 @@ class Clipboard(QtCore.QObject):
             zValue = 0  # Diagram is empty
 
         if pos:
-
             # Paste position has been given manually => figure out which node to use as anchor item and
             # adjust the paste position so that the anchor item is pasted right after the given position
             item = min(nodes, key=lambda x: x.boundingRect().top())
@@ -177,7 +177,26 @@ class Clipboard(QtCore.QObject):
             diagram.pasteX += self.PasteOffsetX
             diagram.pasteY += self.PasteOffsetY
 
-        self.session.undostack.push(CommandItemsAdd(diagram, items))
+        Duplicate_dict_1 = diagram.project.copy_IRI_prefixes_nodes_dictionaries(diagram.project.IRI_prefixes_nodes_dict, dict())
+        Duplicate_dict_2 = diagram.project.copy_IRI_prefixes_nodes_dictionaries(diagram.project.IRI_prefixes_nodes_dict, dict())
+
+        count = 0
+        for x,n in self.nodes.items():
+            new_nd = nodes[count]
+            iri = n.IRI(diagram.project)
+            Duplicate_dict_1[iri][1].add(new_nd)
+            count = count + 1
+
+        commands = []
+
+        commands.append(CommandItemsAdd(diagram, items))
+        commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1))
+
+        self.session.undostack.beginMacro('edit paste >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
 
     def size(self):
         """

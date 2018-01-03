@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-import os
+import os, re
 import textwrap
 
 from PyQt5 import QtCore
@@ -155,9 +155,14 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
 
-        node.iri = e.attribute('IRI', '')
-        node.prefix = e.attribute('PREFIX', '')
-        node.remaining_characters = e.attribute('remaining_characters', '')
+        if label.text() == 'TOP':
+            new_rc = 'TopDataProperty'
+        elif label.text() == 'BOTTOM':
+            new_rc = 'BottomDataProperty'
+        else:
+            new_rc = label.text()
+
+        node.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return node
 
@@ -182,9 +187,14 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
 
-        node.iri = e.attribute('IRI', '')
-        node.prefix = e.attribute('PREFIX', '')
-        node.remaining_characters = e.attribute('remaining_characters', '')
+        if label.text() == 'TOP':
+            new_rc = 'Thing'
+        elif label.text() == 'BOTTOM':
+            new_rc = 'Nothing'
+        else:
+            new_rc = label.text()
+
+        node.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return node
 
@@ -247,9 +257,17 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
 
-        node.iri = e.attribute('IRI', '')
-        node.prefix = e.attribute('PREFIX', '')
-        node.remaining_characters = e.attribute('remaining_characters', '')
+        datatype = node.datatype
+        if datatype is not None:
+            print('datatype.value', datatype.value)
+            index = datatype.value.index(':')
+            print('index',index)
+            new_rc = datatype.value[(index+1):len(label.text())]
+            print('new_rc',new_rc)
+        else:
+            new_rc = label.text()
+
+        node.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return node
 
@@ -296,9 +314,14 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
         node.setText(label.text())
         node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
 
-        node.iri = e.attribute('IRI', '')
-        node.prefix = e.attribute('PREFIX', '')
-        node.remaining_characters = e.attribute('remaining_characters', '')
+        if label.text() == 'TOP':
+            new_rc = 'TopObjectProperty'
+        elif label.text() == 'BOTTOM':
+            new_rc = 'BottomObjectProperty'
+        else:
+            new_rc = label.text()
+
+        node.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return node
 
@@ -726,6 +749,81 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
     #############################################
     #   IMPORT PROJECT FROM XML
     #################################
+    def fetch_IRI_prefixes_nodes_dict_from_string(self,str_dict):
+
+        str = str_dict[1:len(str_dict)-1]
+
+
+        str = str.replace('\'xsd\'','\'xsd\', \'xsd_2\'')
+        str = str.replace('\'abc\'', '\'abc\', \'abc_2\'')
+        str = str.replace('\'owl\'', '\'owl\', \'owl_2\'')
+        str = str.replace('{\'rdfs\'}', 'set()')
+
+        sub_strings = str.split('],')
+
+        RE_PATTERN = re.compile("""^'(?P<iri>.+)':\s\[(?P<value>.*)]$""")
+        RE_VALUE = re.compile("""^{(?P<prefixes>.*)},\s{(?P<nodes>.*)}$""")
+        RE_PREFIX_SET = re.compile("""^set\(\),\s{(?P<nodes>.*)}$""")
+        RE_NODES_SET = re.compile("""^{(?P<prefixes>.*)},\sset\(\)$""")
+        RE_BOTH_SET = re.compile("""^set\(\),\sset\(\)$""")
+
+        dict_to_return = dict()
+        value_to_return = []
+
+        for i in range(0,len(sub_strings)):
+            if i != (len(sub_strings)-1):
+                pr_str = sub_strings[i].strip()+']'
+            else:
+                pr_str = sub_strings[i].strip()
+
+            match = RE_PATTERN.match(pr_str)
+            iri = match.group('iri')
+            value = match.group('value')
+
+            match_2a = RE_VALUE.match(value)
+            match_2b = RE_PREFIX_SET.match(value)
+            match_2c = RE_NODES_SET.match(value)
+            match_2d = RE_BOTH_SET.match(value)
+
+            if (match_2a is not None):
+                prefixes_str = match_2a.group('prefixes')
+                nodes_str = match_2a.group('nodes')
+
+            if (match_2b is not None):
+                prefixes_str = None
+                nodes_str = match_2b.group('nodes')
+
+            if (match_2c is not None):
+                prefixes_str = match_2c.group('prefixes')
+                nodes_str = None
+
+            if (match_2d is not None):
+                prefixes_str = None
+                nodes_str = None
+
+            prefixes = set()
+            nodes = set()
+
+            if prefixes_str is not None:
+                prefixes_str_split = prefixes_str.split(', ')
+
+                for prefix_raw in prefixes_str_split:
+                    prefix = prefix_raw.replace('\'','')
+                    prefixes.add(prefix)
+
+            if nodes_str is not None:
+                nodes_str_split = nodes_str.split(', ')
+
+                for node_raw in nodes_str_split:
+                    node = node_raw.replace('\'','')
+                    nodes.add(node)
+
+            value_to_return.append(prefixes)
+            value_to_return.append(nodes)
+
+            dict_to_return[iri] = value_to_return
+
+        return dict_to_return
 
     def importProjectFromXML(self):
         """
@@ -751,6 +849,11 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         iri = ontology.firstChildElement('iri').text()
         LOGGER.debug('Loaded ontology IRI: %s', iri)
         profileName = ontology.firstChildElement('profile').text()
+
+        string_IRI_prefixes_nodes_dict = ontology.firstChildElement('IRI_prefixes_nodes_dict').text()
+        IRI_prefixes_nodes_dict = self.fetch_IRI_prefixes_nodes_dict_from_string(string_IRI_prefixes_nodes_dict)
+        LOGGER.debug('Loaded ontology IRI_prefixes_nodes_dict: %s', string_IRI_prefixes_nodes_dict)
+
         if not profileName:
             profileName = 'OWL 2'
             LOGGER.warning('Missing ontology profile, using default: %s', profileName)
@@ -759,6 +862,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         self.project = Project(
             name=os.path.basename(path), 
             path=path, prefix=prefix, iri=iri,
+            IRI_prefixes_nodes_dict=IRI_prefixes_nodes_dict,
             profile=profile, session=self.session)
 
     def importMetaFromXML(self):
@@ -1030,9 +1134,14 @@ class GrapholLoaderMixin_v2(object):
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
 
-        n.iri = e.attribute('IRI', '')
-        n.prefix = e.attribute('PREFIX', '')
-        n.remaining_characters = e.attribute('remaining_characters', '')
+        if x.text() == 'TOP':
+            new_rc = 'TopDataProperty'
+        elif x.text() == 'BOTTOM':
+            new_rc = 'BottomDataProperty'
+        else:
+            new_rc = x.text()
+
+        n.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return n
 
@@ -1058,9 +1167,14 @@ class GrapholLoaderMixin_v2(object):
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
 
-        n.iri = e.attribute('IRI', '')
-        n.prefix = e.attribute('PREFIX', '')
-        n.remaining_characters = e.attribute('remaining_characters', '')
+        if x.text() == 'TOP':
+            new_rc = 'Thing'
+        elif x.text() == 'BOTTOM':
+            new_rc = 'Nothing'
+        else:
+            new_rc = x.text()
+
+        n.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return n
 
@@ -1129,9 +1243,17 @@ class GrapholLoaderMixin_v2(object):
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
 
-        n.iri = e.attribute('IRI', '')
-        n.prefix = e.attribute('PREFIX', '')
-        n.remaining_characters = e.attribute('remaining_characters', '')
+        datatype = n.datatype
+        if datatype is not None:
+            print('datatype.value', datatype.value)
+            index = datatype.value.index(':')
+            print('index',index)
+            new_rc = datatype.value[(index+1):len(x.text())]
+            print('new_rc',new_rc)
+        else:
+            new_rc = x.text()
+
+        n.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return n
 
@@ -1182,9 +1304,14 @@ class GrapholLoaderMixin_v2(object):
         n.setText(x.text())
         n.setTextPos(n.mapFromScene(QtCore.QPointF(int(x.attribute('x')), int(x.attribute('y')))))
 
-        n.iri = e.attribute('IRI', '')
-        n.prefix = e.attribute('PREFIX', '')
-        n.remaining_characters = e.attribute('remaining_characters', '')
+        if x.text() == 'TOP':
+            new_rc = 'TopObjectProperty'
+        elif x.text() == 'BOTTOM':
+            new_rc = 'BottomObjectProperty'
+        else:
+            new_rc = x.text()
+
+        n.remaining_characters = e.attribute('remaining_characters', new_rc)
 
         return n
 
@@ -1466,6 +1593,128 @@ class GrapholLoaderMixin_v2(object):
                 self.nproject.setMeta(meta[0], meta[1], meta[2])
             element = element.nextSiblingElement('predicate')
 
+    def fetch_IRI_prefixes_nodes_dict_from_string(self,str_dict):
+
+        str = str_dict[1:len(str_dict)-1]
+
+        sub_strings = str.split('],')
+
+        RE_PATTERN = re.compile("""^'(?P<iri>.+)':\s\[(?P<value>.*)]$""")
+        RE_VALUE = re.compile("""^{(?P<prefixes>.*)},\s{(?P<nodes>.*)}$""")
+        RE_PREFIX_SET = re.compile("""^set\(\),\s{(?P<nodes>.*)}$""")
+        RE_NODES_SET = re.compile("""^{(?P<prefixes>.*)},\sset\(\)$""")
+        RE_BOTH_SET = re.compile("""^set\(\),\sset\(\)$""")
+
+        dict_to_return = dict()
+
+        for i in range(0,len(sub_strings)):
+            if i != (len(sub_strings)-1):
+                pr_str = sub_strings[i].strip()+']'
+            else:
+                pr_str = sub_strings[i].strip()
+
+            match = RE_PATTERN.match(pr_str)
+            iri = match.group('iri')
+            value = match.group('value')
+
+            match_2a = RE_VALUE.match(value)
+            match_2b = RE_PREFIX_SET.match(value)
+            match_2c = RE_NODES_SET.match(value)
+            match_2d = RE_BOTH_SET.match(value)
+
+            if (match_2a is not None):
+                prefixes_str = match_2a.group('prefixes')
+                nodes_str = match_2a.group('nodes')
+
+            if (match_2b is not None):
+                prefixes_str = None
+                nodes_str = match_2b.group('nodes')
+
+            if (match_2c is not None):
+                prefixes_str = match_2c.group('prefixes')
+                nodes_str = None
+
+            if (match_2d is not None):
+                prefixes_str = None
+                nodes_str = None
+
+            prefixes = set()
+            nodes = set()
+
+            if prefixes_str is not None:
+                prefixes_str_split = prefixes_str.split(', ')
+
+                for prefix_raw in prefixes_str_split:
+                    prefix = prefix_raw.replace('\'','')
+                    prefixes.add(prefix)
+
+            if nodes_str is not None:
+                nodes_str_split = nodes_str.split(', ')
+
+                for node_raw in nodes_str_split:
+                    node = node_raw.replace('\'','')
+                    nodes.add(node)
+
+            value_to_return = []
+
+            value_to_return.append(prefixes)
+            value_to_return.append(nodes)
+
+            dict_to_return[iri] = value_to_return
+
+        return dict_to_return
+
+    def convert_string_of_nodes_to_nodes(self):
+
+        nodes_in_project = self.nproject.nodes()
+
+        IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
+
+        print('IRI_prefixes_nodes_dict_old',IRI_prefixes_nodes_dict_old)
+
+        IRI_prefixes_nodes_dict_new = dict()
+
+        # dict[key] = [set(),set()]
+        for iri in IRI_prefixes_nodes_dict_old.keys():
+            prefixes = IRI_prefixes_nodes_dict_old[iri][0]
+            nodes = IRI_prefixes_nodes_dict_old[iri][1]
+
+            values = []
+            to_prefixes = set()
+            to_nodes = set()
+
+            to_prefixes = to_prefixes.union(prefixes)
+            to_nodes = to_nodes.union(nodes)
+
+            values.append(to_prefixes)
+            values.append(to_nodes)
+
+            IRI_prefixes_nodes_dict_new[iri] = values
+
+        for iri in IRI_prefixes_nodes_dict_new.keys():
+            nodes_str_or_just_node = IRI_prefixes_nodes_dict_new[iri][1]
+            new_nodes_entry = set()
+
+            for node_str_or_just_node in nodes_str_or_just_node:
+                if str(type(node_str_or_just_node)) == '<class \'str\'>':
+                    node_str = node_str_or_just_node
+                    for node in nodes_in_project:
+                        if node_str == str(node):
+                            new_nodes_entry.add(node)
+                else:
+                    node=node_str_or_just_node
+                    new_nodes_entry.add(node)
+
+            for node in new_nodes_entry:
+                if (str(node) not in nodes_str_or_just_node) and (node not in new_nodes_entry):
+                    LOGGER.critical('node is missing'+str(node))
+
+            IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
+
+        print('IRI_prefixes_nodes_dict_new',IRI_prefixes_nodes_dict_new)
+
+        self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
+
     def createProject(self):
         """
         Create the Project by reading data from the parsed QDomDocument.
@@ -1481,6 +1730,7 @@ class GrapholLoaderMixin_v2(object):
             """
             QtWidgets.QApplication.processEvents()
             subelement = section.firstChildElement(tag)
+
             if subelement.isNull():
                 LOGGER.warning('Missing tag <%s> in ontology section, using default: %s', tag, default)
                 return default
@@ -1489,6 +1739,11 @@ class GrapholLoaderMixin_v2(object):
                 LOGGER.logger('Empty tag <%s> in ontology section, using default: %s', tag, default)
                 return default
             LOGGER.debug('Loaded ontology %s: %s', tag, content)
+
+            if tag is 'IRI_prefixes_nodes_dict':
+                dictionary_to_return = self.fetch_IRI_prefixes_nodes_dict_from_string(content)
+                return dictionary_to_return
+
             return content
 
         self.nproject = Project(
@@ -1498,6 +1753,7 @@ class GrapholLoaderMixin_v2(object):
             iri=parse(tag='iri'),
             version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile(parse('profile', 'OWL 2')),
+            IRI_prefixes_nodes_dict=parse(tag='IRI_prefixes_nodes_dict', default=dict()),
             session=self.session)
 
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
@@ -1549,6 +1805,9 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         self.createDomDocument()
         self.createProject()
         self.createDiagrams()
+
+        self.convert_string_of_nodes_to_nodes()
+
         self.createPredicatesMeta()
         self.projectRender()
         self.projectMerge()
@@ -1607,6 +1866,21 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
         else:
             self.createProject()
             self.createDiagrams()
+
+            self.convert_string_of_nodes_to_nodes()
+
+            print('display IRI_prefixes_nodes_dict')
+
+            dict = self.nproject.IRI_prefixes_nodes_dict
+
+            for iri in dict.keys():
+                print(iri)
+                print(dict[iri][0])
+                print(dict[iri][1])
+
+            print('display IRI_prefixes_nodes_dict END')
+
             self.createPredicatesMeta()
             self.projectRender()
             self.projectLoaded()
+

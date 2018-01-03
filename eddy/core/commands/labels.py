@@ -35,33 +35,41 @@
 
 from PyQt5 import QtWidgets
 
-from eddy.core.datatypes.graphol import Identity, Item
+from eddy.core.datatypes.graphol import Identity, Item, Special
 
 
 class GenerateNewLabel():
     #Generate a new label for a non value node
-    def __init__(self, project, iri, prefix, remaining_characters):
+    def __init__(self, project, node):
 
         self.project = project
-        self.iri_to_set = iri
-        self.prefix_to_set = prefix
-        self.rc_to_set = remaining_characters
+        self.iri_to_set = node.IRI(self.project)
+        self.prefix_to_set = node.prefix(self.project)
+        self.rc_to_set = node.remaining_characters
+        self.node = node
 
     def return_label(self):
 
-        return_label = None
-
-        if self.prefix_to_set == '':
-            if self.iri_to_set == self.project.iri:
-                return_label = self.project.prefix + ':' + self.rc_to_set
-            else:
-                return_label = self.iri_to_set + '#' + self.rc_to_set
+        if (self.node.type() is Item.IndividualNode) and (self.node.identity() is Identity.Value):
+            return self.node.text()
+        if (self.prefix_to_set is None) and (self.iri_to_set is None):
+            return_label = str('No IRI|Prefix'+self.rc_to_set)
         else:
-            return_label = self.prefix_to_set + ':' + self.rc_to_set
-
-        print('return_label', return_label)
-
+            if (self.prefix_to_set is not None) and ('Error multiple IRIS-' in self.prefix_to_set):
+                return_label = self.prefix_to_set
+                return return_label
+            if (self.iri_to_set is not None) and ('Error multiple IRIS-' in self.iri_to_set):
+                return_label = self.iri_to_set
+                return return_label
+            if self.prefix_to_set is None:
+                if self.iri_to_set == self.project.iri:
+                    return_label = str(self.project.prefix + ':' + self.rc_to_set)
+                else:
+                    return_label = str(self.iri_to_set + '#' + self.rc_to_set)
+            else:
+                return_label = str(self.prefix_to_set + ':' + self.rc_to_set)
         return return_label
+
 
 class CommandLabelChange(QtWidgets.QUndoCommand):
     """
@@ -86,8 +94,6 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        print('>>>          CommandLabelChange (redo)')
-
         meta = None
         # BACKUP METADATA
         if self.item.isNode() and self.refactor:
@@ -96,11 +102,11 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
                 self.project.unsetMeta(self.item.type(), self.data['undo'])
 
         # CHANGE THE CONTENT OF THE LABEL
-        if self.item.isNode():
-            self.project.doRemoveItem(self.diagram, self.item)
+        #if self.item.isNode():
+            #self.project.doRemoveItem(self.diagram, self.item)
         self.item.setText(self.data['redo'])
-        if self.item.isNode():
-            self.project.doAddItem(self.diagram, self.item)
+        #if self.item.isNode():
+            #self.project.doAddItem(self.diagram, self.item)
 
         # RESTORE METADATA
         if meta:
@@ -125,12 +131,8 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         # EMIT UPDATED SIGNAL
         self.diagram.sgnUpdated.emit()
 
-        print('>>>          CommandLabelChange (redo) END')
-
     def undo(self):
         """undo the command"""
-        print('>>>          CommandLabelChange (undo)')
-
         meta = None
         # BACKUP METADATA
         if self.item.isNode() and self.refactor:
@@ -139,11 +141,11 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
                 self.project.unsetMeta(self.item.type(), self.data['redo'])
 
         # CHANGE THE CONTENT OF THE LABEL
-        if self.item.isNode():
-            self.project.doRemoveItem(self.diagram, self.item)
+        #if self.item.isNode():
+            #self.project.doRemoveItem(self.diagram, self.item)
         self.item.setText(self.data['undo'])
-        if self.item.isNode():
-            self.project.doAddItem(self.diagram, self.item)
+        #if self.item.isNode():
+            #self.project.doAddItem(self.diagram, self.item)
 
         # RESTORE METADATA
         if meta:
@@ -167,8 +169,6 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         # EMIT UPDATED SIGNAL
         self.diagram.sgnUpdated.emit()
-
-        print('>>>          CommandLabelChange (undo) END')
 
 
 class CommandLabelMove(QtWidgets.QUndoCommand):

@@ -57,7 +57,7 @@ from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes_2 import CommandNodeSetIRIPrefixAndRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
@@ -104,6 +104,7 @@ from eddy.core.reasoner import ReasonerManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.update import UpdateCheckWorker
 
 from eddy.ui.about import AboutDialog
@@ -1750,18 +1751,33 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
                         print('old_rc, new_rc',node.remaining_characters,',',data)
 
-                        #commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
-                        #commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,node,node.iri,self.project.iri,node.prefix,self.project.prefix,node.remaining_characters,data))
-                        #commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+                        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries\
+                            (self.project.IRI_prefixes_nodes_dict,dict())
+                        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries\
+                            (self.project.IRI_prefixes_nodes_dict,dict())
 
-                        self.undostack.push(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project,node,node.iri,\
-                        self.project.iri,node.prefix,self.project.prefix,node.remaining_characters,data, new_label_undo=node.text(),new_label_redo=data))
+                        old_iri = node.IRI(self.project)
+                        new_iri = self.project.iri
 
+                        Duplicate_dict_1[old_iri][1].remove(node)
+                        Duplicate_dict_1[new_iri][1].add(node)
+
+                        commands = []
+
+                        commands.append(CommandLabelChange(diagram, node, node.text(), data))
+                        commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,Duplicate_dict_2,Duplicate_dict_1))
+                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, data, node, self.project))
+
+                        if any(commands):
+                            self.undostack.beginMacro('edit Forms >> accept() {0}'.format(node))
+                            for command in commands:
+                                if command:
+                                    self.undostack.push(command)
+                            self.undostack.endMacro()
 
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
-
 
         print('>>>      Session (doSetIndividualAs) END')
 
@@ -1782,8 +1798,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 if node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
 
+                    old_iri = node.IRI(self.project)
                     new_iri = 'http://www.w3.org/2002/07/owl'
-                    new_prefix = 'owl'
 
                     if node.type() is Item.ConceptNode:
                         new_rc_lst = ['Nothing','Thing']
@@ -1797,11 +1813,18 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                     elif data == 'BOTTOM':
                         new_rc = new_rc_lst[0]
 
+                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries \
+                        (self.project.IRI_prefixes_nodes_dict, dict())
+                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries \
+                        (self.project.IRI_prefixes_nodes_dict, dict())
+
+                    Duplicate_dict_1[old_iri][1].remove(node)
+                    Duplicate_dict_1[new_iri][1].add(node)
+
                     commands = []
 
-                    commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
-                    commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(diagram.project,node,node.iri,new_iri,node.prefix,new_prefix,node.remaining_characters,new_rc))
-                    commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1))
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_rc, node, diagram.project))
 
                     if any(commands):
                         self.undostack.beginMacro('edit {0} doSetNodeSpecial'.format(node))

@@ -213,9 +213,6 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         element = self.exportLabelNode(node)
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element
@@ -235,9 +232,6 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         element = self.exportLabelNode(node)
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element
@@ -298,9 +292,6 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         element = self.exportLabelNode(node)
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element
@@ -338,9 +329,6 @@ class GrapholProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         element = self.exportLabelNode(node)
-
-        element.setAttribute('PREFIX', node.prefix)
-        element.setAttribute('IRI',node.iri)
         element.setAttribute('remaining_characters', node.remaining_characters)
 
         return element
@@ -523,12 +511,20 @@ class GrapholProjectExporter(AbstractProjectExporter):
         profile.appendChild(self.document.createTextNode(self.project.profile.name()))
         version = self.document.createElement('version')
         version.appendChild(self.document.createTextNode(self.project.version))
+
+        IRI_prefixes_nodes_dict = self.document.createElement('IRI_prefixes_nodes_dict')
+        IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(str(self.project.IRI_prefixes_nodes_dict)))
+
         section = self.document.createElement('ontology')
+
         section.appendChild(name)
         section.appendChild(version)
         section.appendChild(prefix)
         section.appendChild(iri)
         section.appendChild(profile)
+        section.appendChild(IRI_prefixes_nodes_dict)
+
+
         self.document.documentElement().appendChild(section)
 
     def createPredicatesMeta(self):

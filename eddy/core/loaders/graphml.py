@@ -112,9 +112,6 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :rtype: AttributeNode
         """
         imported_item =  self.importNodeFromGenericNode(Item.AttributeNode, element)
-
-        imported_item.prefix = element.attribute('PREFIX','')
-        imported_item.iri = element.attribute('IRI','')
         imported_item.remaining_characters = element.attribute('remaining_characters','')
 
         return imported_item
@@ -133,11 +130,7 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :type element: QDomElement
         :rtype: ConceptNode
         """
-        #return self.importNodeFromGenericNode(Item.ConceptNode, element)
         imported_item =  self.importNodeFromGenericNode(Item.ConceptNode, element)
-
-        imported_item.prefix = element.attribute('PREFIX','')
-        imported_item.iri = element.attribute('IRI','')
         imported_item.remaining_characters = element.attribute('remaining_characters','')
 
         return imported_item
@@ -202,11 +195,7 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :type element: QDomElement
         :rtype: IndividualNode
         """
-        #return self.importNodeFromShapeNode(Item.IndividualNode, element)
         imported_item =  self.importNodeFromShapeNode(Item.IndividualNode, element)
-
-        imported_item.prefix = element.attribute('PREFIX','')
-        imported_item.iri = element.attribute('IRI','')
         imported_item.remaining_characters = element.attribute('remaining_characters','')
 
         return imported_item
@@ -233,11 +222,7 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         :type element: QDomElement
         :rtype: RoleNode
         """
-        #return self.importNodeFromGenericNode(Item.RoleNode, element)
         imported_item = self.importNodeFromGenericNode(Item.RoleNode, element)
-
-        imported_item.prefix = element.attribute('PREFIX','')
-        imported_item.iri = element.attribute('IRI','')
         imported_item.remaining_characters = element.attribute('remaining_characters','')
 
         return imported_item

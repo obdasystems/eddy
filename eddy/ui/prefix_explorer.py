@@ -38,6 +38,7 @@ from PyQt5 import QtWidgets
 
 from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
@@ -71,7 +72,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         ###     Standard [Prefix-IRI] pairs    ###
 
-        self.sub_header_std_IRIs = Header('Standard [Prefix-IRI-Version] pairs', self)
+        self.sub_header_std_IRIs = Header('Standard IRIs', self)
 
         self.horizontalbox_std_IRIs = QtWidgets.QHBoxLayout(self)   #to be added to main layout
         self.horizontalbox_std_IRIs.setAlignment(QtCore.Qt.AlignTop)
@@ -83,6 +84,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.table_std_IRIs.setContentsMargins(0, 0, 0, 0)
         self.table_std_IRIs.horizontalHeader().setVisible(False)
         self.table_std_IRIs.verticalHeader().setVisible(False)
+        self.table_std_IRIs.setColumnCount(2)
         ###
         #add std [IRI-Prefix] pairs
         ###
@@ -94,7 +96,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         ###     Project [Prefix-IRI] pair    ###
 
-        self.sub_header_pjt_IRI = Header('Project [Prefix(es)-IRI-Version] pair', self)
+        self.sub_header_pjt_IRI = Header('Ontology IRI', self)
 
         self.horizontalbox_pjt_IRI = QtWidgets.QHBoxLayout(self)  # to be added to main layout
         self.horizontalbox_pjt_IRI.setAlignment(QtCore.Qt.AlignTop)
@@ -118,7 +120,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         ###     Foreign [Prefix-IRI] pair
 
-        self.sub_header_foreign_IRIs = Header('Foreign [Prefix(es)-IRI-Version] pairs', self)
+        self.sub_header_foreign_IRIs = Header('IRIs', self)
 
         self.horizontalbox_foreign_IRIs = QtWidgets.QHBoxLayout(self)  # to be added to main layout
         self.horizontalbox_foreign_IRIs.setAlignment(QtCore.Qt.AlignTop)
@@ -177,11 +179,23 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         :rtype: bool
         """
         if event.type() == QtCore.QEvent.Resize:
-            widget = source.widget()
-            widget.redraw()
+            self.redraw()
         return super().eventFilter(source, event)
 
+    def fill_std_IRIs_table(self):
 
+        for std_iri in OWLStandardIRIPrefixPairsDict.keys():
+            prefix = OWLStandardIRIPrefixPairsDict[std_iri]
+
+            item_iri = QtWidgets.QTableWidgetItem(std_iri)
+            item_iri.setText(std_iri)
+            item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+
+    def fill_project_IRI_table(self):
+        pass
+
+    def fill_foreign_IRIs_table(self):
+        pass
 
     def run(self):
         """
@@ -198,6 +212,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         widget.run()
         """
+
 
 
 class Header(QtWidgets.QLabel):
@@ -221,4 +236,3 @@ class VBoxLayout(QtWidgets.QVBoxLayout):
         self.setAlignment(QtCore.Qt.AlignTop)
         self.setContentsMargins(0, 0, 0, 0)
         self.setSpacing(0)
-

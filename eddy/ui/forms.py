@@ -40,7 +40,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.nodes_2 import CommandNodeSetIRIPrefixAndRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.owl import Datatype, OWLStandardIRIPrefixPairsDict
@@ -419,19 +420,28 @@ class ValueForm(QtWidgets.QDialog):
                 LOGGER.error('*****************   failed to assign iri to node   *******************')
                 return
 
-            print('node.prefix - new_prefix',node.prefix,'-',new_prefix)
-            print('node.iri - new_iri',node.iri,'-',new_iri)
+            print('node.prefix() - new_prefix',node.prefix(self.project),'-',new_prefix)
+            print('node.IRI() - new_iri',node.IRI(self.project),'-',new_iri)
             print('node.remaining_characters - new_remaining_characters',node.remaining_characters,'-',new_remaining_characters)
             print('data=',data)
 
+            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
+            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
+
+            old_iri = node.IRI(self.project)
+
+            Duplicate_dict_1[old_iri][1].remove(node)
+            Duplicate_dict_1[new_iri][1].add(node)
+
             commands = []
 
-            commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
-            commands.append(CommandNodeSetIRIPrefixAndRemainingCharacters(self.project, node, node.iri, new_iri, node.prefix, new_prefix, node.remaining_characters, new_remaining_characters))
-            commands.append(CommandLabelChange(diagram, node, node.text(), data, name=name))
+            commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
+            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1))
+            commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
+            commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
 
             if any(commands):
-                self.session.undostack.beginMacro('edit {0} properties'.format(node))
+                self.session.undostack.beginMacro('edit Forms >> accept() {0}'.format(node))
                 for command in commands:
                     if command:
                         self.session.undostack.push(command)

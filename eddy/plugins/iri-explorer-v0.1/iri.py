@@ -83,9 +83,9 @@ class IriPlugin(AbstractPlugin):
 
         connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, widget.FillTableWithIRIPrefixNodesDictionaryKeysAndValues)
 
-        connect(self.project.sgnIRIPrefixNodeEntryAdded, widget.entry_ADD_ok)
-        connect(self.project.sgnIRIPrefixNodeEntryRemoved, widget.entry_REMOVE_OK)
-        connect(self.project.sgnIRIPrefixNodeEntryIgnored, widget.entry_NOT_OK)
+        connect(self.project.sgnIRIPrefixEntryAdded, widget.entry_ADD_ok)
+        connect(self.project.sgnIRIPrefixEntryRemoved, widget.entry_REMOVE_OK)
+        connect(self.project.sgnIRIPrefixEntryIgnored, widget.entry_NOT_OK)
 
         widget.run()
 
@@ -194,7 +194,6 @@ class IriWidget(QtWidgets.QScrollArea):
         self.tableheader_iri = Header(' IRI  ', self)
         self.tableheader_nodes = Header('Nodes ', self)
 
-
         self.horizontalbox = QtWidgets.QHBoxLayout(self)   #to be added to main layout
         self.horizontalbox.setAlignment(QtCore.Qt.AlignTop)
         self.horizontalbox.setContentsMargins(0, 0, 0, 0)
@@ -234,12 +233,12 @@ class IriWidget(QtWidgets.QScrollArea):
         self.verticalbox.setAlignment(QtCore.Qt.AlignTop)
         self.verticalbox.setContentsMargins(0, 0, 0, 0)
         self.verticalbox.setSpacing(0)
-        self.verticalbox.addWidget(self.iri_input_box)
-        self.verticalbox.addWidget(self.prefix_input_box)
-        self.verticalbox.addWidget(self.entry_button)
-        self.verticalbox.addWidget(self.remove_entry_button)
+        #self.verticalbox.addWidget(self.iri_input_box)
+        #self.verticalbox.addWidget(self.prefix_input_box)
+        #self.verticalbox.addWidget(self.entry_button)
+        #self.verticalbox.addWidget(self.remove_entry_button)
         self.verticalbox.addWidget(self.dictionary_display_button)
-        self.verticalbox.addWidget(self.entry_status)
+        #self.verticalbox.addWidget(self.entry_status)
 
         #############
 
@@ -247,6 +246,10 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table.setContentsMargins(0, 0, 0, 0)
         self.table.horizontalHeader().setVisible(False)
         self.table.verticalHeader().setVisible(False)
+        self.table.setMinimumWidth(self.width())
+        self.table.setMinimumHeight(self.height()-self.dictionary_display_button.height())
+
+
 
         self.horizontalbox_3 = QtWidgets.QHBoxLayout(self)    #to be added to main layout
         self.horizontalbox_3.setAlignment(QtCore.Qt.AlignTop)
@@ -324,33 +327,32 @@ class IriWidget(QtWidgets.QScrollArea):
     ###############################
     #
     ###############################
-    @QtCore.pyqtSlot(str, str, AbstractNode)
-    def entry_ADD_ok(self,iri,prefix,node):
+
+    @QtCore.pyqtSlot(str, str, str)
+    def entry_ADD_ok(self,iri,prefix,message):
 
         self.ENTRY_ADD_OK_var = True
-        if node is None:
-            print('entry_ADD_ok(self): ', iri, ',', prefix,',None')
-        else:
-            print('entry_ADD_ok(self): ',iri,',',prefix,',',node)
 
-    @QtCore.pyqtSlot(str, str, AbstractNode,str)
-    def entry_REMOVE_OK(self,iri,prefix,node,message):
+        print('entry_ADD_ok(self): ',iri,',',prefix,',',message)
+
+    @QtCore.pyqtSlot(str, str, str)
+    def entry_REMOVE_OK(self,iri,prefix,message):
 
         self.ENTRY_REMOVE_OK_var = True
-        if node is None:
-            print('entry_REMOVE_ok(self): ', iri, ',', prefix,',None ',message)
-        else:
-            print('entry_REMOVE_ok(self): ',iri,',',prefix,',',node,',',message)
 
-    @QtCore.pyqtSlot(str, str, AbstractNode, str)
-    def entry_NOT_OK(self,iri,prefix,node,message):
+        print('entry_REMOVE_ok(self): ',iri,',',prefix,',',message)
 
-        if node is None:
-            print('entry_NOT_OK(self): ', iri, ',', prefix,',None ',message)
-        else:
-            print('entry_NOT_OK(self): ',iri,',',prefix,',',node,',',message)
+    @QtCore.pyqtSlot(str, str, str)
+    def entry_NOT_OK(self,iri,prefix,message):
+
+        self.ENTRY_IGNORE_var = True
+
+        print('entry_NOT_OK(self): ',iri,',',prefix,',',message)
 
     def display_IRIPrefixesNodesDict(self):
+
+        print('self.height()',self.height())
+        print('self.table.height()',self.table.height())
 
         self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
 
@@ -379,7 +381,6 @@ class IriWidget(QtWidgets.QScrollArea):
 
         print('>>>  fill_table_with_standard_iris_and_standard_prefixes     END')
 
-    @QtCore.pyqtSlot()
     def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
 
         print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues')
@@ -389,6 +390,8 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table.clear()
         self.table.setRowCount(0)
 
+        print('self.project.IRI_prefixes_nodes_dict.keys()',self.project.IRI_prefixes_nodes_dict.keys())
+
         for iri in self.project.IRI_prefixes_nodes_dict.keys():
 
             item_iri = QtWidgets.QTableWidgetItem(iri)
@@ -397,10 +400,7 @@ class IriWidget(QtWidgets.QScrollArea):
 
             prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
             item_prefixes = QtWidgets.QTableWidgetItem()
-            if len(prefixes) == 0:
-                item_prefixes.setText('-')
-            else:
-                item_prefixes.setText(str(prefixes))
+            item_prefixes.setText(str(prefixes))
             item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
 
             nodes = self.project.IRI_prefixes_nodes_dict[iri][1]
@@ -408,10 +408,7 @@ class IriWidget(QtWidgets.QScrollArea):
             nds_ids = set()
             for n in nodes:
                 nds_ids.add(n.id)
-            if len(nds_ids) == 0:
-                item_nodes.setText('-')
-            else:
-                item_nodes.setText(str(nds_ids))
+            item_nodes.setText(str(nds_ids))
             item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
 
             self.table.setRowCount(self.table.rowCount() + 1)
@@ -437,9 +434,7 @@ class IriWidget(QtWidgets.QScrollArea):
             self.ENTRY_REMOVE_OK_var = False
 
             self.project.IRI_prefixes_nodes_dict.clear()
-            self.project.copy_IRI_prefixes_nodes_dictionaries(Duplicate_IRI_prefixes_nodes_dict,
-                                                              self.project.IRI_prefixes_nodes_dict)
-
+            self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(Duplicate_IRI_prefixes_nodes_dict, dict())
             self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
     def process_entry_from_textboxes_for_button_add(self):
@@ -447,18 +442,16 @@ class IriWidget(QtWidgets.QScrollArea):
         prefix = self.prefix_input_box.text()
         iri = self.iri_input_box.text()
 
-        Duplicate_IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
+        Duplicate_IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
 
-        self.project.addIRIPrefixNodeEntry(Duplicate_IRI_prefixes_nodes_dict, iri, prefix, None)
+        self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict, iri, prefix)
 
         if self.ENTRY_ADD_OK_var is True:
 
             self.ENTRY_ADD_OK_var = False
 
             self.project.IRI_prefixes_nodes_dict.clear()
-            self.project.copy_IRI_prefixes_nodes_dictionaries(Duplicate_IRI_prefixes_nodes_dict,
-                                                              self.project.IRI_prefixes_nodes_dict)
-
+            self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(Duplicate_IRI_prefixes_nodes_dict, dict())
             self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
     #############################################
@@ -473,8 +466,9 @@ class IriWidget(QtWidgets.QScrollArea):
         scrollbar = self.verticalScrollBar()
         if scrollbar.isVisible():
             width -= scrollbar.width()
-        sizeHint = self.table.sizeHint()
-        height = sizeHint.height()
+        #sizeHint = self.table.sizeHint()
+        #height = sizeHint.height()
+        height = (self.height()) - (self.dictionary_display_button.height())
         self.table.setFixedWidth(width)
         self.table.setFixedHeight(clamp(height, 0))
 

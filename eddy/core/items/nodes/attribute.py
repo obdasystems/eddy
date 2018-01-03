@@ -53,7 +53,7 @@ class AttributeNode(AbstractNode):
     Identities = {Identity.Attribute}
     Type = Item.AttributeNode
 
-    def __init__(self, width=20, height=20, brush=None, iri='', prefix = '', remaining_characters='attribute',**kwargs):
+    def __init__(self, width=20, height=20, brush=None, remaining_characters='attribute', **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -68,12 +68,51 @@ class AttributeNode(AbstractNode):
         self.selection = Polygon(QtCore.QRectF(-14, -14, 28, 28))
         self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
 
-        self.iri = iri
         self.remaining_characters = remaining_characters
 
-        self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self,
-                               editable=True)
+        self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
+
+    def IRI(self,project):
+        """
+        Returns the datatype associated with this node.
+        :rtype: str || 'Error multiple IRIS-'* | None | a single iri
+        """
+        iris = []
+
+        #print('self',self)
+        for iri in project.IRI_prefixes_nodes_dict.keys():
+            nodes = project.IRI_prefixes_nodes_dict[iri][1]
+            if (self in nodes) or (str(self) in str(nodes)):
+                iris.append(iri)
+
+        if len(iris) == 1:
+            return iris[0]
+        if len(iris) == 0:
+            return None
+
+        return str('Error multiple IRIS-'+iris)
+
+    def prefix(self,project):
+        """
+        Returns the value value associated with this node.
+        :rtype: str ||  'Error multiple IRIS-'* | None | a single prefix
+        """
+        iri = self.IRI(project)
+
+        if iri is None:
+            return None
+        if 'Error multiple IRIS-' in iri:
+            return iri
+
+        prefixes = project.IRI_prefixes_nodes_dict[iri][0]
+
+        if len(prefixes) == 0:
+            return None
+
+        sorted_lst = sorted(list(prefixes))
+
+        return sorted_lst[0]
 
     #############################################
     #   INTERFACE
@@ -95,7 +134,8 @@ class AttributeNode(AbstractNode):
             'id': self.id,
             'brush': self.brush(),
             'height': self.height(),
-            'width': self.width(), 'iri': self.iri, 'prefix': self.prefix, 'remaining_characters': self.remaining_characters
+            'width': self.width(),
+            'remaining_characters': self.remaining_characters,
         })
         node.setPos(self.pos())
         node.setText(self.text())
