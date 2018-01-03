@@ -237,7 +237,7 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
 
-        print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
+        #print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
 
         if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
 
@@ -297,9 +297,9 @@ class Project(QtCore.QObject):
                     #print('self.IRI_prefixes_nodes_dict[corr_iri][1] (after addition)',self.IRI_prefixes_nodes_dict[corr_iri][1])
                     self.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
-            print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
+            #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
-        print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
+        #print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
@@ -378,10 +378,15 @@ class Project(QtCore.QObject):
         #if [prefix_inp-IRI'] exists => addition is not possible
         #if [prefix_inp-IRI_inp] exists => addition not needed (duplicate entry)
 
+        all_prefixes_in_dict = []
         for iri in dictionary.keys():
-            prefixes = dictionary[iri]
+            prefixes = dictionary[iri][0]
+            all_prefixes_in_dict.extend(list(prefixes))
+
+        for iri in dictionary.keys():
+            prefixes = dictionary[iri][0]
             if prefix_inp is not None:
-                if (iri != iri_inp) and (prefix_inp in prefixes):
+                if (iri != iri_inp) and (prefix_inp in all_prefixes_in_dict):
                     self.sgnIRIPrefixEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-'+iri))
                     return None
                 if (iri == iri_inp) and (prefix_inp in prefixes):
@@ -448,7 +453,6 @@ class Project(QtCore.QObject):
                 self.sgnIRINodeEntryIgnored.emit(iri_inp, str(node_inp), 'Node mapped to another IRI-'+temp)
                 return None
 
-
         msg = ''
 
         if iri_inp in dictionary.keys():
@@ -472,16 +476,18 @@ class Project(QtCore.QObject):
     def removeIRIPrefixEntry(self, dictionary, iri_inp, prefix_inp):
 
         # iri_inp does not exist => deletion not possible as key is absent
-        #prefix_inp is not None
+        #prefix_inp is None
             # nodes are mapped to IRI_inp =>  deletion not possible as nodes are linked to the IRI
-        # prefix_inp is None
-            # [prefix_inp-iri_inp] does not exist
+        # prefix_inp is not None
+            # [prefix_inp-iri_inp] does not exist => prefix not mapped with this IRI
+
+        print('removeIRIPrefixEntry >>>',iri_inp, ' - ',prefix_inp)
 
         if iri_inp not in dictionary.keys():
             self.sgnIRIPrefixEntryIgnored.emit(iri_inp, prefix_inp, 'IRI is not present in the table')
             return None
 
-        if prefix_inp is not None:
+        if prefix_inp is None: # attempt to delete entire IRI record
             if len(dictionary[iri_inp][1]) > 0:
                 self.sgnIRIPrefixEntryIgnored.emit(iri_inp,prefix_inp,'Nodes are mapped to this IRI, deletion not possible!')
                 return None

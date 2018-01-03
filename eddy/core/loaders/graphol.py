@@ -259,11 +259,11 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
 
         datatype = node.datatype
         if datatype is not None:
-            print('datatype.value', datatype.value)
+            #print('datatype.value', datatype.value)
             index = datatype.value.index(':')
-            print('index',index)
+            #print('index',index)
             new_rc = datatype.value[(index+1):len(label.text())]
-            print('new_rc',new_rc)
+            #print('new_rc',new_rc)
         else:
             new_rc = label.text()
 
@@ -1245,11 +1245,11 @@ class GrapholLoaderMixin_v2(object):
 
         datatype = n.datatype
         if datatype is not None:
-            print('datatype.value', datatype.value)
+            #print('datatype.value', datatype.value)
             index = datatype.value.index(':')
-            print('index',index)
+            #print('index',index)
             new_rc = datatype.value[(index+1):len(x.text())]
-            print('new_rc',new_rc)
+            #print('new_rc',new_rc)
         else:
             new_rc = x.text()
 
@@ -1670,7 +1670,7 @@ class GrapholLoaderMixin_v2(object):
 
         IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
 
-        print('IRI_prefixes_nodes_dict_old',IRI_prefixes_nodes_dict_old)
+        #print('IRI_prefixes_nodes_dict_old',IRI_prefixes_nodes_dict_old)
 
         IRI_prefixes_nodes_dict_new = dict()
 
@@ -1711,7 +1711,7 @@ class GrapholLoaderMixin_v2(object):
 
             IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
 
-        print('IRI_prefixes_nodes_dict_new',IRI_prefixes_nodes_dict_new)
+        #print('IRI_prefixes_nodes_dict_new',IRI_prefixes_nodes_dict_new)
 
         self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
 
@@ -1868,17 +1868,6 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
             self.createDiagrams()
 
             self.convert_string_of_nodes_to_nodes()
-
-            print('display IRI_prefixes_nodes_dict')
-
-            dict = self.nproject.IRI_prefixes_nodes_dict
-
-            for iri in dict.keys():
-                print(iri)
-                print(dict[iri][0])
-                print(dict[iri][1])
-
-            print('display IRI_prefixes_nodes_dict END')
 
             self.createPredicatesMeta()
             self.projectRender()
