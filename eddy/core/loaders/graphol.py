@@ -1595,6 +1595,59 @@ class GrapholLoaderMixin_v2(object):
 
     def fetch_IRI_prefixes_nodes_dict_from_string(self,str_dict):
 
+        dictionary_to_return = dict()
+
+        lines = str_dict.split('\n')
+
+        for i in range(0,len(lines)-1):
+            print('i',i,' - ',lines[i])
+            print('i+1', i+1, ' - ', lines[i+1])
+            if i%3 == 0:
+                iri = lines[i]
+                prefixes_str = lines[i+1]
+                nodes_str = lines[i+2]
+
+                print('iri',iri)
+                print('prefixes_str',prefixes_str)
+                print('nodes_str',nodes_str)
+
+                prefixes_entry = set()
+                prefixes_str_split = prefixes_str.split(', ')
+                for prefix_raw in prefixes_str_split:
+                    prefix = prefix_raw[1:len(prefix_raw)-1]
+                    print('prefix',prefix)
+                    if prefix != '':
+                        prefixes_entry.add(prefix)
+
+                nodes_entry = set()
+                nodes_str_split = nodes_str.split(', ')
+                for node in nodes_str_split:
+                    print('node',node)
+                    if node!= '':
+                        nodes_entry.add(node)
+
+                value = []
+                value.append(prefixes_entry)
+                value.append(nodes_entry)
+
+                print('prefixes_entry',prefixes_entry)
+                print('nodes_entry',nodes_entry)
+
+                dictionary_to_return[iri] = value
+
+        print('dictionary_to_return',dictionary_to_return)
+
+        for k in dictionary_to_return.keys():
+            print(k)
+            print(dictionary_to_return[k][0])
+            print(dictionary_to_return[k][1])
+
+        return dictionary_to_return
+
+    def fetch_IRI_prefixes_nodes_dict_from_string_2(self,str_dict):
+
+        print('str_dict',str_dict)
+
         str = str_dict[1:len(str_dict)-1]
 
         sub_strings = str.split('],')
@@ -1616,6 +1669,8 @@ class GrapholLoaderMixin_v2(object):
             match = RE_PATTERN.match(pr_str)
             iri = match.group('iri')
             value = match.group('value')
+
+            print()
 
             match_2a = RE_VALUE.match(value)
             match_2b = RE_PREFIX_SET.match(value)

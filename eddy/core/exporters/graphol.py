@@ -512,8 +512,23 @@ class GrapholProjectExporter(AbstractProjectExporter):
         version = self.document.createElement('version')
         version.appendChild(self.document.createTextNode(self.project.version))
 
+
+
         IRI_prefixes_nodes_dict = self.document.createElement('IRI_prefixes_nodes_dict')
-        IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(str(self.project.IRI_prefixes_nodes_dict)))
+
+        string_format_dictionary = ''
+
+        dict = self.project.IRI_prefixes_nodes_dict
+        for iri_key in dict.keys():
+            prefixes_ = list(dict[iri_key][0])
+            nodes_ = list(dict[iri_key][1])
+
+            prefixes_to_concat = str(prefixes_)[1:len(str(prefixes_))-1]
+            nodes_to_concat = str(nodes_)[1:len(str(nodes_))-1]
+
+            string_format_dictionary = string_format_dictionary+iri_key+'\n'+prefixes_to_concat+'\n'+nodes_to_concat+'\n'
+
+        IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(string_format_dictionary))
 
         section = self.document.createElement('ontology')
 

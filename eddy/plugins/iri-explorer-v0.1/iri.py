@@ -195,6 +195,7 @@ class IriWidget(QtWidgets.QScrollArea):
         self.tableheader_iri = Header(' IRI  ', self)
         self.tableheader_nodes = Header('Nodes ', self)
 
+        """
         self.horizontalbox = QtWidgets.QHBoxLayout(self)   #to be added to main layout
         self.horizontalbox.setAlignment(QtCore.Qt.AlignTop)
         self.horizontalbox.setContentsMargins(0, 0, 0, 0)
@@ -202,21 +203,52 @@ class IriWidget(QtWidgets.QScrollArea):
         self.horizontalbox.addWidget(self.tableheader_iri)
         self.horizontalbox.addWidget(self.tableheader_prefixes)
         self.horizontalbox.addWidget(self.tableheader_nodes)
-
+        """
         #############
 
         self.entry_status = QtWidgets.QStatusBar()
 
+        """
+        self.slider = QtWidgets.QSlider()
+
+        self.slider.setCursor(QtGui.QCursor())
+        self.slider.setEnabled(True)
+        self.slider.setRange(1,100)
+        self.slider.setValue(12)
+        self.slider.setTickPosition(QtWidgets.QSlider.TicksBothSides)
+        self.slider.setTracking(True)
+        self.slider.setTickInterval(1)
+        self.slider.setMouseTracking(True)
+        self.slider.setTracking(True)
+        """
         self.entry_button = QtWidgets.QPushButton()
-        self.entry_button.setText('Add entry to the table')
+        self.entry_button.setText('+++')
         self.remove_entry_button = QtWidgets.QPushButton()
-        self.remove_entry_button.setText('Remove entry from table')
+        self.remove_entry_button.setText('---')
+        self.modify_entry_button = QtWidgets.QPushButton()
+        self.modify_entry_button.setText('M')
         self.dictionary_display_button = QtWidgets.QPushButton()
-        self.dictionary_display_button.setText('Display dictionary')
+        self.dictionary_display_button.setText('D')
+        self.hide_or_show_nodes_button = QtWidgets.QPushButton()
+        self.hide_or_show_nodes_button.setText('*')
+
+        self.buttons_layout = QtWidgets.QHBoxLayout(self)
+        self.buttons_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
+        self.buttons_layout.setSpacing(0)
+        self.buttons_layout.addWidget(self.entry_button)
+        self.buttons_layout.addWidget(self.remove_entry_button)
+        self.buttons_layout.addWidget(self.modify_entry_button)
+        self.buttons_layout.addWidget(self.dictionary_display_button)
+        self.buttons_layout.addWidget(self.hide_or_show_nodes_button)
 
         connect(self.entry_button.pressed, self.button_add)
         connect(self.remove_entry_button.pressed, self.button_remove)
         connect(self.dictionary_display_button.pressed, self.display_IRIPrefixesNodesDict)
+        connect(self.hide_or_show_nodes_button.pressed, self.hide_or_show_nodes)
+        connect(self.modify_entry_button.pressed, self.modify_entry)
+
+        #connect(self.slider.sliderMoved, self.slider_moved)
 
         self.prefix_input_box = StringField(self)
         self.prefix_input_box.setPlaceholderText('Enter Prefix')
@@ -236,9 +268,11 @@ class IriWidget(QtWidgets.QScrollArea):
         self.verticalbox.setSpacing(0)
         self.verticalbox.addWidget(self.iri_input_box)
         self.verticalbox.addWidget(self.prefix_input_box)
-        self.verticalbox.addWidget(self.entry_button)
-        self.verticalbox.addWidget(self.remove_entry_button)
-        self.verticalbox.addWidget(self.dictionary_display_button)
+        self.verticalbox.addLayout(self.buttons_layout)
+        #self.verticalbox.addWidget(self.entry_button)
+        #self.verticalbox.addWidget(self.remove_entry_button)
+        #self.verticalbox.addWidget(self.dictionary_display_button)
+        #self.verticalbox.addWidget(self.slider)
         self.verticalbox.addWidget(self.entry_status)
 
         #############
@@ -250,8 +284,6 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table.setMinimumWidth(self.width())
         self.table.setMinimumHeight(self.height()-self.dictionary_display_button.height())
 
-
-
         self.horizontalbox_3 = QtWidgets.QHBoxLayout(self)    #to be added to main layout
         self.horizontalbox_3.setAlignment(QtCore.Qt.AlignTop)
         self.horizontalbox_3.setContentsMargins(0, 0, 0, 0)
@@ -261,7 +293,7 @@ class IriWidget(QtWidgets.QScrollArea):
         #############
 
         self.mainLayout.addLayout(self.verticalbox)
-        self.mainLayout.addLayout(self.horizontalbox)
+        #self.mainLayout.addLayout(self.horizontalbox)
         self.mainLayout.addLayout(self.horizontalbox_3)
 
         #############
@@ -291,6 +323,10 @@ class IriWidget(QtWidgets.QScrollArea):
         self.ENTRY_IGNORE_var = False
 
         self.ADD_OR_REMOVE = None
+
+        self.SHOW_NODES = True
+
+        self.ITEM_ACTIVATED = None
 
     #############################################
     #   PROPERTIES
@@ -353,34 +389,160 @@ class IriWidget(QtWidgets.QScrollArea):
         self.entry_status.showMessage(message, 10000)
         print('entry_NOT_OK(self): ',iri,',',prefix,',',message)
 
+    def slider_moved(self):
+
+        new_value = self.slider.value()
+        print('new_value',new_value)
+
+    def modify_entry(self):
+
+        items_selected = []
+
+        for r in range(0,self.table.rowCount()):
+            for c in range(0,2):
+                item = self.table.item(r,c)
+                if item.isSelected():
+                    print(item.text(),' is selected')
+                    items_selected.append(item)
+
+        range_of_rows = set()
+
+        for i in items_selected:
+            range_of_rows.add(i.row())
+
+        if len(range_of_rows) >1:
+            self.entry_status.showMessage('please modify 1 IRI-Prefix pair at a time')
+        elif len(range_of_rows) == 1:
+            prefixes_input_box = set()
+            prefixes_inp = self.prefix_input_box.text().strip()
+            prefixes_raw = prefixes_inp.split(',')
+            for p in prefixes_raw:
+                if p.strip() != '':
+                    prefixes_input_box.add(p.strip())
+
+            iri_input_box = self.iri_input_box.text().strip()
+
+            condition_IRI_item_selected = (items_selected[0].column() == 0)
+            condition_prefixes_item_selected = (items_selected[0].column() == 1)
+            condition_iri_input_box_is_empty = (iri_input_box == '')
+            condition_prefixes_input_box_is_empty = (len(prefixes_input_box) == 0)
+
+            item_iri = None
+
+            # caseX1  None->* | *-> None
+            if (condition_iri_input_box_is_empty) and (condition_prefixes_input_box_is_empty):
+                self.entry_status.showMessage('Please enter IRI and/or prefix in the respective text fields to modify',10000)
+                return
+
+            #caseX2  prefix -> IRI' | IRI -> prefix'
+            if ((len(items_selected) == 1)):
+                if (condition_prefixes_item_selected and not condition_iri_input_box_is_empty) or\
+                   (condition_IRI_item_selected and not condition_prefixes_input_box_is_empty):
+                        self.entry_status.showMessage('IRI cannot be modified to Prefixes or vice versa', 10000)
+                        return
+
+            #case1
+            if (condition_IRI_item_selected is True) and (condition_prefixes_item_selected is False):
+                if not condition_iri_input_box_is_empty:
+                    if condition_prefixes_input_box_is_empty is True:
+                        #Case1.1     IRI->IRI'         if iri==iri' no need for a transaction
+                        pass
+                    else:
+                        #Case1.2     IRI->[IRI',prefix']   IRI=IRI' | IRI!=IRI'
+                        pass
+
+            #case2
+            if (condition_prefixes_item_selected is True) and (condition_IRI_item_selected is False):
+                if not condition_prefixes_input_box_is_empty:
+                    if condition_iri_input_box_is_empty is True:
+                        # case2.1     prefix->prefix'          if prefix==prefix' no need for a transaction
+                        pass
+                    else:
+                        # case2.2     prefix->[IRI',prefix']   prefix->[IRI',prefix'] is an invalid transaction
+                        pass
+
+            #case3
+            if (condition_prefixes_item_selected is True) and (condition_IRI_item_selected is True):
+                if (condition_iri_input_box_is_empty is False) and (condition_prefixes_input_box_is_empty is True):
+                    # case3.1       [IRI,prefix] -> [IRI']
+                    pass
+                elif (condition_iri_input_box_is_empty is True) and (condition_prefixes_input_box_is_empty is False):
+                    # case3.2       [IRI,prefix] -> [prefix']       if prefix==prefix' no need for a transaction
+                    pass
+                elif (condition_iri_input_box_is_empty is False) and (condition_prefixes_input_box_is_empty is False):
+                    # case3.3       [IRI,prefix] -> [IRI',prefix']   if prefix==prefix' and iri==iri' no need for a transaction
+                    pass
+                else:
+                    #already covered in caseX1
+                    pass
+
+            self.iri_input_box.clear()
+            self.prefix_input_box.clear()
+
+        else:
+            self.entry_status.showMessage('please select the cells in the table to modify',10000)
+
     def display_IRIPrefixesNodesDict(self):
 
         self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
 
-    #not used
-    def FillTableWithStandardIRIsAndStandardPrefixes(self):
+    def FillTableWithStandardData(self):
 
-        #print('>>>  fill_table_with_standard_iris_and_standard_prefixes')
+        for iri in self.project.IRI_prefixes_nodes_dict.keys():
+            if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                item_iri = QtWidgets.QTableWidgetItem()
+                item_iri.setText(iri)
+                item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                item_iri.setBackground(QtGui.QBrush(QtGui.QColor(50,50,205,50)))
+                self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
 
-        for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+                item_prefixes = QtWidgets.QTableWidgetItem()
+                item_prefixes.setText(str(prefixes))
+                item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                item_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(50,50,205,50)))
+                self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
 
-            item_std_iri = QtWidgets.QTableWidgetItem()
-            item_std_iri.setText(std_iri)
-            item_std_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                if self.SHOW_NODES is True:
+                    nodes = self.project.IRI_prefixes_nodes_dict[iri][1]
+                    item_nodes = QtWidgets.QTableWidgetItem()
+                    nds_ids = set()
+                    for n in nodes:
+                        nds_ids.add(n.id)
+                    item_nodes.setText(str(nds_ids))
+                    item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                    item_nodes.setBackground(QtGui.QBrush(QtGui.QColor(50,50,205,50)))
+                    self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
 
-            std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
+                self.table.setRowCount(self.table.rowCount() + 1)
 
-            item_std_prefix = QtWidgets.QTableWidgetItem()
-            item_std_prefix.setText(std_prefix)
-            item_std_prefix.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        iri = self.project.iri
+        item_iri = QtWidgets.QTableWidgetItem()
+        item_iri.setText(iri)
+        item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        item_iri.setBackground(QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
+        self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
 
-            self.table.setRowCount(self.table.rowCount() + 1)
+        prefixes = self.project.IRI_prefixes_nodes_dict[self.project.iri][0]
+        item_prefixes = QtWidgets.QTableWidgetItem()
+        item_prefixes.setText(str(prefixes))
+        item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        item_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
+        self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
 
-            self.table.setItem(self.table.rowCount() - 1, 0, item_std_iri)
-            self.table.setItem(self.table.rowCount() - 1, 1, item_std_prefix)
-            #self.table.resizeRowToContents(self.table.rowCount() - 1)
+        if self.SHOW_NODES is True:
+            nodes = self.project.IRI_prefixes_nodes_dict[self.project.iri][1]
+            item_nodes = QtWidgets.QTableWidgetItem()
+            nds_ids = set()
+            for n in nodes:
+                nds_ids.add(n.id)
+            item_nodes.setText(str(nds_ids))
+            item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            item_nodes.setBackground(QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
+            self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
 
-        #print('>>>  fill_table_with_standard_iris_and_standard_prefixes     END')
+        self.table.setRowCount(self.table.rowCount() + 1)
+
 
     def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
 
@@ -389,37 +551,85 @@ class IriWidget(QtWidgets.QScrollArea):
         # add standard IRIs
         # add key value pairs from dict
         self.table.clear()
-        self.table.setRowCount(0)
+        self.table.setRowCount(1)
 
-        #print('self.project.IRI_prefixes_nodes_dict.keys()',self.project.IRI_prefixes_nodes_dict.keys())
+        if self.SHOW_NODES is True:
+            self.table.setColumnCount(3)
+        else:
+            self.table.setColumnCount(2)
 
-        for iri in self.project.IRI_prefixes_nodes_dict.keys():
+        header_iri = QtWidgets.QTableWidgetItem()
+        header_iri.setText('IRI')
+        header_iri.setFont(Font('Roboto', 15, bold=True))
+        header_iri.setTextAlignment(QtCore.Qt.AlignCenter)
+        header_iri.setBackground(QtGui.QBrush(QtGui.QColor(90,80,80,200)))
+        header_iri.setForeground(QtGui.QBrush(QtGui.QColor(255,255,255,255)))
+        self.table.setItem(self.table.rowCount() - 1, 0, header_iri)
 
-            item_iri = QtWidgets.QTableWidgetItem(iri)
+        header_prefixes = QtWidgets.QTableWidgetItem()
+        header_prefixes.setText('PREFIXES')
+        header_prefixes.setFont(Font('Roboto', 15, bold=True))
+        header_prefixes.setTextAlignment(QtCore.Qt.AlignCenter)
+        header_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(90,80,80,200)))
+        header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        self.table.setItem(self.table.rowCount() - 1, 1, header_prefixes)
+
+        if self.SHOW_NODES is True:
+            header_nodes = QtWidgets.QTableWidgetItem()
+            header_nodes.setText('NODES')
+            header_nodes.setFont(Font('Roboto', 15, bold=True))
+            header_nodes.setTextAlignment(QtCore.Qt.AlignCenter)
+            header_nodes.setBackground(QtGui.QBrush(QtGui.QColor(90,80,80,200)))
+            header_nodes.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+            self.table.setItem(self.table.rowCount() - 1, 2, header_nodes)
+
+        self.table.setRowCount(self.table.rowCount() + 1)
+
+        self.FillTableWithStandardData()
+
+        for iri in sorted(self.project.IRI_prefixes_nodes_dict.keys()):
+
+            if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                continue
+            if iri == self.project.iri:
+                continue
+
+            item_iri = QtWidgets.QTableWidgetItem()
             item_iri.setText(iri)
             item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
 
             prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
             item_prefixes = QtWidgets.QTableWidgetItem()
             item_prefixes.setText(str(prefixes))
             item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
 
-            nodes = self.project.IRI_prefixes_nodes_dict[iri][1]
-            item_nodes = QtWidgets.QTableWidgetItem()
-            nds_ids = set()
-            for n in nodes:
-                nds_ids.add(n.id)
-            item_nodes.setText(str(nds_ids))
-            item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            if self.SHOW_NODES is True:
+                nodes = self.project.IRI_prefixes_nodes_dict[iri][1]
+                item_nodes = QtWidgets.QTableWidgetItem()
+                nds_ids = set()
+                for n in nodes:
+                    nds_ids.add(n.id)
+                item_nodes.setText(str(nds_ids))
+                item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
 
             self.table.setRowCount(self.table.rowCount() + 1)
+        self.table.setRowCount(self.table.rowCount() - 1)
 
-            self.table.setItem(self.table.rowCount()-1, 0, item_iri)
-            self.table.setItem(self.table.rowCount()-1, 1, item_prefixes)
-            self.table.setItem(self.table.rowCount()-1, 2, item_nodes)
-            self.table.resizeRowToContents(self.table.rowCount() - 1)
+        self.redraw()
 
         #print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues      END')
+
+    def hide_or_show_nodes(self):
+
+        if self.SHOW_NODES is True:
+            self.SHOW_NODES = False
+        else:
+            self.SHOW_NODES = True
+
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
 
     def button_add(self):
 
@@ -510,40 +720,42 @@ class IriWidget(QtWidgets.QScrollArea):
         """
         Redraw the content of the widget.
         """
+        if self.SHOW_NODES is True:
+            self.table.setColumnCount(3)
+        else:
+            self.table.setColumnCount(2)
+
         width = self.width()
         scrollbar = self.verticalScrollBar()
         if scrollbar.isVisible():
             width -= scrollbar.width()
         #sizeHint = self.table.sizeHint()
         #height = sizeHint.height()
-        height_of_other_objects = self.dictionary_display_button.height() + self.entry_status.height()+\
-                                  self.entry_button.height() + self.remove_entry_button.height() +\
-                                  self.iri_input_box.height() + self.prefix_input_box.height() + self.tableheader_nodes.height()
+        height_of_other_objects = (self.dictionary_display_button.height() + self.entry_status.height()+\
+                                  self.iri_input_box.height() + self.prefix_input_box.height())
         height = (self.height()) - (height_of_other_objects)
         self.table.setFixedWidth(width)
         self.table.setFixedHeight(clamp(height, 0))
 
-        self.table.setColumnWidth(0,self.width()/3)
-        self.table.setColumnWidth(1,self.width()/3)
-        self.table.setColumnWidth(2,self.width()/3)
+        if self.SHOW_NODES is True:
+            self.table.setColumnWidth(0,self.width()/3)
+            self.table.setColumnWidth(1,self.width()/3)
+            self.table.setColumnWidth(2,self.width()/3)
+        else:
+            self.table.setColumnWidth(0, 2*self.width() / 3)
+            self.table.setColumnWidth(1, self.width() / 3)
+
+        for r in range(0,self.table.rowCount()):
+            self.table.resizeRowToContents(r)
 
     @QtCore.pyqtSlot()
     def run(self):
         """
         Set the current stacked widget.
         """
-
-        self.table.setRowCount(0)
-        self.table.setColumnCount(3)
-
-        ###############       END     ##############
-
-        #print('self.table.rowCount()',self.table.rowCount())
-
         self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
-
-        ##############################################################################
         self.redraw()
+
 
 
 

@@ -321,6 +321,26 @@ class Project(QtCore.QObject):
 
         print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
+    def get_iri_for_prefix(self,prefix_inp):
+
+        if prefix_inp is None:
+            return None
+
+        return_list = []
+
+        for iri in self.IRI_prefixes_nodes_dict.keys():
+            prefixes = self.IRI_prefixes_nodes_dict[iri][0]
+            if prefix_inp in prefixes:
+                return_list.append(iri)
+
+        if len(return_list) == 1:
+            return return_list[0]
+        elif len(return_list) == 0:
+            return None
+        else:
+            LOGGER.critical('prefix mapped to multiple IRI(s)')
+            return return_list
+
     def get_prefix_for_iri(self,inp_iri):
 
         prefixes = self.IRI_prefixes_nodes_dict[inp_iri][0]
@@ -360,11 +380,15 @@ class Project(QtCore.QObject):
 
         if (Prefix_inp is not None) and (Prefix_inp in {'rdf', 'rdfs', 'xsd', 'owl'}):
             self.sgnIRIPrefixEntryIgnored.emit(IRI_inp, Prefix_inp, 'Cannot modify standard prefix(es)')
-            return dictionary
+            return None
         ### cannot add standart IRI ###
         if (IRI_inp is not None) and (IRI_inp in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys()):
             self.sgnIRIPrefixNodeEntryIgnored.emit(IRI_inp, Prefix_inp, 'Cannot modify standard IRI(s)')
-            return dictionary
+            return None
+
+        if IRI_inp == self.iri:
+            self.sgnIRIPrefixNodeEntryIgnored.emit(IRI_inp, Prefix_inp, 'Cannot remove project IRI')
+            return None
 
         if inp == 'add_entry':
             self.addIRIPrefixEntry(dictionary,IRI_inp,Prefix_inp)
@@ -378,24 +402,19 @@ class Project(QtCore.QObject):
         #if [prefix_inp-IRI'] exists => addition is not possible
         #if [prefix_inp-IRI_inp] exists => addition not needed (duplicate entry)
 
-        all_prefixes_in_dict = []
-        for iri in dictionary.keys():
-            prefixes = dictionary[iri][0]
-            all_prefixes_in_dict.extend(list(prefixes))
+        corr_iri_of_prefix_inp = self.get_iri_for_prefix(prefix_inp)
 
-        for iri in dictionary.keys():
-            prefixes = dictionary[iri][0]
-            if prefix_inp is not None:
-                if (iri != iri_inp) and (prefix_inp in all_prefixes_in_dict):
-                    self.sgnIRIPrefixEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-'+iri))
-                    return None
-                if (iri == iri_inp) and (prefix_inp in prefixes):
-                    self.sgnIRIPrefixEntryIgnored.emit(iri_inp, prefix_inp, '[Prefix-IRI] entry already exists')
-                    return None
+        if (corr_iri_of_prefix_inp is not None):
+            if(corr_iri_of_prefix_inp != iri_inp):
+                self.sgnIRIPrefixEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-' + corr_iri_of_prefix_inp))
+                return None
             else:
-                if (iri == iri_inp):
-                    self.sgnIRIPrefixEntryIgnored.emit(iri_inp, None, '[IRI] entry already exists in table')
-                    return None
+                self.sgnIRIPrefixEntryIgnored.emit(iri_inp, prefix_inp, '[IRI] entry already exists in table')
+                return None
+
+        if (prefix_inp is None) and (iri_inp in dictionary.keys()):
+            self.sgnIRIPrefixEntryIgnored.emit(iri_inp, None, '[IRI] entry already exists in table')
+            return None
 
         #C1 prefix_inp !None
         #C2 prefix_inp None
