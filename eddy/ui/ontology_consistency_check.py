@@ -382,9 +382,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
             print('unsatisfiable_entity.toString()',unsatisfiable_entity.toString())
 
-            #if self.project.iri in unsatisfiable_entity.toString():
-
-
             unsatisfiable_entities_string.append(unsatisfiable_entity.toString())
 
             explanations_for_unsatisfiable_entity = []

@@ -122,6 +122,10 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
     def add_unsatisfiable_nodes_in_widget(self,input_list,inp_type):
 
+        print('add_unsatisfiable_nodes_in_widget    >>>')
+        print('input_list',input_list)
+        print('inp_type', inp_type)
+
         for count,entity in enumerate(input_list):
 
             for node in entity:
