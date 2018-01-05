@@ -109,22 +109,22 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         return_list = []
 
-        for uc in input_list:
+        for ue in input_list:
             #OWL_term_for_uc = uc
             temp = []
             for p in self.project.nodes():
                 OWL_term_for_p = self.project.getOWLtermfornode(p)
-                match = self.checkmatchforOWLtermandnodename(uc,OWL_term_for_p)
+                match = self.checkmatchforOWLtermandnodename(ue,OWL_term_for_p)
                 if match is True:
                     temp.append(p)
+            if len(temp) == 0:
+                LOGGER.critical('no nodes found for WOL term-'+ue)
+
             return_list.append(temp)
+
         return return_list
 
     def add_unsatisfiable_nodes_in_widget(self,input_list,inp_type):
-
-        print('add_unsatisfiable_nodes_in_widget    >>>')
-        print('input_list',input_list)
-        print('inp_type', inp_type)
 
         for count,entity in enumerate(input_list):
 
@@ -141,6 +141,8 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
             else:
                 LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
 
+            print('entity', entity)
+            print('explanation_for_node', explanation_for_node)
             self.sgnFakeExplanationAdded.emit(entity[0],explanation_for_node)
 
     @QtCore.pyqtSlot()
@@ -177,12 +179,6 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
             temp.append(str_to_append)
 
         self.project.nodes_of_unsatisfiable_entities.extend(temp)
-
-        print('self.project.nodes_of_unsatisfiable_entities',self.project.nodes_of_unsatisfiable_entities)
-
-        print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
-        print('attributes_only_unsatisfiable_nodes_in_diagram', attributes_only_unsatisfiable_nodes_in_diagram)
-        print('roles_only_unsatisfiable_nodes_in_diagram', roles_only_unsatisfiable_nodes_in_diagram)
 
         self.add_unsatisfiable_nodes_in_widget(classes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_classes')
         self.add_unsatisfiable_nodes_in_widget(attributes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_attributes')

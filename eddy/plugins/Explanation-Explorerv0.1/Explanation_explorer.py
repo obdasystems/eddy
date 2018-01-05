@@ -68,64 +68,7 @@ class ExplanationExplorerPlugin(AbstractPlugin):
     #############################################
     #   SLOTS
     #################################
-    """
-    def getOWLtermfornode(self, node_names):
 
-        # looks up the dict for the raw term and then..
-        # returns the string portion without the IRI and special characters
-
-        print('getOWLtermfornode    >>>     node_names',node_names)
-
-        return_result = []
-
-        for diag_name, val_in_diag in self.project.converted_nodes.items():
-
-            diagrams = self.project.diagrams()
-
-            for d in diagrams:
-                if d.name == diag_name:
-                    node_ids = set()
-
-                    for p in self.project.nodes(d):
-                        if p.text() in node_names:
-                            node_ids.add(p.id)
-
-                    print('getOWLtermfornode >>> ',node_ids)
-
-                    for nd in val_in_diag:
-                        if (val_in_diag[nd] is not None) and (nd in node_ids):
-                            if str(type(val_in_diag[nd])) == '<class \'list\'>':
-
-                                return_list = []
-                                for ele in val_in_diag[nd]:
-                                    java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
-                                    cast(autoclass(java_class), ele)
-                                    return_list.append(ele.toString())
-                                #return return_list
-                                return_result.append(return_list)
-
-                            else:
-                                java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
-                                cast(autoclass(java_class), val_in_diag[nd])
-                                #return val_in_diag[nd].toString()
-                                return_result.append(val_in_diag[nd].toString())
-
-        if len(return_result) != 1:
-
-            set_of_return_result = set()
-
-            for r in return_result:
-                set_of_return_result.add(r)
-
-            if len(set_of_return_result) !=1:
-
-                LOGGER.error('error in module getOWLtermfornode; return_result = ',return_result)
-                sys.exit(0)
-            else:
-                return list(set_of_return_result)[0]
-
-        return return_result[0]
-    """
     @QtCore.pyqtSlot()
     def onSessionReady(self):
         """
@@ -148,13 +91,13 @@ class ExplanationExplorerPlugin(AbstractPlugin):
             explanations_for_widget = self.project.explanations_for_inconsistent_ontology
         else:
             if 'ConceptNode' in self.project.uc_as_input_for_explanation_explorer:
-                unsatisfiable_entity = self.project.unsatisfiable_classes
+                unsatisfiable_entities = self.project.unsatisfiable_classes
                 explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_classes
             elif 'AttributeNode' in self.project.uc_as_input_for_explanation_explorer:
-                unsatisfiable_entity = self.project.unsatisfiable_attributes
+                unsatisfiable_entities = self.project.unsatisfiable_attributes
                 explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_attributes
             elif 'RoleNode' in self.project.uc_as_input_for_explanation_explorer:
-                unsatisfiable_entity = self.project.unsatisfiable_roles
+                unsatisfiable_entities = self.project.unsatisfiable_roles
                 explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_roles
 
             print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
@@ -167,9 +110,8 @@ class ExplanationExplorerPlugin(AbstractPlugin):
                 if str(n) == self.project.uc_as_input_for_explanation_explorer:
                     inp_node = n
 
-            #OWL_term_uc_as_input_for_explanation_explorer = self.getOWLtermfornode(inp_lst)
             OWL_term_uc_as_input_for_explanation_explorer = self.project.getOWLtermfornode(inp_node)
-            index_uc = unsatisfiable_entity.index(OWL_term_uc_as_input_for_explanation_explorer)
+            index_uc = unsatisfiable_entities.index(OWL_term_uc_as_input_for_explanation_explorer)
             explanations_for_widget = explanations_unsatisfiable_entity[index_uc]
 
         for explanation_count, e in enumerate(explanations_for_widget):

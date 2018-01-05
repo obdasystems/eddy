@@ -434,14 +434,13 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             explanations_for_all_unsatisfiable_entities.append(explanations_for_unsatisfiable_entity)
 
 
-
         if java_class == self.OWLClass:
         
             self.project.unsatisfiable_classes = unsatisfiable_entities_string
             self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_entities
 
             if len(self.project.unsatisfiable_classes) != len(self.project.explanations_for_unsatisfiable_classes):
-                LOGGER.info('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classes)')
+                LOGGER.critical('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classes)')
                 sys.exit(0)
         
         elif java_class == self.OWLDataProperty:
@@ -450,7 +449,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             self.project.explanations_for_unsatisfiable_attributes = explanations_for_all_unsatisfiable_entities
 
             if len(self.project.unsatisfiable_attributes) != len(self.project.explanations_for_unsatisfiable_attributes):
-                LOGGER.info(
+                LOGGER.critical(
                     'len(self.project.unsatisfiable_attributes) != len(explanations_for_all_unsatisfiable_attributes)')
                 sys.exit(0)
         
@@ -460,7 +459,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             self.project.explanations_for_unsatisfiable_roles = explanations_for_all_unsatisfiable_entities
 
             if len(self.project.unsatisfiable_roles) != len(self.project.explanations_for_unsatisfiable_roles):
-                LOGGER.info(
+                LOGGER.critical(
                     'len(self.project.unsatisfiable_roles) != len(explanations_for_all_unsatisfiable_roles)')
                 sys.exit(0)
         
@@ -468,13 +467,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             
             LOGGER.error('invalid unsatisfiable entity')
             sys.exit(0)
-
-        print('self.project.unsatisfiable_classes',self.project.unsatisfiable_classes)
-        print('self.project.explanations_for_unsatisfiable_classes',self.project.explanations_for_unsatisfiable_classes)
-        print('self.project.unsatisfiable_roles', self.project.unsatisfiable_roles)
-        print('self.project.explanations_for_unsatisfiable_roles',self.project.explanations_for_unsatisfiable_roles)
-        print('self.project.unsatisfiable_attributes', self.project.unsatisfiable_attributes)
-        print('self.project.explanations_for_unsatisfiable_attributes',self.project.explanations_for_unsatisfiable_attributes)
 
     def reason_over_ontology(self):
 
@@ -523,6 +515,16 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             self.fetch_axioms_and_set_variables(bottom_class_node,self.OWLClass)
             self.fetch_axioms_and_set_variables(bottom_data_property_node, self.OWLDataProperty)
             self.fetch_axioms_and_set_variables(bottom_object_property_node, self.OWLObjectPropertyExpression)
+
+            print('self.project.unsatisfiable_classes', self.project.unsatisfiable_classes)
+            print('self.project.explanations_for_unsatisfiable_classes',
+                  self.project.explanations_for_unsatisfiable_classes)
+            print('self.project.unsatisfiable_roles', self.project.unsatisfiable_roles)
+            print('self.project.explanations_for_unsatisfiable_roles',
+                  self.project.explanations_for_unsatisfiable_roles)
+            print('self.project.unsatisfiable_attributes', self.project.unsatisfiable_attributes)
+            print('self.project.explanations_for_unsatisfiable_attributes',
+                  self.project.explanations_for_unsatisfiable_attributes)
 
             hermit.flush();
             hermit.dispose();
