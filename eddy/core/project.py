@@ -183,7 +183,7 @@ class Project(QtCore.QObject):
             if 'Project_IRI' in properties:
                 return_list.append(iri)
 
-        print('Project >> iri >> return_list',return_list)
+        #print('Project >> iri >> return_list',return_list)
 
         if len(return_list) == 0:
             return None
@@ -211,14 +211,11 @@ class Project(QtCore.QObject):
         project_iri = self.iri
 
         if project_iri is None:
-            return set()
+            return None
 
         project_prefixes = self.IRI_prefixes_nodes_dict[project_iri][0]
 
-        if len(project_prefixes) == 0:
-            return set()
-        else:
-            return project_prefixes
+        return project_prefixes
 
     """
     @property
@@ -239,12 +236,12 @@ class Project(QtCore.QObject):
 
     def print_dictionary(self, dictionary):
 
-        print('print_dictionary     >>>')
-        print('size of the dictionary', len(dictionary.keys()))
+        LOGGER.info('<<<<<<<<<          print_dictionary        >>>>>>>>')
+        LOGGER.info('size of the dictionary - '+str(len(dictionary.keys())))
 
-        print('Project_IRI',self.iri)
-        print('Project_prefix(es)', self.prefixes)
-        print('Project_prefix', self.prefix)
+        LOGGER.info('Project_IRI - '+str(self.iri))
+        LOGGER.info('Project_prefix(es) - '+str(self.prefixes))
+        LOGGER.info('Project_prefix - '+str(self.prefix))
 
         for iri in dictionary.keys():
             prefixes = dictionary[iri][0]
@@ -253,18 +250,18 @@ class Project(QtCore.QObject):
             #version = dictionary[iri][3]
 
             #print(iri, '-', prefixes, '-', nodes, '-', properties, '-', version)
-            print(iri, '-', prefixes, '-', nodes, '-', properties)
-        print('********************')
+            LOGGER.info(str(iri)+ ' - '+ str(prefixes)+ ' - '+ str(nodes)+ ' - '+ str(properties))
+        LOGGER.info('********************')
 
         for n in self.nodes():
             if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
 
                 if n.Type is Item.IndividualNode:
-                    print(n.type(), ',', n.id, ',', n.IRI(self), ',', n.prefix(self), ',', n.remaining_characters, ',', n.identity())
+                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(n.IRI(self))+ ','+ str(n.prefix(self))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
                 else:
-                    print(n.type(), ',', n.id, ',', n.IRI(self), ',', n.prefix(self), ',', n.remaining_characters)
+                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(n.IRI(self))+ ','+ str(n.prefix(self))+ ','+ str(n.remaining_characters))
 
-        print('print_dictionary   END  >>>')
+        LOGGER.info('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
 
     def copy_IRI_prefixes_nodes_dictionaries(self, from_dict, to_dict):
 
