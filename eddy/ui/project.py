@@ -80,12 +80,20 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.nameField.setMinimumWidth(400)
         self.nameField.setMaxLength(64)
 
+        """
         self.prefixLabel = QtWidgets.QLabel(self)
         self.prefixLabel.setFont(Font('Roboto', 12))
         self.prefixLabel.setText('Prefix')
         self.prefixField = StringField(self)
         self.prefixField.setFont(Font('Roboto', 12))
         self.prefixField.setMinimumWidth(400)
+        """
+        self.prefixesLabel = QtWidgets.QLabel(self)
+        self.prefixesLabel.setFont(Font('Roboto', 12))
+        self.prefixesLabel.setText('Prefix(es)')
+        self.prefixesField = StringField(self)
+        self.prefixesField.setFont(Font('Roboto', 12))
+        self.prefixesField.setMinimumWidth(400)
 
         self.iriLabel = QtWidgets.QLabel(self)
         self.iriLabel.setFont(Font('Roboto', 12))
@@ -94,7 +102,8 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.iriField.setFont(Font('Roboto', 12))
         self.iriField.setMinimumWidth(400)
 
-        connect(self.prefixField.textChanged, self.doAcceptForm)
+        #connect(self.prefixField.textChanged, self.doAcceptForm)
+        connect(self.prefixesField.textChanged, self.doAcceptForm)
         connect(self.iriField.textChanged, self.doAcceptForm)
         connect(self.nameField.textChanged, self.doAcceptForm)
         connect(self.nameField.textChanged, self.onNameFieldChanged)
@@ -116,7 +125,8 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.formWidget = QtWidgets.QWidget(self)
         self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.nameLabel, self.nameField)
-        self.formLayout.addRow(self.prefixLabel, self.prefixField)
+        #self.formLayout.addRow(self.prefixLabel, self.prefixField)
+        self.formLayout.addRow(self.prefixesLabel, self.prefixesField)
         self.formLayout.addRow(self.iriLabel, self.iriField)
         self.formLayout.addWidget(spacer)
         self.formLayout.addRow(self.pathLabel, self.pathField)
@@ -187,16 +197,48 @@ class NewProjectDialog(QtWidgets.QDialog):
         """
         return self.prefixField.value()
 
+    def prefixes(self):
+        """
+        Returns the value of the prefixes field (trimmed).
+        :rtype: str
+        """
+        return self.prefixesField.value()
+
+    def IRI_prefixes_nodes_dict(self):
+
+        IRI_prefixes_nodes_dict = dict()
+
+        prefixes = set()
+        nodes = set()
+        properties = set()
+
+        prefixes_to_add = self.prefixesField.value().split(', ')
+
+        for p in prefixes_to_add:
+            prefixes.add(p)
+
+        properties.add('Project_IRI')
+
+        value = []
+
+        value.append(prefixes)
+        value.append(nodes)
+        value.append(properties)
+
+        IRI_prefixes_nodes_dict[self.iri().strip()] = value
+
+        return IRI_prefixes_nodes_dict
+
     #############################################
     # SLOTS
     #################################
-
     @QtCore.pyqtSlot()
     def accept(self):
         """
         Accept the project form and creates a new empty project.
         """
-        project = Project(name=self.name(), path=self.path(), prefix=self.prefix(), iri=self.iri(), profile=OWL2Profile())
+        #project = Project(name=self.name(), path=self.path(), prefix=self.prefix(), iri=self.iri(), profile=OWL2Profile())
+        project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), IRI_prefixes_nodes_dict=self.IRI_prefixes_nodes_dict())
         worker = GrapholProjectExporter(project)
         worker.run()
         super().accept()
@@ -229,7 +271,8 @@ class NewProjectDialog(QtWidgets.QDialog):
         #################################
 
         if enabled:
-            if not self.prefix():
+            #if not self.prefix():
+            if not self.prefixes():
                 caption = ''
                 enabled = False
 

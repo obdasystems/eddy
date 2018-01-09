@@ -162,7 +162,10 @@ class StringField(QtWidgets.QLineEdit):
         Set the value of the field.
         :type value: str.
         """
-        self.setText(value.strip())
+        if value is None:
+            self.setText(None)
+        else:
+            self.setText(value.strip())
 
     def value(self):
         """

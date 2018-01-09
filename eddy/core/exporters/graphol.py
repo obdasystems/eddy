@@ -501,18 +501,16 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         Create the 'ontology' element in the QDomDocument.
         """
-        iri = self.document.createElement('iri')
-        iri.appendChild(self.document.createTextNode(self.project.iri))
+        #iri = self.document.createElement('iri')
+        #iri.appendChild(self.document.createTextNode(self.project.iri))
         name = self.document.createElement('name')
         name.appendChild(self.document.createTextNode(self.project.name))
-        prefix = self.document.createElement('prefix')
-        prefix.appendChild(self.document.createTextNode(self.project.prefix))
+        #prefix = self.document.createElement('prefix')
+        #prefix.appendChild(self.document.createTextNode(self.project.prefix))
         profile = self.document.createElement('profile')
         profile.appendChild(self.document.createTextNode(self.project.profile.name()))
         version = self.document.createElement('version')
         version.appendChild(self.document.createTextNode(self.project.version))
-
-
 
         IRI_prefixes_nodes_dict = self.document.createElement('IRI_prefixes_nodes_dict')
 
@@ -522,11 +520,14 @@ class GrapholProjectExporter(AbstractProjectExporter):
         for iri_key in dict.keys():
             prefixes_ = list(dict[iri_key][0])
             nodes_ = list(dict[iri_key][1])
+            properties_ = list(dict[iri_key][2])
 
             prefixes_to_concat = str(prefixes_)[1:len(str(prefixes_))-1]
             nodes_to_concat = str(nodes_)[1:len(str(nodes_))-1]
+            properties_to_concat = str(properties_)[1:len(str(properties_)) - 1]
 
-            string_format_dictionary = string_format_dictionary+iri_key+'\n'+prefixes_to_concat+'\n'+nodes_to_concat+'\n'
+            string_format_dictionary = string_format_dictionary+iri_key+'\n'+prefixes_to_concat+'\n'+\
+                                       nodes_to_concat+'\n'+properties_to_concat+'\n'
 
         IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(string_format_dictionary))
 
@@ -534,8 +535,8 @@ class GrapholProjectExporter(AbstractProjectExporter):
 
         section.appendChild(name)
         section.appendChild(version)
-        section.appendChild(prefix)
-        section.appendChild(iri)
+        #section.appendChild(prefix)
+        #section.appendChild(iri)
         section.appendChild(profile)
         section.appendChild(IRI_prefixes_nodes_dict)
 

@@ -442,6 +442,16 @@ class PredicateNodeProperty(NodeProperty):
 
         self.iriField.setValue(self.node.IRI(diagram.project))
 
+        """
+        self.iriversionLabel = QtWidgets.QLabel(self)
+        self.iriversionLabel.setFont(Font('Roboto', 12))
+        self.iriversionLabel.setText('IRI version')
+        self.iriversionField = StringField(self)
+        self.iriversionField.setFixedWidth(300)
+        self.iriversionField.setFont(Font('Roboto', 12))
+
+        self.iriversionField.setValue(self.node.IRI_version(diagram.project))
+        """
         #############################################
         # LABEL TAB
         #################################
@@ -476,6 +486,7 @@ class PredicateNodeProperty(NodeProperty):
         self.labelWidget = QtWidgets.QWidget()
         self.labelLayout = QtWidgets.QFormLayout(self.labelWidget)
         self.labelLayout.addRow(self.iriLabel, self.iriField)
+        #self.labelLayout.addRow(self.versionLabel, self.versionField)
         self.labelLayout.addRow(self.textLabel, self.textField)
         self.labelLayout.addRow(self.refactorLabel, self.refactorField)
 
@@ -487,7 +498,9 @@ class PredicateNodeProperty(NodeProperty):
         self.FulliriField = StringField(self)
         self.FulliriField.setFixedWidth(300)
         self.FulliriField.setFont(Font('Roboto', 12))
-        self.FulliriField.setValue(self.iriField.value()+'#'+self.textField.value().strip())
+        full_iri = self.project.get_full_IRI(self.iriField.value(),None,self.textField.value().strip())
+        self.FulliriField.setValue(full_iri)
+        #self.FulliriField.setValue(self.iriField.value()+'#'+self.textField.value().strip())
         self.FulliriField.setReadOnly(True)
 
         self.generalLayout.addRow(self.FulliriLabel, self.FulliriField)
@@ -566,8 +579,8 @@ class PredicateNodeProperty(NodeProperty):
         #Change the iri of the node.
         #:rtype: Command
 
+        #if (self.iriField.value() != self.node.IRI(self.project)) or (self.iriversionField.value() != self.node.IRI_version(self.project)):
         if self.iriField.value() != self.node.IRI(self.project):
-
             connect(self.project.sgnIRINodeEntryAdded, self.metaDataChanged_ADD_OK)
             connect(self.project.sgnIRINodeEntryRemoved, self.metaDataChanged_REMOVE_OK)
             connect(self.project.sgnIRINodeEntryIgnored, self.metaDataChanged_IGNORE)
@@ -584,11 +597,7 @@ class PredicateNodeProperty(NodeProperty):
 
             if self.refactorField.isChecked():
                 for n in self.project.nodes():
-
-                    if n is None:
-                        print('n is None:')
-
-                    if n.text() == self.node.text():
+                    if (n.IRI(self.project) == self.node.IRI(self.project)) and (n.remaining_characters == self.node.remaining_characters):
                         list_of_nodes_to_process.append(n)
             else:
                 list_of_nodes_to_process.append(self.node)
@@ -599,29 +608,15 @@ class PredicateNodeProperty(NodeProperty):
                 self.project.addIRINodeEntry(Duplicate_dict_1, self.iriField.value(), nd)
 
                 if (self.metaDataChanged_REMOVE_OK_var is True) and (self.metaDataChanged_ADD_OK_var is True):
-
                     self.metaDataChanged_REMOVE_OK_var = False
                     self.metaDataChanged_ADD_OK_var = False
                     self.metaDataChanged_IGNORE_var = False
-
-                    # all ok->
-                    if self.iriField.value() == '':
-                        new_iri = self.project.iri
-                    else:
-                        new_iri = self.iriField.value()
-
-                    print('new_iri',new_iri)
-
                 else:
-
                     LOGGER.warning('redo != undo but transaction was not executed correctly')
-
                     self.metaDataChanged_REMOVE_OK_var = False
                     self.metaDataChanged_ADD_OK_var = False
                     self.metaDataChanged_IGNORE_var = False
-
                     return str('Error in '+str(nd))
-
             return CommandProjetSetIRIPrefixesNodesDict(self.diagram.project, Duplicate_dict_2, Duplicate_dict_1)
 
         self.metaDataChanged_REMOVE_OK_var = False

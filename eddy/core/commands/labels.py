@@ -44,6 +44,7 @@ class GenerateNewLabel():
 
         self.project = project
         self.iri_to_set = node.IRI(self.project)
+        #self.iri_to_set_version = node.IRI_version(self.project)
         self.prefix_to_set = node.prefix(self.project)
         self.rc_to_set = node.remaining_characters
         self.node = node
@@ -63,9 +64,10 @@ class GenerateNewLabel():
                 return return_label
             if self.prefix_to_set is None:
                 if self.iri_to_set == self.project.iri:
+                #if 'Project_IRI' in self.iri_to_set[2]: # if Project_IRI in (properties) of IRI
                     return_label = str(self.project.prefix + ':' + self.rc_to_set)
                 else:
-                    return_label = str(self.iri_to_set + '#' + self.rc_to_set)
+                    return_label = self.project.get_full_IRI(self.iri_to_set,None,self.rc_to_set)
             else:
                 return_label = str(self.prefix_to_set + ':' + self.rc_to_set)
         return return_label

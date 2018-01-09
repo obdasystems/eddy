@@ -122,7 +122,19 @@ class IndividualNode(AbstractResizableNode):
             return None
 
         return str('Error multiple IRIS-'+iris)
+    """
+    def IRI_version(self,project):
 
+        iri = self.IRI(project)
+
+        if 'Error multiple IRIS-' in iri:
+            return 'Error multiple IRIS-'
+        else:
+            if iri is None:
+                return None
+            else:
+                return project.IRI_prefixes_nodes_dict[iri][3]
+    """
     def prefix(self,project):
         """
         Returns the value value associated with this node.

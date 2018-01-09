@@ -42,13 +42,12 @@ from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
-from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.output import getLogger
 
 from eddy.ui.dock import DockWidget
 from eddy.ui.fields import IntegerField, StringField
-from eddy.ui.fields import CheckBox, ComboBox
 
+import sys
 
 LOGGER = getLogger()
 
@@ -84,9 +83,10 @@ class IriPlugin(AbstractPlugin):
 
         connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, widget.FillTableWithIRIPrefixNodesDictionaryKeysAndValues)
 
+        connect(self.project.sgnIRIPrefixesEntryModified, widget.entry_MODIFY_ok)
         connect(self.project.sgnIRIPrefixEntryAdded, widget.entry_ADD_ok)
         connect(self.project.sgnIRIPrefixEntryRemoved, widget.entry_REMOVE_OK)
-        connect(self.project.sgnIRIPrefixEntryIgnored, widget.entry_NOT_OK)
+        connect(self.project.sgnIRIPrefixesEntryIgnored, widget.entry_NOT_OK)
 
         widget.run()
 
@@ -246,7 +246,7 @@ class IriWidget(QtWidgets.QScrollArea):
         connect(self.remove_entry_button.pressed, self.button_remove)
         connect(self.dictionary_display_button.pressed, self.display_IRIPrefixesNodesDict)
         connect(self.hide_or_show_nodes_button.pressed, self.hide_or_show_nodes)
-        connect(self.modify_entry_button.pressed, self.modify_entry)
+        connect(self.modify_entry_button.pressed, self.process_entry_from_textboxes_for_button_modify)
 
         #connect(self.slider.sliderMoved, self.slider_moved)
 
@@ -318,9 +318,10 @@ class IriWidget(QtWidgets.QScrollArea):
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
 
-        self.ENTRY_REMOVE_OK_var = False
-        self.ENTRY_ADD_OK_var = False
-        self.ENTRY_IGNORE_var = False
+        self.ENTRY_MODIFY_OK_var = set()
+        self.ENTRY_REMOVE_OK_var = set()
+        self.ENTRY_ADD_OK_var = set()
+        self.ENTRY_IGNORE_var = set()
 
         self.ADD_OR_REMOVE = None
 
@@ -366,121 +367,40 @@ class IriWidget(QtWidgets.QScrollArea):
     ###############################
     #
     ###############################
+    @QtCore.pyqtSlot(str, str, str, str)
+    def entry_MODIFY_ok(self,iri_from,prefix_from,iri_to,prefix_to):
+
+        self.ENTRY_MODIFY_OK_var.add(True)
+
+        self.entry_status.showMessage('Successfully modified',10000)
+        print('entry_ADD_ok(self): ',iri_from,',',prefix_from,',',iri_to,',',prefix_to)
 
     @QtCore.pyqtSlot(str, str, str)
     def entry_ADD_ok(self,iri,prefix,message):
 
-        self.ENTRY_ADD_OK_var = True
-
+        self.ENTRY_ADD_OK_var.add(True)
         self.entry_status.showMessage(message,10000)
         print('entry_ADD_ok(self): ',iri,',',prefix,',',message)
 
     @QtCore.pyqtSlot(str, str, str)
     def entry_REMOVE_OK(self,iri,prefix,message):
 
-        self.ENTRY_REMOVE_OK_var = True
+        self.ENTRY_REMOVE_OK_var.add(True)
         self.entry_status.showMessage(message, 10000)
         print('entry_REMOVE_ok(self): ',iri,',',prefix,',',message)
 
     @QtCore.pyqtSlot(str, str, str)
-    def entry_NOT_OK(self,iri,prefix,message):
+    def entry_NOT_OK(self,iri,prefixes,message):
 
-        self.ENTRY_IGNORE_var = True
+        self.ENTRY_IGNORE_var.add(True)
         self.entry_status.showMessage(message, 10000)
-        print('entry_NOT_OK(self): ',iri,',',prefix,',',message)
+        print('entry_NOT_OK(self): ',iri,',',prefixes,',',message)
 
+    #not used
     def slider_moved(self):
 
         new_value = self.slider.value()
         print('new_value',new_value)
-
-    def modify_entry(self):
-
-        items_selected = []
-
-        for r in range(0,self.table.rowCount()):
-            for c in range(0,2):
-                item = self.table.item(r,c)
-                if item.isSelected():
-                    print(item.text(),' is selected')
-                    items_selected.append(item)
-
-        range_of_rows = set()
-
-        for i in items_selected:
-            range_of_rows.add(i.row())
-
-        if len(range_of_rows) >1:
-            self.entry_status.showMessage('please modify 1 IRI-Prefix pair at a time')
-        elif len(range_of_rows) == 1:
-            prefixes_input_box = set()
-            prefixes_inp = self.prefix_input_box.text().strip()
-            prefixes_raw = prefixes_inp.split(',')
-            for p in prefixes_raw:
-                if p.strip() != '':
-                    prefixes_input_box.add(p.strip())
-
-            iri_input_box = self.iri_input_box.text().strip()
-
-            condition_IRI_item_selected = (items_selected[0].column() == 0)
-            condition_prefixes_item_selected = (items_selected[0].column() == 1)
-            condition_iri_input_box_is_empty = (iri_input_box == '')
-            condition_prefixes_input_box_is_empty = (len(prefixes_input_box) == 0)
-
-            item_iri = None
-
-            # caseX1  None->* | *-> None
-            if (condition_iri_input_box_is_empty) and (condition_prefixes_input_box_is_empty):
-                self.entry_status.showMessage('Please enter IRI and/or prefix in the respective text fields to modify',10000)
-                return
-
-            #caseX2  prefix -> IRI' | IRI -> prefix'
-            if ((len(items_selected) == 1)):
-                if (condition_prefixes_item_selected and not condition_iri_input_box_is_empty) or\
-                   (condition_IRI_item_selected and not condition_prefixes_input_box_is_empty):
-                        self.entry_status.showMessage('IRI cannot be modified to Prefixes or vice versa', 10000)
-                        return
-
-            #case1
-            if (condition_IRI_item_selected is True) and (condition_prefixes_item_selected is False):
-                if not condition_iri_input_box_is_empty:
-                    if condition_prefixes_input_box_is_empty is True:
-                        #Case1.1     IRI->IRI'         if iri==iri' no need for a transaction
-                        pass
-                    else:
-                        #Case1.2     IRI->[IRI',prefix']   IRI=IRI' | IRI!=IRI'
-                        pass
-
-            #case2
-            if (condition_prefixes_item_selected is True) and (condition_IRI_item_selected is False):
-                if not condition_prefixes_input_box_is_empty:
-                    if condition_iri_input_box_is_empty is True:
-                        # case2.1     prefix->prefix'          if prefix==prefix' no need for a transaction
-                        pass
-                    else:
-                        # case2.2     prefix->[IRI',prefix']   prefix->[IRI',prefix'] is an invalid transaction
-                        pass
-
-            #case3
-            if (condition_prefixes_item_selected is True) and (condition_IRI_item_selected is True):
-                if (condition_iri_input_box_is_empty is False) and (condition_prefixes_input_box_is_empty is True):
-                    # case3.1       [IRI,prefix] -> [IRI']
-                    pass
-                elif (condition_iri_input_box_is_empty is True) and (condition_prefixes_input_box_is_empty is False):
-                    # case3.2       [IRI,prefix] -> [prefix']       if prefix==prefix' no need for a transaction
-                    pass
-                elif (condition_iri_input_box_is_empty is False) and (condition_prefixes_input_box_is_empty is False):
-                    # case3.3       [IRI,prefix] -> [IRI',prefix']   if prefix==prefix' and iri==iri' no need for a transaction
-                    pass
-                else:
-                    #already covered in caseX1
-                    pass
-
-            self.iri_input_box.clear()
-            self.prefix_input_box.clear()
-
-        else:
-            self.entry_status.showMessage('please select the cells in the table to modify',10000)
 
     def display_IRIPrefixesNodesDict(self):
 
@@ -542,7 +462,6 @@ class IriWidget(QtWidgets.QScrollArea):
             self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
 
         self.table.setRowCount(self.table.rowCount() + 1)
-
 
     def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
 
@@ -643,7 +562,34 @@ class IriWidget(QtWidgets.QScrollArea):
         self.process_entry_from_textboxes_for_button_add_or_remove()
         self.ADD_OR_REMOVE = None
 
+    def convert_prefixes_in_table_to_set(self,prefixes_str):
+
+        if prefixes_str is None:
+            return None
+
+        prefixes_set = set()
+
+        if (prefixes_str[0] == '{') and (prefixes_str[len(prefixes_str)-1] == '}'):
+            prefixes_str = prefixes_str[1:len(prefixes_str)-1]
+        else:
+            pass
+
+        prefixes_str_split = prefixes_str.split(', ')
+
+        for prefix_raw in prefixes_str_split:
+            if (prefix_raw[0] == '\'') and (prefix_raw[len(prefix_raw)-1] == '\''):
+                prefix = prefix_raw[1:len(prefix_raw) - 1]
+                if prefix != '':
+                    prefixes_set.add(prefix)
+
+        print('return prefixes_set',prefixes_set)
+        return prefixes_set
+
     def process_entry_from_textboxes_for_button_add_or_remove(self):
+
+        self.ENTRY_ADD_OK_var = set()
+        self.ENTRY_REMOVE_OK_var = set()
+        self.ENTRY_IGNORE_var = set()
 
         prefixes = set()
         prefixes_inp = self.prefix_input_box.text().strip()
@@ -672,38 +618,40 @@ class IriWidget(QtWidgets.QScrollArea):
 
         if len(prefixes) > 0:
             for prefix in prefixes:
-
                 if self.ADD_OR_REMOVE == 'remove':
-                    self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
-                    if self.ENTRY_REMOVE_OK_var is True:
-                        self.ENTRY_REMOVE_OK_var = False
-                        process = True
-                    else:
+                    #self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
+                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix, 'remove_entry')
+                    if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
                         LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                         return
+                    else:
+                        process = True
                 elif self.ADD_OR_REMOVE == 'add':
-                    self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
-                    if self.ENTRY_ADD_OK_var is True:
-                        self.ENTRY_ADD_OK_var = False
-                        process = True
-                    else:
+                    #self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
+                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix, 'add_entry')
+                    if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var) :
                         LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                         return
+                    else:
+                        process = True
                 else:
                     pass
         else:
-
             if self.ADD_OR_REMOVE == 'remove':
-                self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
-
-                if self.ENTRY_REMOVE_OK_var is True:
-                    self.ENTRY_REMOVE_OK_var = False
+                #self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None, 'remove_entry')
+                if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
+                    LOGGER.error('transaction was not executed correctly; problem with IRI')
+                    return
+                else:
                     process = True
             elif self.ADD_OR_REMOVE == 'add':
-                self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
-
-                if self.ENTRY_ADD_OK_var is True:
-                    self.ENTRY_ADD_OK_var = False
+                #self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None, 'add_entry')
+                if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var):
+                    LOGGER.error('transaction was not executed correctly; problem with IRI')
+                    return
+                else:
                     process = True
             else:
                 pass
@@ -711,6 +659,217 @@ class IriWidget(QtWidgets.QScrollArea):
         if process is True:
             self.session.undostack.push(CommandProjetSetIRIPrefixesNodesDict(self.project,\
                                         Duplicate_IRI_prefixes_nodes_dict_2,Duplicate_IRI_prefixes_nodes_dict_1))
+
+        self.ENTRY_ADD_OK_var = set()
+        self.ENTRY_REMOVE_OK_var = set()
+        self.ENTRY_IGNORE_var = set()
+
+    def process_entry_from_textboxes_for_button_modify(self):
+
+        self.ENTRY_MODIFY_OK_var = set()
+        self.ENTRY_IGNORE_var = set()
+
+        items_selected = []
+
+        for r in range(0, self.table.rowCount()):
+            for c in range(0, 2):
+                item = self.table.item(r, c)
+                if item.isSelected():
+                    print(item.text(), ' is selected')
+                    items_selected.append(item)
+
+        range_of_rows = set()
+
+        for i in items_selected:
+            range_of_rows.add(i.row())
+
+        if len(range_of_rows) > 1:
+            self.entry_status.showMessage('please modify 1 IRI-Prefix pair at a time')
+        elif len(range_of_rows) == 1:
+
+            prefixes_input_box_set = set()
+            prefixes_inp = self.prefix_input_box.text().strip()
+            prefixes_raw = prefixes_inp.split(',')
+            for p in prefixes_raw:
+                if p.strip() != '':
+                    prefixes_input_box_set.add(p.strip())
+
+            iri_input_box = self.iri_input_box.text().strip()
+
+            condition_IRI_item_selected_A = (items_selected[0].column() == 0)
+            condition_prefixes_item_selected_A = (items_selected[0].column() == 1)
+
+            if len(items_selected) == 2:
+                condition_IRI_item_selected_B = (items_selected[1].column() == 0)
+                condition_prefixes_item_selected_B = (items_selected[1].column() == 1)
+            else:
+                condition_IRI_item_selected_B = False
+                condition_prefixes_item_selected_B = False
+
+            condition_IRI_item_selected = (condition_IRI_item_selected_A or condition_IRI_item_selected_B)
+            condition_prefixes_item_selected = (
+                condition_prefixes_item_selected_A or condition_prefixes_item_selected_B)
+            condition_iri_input_box_is_empty = (iri_input_box == '')
+            condition_prefixes_input_box_is_empty = (len(prefixes_input_box_set) == 0)
+
+            item_iri = None
+            item_prefixes = None
+
+            if condition_IRI_item_selected_A is True:
+                item_iri = items_selected[0].text()
+            else:  # condition_IRI_item_selected_A is False
+                if condition_IRI_item_selected_B is True:
+                    item_iri = items_selected[1].text()
+
+            if condition_prefixes_item_selected_A is True:
+                item_prefixes = items_selected[0].text()
+            else:  # condition_prefixes_item_selected_A is False
+                if condition_prefixes_item_selected_B is True:
+                    item_prefixes = items_selected[1].text()
+
+            item_prefixes_set = self.convert_prefixes_in_table_to_set(item_prefixes)
+
+            """
+            print('item_iri',item_iri)
+            print('prefixes_input_box_set', item_prefixes_set)
+            print('iri_input_box', iri_input_box)
+            print('prefixes_input_box_set', prefixes_input_box_set)
+
+            return
+            """
+            # caseX1  None->* | *-> None
+            if (condition_iri_input_box_is_empty) and (condition_prefixes_input_box_is_empty):
+                self.entry_status.showMessage(
+                    'Please enter IRI and/or prefix in the respective text fields to modify', 10000)
+                return
+
+            # caseX2  prefix(es) -> IRI' | IRI -> prefix(es)'
+            if ((len(items_selected) == 1)):
+                if (condition_prefixes_item_selected and not condition_iri_input_box_is_empty) or \
+                        (condition_IRI_item_selected and not condition_prefixes_input_box_is_empty):
+                    self.entry_status.showMessage('IRI cannot be modified to Prefixes or vice versa', 10000)
+                    return
+
+            Duplicate_IRI_prefixes_nodes_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+            Duplicate_IRI_prefixes_nodes_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+
+            process = False
+
+            # case1
+            if (condition_IRI_item_selected is True) and (condition_prefixes_item_selected is False):
+                print('case1')
+                if not condition_iri_input_box_is_empty:
+                    if condition_prefixes_input_box_is_empty is True:
+                        # Case1.1     IRI->IRI'         if iri==iri' no need for a transaction
+                        if (item_iri == iri_input_box):
+                            print('case1.1')
+                            self.entry_status.showMessage('IRIs in selected cell and input box are the same. Nothing to change', 10000)
+                            return
+                        #$$$$$$
+                        self.project.modifyIRIPrefixesEntry(item_iri,None,iri_input_box,None,Duplicate_IRI_prefixes_nodes_dict_1)
+                        if(False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
+                            LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                            return
+                        else:
+                            process = True
+                    else:
+                        # Case1.2     IRI->[IRI',prefix(es)']   IRI=IRI' | IRI!=IRI'
+                        #$$$$$$
+                        print('case1.2')
+                        self.project.modifyIRIPrefixesEntry(item_iri,None,iri_input_box,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                        if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
+                            LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                            return
+                        else:
+                            process = True
+
+            # case2
+            if (condition_prefixes_item_selected is True) and (condition_IRI_item_selected is False):
+                print('case2')
+                if not condition_prefixes_input_box_is_empty:
+                    if condition_iri_input_box_is_empty is True:
+                        print('case2.1')
+                        # case2.1     prefix(es)->prefix(es)'          if prefix(es)==prefix(es)' no need for a transaction
+                        if (item_prefixes_set.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_set)):
+                            self.entry_status.showMessage(
+                                'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
+                            return
+                        #$$$$$$
+                        self.project.modifyIRIPrefixesEntry(None,item_prefixes_set,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                        if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
+                            LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                            return
+                        else:
+                            process = True
+                    else:
+                        print('case2.2')
+                        # case2.2     prefix(es)->[IRI',prefix(es)']   prefix->[IRI',prefix(es)'] is an invalid transaction
+                        self.entry_status.showMessage('prefix->[IRI\',prefix(es)\'] is an invalid transaction', 10000)
+                        return
+
+            # case3
+            if (condition_prefixes_item_selected is True) and (condition_IRI_item_selected is True):
+                print('case3')
+                if (condition_iri_input_box_is_empty is False) and (condition_prefixes_input_box_is_empty is True):
+                    # case3.1       [IRI,prefix(es)] -> [IRI']
+                    print('case3.1')
+                    #$$$$$$
+                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,iri_input_box,None,Duplicate_IRI_prefixes_nodes_dict_1)
+                    if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
+                        LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                        return
+                    else:
+                        process = True
+                elif (condition_iri_input_box_is_empty is True) and (condition_prefixes_input_box_is_empty is False):
+                    # case3.2       [IRI,prefix(es)] -> [prefix(es)']       if prefix==prefix' no need for a transaction
+                    print('case3.2')
+                    if (item_prefixes_set.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_set)):
+                        self.entry_status.showMessage(
+                            'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
+                        return
+                    #$$$$$$
+                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                    if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
+                        LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                        return
+                    else:
+                        process = True
+                elif (condition_iri_input_box_is_empty is False) and (
+                            condition_prefixes_input_box_is_empty is False):
+                    # case3.3       [IRI,prefix(es)] -> [IRI',prefix(es)']   if prefix(es)==prefix(es)' and iri==iri' no need for a transaction
+                    print('case3.3')
+                    if (item_prefixes_set.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_set)) and (item_iri == iri_input_box):
+                        self.entry_status.showMessage('IRI and prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
+                        return
+                    #$$$$$$
+                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,iri_input_box,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                    if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
+                        LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                        return
+                    else:
+                        process = True
+                else:
+                    # already covered in caseX1
+                    pass
+
+            print('before pushing to stack')
+
+            self.project.print_dictionary(Duplicate_IRI_prefixes_nodes_dict_1)
+
+            print('before pushing to stack END')
+
+            if process is True:
+                self.session.undostack.push(CommandProjetSetIRIPrefixesNodesDict(self.project, \
+                            Duplicate_IRI_prefixes_nodes_dict_2, Duplicate_IRI_prefixes_nodes_dict_1))
+
+            self.iri_input_box.clear()
+            self.prefix_input_box.clear()
+
+        else:
+            self.entry_status.showMessage('please select the cells in the table to modify', 10000)
+
+        self.ENTRY_MODIFY_OK_var = set()
+        self.ENTRY_IGNORE_var = set()
 
     #############################################
     #   INTERFACE

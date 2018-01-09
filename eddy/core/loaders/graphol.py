@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-import os, re
+import os, re, sys
 import textwrap
 
 from PyQt5 import QtCore
@@ -1600,50 +1600,64 @@ class GrapholLoaderMixin_v2(object):
         lines = str_dict.split('\n')
 
         for i in range(0,len(lines)-1):
-            print('i',i,' - ',lines[i])
-            print('i+1', i+1, ' - ', lines[i+1])
-            if i%3 == 0:
+            #print('i',i,' - ',lines[i])
+            #print('i+1', i+1, ' - ', lines[i+1])
+            if i%4 == 0:
                 iri = lines[i]
                 prefixes_str = lines[i+1]
                 nodes_str = lines[i+2]
-
+                properties_str = lines[i+3]
+                """
                 print('iri',iri)
                 print('prefixes_str',prefixes_str)
                 print('nodes_str',nodes_str)
-
+                print('properties_str',properties_str)
+                """
                 prefixes_entry = set()
                 prefixes_str_split = prefixes_str.split(', ')
                 for prefix_raw in prefixes_str_split:
                     prefix = prefix_raw[1:len(prefix_raw)-1]
-                    print('prefix',prefix)
+                    #print('prefix',prefix)
                     if prefix != '':
                         prefixes_entry.add(prefix)
 
                 nodes_entry = set()
                 nodes_str_split = nodes_str.split(', ')
                 for node in nodes_str_split:
-                    print('node',node)
+                    #print('node',node)
                     if node!= '':
                         nodes_entry.add(node)
+
+                properties_entry = set()
+                properties_str_split = properties_str.split(', ')
+                for property_raw in properties_str_split:
+                    property = property_raw[1:len(property_raw) - 1]
+                    #print('property', property)
+                    if property != '':
+                        properties_entry.add(property)
 
                 value = []
                 value.append(prefixes_entry)
                 value.append(nodes_entry)
-
+                value.append(properties_entry)
+                """
                 print('prefixes_entry',prefixes_entry)
                 print('nodes_entry',nodes_entry)
-
+                print('properties_entry', properties_entry)
+                """
                 dictionary_to_return[iri] = value
 
-        print('dictionary_to_return',dictionary_to_return)
-
+        #print('dictionary_to_return',dictionary_to_return)
+        """
         for k in dictionary_to_return.keys():
             print(k)
             print(dictionary_to_return[k][0])
             print(dictionary_to_return[k][1])
-
+            print(dictionary_to_return[k][2])
+        """
         return dictionary_to_return
 
+    #not used
     def fetch_IRI_prefixes_nodes_dict_from_string_2(self,str_dict):
 
         print('str_dict',str_dict)
@@ -1725,24 +1739,25 @@ class GrapholLoaderMixin_v2(object):
 
         IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
 
-        #print('IRI_prefixes_nodes_dict_old',IRI_prefixes_nodes_dict_old)
-
         IRI_prefixes_nodes_dict_new = dict()
 
-        # dict[key] = [set(),set()]
         for iri in IRI_prefixes_nodes_dict_old.keys():
             prefixes = IRI_prefixes_nodes_dict_old[iri][0]
             nodes = IRI_prefixes_nodes_dict_old[iri][1]
+            properties = IRI_prefixes_nodes_dict_old[iri][2]
 
             values = []
             to_prefixes = set()
             to_nodes = set()
+            to_properties = set()
 
             to_prefixes = to_prefixes.union(prefixes)
             to_nodes = to_nodes.union(nodes)
+            to_properties = to_properties.union(properties)
 
             values.append(to_prefixes)
             values.append(to_nodes)
+            values.append(to_properties)
 
             IRI_prefixes_nodes_dict_new[iri] = values
 
@@ -1766,8 +1781,6 @@ class GrapholLoaderMixin_v2(object):
 
             IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
 
-        #print('IRI_prefixes_nodes_dict_new',IRI_prefixes_nodes_dict_new)
-
         self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
 
     def createProject(self):
@@ -1786,10 +1799,14 @@ class GrapholLoaderMixin_v2(object):
             QtWidgets.QApplication.processEvents()
             subelement = section.firstChildElement(tag)
 
+            #print('tag',tag)
+            #print('subelement', subelement)
+
             if subelement.isNull():
                 LOGGER.warning('Missing tag <%s> in ontology section, using default: %s', tag, default)
                 return default
             content = subelement.text()
+            #print('content', content)
             if not content:
                 LOGGER.logger('Empty tag <%s> in ontology section, using default: %s', tag, default)
                 return default
@@ -1804,12 +1821,42 @@ class GrapholLoaderMixin_v2(object):
         self.nproject = Project(
             name=parse(tag='name', default=rstrip(os.path.basename(self.path), File.Graphol.extension)),
             path=os.path.dirname(self.path),
-            prefix=parse(tag='prefix'),
-            iri=parse(tag='iri'),
+            #prefix=parse(tag='prefix', default=None),
+            #iri=parse(tag='iri', default=None),
             version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile(parse('profile', 'OWL 2')),
             IRI_prefixes_nodes_dict=parse(tag='IRI_prefixes_nodes_dict', default=dict()),
             session=self.session)
+
+        saved_iri = parse(tag='iri', default=None)
+        saved_prefix = parse(tag='prefix', default=None)
+
+        #print('self.nproject.iri',self.nproject.iri)
+
+        self.nproject.print_dictionary(self.nproject.IRI_prefixes_nodes_dict)
+
+        if (saved_iri is not None) and (saved_iri not in self.nproject.IRI_prefixes_nodes_dict.keys()) :
+
+            #print('(saved_iri is not None) and (saved_iri not in self.nproject.IRI_prefixes_nodes_dict.keys())')
+
+            prefixes = set()
+            if saved_prefix is not None:
+                prefixes.add(saved_prefix)
+            nodes = set()
+            properties = set()
+            properties.add('Project_IRI')
+
+            value = []
+
+            value.append(prefixes)
+            value.append(nodes)
+            value.append(properties)
+
+            self.nproject.IRI_prefixes_nodes_dict[saved_iri] = value
+
+        #print('self.nproject.iri', self.nproject.iri)
+
+        self.nproject.print_dictionary(self.nproject.IRI_prefixes_nodes_dict)
 
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 

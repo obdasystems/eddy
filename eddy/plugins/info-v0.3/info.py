@@ -41,6 +41,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
@@ -618,21 +619,28 @@ class ProjectInfo(AbstractInfo):
         self.versionKey.setFont(Font('Roboto', 12))
         self.versionField = String(self)
         self.versionField.setFont(Font('Roboto', 12))
-        self.versionField.setReadOnly(True)
+        #self.versionField.setReadOnly(True)
         connect(self.versionField.editingFinished, self.versionEditingFinished)
-
+        """
         self.prefixKey = Key('Prefix', self)
         self.prefixKey.setFont(Font('Roboto', 12))
         self.prefixField = String(self)
         self.prefixField.setFont(Font('Roboto', 12))
         self.prefixField.setReadOnly(True)
         connect(self.prefixField.editingFinished, self.prefixEditingFinished)
+        """
+        self.prefixesKey = Key('Prefix(es)', self)
+        self.prefixesKey.setFont(Font('Roboto', 12))
+        self.prefixesField = String(self)
+        self.prefixesField.setFont(Font('Roboto', 12))
+        #self.prefixesField.setReadOnly(True)
+        connect(self.prefixesField.editingFinished, self.prefixesEditingFinished)
 
         self.iriKey = Key('IRI', self)
         self.iriKey.setFont(Font('Roboto', 12))
         self.iriField = String(self)
         self.iriField.setFont(Font('Roboto', 12))
-        self.iriField.setReadOnly(True)
+        #self.iriField.setReadOnly(True)
         connect(self.iriField.editingFinished, self.iriEditingFinished)
 
         self.profileKey = Key('Profile', self)
@@ -648,7 +656,8 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
         self.ontologyPropLayout.addRow(self.versionKey, self.versionField)
-        self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
+        #self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
+        self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
@@ -715,18 +724,57 @@ class ProjectInfo(AbstractInfo):
         self.mainLayout.addWidget(self.assertionsHeader)
         self.mainLayout.addLayout(self.assertionsLayout)
 
+        self.ENTRY_MODIFIED_OK_var = set()
+        self.ENTRY_IGNORE_var = set()
+
+        #connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
+        #connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
+
+
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot(str, str, str, str)
+    def entry_MODIFIED_ok(self, iri_from, prefixes_from, iri_to, prefixes_to):
+
+        self.ENTRY_MODIFIED_OK_var.add(True)
+        print('entry_ADD_ok(self): ', iri_from, ',', prefixes_from, ',', iri_to, ',',prefixes_to)
+
+    @QtCore.pyqtSlot(str, str, str)
+    def entry_NOT_OK(self, iri, prefix, message):
+
+        self.ENTRY_IGNORE_var.add(True)
+        print('entry_NOT_OK(self): ', iri, ',', prefix, ',', message)
 
     @QtCore.pyqtSlot()
     def iriEditingFinished(self):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        iri = self.iriField.value()
-        if self.project.iri != iri:
-            self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
+        new_iri = self.iriField.value()
+        if (self.project.iri != new_iri) and (new_iri != ''):
+            #self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
+
+            self.ENTRY_MODIFIED_OK_var = set()
+            self.ENTRY_IGNORE_var = set()
+
+            connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
+            connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
+
+            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+
+            self.project.modifyIRIPrefixesEntry(self.project.iri, None, new_iri, None, Duplicate_dict_1)
+            if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
+                self.ENTRY_MODIFIED_OK_var = set()
+                self.ENTRY_IGNORE_var = set()
+
+                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1)
+                self.session.undostack.push(command)
+
+            self.ENTRY_MODIFIED_OK_var = set()
+            self.ENTRY_IGNORE_var = set()
+
         self.iriField.clearFocus()
 
     @QtCore.pyqtSlot()
@@ -738,6 +786,50 @@ class ProjectInfo(AbstractInfo):
         if self.project.prefix != prefix:
             self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
         self.prefixField.clearFocus()
+
+    @QtCore.pyqtSlot()
+    def prefixesEditingFinished(self):
+        """
+        Executed whenever we finish to edit the ontology prefix
+        """
+        prefixes_str = self.prefixesField.value()
+
+        prefixes_new = set()
+
+        prefixes_str_split = prefixes_str.split(', ')
+
+        for p in prefixes_str_split:
+            if p !='':
+                prefixes_new.add(p)
+
+        if (self.project.prefixes.issubset(prefixes_new)) and (prefixes_new.issubset(self.project.prefixes)) :
+            #do nothing
+            pass
+        else:
+            self.ENTRY_MODIFIED_OK_var = set()
+            self.ENTRY_IGNORE_var = set()
+
+            connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
+            connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
+
+            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+
+            self.project.modifyIRIPrefixesEntry(self.project.iri,self.project.prefixes,self.project.iri,prefixes_new,Duplicate_dict_1)
+
+            self.project.print_dictionary(Duplicate_dict_1)
+
+            if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
+                self.ENTRY_MODIFIED_OK_var = set()
+                self.ENTRY_IGNORE_var = set()
+
+                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1)
+                self.session.undostack.push(command)
+
+            self.ENTRY_MODIFIED_OK_var = set()
+            self.ENTRY_IGNORE_var = set()
+
+        self.prefixesField.clearFocus()
 
     @QtCore.pyqtSlot()
     def profileChanged(self):
@@ -768,10 +860,26 @@ class ProjectInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type project: Project
         """
+        """
         self.prefixField.setValue(project.prefix)
         self.prefixField.home(True)
         self.prefixField.clearFocus()
         self.prefixField.deselect()
+        """
+        prefixes_str_to_set = ''
+        project_prefixes = project.prefixes
+        if project_prefixes is None:
+            self.prefixesField.setValue('')
+        else:
+            for p in project_prefixes:
+                prefixes_str_to_set = prefixes_str_to_set+p+', '
+
+            prefixes_str_to_set = prefixes_str_to_set[0:len(prefixes_str_to_set)-2]
+            self.prefixesField.setValue(prefixes_str_to_set)
+
+        self.prefixesField.home(True)
+        self.prefixesField.clearFocus()
+        self.prefixesField.deselect()
 
         self.iriField.setValue(project.iri)
         self.iriField.home(True)
