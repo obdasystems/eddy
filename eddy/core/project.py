@@ -253,6 +253,11 @@ class Project(QtCore.QObject):
             LOGGER.info(str(iri)+ ' - '+ str(prefixes)+ ' - '+ str(nodes)+ ' - '+ str(properties))
         LOGGER.info('********************')
 
+        for p in self.nodes():
+            LOGGER.info(str(p.text()))
+
+        LOGGER.info('********************')
+
         for n in self.nodes():
             #if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
             if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (

@@ -331,7 +331,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                 node = self.parentItem()
                 match = RE_VALUE.match(currentData)
-                print('match = RE_VALUE.match(currentData)',match)
 
                 commands = []
 
@@ -360,6 +359,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.diagram.project))
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
                 else:
+                    self.setText(self.old_text)
+
                     currentData_processed = ''
 
                     for c in currentData:
@@ -370,14 +371,11 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                         else:
                             currentData_processed = currentData_processed + c
 
-                    print('CommandNodeSetRemainingCharacters(node.remaining_characters, currentData, node, self.diagram.project)')
-                    print('currentData_processed',currentData_processed)
                     commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.diagram.project))
 
                 if any(commands):
                     self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))
                     for command in commands:
-                        print('command',command)
                         if command:
                             self.session.undostack.push(command)
                     self.session.undostack.endMacro()
