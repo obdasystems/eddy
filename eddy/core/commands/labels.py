@@ -104,11 +104,11 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
                 self.project.unsetMeta(self.item.type(), self.data['undo'])
 
         # CHANGE THE CONTENT OF THE LABEL
-        #if self.item.isNode():
-            #self.project.doRemoveItem(self.diagram, self.item)
+        if self.item.isNode():
+            self.project.doRemoveItem(self.diagram, self.item)
         self.item.setText(self.data['redo'])
-        #if self.item.isNode():
-            #self.project.doAddItem(self.diagram, self.item)
+        if self.item.isNode():
+            self.project.doAddItem(self.diagram, self.item)
 
         # RESTORE METADATA
         if meta:
@@ -143,11 +143,11 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
                 self.project.unsetMeta(self.item.type(), self.data['redo'])
 
         # CHANGE THE CONTENT OF THE LABEL
-        #if self.item.isNode():
-            #self.project.doRemoveItem(self.diagram, self.item)
+        if self.item.isNode():
+            self.project.doRemoveItem(self.diagram, self.item)
         self.item.setText(self.data['undo'])
-        #if self.item.isNode():
-            #self.project.doAddItem(self.diagram, self.item)
+        if self.item.isNode():
+            self.project.doAddItem(self.diagram, self.item)
 
         # RESTORE METADATA
         if meta:

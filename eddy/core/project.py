@@ -332,18 +332,19 @@ class Project(QtCore.QObject):
                 if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
 
                     #print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    if (node.IRI(self) is None):
+                        prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
 
-                    prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
+                        std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns','rdf',
+                                          'http://www.w3.org/2000/01/rdf-schema','rdfs',
+                                          'http://www.w3.org/2001/XMLSchema','xsd',
+                                          'http://www.w3.org/2002/07/owl','owl']
 
-                    std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns','rdf',
-                                      'http://www.w3.org/2000/01/rdf-schema','rdfs',
-                                      'http://www.w3.org/2001/XMLSchema','xsd',
-                                      'http://www.w3.org/2002/07/owl','owl']
-
-                    ind_prefix = std_iri_prefix.index(prefix)
-                    ind_iri = ind_prefix-1
-                    corr_iri = std_iri_prefix[ind_iri]
-
+                        ind_prefix = std_iri_prefix.index(prefix)
+                        ind_iri = ind_prefix-1
+                        corr_iri = std_iri_prefix[ind_iri]
+                    else:
+                        corr_iri = None
                 else:
 
                     #print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
