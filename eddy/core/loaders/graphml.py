@@ -729,7 +729,8 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
             name=rstrip(os.path.basename(self.path), File.GraphML.extension),
             path=os.path.dirname(self.path),
             profile=self.session.createProfile('OWL 2'),
-            session=self.session)
+            session=self.session,
+            IRI_prefixes_nodes_dict=dict())
 
         LOGGER.debug('Created project: %s', self.nproject.name)
 

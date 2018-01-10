@@ -227,6 +227,49 @@ class Project(QtCore.QObject):
         return version
     """
 
+    def get_iri_of_node(self,node_inp):
+
+        iris = []
+
+        # print('self',self)
+        for iri in self.IRI_prefixes_nodes_dict.keys():
+            nodes = self.IRI_prefixes_nodes_dict[iri][1]
+            if (node_inp in nodes) or (str(node_inp) in str(nodes)):
+                iris.append(iri)
+
+        if len(iris) == 1:
+            return iris[0]
+        if len(iris) == 0:
+            return None
+
+        return str('Error multiple IRIS-' + iris)
+
+    def get_prefixes_of_node(self, node_inp):
+        """
+        Returns the value value associated with this node.
+        :rtype: str ||  'Error multiple IRIS-'* | None | a single prefix
+        """
+        iri = self.get_iri_of_node(node_inp)
+
+        if iri is None:
+            return None
+        if 'Error multiple IRIS-' in iri:
+            return iri
+
+        prefixes = self.IRI_prefixes_nodes_dict[iri][0]
+        return sorted(list(prefixes))
+
+    def get_prefix_of_node(self,node_inp):
+
+        prefixes = self.get_prefixes_of_node(node_inp)
+
+        if prefixes is None:
+            return None
+        if 'Error multiple IRIS-' in prefixes:
+            return prefixes
+
+        return prefixes[0]
+
     def get_full_IRI(self,iri,version,remaining_characters):
 
         if (version is None) or (version == ''):
@@ -263,9 +306,9 @@ class Project(QtCore.QObject):
             if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
                 if n.Type is Item.IndividualNode:
-                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(n.IRI(self))+ ','+ str(n.prefix(self))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
+                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
                 else:
-                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(n.IRI(self))+ ','+ str(n.prefix(self))+ ','+ str(n.remaining_characters))
+                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
 
         LOGGER.info('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
 
@@ -336,7 +379,7 @@ class Project(QtCore.QObject):
             if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
 
                 # print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
-                if (node.IRI(self) is None):
+                if (self.get_iri_of_node(node) is None):
                     prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
 
                     std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns', 'rdf',
@@ -353,9 +396,9 @@ class Project(QtCore.QObject):
 
                 # print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
 
-                if (node.IRI(self) is None):
+                if (self.get_iri_of_node(node) is None):
 
-                    # print('if       (node.IRI(self) is None):')
+                    # print('if       (self.get_iri_of_node(node) is None):')
 
                     if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
 
@@ -369,7 +412,7 @@ class Project(QtCore.QObject):
                         corr_iri = self.iri
                 else:
 
-                    # print('else       (node.IRI(self) is None):')
+                    # print('else       (self.get_iri_of_node(node) is None):')
 
                     corr_iri = None
 

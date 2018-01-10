@@ -44,9 +44,9 @@ class GenerateNewLabel():
     def __init__(self, project, node):
 
         self.project = project
-        self.iri_to_set = node.IRI(self.project)
+        self.iri_to_set = self.project.get_iri_of_node(node)
         #self.iri_to_set_version = node.IRI_version(self.project)
-        self.prefix_to_set = node.prefix(self.project)
+        self.prefix_to_set = self.project.get_prefix_of_node(node)
         self.rc_to_set = node.remaining_characters
         self.node = node
 

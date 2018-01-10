@@ -349,7 +349,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
                         self.project.IRI_prefixes_nodes_dict, dict())
 
-                    old_iri = node.IRI(self.project)
+                    old_iri = self.project.get_iri_of_node(node)
 
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)

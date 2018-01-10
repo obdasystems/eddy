@@ -420,15 +420,15 @@ class ValueForm(QtWidgets.QDialog):
                 LOGGER.error('*****************   failed to assign iri to node   *******************')
                 return
 
-            print('node.prefix() - new_prefix',node.prefix(self.project),'-',new_prefix)
-            print('node.IRI() - new_iri',node.IRI(self.project),'-',new_iri)
+            print('self.project.get_prefix_of_node(node) - new_prefix',self.project.get_prefix_of_node(node),'-',new_prefix)
+            print('self.project.get_iri_of_node(node) - new_iri',self.project.get_iri_of_node(node),'-',new_iri)
             print('node.remaining_characters - new_remaining_characters',node.remaining_characters,'-',new_remaining_characters)
             print('data=',data)
 
             Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
             Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
 
-            old_iri = node.IRI(self.project)
+            old_iri = self.project.get_iri_of_node(node)
 
             Duplicate_dict_1[old_iri][1].remove(node)
             Duplicate_dict_1[new_iri][1].add(node)

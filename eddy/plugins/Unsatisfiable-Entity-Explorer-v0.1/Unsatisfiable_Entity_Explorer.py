@@ -418,19 +418,12 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         """
         print('doAddNode    >>>     node',node)
 
-        """
-        sub_string = str(node).split(':')
-
-        short_str = str(node).replace(sub_string[0] + ':', '')
-        short_str = short_str.replace(':' + sub_string[len(sub_string) - 1], '')
-        """
         owl_term_for_node = self.project.getOWLtermfornode(node)
 
-        if (node not in self.project.nodes_of_unsatisfiable_entities) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities):
+        if (node not in self.project.nodes_of_unsatisfiable_entities) and ((owl_term_for_node is not None) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities)):
             self.project.nodes_of_unsatisfiable_entities.append(node)
 
-        if (node in self.project.nodes_of_unsatisfiable_entities) or (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities):
-        #if (node in self.project.nodes_of_unsatisfiable_entities):
+        if (node in self.project.nodes_of_unsatisfiable_entities) or ((owl_term_for_node is not None) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities)):
             #if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
 
                 parent = self.parentFor(node)
@@ -486,9 +479,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         """
         print('doRemoveNode >>>')
         print('node',node)
-        #if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
-        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
-                        'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+        if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+        #if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             if node in self.project.nodes_of_unsatisfiable_entities:
                 self.project.nodes_of_unsatisfiable_entities.remove(node)
             parent = self.parentFor(node)

@@ -1756,7 +1756,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                         Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries\
                             (self.project.IRI_prefixes_nodes_dict,dict())
 
-                        old_iri = node.IRI(self.project)
+                        old_iri = self.project.get_iri_of_node(node)
                         new_iri = self.project.iri
 
                         Duplicate_dict_1[old_iri][1].remove(node)
@@ -1798,7 +1798,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 if node.text() != data:
                     name = 'change {0} to {1}'.format(node.shortName, data)
 
-                    old_iri = node.IRI(self.project)
+                    old_iri = self.project.get_iri_of_node(node)
                     new_iri = 'http://www.w3.org/2002/07/owl'
 
                     if node.type() is Item.ConceptNode:

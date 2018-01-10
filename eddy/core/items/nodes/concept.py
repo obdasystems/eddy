@@ -74,59 +74,6 @@ class ConceptNode(AbstractResizableNode):
         self.updateNode()
         self.updateTextPos()
 
-    def IRI(self,project):
-        """
-        Returns the datatype associated with this node.
-        :rtype: str || 'Error multiple IRIS-'* | None | a single iri
-        """
-        iris = []
-
-        #print('self',self)
-        for iri in project.IRI_prefixes_nodes_dict.keys():
-            nodes = project.IRI_prefixes_nodes_dict[iri][1]
-            if (self in nodes) or (str(self) in str(nodes)):
-                iris.append(iri)
-
-        if len(iris) == 1:
-            return iris[0]
-        if len(iris) == 0:
-            return None
-
-        return str('Error multiple IRIS-'+iris)
-
-    """
-    def IRI_version(self,project):
-
-        iri = self.IRI(project)
-
-        if 'Error multiple IRIS-' in iri:
-            return 'Error multiple IRIS-'
-        else:
-            if iri is None:
-                return None
-            else:
-                return project.IRI_prefixes_nodes_dict[iri][3]
-    """
-    def prefix(self,project):
-        """
-        Returns the value value associated with this node.
-        :rtype: str ||  'Error multiple IRIS-'* | None | a single prefix
-        """
-        iri = self.IRI(project)
-
-        if iri is None:
-            return None
-        if 'Error multiple IRIS-' in iri:
-            return iri
-
-        prefixes = project.IRI_prefixes_nodes_dict[iri][0]
-
-        if len(prefixes) == 0:
-            return None
-
-        sorted_lst = sorted(list(prefixes))
-
-        return sorted_lst[0]
 
     #############################################
     #   INTERFACE

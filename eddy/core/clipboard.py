@@ -183,7 +183,7 @@ class Clipboard(QtCore.QObject):
         count = 0
         for x,n in self.nodes.items():
             new_nd = nodes[count]
-            iri = n.IRI(diagram.project)
+            iri = self.diagram.project.get_iri_of_node(n)
             Duplicate_dict_1[iri][1].add(new_nd)
             count = count + 1
 

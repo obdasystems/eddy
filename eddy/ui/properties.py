@@ -440,7 +440,7 @@ class PredicateNodeProperty(NodeProperty):
         self.iriField.setFixedWidth(300)
         self.iriField.setFont(Font('Roboto', 12))
 
-        self.iriField.setValue(self.node.IRI(diagram.project))
+        self.iriField.setValue(self.diagram.project.get_iri_of_node(node))
 
         """
         self.iriversionLabel = QtWidgets.QLabel(self)
@@ -583,8 +583,8 @@ class PredicateNodeProperty(NodeProperty):
         #Change the iri of the node.
         #:rtype: Command
 
-        #if (self.iriField.value() != self.node.IRI(self.project)) or (self.iriversionField.value() != self.node.IRI_version(self.project)):
-        if self.iriField.value() != self.node.IRI(self.project):
+        #if (self.iriField.value() != self.project.get_iri_of_node(node)) or (self.iriversionField.value() != self.node.IRI_version(self.project)):
+        if self.iriField.value() != self.project.get_iri_of_node(self.node):
             connect(self.project.sgnIRINodeEntryAdded, self.metaDataChanged_ADD_OK)
             connect(self.project.sgnIRINodeEntryRemoved, self.metaDataChanged_REMOVE_OK)
             connect(self.project.sgnIRINodeEntryIgnored, self.metaDataChanged_IGNORE)
@@ -601,14 +601,14 @@ class PredicateNodeProperty(NodeProperty):
 
             if self.refactorField.isChecked():
                 for n in self.project.nodes():
-                    if (n.IRI(self.project) == self.node.IRI(self.project)) and (n.remaining_characters == self.node.remaining_characters):
+                    if (self.project.get_iri_of_node(n) == self.project.get_iri_of_node(self.node)) and (n.remaining_characters == self.node.remaining_characters):
                         list_of_nodes_to_process.append(n)
             else:
                 list_of_nodes_to_process.append(self.node)
 
             for nd in list_of_nodes_to_process:
 
-                self.project.removeIRINodeEntry(Duplicate_dict_1, nd.IRI(self.project), nd)
+                self.project.removeIRINodeEntry(Duplicate_dict_1, self.project.get_iri_of_node(nd), nd)
                 self.project.addIRINodeEntry(Duplicate_dict_1, self.iriField.value(), nd)
 
                 if (self.metaDataChanged_REMOVE_OK_var is True) and (self.metaDataChanged_ADD_OK_var is True):
@@ -1034,7 +1034,7 @@ class ValueNodeProperty(NodeProperty):
             Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
             Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
 
-            old_iri = self.node.IRI(self.project)
+            old_iri = self.project.get_iri_of_node(self.node)
 
             Duplicate_dict_1[old_iri][1].remove(self.node)
             Duplicate_dict_1[new_iri][1].add(self.node)

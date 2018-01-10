@@ -62,7 +62,7 @@ class FacetNode(AbstractNode):
     Identities = {Identity.Facet}
     Type = Item.FacetNode
 
-    def __init__(self, width=80, height=40, brush=None, **kwargs):
+    def __init__(self, width=80, height=40, brush=None, remaining_characters='facet', **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -75,6 +75,9 @@ class FacetNode(AbstractNode):
         self.polygon = Polygon(self.createPolygon(80, 40))
         self.polygonA = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushA, FacetNode.DefaultPenA)
         self.polygonB = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushB, FacetNode.DefaultPenB)
+
+        self.remaining_characters = remaining_characters
+
         self.labelA = NodeLabel(Facet.length.value, pos=self.centerA, editable=False, movable=False, parent=self)
         self.labelB = FacetQuotedLabel(template='"32"', movable=False, pos=self.centerB, parent=self)
         self.updateNode()
