@@ -47,6 +47,7 @@ from eddy.core.exporters.owl2 import OWLOntologyFetcher
 from eddy.core.datatypes.owl import OWLAxiom,OWLSyntax
 from eddy.core.worker import AbstractWorker
 from jnius import autoclass, cast, detach
+from eddy.core.datatypes.graphol import Special
 
 import sys,math, threading
 
@@ -369,6 +370,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         else:
             self.status_bar.showMessage('')
 
+
+
         entities_of_bottom_entity_node = bottom_entity_node.getEntities()
         entities_of_bottom_entity_node_itr = entities_of_bottom_entity_node.iterator()
 
@@ -382,29 +385,24 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
             print('unsatisfiable_entity.toString()',unsatisfiable_entity.toString())
 
+            if unsatisfiable_entity.toString() in Special.BottomEntities.value.values():
+                continue
+
             unsatisfiable_entities_string.append(unsatisfiable_entity.toString())
 
             explanations_for_unsatisfiable_entity = []
             axioms_of_explanations = []
 
             if java_class == self.OWLClass:
-                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(unsatisfiable_entity,
-                                                                                   self.OWLFunctionalSyntaxFactory.OWLNothing());
-
+                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLNothing());
             elif java_class == self.OWLDataProperty:
-                exists_for_some_values = self.OWLFunctionalSyntaxFactory.DataSomeValuesFrom(unsatisfiable_entity,
-                                                                                            self.OWLFunctionalSyntaxFactory.TopDatatype());
+                exists_for_some_values = self.OWLFunctionalSyntaxFactory.DataSomeValuesFrom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.TopDatatype());
                 # cast(self.OWLDataSomeValuesFrom,exists_for_some_values)
-                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_values,
-                                                                                   self.OWLFunctionalSyntaxFactory.OWLNothing());
-
+                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_values, self.OWLFunctionalSyntaxFactory.OWLNothing());
             elif java_class == self.OWLObjectPropertyExpression:
-                exists_for_some_objects = self.OWLFunctionalSyntaxFactory.ObjectSomeValuesFrom(unsatisfiable_entity,
-                                                                                               self.OWLFunctionalSyntaxFactory.OWLThing());
+                exists_for_some_objects = self.OWLFunctionalSyntaxFactory.ObjectSomeValuesFrom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLThing());
                 # cast(self.OWLObjectSomeValuesFrom,exists_for_some_objects)
-                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_objects,
-                                                                                   self.OWLFunctionalSyntaxFactory.OWLNothing());
-
+                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_objects, self.OWLFunctionalSyntaxFactory.OWLNothing());
             else:
                 LOGGER.error('invalid unsatisfiable entity')
                 sys.exit(0)
@@ -512,6 +510,22 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             bottom_data_property_node = hermit.getBottomDataPropertyNode();
             bottom_object_property_node = hermit.getBottomObjectPropertyNode();
 
+            print('self.project.unsatisfiable_classes', self.project.unsatisfiable_classes)
+            print('self.project.explanations_for_unsatisfiable_classes', self.project.explanations_for_unsatisfiable_classes)
+            print('self.project.unsatisfiable_roles', self.project.unsatisfiable_roles)
+            print('self.project.explanations_for_unsatisfiable_roles', self.project.explanations_for_unsatisfiable_roles)
+            print('self.project.unsatisfiable_attributes', self.project.unsatisfiable_attributes)
+            print('self.project.explanations_for_unsatisfiable_attributes', self.project.explanations_for_unsatisfiable_attributes)
+
+            print('*****************************************************')
+
+            for p in self.project.nodes():
+                print('p',p)
+
+            print('Special.BottomEntities.value',Special.BottomEntities.value.values())
+
+            print('*****************************************************')
+
             self.fetch_axioms_and_set_variables(bottom_class_node,self.OWLClass)
             self.fetch_axioms_and_set_variables(bottom_data_property_node, self.OWLDataProperty)
             self.fetch_axioms_and_set_variables(bottom_object_property_node, self.OWLObjectPropertyExpression)
@@ -528,6 +542,8 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
             hermit.flush();
             hermit.dispose();
+
+
 
         except Exception as e:
 

@@ -893,6 +893,8 @@ class Project(QtCore.QObject):
             node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node_or_edge.update(node_or_edge.boundingRect())
 
+        print('self.nodes_of_unsatisfiable_entities',self.nodes_of_unsatisfiable_entities)
+
         for node_or_str in self.nodes_of_unsatisfiable_entities:
 
             if str(type(node_or_str)) != '<class \'str\'>':

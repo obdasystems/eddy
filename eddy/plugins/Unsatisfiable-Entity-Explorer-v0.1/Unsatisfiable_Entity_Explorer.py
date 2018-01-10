@@ -126,7 +126,11 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
     def add_unsatisfiable_nodes_in_widget(self,input_list,inp_type):
 
-        for count,entity in enumerate(input_list):
+        count = 0
+
+        print('input_list',input_list)
+
+        for entity in input_list:
 
             for node in entity:
 
@@ -143,7 +147,10 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
             print('entity', entity)
             print('explanation_for_node', explanation_for_node)
+
             self.sgnFakeExplanationAdded.emit(entity[0],explanation_for_node)
+
+            count = count + 1
 
     @QtCore.pyqtSlot()
     def onSessionReady(self):
@@ -163,6 +170,10 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         attributes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_attributes)
         roles_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_roles)
 
+        print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
+        print('attributes_only_unsatisfiable_nodes_in_diagram',attributes_only_unsatisfiable_nodes_in_diagram)
+        print('roles_only_unsatisfiable_nodes_in_diagram',roles_only_unsatisfiable_nodes_in_diagram)
+
         [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in classes_only_unsatisfiable_nodes_in_diagram]
         [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in attributes_only_unsatisfiable_nodes_in_diagram]
         [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in roles_only_unsatisfiable_nodes_in_diagram]
@@ -171,13 +182,16 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         for n in self.project.nodes_of_unsatisfiable_entities:
 
+            owl_term = self.project.getOWLtermfornode(n)
+            temp.append(owl_term)
+            """
             sub_string = str(n).split(':')
 
             str_to_append = str(n).replace(sub_string[0]+':', '')
             str_to_append = str_to_append.replace(':'+sub_string[len(sub_string)-1], '')
 
             temp.append(str_to_append)
-
+            """
         self.project.nodes_of_unsatisfiable_entities.extend(temp)
 
         self.add_unsatisfiable_nodes_in_widget(classes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_classes')
@@ -404,15 +418,19 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         """
         print('doAddNode    >>>     node',node)
 
+        """
         sub_string = str(node).split(':')
 
         short_str = str(node).replace(sub_string[0] + ':', '')
         short_str = short_str.replace(':' + sub_string[len(sub_string) - 1], '')
+        """
+        owl_term_for_node = self.project.getOWLtermfornode(node)
 
-        if (node not in self.project.nodes_of_unsatisfiable_entities) and (short_str in self.project.nodes_of_unsatisfiable_entities):
+        if (node not in self.project.nodes_of_unsatisfiable_entities) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities):
             self.project.nodes_of_unsatisfiable_entities.append(node)
 
-        if (node in self.project.nodes_of_unsatisfiable_entities) or (short_str in self.project.nodes_of_unsatisfiable_entities):
+        if (node in self.project.nodes_of_unsatisfiable_entities) or (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities):
+        #if (node in self.project.nodes_of_unsatisfiable_entities):
             if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
                 parent = self.parentFor(node)
                 if not parent:
@@ -570,7 +588,10 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         :type node: AbstractNode
         :rtype: QtGui.QStandardItem
         """
+        print('parentFor(self, node)')
+        print('node',node)
         for i in self.model.findItems(self.parentKey(node), QtCore.Qt.MatchExactly):
+            print('i',i)
             #n = i.child(0).data()
             if i.text() == node.text():
                 return i

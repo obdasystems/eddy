@@ -182,6 +182,16 @@ class Special(Enum_):
     TopRole[2] = 'owl:topObjectProperty'
     TopRole[3] = 'owl:topobjectproperty'
 
+    TopEntities = {}
+
+    TopEntities[1] = 'owl:Thing'
+    TopEntities[2] = 'owl:thing'
+    TopEntities[3] = 'owl:TopDataProperty'
+    TopEntities[4] = 'owl:topDataProperty'
+    TopEntities[5] = 'owl:topdataproperty'
+    TopEntities[6] = 'owl:TopObjectProperty'
+    TopEntities[7] = 'owl:topObjectProperty'
+    TopEntities[8] = 'owl:topobjectproperty'
 
     AllTopEntities = 'TOP | owl:Thing | owl:thing | owl:TopDataProperty | owl:topDataProperty | owl:topdataproperty | \
     #                 owl:TopObjectProperty | owl:topObjectProperty | owl:topobjectproperty'
@@ -205,6 +215,17 @@ class Special(Enum_):
     BottomRole[1] = 'owl:BottomObjectProperty'
     BottomRole[2] = 'owl:bottomObjectProperty'
     BottomRole[3] = 'owl:bottomobjectproperty'
+
+    BottomEntities = {}
+
+    BottomEntities[1] = 'owl:Nothing'
+    BottomEntities[2] = 'owl:nothing'
+    BottomEntities[3] = 'owl:BottomDataProperty'
+    BottomEntities[4] = 'owl:bottomDataProperty'
+    BottomEntities[5] = 'owl:bottomdataproperty'
+    BottomEntities[6] = 'owl:BottomObjectProperty'
+    BottomEntities[7] = 'owl:bottomObjectProperty'
+    BottomEntities[8] = 'owl:bottomobjectproperty'
 
     AllBottomEntities = 'BOTTOM | owl:Nothing | owl:nothing | owl:BottomDataProperty | owl:bottomDataProperty | \
     #                   owl:bottomdataproperty | owl:BottomObjectProperty | owl:bottomObjectProperty | owl:bottomobjectproperty'

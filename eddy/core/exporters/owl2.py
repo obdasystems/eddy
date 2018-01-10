@@ -734,7 +734,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
             return self.df.getOWLBottomDataProperty()
         if node.IRI(self.project) != '':
-            if node.prefix(self.project) != '':
+            if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                 self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                 return self.df.getOWLDataProperty(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
             else:
@@ -781,7 +781,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if (node.special() is Special.Bottom) or (node.special() is Special.BottomConcept):
             return self.df.getOWLNothing()
         if node.IRI(self.project) != '':
-            if node.prefix(self.project) != '':
+            if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                 self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                 return self.df.getOWLClass(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
             else:
@@ -958,7 +958,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         """
         if node.identity() is Identity.Individual:
             if node.IRI(self.project) != '':
-                if node.prefix(self.project) != '':
+                if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                     self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                     return self.df.getOWLNamedIndividual(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
                 else:
@@ -1081,7 +1081,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if (node.special() is Special.Bottom) or ((node.special() is Special.BottomRole)):
             return self.df.getOWLBottomObjectProperty()
         if node.IRI(self.project) != '':
-            if node.prefix(self.project) != '':
+            if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                 self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                 return self.df.getOWLObjectProperty(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
             else:
@@ -2244,7 +2244,7 @@ class OWLOntologyFetcher:
         if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
             return self.df.getOWLBottomDataProperty()
         if node.IRI(self.project) != '':
-            if node.prefix(self.project) != '':
+            if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                 self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                 return self.df.getOWLDataProperty(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
             else:
@@ -2316,7 +2316,7 @@ class OWLOntologyFetcher:
         if (node.special() is Special.Bottom) or (node.special() is Special.BottomConcept):
             return self.df.getOWLNothing()
         if node.IRI(self.project) != '':
-            if node.prefix(self.project) != '':
+            if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                 self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                 return self.df.getOWLClass(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
             else:
@@ -2519,7 +2519,7 @@ class OWLOntologyFetcher:
         """
         if node.identity() is Identity.Individual:
             if node.IRI(self.project) != '':
-                if node.prefix(self.project) != '':
+                if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                     self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                     return self.df.getOWLNamedIndividual(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
                 else:
@@ -2655,7 +2655,7 @@ class OWLOntologyFetcher:
         if (node.special() is Special.Bottom) or ((node.special() is Special.BottomRole)):
             return self.df.getOWLBottomObjectProperty()
         if node.IRI(self.project) != '':
-            if node.prefix(self.project) != '':
+            if (node.prefix(self.project) != '') and (node.prefix(self.project) != None):
                 self.pm.setPrefix(node.prefix(self.project), postfix(node.IRI(self.project), '#'))
                 return self.df.getOWLObjectProperty(OWLShortIRI(node.prefix(self.project), node.remaining_characters), self.pm)
             else:
