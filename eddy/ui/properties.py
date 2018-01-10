@@ -462,13 +462,16 @@ class PredicateNodeProperty(NodeProperty):
         self.textField = StringField(self)
         self.textField.setFixedWidth(300)
         self.textField.setFont(Font('Roboto', 12))
-        if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
+        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
+                    'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             self.textField.setValue(self.node.remaining_characters)
         else:
             self.textField.setValue(self.node.text())
 
-        if ((node.type() is Item.IndividualNode) and (node.identity() is Identity.Value)) or \
-            ((node.type() is not Item.IndividualNode) and (node.special() is not None)):
+        #if ((node.type() is Item.IndividualNode) and (node.identity() is Identity.Value)) or \
+        if(('IndividualNode' in str(type(node))) and (node.identity() is Identity.Value)) or \
+            (('IndividualNode' not in str(type(node))) and (node.special() is not None)):
             self.textField.setReadOnly(True)
             self.iriField.setReadOnly(True)
 
@@ -479,7 +482,8 @@ class PredicateNodeProperty(NodeProperty):
         self.refactorField.setFont(Font('Roboto', 12))
         self.refactorField.setChecked(False)
 
-        if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             if node.special() is not None:
                 self.refactorField.setEnabled(False)
 

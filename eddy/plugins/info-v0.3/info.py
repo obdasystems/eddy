@@ -1138,7 +1138,8 @@ class PredicateNodeInfo(NodeInfo):
         #################################
 
         refactor = True
-        if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             if node.special() is not None:
                 refactor = False
         self.nameField.setReadOnly(not refactor)

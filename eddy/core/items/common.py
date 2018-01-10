@@ -328,10 +328,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             self.setText(focusInData)
 
             if focusInData and focusInData != currentData:
+
                 node = self.parentItem()
-
                 match = RE_VALUE.match(currentData)
-
                 print('match = RE_VALUE.match(currentData)',match)
 
                 commands = []
@@ -361,15 +360,27 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.diagram.project))
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
                 else:
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData, node, self.diagram.project))
+                    currentData_processed = ''
+
+                    for c in currentData:
+                        if c == '':
+                            pass
+                        elif (not c.isalnum()):
+                            currentData_processed = currentData_processed + '_'
+                        else:
+                            currentData_processed = currentData_processed + c
+
+                    print('CommandNodeSetRemainingCharacters(node.remaining_characters, currentData, node, self.diagram.project)')
+                    print('currentData_processed',currentData_processed)
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.diagram.project))
 
                 if any(commands):
                     self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))
                     for command in commands:
+                        print('command',command)
                         if command:
                             self.session.undostack.push(command)
                     self.session.undostack.endMacro()
-
             else:
                 self.setText(self.old_text)
                 self.old_text = None
@@ -422,70 +433,12 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             super().mouseDoubleClickEvent(mouseEvent)
 
             self.old_text = self.text()
-
             prev_rc = self._parent.remaining_characters
-            """
-            
-            last_hash = self.old_text.rfind('#')
-            last_colon = self.old_text.rfind(':')
-            
-            prev_rc = None
-
-            if last_colon == -1:
-                if last_hash == -1:
-                    LOGGER.error('# or : not found in node.text()')
-                else:
-                    # hash is present ^^ colon is absent
-                    prev_rc = self.text()[last_hash + 1:len(self.text())]
-                    
-            else:
-                # colon is present
-                prev_rc = self.text()[last_colon + 1:len(self.text())]
-            
-            """
 
             self.setText(prev_rc)
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
             self.setFocus()
 
-    def SetRemainingCharactersOfNode(self):
-
-        if self._parent.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
-
-            current_text = self.text()
-
-            if (self._parent.type() is Item.IndividualNode) and (self._parent.value is not None):
-
-                pass
-
-            else:
-
-                last_hash = current_text.rfind('#')
-                last_colon = current_text.rfind(':')
-
-                print('current_text',current_text)
-                print('last_hash',last_hash)
-                print('last_colon',last_colon)
-
-                prefix = self._parent.prefix(self.project)
-                iri = self._parent.IRI(self.project)
-
-
-                if (prefix is None) or (prefix == ''):
-                    if (iri is None) or (iri == ''):
-                        rc_text = None
-                    else:
-                        # hash is present ^^ colon is absent
-                        rc_text = self.text()[last_hash+1 : len(self.text())]
-                else:
-                    # colon is present
-                    rc_text = self.text()[last_colon+1 : len(self.text())]
-
-                if rc_text is None:
-                    pass
-                else:
-                    print('rc_text',rc_text)
-                    self._parent.remaining_characters = rc_text
     #############################################
     #   SLOTS
     #################################

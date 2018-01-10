@@ -36,6 +36,7 @@
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
+from eddy.core.functions.signals import connect, disconnect
 
 
 class GenerateNewLabel():
@@ -105,10 +106,23 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
+            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
+            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
+                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
+                disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+                disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
             self.project.doRemoveItem(self.diagram, self.item)
+
         self.item.setText(self.data['redo'])
+
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
+            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
+            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
+                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
+                connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+                connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+
 
         # RESTORE METADATA
         if meta:
@@ -144,10 +158,23 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
+            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
+            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
+                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
+                disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+                disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
             self.project.doRemoveItem(self.diagram, self.item)
+
         self.item.setText(self.data['undo'])
+
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
+            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
+            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
+                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
+                connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+                connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+
 
         # RESTORE METADATA
         if meta:

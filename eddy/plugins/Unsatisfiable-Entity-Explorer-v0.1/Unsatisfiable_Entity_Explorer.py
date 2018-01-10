@@ -431,7 +431,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
 
         if (node in self.project.nodes_of_unsatisfiable_entities) or (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities):
         #if (node in self.project.nodes_of_unsatisfiable_entities):
-            if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+            #if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+
                 parent = self.parentFor(node)
                 if not parent:
                     parent = QtGui.QStandardItem(self.parentKey(node))
@@ -485,8 +486,9 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         """
         print('doRemoveNode >>>')
         print('node',node)
-        if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
-
+        #if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
+                        'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             if node in self.project.nodes_of_unsatisfiable_entities:
                 self.project.nodes_of_unsatisfiable_entities.remove(node)
             parent = self.parentFor(node)

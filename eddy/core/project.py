@@ -254,8 +254,9 @@ class Project(QtCore.QObject):
         LOGGER.info('********************')
 
         for n in self.nodes():
-            if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
-
+            #if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
+            if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                            'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
                 if n.Type is Item.IndividualNode:
                     LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(n.IRI(self))+ ','+ str(n.prefix(self))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
                 else:
@@ -318,64 +319,62 @@ class Project(QtCore.QObject):
 
         #print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
 
-        if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
-
+        #if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
+        if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
+                    'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))):
             #print('item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:')
 
             node = item
 
-            if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
-                'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+            # print('2nd if statement')
 
-                #print('2nd if statement')
+            if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
 
-                if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
+                # print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                if (node.IRI(self) is None):
+                    prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
 
-                    #print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
-                    if (node.IRI(self) is None):
-                        prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
+                    std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns', 'rdf',
+                                      'http://www.w3.org/2000/01/rdf-schema', 'rdfs',
+                                      'http://www.w3.org/2001/XMLSchema', 'xsd',
+                                      'http://www.w3.org/2002/07/owl', 'owl']
 
-                        std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns','rdf',
-                                          'http://www.w3.org/2000/01/rdf-schema','rdfs',
-                                          'http://www.w3.org/2001/XMLSchema','xsd',
-                                          'http://www.w3.org/2002/07/owl','owl']
+                    ind_prefix = std_iri_prefix.index(prefix)
+                    ind_iri = ind_prefix - 1
+                    corr_iri = std_iri_prefix[ind_iri]
+                else:
+                    corr_iri = None
+            else:
 
-                        ind_prefix = std_iri_prefix.index(prefix)
-                        ind_iri = ind_prefix-1
-                        corr_iri = std_iri_prefix[ind_iri]
+                # print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+
+                if (node.IRI(self) is None):
+
+                    # print('if       (node.IRI(self) is None):')
+
+                    if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
+
+                        # print('if       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
+
+                        corr_iri = 'http://www.w3.org/2002/07/owl'
                     else:
-                        corr_iri = None
+
+                        # print('else       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
+
+                        corr_iri = self.iri
                 else:
 
-                    #print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    # print('else       (node.IRI(self) is None):')
 
-                    if (node.IRI(self) is None):
+                    corr_iri = None
 
-                        #print('if       (node.IRI(self) is None):')
+            # print('corr_iri',corr_iri)
 
-                        if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
-
-                            #print('if       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
-
-                            corr_iri = 'http://www.w3.org/2002/07/owl'
-                        else:
-
-                            #print('else       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
-
-                            corr_iri = self.iri
-                    else:
-
-                        #print('else       (node.IRI(self) is None):')
-
-                        corr_iri = None
-
-                #print('corr_iri',corr_iri)
-
-                if corr_iri is not None:
-                    #print('self.IRI_prefixes_nodes_dict[corr_iri][1] (before addition)',self.IRI_prefixes_nodes_dict[corr_iri][1])
-                    self.IRI_prefixes_nodes_dict[corr_iri][1].add(node)
-                    #print('self.IRI_prefixes_nodes_dict[corr_iri][1] (after addition)',self.IRI_prefixes_nodes_dict[corr_iri][1])
-                    self.sgnIRIPrefixNodeDictionaryUpdated.emit()
+            if corr_iri is not None:
+                # print('self.IRI_prefixes_nodes_dict[corr_iri][1] (before addition)',self.IRI_prefixes_nodes_dict[corr_iri][1])
+                self.IRI_prefixes_nodes_dict[corr_iri][1].add(node)
+                # print('self.IRI_prefixes_nodes_dict[corr_iri][1] (after addition)',self.IRI_prefixes_nodes_dict[corr_iri][1])
+                self.sgnIRIPrefixNodeDictionaryUpdated.emit()
 
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
@@ -386,20 +385,21 @@ class Project(QtCore.QObject):
 
         print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
         #remove the node in all the indices of the dictionary
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
+                    'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+            corr_iris = []
 
-        corr_iris = []
+            for IRI_in_dict in self.IRI_prefixes_nodes_dict.keys():
+                if node in self.IRI_prefixes_nodes_dict[IRI_in_dict][1]:
+                    corr_iris.append(IRI_in_dict)
 
-        for IRI_in_dict in self.IRI_prefixes_nodes_dict.keys():
-            if node in self.IRI_prefixes_nodes_dict[IRI_in_dict][1]:
-                corr_iris.append(IRI_in_dict)
-
-        if len(corr_iris) == 1:
-            self.IRI_prefixes_nodes_dict[corr_iris[0]][1].remove(node)
-            self.sgnIRIPrefixNodeDictionaryUpdated.emit()
-        elif len(corr_iris) == 0:
-            LOGGER.warning('node is not present in the dictionary')
-        else:
-            LOGGER.critical('multiple IRIs found for node')
+            if len(corr_iris) == 1:
+                self.IRI_prefixes_nodes_dict[corr_iris[0]][1].remove(node)
+                self.sgnIRIPrefixNodeDictionaryUpdated.emit()
+            elif len(corr_iris) == 0:
+                LOGGER.warning('node is not present in the dictionary')
+            else:
+                LOGGER.critical('multiple IRIs found for node')
 
         print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
@@ -874,7 +874,9 @@ class Project(QtCore.QObject):
     def regenerate_all_labels(self):
 
         for node in self.nodes():
-            if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
+            #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
+            if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
+                            'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
                 new_label = GenerateNewLabel(self, node).return_label()
                 CommandLabelChange(node.diagram, node, None, new_label).redo()
 
