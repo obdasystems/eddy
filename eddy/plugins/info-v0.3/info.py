@@ -769,7 +769,7 @@ class ProjectInfo(AbstractInfo):
                 self.ENTRY_MODIFIED_OK_var = set()
                 self.ENTRY_IGNORE_var = set()
 
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1)
+                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.iri, new_iri])
                 self.session.undostack.push(command)
 
             self.ENTRY_MODIFIED_OK_var = set()
@@ -823,7 +823,7 @@ class ProjectInfo(AbstractInfo):
                 self.ENTRY_MODIFIED_OK_var = set()
                 self.ENTRY_IGNORE_var = set()
 
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1)
+                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.iri])
                 self.session.undostack.push(command)
 
             self.ENTRY_MODIFIED_OK_var = set()

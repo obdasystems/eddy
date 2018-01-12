@@ -1765,7 +1765,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                         commands = []
 
                         commands.append(CommandLabelChange(diagram, node, node.text(), data))
-                        commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,Duplicate_dict_2,Duplicate_dict_1))
+                        commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,Duplicate_dict_2,Duplicate_dict_1, [old_iri, new_iri]))
                         commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, data, node, self.project))
 
                         if any(commands):
@@ -1823,7 +1823,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
                     commands = []
 
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri]))
                     commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_rc, node, diagram.project))
 
                     if any(commands):

@@ -121,7 +121,7 @@ class Project(QtCore.QObject):
     sgnIRIVersionEntryRemoved = QtCore.pyqtSignal(str,str,str)
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str,str,str)
 
-    sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal()
+    sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str)
 
     def __init__(self, **kwargs):
         """

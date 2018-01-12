@@ -658,7 +658,7 @@ class IriWidget(QtWidgets.QScrollArea):
 
         if process is True:
             self.session.undostack.push(CommandProjetSetIRIPrefixesNodesDict(self.project,\
-                                        Duplicate_IRI_prefixes_nodes_dict_2,Duplicate_IRI_prefixes_nodes_dict_1))
+                                        Duplicate_IRI_prefixes_nodes_dict_2,Duplicate_IRI_prefixes_nodes_dict_1, [iri]))
 
         self.ENTRY_ADD_OK_var = set()
         self.ENTRY_REMOVE_OK_var = set()
@@ -755,6 +755,8 @@ class IriWidget(QtWidgets.QScrollArea):
 
             process = False
 
+            iris_to_be_updated = []
+
             # case1
             if (condition_IRI_item_selected is True) and (condition_prefixes_item_selected is False):
                 print('case1')
@@ -765,8 +767,11 @@ class IriWidget(QtWidgets.QScrollArea):
                             print('case1.1')
                             self.entry_status.showMessage('IRIs in selected cell and input box are the same. Nothing to change', 10000)
                             return
-                        #$$$$$$
+
                         self.project.modifyIRIPrefixesEntry(item_iri,None,iri_input_box,None,Duplicate_IRI_prefixes_nodes_dict_1)
+                        iris_to_be_updated.append(item_iri)
+                        iris_to_be_updated.append(iri_input_box)
+
                         if(False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
                             LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                             return
@@ -776,7 +781,11 @@ class IriWidget(QtWidgets.QScrollArea):
                         # Case1.2     IRI->[IRI',prefix(es)']   IRI=IRI' | IRI!=IRI'
                         #$$$$$$
                         print('case1.2')
+
                         self.project.modifyIRIPrefixesEntry(item_iri,None,iri_input_box,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                        iris_to_be_updated.append(item_iri)
+                        iris_to_be_updated.append(iri_input_box)
+
                         if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
                             LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                             return
@@ -794,8 +803,11 @@ class IriWidget(QtWidgets.QScrollArea):
                             self.entry_status.showMessage(
                                 'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                             return
-                        #$$$$$$
+
                         self.project.modifyIRIPrefixesEntry(None,item_prefixes_set,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                        $$$
+
+
                         if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
                             LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                             return
@@ -813,8 +825,11 @@ class IriWidget(QtWidgets.QScrollArea):
                 if (condition_iri_input_box_is_empty is False) and (condition_prefixes_input_box_is_empty is True):
                     # case3.1       [IRI,prefix(es)] -> [IRI']
                     print('case3.1')
-                    #$$$$$$
+
                     self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,iri_input_box,None,Duplicate_IRI_prefixes_nodes_dict_1)
+                    iris_to_be_updated.append(item_iri)
+                    iris_to_be_updated.append(iri_input_box)
+
                     if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
                         LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                         return
@@ -827,8 +842,11 @@ class IriWidget(QtWidgets.QScrollArea):
                         self.entry_status.showMessage(
                             'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                         return
-                    #$$$$$$
+
                     self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                    iris_to_be_updated.append(item_iri)
+                    $$$
+
                     if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
                         LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                         return
@@ -841,8 +859,11 @@ class IriWidget(QtWidgets.QScrollArea):
                     if (item_prefixes_set.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_set)) and (item_iri == iri_input_box):
                         self.entry_status.showMessage('IRI and prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                         return
-                    #$$$$$$
+
                     self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,iri_input_box,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                    iris_to_be_updated.append(item_iri)
+                    iris_to_be_updated.append(iri_input_box)
+
                     if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):
                         LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                         return

@@ -39,7 +39,7 @@ from eddy.core.commands.labels import CommandLabelChange, GenerateNewLabel
 
 class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
-    def __init__(self, project, dict_old_val, dict_new_val):
+    def __init__(self, project, dict_old_val, dict_new_val, iris_to_update):
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  __init__')
 
@@ -48,13 +48,15 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.project = project
         self.dict_old_val = dict_old_val
         self.dict_new_val = dict_new_val
+        self.iris_to_update = iris_to_update
 
     def redo(self):
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_new_val,dict())
-        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
+        for iri in self.iris_to_update:
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri)
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
 
@@ -63,7 +65,8 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_old_val,dict())
-        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit()
+        for iri in self.iris_to_update:
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri)
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
 

@@ -180,18 +180,20 @@ class Clipboard(QtCore.QObject):
         Duplicate_dict_1 = diagram.project.copy_IRI_prefixes_nodes_dictionaries(diagram.project.IRI_prefixes_nodes_dict, dict())
         Duplicate_dict_2 = diagram.project.copy_IRI_prefixes_nodes_dictionaries(diagram.project.IRI_prefixes_nodes_dict, dict())
 
+        iris_to_be_updated = []
         count = 0
         for x,n in self.nodes.items():
             new_nd = nodes[count]
             iri = diagram.project.get_iri_of_node(n)
+            iris_to_be_updated.append(iri)
             Duplicate_dict_1[iri][1].add(new_nd)
             count = count + 1
 
         commands = []
 
-        commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1))
+        commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated))
         commands.append(CommandItemsAdd(diagram, items))
-        commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1))
+        commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated))
 
         self.session.undostack.beginMacro('edit paste >>')
         for command in commands:
