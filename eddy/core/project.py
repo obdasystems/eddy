@@ -603,14 +603,10 @@ class Project(QtCore.QObject):
             if (False in ENTRY_ADD_OK_var) or (True in ENTRY_IGNORE_var):
                 return str('Error could not modify IRI from '+from_iri+' to '+to_iri)
 
-            if to_iri in dictionary.keys():
-                dictionary[to_iri][0] = dictionary[to_iri][0].union(temp_prefixes)
-                dictionary[to_iri][1] = dictionary[to_iri][1].union(temp_nodes)
-                dictionary[to_iri][2] = dictionary[to_iri][2].union(temp_properties)
-            else:
-                dictionary[to_iri][0] = temp_prefixes
-                dictionary[to_iri][1] = temp_nodes
-                dictionary[to_iri][2] = temp_properties
+            dictionary[to_iri][0] = dictionary[to_iri][0].union(temp_prefixes)
+            dictionary[to_iri][1] = dictionary[to_iri][1].union(temp_nodes)
+            dictionary[to_iri][2] = dictionary[to_iri][2].union(temp_properties)
+
             return 'Success'
 
         def modify_prefixes(iri_inp, from_prefixes, to_prefixes, dictionary):
@@ -618,32 +614,24 @@ class Project(QtCore.QObject):
             if (to_prefixes.issubset(from_prefixes) and from_prefixes.issubset(to_prefixes)):
                 return 'Nothing to modify in prefixes'
 
-            iri_keys = []
-            msg = None
+            prefixes = dictionary[iri_inp][0]
+            equal = (prefixes.issubset(from_prefixes) and from_prefixes.issubset(prefixes))
+            if equal:
+                # dictionary[i][1] = set()
+                for p in from_prefixes:
+                    # self.removeIRIPrefixEntry(dictionary, i, p)
+                    self.addORremoveIRIPrefixEntry(dictionary, iri_inp, p, 'remove_entry', remove_project_prefixes=True)
+                    if (False in ENTRY_REMOVE_OK_var) or (True in ENTRY_IGNORE_var):
+                        return 'Error could not modify prefixes from ' + str(from_prefixes) + ' to ' + str(to_prefixes)
 
-            if iri_inp is None:
-                iri_keys.extend(dictionary.keys())
+                for p in to_prefixes:
+                    # self.addIRIPrefixEntry(dictionary,i,p)
+                    self.addORremoveIRIPrefixEntry(dictionary, iri_inp, p, 'add_entry')
+                    if (False in ENTRY_ADD_OK_var) or (True in ENTRY_IGNORE_var):
+                        return 'Error could not modify prefixes from ' + str(from_prefixes) + ' to ' + str(to_prefixes)
             else:
-                iri_keys.append(iri_inp)
+                pass
 
-            for i in iri_keys:
-                prefixes = dictionary[i][0]
-                equal = (prefixes.issubset(from_prefixes) and from_prefixes.issubset(prefixes))
-                if equal:
-                    #dictionary[i][1] = set()
-                    for p in from_prefixes:
-                        #self.removeIRIPrefixEntry(dictionary, i, p)
-                        self.addORremoveIRIPrefixEntry(dictionary, i, p, 'remove_entry', remove_project_prefixes=True)
-                        if (False in ENTRY_REMOVE_OK_var) or (True in ENTRY_IGNORE_var):
-                            return 'Error could not modify prefixes from '+str(from_prefixes)+' to '+str(to_prefixes)
-
-                    for p in to_prefixes:
-                        #self.addIRIPrefixEntry(dictionary,i,p)
-                        self.addORremoveIRIPrefixEntry(dictionary, i, p, 'add_entry')
-                        if (False in ENTRY_ADD_OK_var) or (True in ENTRY_IGNORE_var):
-                            return 'Error could not modify prefixes from '+str(from_prefixes)+' to '+str(to_prefixes)
-                else:
-                    pass
             return 'Success'
 
         msg_1=None
@@ -664,10 +652,20 @@ class Project(QtCore.QObject):
         #Case3
         elif (None_1) and (not None_2) and (None_3) and (not None_4):
             print('modifyIRIPrefixesEntry   >>>    Case3')
+
+            iri_keys = []
+
             for iri_key in dictionary.keys():
-                msg_2 = modify_prefixes(iri_key, prefixes_from_val, prefixes_to_val, dictionary)
-                if 'Error' in msg_2:
-                    break
+                prefixes_of_iri_key =  dictionary[iri_key][0]
+                if prefixes_of_iri_key.issubset(prefixes_from_val) and prefixes_from_val.issubset(prefixes_of_iri_key):
+                    iri_keys.append(iri_key)
+
+            if len(iri_keys) > 0:
+                msg_2 = 'Error, multiple iris found for prefixes'
+            elif len(iri_keys) == 0:
+                msg_2 = 'Error, IRI not found for the prefixes'
+            else:
+                msg_2 = modify_prefixes(iri_keys[0], prefixes_from_val, prefixes_to_val, dictionary)
 
         #Case4
         elif (not None_1) and (not None_2) and (not None_3) and (None_4):
