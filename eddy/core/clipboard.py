@@ -183,12 +183,13 @@ class Clipboard(QtCore.QObject):
         count = 0
         for x,n in self.nodes.items():
             new_nd = nodes[count]
-            iri = self.diagram.project.get_iri_of_node(n)
+            iri = diagram.project.get_iri_of_node(n)
             Duplicate_dict_1[iri][1].add(new_nd)
             count = count + 1
 
         commands = []
 
+        commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1))
         commands.append(CommandItemsAdd(diagram, items))
         commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1))
 

@@ -268,6 +268,9 @@ class Project(QtCore.QObject):
         if 'Error multiple IRIS-' in prefixes:
             return prefixes
 
+        if len(prefixes) == 0:
+            return None
+
         return prefixes[0]
 
     def get_full_IRI(self,iri,version,remaining_characters):
