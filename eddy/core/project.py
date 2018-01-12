@@ -596,8 +596,9 @@ class Project(QtCore.QObject):
             if (False in ENTRY_REMOVE_OK_var) or (True in ENTRY_IGNORE_var):
                 return str('Error could not modify IRI from '+from_iri+' to '+to_iri)
 
-            #self.addIRIPrefixEntry(dictionary,to_iri,None)
-            self.addORremoveIRIPrefixEntry(dictionary, to_iri, None, 'add_entry')
+            if to_iri not in dictionary.keys():
+                #self.addIRIPrefixEntry(dictionary,to_iri,None)
+                self.addORremoveIRIPrefixEntry(dictionary, to_iri, None, 'add_entry')
 
             if (False in ENTRY_ADD_OK_var) or (True in ENTRY_IGNORE_var):
                 return str('Error could not modify IRI from '+from_iri+' to '+to_iri)
