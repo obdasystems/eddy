@@ -711,8 +711,8 @@ class Project(QtCore.QObject):
                 if prefixes_of_iri_key.issubset(prefixes_from_val) and prefixes_from_val.issubset(prefixes_of_iri_key):
                     iri_keys.append(iri_key)
 
-            if len(iri_keys) > 0:
-                msg_2 = 'Error, multiple iris found for prefixes'
+            if len(iri_keys) > 1:
+                msg_2 = 'Error, multiple iris found for prefixes - '+str(iri_keys)
             elif len(iri_keys) == 0:
                 msg_2 = 'Error, IRI not found for the prefixes'
             else:
@@ -754,7 +754,7 @@ class Project(QtCore.QObject):
             if error_C2:
                 msg_error = msg_error + ' ; ' + msg_2
 
-            msg_iris = 'From: '+ iri_from_val +' To: '+ iri_to_val
+            msg_iris = 'From: '+ str(iri_from_val) +' To: '+ str(iri_to_val)
             msg_prefixes = 'From: ' + str(prefixes_from_val) + ' To: ' + str(prefixes_to_val)
 
             self.sgnIRIPrefixesEntryIgnored.emit(msg_iris,msg_prefixes,msg_error)
@@ -977,6 +977,11 @@ class Project(QtCore.QObject):
         new_label = GenerateNewLabel(self, node).return_label()
         # CommandLabelChange(node.diagram, node, node.text(), new_label).redo()
 
+        if old_label==new_label:
+            return
+
+        print(' def node_label_update_core_code     >>> new_label',new_label)
+
         # CHANGE THE CONTENT OF THE LABEL
         self.doRemoveItem(node.diagram, node)
         node.setText(new_label)
@@ -1005,18 +1010,22 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot(str,str)
     def regenerate_label_of_nodes_for_iri(self,iri_inp,node_inp):
 
-        print('def regenerate_label_of_nodes_for_iri    >>>')
+        # input string/string
+
+        print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
 
         disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
-        if node_inp is None:
+        if (node_inp is None) or (node_inp is ''):
+            print('node_inp is None')
             if iri_inp in self.IRI_prefixes_nodes_dict.keys():
                 nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
-
+                print('len(nodes_to_update)',len(nodes_to_update))
                 for node in nodes_to_update:
                     self.node_label_update_core_code(node)
         else:
+            print('node_inp is not None')
             for n in self.nodes():
                 if str(n) == node_inp:
                     self.node_label_update_core_code(n)

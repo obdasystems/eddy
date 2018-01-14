@@ -59,10 +59,12 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
         for iri in self.iris_to_update:
             if self.nodes_to_update is None:
+                print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
                 self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
             else:
                 for n in self.nodes_to_update:
-                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)
+                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
 
@@ -74,10 +76,12 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
         for iri in self.iris_to_update:
             if self.nodes_to_update is None:
+                print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
                 self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
             else:
                 for n in self.nodes_to_update:
-                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)
+                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
 

@@ -817,7 +817,7 @@ class ProjectInfo(AbstractInfo):
 
             self.project.modifyIRIPrefixesEntry(self.project.iri,self.project.prefixes,self.project.iri,prefixes_new,Duplicate_dict_1)
 
-            self.project.print_dictionary(Duplicate_dict_1)
+            #self.project.print_dictionary(Duplicate_dict_1)
 
             if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
                 self.ENTRY_MODIFIED_OK_var = set()

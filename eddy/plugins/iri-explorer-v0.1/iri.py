@@ -948,7 +948,7 @@ class IriWidget(QtWidgets.QScrollArea):
 
             print('before pushing to stack')
 
-            self.project.print_dictionary(Duplicate_IRI_prefixes_nodes_dict_1)
+            #self.project.print_dictionary(Duplicate_IRI_prefixes_nodes_dict_1)
 
             print('before pushing to stack END')
 
