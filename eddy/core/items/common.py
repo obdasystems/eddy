@@ -355,7 +355,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     Duplicate_dict_1[new_iri][1].add(node)
 
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri]))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
                     commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.diagram.project))
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
                 else:

@@ -52,7 +52,7 @@ from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir
 from eddy.core.functions.misc import rstrip, postfix
 from eddy.core.functions.path import expandPath
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
@@ -67,6 +67,8 @@ from eddy.core.project import K_DESCRIPTION
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
+
+from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
 
 
 LOGGER = getLogger()
@@ -1626,6 +1628,13 @@ class GrapholLoaderMixin_v2(object):
             except Exception:
                 LOGGER.exception('Failed to create node %s', sube.attribute('id'))
             else:
+                if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
+                            'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+                    if self.nproject.get_iri_of_node(node) is None:
+                        self.nproject.IRI_prefixes_nodes_dict[self.nproject.iri][1].add(node)
+                        new_text = GenerateNewLabel(self.nproject, node).return_label()
+                        node.setText(new_text)
+
                 diagram.addItem(node)
                 diagram.guid.update(node.id)
                 self.buffer[diagram.name][node.id] = node
@@ -1877,6 +1886,8 @@ class GrapholLoaderMixin_v2(object):
 
     def convert_string_of_nodes_to_nodes(self):
 
+        LOGGER.debug('Convert nodes from string format to eddy nodes format in IRI-Prefixes dictionary')
+
         nodes_in_project = self.nproject.nodes()
 
         IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
@@ -1924,6 +1935,97 @@ class GrapholLoaderMixin_v2(object):
             IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
 
         self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
+
+    # not used
+    def update_core_code(self, project, diagram, item, undo, redo, refactor=False, name=None):
+
+        iri = self.nproject.get_iri_of_node(item)
+        if iri is None:
+            print('def update_core_code     >>>    iri is None',item)
+
+        data = {'undo': undo, 'redo': redo}
+
+        # CHANGE THE CONTENT OF THE LABEL
+        #if item.isNode():
+            #project.doRemoveItem(diagram, item)
+        item.setText(data['redo'])
+        #if item.isNode():
+            #project.doAddItem(diagram, item)
+
+
+        # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
+        #for node in project.predicates(item.type(), data['redo']):
+            #node.updateNode()
+
+        """
+        # IDENTITFY NEIGHBOURS
+        if item.type() is Item.IndividualNode:
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.type() in {Item.EnumerationNode, Item.PropertyAssertionNode}
+            for node in item.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                diagram.sgnNodeIdentification.emit(node)
+            f3 = lambda x: x.type() is Item.MembershipEdge
+            f4 = lambda x: Identity.Neutral in x.identities()
+            for node in item.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
+                diagram.sgnNodeIdentification.emit(node)
+        """
+
+        # EMIT UPDATED SIGNAL
+        #diagram.sgnUpdated.emit()
+
+        iri_2 = self.nproject.get_iri_of_node(item)
+        if iri_2 is None:
+            print('def update_core_code     >>>    iri_2 is None', item)
+
+    # not used
+    def update_label_of_nodes(self):
+
+        print('def update_label_of_nodes    >>>')
+
+        nodes_to_update = []
+        nodes_with_no_iri = []
+
+        for n in self.nproject.nodes():
+            # if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
+            if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                        'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+
+                if self.nproject.get_iri_of_node(n) is None:
+                    print('No IRI for ', n.id, ' ', n.text())
+
+                    nodes_with_no_iri.append(n)
+
+                else:
+                    nodes_to_update.append(n)
+
+
+        print('nodes_with_no_iri',nodes_with_no_iri)
+
+        """
+        for iri in self.nproject.IRI_prefixes_nodes_dict.keys():
+            nodes = self.nproject.IRI_prefixes_nodes_dict[iri][1]
+            nodes_to_update.extend(nodes)
+        """
+
+        for n in nodes_to_update:
+
+            if self.nproject.get_iri_of_node(n) is None:
+                print('(1) No IRI for ', n.id, ' ', n.text())
+
+            new_label = GenerateNewLabel(self.nproject, n).return_label()
+            #CommandLabelChange(n.diagram, n, n.text(), new_label).redo()
+            #self.update_core_code(self.nproject, n.diagram, n, n.text(), new_label)
+
+            if self.nproject.get_iri_of_node(n) is None:
+                print('(2) No IRI for ', n.id, ' ', n.text())
+
+            #n.setText(new_label)
+
+            if self.nproject.get_iri_of_node(n) is None:
+                print('(3) No IRI for ', n.id, ' ', n.text())
+
+
+        print('def update_label_of_nodes  END  >>>')
 
     def createProject(self):
         """
@@ -2109,9 +2211,11 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
             self.createProject()
             self.createDiagrams()
 
+            #self.update_label_of_nodes()
             self.convert_string_of_nodes_to_nodes()
 
             self.createPredicatesMeta()
             self.projectRender()
             self.projectLoaded()
+
 

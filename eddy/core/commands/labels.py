@@ -45,6 +45,11 @@ class GenerateNewLabel():
 
         self.project = project
         self.iri_to_set = self.project.get_iri_of_node(node)
+
+        if self.iri_to_set is None:
+            print('class GenerateNewLabel init    >>>')
+            print('No IRI for ', node.id, ' ', node.text())
+
         #self.iri_to_set_version = node.IRI_version(self.project)
         self.prefix_to_set = self.project.get_prefix_of_node(node)
         self.rc_to_set = node.remaining_characters
@@ -65,10 +70,12 @@ class GenerateNewLabel():
                 return return_label
             if self.prefix_to_set is None:
                 if self.iri_to_set == self.project.iri:
-                #if 'Project_IRI' in self.iri_to_set[2]: # if Project_IRI in (properties) of IRI
-                    return_label = str(self.project.prefix + ':' + self.rc_to_set)
+                     if self.project.prefix is not None:
+                        return_label = str(self.project.prefix + ':' + self.rc_to_set)
+                     else:
+                        return_label = self.project.get_full_IRI(self.project.iri, None, self.rc_to_set)
                 else:
-                    return_label = self.project.get_full_IRI(self.iri_to_set,None,self.rc_to_set)
+                    return_label = self.project.get_full_IRI(self.iri_to_set, None, self.rc_to_set)
             else:
                 return_label = str(self.prefix_to_set + ':' + self.rc_to_set)
         return return_label
@@ -106,23 +113,10 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
-            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
-            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
-                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
-                disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-                disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
             self.project.doRemoveItem(self.diagram, self.item)
-
         self.item.setText(self.data['redo'])
-
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
-            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
-            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
-                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
-                connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-                connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
-
 
         # RESTORE METADATA
         if meta:
@@ -158,23 +152,10 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
-            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
-            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
-                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
-                disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-                disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
             self.project.doRemoveItem(self.diagram, self.item)
-
         self.item.setText(self.data['undo'])
-
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
-            #if self.item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
-            if (('AttributeNode' in str(type(self.item))) or ('ConceptNode' in str(type(self.item))) or (
-                        'IndividualNode' in str(type(self.item))) or ('RoleNode' in str(type(self.item)))):
-                connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-                connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
-
 
         # RESTORE METADATA
         if meta:

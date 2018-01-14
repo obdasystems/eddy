@@ -39,7 +39,7 @@ from eddy.core.commands.labels import CommandLabelChange, GenerateNewLabel
 
 class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
-    def __init__(self, project, dict_old_val, dict_new_val, iris_to_update):
+    def __init__(self, project, dict_old_val, dict_new_val, iris_to_update, nodes_to_update):
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  __init__')
 
@@ -49,14 +49,20 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.dict_old_val = dict_old_val
         self.dict_new_val = dict_new_val
         self.iris_to_update = iris_to_update
+        self.nodes_to_update = nodes_to_update
 
     def redo(self):
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_new_val,dict())
+
         for iri in self.iris_to_update:
-            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri)
+            if self.nodes_to_update is None:
+                self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
+            else:
+                for n in self.nodes_to_update:
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
 
@@ -65,8 +71,13 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_old_val,dict())
+
         for iri in self.iris_to_update:
-            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri)
+            if self.nodes_to_update is None:
+                self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
+            else:
+                for n in self.nodes_to_update:
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
 

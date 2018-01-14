@@ -121,7 +121,7 @@ class Project(QtCore.QObject):
     sgnIRIVersionEntryRemoved = QtCore.pyqtSignal(str,str,str)
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str,str,str)
 
-    sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str)
+    sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str)
 
     def __init__(self, **kwargs):
         """
@@ -168,7 +168,7 @@ class Project(QtCore.QObject):
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
-        connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_all_labels)
+        connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
 
     @property
     def iri(self):
@@ -229,16 +229,20 @@ class Project(QtCore.QObject):
 
     def get_iri_of_node(self,node_inp):
 
-        iris = []
+        iris = set()
 
         # print('self',self)
         for iri in self.IRI_prefixes_nodes_dict.keys():
             nodes = self.IRI_prefixes_nodes_dict[iri][1]
             if (node_inp in nodes) or (str(node_inp) in str(nodes)):
-                iris.append(iri)
+                iris.add(iri)
+            else:
+                for n in nodes:
+                    if (node_inp is n) or (str(node_inp) == str(n)):
+                        iris.add(iri)
 
         if len(iris) == 1:
-            return iris[0]
+            return list(iris)[0]
         if len(iris) == 0:
             return None
 
@@ -280,7 +284,7 @@ class Project(QtCore.QObject):
         else:
             return iri + '/' + version + '#' + remaining_characters
 
-    def print_dictionary(self, dictionary):
+    def print_dictionary_2(self, dictionary):
 
         LOGGER.info('<<<<<<<<<          print_dictionary        >>>>>>>>')
         LOGGER.info('size of the dictionary - '+str(len(dictionary.keys())))
@@ -309,11 +313,60 @@ class Project(QtCore.QObject):
             if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
                 if n.Type is Item.IndividualNode:
-                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
+                    LOGGER.info(str(n.type())+ ' , '+ str(n.id)+ ' , '+ str(self.get_iri_of_node(n))+ ' , '+ str(self.get_prefix_of_node(n))+ ' , '+ str(n.remaining_characters)+ ' , '+ str(n.identity()))
                 else:
-                    LOGGER.info(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
+                    LOGGER.info(str(n.type())+ ' , '+ str(n.id)+ ' , '+ str(self.get_iri_of_node(n))+ ' , '+ str(self.get_prefix_of_node(n))+ ' , '+ str(n.remaining_characters))
 
         LOGGER.info('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
+
+    def print_dictionary(self, dictionary):
+
+        print('<<<<<<<<<          print_dictionary        >>>>>>>>')
+        print('size of the dictionary - '+str(len(dictionary.keys())))
+
+        print('Project_IRI - '+str(self.iri))
+        print('Project_prefix(es) - '+str(self.prefixes))
+        print('Project_prefix - '+str(self.prefix))
+
+        for iri in dictionary.keys():
+            prefixes = dictionary[iri][0]
+            nodes = dictionary[iri][1]
+            properties = dictionary[iri][2]
+            #version = dictionary[iri][3]
+
+            #print(iri, '-', prefixes, '-', nodes, '-', properties, '-', version)
+            print(str(iri)+ ' - '+ str(prefixes)+ ' - '+ str(nodes)+ ' - '+ str(properties))
+        print('********************')
+
+        """
+        for p in self.nodes():
+            print(str(p.text()))
+
+        print('********************')
+        """
+
+        print('*********        No IRI for Nodes        ***********')
+
+        for n in self.nodes():
+            #if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
+            if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                            'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+
+                if self.get_iri_of_node(n) is None:
+                    print('No IRI for ',n.id,' ',n.text())
+
+        print('*********        No IRI for Nodes (END)       ***********')
+
+        for n in self.nodes():
+            #if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
+            if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                            'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+                if n.Type is Item.IndividualNode:
+                    print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
+                else:
+                    print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
+
+        print('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
 
     def copy_IRI_prefixes_nodes_dictionaries(self, from_dict, to_dict):
 
@@ -422,10 +475,8 @@ class Project(QtCore.QObject):
             # print('corr_iri',corr_iri)
 
             if corr_iri is not None:
-                # print('self.IRI_prefixes_nodes_dict[corr_iri][1] (before addition)',self.IRI_prefixes_nodes_dict[corr_iri][1])
                 self.IRI_prefixes_nodes_dict[corr_iri][1].add(node)
-                # print('self.IRI_prefixes_nodes_dict[corr_iri][1] (after addition)',self.IRI_prefixes_nodes_dict[corr_iri][1])
-                self.sgnIRIPrefixNodeDictionaryUpdated.emit()
+                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri,str(node))
 
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
@@ -446,7 +497,7 @@ class Project(QtCore.QObject):
 
             if len(corr_iris) == 1:
                 self.IRI_prefixes_nodes_dict[corr_iris[0]][1].remove(node)
-                self.sgnIRIPrefixNodeDictionaryUpdated.emit()
+                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iris[0],str(node))
             elif len(corr_iris) == 0:
                 LOGGER.warning('node is not present in the dictionary')
             else:
@@ -920,15 +971,70 @@ class Project(QtCore.QObject):
         self.sgnIRINodeEntryRemoved.emit(iri_inp, str(node_inp), str('Node no longer mapped to IRI'+iri_inp))
         return dictionary
 
-    @QtCore.pyqtSlot()
-    def regenerate_all_labels(self):
+    def node_label_update_core_code(self,node):
 
+        old_label = node.text()
+        new_label = GenerateNewLabel(self, node).return_label()
+        # CommandLabelChange(node.diagram, node, node.text(), new_label).redo()
+
+        # CHANGE THE CONTENT OF THE LABEL
+        self.doRemoveItem(node.diagram, node)
+        node.setText(new_label)
+        self.doAddItem(node.diagram, node)
+
+        # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
+        for n in self.predicates(node.type(), old_label):
+            n.updateNode()
+        for n in self.predicates(node.type(), new_label):
+            n.updateNode()
+
+        # IDENTITFY NEIGHBOURS
+        if node.type() is Item.IndividualNode:
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.type() in {Item.EnumerationNode, Item.PropertyAssertionNode}
+            for n in node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                node.diagram.sgnNodeIdentification.emit(n)
+            f3 = lambda x: x.type() is Item.MembershipEdge
+            f4 = lambda x: Identity.Neutral in x.identities()
+            for n in node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
+                node.diagram.sgnNodeIdentification.emit(n)
+
+        # EMIT UPDATED SIGNAL
+        node.diagram.sgnUpdated.emit()
+
+    @QtCore.pyqtSlot(str,str)
+    def regenerate_label_of_nodes_for_iri(self,iri_inp,node_inp):
+
+        print('def regenerate_label_of_nodes_for_iri    >>>')
+
+        disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
+        if node_inp is None:
+            if iri_inp in self.IRI_prefixes_nodes_dict.keys():
+                nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
+
+                for node in nodes_to_update:
+                    self.node_label_update_core_code(node)
+        else:
+            for n in self.nodes():
+                if str(n) == node_inp:
+                    self.node_label_update_core_code(n)
+                    break
+
+        connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
+        print('def regenerate_label_of_nodes_for_iri    >>>')
+
+        """
         for node in self.nodes():
             #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
             if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                             'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
                 new_label = GenerateNewLabel(self, node).return_label()
                 CommandLabelChange(node.diagram, node, None, new_label).redo()
+        """
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 

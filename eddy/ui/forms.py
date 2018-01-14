@@ -436,7 +436,7 @@ class ValueForm(QtWidgets.QDialog):
             commands = []
 
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri]))
+            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
             commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
 

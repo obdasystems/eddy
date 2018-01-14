@@ -621,7 +621,7 @@ class PredicateNodeProperty(NodeProperty):
                     self.metaDataChanged_ADD_OK_var = False
                     self.metaDataChanged_IGNORE_var = False
                     return str('Error in '+str(nd))
-            return CommandProjetSetIRIPrefixesNodesDict(self.diagram.project, Duplicate_dict_2, Duplicate_dict_1, [self.iriField.value(), self.project.get_iri_of_node(self.node)])
+            return CommandProjetSetIRIPrefixesNodesDict(self.diagram.project, Duplicate_dict_2, Duplicate_dict_1, [self.iriField.value(), self.project.get_iri_of_node(self.node)], list_of_nodes_to_process)
 
         self.metaDataChanged_REMOVE_OK_var = False
         self.metaDataChanged_ADD_OK_var = False
@@ -1042,7 +1042,7 @@ class ValueNodeProperty(NodeProperty):
             commands = []
 
             commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri]))
+            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [self.node]))
             commands.append(CommandNodeSetRemainingCharacters(self.node.remaining_characters,\
                                                               new_remaining_characters,self.node,self.project))
             commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))

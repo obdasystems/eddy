@@ -40,7 +40,7 @@ from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+
 
 class ConceptNode(AbstractResizableNode):
     """
