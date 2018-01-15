@@ -170,6 +170,36 @@ class Header(QtWidgets.QLabel):
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setFixedHeight(24)
         self.setFont(Font('Roboto', 12))
+class String_1(StringField):
+    """
+    This class implements the string value of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(20)
+class String_2(StringField):
+    """
+    This class implements the string value of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(20)
+class String_3(StringField):
+    """
+    This class implements the string value of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(20)
 
 
 class PrefixWidget(QtWidgets.QScrollArea):
@@ -193,52 +223,97 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         #############
 
-        self.tableheader_prefixes = Header('Prefix', self)
-        self.tableheader_iri = Header(' IRI  ', self)
-        self.tableheader_nodes = Header('Nodes ', self)
-
-        #############
+        #self.tableheader_prefixes = Header('Prefix', self)
+        #self.tableheader_iri = Header(' IRI  ', self)
 
         self.entry_status = QtWidgets.QStatusBar()
-        self.entry_status.setMinimumHeight(30)
+
+        """
+        self.entry_button = QtWidgets.QPushButton()
+        self.entry_button.setText('+++')
+        """
+        self.remove_entry_button = QtWidgets.QPushButton()
+        self.remove_entry_button.setText('---')
+        self.modify_entry_button = QtWidgets.QPushButton()
+
+        self.buttons_layout = QtWidgets.QHBoxLayout(self)
+        self.buttons_layout.setAlignment(QtCore.Qt.AlignTop)
+        self.buttons_layout.setContentsMargins(0, 0, 0, 0)
+        self.buttons_layout.setSpacing(0)
+        #self.buttons_layout.addWidget(self.entry_button)
+        self.buttons_layout.addWidget(self.remove_entry_button)
+
+        #connect(self.entry_button.pressed, self.button_add)
+        connect(self.remove_entry_button.pressed, self.button_remove)
 
         self.verticalbox = QtWidgets.QVBoxLayout(self)  # to be added to main layout
         self.verticalbox.setAlignment(QtCore.Qt.AlignTop)
         self.verticalbox.setContentsMargins(0, 0, 0, 0)
         self.verticalbox.setSpacing(0)
+        self.verticalbox.addLayout(self.buttons_layout)
         self.verticalbox.addWidget(self.entry_status)
 
         #############
 
         self.table = QtWidgets.QTableWidget(self)
         self.table.setContentsMargins(0, 0, 0, 0)
-        self.table.horizontalHeader().setVisible(False)
-        self.table.verticalHeader().setVisible(False)
-        self.table.setMinimumWidth(self.width())
-        self.table.setMinimumHeight(self.height())
 
-
-        connect(self.table.cellPressed, self.cell_edited)
+        self.horizontalbox_3 = QtWidgets.QHBoxLayout(self)    #to be added to main layout
+        self.horizontalbox_3.setAlignment(QtCore.Qt.AlignTop)
+        self.horizontalbox_3.setContentsMargins(0, 0, 0, 0)
+        self.horizontalbox_3.setSpacing(0)
+        self.horizontalbox_3.addLayout(self.table)
 
         #############
-        self.verticalbox.addWidget(self.table)
 
         self.mainLayout.addLayout(self.verticalbox)
+        self.mainLayout.addLayout(self.horizontalbox_3)
 
         #############
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumSize(QtCore.QSize(216, 120))
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(350)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setWidgetResizable(True)
 
         self.setStyleSheet("""
-        IriWidget {
+        PrefixWidget {
           background: #FFFFFF;
         }
-        IriWidget Header {
+                
+        PrefixWidget String_1{
+          background: #bccbff;
+          border-top: none;
+          border-right: none;
+          border-bottom: 1px solid #BBDEFB !important;
+          border-left: 1px solid #BBDEFB !important;
+          padding: 0 0 0 4px;
+          text-align:left;
+        }
+        
+        PrefixWidget String_2{
+          background: #ffc1c1;
+          border-top: none;
+          border-right: none;
+          border-bottom: 1px solid #BBDEFB !important;
+          border-left: 1px solid #BBDEFB !important;
+          padding: 0 0 0 4px;
+          text-align:left;
+        }
+        
+        PrefixWidget String_3{
+          background: #ffffff;
+          border-top: none;
+          border-right: none;
+          border-bottom: 1px solid #BBDEFB !important;
+          border-left: 1px solid #BBDEFB !important;
+          padding: 0 0 0 4px;
+          text-align:left;
+        }
+        
+        PrefixWidget Header {
           background: #5A5050;
           padding-left: 4px;
           color: #FFFFFF;
@@ -253,10 +328,10 @@ class PrefixWidget(QtWidgets.QScrollArea):
         self.ENTRY_ADD_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
-        self.ITEM_EDITED = None
-        self.ITEM_CHANGED = None
-        self.old_text = None
-        self.new_text = None
+        self.ADD_OR_REMOVE = None
+
+        self.ITEM_ACTIVATED = None
+
     #############################################
     #   PROPERTIES
     #################################
@@ -280,6 +355,28 @@ class PrefixWidget(QtWidgets.QScrollArea):
     #############################################
     #   EVENTS
     #################################
+
+    def button_remove(self):
+
+        for r in range(0,self.table.rowCount()):
+
+            iri=self.table.itemAt(r, QtWidgets.QFormLayout.LabelRole).widget()
+            prefixes=self.table.itemAt(r, QtWidgets.QFormLayout.FieldRole).widget()
+
+            disconnect(iri,self.module_for_cell_modified)
+            disconnect(prefixes, self.module_for_cell_modified)
+
+            item_to_delete = self.table.takeAt(0)
+            self.table.removeItem(item_to_delete)
+            del item_to_delete
+
+        del self.table
+
+        self.table = QtWidgets.QFormLayout()
+        self.table.setContentsMargins(0, 0, 0, 0)
+
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
+        self.redraw()
 
     def eventFilter(self, source, event):
         """
@@ -324,153 +421,163 @@ class PrefixWidget(QtWidgets.QScrollArea):
         self.entry_status.showMessage(message, 10000)
         print('entry_NOT_OK(self): ',iri,',',prefixes,',',message)
 
-    @QtCore.pyqtSlot(int, int)
-    def cell_changed(self, r, c):
+        self.clear_table()
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
+        self.redraw()
 
-        item_changed = self.table.item(r, c)
-        self.new_text = item_changed.text().strip()
-        self.ITEM_CHANGED = [r, c]
+    @QtCore.pyqtSlot()
+    def module_for_cell_modified(self):
 
-        self.add_remove_or_modify_task()
+        for r in range(1,self.table.rowCount()-1):
+            iri_widget=self.table.itemAt(r, QtWidgets.QFormLayout.LabelRole).widget()
+            prefixes_widget=self.table.itemAt(r, QtWidgets.QFormLayout.FieldRole).widget()
 
-    @QtCore.pyqtSlot(int,int)
-    def cell_edited(self, r, c):
+            prefixes_widget_raw_val = prefixes_widget.value().strip()
+            prefixes_widget_processed_str = prefixes_widget_raw_val.replace(' ','')
 
-        item_to_edit = self.table.item(r, c)
-        self.old_text = item_to_edit.text().strip()
-        self.ITEM_EDITED = [r, c]
+            #iri is not changed
+            if iri_widget.value().strip() in self.project.IRI_prefixes_nodes_dict.keys():
+                prefixes_in_backup = self.convert_set_to_text_comma_seperated(\
+                    self.project.IRI_prefixes_nodes_dict[iri_widget.value().strip()][0])
 
-    @QtCore.pyqtSlot(str, str)
+                #prefixes_is_changed
+                if prefixes_in_backup != prefixes_widget_processed_str:
+
+                    if prefixes_in_backup !='':
+
+                        if prefixes_widget_processed_str == '':
+                            #val -> '' (remove prefixes_widget)
+                            pass
+                        elif prefixes_widget_processed_str != '':
+                            #val1 -> val2 (modify prefixes_widget)
+                            self.process_entry_from_textboxes_for_task_modify(None,None,\
+                                        prefixes_in_backup,prefixes_widget_processed_str)
+                            return
+                    else:
+
+                        if prefixes_widget_processed_str == '':
+                            #nothing to change(case not possible)
+                            pass
+                        elif prefixes_widget_processed_str != '':
+                            #'' -> val (add prefixes_widget)
+                            pass
+            #iri is changed
+            else:
+                difference = self.get_list_of_iris_changed_or_removed_in_widget()
+
+                if len(difference) !=1:
+                    LOGGER.critical('number of IRIs changed is !=1.')
+                prev_iri = difference[0]
+
+                if iri_widget.value().strip() == '':
+                    # iri' -> '' and hence remove signal for [iri_widget] has to be emited
+                    pass
+                else:
+                    #(iri.value().strip()) is not in backup data; it also contains a val(!='')
+                    # an iri' -> (iri_widget.value().strip())
+                    self.process_entry_from_textboxes_for_task_modify(prev_iri,iri_widget.value().strip(),None,None)
+                    return
+
+        empty_iri = self.table.itemAt(self.table.rowCount()-1, QtWidgets.QFormLayout.LabelRole).widget()
+        empty_prefixes = self.table.itemAt(self.table.rowCount()-1, QtWidgets.QFormLayout.FieldRole).widget()
+
+        # add signal needs to be sent
+        if empty_iri !='':
+            print('empty_iri !='':')
+        if empty_prefixes !='':
+            print('empty_prefixes !='':')
+
+    #needs editing
+    @QtCore.pyqtSlot(str,str)
     def UpdateTableForIRI(self,iri_inp,nodes_inp):
 
-        disconnect(self.table.cellChanged, self.cell_changed)
+        print('UpdateTableForIRI    >>> iri_inp-nodes_inp >',iri_inp,' - ',nodes_inp)
 
+        self.clear_table()
         self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
+        self.redraw()
 
-        connect(self.table.cellChanged, self.cell_changed)
+    def clear_table(self):
 
-    def add_remove_or_modify_task(self):
+        for r in range(0,self.table.rowCount()):
 
-        print('self.ITEM_CHANGED',self.ITEM_CHANGED)
-        print('self.ITEM_EDITED',self.ITEM_EDITED)
+            iri=self.table.itemAt(r, QtWidgets.QFormLayout.LabelRole).widget()
+            prefixes=self.table.itemAt(r, QtWidgets.QFormLayout.FieldRole).widget()
 
-        if self.ITEM_CHANGED is None or self.ITEM_EDITED is None:
-            return
+            disconnect(iri,self.module_for_cell_modified)
+            disconnect(prefixes, self.module_for_cell_modified)
+            del iri
+            del prefixes
+            #item_to_delete = self.table.takeAt(0)
+            #self.table.removeItem(item_to_delete)
+            #del item_to_delete
 
-        if (self.ITEM_CHANGED[0] == self.ITEM_EDITED[0]) and (self.ITEM_CHANGED[1] == self.ITEM_EDITED[1]):
-            column = self.ITEM_CHANGED[1]
-            if column == 0:
-                # add/remove/modify IRI
-                if self.old_text == '' and self.new_text != '':
+        del self.table
 
-                    # Add IRI
-                    self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add')
+        self.table = QtWidgets.QFormLayout()
+        self.table.setContentsMargins(0, 0, 0, 0)
 
-                elif self.old_text != '' and self.new_text != '':
+    def get_list_of_iris_changed_or_removed_in_widget(self):
 
-                    # Modify IRI
-                    self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
+        iri_widget_set = []
+        difference = []
 
-                elif self.old_text != '' and self.new_text == '':
+        for r in range(1,self.table.rowCount()-1):
+            iri_widget=self.table.itemAt(r, QtWidgets.QFormLayout.LabelRole).widget()
+            iri_widget_set.append(iri_widget.text().strip())
 
-                    # Remove IRI
-                    self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
+        for iri_backup in self.project.IRI_prefixes_nodes_dict.keys():
+            if iri_backup not in iri_widget_set:
+                difference.append(iri_backup)
 
-                else:
-                    pass
-            else:
-                # add/remove/modify prefixes
-                if self.old_text == '' and self.new_text != '':
-
-                    # Add Prefixes
-                    self.process_entry_from_textboxes_for_button_add_or_remove(None, self.new_text, 'add')
-
-                elif self.old_text != '' and self.new_text != '':
-
-                    # Modify Prefixes
-                    self.process_entry_from_textboxes_for_task_modify(None, None, self.old_text, self.new_text)
-
-                elif self.old_text != '' and self.new_text == '':
-
-                    # Remove Prefixes
-                    self.process_entry_from_textboxes_for_button_add_or_remove(None, self.old_text, 'remove')
-
-                else:
-                    pass
-
-        self.old_text = None
-        self.new_text = None
-        self.ITEM_CHANGED = None
-        self.ITEM_EDITED = None
+        return difference
 
     def FillTableWithStandardData(self):
 
         for iri in self.project.IRI_prefixes_nodes_dict.keys():
             if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                item_iri = QtWidgets.QTableWidgetItem()
+
+                item_iri = String_1(self)
                 item_iri.setText(iri)
-                item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                item_iri.setBackground(QtGui.QBrush(QtGui.QColor(50,50,205,50)))
-                self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
+                connect(item_iri.editingFinished, self.module_for_cell_modified)
 
                 prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
-                item_prefixes = QtWidgets.QTableWidgetItem()
-                #item_prefixes.setText(str(prefixes))
-                item_prefixes.setText(self.convert_set_to_comma_seperated_text(prefixes))
-                item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                item_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(50,50,205,50)))
-                self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
+                item_prefixes = String_1(self)
+                item_prefixes.setText(self.convert_set_to_text_comma_seperated(prefixes))
+                connect(item_prefixes.editingFinished, self.module_for_cell_modified)
 
-                self.table.setRowCount(self.table.rowCount() + 1)
+                self.table.addRow(item_iri, item_prefixes)
 
         iri = self.project.iri
-        item_iri = QtWidgets.QTableWidgetItem()
+        item_iri = String_2(self)
         item_iri.setText(iri)
-        item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-        item_iri.setBackground(QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
-        self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
+        connect(item_iri.editingFinished, self.module_for_cell_modified)
 
         prefixes = self.project.IRI_prefixes_nodes_dict[self.project.iri][0]
-        item_prefixes = QtWidgets.QTableWidgetItem()
-        #item_prefixes.setText(str(prefixes))
-        item_prefixes.setText(self.convert_set_to_comma_seperated_text(prefixes))
-        item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-        item_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
-        self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
+        item_prefixes = String_2(self)
+        item_prefixes.setText(self.convert_set_to_text_comma_seperated(prefixes))
+        connect(item_prefixes.editingFinished, self.module_for_cell_modified)
 
-        self.table.setRowCount(self.table.rowCount() + 1)
+        self.table.addRow(item_iri, item_prefixes)
 
     def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
 
-        #if (iri_to_update is None) and (nodes_to_update is None):
         # print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues')
         # first delete all entries from the dictionary id present
         # add standard IRIs
         # add key value pairs from dict
-        self.table.clear()
-        self.table.setRowCount(1)
-        self.table.setColumnCount(2)
 
-        header_iri = QtWidgets.QTableWidgetItem()
+        #self.table.clear()
+
+        header_iri = Header(self)
         header_iri.setText('IRI')
         header_iri.setFont(Font('Roboto', 15, bold=True))
-        header_iri.setTextAlignment(QtCore.Qt.AlignCenter)
-        header_iri.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
-        header_iri.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
-        header_iri.setFlags(QtCore.Qt.NoItemFlags)
-        self.table.setItem(self.table.rowCount() - 1, 0, header_iri)
 
-        header_prefixes = QtWidgets.QTableWidgetItem()
+        header_prefixes = Header(self)
         header_prefixes.setText('PREFIXES')
         header_prefixes.setFont(Font('Roboto', 15, bold=True))
-        header_prefixes.setTextAlignment(QtCore.Qt.AlignCenter)
-        header_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
-        header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
-        header_prefixes.setFlags(QtCore.Qt.NoItemFlags)
-        self.table.setItem(self.table.rowCount() - 1, 1, header_prefixes)
 
-        self.table.setRowCount(self.table.rowCount() + 1)
-
+        self.table.addRow(header_iri, header_prefixes)
         self.FillTableWithStandardData()
 
         for iri in sorted(self.project.IRI_prefixes_nodes_dict.keys()):
@@ -480,37 +587,31 @@ class PrefixWidget(QtWidgets.QScrollArea):
             if iri == self.project.iri:
                 continue
 
-            item_iri = QtWidgets.QTableWidgetItem()
+            item_iri = String_3(self)
             item_iri.setText(iri)
-            item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-            self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
+
+            connect(item_iri.editingFinished, self.module_for_cell_modified)
 
             prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
-            item_prefixes = QtWidgets.QTableWidgetItem()
-            #item_prefixes.setText(str(prefixes))
-            item_prefixes.setText(self.convert_set_to_comma_seperated_text(prefixes))
-            item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-            self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
+            item_prefixes = String_3(self)
+            item_prefixes.setText(self.convert_set_to_text_comma_seperated(prefixes))
+            connect(item_prefixes.editingFinished, self.module_for_cell_modified)
 
-            self.table.setRowCount(self.table.rowCount() + 1)
+            self.table.addRow(item_iri, item_prefixes)
 
-        item_iri = QtWidgets.QTableWidgetItem()
-        item_iri.setText('')
-        item_iri.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-        self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
+        empty_item_iri = String_3(self)
+        empty_item_iri.setText('')
+        connect(empty_item_iri.editingFinished, self.module_for_cell_modified)
 
-        item_prefixes = QtWidgets.QTableWidgetItem()
-        # item_prefixes.setText(str(prefixes))
-        item_prefixes.setText('')
-        item_prefixes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable)
-        self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
+        empty_item_prefixes = String_3(self)
+        empty_item_prefixes.setText('')
+        connect(empty_item_prefixes.editingFinished, self.module_for_cell_modified)
 
-        #self.table.setRowCount(self.table.rowCount() + 1)
-        #self.table.setRowCount(self.table.rowCount() - 1)
+        self.table.addRow(empty_item_iri, empty_item_prefixes)
 
         self.redraw()
 
-    def convert_set_to_comma_seperated_text(self,inp_set):
+    def convert_set_to_text_comma_seperated(self,inp_set):
 
         return_str = ''
 
@@ -523,7 +624,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         return return_str
 
-    def convert_str_prefixes_in_table_to_set(self,prefixes_str):
+    def convert_prefixes_in_table_to_set(self,prefixes_str):
 
         if prefixes_str is None:
             return None
@@ -533,21 +634,33 @@ class PrefixWidget(QtWidgets.QScrollArea):
         prefixes_str_split = prefixes_str.split(',')
 
         for prefix_raw in prefixes_str_split:
-            prefix = prefix_raw.strip()
-            if prefix != '':
-                prefixes_set.add(prefix)
+                prefix = prefix_raw.strip()
+                if prefix != '':
+                    prefixes_set.add(prefix)
 
+        print('return prefixes_set',prefixes_set)
         return prefixes_set
 
-    def process_entry_from_textboxes_for_button_add_or_remove(self,iri_inp,prefixes_inp,inp_task):
+    #has to be edited
+    def process_entry_from_textboxes_for_task_add_or_remove(self):
 
         self.ENTRY_ADD_OK_var = set()
         self.ENTRY_REMOVE_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
-        prefixes = self.convert_str_prefixes_in_table_to_set(prefixes_inp)
+        prefixes = set()
+        prefixes_inp = self.prefix_input_box.text().strip()
+        prefixes_raw = prefixes_inp.split(',')
+        for p in prefixes_raw:
+            if p.strip() != '':
+                prefixes.add(p.strip())
 
-        if iri_inp == '':
+        iri = self.iri_input_box.text().strip()
+
+        self.iri_input_box.clear()
+        self.prefix_input_box.clear()
+
+        if iri == '':
             print('iri field is empty')
             self.entry_status.showMessage('iri field is empty', 10000)
             return
@@ -560,19 +673,19 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         process = False
 
-        if (prefixes is not None) and (len(prefixes) > 0):
+        if len(prefixes) > 0:
             for prefix in prefixes:
-                if inp_task == 'remove':
+                if self.ADD_OR_REMOVE == 'remove':
                     #self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
-                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix, 'remove_entry')
+                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix, 'remove_entry')
                     if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
                         LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                         return
                     else:
                         process = True
-                elif inp_task == 'add':
+                elif self.ADD_OR_REMOVE == 'add':
                     #self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
-                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix, 'add_entry')
+                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix, 'add_entry')
                     if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var) :
                         LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                         return
@@ -581,17 +694,17 @@ class PrefixWidget(QtWidgets.QScrollArea):
                 else:
                     pass
         else:
-            if inp_task == 'remove':
+            if self.ADD_OR_REMOVE == 'remove':
                 #self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
-                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, None, 'remove_entry')
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None, 'remove_entry')
                 if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
                     LOGGER.error('transaction was not executed correctly; problem with IRI')
                     return
                 else:
                     process = True
-            elif inp_task == 'add':
+            elif self.ADD_OR_REMOVE == 'add':
                 #self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
-                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, None, 'add_entry')
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None, 'add_entry')
                 if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var):
                     LOGGER.error('transaction was not executed correctly; problem with IRI')
                     return
@@ -602,28 +715,26 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         if process is True:
             self.session.undostack.push(CommandProjetSetIRIPrefixesNodesDict(self.project,\
-                                        Duplicate_IRI_prefixes_nodes_dict_2,Duplicate_IRI_prefixes_nodes_dict_1, [iri_inp], None))
+                                        Duplicate_IRI_prefixes_nodes_dict_2,Duplicate_IRI_prefixes_nodes_dict_1, [iri], None))
 
         self.ENTRY_ADD_OK_var = set()
         self.ENTRY_REMOVE_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
     # has to be edited
-    def process_entry_from_textboxes_for_task_modify(self, iri_old, iri_new, prefixes_old, prefixes_new):
+    def process_entry_from_textboxes_for_task_modify(self,iri_old,iri_new,prefixes_old,prefixes_new):
 
         print('process_entry_from_textboxes_for_task_modify >>>')
-        print('iri_old', iri_old)
-        print('iri_new', iri_new)
-        print('prefixes_old', prefixes_old)
-        print('prefixes_new', prefixes_new)
+        print('iri_old',iri_old)
+        print('iri_new',iri_new)
+        print('prefixes_old',prefixes_old)
+        print('prefixes_new',prefixes_new)
 
         self.ENTRY_MODIFY_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
-        Duplicate_IRI_prefixes_nodes_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-        Duplicate_IRI_prefixes_nodes_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
+        Duplicate_IRI_prefixes_nodes_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+        Duplicate_IRI_prefixes_nodes_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
 
         process = False
 
@@ -634,8 +745,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
             # Case1     IRI->IRI'         if iri==iri' no need for a transaction
             if (iri_old == iri_new):
                 print('case1')
-                self.entry_status.showMessage('IRIs in selected cell and input box are the same. Nothing to change',
-                                              10000)
+                self.entry_status.showMessage('IRIs in selected cell and input box are the same. Nothing to change', 10000)
                 return
 
             self.project.modifyIRIPrefixesEntry(iri_old, None, iri_new, None, Duplicate_IRI_prefixes_nodes_dict_1)
@@ -650,8 +760,8 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         if (prefixes_old is not None) and (prefixes_new is not None):
 
-            prefixes_old_set = self.convert_str_prefixes_in_table_to_set(prefixes_old)
-            prefixes_new_set = self.convert_str_prefixes_in_table_to_set(prefixes_new)
+            prefixes_old_set = self.convert_prefixes_in_table_to_set(prefixes_old)
+            prefixes_new_set = self.convert_prefixes_in_table_to_set(prefixes_new)
 
             # case2     prefix(es)->prefix(es)'          if prefix(es)==prefix(es)' no need for a transaction
             if (prefixes_old_set.issubset(prefixes_new_set) and prefixes_new_set.issubset(
@@ -680,9 +790,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         if process is True:
             self.session.undostack.push(CommandProjetSetIRIPrefixesNodesDict(self.project, \
-                                                                             Duplicate_IRI_prefixes_nodes_dict_2,
-                                                                             Duplicate_IRI_prefixes_nodes_dict_1,
-                                                                             iris_to_be_updated, None))
+                Duplicate_IRI_prefixes_nodes_dict_2, Duplicate_IRI_prefixes_nodes_dict_1, iris_to_be_updated, None))
 
         self.ENTRY_MODIFY_OK_var = set()
         self.ENTRY_IGNORE_var = set()
@@ -696,27 +804,33 @@ class PrefixWidget(QtWidgets.QScrollArea):
         Redraw the content of the widget.
         """
 
-        self.table.setColumnCount(2)
-
         width = self.width()
         scrollbar = self.verticalScrollBar()
         if scrollbar.isVisible():
             width -= scrollbar.width()
 
-        height_of_other_objects = self.entry_status.height()
-        self.setMinimumHeight(height_of_other_objects+30*self.table.rowCount())
-        height = (self.height()) - (height_of_other_objects)
-
-        self.table.setFixedWidth(width)
-        #self.table.setFixedHeight(clamp(height, 0))
-        self.table.setFixedHeight(height)
-
-        self.table.setColumnWidth(0, 7*self.width() / 10)
-        self.table.setColumnWidth(1, 3*self.width() / 10)
+        height_of_other_objects = self.entry_status.height()+20*self.table.rowCount()
+        self.setFixedHeight(height_of_other_objects)
 
         for r in range(0,self.table.rowCount()):
-            self.table.setRowHeight(r,30)
-            #self.table.resizeRowToContents(r)
+
+            iri=self.table.itemAt(r, QtWidgets.QFormLayout.LabelRole)
+            prefixes=self.table.itemAt(r, QtWidgets.QFormLayout.FieldRole)
+
+            #print('r', r)
+
+            if iri is not None:
+                #print('type(iri)',type(iri))
+                #print('type(iri.widget())', type(iri.widget()))
+                iri.widget().setFixedWidth(7 * self.width() / 10)
+                #print('iri', iri.widget().text())
+
+            if prefixes is not None:
+                #print('type(prefixes)',type(prefixes))
+                #print('type(prefixes.widget())', type(prefixes.widget()))
+                #print('prefixes', prefixes.widget().text())
+                prefixes.widget().setFixedWidth(3*self.width()/10)
+
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -726,4 +840,11 @@ class PrefixWidget(QtWidgets.QScrollArea):
         self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
         self.redraw()
 
-        connect(self.table.cellChanged, self.cell_changed)
+
+
+
+
+
+
+
+
