@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ##########################################################################
 #                                                                        #
 #  Eddy: a graphical editor for the specification of Graphol ontologies  #
@@ -32,29 +30,9 @@
 #                                                                        #
 ##########################################################################
 
-
-__appname__ = 'Eddy'
-__author__ = 'Daniele Pantaleone' + 'Ashwin Ravishankar' + 'Giulio Ganino'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'+'ashwingoldfish@yahoo.co.in'+'ganino@dis.uniroma1.it'
-__license__ = 'GPL'
-__organization__ = 'Sapienza University'
-__status__ = 'Beta'
-__version__ = '1.0.0'
-
-
-APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
-APPNAME = __appname__
-AUTHOR = __author__
-BUG_TRACKER = 'https://github.com/danielepantaleone/eddy/issues'
-COPYRIGHT = __copyright__
-DIAG_HOME = 'http://www.diag.uniroma1.it/en'
-EMAIL = __email__
-GRAPHOL_HOME = 'http://www.diag.uniroma1.it/~graphol/'
-LICENSE = __license__
-ORGANIZATION = __organization__
-PROJECT_HOME = 'https://github.com/danielepantaleone/eddy'
-SAPIENZA_HOME = 'http://en.uniroma1.it/'
-STATUS = __status__
-VERSION = __version__
-WORKSPACE = '~/EddyProjects'
+[plugin]
+author: Ashwin Ravishankar
+contact: ashwingoldfish@yahoo.co.in
+id: prefix_explorer
+name: prefix_explorer
+version: 0.1
