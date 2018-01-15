@@ -723,8 +723,13 @@ class PrefixWidget(QtWidgets.QScrollArea):
         #self.table.setFixedHeight(clamp(height, 0))
         self.table.setFixedHeight(height)
 
-        self.table.setColumnWidth(0, 7*self.width() / 10)
-        self.table.setColumnWidth(1, 3*self.width() / 10)
+        scrollbar_width = 0
+        if scrollbar.isVisible():
+            scrollbar_width = scrollbar.width()
+            scrollbar_width = scrollbar_width+20
+
+        self.table.setColumnWidth(0, (7*self.width() / 10)-(scrollbar_width/2))
+        self.table.setColumnWidth(1, (3*self.width() / 10)-(scrollbar_width/2))
 
         for r in range(0,self.table.rowCount()):
             self.table.setRowHeight(r,30)
