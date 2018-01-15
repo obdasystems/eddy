@@ -200,7 +200,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
         #############
 
         self.entry_status = QtWidgets.QStatusBar()
-        self.entry_status.setMinimumHeight(30)
+        self.entry_status.setFixedHeight(30)
 
         self.verticalbox = QtWidgets.QVBoxLayout(self)  # to be added to main layout
         self.verticalbox.setAlignment(QtCore.Qt.AlignTop)
