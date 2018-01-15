@@ -324,6 +324,12 @@ class PrefixWidget(QtWidgets.QScrollArea):
         self.entry_status.showMessage(message, 10000)
         print('entry_NOT_OK(self): ',iri,',',prefixes,',',message)
 
+        disconnect(self.table.cellChanged, self.cell_changed)
+
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
+
+        connect(self.table.cellChanged, self.cell_changed)
+
     @QtCore.pyqtSlot(int, int)
     def cell_changed(self, r, c):
 
