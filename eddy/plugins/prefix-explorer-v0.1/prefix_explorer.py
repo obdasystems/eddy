@@ -380,10 +380,15 @@ class PrefixWidget(QtWidgets.QScrollArea):
                     pass
             else:
                 # add/remove/modify prefixes
+
+                iri_row = self.ITEM_CHANGED[0]
+                iri_column = 0
+                iri_inp = self.table.item(iri_row,iri_column).text()
+
                 if self.old_text == '' and self.new_text != '':
 
                     # Add Prefixes
-                    self.process_entry_from_textboxes_for_button_add_or_remove(None, self.new_text, 'add')
+                    self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.new_text, 'add')
 
                 elif self.old_text != '' and self.new_text != '':
 
@@ -393,7 +398,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
                 elif self.old_text != '' and self.new_text == '':
 
                     # Remove Prefixes
-                    self.process_entry_from_textboxes_for_button_add_or_remove(None, self.old_text, 'remove')
+                    self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.old_text, 'remove')
 
                 else:
                     pass
