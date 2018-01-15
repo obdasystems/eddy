@@ -277,6 +277,18 @@ class Project(QtCore.QObject):
 
         return prefixes[0]
 
+    def get_properties_of_node(self,node_inp):
+
+        iri = self.get_iri_of_node(node_inp)
+
+        if iri is None:
+            return None
+        if 'Error multiple IRIS-' in iri:
+            return iri
+
+        properties = self.IRI_prefixes_nodes_dict[iri][2]
+        return sorted(list(properties))
+
     def get_full_IRI(self,iri,version,remaining_characters):
 
         if (version is None) or (version == ''):

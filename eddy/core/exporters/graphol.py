@@ -514,22 +514,44 @@ class GrapholProjectExporter(AbstractProjectExporter):
 
         IRI_prefixes_nodes_dict = self.document.createElement('IRI_prefixes_nodes_dict')
 
-        string_format_dictionary = ''
-
         dict = self.project.IRI_prefixes_nodes_dict
+
         for iri_key in dict.keys():
+
+            iri_to_save = self.document.createElement('iri')
+            iri_to_save.setAttribute('iri_value', iri_key)
+
             prefixes_ = list(dict[iri_key][0])
             nodes_ = list(dict[iri_key][1])
             properties_ = list(dict[iri_key][2])
 
-            prefixes_to_concat = str(prefixes_)[1:len(str(prefixes_))-1]
-            nodes_to_concat = str(nodes_)[1:len(str(nodes_))-1]
-            properties_to_concat = str(properties_)[1:len(str(properties_)) - 1]
+            prefixes_to_save = self.document.createElement('prefixes')
+            nodes_to_save = self.document.createElement('nodes')
+            properties_to_save = self.document.createElement('properties')
 
-            string_format_dictionary = string_format_dictionary+iri_key+'\n'+prefixes_to_concat+'\n'+\
-                                       nodes_to_concat+'\n'+properties_to_concat+'\n'
+            for p in prefixes_:
+                prefix_to_save = self.document.createElement('prefix')
+                prefix_to_save.setAttribute('prefix_value', p)
+                prefixes_to_save.appendChild(prefix_to_save)
 
-        IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(string_format_dictionary))
+            for n in nodes_:
+                node_to_save = self.document.createElement('node')
+                node_to_save.setAttribute('node_value', str(n))
+                nodes_to_save.appendChild(node_to_save)
+
+            for ppt in properties_:
+                property_to_save = self.document.createElement('property')
+                property_to_save.setAttribute('property_value', ppt)
+                properties_to_save.appendChild(property_to_save)
+
+            iri_to_save.appendChild(prefixes_to_save)
+            iri_to_save.appendChild(nodes_to_save)
+            iri_to_save.appendChild(properties_to_save)
+
+            IRI_prefixes_nodes_dict.appendChild(iri_to_save)
+
+        #IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(string_format_dictionary))
+        #IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(new_lines))
 
         section = self.document.createElement('ontology')
 
