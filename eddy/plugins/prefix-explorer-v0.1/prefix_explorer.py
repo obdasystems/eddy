@@ -230,6 +230,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumSize(QtCore.QSize(216, 120))
         self.setMinimumWidth(400)
+        self.setMaximumHeight(600)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setWidgetResizable(True)
@@ -715,7 +716,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
             width -= scrollbar.width()
 
         height_of_other_objects = self.entry_status.height()
-        self.setMinimumHeight(height_of_other_objects+30*self.table.rowCount())
+        #self.setMinimumHeight(height_of_other_objects+30*self.table.rowCount())
         height = (self.height()) - (height_of_other_objects)
 
         self.table.setFixedWidth(width)
