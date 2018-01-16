@@ -1734,7 +1734,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         Set an invididual node either to Individual or Value.
         Will bring up the Value Form if needed.
         """
-        print('>>>      Session (doSetIndividualAs)')
+        #print('>>>      Session (doSetIndividualAs)')
 
         diagram = self.mdi.activeDiagram()
         if diagram:
@@ -1779,7 +1779,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                     form = ValueForm(node, self)
                     form.exec_()
 
-        print('>>>      Session (doSetIndividualAs) END')
+        #print('>>>      Session (doSetIndividualAs) END')
 
     @QtCore.pyqtSlot()
     def doSetNodeSpecial(self):
