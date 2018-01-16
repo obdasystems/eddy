@@ -1097,7 +1097,14 @@ class Project(QtCore.QObject):
 
         for diag, val_in_diag in self.converted_nodes.items():
             for nd in val_in_diag:
-                if (val_in_diag[nd] is not None) and (nd == node.id):
+                abs_nodes = self.nodes()
+                abs_nd = None
+                for i in abs_nodes:
+                    if i.id == nd:
+                        abs_nd = i
+                        break
+                if (val_in_diag[nd] is not None) and \
+                    ((nd==node.id) or ((abs_nd is not None) and (abs_nd.text()==node.text()))):
                     if str(type(val_in_diag[nd])) == '<class \'list\'>':
 
                         return_list = []

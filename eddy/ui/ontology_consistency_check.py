@@ -370,8 +370,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         else:
             self.status_bar.showMessage('')
 
-
-
         entities_of_bottom_entity_node = bottom_entity_node.getEntities()
         entities_of_bottom_entity_node_itr = entities_of_bottom_entity_node.iterator()
 
