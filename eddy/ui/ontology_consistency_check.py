@@ -471,6 +471,14 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
         worker.run()
 
+        errored_message = worker.errored_message
+        if errored_message is not None:
+            self.status_bar.showMessage(errored_message)
+            self.project.inconsistent_ontology = None
+            LOGGER.error(errored_message)
+            return
+
+
         dict = worker.refined_axiom_to_node_or_edge
         ontology = worker.ontology
 

@@ -783,10 +783,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
         if (self.project.get_prefix_of_node(node) is not None) and (self.project.get_prefix_of_node(node) != ''):
             self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(self.project.get_iri_of_node(node), '#'))
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLClass(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLClass(
                 self.IRI.create(self.project.get_iri_of_node(node) + '#' + node.remaining_characters))
 
     def getDatatypeRestriction(self, node):
@@ -960,10 +960,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
             if (self.project.get_prefix_of_node(node) is not None) and (self.project.get_prefix_of_node(node) != ''):
                 self.pm.setPrefix(self.project.get_prefix_of_node(node),
                                   postfix(self.project.get_iri_of_node(node), '#'))
-                return self.df.getOWLDataProperty(
+                return self.df.getOWLNamedIndividual(
                     OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
             else:
-                return self.df.getOWLDataProperty(
+                return self.df.getOWLNamedIndividual(
                     self.IRI.create(self.project.get_iri_of_node(node) + '#' + node.remaining_characters))
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
@@ -1083,10 +1083,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
         if (self.project.get_prefix_of_node(node) is not None) and (self.project.get_prefix_of_node(node) != ''):
             self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(self.project.get_iri_of_node(node), '#'))
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLObjectProperty(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLObjectProperty(
                 self.IRI.create(self.project.get_iri_of_node(node) + '#' + node.remaining_characters))
 
     def getRoleChain(self, node):
@@ -2015,6 +2015,8 @@ class OWLOntologyFetcher:
         self.ontology = None
         self.pm = None
 
+        self.errored_message = None
+
     def get_nodes_and_edges_for_axiom(self,axiom):
 
         pass
@@ -2318,10 +2320,10 @@ class OWLOntologyFetcher:
 
         if (self.project.get_prefix_of_node(node) is not None) and (self.project.get_prefix_of_node(node) != ''):
             self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(self.project.get_iri_of_node(node), '#'))
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLClass(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLClass(
                 self.IRI.create(self.project.get_iri_of_node(node) + '#' + node.remaining_characters))
 
     def getDatatypeRestriction(self, node, conversion_trace):
@@ -2521,10 +2523,10 @@ class OWLOntologyFetcher:
             if (self.project.get_prefix_of_node(node) is not None) and (self.project.get_prefix_of_node(node) != ''):
                 self.pm.setPrefix(self.project.get_prefix_of_node(node),
                                   postfix(self.project.get_iri_of_node(node), '#'))
-                return self.df.getOWLDataProperty(
+                return self.df.getOWLNamedIndividual(
                     OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
             else:
-                return self.df.getOWLDataProperty(
+                return self.df.getOWLNamedIndividual(
                     self.IRI.create(self.project.get_iri_of_node(node) + '#' + node.remaining_characters))
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
@@ -2657,10 +2659,10 @@ class OWLOntologyFetcher:
 
         if (self.project.get_prefix_of_node(node) is not None) and (self.project.get_prefix_of_node(node) != ''):
             self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(self.project.get_iri_of_node(node), '#'))
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLObjectProperty(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
-            return self.df.getOWLDataProperty(
+            return self.df.getOWLObjectProperty(
                 self.IRI.create(self.project.get_iri_of_node(node) + '#' + node.remaining_characters))
 
     def getRoleChain(self, node, conversion_trace):
@@ -3907,12 +3909,13 @@ class OWLOntologyFetcher:
 
         except DiagramMalformedError as e:
             LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
+            self.errored_message='Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e)
         except Exception as e:
             LOGGER.exception('OWL 2 fetch could not be completed')
+            self.errored_message ='OWL 2 fetch could not be completed'
         else:
             LOGGER.debug('OWL 2 fetch could be completed')
         finally:
-
             detach()
 
 
