@@ -566,7 +566,7 @@ class PredicateNodeProperty(NodeProperty):
 
             return_list = []
 
-            print('new_rc', new_rc)
+            #print('new_rc', new_rc)
 
             if self.refactorField.isChecked():
                 for n in self.project.nodes():
@@ -632,13 +632,13 @@ class PredicateNodeProperty(NodeProperty):
     @QtCore.pyqtSlot(str, str, str)
     def metaDataChanged_REMOVE_OK(self, iri, node, message):
 
-        print('metaDataChanged_REMOVE_OK -', iri, ',', node, ',', message)
+        #print('metaDataChanged_REMOVE_OK -', iri, ',', node, ',', message)
         self.metaDataChanged_REMOVE_OK_var = True
 
     @QtCore.pyqtSlot(str, str, str)
     def metaDataChanged_ADD_OK(self, iri, node, message):
 
-        print('metaDataChanged_ADD_OK -', iri, ',', node, ',', message)
+        #print('metaDataChanged_ADD_OK -', iri, ',', node, ',', message)
         self.metaDataChanged_ADD_OK_var = True
 
     @QtCore.pyqtSlot(str, str, str)
@@ -647,7 +647,7 @@ class PredicateNodeProperty(NodeProperty):
         #if node.id is None:
             #print('metaDataChanged_IGNORE >', iri, '-', 'None', '-', message)
         #else:
-        print('metaDataChanged_IGNORE >', iri, '-', node, '-', message)
+        #print('metaDataChanged_IGNORE >', iri, '-', node, '-', message)
         self.metaDataChanged_IGNORE_var = True
 
 

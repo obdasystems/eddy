@@ -91,8 +91,8 @@ class ConceptNode(AbstractResizableNode):
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        print('copy >> self',self)
-        print('copy >> type(self)', type(self))
+        #print('copy >> self',self)
+        #print('copy >> type(self)', type(self))
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
             'brush': self.brush(),
@@ -103,7 +103,7 @@ class ConceptNode(AbstractResizableNode):
         node.setPos(self.pos())
         node.setText(self.text())
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
-        print('copy END >> self', self)
+        #print('copy END >> self', self)
         return node
 
     def height(self):

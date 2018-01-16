@@ -381,7 +381,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             unsatisfiable_entity = entities_of_bottom_entity_node_itr.next()
             cast(java_class, unsatisfiable_entity)
 
-            print('unsatisfiable_entity.toString()',unsatisfiable_entity.toString())
+            #print('unsatisfiable_entity.toString()',unsatisfiable_entity.toString())
 
             if unsatisfiable_entity.toString() in Special.BottomEntities.value.values():
                 continue
@@ -515,7 +515,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             bottom_class_node = hermit.getBottomClassNode();
             bottom_data_property_node = hermit.getBottomDataPropertyNode();
             bottom_object_property_node = hermit.getBottomObjectPropertyNode();
-
+            """
             print('self.project.unsatisfiable_classes', self.project.unsatisfiable_classes)
             print('self.project.explanations_for_unsatisfiable_classes', self.project.explanations_for_unsatisfiable_classes)
             print('self.project.unsatisfiable_roles', self.project.unsatisfiable_roles)
@@ -531,11 +531,11 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             print('Special.BottomEntities.value',Special.BottomEntities.value.values())
 
             print('*****************************************************')
-
+            """
             self.fetch_axioms_and_set_variables(bottom_class_node,self.OWLClass)
             self.fetch_axioms_and_set_variables(bottom_data_property_node, self.OWLDataProperty)
             self.fetch_axioms_and_set_variables(bottom_object_property_node, self.OWLObjectPropertyExpression)
-
+            """
             print('self.project.unsatisfiable_classes', self.project.unsatisfiable_classes)
             print('self.project.explanations_for_unsatisfiable_classes',
                   self.project.explanations_for_unsatisfiable_classes)
@@ -545,7 +545,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             print('self.project.unsatisfiable_attributes', self.project.unsatisfiable_attributes)
             print('self.project.explanations_for_unsatisfiable_attributes',
                   self.project.explanations_for_unsatisfiable_attributes)
-
+            """
             hermit.flush();
             hermit.dispose();
 

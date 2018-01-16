@@ -55,14 +55,14 @@ class CommandProjectSetIRIandPrefix(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        print('CommandProjectSetIRI >>> redo')
+        #print('CommandProjectSetIRI >>> redo')
         self.project.iri = self.redo_iri
         self.project.prefix = self.redo_prefix
         self.project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        print('CommandProjectSetIRI >>> undo')
+        #print('CommandProjectSetIRI >>> undo')
         self.project.iri = self.undo_iri
         self.project.prefix = self.undo_prefix
         self.project.sgnUpdated.emit()
@@ -79,7 +79,7 @@ class CommandProjectSetIRI(QtWidgets.QUndoCommand):
         :type undo: str
         :type redo: str
         """
-        print('CommandProjectSetIRI >>> init')
+        #print('CommandProjectSetIRI >>> init')
         super().__init__("set ontology IRI to '{0}'".format(redo))
         self._project = project
         self._undo = undo
@@ -88,13 +88,13 @@ class CommandProjectSetIRI(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        print('CommandProjectSetIRI >>> redo')
+        #print('CommandProjectSetIRI >>> redo')
         self._project.iri = self._redo
         self._project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        print('CommandProjectSetIRI >>> undo')
+        #print('CommandProjectSetIRI >>> undo')
         self._project.iri = self._undo
         self._project.sgnUpdated.emit()
 
@@ -110,7 +110,7 @@ class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
         :type undo: str
         :type redo: str
         """
-        print('CommandProjectSetPrefix >>> init')
+        #print('CommandProjectSetPrefix >>> init')
         super().__init__("set ontology prefix to '{0}'".format(redo))
         self._project = project
         self._undo = undo
@@ -118,13 +118,13 @@ class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        print('CommandProjectSetPrefix >>> redo')
+        #print('CommandProjectSetPrefix >>> redo')
         self._project.prefix = self._redo
         self._project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
-        print('CommandProjectSetPrefix >>> undo')
+        #print('CommandProjectSetPrefix >>> undo')
         self._project.prefix = self._undo
         self._project.sgnUpdated.emit()
 

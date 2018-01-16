@@ -1484,7 +1484,7 @@ class GrapholLoaderMixin_v2(object):
 
                 var_to_append = sube.attribute(str(inp_var+'_value'))
 
-                print('inp_type-',inp_type,'-var_to_append-',var_to_append)
+                #print('inp_type-',inp_type,'-var_to_append-',var_to_append)
 
             except Exception:
                 LOGGER.exception('Failed to fetch prefixes_nodes_or_properties %s',var_to_append)
@@ -1495,7 +1495,7 @@ class GrapholLoaderMixin_v2(object):
             finally:
                 sube = sube.nextSiblingElement(inp_var)
 
-        print('return_set',return_set)
+        #print('return_set',return_set)
 
         return return_set
 
@@ -1510,23 +1510,23 @@ class GrapholLoaderMixin_v2(object):
 
                 iri_to_append = sube.attribute('iri_value')
 
-                print('iri_to_append',iri_to_append)
+                #print('iri_to_append',iri_to_append)
 
                 sube_prefixes_to_append = sube.firstChildElement('prefixes')
                 prefixes_to_append = self.import_prefixes_nodes_or_properties_of_iri(sube_prefixes_to_append,'prefixes')
 
-                print('prefixes_to_append', prefixes_to_append)
+                #print('prefixes_to_append', prefixes_to_append)
 
                 sube_nodes_to_append = sube_prefixes_to_append.nextSiblingElement('nodes')
                 nodes_to_append = self.import_prefixes_nodes_or_properties_of_iri(sube_nodes_to_append,'nodes')
 
-                print('len(nodes_to_append)', len(nodes_to_append))
-                print('type(nodes_to_append)', type(nodes_to_append))
+                #print('len(nodes_to_append)', len(nodes_to_append))
+                #print('type(nodes_to_append)', type(nodes_to_append))
 
                 sube_properties_to_append = sube_nodes_to_append.nextSiblingElement('properties')
                 properties_to_append = self.import_prefixes_nodes_or_properties_of_iri(sube_properties_to_append,'properties')
 
-                print('properties_to_append', properties_to_append)
+               # print('properties_to_append', properties_to_append)
 
             except Exception:
                 LOGGER.exception('Failed to fetch iri for %s',iri_to_append)
@@ -1772,12 +1772,12 @@ class GrapholLoaderMixin_v2(object):
 
             if tag is 'IRI_prefixes_nodes_dict':
 
-                print('tag is IRI_prefixes_nodes_dict')
+                #print('tag is IRI_prefixes_nodes_dict')
 
                 #dictionary_to_return = self.fetch_IRI_prefixes_nodes_dict_from_string(content)
                 dictionary_to_return = self.import_IRI_prefixes_nodes_dict(subelement)
 
-                print('len(dictionary_to_return)',len(dictionary_to_return))
+                #print('len(dictionary_to_return)',len(dictionary_to_return))
 
                 return dictionary_to_return
 

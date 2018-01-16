@@ -497,7 +497,7 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
 
-        print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
+        #print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
         #remove the node in all the indices of the dictionary
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                     'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
@@ -515,7 +515,7 @@ class Project(QtCore.QObject):
             else:
                 LOGGER.critical('multiple IRIs found for node')
 
-        print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
+        #print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
     def get_iri_for_prefix(self,prefix_inp):
 
@@ -620,19 +620,19 @@ class Project(QtCore.QObject):
         def entry_ADD_ok(iri, prefix, message):
 
             ENTRY_ADD_OK_var.add(True)
-            print('modifyIRIPrefixesEntry   >>>     entry_ADD_ok(self): ', iri, ',', prefix, ',', message)
+            #print('modifyIRIPrefixesEntry   >>>     entry_ADD_ok(self): ', iri, ',', prefix, ',', message)
 
         @QtCore.pyqtSlot(str, str, str)
         def entry_REMOVE_OK(iri, prefix, message):
 
             ENTRY_REMOVE_OK_var.add(True)
-            print('modifyIRIPrefixesEntry   >>>     entry_REMOVE_ok(self): ', iri, ',', prefix, ',', message)
+            #print('modifyIRIPrefixesEntry   >>>     entry_REMOVE_ok(self): ', iri, ',', prefix, ',', message)
 
         @QtCore.pyqtSlot(str, str, str)
         def entry_NOT_OK(iri, prefix, message):
 
             ENTRY_IGNORE_var.add(True)
-            print('modifyIRIPrefixesEntry   >>>     entry_NOT_OK(self): ', iri, ',', prefix, ',', message)
+            #print('modifyIRIPrefixesEntry   >>>     entry_NOT_OK(self): ', iri, ',', prefix, ',', message)
 
         connect(self.sgnIRIPrefixEntryAdded, entry_ADD_ok)
         connect(self.sgnIRIPrefixEntryRemoved, entry_REMOVE_OK)
@@ -702,19 +702,19 @@ class Project(QtCore.QObject):
 
         #Case1
         if (not None_1) and (None_2) and (not None_3) and (None_4):
-            print('modifyIRIPrefixesEntry   >>>    Case1')
+            #print('modifyIRIPrefixesEntry   >>>    Case1')
             msg_1 = modify_iri(iri_from_val,iri_to_val,dictionary)
 
         #Case2
         elif (not None_1) and (None_2) and (not None_3) and (not None_4):
-            print('modifyIRIPrefixesEntry   >>>    Case2')
+            #print('modifyIRIPrefixesEntry   >>>    Case2')
             msg_1 = modify_iri(iri_from_val, iri_to_val,dictionary)
             if 'Error' not in msg_1:
                 msg_2 = modify_prefixes(iri_to_val,prefixes_from_val,prefixes_to_val,dictionary)
 
         #Case3
         elif (None_1) and (not None_2) and (None_3) and (not None_4):
-            print('modifyIRIPrefixesEntry   >>>    Case3')
+            #print('modifyIRIPrefixesEntry   >>>    Case3')
 
             iri_keys = []
 
@@ -732,24 +732,24 @@ class Project(QtCore.QObject):
 
         #Case4
         elif (not None_1) and (not None_2) and (not None_3) and (None_4):
-            print('modifyIRIPrefixesEntry   >>>    Case4')
+            #print('modifyIRIPrefixesEntry   >>>    Case4')
             msg_1 = modify_iri(iri_from_val, iri_to_val,dictionary)
             if 'Error' not in msg_1:
                 msg_2 = modify_prefixes(iri_to_val,prefixes_from_val,set(),dictionary)
 
         #Case5
         elif (not None_1) and (not None_2) and (None_3) and (not None_4):
-            print('modifyIRIPrefixesEntry   >>>    Case5')
+            #print('modifyIRIPrefixesEntry   >>>    Case5')
             msg_2 = modify_prefixes(iri_from_val, prefixes_from_val, prefixes_to_val, dictionary)
 
         #Case6
         elif (not None_1) and (not None_2) and (not None_3) and (not None_4):
-            print('modifyIRIPrefixesEntry   >>>    Case6')
+            #print('modifyIRIPrefixesEntry   >>>    Case6')
             msg_1 = modify_iri(iri_from_val, iri_to_val, dictionary)
-            print('msg_1',msg_1)
+            #print('msg_1',msg_1)
             if 'Error' not in msg_1:
                 msg_2 = modify_prefixes(iri_to_val, prefixes_from_val, prefixes_to_val, dictionary)
-                print('msg_2', msg_2)
+                #print('msg_2', msg_2)
         #None of the cases
         else:
             LOGGER.critical('Case not dealt with/ Design fault; please contact programmer')
@@ -800,7 +800,7 @@ class Project(QtCore.QObject):
 
     def addIRIPrefixEntry(self, dictionary, iri_inp, prefix_inp):
 
-        print('addIRIPrefixEntry    >>>')
+        #print('addIRIPrefixEntry    >>>')
         #if [prefix_inp-IRI'] exists => addition is not possible
         #if [prefix_inp-IRI_inp] exists => addition not needed (duplicate entry)
 
@@ -833,19 +833,19 @@ class Project(QtCore.QObject):
         if iri_inp in dictionary.keys():
             if prefix_inp is not None:
                 #Case A1
-                print('Case A1')
+                #print('Case A1')
                 dictionary[iri_inp][0].add(prefix_inp)
                 self.sgnIRIPrefixEntryAdded.emit(iri_inp, prefix_inp, 'prefix added to existing IRI')
                 return dictionary
             else:
                 #Case A2
-                print('Case A2')
+                #print('Case A2')
                 self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, None, 'Nothing to add')
                 return None
         else:
             if prefix_inp is not None:
                 #Case B1
-                print('Case B1')
+                #print('Case B1')
                 prefixes = set()
                 prefixes.add(prefix_inp)
                 nodes = set()
@@ -863,7 +863,7 @@ class Project(QtCore.QObject):
                 return dictionary
             else:
                 # Case B2
-                print('Case B2')
+                #print('Case B2')
                 prefixes = set()
                 nodes = set()
                 properties = set()
@@ -928,7 +928,7 @@ class Project(QtCore.QObject):
         # prefix_inp is not None
             # [prefix_inp-iri_inp] does not exist => prefix not mapped with this IRI
 
-        print('removeIRIPrefixEntry >>>',iri_inp, ' - ',prefix_inp)
+        #print('removeIRIPrefixEntry >>>',iri_inp, ' - ',prefix_inp)
 
         if iri_inp not in dictionary.keys():
             self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'IRI is not present in the table')
@@ -979,7 +979,7 @@ class Project(QtCore.QObject):
             return None
 
         dictionary[iri_inp][1].remove(node_inp)
-        print('node_inp',node_inp)
+        #print('node_inp',node_inp)
         self.sgnIRINodeEntryRemoved.emit(iri_inp, str(node_inp), str('Node no longer mapped to IRI'+iri_inp))
         return dictionary
 
@@ -992,7 +992,7 @@ class Project(QtCore.QObject):
         if old_label==new_label:
             return
 
-        print(' def node_label_update_core_code     >>> new_label',new_label)
+        #print(' def node_label_update_core_code     >>> new_label',new_label)
 
         # CHANGE THE CONTENT OF THE LABEL
         self.doRemoveItem(node.diagram, node)
@@ -1024,20 +1024,20 @@ class Project(QtCore.QObject):
 
         # input string/string
 
-        print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
+        #print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
 
         disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
         if (node_inp is None) or (node_inp is ''):
-            print('node_inp is None')
+            #print('node_inp is None')
             if iri_inp in self.IRI_prefixes_nodes_dict.keys():
                 nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
-                print('len(nodes_to_update)',len(nodes_to_update))
+                #print('len(nodes_to_update)',len(nodes_to_update))
                 for node in nodes_to_update:
                     self.node_label_update_core_code(node)
         else:
-            print('node_inp is not None')
+            #print('node_inp is not None')
             for n in self.nodes():
                 if str(n) == node_inp:
                     self.node_label_update_core_code(n)
@@ -1046,7 +1046,7 @@ class Project(QtCore.QObject):
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
-        print('def regenerate_label_of_nodes_for_iri    >>>')
+        #print('def regenerate_label_of_nodes_for_iri    >>>')
 
         """
         for node in self.nodes():
@@ -1073,7 +1073,7 @@ class Project(QtCore.QObject):
             node_or_edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node_or_edge.update(node_or_edge.boundingRect())
 
-        print('self.nodes_of_unsatisfiable_entities',self.nodes_of_unsatisfiable_entities)
+        #print('self.nodes_of_unsatisfiable_entities',self.nodes_of_unsatisfiable_entities)
 
         for node_or_str in self.nodes_of_unsatisfiable_entities:
 

@@ -41,7 +41,7 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
     def __init__(self, project, dict_old_val, dict_new_val, iris_to_update, nodes_to_update):
 
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  __init__')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  __init__')
 
         super().__init__('update dictionary')
 
@@ -52,38 +52,38 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.nodes_to_update = nodes_to_update
 
     def redo(self):
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_new_val,dict())
 
         for iri in self.iris_to_update:
             if self.nodes_to_update is None:
-                print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
+                #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
                 self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
             else:
                 for n in self.nodes_to_update:
-                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                    #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
                     self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
 
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
 
     def undo(self):
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo)')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_old_val,dict())
 
         for iri in self.iris_to_update:
             if self.nodes_to_update is None:
-                print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
+                #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
                 self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
             else:
                 for n in self.nodes_to_update:
-                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                    #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
                     self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
 
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
 
 
 class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
