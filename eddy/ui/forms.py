@@ -396,13 +396,13 @@ class ValueForm(QtWidgets.QDialog):
         """
         Accepts the form and set the new value.
         """
-        print('>>>          ValueForm (accept)')
+        #print('>>>          ValueForm (accept)')
         node = self.node
         diagram = node.diagram
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
         data = node.compose(value, datatype)
-        print('data',data)
+        #print('data',data)
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
             #self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
@@ -420,10 +420,10 @@ class ValueForm(QtWidgets.QDialog):
                 LOGGER.error('*****************   failed to assign iri to node   *******************')
                 return
 
-            print('self.project.get_prefix_of_node(node) - new_prefix',self.project.get_prefix_of_node(node),'-',new_prefix)
-            print('self.project.get_iri_of_node(node) - new_iri',self.project.get_iri_of_node(node),'-',new_iri)
-            print('node.remaining_characters - new_remaining_characters',node.remaining_characters,'-',new_remaining_characters)
-            print('data=',data)
+            #print('self.project.get_prefix_of_node(node) - new_prefix',self.project.get_prefix_of_node(node),'-',new_prefix)
+            #print('self.project.get_iri_of_node(node) - new_iri',self.project.get_iri_of_node(node),'-',new_iri)
+            #print('node.remaining_characters - new_remaining_characters',node.remaining_characters,'-',new_remaining_characters)
+            #print('data=',data)
 
             Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
             Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
@@ -449,7 +449,8 @@ class ValueForm(QtWidgets.QDialog):
 
         super().accept()
 
-        print('>>>          ValueForm (accept) END')
+        #print('>>>          ValueForm (accept) END')
+
 
 class AbstractDiagramForm(QtWidgets.QDialog):
     """
