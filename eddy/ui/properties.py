@@ -487,27 +487,25 @@ class PredicateNodeProperty(NodeProperty):
             if node.special() is not None:
                 self.refactorField.setEnabled(False)
 
-        self.labelWidget = QtWidgets.QWidget()
-        self.labelLayout = QtWidgets.QFormLayout(self.labelWidget)
-        self.labelLayout.addRow(self.iriLabel, self.iriField)
-        #self.labelLayout.addRow(self.versionLabel, self.versionField)
-        self.labelLayout.addRow(self.textLabel, self.textField)
-        self.labelLayout.addRow(self.refactorLabel, self.refactorField)
-
-        self.mainWidget.addTab(self.labelWidget, 'IRI, Label')
-
         self.FulliriLabel = QtWidgets.QLabel(self)
         self.FulliriLabel.setFont(Font('Roboto', 12))
         self.FulliriLabel.setText('Full IRI')
         self.FulliriField = StringField(self)
         self.FulliriField.setFixedWidth(300)
         self.FulliriField.setFont(Font('Roboto', 12))
-        full_iri = self.project.get_full_IRI(self.iriField.value(),None,self.textField.value().strip())
+        full_iri = self.project.get_full_IRI(self.iriField.value(), None, self.textField.value().strip())
         self.FulliriField.setValue(full_iri)
-        #self.FulliriField.setValue(self.iriField.value()+'#'+self.textField.value().strip())
+        # self.FulliriField.setValue(self.iriField.value()+'#'+self.textField.value().strip())
         self.FulliriField.setReadOnly(True)
 
-        self.generalLayout.addRow(self.FulliriLabel, self.FulliriField)
+        self.labelWidget = QtWidgets.QWidget()
+        self.labelLayout = QtWidgets.QFormLayout(self.labelWidget)
+        self.labelLayout.addRow(self.iriLabel, self.iriField)
+        self.labelLayout.addRow(self.textLabel, self.textField)
+        self.labelLayout.addRow(self.FulliriLabel, self.FulliriField)
+        self.labelLayout.addRow(self.refactorLabel, self.refactorField)
+
+        self.mainWidget.addTab(self.labelWidget, 'IRI')
 
         self.metaDataChanged_ADD_OK_var = None
         self.metaDataChanged_REMOVE_OK_var = None
@@ -554,13 +552,19 @@ class PredicateNodeProperty(NodeProperty):
 
         new_rc = ''
 
+        flag = False
+
         for c in unprocessed_new_text:
             if c == '':
                 pass
             elif (not c.isalnum()):
                 new_rc = new_rc + '_'
+                flag = True
             else:
                 new_rc = new_rc + c
+
+        if flag is True:
+            self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',15000)
 
         if (unprocessed_new_text != self.node.remaining_characters):
 

@@ -241,7 +241,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Configure application built-in actions.
         """
-
         #############################################
         # APPLICATION GENERIC
         #################################
@@ -898,7 +897,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Load and initialize application plugins.
         """
-        skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri']
+        skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer']
         self.addPlugins(self.pmanager.init(skip_list=skip_list))
 
     def initProfiles(self):

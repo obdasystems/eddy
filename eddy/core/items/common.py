@@ -363,13 +363,19 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     currentData_processed = ''
 
+                    flag = False
+
                     for c in currentData:
                         if c == '':
                             pass
                         elif (not c.isalnum()):
                             currentData_processed = currentData_processed + '_'
+                            flag = True
                         else:
                             currentData_processed = currentData_processed + c
+
+                    if flag is True:
+                        self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
                     commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.diagram.project))
 
