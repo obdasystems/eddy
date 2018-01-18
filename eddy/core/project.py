@@ -507,6 +507,10 @@ class Project(QtCore.QObject):
 
         #print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
+    def check_validity_of_IRI(self,iri_inp):
+
+        return True
+
     def get_iri_for_prefix(self,prefix_inp):
 
         if prefix_inp is None:

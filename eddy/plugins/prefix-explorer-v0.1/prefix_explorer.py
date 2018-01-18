@@ -412,42 +412,49 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
             if column == 0:
                 # add/remove/modify IRI
-                if (self.old_text == '' and self.new_text != '') or \
-                        (self.old_text != '' and self.new_text != '' and row == self.table.rowCount()-1) :
+                IRI_valid = self.project.check_validity_of_IRI(self.new_text)
 
-                    # Add IRI
-                    prefix_inp = self.table.item(row, 1).text().strip()
+                if IRI_valid is False:
+                    self.entry_status.showMessage('Invalid IRI.', 15000)
+                    self.table.item(row, column).setText(self.old_text)
+                else:
 
-                    if (prefix_inp == ''):
-                        if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
+                    if (self.old_text == '' and self.new_text != '') or \
+                            (self.old_text != '' and self.new_text != '' and row == self.table.rowCount()-1) :
+
+                        # Add IRI
+                        prefix_inp = self.table.item(row, 1).text().strip()
+
+                        if (prefix_inp == ''):
+                            if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
+                                pass
+                            else:
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add')
+                        else:
+                            self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, prefix_inp, 'add')
+
+
+                    elif self.old_text != '' and self.new_text != '':
+
+                        # Modify IRI
+                        if row == self.table.rowCount()-1:
                             pass
                         else:
-                            self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add')
-                    else:
-                        self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, prefix_inp, 'add')
+                            self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
 
+                    elif self.old_text != '' and self.new_text == '':
 
-                elif self.old_text != '' and self.new_text != '':
-
-                    # Modify IRI
-                    if row == self.table.rowCount()-1:
-                        pass
-                    else:
-                        self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
-
-                elif self.old_text != '' and self.new_text == '':
-
-                    # Remove IRI
-                    if row == self.table.rowCount()-1:
-                        pass
-                    else:
-                        prefix_inp = self.table.item(row, 1).text().strip()
-                        if (prefix_inp == ''):
-                            self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
+                        # Remove IRI
+                        if row == self.table.rowCount()-1:
+                            pass
                         else:
-                            self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, prefix_inp, 'remove')
-                else:
-                    pass
+                            prefix_inp = self.table.item(row, 1).text().strip()
+                            if (prefix_inp == ''):
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
+                            else:
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, prefix_inp, 'remove')
+                    else:
+                        pass
             else:
                 # add/remove/modify prefixes
 
@@ -455,32 +462,47 @@ class PrefixWidget(QtWidgets.QScrollArea):
                 iri_column = 0
                 iri_inp = self.table.item(iri_row,iri_column).text().strip()
 
-                if self.old_text == '' and self.new_text != '':
+                flag = False
 
-                    # Add Prefixes
-                    if iri_inp == '':
+                for c in self.new_text:
+                    if c == '':
                         pass
+                    elif (not c.isalnum()):
+                        flag = True
                     else:
-                        self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.new_text, 'add')
-
-                elif self.old_text != '' and self.new_text != '':
-
-                    # Modify Prefixes
-                    if row == self.table.rowCount()-1:
                         pass
-                    else:
-                        self.process_entry_from_textboxes_for_task_modify(None, None, self.old_text, self.new_text)
 
-                elif self.old_text != '' and self.new_text == '':
-
-                    # Remove Prefixes
-                    if row == self.table.rowCount()-1:
-                        pass
-                    else:
-                        self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.old_text, 'remove')
-
+                if flag is True:
+                    self.entry_status.showMessage('Spaces and special characters are not allowed in a prefix.',15000)
+                    self.table.item(row,column).setText(self.old_text)
                 else:
-                    pass
+
+                    if self.old_text == '' and self.new_text != '':
+
+                        # Add Prefixes
+                        if iri_inp == '':
+                            pass
+                        else:
+                            self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.new_text, 'add')
+
+                    elif self.old_text != '' and self.new_text != '':
+
+                        # Modify Prefixes
+                        if row == self.table.rowCount()-1:
+                            pass
+                        else:
+                            self.process_entry_from_textboxes_for_task_modify(None, None, self.old_text, self.new_text)
+
+                    elif self.old_text != '' and self.new_text == '':
+
+                        # Remove Prefixes
+                        if row == self.table.rowCount()-1:
+                            pass
+                        else:
+                            self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.old_text, 'remove')
+
+                    else:
+                        pass
 
         self.old_text = None
         self.new_text = None
