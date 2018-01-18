@@ -217,16 +217,6 @@ class Project(QtCore.QObject):
 
         return project_prefixes
 
-    """
-    @property
-    def version(self):
-
-        project_iri = self.iri
-        version = self.IRI_prefixes_nodes_dict[project_iri][3]
-
-        return version
-    """
-
     def get_iri_of_node(self,node_inp):
 
         iris = set()
@@ -809,16 +799,15 @@ class Project(QtCore.QObject):
         corr_iri_of_prefix_inp_in_dict = []
 
         for i in dictionary.keys():
-            if dictionary[i][0] == prefix_inp:
+            if prefix_inp in dictionary[i][0]:
                 corr_iri_of_prefix_inp_in_dict.append(i)
-
 
         if (len(corr_iri_of_prefix_inp_in_dict) > 0):
             if(iri_inp not in corr_iri_of_prefix_inp_in_dict):
                 self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-' + corr_iri_of_prefix_inp_in_dict))
                 return None
             else:
-                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, '[IRI] entry already exists in table')
+                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, '[IRI-prefix] entry already exists in table')
                 return None
 
         if (prefix_inp is None) and (iri_inp in dictionary.keys()):

@@ -400,6 +400,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         print('self.ITEM_CHANGED',self.ITEM_CHANGED)
         print('self.ITEM_PRESSED',self.ITEM_PRESSED)
+        print('self.table.rowCount()',self.table.rowCount())
 
         if self.ITEM_CHANGED is None or self.ITEM_PRESSED is None:
             return
@@ -411,29 +412,40 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
             if column == 0:
                 # add/remove/modify IRI
-                if self.old_text == '' and self.new_text != '':
+                if (self.old_text == '' and self.new_text != '') or \
+                        (self.old_text != '' and self.new_text != '' and row == self.table.rowCount()-1) :
 
                     # Add IRI
-                    if (self.table.item(row,1).text().strip() == ''):
+                    prefix_inp = self.table.item(row, 1).text().strip()
+
+                    if (prefix_inp == ''):
                         if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
                             pass
                         else:
                             self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add')
                     else:
-                        prefix_inp = self.table.item(row, 1).text().strip()
                         self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, prefix_inp, 'add')
 
 
                 elif self.old_text != '' and self.new_text != '':
 
                     # Modify IRI
-                    self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
+                    if row == self.table.rowCount()-1:
+                        pass
+                    else:
+                        self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
 
                 elif self.old_text != '' and self.new_text == '':
 
                     # Remove IRI
-                    self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
-
+                    if row == self.table.rowCount()-1:
+                        pass
+                    else:
+                        prefix_inp = self.table.item(row, 1).text().strip()
+                        if (prefix_inp == ''):
+                            self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
+                        else:
+                            self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, prefix_inp, 'remove')
                 else:
                     pass
             else:
@@ -454,12 +466,18 @@ class PrefixWidget(QtWidgets.QScrollArea):
                 elif self.old_text != '' and self.new_text != '':
 
                     # Modify Prefixes
-                    self.process_entry_from_textboxes_for_task_modify(None, None, self.old_text, self.new_text)
+                    if row == self.table.rowCount()-1:
+                        pass
+                    else:
+                        self.process_entry_from_textboxes_for_task_modify(None, None, self.old_text, self.new_text)
 
                 elif self.old_text != '' and self.new_text == '':
 
                     # Remove Prefixes
-                    self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.old_text, 'remove')
+                    if row == self.table.rowCount()-1:
+                        pass
+                    else:
+                        self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.old_text, 'remove')
 
                 else:
                     pass
