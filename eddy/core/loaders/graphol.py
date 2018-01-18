@@ -1542,6 +1542,29 @@ class GrapholLoaderMixin_v2(object):
 
         return dictionary_to_return
 
+    def import_prefered_prefix_dict(self,e):
+
+        dictionary_to_return = dict()
+
+        sube = e.firstChildElement('key')
+        while not sube.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+
+                key_to_append = sube.attribute('key_value')
+
+                sube_2 = sube.firstChildElement('value')
+                prefered_prefix_to_append = sube_2.attribute('prefix_value')
+
+            except Exception:
+                LOGGER.exception('import_prefered_prefix_dict >>> Failed to fetch key for %s', key_to_append)
+            else:
+                dictionary_to_return[key_to_append] = prefered_prefix_to_append
+            finally:
+                sube = sube.nextSiblingElement('key')
+
+        return dictionary_to_return
+
     #############################################
     #   ONTOLOGY DIAGRAMS : MAIN IMPORT
     #################################
@@ -1757,28 +1780,21 @@ class GrapholLoaderMixin_v2(object):
             QtWidgets.QApplication.processEvents()
             subelement = section.firstChildElement(tag)
 
-            #print('tag',tag)
-            #print('subelement', subelement)
-
             if subelement.isNull():
                 LOGGER.warning('Missing tag <%s> in ontology section, using default: %s', tag, default)
                 return default
             content = subelement.text()
-            #print('content', content)
-            if (not content) and tag is not 'IRI_prefixes_nodes_dict':
+            if (not content) and (tag is not 'IRI_prefixes_nodes_dict') and (tag is not 'prefered_prefix_dict'):
                 LOGGER.warning('Empty tag <%s> in ontology section, using default: %s', tag, default)
                 return default
             LOGGER.debug('Loaded ontology %s: %s', tag, content)
 
             if tag is 'IRI_prefixes_nodes_dict':
-
-                #print('tag is IRI_prefixes_nodes_dict')
-
-                #dictionary_to_return = self.fetch_IRI_prefixes_nodes_dict_from_string(content)
                 dictionary_to_return = self.import_IRI_prefixes_nodes_dict(subelement)
+                return dictionary_to_return
 
-                #print('len(dictionary_to_return)',len(dictionary_to_return))
-
+            if tag is 'prefered_prefix_dict':
+                dictionary_to_return = self.import_prefered_prefix_dict(subelement)
                 return dictionary_to_return
 
             return content
@@ -1791,6 +1807,7 @@ class GrapholLoaderMixin_v2(object):
             version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile(parse('profile', 'OWL 2')),
             IRI_prefixes_nodes_dict = parse('IRI_prefixes_nodes_dict', dict()),
+            prefered_prefix_dict = parse('prefered_prefix_dict', dict()),
             session=self.session)
 
         saved_iri = parse(tag='iri', default=None)

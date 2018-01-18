@@ -166,6 +166,8 @@ class Project(QtCore.QObject):
         self.IRI_prefixes_nodes_dict = kwargs.get('IRI_prefixes_nodes_dict')
         self.init_IRI_prefixes_nodes_dict_with_std_data()
 
+        self.prefered_prefix_dict = kwargs.get('prefered_prefix_dict')
+
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
@@ -203,6 +205,11 @@ class Project(QtCore.QObject):
         if len(project_prefixes) == 0:
             return None
         else:
+            if self.iri in self.prefered_prefix_dict.keys():
+                prefered_prefix = self.prefered_prefix_dict[self.iri]
+                if prefered_prefix in project_prefixes:
+                    return prefered_prefix
+
             return sorted(list(project_prefixes))[0]
 
     @property
@@ -255,17 +262,22 @@ class Project(QtCore.QObject):
 
     def get_prefix_of_node(self,node_inp):
 
-        prefixes = self.get_prefixes_of_node(node_inp)
+        node_prefixes = self.get_prefixes_of_node(node_inp)
 
-        if prefixes is None:
+        if node_prefixes is None:
             return None
-        if 'Error multiple IRIS-' in prefixes:
-            return prefixes
+        if 'Error multiple IRIS-' in node_prefixes:
+            return node_prefixes
 
-        if len(prefixes) == 0:
+        if len(node_prefixes) == 0:
             return None
+        else:
+            if str(node_inp) in self.prefered_prefix_dict.keys():
+                prefered_prefix = self.prefered_prefix_dict[str(node_inp)]
+                if prefered_prefix in node_prefixes:
+                    return prefered_prefix
 
-        return prefixes[0]
+            return node_prefixes[0]
 
     def get_properties_of_node(self,node_inp):
 
@@ -330,6 +342,9 @@ class Project(QtCore.QObject):
         print('Project_prefix(es) - '+str(self.prefixes))
         print('Project_prefix - '+str(self.prefix))
 
+        #prefered_prefix = list(sorted(self.prefixes))[len(self.prefixes) - 1]
+        #self.prefered_prefix_dict[self.iri] = prefered_prefix
+
         for iri in dictionary.keys():
             prefixes = dictionary[iri][0]
             nodes = dictionary[iri][1]
@@ -363,12 +378,27 @@ class Project(QtCore.QObject):
             #if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
             if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+
+                #prefixes_of_node = self.get_prefixes_of_node(n)
+                #prefered_prefix = list(sorted(prefixes_of_node))[len(prefixes_of_node)-1]
+                #self.prefered_prefix_dict[str(n)] = prefered_prefix
+
                 if n.Type is Item.IndividualNode:
                     print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
                 else:
                     print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
 
         print('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
+
+        print('<<<<<<<<<          print_prefered_prefix (END)       >>>>>>>>')
+
+        print('len(self.prefered_prefix_dict)',len(self.prefered_prefix_dict))
+
+        for k in self.prefered_prefix_dict:
+            print('k,-,self.prefered_prefix_dict[k]',k,'-',self.prefered_prefix_dict[k])
+
+        print('<<<<<<<<<          print_prefered_prefix (END)       >>>>>>>>')
+
 
     def copy_IRI_prefixes_nodes_dictionaries(self, from_dict, to_dict):
 
