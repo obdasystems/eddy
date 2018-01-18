@@ -829,6 +829,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
 
         string_IRI_prefixes_nodes_dict = ontology.firstChildElement('IRI_prefixes_nodes_dict').text()
         IRI_prefixes_nodes_dict = self.fetch_IRI_prefixes_nodes_dict_from_string(string_IRI_prefixes_nodes_dict)
+        prefered_prefix_list = None
         LOGGER.debug('Loaded ontology IRI_prefixes_nodes_dict: %s', string_IRI_prefixes_nodes_dict)
 
         if not profileName:
@@ -841,6 +842,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
             path=path,
             #prefix=prefix, iri=iri,
             IRI_prefixes_nodes_dict=IRI_prefixes_nodes_dict,
+            prefered_prefix_list=prefered_prefix_list,
             profile=profile, session=self.session)
 
         saved_iri = iri
@@ -1565,6 +1567,37 @@ class GrapholLoaderMixin_v2(object):
 
         return dictionary_to_return
 
+    def import_prefered_prefix_list(self,e):
+
+        list_to_return = []
+
+        key_list = []
+        value_list = []
+
+        sube = e.firstChildElement('key')
+
+        while not sube.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+
+                key_to_append = sube.attribute('key_value')
+
+                sube_2 = sube.firstChildElement('value')
+                prefered_prefix_to_append = sube_2.attribute('prefix_value')
+
+            except Exception:
+                LOGGER.exception('import_prefered_prefix_dict >>> Failed to fetch key for %s', key_to_append)
+            else:
+                key_list.append(key_to_append)
+                value_list.append(prefered_prefix_to_append)
+            finally:
+                sube = sube.nextSiblingElement('key')
+
+        list_to_return.append(key_list)
+        list_to_return.append(value_list)
+
+        return list_to_return
+
     #############################################
     #   ONTOLOGY DIAGRAMS : MAIN IMPORT
     #################################
@@ -1764,6 +1797,53 @@ class GrapholLoaderMixin_v2(object):
 
         self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
 
+    def convert_string_of_nodes_to_nodes_for_prefered_prefix(self):
+
+        old_list = self.nproject.prefered_prefix_list
+
+        nodes_in_project = self.nproject.nodes()
+
+        key_list = old_list[0]
+        value_list = old_list[1]
+
+        new_key_list = []
+        new_value_list = []
+
+        errored_keys = []
+        errored_values = []
+
+        for c,key in enumerate(key_list):
+            pass
+            flag = False
+
+            for n in nodes_in_project:
+                if str(n) == key:
+                    new_key_list.append(n)
+                    new_value_list.append(value_list[c])
+                    flag = True
+                    break
+
+            if key == self.nproject.iri:
+                flag = True
+                new_key_list.append(key)
+                new_value_list.append(value_list[c])
+
+            if flag is False:
+                errored_keys.append(key)
+                errored_values.append(value_list[c])
+
+        if len(errored_keys) >0:
+            LOGGER.critical('prefered_prefix not imported correctly')
+        else:
+
+            self.nproject.prefered_prefix_list.clear()
+
+            new_list = []
+            new_list.append(new_key_list)
+            new_list.append(new_value_list)
+
+            self.nproject.prefered_prefix_list = new_list
+
     def createProject(self):
         """
         Create the Project by reading data from the parsed QDomDocument.
@@ -1793,9 +1873,9 @@ class GrapholLoaderMixin_v2(object):
                 dictionary_to_return = self.import_IRI_prefixes_nodes_dict(subelement)
                 return dictionary_to_return
 
-            if tag is 'prefered_prefix_dict':
-                dictionary_to_return = self.import_prefered_prefix_dict(subelement)
-                return dictionary_to_return
+            if tag is 'prefered_prefix_list':
+                list_to_return = self.import_prefered_prefix_list(subelement)
+                return list_to_return
 
             return content
 
@@ -1807,7 +1887,8 @@ class GrapholLoaderMixin_v2(object):
             version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile(parse('profile', 'OWL 2')),
             IRI_prefixes_nodes_dict = parse('IRI_prefixes_nodes_dict', dict()),
-            prefered_prefix_dict = parse('prefered_prefix_dict', dict()),
+            #prefered_prefix_dict = parse('prefered_prefix_dict', dict()),
+            prefered_prefix_list=parse('prefered_prefix_list', []),
             session=self.session)
 
         saved_iri = parse(tag='iri', default=None)
@@ -1889,6 +1970,7 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         self.createDiagrams()
 
         self.convert_string_of_nodes_to_nodes()
+        self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
         self.createPredicatesMeta()
         self.projectRender()
@@ -1951,6 +2033,7 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
 
             #self.update_label_of_nodes()
             self.convert_string_of_nodes_to_nodes()
+            self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
             self.createPredicatesMeta()
             self.projectRender()

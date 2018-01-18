@@ -626,7 +626,6 @@ class ProjectInfo(AbstractInfo):
         self.prefixKey.setFont(Font('Roboto', 12))
         self.prefixField = String(self)
         self.prefixField.setFont(Font('Roboto', 12))
-        self.prefixField.setReadOnly(True)
         connect(self.prefixField.editingFinished, self.prefixEditingFinished)
         """
         self.prefixesKey = Key('Prefix(es)', self)
@@ -738,13 +737,13 @@ class ProjectInfo(AbstractInfo):
     def entry_MODIFIED_ok(self, iri_from, prefixes_from, iri_to, prefixes_to):
 
         self.ENTRY_MODIFIED_OK_var.add(True)
-        print('entry_ADD_ok(self): ', iri_from, ',', prefixes_from, ',', iri_to, ',',prefixes_to)
+        #print('entry_ADD_ok(self): ', iri_from, ',', prefixes_from, ',', iri_to, ',',prefixes_to)
 
     @QtCore.pyqtSlot(str, str, str)
     def entry_NOT_OK(self, iri, prefix, message):
 
         self.ENTRY_IGNORE_var.add(True)
-        print('entry_NOT_OK(self): ', iri, ',', prefix, ',', message)
+        #print('entry_NOT_OK(self): ', iri, ',', prefix, ',', message)
 
     @QtCore.pyqtSlot()
     def iriEditingFinished(self):
@@ -804,11 +803,11 @@ class ProjectInfo(AbstractInfo):
             if self.project.prefix != prefix_in_field:
                 #self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
 
-                prefixes = self.project.prefixes
+                prefixes_of_project = self.project.prefixes
 
                 commands = []
 
-                if prefix_in_field in prefixes:
+                if prefix_in_field in prefixes_of_project:
 
                     Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries( \
                         self.project.prefered_prefix_dict, dict())
@@ -816,6 +815,11 @@ class ProjectInfo(AbstractInfo):
                         self.project.prefered_prefix_dict, dict())
 
                     Duplicate_dict_1B[self.project.iri] = prefix_in_field
+
+                    nodes_corr_project_iri = self.project.IRI_prefixes_nodes_dict[self.project.iri][1]
+
+                    for node in nodes_corr_project_iri:
+                        Duplicate_dict_1B[str(node)] = prefix_in_field
 
                     command = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B,\
                                                         self.project.iri, None)
@@ -836,10 +840,10 @@ class ProjectInfo(AbstractInfo):
                         self.project.IRI_prefixes_nodes_dict, dict())
 
                     prefixes_new = set()
-                    prefixes_new = prefixes_new.union(self.project.prefixes)
+                    prefixes_new = prefixes_new.union(prefixes_of_project)
                     prefixes_new.add(prefix_in_field)
 
-                    self.project.modifyIRIPrefixesEntry(self.project.iri, self.project.prefixes, self.project.iri,
+                    self.project.modifyIRIPrefixesEntry(self.project.iri, prefixes_of_project, self.project.iri,
                                                         prefixes_new, Duplicate_dict_1)
 
                     # self.project.print_dictionary(Duplicate_dict_1)
@@ -856,7 +860,11 @@ class ProjectInfo(AbstractInfo):
                         Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
                             self.project.prefered_prefix_dict, dict())
 
+                        nodes_corr_project_iri = Duplicate_dict_1[self.project.iri][1]
+
                         Duplicate_dict_1B[self.project.iri] = prefix_in_field
+                        for node in nodes_corr_project_iri:
+                            Duplicate_dict_1B[str(node)] = prefix_in_field
 
                         command_2 = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B,\
                                                         self.project.iri, None)
@@ -870,12 +878,12 @@ class ProjectInfo(AbstractInfo):
 
                 if commands:
                     if len(commands) > 1:
-                        self.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
+                        self.session.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
                         for command in commands:
-                            self.undostack.push(command)
-                        self.undostack.endMacro()
+                            self.session.undostack.push(command)
+                        self.session.undostack.endMacro()
                     else:
-                        self.undostack.push(first(commands))
+                        self.session.undostack.push(first(commands))
 
         self.prefixField.clearFocus()
 
@@ -953,7 +961,7 @@ class ProjectInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type project: Project
         """
-        """
+
         self.prefixField.setValue(project.prefix)
         self.prefixField.home(True)
         self.prefixField.clearFocus()
@@ -969,11 +977,11 @@ class ProjectInfo(AbstractInfo):
 
             prefixes_str_to_set = prefixes_str_to_set[0:len(prefixes_str_to_set)-2]
             self.prefixesField.setValue(prefixes_str_to_set)
-
+        
         self.prefixesField.home(True)
         self.prefixesField.clearFocus()
         self.prefixesField.deselect()
-
+        """
         self.iriField.setValue(project.iri)
         self.iriField.home(True)
         self.iriField.clearFocus()

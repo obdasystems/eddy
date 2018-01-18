@@ -122,7 +122,7 @@ class Project(QtCore.QObject):
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str,str,str)
 
     sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str)
-    sgnPreferedPrefixDictionaryUpdated = QtCore.pyqtSignal(str,str)
+    sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
 
     def __init__(self, **kwargs):
         """
@@ -167,11 +167,13 @@ class Project(QtCore.QObject):
         self.IRI_prefixes_nodes_dict = kwargs.get('IRI_prefixes_nodes_dict')
         self.init_IRI_prefixes_nodes_dict_with_std_data()
 
-        self.prefered_prefix_dict = kwargs.get('prefered_prefix_dict')
+        self.prefered_prefix_list = kwargs.get('prefered_prefix_list')
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+        connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
+        connect(self.sgnPreferedPrefixListUpdated, self.regenerate_label_of_nodes_for_iri_2)
 
     @property
     def iri(self):
@@ -547,6 +549,12 @@ class Project(QtCore.QObject):
                 LOGGER.critical('multiple IRIs found for node')
 
         #print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
+
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def remove_item_from_prefered_prefix_dict(self, diagram, node):
+
+        if str(node) in self.prefered_prefix_dict.keys():
+            self.prefered_prefix_dict.pop(str(node))
 
     def check_validity_of_IRI(self,iri_inp):
 
@@ -1017,11 +1025,14 @@ class Project(QtCore.QObject):
         self.sgnIRINodeEntryRemoved.emit(iri_inp, str(node_inp), str('Node no longer mapped to IRI'+iri_inp))
         return dictionary
 
-    def node_label_update_core_code(self,node):
+    def node_label_update_core_code(self,node,prefered_prefix):
 
         old_label = node.text()
-        new_label = GenerateNewLabel(self, node).return_label()
-        # CommandLabelChange(node.diagram, node, node.text(), new_label).redo()
+
+        if prefered_prefix is None:
+            new_label = GenerateNewLabel(self, node).return_label()
+        else:
+            new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
 
         if old_label==new_label:
             return
@@ -1069,27 +1080,43 @@ class Project(QtCore.QObject):
                 nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
                 #print('len(nodes_to_update)',len(nodes_to_update))
                 for node in nodes_to_update:
-                    self.node_label_update_core_code(node)
+                    self.node_label_update_core_code(node,None)
         else:
             #print('node_inp is not None')
             for n in self.nodes():
                 if str(n) == node_inp:
-                    self.node_label_update_core_code(n)
+                    self.node_label_update_core_code(n,None)
                     break
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
-        #print('def regenerate_label_of_nodes_for_iri    >>>')
+    @QtCore.pyqtSlot(str, str, str)
+    def regenerate_label_of_nodes_for_iri_2(self, iri_inp, node_inp, prefered_prefix):
 
-        """
-        for node in self.nodes():
-            #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
-            if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
-                            'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
-                new_label = GenerateNewLabel(self, node).return_label()
-                CommandLabelChange(node.diagram, node, None, new_label).redo()
-        """
+        # input string/string
+
+        # print('def regenerate_label_of_nodes_for_iri_2    >>>',iri_inp,' - ',node_inp)
+
+        disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
+        if (node_inp is None) or (node_inp is ''):
+            # print('node_inp is None')
+            if iri_inp in self.IRI_prefixes_nodes_dict.keys():
+                nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
+                # print('len(nodes_to_update)',len(nodes_to_update))
+                for node in nodes_to_update:
+                    self.node_label_update_core_code(node,prefered_prefix)
+        else:
+            # print('node_inp is not None')
+            for n in self.nodes():
+                if str(n) == node_inp:
+                    self.node_label_update_core_code(n,prefered_prefix)
+                    break
+
+        connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 
