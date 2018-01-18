@@ -122,6 +122,7 @@ class Project(QtCore.QObject):
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str,str,str)
 
     sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str)
+    sgnPreferedPrefixDictionaryUpdated = QtCore.pyqtSignal(str,str)
 
     def __init__(self, **kwargs):
         """
@@ -399,6 +400,16 @@ class Project(QtCore.QObject):
 
         print('<<<<<<<<<          print_prefered_prefix (END)       >>>>>>>>')
 
+    def copy_prefered_prefix_dictionaries(self, from_dict, to_dict):
+
+        # entity = ontology_IRI | str(node)
+        for entity in from_dict.keys():
+
+            prefered_prefix = from_dict[entity]
+
+            to_dict[entity] = prefered_prefix
+
+        return to_dict
 
     def copy_IRI_prefixes_nodes_dictionaries(self, from_dict, to_dict):
 

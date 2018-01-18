@@ -41,7 +41,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjectORNodeSetPreferedPrefix
 from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.project import CommandProjectSetIRI
 from eddy.core.commands.project import CommandProjectSetPrefix
@@ -621,7 +621,7 @@ class ProjectInfo(AbstractInfo):
         self.versionField.setFont(Font('Roboto', 12))
         #self.versionField.setReadOnly(True)
         connect(self.versionField.editingFinished, self.versionEditingFinished)
-        """
+
         self.prefixKey = Key('Prefix', self)
         self.prefixKey.setFont(Font('Roboto', 12))
         self.prefixField = String(self)
@@ -635,7 +635,7 @@ class ProjectInfo(AbstractInfo):
         self.prefixesField.setFont(Font('Roboto', 12))
         #self.prefixesField.setReadOnly(True)
         connect(self.prefixesField.editingFinished, self.prefixesEditingFinished)
-
+        """
         self.iriKey = Key('IRI', self)
         self.iriKey.setFont(Font('Roboto', 12))
         self.iriField = String(self)
@@ -656,8 +656,8 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
         self.ontologyPropLayout.addRow(self.versionKey, self.versionField)
-        #self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
-        self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
+        self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
+        #self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
@@ -782,11 +782,104 @@ class ProjectInfo(AbstractInfo):
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        prefix = self.prefixField.value()
-        if self.project.prefix != prefix:
-            self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
+        prefix_in_field = self.prefixField.value().strip()
+
+        flag = False
+
+        for c in prefix_in_field:
+            if c == '':
+                pass
+            elif (not c.isalnum()):
+                flag = True
+                break
+            else:
+                pass
+
+        if flag is True:
+            self.session.statusBar().showMessage(
+                'Spaces in between alphanumeric characters and special characters are not allowed in a prefix.',
+                15000)
+        else:
+
+            if self.project.prefix != prefix_in_field:
+                #self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
+
+                prefixes = self.project.prefixes
+
+                commands = []
+
+                if prefix_in_field in prefixes:
+
+                    Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries( \
+                        self.project.prefered_prefix_dict, dict())
+                    Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
+                        self.project.prefered_prefix_dict, dict())
+
+                    Duplicate_dict_1B[self.project.iri] = prefix_in_field
+
+                    command = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B,\
+                                                        self.project.iri, None)
+
+                    commands.append(command)
+
+                else:
+
+                    self.ENTRY_MODIFIED_OK_var = set()
+                    self.ENTRY_IGNORE_var = set()
+
+                    connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
+                    connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
+
+                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                        self.project.IRI_prefixes_nodes_dict, dict())
+                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                        self.project.IRI_prefixes_nodes_dict, dict())
+
+                    prefixes_new = set()
+                    prefixes_new = prefixes_new.union(self.project.prefixes)
+                    prefixes_new.add(prefix_in_field)
+
+                    self.project.modifyIRIPrefixesEntry(self.project.iri, self.project.prefixes, self.project.iri,
+                                                        prefixes_new, Duplicate_dict_1)
+
+                    # self.project.print_dictionary(Duplicate_dict_1)
+
+                    if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
+                        self.ENTRY_MODIFIED_OK_var = set()
+                        self.ENTRY_IGNORE_var = set()
+
+                        command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                                       [self.project.iri], None)
+
+                        Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries(\
+                            self.project.prefered_prefix_dict, dict())
+                        Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
+                            self.project.prefered_prefix_dict, dict())
+
+                        Duplicate_dict_1B[self.project.iri] = prefix_in_field
+
+                        command_2 = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B,\
+                                                        self.project.iri, None)
+
+                        commands.append(command_1)
+                        commands.append(command_2)
+
+                    self.ENTRY_MODIFIED_OK_var = set()
+                    self.ENTRY_IGNORE_var = set()
+
+
+                if commands:
+                    if len(commands) > 1:
+                        self.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
+                        for command in commands:
+                            self.undostack.push(command)
+                        self.undostack.endMacro()
+                    else:
+                        self.undostack.push(first(commands))
+
         self.prefixField.clearFocus()
 
+    #not used
     @QtCore.pyqtSlot()
     def prefixesEditingFinished(self):
         """

@@ -469,6 +469,7 @@ class PrefixWidget(QtWidgets.QScrollArea):
                         pass
                     elif (not c.isalnum()):
                         flag = True
+                        break
                     else:
                         pass
 

@@ -87,6 +87,7 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
 
 class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
+
     def __init__(self, rc_undo, rc_redo, node, project):
         """
         Initialize the command.
@@ -112,3 +113,48 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
         new_text = self.node.text()
         old_text = GenerateNewLabel(self.project, self.node).return_label()
         CommandLabelChange(self.node.diagram, self.node, old_text, new_text).undo()
+
+
+class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):
+
+    def __init__(self, project, dict_old_val, dict_new_val, iri_to_update, nodes_to_update):
+        super().__init__('update dictionary')
+
+        self.project = project
+        self.dict_old_val = dict_old_val
+        self.dict_new_val = dict_new_val
+        self.iris_to_update = iri_to_update
+        self.nodes_to_update = nodes_to_update
+
+    def redo(self):
+        #print('>>>      CommandProjectORNodeSetPreferedPrefix  (redo)')
+
+        self.project.prefered_prefix_dict.clear()
+        self.project.prefered_prefix_dict = self.project.copy_prefered_prefix_dictionaries(self.dict_new_val,dict())
+
+        if self.nodes_to_update is None:
+            # print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, None) -', iri)
+            self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iris_to_update, None)
+        else:
+            for n in self.nodes_to_update:
+                # print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iris_to_update, str(n))
+
+
+        #print('>>>      sgnPreferedPrefixeDictionaryUpdated  (redo) END')
+
+    def undo(self):
+        #print('>>>      sgnPreferedPrefixeDictionaryUpdated  (undo)')
+
+        self.project.prefered_prefix_dict.clear()
+        self.project.prefered_prefix_dict = self.project.copy_prefered_prefix_dictionaries(self.dict_old_val,dict())
+
+        if self.nodes_to_update is None:
+            # print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, None) -', iri)
+            self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iri_to_update, None)
+        else:
+            for n in self.nodes_to_update:
+                # print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iri_to_update, str(n))
+
+        #print('>>>      CommandProjectORNodeSetPreferedPrefix  (undo) END')

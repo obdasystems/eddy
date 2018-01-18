@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-import os, re, sys
+import os
 import textwrap
 
 from PyQt5 import QtCore

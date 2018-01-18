@@ -37,7 +37,6 @@ from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
 
-
 class CommandProjectSetIRIandPrefix(QtWidgets.QUndoCommand):
     """
     This command is used to set the IRI and prefix of a project.
