@@ -568,7 +568,8 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         for iri in self.project.IRI_prefixes_nodes_dict.keys():
             if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                standard_prefix = list(self.project.IRI_prefixes_nodes_dict[iri][0])[0]
+                standard_prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+                standard_prefix = standard_prefixes[0]
                 self.append_row_and_column_to_table(iri, standard_prefix, False,
                                                     QtGui.QBrush(QtGui.QColor(50, 50, 205, 50)))
 
@@ -598,51 +599,17 @@ class PrefixWidget(QtWidgets.QScrollArea):
             else:
                 self.append_row_and_column_to_table(iri, '', True, None)
 
-
-
         self.append_row_and_column_to_table('','',True,None)
-
 
         self.table.setRowCount(self.table.rowCount() - 1)
 
         self.redraw()
 
-    def convert_set_to_comma_seperated_text(self,inp_set):
-
-        return_str = ''
-
-        for p in inp_set:
-            return_str = return_str+p+', '
-
-        if len(return_str)>=2:
-            if return_str[len(return_str)-2] == ',' and return_str[len(return_str)-1] == ' ':
-                return return_str[0:len(return_str)-2]
-
-        return return_str
-
-    def convert_str_prefixes_in_table_to_set(self,prefixes_str):
-
-        if prefixes_str is None:
-            return None
-
-        prefixes_set = set()
-
-        prefixes_str_split = prefixes_str.split(',')
-
-        for prefix_raw in prefixes_str_split:
-            prefix = prefix_raw.strip()
-            if prefix != '':
-                prefixes_set.add(prefix)
-
-        return prefixes_set
-
-    def process_entry_from_textboxes_for_button_add_or_remove(self,iri_inp,prefixes_inp,inp_task):
+    def process_entry_from_textboxes_for_button_add_or_remove(self,iri_inp,prefix_inp,inp_task):
 
         self.ENTRY_ADD_OK_var = set()
         self.ENTRY_REMOVE_OK_var = set()
         self.ENTRY_IGNORE_var = set()
-
-        prefixes = self.convert_str_prefixes_in_table_to_set(prefixes_inp)
 
         if iri_inp == '':
             print('iri field is empty')
@@ -657,26 +624,27 @@ class PrefixWidget(QtWidgets.QScrollArea):
 
         process = False
 
-        if (prefixes is not None) and (len(prefixes) > 0):
-            for prefix in prefixes:
-                if inp_task == 'remove':
-                    #self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
-                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix, 'remove_entry')
-                    if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
-                        LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
-                        return
-                    else:
-                        process = True
-                elif inp_task == 'add':
-                    #self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
-                    self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix, 'add_entry')
-                    if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var) :
-                        LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
-                        return
-                    else:
-                        process = True
+        if (prefix_inp is not None):
+            if inp_task == 'remove':
+                # self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix_inp,
+                                                       'remove_entry')
+                if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
+                    LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                    return
                 else:
-                    pass
+                    process = True
+            elif inp_task == 'add':
+                # self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix_inp,
+                                                       'add_entry')
+                if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var):
+                    LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
+                    return
+                else:
+                    process = True
+            else:
+                pass
         else:
             if inp_task == 'remove':
                 #self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
@@ -706,13 +674,13 @@ class PrefixWidget(QtWidgets.QScrollArea):
         self.ENTRY_IGNORE_var = set()
 
     # has to be edited
-    def process_entry_from_textboxes_for_task_modify(self, iri_old, iri_new, prefixes_old, prefixes_new):
+    def process_entry_from_textboxes_for_task_modify(self, iri_old, iri_new, prefix_old, prefix_new):
 
         print('process_entry_from_textboxes_for_task_modify >>>')
         print('iri_old', iri_old)
         print('iri_new', iri_new)
-        print('prefixes_old', prefixes_old)
-        print('prefixes_new', prefixes_new)
+        print('prefixes_old', prefix_old)
+        print('prefixes_new', prefix_new)
 
         self.ENTRY_MODIFY_OK_var = set()
         self.ENTRY_IGNORE_var = set()
@@ -745,28 +713,23 @@ class PrefixWidget(QtWidgets.QScrollArea):
             else:
                 process = True
 
-        if (prefixes_old is not None) and (prefixes_new is not None):
+        if (prefix_old is not None) and (prefix_new is not None):
 
-            prefixes_old_set = self.convert_str_prefixes_in_table_to_set(prefixes_old)
-            prefixes_new_set = self.convert_str_prefixes_in_table_to_set(prefixes_new)
+            #prefixes_old_list = self.convert_str_prefixes_in_table_to_list(prefixes_old)
+            #prefixes_new_list = self.convert_str_prefixes_in_table_to_list(prefixes_new)
 
-            # case2     prefix(es)->prefix(es)'          if prefix(es)==prefix(es)' no need for a transaction
-            if (prefixes_old_set.issubset(prefixes_new_set) and prefixes_new_set.issubset(
-                    prefixes_old_set)):
+            # case2     prefix->prefix'          if prefix==prefix' no need for a transaction
+            if (prefix_old == prefix_new):
                 self.entry_status.showMessage(
                     'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                 return
 
-            self.project.modifyIRIPrefixesEntry(None, prefixes_old_set, None, prefixes_new_set,
+            self.project.modifyIRIPrefixesEntry(None, [prefix_old], None, [prefix_new],
                                                 Duplicate_IRI_prefixes_nodes_dict_1)
 
             for iri_key in Duplicate_IRI_prefixes_nodes_dict_1.keys():
                 prefixes_for_iri_key = Duplicate_IRI_prefixes_nodes_dict_1[iri_key][0]
-                C1 = prefixes_for_iri_key.issubset(prefixes_old_set) and prefixes_old_set.issubset(
-                    prefixes_for_iri_key)
-                C2 = prefixes_for_iri_key.issubset(prefixes_new_set) and prefixes_new_set.issubset(
-                    prefixes_for_iri_key)
-                if C1 or C2:
+                if (prefix_old in prefixes_for_iri_key) or (prefix_new in prefixes_for_iri_key):
                     iris_to_be_updated.append(iri_key)
 
             if (False in self.ENTRY_MODIFY_OK_var) or (True in self.ENTRY_IGNORE_var):

@@ -122,7 +122,7 @@ class Project(QtCore.QObject):
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str,str,str)
 
     sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str)
-    sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
+    #sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
 
     def __init__(self, **kwargs):
         """
@@ -167,13 +167,13 @@ class Project(QtCore.QObject):
         self.IRI_prefixes_nodes_dict = kwargs.get('IRI_prefixes_nodes_dict')
         self.init_IRI_prefixes_nodes_dict_with_std_data()
 
-        self.prefered_prefix_list = kwargs.get('prefered_prefix_list')
+        #self.prefered_prefix_list = kwargs.get('prefered_prefix_list')
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
-        connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
+        #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
-        connect(self.sgnPreferedPrefixListUpdated, self.regenerate_label_of_nodes_for_iri_2)
+        #connect(self.sgnPreferedPrefixListUpdated, self.regenerate_label_of_nodes_for_iri_2)
 
     @property
     def iri(self):
@@ -208,12 +208,7 @@ class Project(QtCore.QObject):
         if len(project_prefixes) == 0:
             return None
         else:
-            if self.iri in self.prefered_prefix_dict.keys():
-                prefered_prefix = self.prefered_prefix_dict[self.iri]
-                if prefered_prefix in project_prefixes:
-                    return prefered_prefix
-
-            return sorted(list(project_prefixes))[0]
+            return project_prefixes[len(project_prefixes)-1]
 
     @property
     def prefixes(self):
@@ -275,12 +270,7 @@ class Project(QtCore.QObject):
         if len(node_prefixes) == 0:
             return None
         else:
-            if str(node_inp) in self.prefered_prefix_dict.keys():
-                prefered_prefix = self.prefered_prefix_dict[str(node_inp)]
-                if prefered_prefix in node_prefixes:
-                    return prefered_prefix
-
-            return node_prefixes[0]
+            return node_prefixes[len(node_prefixes)-1]
 
     def get_properties_of_node(self,node_inp):
 
@@ -345,25 +335,13 @@ class Project(QtCore.QObject):
         print('Project_prefix(es) - '+str(self.prefixes))
         print('Project_prefix - '+str(self.prefix))
 
-        #prefered_prefix = list(sorted(self.prefixes))[len(self.prefixes) - 1]
-        #self.prefered_prefix_dict[self.iri] = prefered_prefix
-
         for iri in dictionary.keys():
             prefixes = dictionary[iri][0]
             nodes = dictionary[iri][1]
             properties = dictionary[iri][2]
-            #version = dictionary[iri][3]
 
-            #print(iri, '-', prefixes, '-', nodes, '-', properties, '-', version)
             print(str(iri)+ ' - '+ str(prefixes)+ ' - '+ str(nodes)+ ' - '+ str(properties))
         print('********************')
-
-        """
-        for p in self.nodes():
-            print(str(p.text()))
-
-        print('********************')
-        """
 
         print('*********        No IRI for Nodes        ***********')
 
@@ -382,10 +360,6 @@ class Project(QtCore.QObject):
             if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
 
-                #prefixes_of_node = self.get_prefixes_of_node(n)
-                #prefered_prefix = list(sorted(prefixes_of_node))[len(prefixes_of_node)-1]
-                #self.prefered_prefix_dict[str(n)] = prefered_prefix
-
                 if n.Type is Item.IndividualNode:
                     print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
                 else:
@@ -393,15 +367,7 @@ class Project(QtCore.QObject):
 
         print('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
 
-        print('<<<<<<<<<          print_prefered_prefix (END)       >>>>>>>>')
-
-        print('len(self.prefered_prefix_dict)',len(self.prefered_prefix_dict))
-
-        for k in self.prefered_prefix_dict:
-            print('k,-,self.prefered_prefix_dict[k]',k,'-',self.prefered_prefix_dict[k])
-
-        print('<<<<<<<<<          print_prefered_prefix (END)       >>>>>>>>')
-
+    #not used
     def copy_prefered_prefix_dictionaries(self, from_dict, to_dict):
 
         # entity = ontology_IRI | str(node)
@@ -423,12 +389,12 @@ class Project(QtCore.QObject):
             #version = from_dict[iri][3]
 
             values = []
-            to_prefixes = set()
+            to_prefixes = []
             to_nodes = set()
             to_properties = set()
             #to_version = None
 
-            to_prefixes = to_prefixes.union(prefixes)
+            to_prefixes.extend(prefixes)
             to_nodes = to_nodes.union(nodes)
             to_properties = to_properties.union(properties)
             #to_version = version
@@ -444,14 +410,23 @@ class Project(QtCore.QObject):
 
     def init_IRI_prefixes_nodes_dict_with_std_data(self):
 
+        print('init_IRI_prefixes_nodes_dict_with_std_data')
+
         for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
 
             if std_iri in self.IRI_prefixes_nodes_dict.keys():
                 continue
 
             std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
-            prefixes = set()
-            prefixes.add(std_prefix)
+            prefixes = []
+
+            print('std_iri, std_prefix, prefixes',std_iri, std_prefix, prefixes)
+
+            if std_prefix not in prefixes:
+                prefixes.append(std_prefix)
+
+            print('std_iri, std_prefix, prefixes',std_iri, std_prefix, prefixes)
+
             nodes = set()
             properties = set()
             properties.add('Standard_IRI')
@@ -462,6 +437,8 @@ class Project(QtCore.QObject):
             values.append(properties)
 
             self.IRI_prefixes_nodes_dict[std_iri] = values
+
+        print('init_IRI_prefixes_nodes_dict_with_std_data END')
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
@@ -550,6 +527,7 @@ class Project(QtCore.QObject):
 
         #print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
+    #not used
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_prefered_prefix_dict(self, diagram, node):
 
@@ -583,9 +561,10 @@ class Project(QtCore.QObject):
     def get_prefix_for_iri(self,inp_iri):
 
         prefixes = self.IRI_prefixes_nodes_dict[inp_iri][0]
-        sorted_lst_prefixes = sorted(list(prefixes))
+        #sorted_lst_prefixes = sorted(list(prefixes))
 
-        return sorted_lst_prefixes[0]
+        return prefixes[len(prefixes)-1]
+
     """
     #not used as of now
     def AddORremoveORmodifyVersionforIRI(self, iri_inp, version_to, dictionary, **kwargs):
@@ -692,7 +671,7 @@ class Project(QtCore.QObject):
             temp_nodes = dictionary[from_iri][1]
             temp_properties = dictionary[from_iri][2]
 
-            dictionary[from_iri][0] = set()
+            dictionary[from_iri][0] = []
             dictionary[from_iri][1] = set()
             dictionary[from_iri][2] = set()
 
@@ -709,7 +688,11 @@ class Project(QtCore.QObject):
             if (False in ENTRY_ADD_OK_var) or (True in ENTRY_IGNORE_var):
                 return str('Error could not modify IRI from '+from_iri+' to '+to_iri)
 
-            dictionary[to_iri][0] = dictionary[to_iri][0].union(temp_prefixes)
+            #dictionary[to_iri][0] = dictionary[to_iri][0].extend(temp_prefixes)
+            for p in temp_prefixes:
+                if p not in dictionary[to_iri][0]:
+                    dictionary[to_iri][0].append(p)
+
             dictionary[to_iri][1] = dictionary[to_iri][1].union(temp_nodes)
             dictionary[to_iri][2] = dictionary[to_iri][2].union(temp_properties)
 
@@ -717,12 +700,35 @@ class Project(QtCore.QObject):
 
         def modify_prefixes(iri_inp, from_prefixes, to_prefixes, dictionary):
 
-            if (to_prefixes.issubset(from_prefixes) and from_prefixes.issubset(to_prefixes)):
+            flag = set()
+            if len(from_prefixes) == len(to_prefixes):
+                for c,p in enumerate(from_prefixes):
+                    if to_prefixes[c] == p:
+                        flag.add(True)
+                    else:
+                        flag.add(False)
+            else:
+                flag.add(False)
+
+            #if (to_prefixes.issubset(from_prefixes) and from_prefixes.issubset(to_prefixes)):
+            if False not in flag:
                 return 'Nothing to modify in prefixes'
 
             prefixes = dictionary[iri_inp][0]
-            equal = (prefixes.issubset(from_prefixes) and from_prefixes.issubset(prefixes))
-            if equal:
+            #equal = (prefixes.issubset(from_prefixes) and from_prefixes.issubset(prefixes))
+            # check if inp_iri maps to from_prefixes
+
+            flag_2 = set()
+            if len(from_prefixes) == len(prefixes):
+                for c,p in enumerate(from_prefixes):
+                    if prefixes[c] == p:
+                        flag_2.add(True)
+                    else:
+                        flag_2.add(False)
+            else:
+                flag_2.add(False)
+
+            if False not in flag_2:
                 # dictionary[i][1] = set()
                 for p in from_prefixes:
                     # self.removeIRIPrefixEntry(dictionary, i, p)
@@ -736,7 +742,7 @@ class Project(QtCore.QObject):
                     if (False in ENTRY_ADD_OK_var) or (True in ENTRY_IGNORE_var):
                         return 'Error could not modify prefixes from ' + str(from_prefixes) + ' to ' + str(to_prefixes)
             else:
-                pass
+                return 'Error IRI(input) does not correspond to var from_prefixes ' + str(iri_inp) + ' , ' + str(from_prefixes)
 
             return 'Success'
 
@@ -763,7 +769,18 @@ class Project(QtCore.QObject):
 
             for iri_key in dictionary.keys():
                 prefixes_of_iri_key =  dictionary[iri_key][0]
-                if prefixes_of_iri_key.issubset(prefixes_from_val) and prefixes_from_val.issubset(prefixes_of_iri_key):
+                #if prefixes_of_iri_key.issubset(prefixes_from_val) and prefixes_from_val.issubset(prefixes_of_iri_key):
+                flag = set()
+                if len(prefixes_of_iri_key) == len(prefixes_from_val):
+                    for c, p in enumerate(prefixes_of_iri_key):
+                        if prefixes_from_val[c] == p:
+                            flag.add(True)
+                        else:
+                            flag.add(False)
+                else:
+                    flag.add(False)
+
+                if False not in flag:
                     iri_keys.append(iri_key)
 
             if len(iri_keys) > 1:
@@ -876,7 +893,7 @@ class Project(QtCore.QObject):
             if prefix_inp is not None:
                 #Case A1
                 #print('Case A1')
-                dictionary[iri_inp][0].add(prefix_inp)
+                dictionary[iri_inp][0].append(prefix_inp)
                 self.sgnIRIPrefixEntryAdded.emit(iri_inp, prefix_inp, 'prefix added to existing IRI')
                 return dictionary
             else:
@@ -888,8 +905,8 @@ class Project(QtCore.QObject):
             if prefix_inp is not None:
                 #Case B1
                 #print('Case B1')
-                prefixes = set()
-                prefixes.add(prefix_inp)
+                prefixes = []
+                prefixes.append(prefix_inp)
                 nodes = set()
                 properties = set()
                 #version = iri_version
@@ -906,7 +923,7 @@ class Project(QtCore.QObject):
             else:
                 # Case B2
                 #print('Case B2')
-                prefixes = set()
+                prefixes = []
                 nodes = set()
                 properties = set()
                 #version = iri_version
@@ -1025,14 +1042,14 @@ class Project(QtCore.QObject):
         self.sgnIRINodeEntryRemoved.emit(iri_inp, str(node_inp), str('Node no longer mapped to IRI'+iri_inp))
         return dictionary
 
-    def node_label_update_core_code(self,node,prefered_prefix):
+    def node_label_update_core_code(self,node):
 
         old_label = node.text()
 
-        if prefered_prefix is None:
-            new_label = GenerateNewLabel(self, node).return_label()
-        else:
-            new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
+        #if prefered_prefix is None:
+        new_label = GenerateNewLabel(self, node).return_label()
+        #else:
+            #new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
 
         if old_label==new_label:
             return
@@ -1080,17 +1097,18 @@ class Project(QtCore.QObject):
                 nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
                 #print('len(nodes_to_update)',len(nodes_to_update))
                 for node in nodes_to_update:
-                    self.node_label_update_core_code(node,None)
+                    self.node_label_update_core_code(node)
         else:
             #print('node_inp is not None')
             for n in self.nodes():
                 if str(n) == node_inp:
-                    self.node_label_update_core_code(n,None)
+                    self.node_label_update_core_code(n)
                     break
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
+    #not used
     @QtCore.pyqtSlot(str, str, str)
     def regenerate_label_of_nodes_for_iri_2(self, iri_inp, node_inp, prefered_prefix):
 

@@ -520,7 +520,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
             iri_to_save = self.document.createElement('iri')
             iri_to_save.setAttribute('iri_value', iri_key)
 
-            prefixes_ = list(dict[iri_key][0])
+            prefixes_ = dict[iri_key][0]
             nodes_ = list(dict[iri_key][1])
             properties_ = list(dict[iri_key][2])
 
@@ -552,7 +552,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         #IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(string_format_dictionary))
         #IRI_prefixes_nodes_dict.appendChild(self.document.createTextNode(new_lines))
 
-
+        """
         prefered_prefix_list = self.document.createElement('prefered_prefix_list')
         dict_2 = self.project.prefered_prefix_list
 
@@ -574,6 +574,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
 
             key_to_save.appendChild(value_to_save)
             prefered_prefix_list.appendChild(key_to_save)
+        """
 
         section = self.document.createElement('ontology')
 
@@ -583,7 +584,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         #section.appendChild(iri)
         section.appendChild(profile)
         section.appendChild(IRI_prefixes_nodes_dict)
-        section.appendChild(prefered_prefix_list)
+        #section.appendChild(prefered_prefix_list)
 
         self.document.documentElement().appendChild(section)
 

@@ -766,11 +766,11 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
             properties = IRI_prefixes_nodes_dict_old[iri][2]
 
             values = []
-            to_prefixes = set()
+            to_prefixes = []
             to_nodes = set()
             to_properties = set()
 
-            to_prefixes = to_prefixes.union(prefixes)
+            to_prefixes.extend(prefixes)
             to_nodes = to_nodes.union(nodes)
             to_properties = to_properties.union(properties)
 
@@ -807,6 +807,8 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         Initialize the project instance by reading project metadata from XML file.
         :raise ProjectNotValidError: If the project metadata file is missing or not readable.
         """
+        print('importProjectFromXML >>> ')
+
         QtWidgets.QApplication.processEvents()
 
         LOGGER.info('Loading ontology metadata from %s', self.projectMetaDataPath)
@@ -827,10 +829,9 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         LOGGER.debug('Loaded ontology IRI: %s', iri)
         profileName = ontology.firstChildElement('profile').text()
 
-        string_IRI_prefixes_nodes_dict = ontology.firstChildElement('IRI_prefixes_nodes_dict').text()
-        IRI_prefixes_nodes_dict = self.fetch_IRI_prefixes_nodes_dict_from_string(string_IRI_prefixes_nodes_dict)
-        prefered_prefix_list = None
-        LOGGER.debug('Loaded ontology IRI_prefixes_nodes_dict: %s', string_IRI_prefixes_nodes_dict)
+        IRI_prefixes_nodes_dict = ontology.firstChildElement('IRI_prefixes_nodes_dict').text()
+
+        LOGGER.debug('Loaded ontology IRI_prefixes_nodes_dict: %s', IRI_prefixes_nodes_dict)
 
         if not profileName:
             profileName = 'OWL 2'
@@ -842,7 +843,6 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
             path=path,
             #prefix=prefix, iri=iri,
             IRI_prefixes_nodes_dict=IRI_prefixes_nodes_dict,
-            prefered_prefix_list=prefered_prefix_list,
             profile=profile, session=self.session)
 
         saved_iri = iri
@@ -855,9 +855,9 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
 
             # print('(saved_iri is not None) and (saved_iri not in self.project.IRI_prefixes_nodes_dict.keys())')
 
-            prefixes = set()
+            prefixes = []
             if saved_prefix is not None:
-                prefixes.add(saved_prefix)
+                prefixes.append(saved_prefix)
             nodes = set()
             properties = set()
             properties.add('Project_IRI')
@@ -872,6 +872,8 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
 
         # print('self.project.iri',self.project.iri)
         # self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
+
+        print('importProjectFromXML >>> END')
 
     def importMetaFromXML(self):
         """
@@ -1466,16 +1468,23 @@ class GrapholLoaderMixin_v2(object):
     #   ONTOLOGY IRI dictionary : MAIN IMPORT
     #################################
 
-    def import_prefixes_nodes_or_properties_of_iri(self,e, inp_type):
-
-        return_set = set()
+    def import_prefixes_nodes_or_properties_of_iri(self, e, inp_type):
 
         if inp_type == 'prefixes':
+
+            return_set = []
             inp_var = 'prefix'
+
         elif inp_type == 'nodes':
+
+            return_set = set()
             inp_var = 'node'
+
         elif inp_type == 'properties':
+
+            return_set = set()
             inp_var = 'property'
+
         else:
             pass
 
@@ -1492,7 +1501,10 @@ class GrapholLoaderMixin_v2(object):
                 LOGGER.exception('Failed to fetch prefixes_nodes_or_properties %s',var_to_append)
             else:
 
-                return_set.add(var_to_append)
+                if inp_type == 'prefixes':
+                    return_set.append(var_to_append)
+                else:
+                    return_set.add(var_to_append)
 
             finally:
                 sube = sube.nextSiblingElement(inp_var)
@@ -1544,6 +1556,7 @@ class GrapholLoaderMixin_v2(object):
 
         return dictionary_to_return
 
+    #not used
     def import_prefered_prefix_dict(self,e):
 
         dictionary_to_return = dict()
@@ -1753,6 +1766,70 @@ class GrapholLoaderMixin_v2(object):
 
         IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
 
+        self.nproject.print_dictionary(IRI_prefixes_nodes_dict_old)
+
+        print('******  IRI_prefixes_nodes_dict_old  END ******')
+
+        IRI_prefixes_nodes_dict_new = dict()
+
+        for iri in IRI_prefixes_nodes_dict_old.keys():
+            prefixes = IRI_prefixes_nodes_dict_old[iri][0]
+            nodes = IRI_prefixes_nodes_dict_old[iri][1]
+            properties = IRI_prefixes_nodes_dict_old[iri][2]
+
+            values = []
+            to_prefixes = []
+            to_nodes = set()
+            to_properties = set()
+
+            print('iri,to_prefixes,prefixes', iri, to_prefixes, prefixes)
+
+            to_prefixes.extend(prefixes)
+
+            print('iri,to_prefixes,prefixes', iri, to_prefixes, prefixes)
+
+            to_nodes = to_nodes.union(nodes)
+            to_properties = to_properties.union(properties)
+
+            values.append(to_prefixes)
+            values.append(to_nodes)
+            values.append(to_properties)
+
+            IRI_prefixes_nodes_dict_new[iri] = values
+
+        for iri in IRI_prefixes_nodes_dict_new.keys():
+            nodes_str_or_just_node = IRI_prefixes_nodes_dict_new[iri][1]
+            new_nodes_entry = set()
+
+            for node_str_or_just_node in nodes_str_or_just_node:
+                if str(type(node_str_or_just_node)) == '<class \'str\'>':
+                    node_str = node_str_or_just_node
+                    for node in nodes_in_project:
+                        if node_str == str(node):
+                            new_nodes_entry.add(node)
+                else:
+                    node = node_str_or_just_node
+                    new_nodes_entry.add(node)
+
+            for node in new_nodes_entry:
+                if (str(node) not in nodes_str_or_just_node) and (node not in new_nodes_entry):
+                    LOGGER.critical('node is missing' + str(node))
+
+            IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
+
+        self.nproject.print_dictionary(IRI_prefixes_nodes_dict_new)
+
+        self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(
+            IRI_prefixes_nodes_dict_new, dict())
+
+    def convert_string_of_nodes_to_nodes_2(self):
+
+        LOGGER.debug('Convert nodes from string format to eddy nodes format in IRI-Prefixes dictionary')
+
+        nodes_in_project = self.nproject.nodes()
+
+        IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
+
         IRI_prefixes_nodes_dict_new = dict()
 
         for iri in IRI_prefixes_nodes_dict_old.keys():
@@ -1797,6 +1874,7 @@ class GrapholLoaderMixin_v2(object):
 
         self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
 
+    #not used
     def convert_string_of_nodes_to_nodes_for_prefered_prefix(self):
 
         old_list = self.nproject.prefered_prefix_list
@@ -1873,10 +1951,6 @@ class GrapholLoaderMixin_v2(object):
                 dictionary_to_return = self.import_IRI_prefixes_nodes_dict(subelement)
                 return dictionary_to_return
 
-            if tag is 'prefered_prefix_list':
-                list_to_return = self.import_prefered_prefix_list(subelement)
-                return list_to_return
-
             return content
 
         self.nproject = Project(
@@ -1887,8 +1961,6 @@ class GrapholLoaderMixin_v2(object):
             version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile(parse('profile', 'OWL 2')),
             IRI_prefixes_nodes_dict = parse('IRI_prefixes_nodes_dict', dict()),
-            #prefered_prefix_dict = parse('prefered_prefix_dict', dict()),
-            prefered_prefix_list=parse('prefered_prefix_list', []),
             session=self.session)
 
         saved_iri = parse(tag='iri', default=None)
@@ -1901,9 +1973,9 @@ class GrapholLoaderMixin_v2(object):
 
             #print('(saved_iri is not None) and (saved_iri not in self.nproject.IRI_prefixes_nodes_dict.keys())')
 
-            prefixes = set()
+            prefixes = []
             if saved_prefix is not None:
-                prefixes.add(saved_prefix)
+                prefixes.append(saved_prefix)
             nodes = set()
             properties = set()
             properties.add('Project_IRI')
@@ -1970,7 +2042,7 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         self.createDiagrams()
 
         self.convert_string_of_nodes_to_nodes()
-        self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
+        #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
         self.createPredicatesMeta()
         self.projectRender()
@@ -2025,7 +2097,9 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
         """
         try:
             self.createDomDocument()
+            print('self.createDomDocument()')
         except (ProjectNotFoundError, ProjectVersionError):
+            print('self.createLegacyProject()')
             self.createLegacyProject()
         else:
             self.createProject()
@@ -2033,7 +2107,7 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
 
             #self.update_label_of_nodes()
             self.convert_string_of_nodes_to_nodes()
-            self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
+            #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
             self.createPredicatesMeta()
             self.projectRender()

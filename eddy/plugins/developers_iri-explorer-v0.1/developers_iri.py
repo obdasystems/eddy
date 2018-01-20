@@ -220,12 +220,14 @@ class IriWidget(QtWidgets.QScrollArea):
         self.slider.setMouseTracking(True)
         self.slider.setTracking(True)
         """
+        """
         self.entry_button = QtWidgets.QPushButton()
         self.entry_button.setText('+++')
         self.remove_entry_button = QtWidgets.QPushButton()
         self.remove_entry_button.setText('---')
         self.modify_entry_button = QtWidgets.QPushButton()
         self.modify_entry_button.setText('M')
+        """
         self.dictionary_display_button = QtWidgets.QPushButton()
         self.dictionary_display_button.setText('D')
         self.hide_or_show_nodes_button = QtWidgets.QPushButton()
@@ -235,17 +237,17 @@ class IriWidget(QtWidgets.QScrollArea):
         self.buttons_layout.setAlignment(QtCore.Qt.AlignTop)
         self.buttons_layout.setContentsMargins(0, 0, 0, 0)
         self.buttons_layout.setSpacing(0)
-        self.buttons_layout.addWidget(self.entry_button)
-        self.buttons_layout.addWidget(self.remove_entry_button)
-        self.buttons_layout.addWidget(self.modify_entry_button)
+        #self.buttons_layout.addWidget(self.entry_button)
+        #self.buttons_layout.addWidget(self.remove_entry_button)
+        #self.buttons_layout.addWidget(self.modify_entry_button)
         self.buttons_layout.addWidget(self.dictionary_display_button)
         self.buttons_layout.addWidget(self.hide_or_show_nodes_button)
 
-        connect(self.entry_button.pressed, self.button_add)
-        connect(self.remove_entry_button.pressed, self.button_remove)
+        #connect(self.entry_button.pressed, self.button_add)
+        #connect(self.remove_entry_button.pressed, self.button_remove)
         connect(self.dictionary_display_button.pressed, self.display_IRIPrefixesNodesDict)
         connect(self.hide_or_show_nodes_button.pressed, self.hide_or_show_nodes)
-        connect(self.modify_entry_button.pressed, self.process_entry_from_textboxes_for_button_modify)
+        #connect(self.modify_entry_button.pressed, self.process_entry_from_textboxes_for_button_modify)
 
         #connect(self.slider.sliderMoved, self.slider_moved)
 
@@ -625,14 +627,14 @@ class IriWidget(QtWidgets.QScrollArea):
         self.process_entry_from_textboxes_for_button_add_or_remove()
         self.ADD_OR_REMOVE = None
 
-    def convert_prefixes_in_table_to_set(self,prefixes_str):
+    def convert_prefixes_in_table_to_list(self,prefixes_str):
 
         if prefixes_str is None:
             return None
 
-        prefixes_set = set()
+        prefixes_list = []
 
-        if (prefixes_str[0] == '{') and (prefixes_str[len(prefixes_str)-1] == '}'):
+        if (prefixes_str[0] == '[') and (prefixes_str[len(prefixes_str)-1] == ']'):
             prefixes_str = prefixes_str[1:len(prefixes_str)-1]
         else:
             pass
@@ -643,10 +645,10 @@ class IriWidget(QtWidgets.QScrollArea):
             if (prefix_raw[0] == '\'') and (prefix_raw[len(prefix_raw)-1] == '\''):
                 prefix = prefix_raw[1:len(prefix_raw) - 1]
                 if prefix != '':
-                    prefixes_set.add(prefix)
+                    prefixes_list.add(prefix)
 
-        print('return prefixes_set',prefixes_set)
-        return prefixes_set
+        print('return prefixes_list',prefixes_list)
+        return prefixes_list
 
     def process_entry_from_textboxes_for_button_add_or_remove(self):
 
@@ -654,12 +656,12 @@ class IriWidget(QtWidgets.QScrollArea):
         self.ENTRY_REMOVE_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
-        prefixes = set()
+        prefixes = []
         prefixes_inp = self.prefix_input_box.text().strip()
         prefixes_raw = prefixes_inp.split(',')
         for p in prefixes_raw:
             if p.strip() != '':
-                prefixes.add(p.strip())
+                prefixes.append(p.strip())
 
         iri = self.iri_input_box.text().strip()
 
@@ -790,7 +792,7 @@ class IriWidget(QtWidgets.QScrollArea):
                 if condition_prefixes_item_selected_B is True:
                     item_prefixes = items_selected[1].text()
 
-            item_prefixes_set = self.convert_prefixes_in_table_to_set(item_prefixes)
+            item_prefixes_list = self.convert_prefixes_in_table_to_list(item_prefixes)
 
             """
             print('item_iri',item_iri)
@@ -862,16 +864,16 @@ class IriWidget(QtWidgets.QScrollArea):
                     if condition_iri_input_box_is_empty is True:
                         print('case2.1')
                         # case2.1     prefix(es)->prefix(es)'          if prefix(es)==prefix(es)' no need for a transaction
-                        if (item_prefixes_set.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_set)):
+                        if (item_prefixes_list.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_list)):
                             self.entry_status.showMessage(
                                 'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                             return
 
-                        self.project.modifyIRIPrefixesEntry(None,item_prefixes_set,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                        self.project.modifyIRIPrefixesEntry(None,item_prefixes_list,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
 
                         for iri_key in Duplicate_IRI_prefixes_nodes_dict_1.keys():
                             prefixes_for_iri_key = Duplicate_IRI_prefixes_nodes_dict_1[iri_key][0]
-                            C1 = prefixes_for_iri_key.issubset(item_prefixes_set) and item_prefixes_set.issubset(prefixes_for_iri_key)
+                            C1 = prefixes_for_iri_key.issubset(item_prefixes_list) and item_prefixes_list.issubset(prefixes_for_iri_key)
                             C2 = prefixes_for_iri_key.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(prefixes_for_iri_key)
                             if C1 or C2:
                                 iris_to_be_updated.append(iri_key)
@@ -894,7 +896,7 @@ class IriWidget(QtWidgets.QScrollArea):
                     # case3.1       [IRI,prefix(es)] -> [IRI']
                     print('case3.1')
 
-                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,iri_input_box,None,Duplicate_IRI_prefixes_nodes_dict_1)
+                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_list,iri_input_box,None,Duplicate_IRI_prefixes_nodes_dict_1)
                     iris_to_be_updated.append(item_iri)
                     iris_to_be_updated.append(iri_input_box)
 
@@ -906,12 +908,12 @@ class IriWidget(QtWidgets.QScrollArea):
                 elif (condition_iri_input_box_is_empty is True) and (condition_prefixes_input_box_is_empty is False):
                     # case3.2       [IRI,prefix(es)] -> [prefix(es)']       if prefix==prefix' no need for a transaction
                     print('case3.2')
-                    if (item_prefixes_set.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_set)):
+                    if (item_prefixes_list.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_list)):
                         self.entry_status.showMessage(
                             'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                         return
 
-                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_list,None,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
                     iris_to_be_updated.append(item_iri)
 
                     for iri_key in Duplicate_IRI_prefixes_nodes_dict_1.keys():
@@ -930,11 +932,11 @@ class IriWidget(QtWidgets.QScrollArea):
                             condition_prefixes_input_box_is_empty is False):
                     # case3.3       [IRI,prefix(es)] -> [IRI',prefix(es)']   if prefix(es)==prefix(es)' and iri==iri' no need for a transaction
                     print('case3.3')
-                    if (item_prefixes_set.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_set)) and (item_iri == iri_input_box):
+                    if (item_prefixes_list.issubset(prefixes_input_box_set) and prefixes_input_box_set.issubset(item_prefixes_list)) and (item_iri == iri_input_box):
                         self.entry_status.showMessage('IRI and prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                         return
 
-                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_set,iri_input_box,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
+                    self.project.modifyIRIPrefixesEntry(item_iri,item_prefixes_list,iri_input_box,prefixes_input_box_set,Duplicate_IRI_prefixes_nodes_dict_1)
                     iris_to_be_updated.append(item_iri)
                     iris_to_be_updated.append(iri_input_box)
 
