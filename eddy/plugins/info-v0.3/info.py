@@ -757,6 +757,13 @@ class ProjectInfo(AbstractInfo):
             self.updateData(self.project)
             return
 
+        IRI_valid = self.project.check_validity_of_IRI(new_iri)
+
+        if(IRI_valid is False):
+            self.session.statusBar().showMessage('IRI is invalid.', 15000)
+            self.updateData(self.project)
+            return
+
         if (self.project.iri != new_iri) and (new_iri != ''):
             #self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
 

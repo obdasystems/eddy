@@ -35,7 +35,7 @@
 
 from PyQt5 import QtCore
 
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandCommandProjetSetIRIofCutNodes
 from eddy.core.commands.common import CommandItemsAdd
 from eddy.core.output import getLogger
 
@@ -109,14 +109,19 @@ class Clipboard(QtCore.QObject):
             Create a copy of the given node generating a new id.
             :type node: AbstractNode
             """
+            print('ncopy >>> node',node)
             copy = node.copy(diagram)
             copy.id = diagram.guid.next('n')
+            print('copy.id',copy.id)
             return copy
 
         # Create a copy of all the nodes in the clipboard and store them in a dict using the old
         # node id: this is needed so we can attach copied edges to the copy of the nodes in the
         # clipboard and to do so we need a mapping between the old node id and the new node id.
         nodes = {x:ncopy(n) for x, n in self.nodes.items()}
+
+        print('nodes',nodes)
+        print('self.nodes.items()',self.nodes.items())
 
         def ecopy(edge):
             """
@@ -183,19 +188,45 @@ class Clipboard(QtCore.QObject):
         iris_to_be_updated = []
         nodes_to_be_updated = []
         count = 0
+
+        print('len(nodes)',len(nodes))
+
+        print('diagram.project.iri_of_cut_nodes',diagram.project.iri_of_cut_nodes)
+
+        #Dup_1B = diagram.project.copy_list(diagram.project.iri_of_cut_nodes, [])
+        #Dup_2B = diagram.project.copy_list(diagram.project.iri_of_cut_nodes, [])
+
         for x,n in self.nodes.items():
+
+            flag = False
+
+            for c,ele in enumerate(diagram.project.iri_of_cut_nodes):
+                print('ele',ele)
+                if (n is ele) or (str(n) == str(ele)):
+                    iri = diagram.project.iri_of_cut_nodes[c+1]
+                    flag = True
+            if flag is False:
+                iri = diagram.project.get_iri_of_node(n)
+
             new_nd = nodes[count]
-            iri = diagram.project.get_iri_of_node(n)
+            print('n',n)
+            print('new_nd',new_nd)
+
+            print('paste    >>>',iri)
             nodes_to_be_updated.append(n)
             iris_to_be_updated.append(iri)
             Duplicate_dict_1[iri][1].add(new_nd)
             count = count + 1
 
+        #Dup_1B[:] = []
+
         commands = []
 
+        #commands.append(CommandCommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, diagram.project))
         commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated, nodes_to_be_updated))
         commands.append(CommandItemsAdd(diagram, items))
-        commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated, nodes_to_be_updated))
+        #commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated, nodes_to_be_updated))
+        #commands.append(CommandCommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
 
         self.session.undostack.beginMacro('edit paste >>')
         for command in commands:

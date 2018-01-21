@@ -255,4 +255,3 @@ class OWLStandardIRIPrefixPairsDict():
     std_IRI_prefix_dict['http://www.w3.org/2000/01/rdf-schema'] = 'rdfs'
     std_IRI_prefix_dict['http://www.w3.org/2001/XMLSchema'] = 'xsd'
     std_IRI_prefix_dict['http://www.w3.org/2002/07/owl'] = 'owl'
-

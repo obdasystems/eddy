@@ -65,7 +65,6 @@ from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationWorker
 
 
-
 LOGGER = getLogger()
 
 
@@ -3917,6 +3916,3 @@ class OWLOntologyFetcher:
             LOGGER.debug('OWL 2 fetch could be completed')
         finally:
             detach()
-
-
-

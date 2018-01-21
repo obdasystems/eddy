@@ -94,7 +94,7 @@ from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.path import shortPath
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
@@ -104,7 +104,7 @@ from eddy.core.reasoner import ReasonerManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandCommandProjetSetIRIofCutNodes
 from eddy.core.update import UpdateCheckWorker
 
 from eddy.ui.about import AboutDialog
@@ -402,10 +402,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='(decolour the nodes)', enabled=False))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_refresh_black'), 'Open Prefix Explorer',
+            #QtGui.QIcon(':/icons/24/ic_refresh_black'),
+            'Open Prefix Explorer',
             self, objectName='open_prefix_explorer', enabled=True,
             statusTip='Open Prefix Explorer', triggered=self.doOpenPrefixExplorer))
-
         #############################################
         # DIAGRAM SPECIFIC
         #################################
@@ -757,13 +757,13 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()
-        menu.addAction(self.action('open_prefix_explorer'))
-        menu.addSeparator()
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
         menu.addAction(self.action('ontology_consistency_check'))
+        menu.addSeparator()
+        menu.addAction(self.action('open_prefix_explorer'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Tools', objectName='tools')
@@ -792,6 +792,12 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Special type', objectName='special')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
+        menu.addAction(self.action('special_top'))
+        menu.addAction(self.action('special_bottom'))
+        self.addMenu(menu)
+
+        menu = QtWidgets.QMenu('Set prefix', objectName='Set prefix')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
         menu.addAction(self.action('special_top'))
         menu.addAction(self.action('special_bottom'))
@@ -1188,11 +1194,53 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 else:
                     self.undostack.push(first(commands))
 
+    def common_commands_for_cut_delete_purge(self,diagram,items):
+
+        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                             dict())
+        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                             dict())
+
+        Dup_1B = self.project.copy_list(self.project.iri_of_cut_nodes, [])
+        Dup_2B = self.project.copy_list(self.project.iri_of_cut_nodes, [])
+
+        iris_to_update = []
+        nodes_to_update = []
+
+        for item in items:
+            if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
+                        'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))):
+                iri_of_node = self.project.get_iri_of_node(item)
+
+                iris_to_update.append(iri_of_node)
+                nodes_to_update.append(item)
+
+                Dup_1B.append(item)
+                Dup_1B.append(iri_of_node)
+
+                Duplicate_dict_1[iri_of_node][1].remove(item)
+
+        commands = []
+
+        commands.append(CommandItemsRemove(diagram, items))
+        commands.append(
+            CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_update,
+                                                 nodes_to_update))
+        commands.append(CommandCommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
+
+        self.undostack.beginMacro('>>')
+        for command in commands:
+            if command:
+                self.undostack.push(command)
+        self.undostack.endMacro()
+
     @QtCore.pyqtSlot()
     def doCopy(self):
         """
         Make a copy of selected items.
         """
+        self.project.iri_of_cut_nodes[:] = []
+
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1206,6 +1254,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Cut selected items from the active diagram.
         """
+        self.project.iri_of_cut_nodes[:] = []
+
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1216,7 +1266,9 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             items = diagram.selectedItems()
             if items:
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
-                self.undostack.push(CommandItemsRemove(diagram, items))
+
+                self.common_commands_for_cut_delete_purge(diagram, items)
+
 
     @QtCore.pyqtSlot()
     def doDelete(self):
@@ -1229,7 +1281,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             items = diagram.selectedItems()
             if items:
                 items.extend([x for item in items if item.isNode() for x in item.edges if x not in items])
-                self.undostack.push(CommandItemsRemove(diagram, items))
+
+                self.common_commands_for_cut_delete_purge(diagram, items)
 
     @QtCore.pyqtSlot()
     def doExport(self):
@@ -1362,6 +1415,89 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         Focus the item which is being held by the supplying QAction.
         """
         self.sgnFocusItem.emit(self.sender().data())
+
+    @QtCore.pyqtSlot()
+    def setprefix(self):
+
+        node = self.sender().data()
+        to_prefix = self.sender().text()
+        to_iri = self.project.get_iri_for_prefix(to_prefix)
+        from_prefix = self.project.get_prefix_of_node(node)
+        from_iri = self.project.get_iri_of_node(node)
+
+        print('from_prefix', from_prefix)
+        print('to_prefix',to_prefix)
+        print('from_iri', from_iri)
+        print('to_iri',to_iri)
+        print('node',node)
+
+        #case 1
+        if from_prefix == to_prefix:
+            print('from_prefix == to_prefix')
+            return
+
+        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+
+        #case 2
+        if from_iri == to_iri:
+
+            Duplicate_dict_1[from_iri][0].remove(to_prefix)
+            Duplicate_dict_1[from_iri][0].append(to_prefix)
+
+            command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                           [from_iri], None)
+
+        #case 3
+        else:
+
+            metaDataChanged_ADD_OK_var = set()
+            metaDataChanged_REMOVE_OK_var = set()
+            metaDataChanged_IGNORE_var = set()
+
+            @QtCore.pyqtSlot(str, str, str)
+            def metaDataChanged_REMOVE_OK(iri, node, message):
+                #print('metaDataChanged_REMOVE_OK -', iri, ',', node, ',', message)
+                metaDataChanged_REMOVE_OK_var.add(True)
+
+            @QtCore.pyqtSlot(str, str, str)
+            def metaDataChanged_ADD_OK(iri, node, message):
+                #print('metaDataChanged_ADD_OK -', iri, ',', node, ',', message)
+                metaDataChanged_ADD_OK_var.add(True)
+
+            @QtCore.pyqtSlot(str, str, str)
+            def metaDataChanged_IGNORE(iri, node, message):
+                # if node.id is None:
+                # print('metaDataChanged_IGNORE >', iri, '-', 'None', '-', message)
+                # else:
+                #print('metaDataChanged_IGNORE >', iri, '-', node, '-', message)
+                metaDataChanged_IGNORE_var.add(True)
+
+            connect(self.project.sgnIRINodeEntryAdded, metaDataChanged_ADD_OK)
+            connect(self.project.sgnIRINodeEntryRemoved, metaDataChanged_REMOVE_OK)
+            connect(self.project.sgnIRINodeEntryIgnored, metaDataChanged_IGNORE)
+
+            self.project.removeIRINodeEntry(Duplicate_dict_1, from_iri, node)
+            self.project.addIRINodeEntry(Duplicate_dict_1, to_iri, node)
+
+            if ((False not in metaDataChanged_REMOVE_OK_var) and (False not in metaDataChanged_ADD_OK_var)) \
+                    and(True not in metaDataChanged_IGNORE_var):
+                pass
+            else:
+                LOGGER.warning('redo != undo but transaction was not executed correctly')
+                self.statusBar().showMessage('transaction was not executed correctly for node' + str(node),15000)
+                return
+
+            #part 2
+            Duplicate_dict_1[to_iri][0].remove(to_prefix)
+            Duplicate_dict_1[to_iri][0].append(to_prefix)
+
+            command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                               [from_iri, to_iri], [node])
+
+        if(command):
+            self.undostack.push(command)
+
 
     @QtCore.pyqtSlot()
     def doNewDiagram(self):
@@ -1517,7 +1653,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             if collection:
                 collection.extend(
                     [x for item in collection if item.isNode() for x in item.edges if x not in collection])
-                self.undostack.push(CommandItemsRemove(diagram, collection))
+
+                self.common_commands_for_cut_delete_purge(diagram, collection)
+
+                #self.undostack.push(CommandItemsRemove(diagram, collection))
 
     @QtCore.pyqtSlot()
     def doQuit(self):

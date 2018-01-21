@@ -40,7 +40,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
-from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile
+from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, OWLStandardIRIPrefixPairsDict
 from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 
@@ -208,7 +208,10 @@ class MenuFactory(QtCore.QObject):
         menu = self.buildGenericNodeMenu(diagram, node)
         # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
         self.customAction['occurrences'] = []
+        self.customAction['set prefix'] = []
+
         for pnode in self.project.predicates(node.type(), node.text()):
+
             action = QtWidgets.QAction(self.session)
             action.setCheckable(True)
             action.setChecked(pnode is node)
@@ -216,6 +219,7 @@ class MenuFactory(QtCore.QObject):
             action.setText('{} ({})'.format(pnode.diagram.name, pnode.id))
             connect(action.triggered, self.session.doLookupOccurrence)
             self.customAction['occurrences'].append(action)
+
         # BUILD CUSTOM MENU FOR PREDICATE OCCURRENCES
         self.customMenu['occurrences'] = QtWidgets.QMenu('Occurrences')
         self.customMenu['occurrences'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
@@ -224,6 +228,34 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
         # ADD DESCRIPTION LINK TO THE MENU OF PREDICATE NODE
         menu.addAction(self.session.action('node_description'))
+
+        OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values()
+
+        if node.special() is None:
+            self.customAction['set prefix'] = []
+
+            for iri in self.project.IRI_prefixes_nodes_dict.keys():
+                prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+                for p in prefixes:
+                    if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
+                        continue
+                    action = QtWidgets.QAction(self.session)
+                    action.setCheckable(True)
+                    pr_node = self.project.get_prefix_of_node(node)
+                    action.setChecked(pr_node is p)
+                    action.setData(node)
+                    action.setText('{}'.format(p))
+                    connect(action.triggered, self.session.setprefix)
+                    self.customAction['set prefix'].append(action)
+
+            self.customMenu['set prefix'] = QtWidgets.QMenu('set prefix')
+            #self.customMenu['set prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
+
+            for action in (self.customAction['set prefix']):
+                self.customMenu['set prefix'].addAction(action)
+
+            menu.insertMenu(self.session.action('node_properties'), self.customMenu['set prefix'])
+
         return menu
 
     def buildAttributeNodeMenu(self, diagram, node):

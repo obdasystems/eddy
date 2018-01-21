@@ -228,6 +228,8 @@ class IriWidget(QtWidgets.QScrollArea):
         self.modify_entry_button = QtWidgets.QPushButton()
         self.modify_entry_button.setText('M')
         """
+        self.test_IRI_button = QtWidgets.QPushButton()
+        self.test_IRI_button.setText('T')
         self.dictionary_display_button = QtWidgets.QPushButton()
         self.dictionary_display_button.setText('D')
         self.hide_or_show_nodes_button = QtWidgets.QPushButton()
@@ -240,6 +242,7 @@ class IriWidget(QtWidgets.QScrollArea):
         #self.buttons_layout.addWidget(self.entry_button)
         #self.buttons_layout.addWidget(self.remove_entry_button)
         #self.buttons_layout.addWidget(self.modify_entry_button)
+        self.buttons_layout.addWidget(self.test_IRI_button)
         self.buttons_layout.addWidget(self.dictionary_display_button)
         self.buttons_layout.addWidget(self.hide_or_show_nodes_button)
 
@@ -247,6 +250,7 @@ class IriWidget(QtWidgets.QScrollArea):
         #connect(self.remove_entry_button.pressed, self.button_remove)
         connect(self.dictionary_display_button.pressed, self.display_IRIPrefixesNodesDict)
         connect(self.hide_or_show_nodes_button.pressed, self.hide_or_show_nodes)
+        connect(self.test_IRI_button.pressed, self.test_IRI)
         #connect(self.modify_entry_button.pressed, self.process_entry_from_textboxes_for_button_modify)
 
         #connect(self.slider.sliderMoved, self.slider_moved)
@@ -404,6 +408,12 @@ class IriWidget(QtWidgets.QScrollArea):
 
         print(r,'-',c)
         self.table.editItem(self.table.item(r,c))
+
+    def test_IRI(self):
+
+        iri_inp = self.iri_input_box.text()
+        res = self.project.check_validity_of_IRI(iri_inp)
+        print('IRI_valid',res)
 
     def display_IRIPrefixesNodesDict(self):
 

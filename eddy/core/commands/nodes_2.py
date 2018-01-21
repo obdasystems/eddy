@@ -57,14 +57,17 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_new_val,dict())
 
-        for iri in self.iris_to_update:
-            if self.nodes_to_update is None:
-                print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
-                self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
-            else:
-                for n in self.nodes_to_update:
-                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
-                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
+        if len(self.iris_to_update) > 0:
+            for iri in self.iris_to_update:
+                if self.nodes_to_update is None:
+                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
+                else:
+                    for n in self.nodes_to_update:
+                        print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
+        else:
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None)
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
 
@@ -74,16 +77,44 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_old_val,dict())
 
-        for iri in self.iris_to_update:
-            if self.nodes_to_update is None:
-                print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
-                self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
-            else:
-                for n in self.nodes_to_update:
-                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
-                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
+        if len(self.iris_to_update) > 0:
+            for iri in self.iris_to_update:
+                if self.nodes_to_update is None:
+                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
+                else:
+                    for n in self.nodes_to_update:
+                        print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
+        else:
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None)
 
         print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
+
+
+class CommandCommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
+
+
+    def __init__(self, list_undo, list_redo, project):
+
+        super().__init__('add {0}'.format(project.name))
+        self.list_undo = list_undo
+        self.list_redo = list_redo
+        self.project = project
+
+    def redo(self):
+        """redo the command"""
+        new_list = []
+        for ele in self.list_redo:
+            new_list.append(ele)
+        self.project.iri_of_cut_nodes = new_list
+
+    def undo(self):
+        """undo the command"""
+        old_list = []
+        for ele in self.list_undo:
+            old_list.append(ele)
+        self.project.iri_of_cut_nodes = old_list
 
 
 class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
@@ -91,7 +122,7 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
     def __init__(self, rc_undo, rc_redo, node, project):
         """
         Initialize the command.
-        :type diagram: Diagram
+        :type project: Project
         :type node: AbstractNode
         """
         super().__init__('add {0}'.format(node.name))

@@ -32,9 +32,7 @@
 #                                                                        #
 ##########################################################################
 
-import ast
-
-from PyQt5 import QtCore,QtGui
+from PyQt5 import QtCore,QtGui,QtWidgets
 
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramAdd
@@ -51,6 +49,9 @@ from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 from jnius import autoclass, cast, detach
+
+from rfc3987 import parse
+
 
 LOGGER = getLogger()
 
@@ -167,6 +168,7 @@ class Project(QtCore.QObject):
         self.IRI_prefixes_nodes_dict = kwargs.get('IRI_prefixes_nodes_dict')
         self.init_IRI_prefixes_nodes_dict_with_std_data()
 
+        self.iri_of_cut_nodes = []
         #self.prefered_prefix_list = kwargs.get('prefered_prefix_list')
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
@@ -174,6 +176,7 @@ class Project(QtCore.QObject):
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
         #connect(self.sgnPreferedPrefixListUpdated, self.regenerate_label_of_nodes_for_iri_2)
+
 
     @property
     def iri(self):
@@ -256,7 +259,7 @@ class Project(QtCore.QObject):
             return iri
 
         prefixes = self.IRI_prefixes_nodes_dict[iri][0]
-        return sorted(list(prefixes))
+        return prefixes
 
     def get_prefix_of_node(self,node_inp):
 
@@ -366,6 +369,12 @@ class Project(QtCore.QObject):
                     print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
 
         print('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
+        print('<<<<<<<<<          iri_of_cut_nodes       >>>>>>>>')
+        print('len(self.iri_of_cut_nodes)',len(self.iri_of_cut_nodes))
+        for ele in self.iri_of_cut_nodes:
+            print('ele',ele)
+
+        print('<<<<<<<<<          iri_of_cut_nodes (END)       >>>>>>>>')
 
     #not used
     def copy_prefered_prefix_dictionaries(self, from_dict, to_dict):
@@ -408,6 +417,13 @@ class Project(QtCore.QObject):
 
         return to_dict
 
+    def copy_list(self, from_list, to_list):
+
+        for ele in from_list:
+            to_list.append(ele)
+
+        return to_list
+
     def init_IRI_prefixes_nodes_dict_with_std_data(self):
 
         print('init_IRI_prefixes_nodes_dict_with_std_data')
@@ -443,7 +459,8 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
 
-        #print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
+        print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
+        print('self.iri_of_cut_nodes',self.iri_of_cut_nodes)
 
         #if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
         if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
@@ -451,48 +468,56 @@ class Project(QtCore.QObject):
             #print('item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:')
 
             node = item
+            corr_iri = None
 
-            # print('2nd if statement')
+            flag = False
 
-            if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
+            for c,ele in enumerate(self.iri_of_cut_nodes):
+                if (node is ele) or str(node) == str(ele):
+                    corr_iri = self.iri_of_cut_nodes[c+1]
+                    flag = True
+                    break
 
-                # print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
-                if (self.get_iri_of_node(node) is None):
-                    prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
+            if flag is False:
+                if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
 
-                    std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns', 'rdf',
-                                      'http://www.w3.org/2000/01/rdf-schema', 'rdfs',
-                                      'http://www.w3.org/2001/XMLSchema', 'xsd',
-                                      'http://www.w3.org/2002/07/owl', 'owl']
+                    # print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    if (self.get_iri_of_node(node) is None):
+                        prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
 
-                    ind_prefix = std_iri_prefix.index(prefix)
-                    ind_iri = ind_prefix - 1
-                    corr_iri = std_iri_prefix[ind_iri]
+                        std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns', 'rdf',
+                                          'http://www.w3.org/2000/01/rdf-schema', 'rdfs',
+                                          'http://www.w3.org/2001/XMLSchema', 'xsd',
+                                          'http://www.w3.org/2002/07/owl', 'owl']
+
+                        ind_prefix = std_iri_prefix.index(prefix)
+                        ind_iri = ind_prefix - 1
+                        corr_iri = std_iri_prefix[ind_iri]
+                    else:
+                        pass
                 else:
-                    corr_iri = None
-            else:
 
-                # print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    # print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
 
-                if (self.get_iri_of_node(node) is None):
+                    if (self.get_iri_of_node(node) is None):
 
-                    # print('if       (self.get_iri_of_node(node) is None):')
+                        # print('if       (self.get_iri_of_node(node) is None):')
 
-                    if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
+                        if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
 
-                        # print('if       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
+                            # print('if       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
 
-                        corr_iri = 'http://www.w3.org/2002/07/owl'
+                            corr_iri = 'http://www.w3.org/2002/07/owl'
+                        else:
+
+                            # print('else       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
+
+                            corr_iri = self.iri
                     else:
 
-                        # print('else       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
+                        # print('else       (self.get_iri_of_node(node) is None):')
 
-                        corr_iri = self.iri
-                else:
-
-                    # print('else       (self.get_iri_of_node(node) is None):')
-
-                    corr_iri = None
+                        corr_iri = None
 
             # print('corr_iri',corr_iri)
 
@@ -502,7 +527,7 @@ class Project(QtCore.QObject):
 
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
-        #print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
+        print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
@@ -1044,6 +1069,8 @@ class Project(QtCore.QObject):
 
     def node_label_update_core_code(self,node):
 
+        #print('node_label_update_core_code   >>>>>')
+
         old_label = node.text()
 
         #if prefered_prefix is None:
@@ -1051,10 +1078,12 @@ class Project(QtCore.QObject):
         #else:
             #new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
 
+       # print(' def node_label_update_core_code     >>> new_label', new_label)
+
         if old_label==new_label:
             return
 
-        #print(' def node_label_update_core_code     >>> new_label',new_label)
+
 
         # CHANGE THE CONTENT OF THE LABEL
         self.doRemoveItem(node.diagram, node)
@@ -1086,6 +1115,8 @@ class Project(QtCore.QObject):
 
         # input string/string
 
+        if ((node_inp is None) or (node_inp is '')) and ((iri_inp is None) or (iri_inp is '')):
+            return
         #print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
 
         disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
@@ -1135,6 +1166,18 @@ class Project(QtCore.QObject):
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
+
+    def check_validity_of_IRI(self,iri_inp):
+
+        try:
+            parse('http://fdasdf.fdsfîășîs.fss/ăîăî', rule='IRI')
+        except (ValueError):
+            print('Exception',ValueError)
+        else:
+            pass
+
+        print('parse',parse)
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 

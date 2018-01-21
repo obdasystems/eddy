@@ -45,12 +45,6 @@ class GenerateNewLabel():
 
         self.project = project
         self.iri_to_set = self.project.get_iri_of_node(node)
-
-        #if self.iri_to_set is None:
-            #print('class GenerateNewLabel init    >>>')
-            #print('No IRI for ', node.id, ' ', node.text())
-
-        #self.iri_to_set_version = node.IRI_version(self.project)
         self.prefix_to_set = self.project.get_prefix_of_node(node)
         self.rc_to_set = node.remaining_characters
         self.node = node

@@ -807,7 +807,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         Initialize the project instance by reading project metadata from XML file.
         :raise ProjectNotValidError: If the project metadata file is missing or not readable.
         """
-        print('importProjectFromXML >>> ')
+        #print('importProjectFromXML >>> ')
 
         QtWidgets.QApplication.processEvents()
 
@@ -873,7 +873,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         # print('self.project.iri',self.project.iri)
         # self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
 
-        print('importProjectFromXML >>> END')
+        #print('importProjectFromXML >>> END')
 
     def importMetaFromXML(self):
         """
@@ -1768,7 +1768,7 @@ class GrapholLoaderMixin_v2(object):
 
         self.nproject.print_dictionary(IRI_prefixes_nodes_dict_old)
 
-        print('******  IRI_prefixes_nodes_dict_old  END ******')
+        #print('******  IRI_prefixes_nodes_dict_old  END ******')
 
         IRI_prefixes_nodes_dict_new = dict()
 
@@ -1782,11 +1782,11 @@ class GrapholLoaderMixin_v2(object):
             to_nodes = set()
             to_properties = set()
 
-            print('iri,to_prefixes,prefixes', iri, to_prefixes, prefixes)
+            #print('iri,to_prefixes,prefixes', iri, to_prefixes, prefixes)
 
             to_prefixes.extend(prefixes)
 
-            print('iri,to_prefixes,prefixes', iri, to_prefixes, prefixes)
+            #print('iri,to_prefixes,prefixes', iri, to_prefixes, prefixes)
 
             to_nodes = to_nodes.union(nodes)
             to_properties = to_properties.union(properties)
@@ -2097,9 +2097,9 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
         """
         try:
             self.createDomDocument()
-            print('self.createDomDocument()')
+            #print('self.createDomDocument()')
         except (ProjectNotFoundError, ProjectVersionError):
-            print('self.createLegacyProject()')
+            #print('self.createLegacyProject()')
             self.createLegacyProject()
         else:
             self.createProject()
