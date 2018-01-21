@@ -153,6 +153,21 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.run()
 
+    def closeEvent(self, QCloseEvent):
+
+
+        disconnect(self.table.cellPressed, self.cell_pressed)
+        disconnect(self.table.cellChanged, self.cell_changed)
+
+        disconnect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.UpdateTableForIRI)
+
+        disconnect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFY_ok)
+        disconnect(self.project.sgnIRIPrefixEntryAdded, self.entry_ADD_ok)
+        disconnect(self.project.sgnIRIPrefixEntryRemoved, self.entry_REMOVE_OK)
+        disconnect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
+
+        self.close()
+
     def resizeEvent(self, QResizeEvent):
 
         self.redraw()
