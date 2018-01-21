@@ -1766,7 +1766,7 @@ class GrapholLoaderMixin_v2(object):
 
         IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
 
-        self.nproject.print_dictionary(IRI_prefixes_nodes_dict_old)
+        #self.nproject.print_dictionary(IRI_prefixes_nodes_dict_old)
 
         #print('******  IRI_prefixes_nodes_dict_old  END ******')
 
@@ -1817,7 +1817,7 @@ class GrapholLoaderMixin_v2(object):
 
             IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
 
-        self.nproject.print_dictionary(IRI_prefixes_nodes_dict_new)
+        #self.nproject.print_dictionary(IRI_prefixes_nodes_dict_new)
 
         self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(
             IRI_prefixes_nodes_dict_new, dict())

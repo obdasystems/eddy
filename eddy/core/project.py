@@ -426,7 +426,7 @@ class Project(QtCore.QObject):
 
     def init_IRI_prefixes_nodes_dict_with_std_data(self):
 
-        print('init_IRI_prefixes_nodes_dict_with_std_data')
+        #print('init_IRI_prefixes_nodes_dict_with_std_data')
 
         for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
 
@@ -436,12 +436,12 @@ class Project(QtCore.QObject):
             std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
             prefixes = []
 
-            print('std_iri, std_prefix, prefixes',std_iri, std_prefix, prefixes)
+            #print('std_iri, std_prefix, prefixes',std_iri, std_prefix, prefixes)
 
             if std_prefix not in prefixes:
                 prefixes.append(std_prefix)
 
-            print('std_iri, std_prefix, prefixes',std_iri, std_prefix, prefixes)
+            #print('std_iri, std_prefix, prefixes',std_iri, std_prefix, prefixes)
 
             nodes = set()
             properties = set()
@@ -454,13 +454,13 @@ class Project(QtCore.QObject):
 
             self.IRI_prefixes_nodes_dict[std_iri] = values
 
-        print('init_IRI_prefixes_nodes_dict_with_std_data END')
+        #print('init_IRI_prefixes_nodes_dict_with_std_data END')
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
 
-        print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
-        print('self.iri_of_cut_nodes',self.iri_of_cut_nodes)
+        #print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
+        #print('self.iri_of_cut_nodes',self.iri_of_cut_nodes)
 
         #if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
         if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
@@ -527,7 +527,7 @@ class Project(QtCore.QObject):
 
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
-        print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
+        #print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):

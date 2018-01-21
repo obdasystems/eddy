@@ -124,7 +124,7 @@ from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.prefix_explorer import PrefixExplorerDialog
 from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.view import DiagramView
-
+from eddy.ui.dock import DockWidget
 from eddy.core.items.common import AbstractItem
 
 _LINUX = sys.platform.startswith('linux')
@@ -1425,15 +1425,15 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         from_prefix = self.project.get_prefix_of_node(node)
         from_iri = self.project.get_iri_of_node(node)
 
-        print('from_prefix', from_prefix)
-        print('to_prefix',to_prefix)
-        print('from_iri', from_iri)
-        print('to_iri',to_iri)
-        print('node',node)
+        #print('from_prefix', from_prefix)
+        #print('to_prefix',to_prefix)
+        #print('from_iri', from_iri)
+        #print('to_iri',to_iri)
+        #print('node',node)
 
         #case 1
         if from_prefix == to_prefix:
-            print('from_prefix == to_prefix')
+            #print('from_prefix == to_prefix')
             return
 
         Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
@@ -2131,7 +2131,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         dialog = PrefixExplorerDialog(self.project, self)
         dialog.exec_()
-
 
     @QtCore.pyqtSlot()
     def BackgrounddeColourNodesAndEdges(self,**kwargs):
