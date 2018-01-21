@@ -597,24 +597,18 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         width = self.width()
         height = self.height()
 
-        print('dialog_width',width)
+        #print('dialog_width',width)
 
         total_height_of_all_rows = 0
         for r in range(0,self.table.rowCount()+1):
             total_height_of_all_rows = total_height_of_all_rows+self.table.rowHeight(r)
 
 
-        #scrollbar = self.table.verticalScrollBar()
-        #if scrollbar.isVisible():
-            #width -= scrollbar.width()+1
-
-
-
         self.table.setFixedWidth(width-40)
         self.table.setFixedHeight(height-40)
 
-        print('self.table.height()',self.table.height())
-        print('total_height_of_all_rows',total_height_of_all_rows)
+        #print('self.table.height()',self.table.height())
+        #print('total_height_of_all_rows',total_height_of_all_rows)
 
         if total_height_of_all_rows >= (self.table.height()):
             scrollbar_width = 15
@@ -624,18 +618,19 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.table.setColumnWidth(0, (7*(self.table.width() - scrollbar_width)/ 10))
         self.table.setColumnWidth(1, (3*(self.table.width() - scrollbar_width)/ 10))
 
-        print('self.table.columnWidth(0)',self.table.columnWidth(0))
-        print('self.table.columnWidth(1)', self.table.columnWidth(1))
-        print('self.table.verticalScrollBar().isVisible()',self.table.verticalScrollBar().isVisible())
-        print('self.table.width()',self.table.width())
-        print('scrollbar_width',scrollbar_width)
+        #print('self.table.columnWidth(0)',self.table.columnWidth(0))
+        #print('self.table.columnWidth(1)', self.table.columnWidth(1))
+        #print('self.table.verticalScrollBar().isVisible()',self.table.verticalScrollBar().isVisible())
+        #print('self.table.width()',self.table.width())
+        #print('scrollbar_width',scrollbar_width)
 
         for r in range(0,self.table.rowCount()):
-            #self.table.setRowHeight(r,30)
-            self.table.resizeRowToContents(r)
+            self.table.setRowHeight(r,25)
+            #self.table.resizeRowToContents(r)
 
-        print('self.table.height()',self.table.height())
-        print('self.table.rowCount()',self.table.rowCount())
+
+        #print('self.table.height()',self.table.height())
+        #print('self.table.rowCount()',self.table.rowCount())
 
         self.setMaximumHeight(total_height_of_all_rows+3+40)
 
