@@ -52,7 +52,7 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.nodes_to_update = nodes_to_update
 
     def redo(self):
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_new_val,dict())
@@ -60,19 +60,19 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         if len(self.iris_to_update) > 0:
             for iri in self.iris_to_update:
                 if self.nodes_to_update is None:
-                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
+                    #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
                     self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
                 else:
                     for n in self.nodes_to_update:
-                        print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                        #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
                         self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
         else:
             self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None)
 
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
 
     def undo(self):
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo)')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
         self.project.IRI_prefixes_nodes_dict = self.project.copy_IRI_prefixes_nodes_dictionaries(self.dict_old_val,dict())
@@ -80,16 +80,16 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         if len(self.iris_to_update) > 0:
             for iri in self.iris_to_update:
                 if self.nodes_to_update is None:
-                    print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
+                    #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
                     self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
                 else:
                     for n in self.nodes_to_update:
-                        print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
+                        #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
                         self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
         else:
             self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None)
 
-        print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
+        #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
 
 
 class CommandCommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
@@ -158,7 +158,7 @@ class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):
         self.nodes_to_update = nodes_to_update
 
     def redo(self):
-        print('>>>      CommandProjectORNodeSetPreferedPrefix  (redo)')
+        #print('>>>      CommandProjectORNodeSetPreferedPrefix  (redo)')
 
         prefered_prefix = self.dict_new_val[self.iri_to_update]
 
@@ -166,18 +166,18 @@ class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):
         self.project.prefered_prefix_dict = self.project.copy_prefered_prefix_dictionaries(self.dict_new_val,dict())
 
         if self.nodes_to_update is None:
-            print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, None) -', self.iri_to_update)
+            #print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, None) -', self.iri_to_update)
             self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iri_to_update, None, prefered_prefix)
         else:
             for n in self.nodes_to_update:
-                print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, n)', self.iri_to_update, ' - ',n)
+                #print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, n)', self.iri_to_update, ' - ',n)
                 self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iri_to_update, str(n), prefered_prefix)
 
 
-        print('>>>      CommandProjectORNodeSetPreferedPrefix  (redo) END')
+        #print('>>>      CommandProjectORNodeSetPreferedPrefix  (redo) END')
 
     def undo(self):
-        print('>>>      CommandProjectORNodeSetPreferedPrefix  (undo)')
+        #print('>>>      CommandProjectORNodeSetPreferedPrefix  (undo)')
 
         prefered_prefix = self.dict_old_val[self.iri_to_update]
 
@@ -185,11 +185,11 @@ class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):
         self.project.prefered_prefix_dict = self.project.copy_prefered_prefix_dictionaries(self.dict_old_val,dict())
 
         if self.nodes_to_update is None:
-            print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, None) -', self.iri_to_update)
+            #print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, None) -', self.iri_to_update)
             self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iri_to_update, None, prefered_prefix)
         else:
             for n in self.nodes_to_update:
-                print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, n)', self.iri_to_update, ' - ',n)
+                #print('self.project.sgnPreferedPrefixeDictionaryUpdated.emit(iri, n)', self.iri_to_update, ' - ',n)
                 self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iri_to_update, str(n), prefered_prefix)
 
-        print('>>>      CommandProjectORNodeSetPreferedPrefix  (undo) END')
+        #print('>>>      CommandProjectORNodeSetPreferedPrefix  (undo) END')

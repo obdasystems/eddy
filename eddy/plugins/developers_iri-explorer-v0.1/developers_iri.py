@@ -657,7 +657,7 @@ class IriWidget(QtWidgets.QScrollArea):
                 if prefix != '':
                     prefixes_list.add(prefix)
 
-        print('return prefixes_list',prefixes_list)
+        #print('return prefixes_list',prefixes_list)
         return prefixes_list
 
     def process_entry_from_textboxes_for_button_add_or_remove(self):
@@ -750,7 +750,7 @@ class IriWidget(QtWidgets.QScrollArea):
             for c in range(0, 2):
                 item = self.table.item(r, c)
                 if item.isSelected():
-                    print(item.text(), ' is selected')
+                    #print(item.text(), ' is selected')
                     items_selected.append(item)
 
         range_of_rows = set()

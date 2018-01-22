@@ -100,9 +100,9 @@ class ExplanationExplorerPlugin(AbstractPlugin):
                 unsatisfiable_entities = self.project.unsatisfiable_roles
                 explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_roles
 
-            print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
+            #print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
 
-            print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
+            #print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
 
             inp_node = None
 

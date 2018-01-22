@@ -109,10 +109,10 @@ class Clipboard(QtCore.QObject):
             Create a copy of the given node generating a new id.
             :type node: AbstractNode
             """
-            print('ncopy >>> node',node)
+            #print('ncopy >>> node',node)
             copy = node.copy(diagram)
             copy.id = diagram.guid.next('n')
-            print('copy.id',copy.id)
+            #print('copy.id',copy.id)
             return copy
 
         # Create a copy of all the nodes in the clipboard and store them in a dict using the old
@@ -120,8 +120,8 @@ class Clipboard(QtCore.QObject):
         # clipboard and to do so we need a mapping between the old node id and the new node id.
         nodes = {x:ncopy(n) for x, n in self.nodes.items()}
 
-        print('nodes',nodes)
-        print('self.nodes.items()',self.nodes.items())
+        #print('nodes',nodes)
+        #print('self.nodes.items()',self.nodes.items())
 
         def ecopy(edge):
             """
@@ -189,9 +189,9 @@ class Clipboard(QtCore.QObject):
         nodes_to_be_updated = []
         count = 0
 
-        print('len(nodes)',len(nodes))
+        #print('len(nodes)',len(nodes))
 
-        print('diagram.project.iri_of_cut_nodes',diagram.project.iri_of_cut_nodes)
+        #print('diagram.project.iri_of_cut_nodes',diagram.project.iri_of_cut_nodes)
 
         #Dup_1B = diagram.project.copy_list(diagram.project.iri_of_cut_nodes, [])
         #Dup_2B = diagram.project.copy_list(diagram.project.iri_of_cut_nodes, [])
@@ -201,7 +201,7 @@ class Clipboard(QtCore.QObject):
             flag = False
 
             for c,ele in enumerate(diagram.project.iri_of_cut_nodes):
-                print('ele',ele)
+                #print('ele',ele)
                 if (n is ele) or (str(n) == str(ele)):
                     iri = diagram.project.iri_of_cut_nodes[c+1]
                     flag = True
@@ -209,10 +209,10 @@ class Clipboard(QtCore.QObject):
                 iri = diagram.project.get_iri_of_node(n)
 
             new_nd = nodes[count]
-            print('n',n)
-            print('new_nd',new_nd)
+            #print('n',n)
+            #print('new_nd',new_nd)
 
-            print('paste    >>>',iri)
+            #print('paste    >>>',iri)
             nodes_to_be_updated.append(n)
             iris_to_be_updated.append(iri)
             Duplicate_dict_1[iri][1].add(new_nd)

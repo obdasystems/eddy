@@ -178,28 +178,28 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.ENTRY_MODIFY_OK_var.add(True)
 
         self.session.statusBar().showMessage('Successfully modified',10000)
-        print('entry_ADD_ok(self): ',iri_from,',',prefix_from,',',iri_to,',',prefix_to)
+        #print('entry_ADD_ok(self): ',iri_from,',',prefix_from,',',iri_to,',',prefix_to)
 
     @QtCore.pyqtSlot(str, str, str)
     def entry_ADD_ok(self,iri,prefix,message):
 
         self.ENTRY_ADD_OK_var.add(True)
         self.session.statusBar().showMessage(message,10000)
-        print('entry_ADD_ok(self): ',iri,',',prefix,',',message)
+        #print('entry_ADD_ok(self): ',iri,',',prefix,',',message)
 
     @QtCore.pyqtSlot(str, str, str)
     def entry_REMOVE_OK(self,iri,prefix,message):
 
         self.ENTRY_REMOVE_OK_var.add(True)
         self.session.statusBar().showMessage(message, 10000)
-        print('entry_REMOVE_ok(self): ',iri,',',prefix,',',message)
+        #print('entry_REMOVE_ok(self): ',iri,',',prefix,',',message)
 
     @QtCore.pyqtSlot(str, str, str)
     def entry_NOT_OK(self,iri,prefixes,message):
 
         self.ENTRY_IGNORE_var.add(True)
         self.session.statusBar().showMessage(message, 10000)
-        print('entry_NOT_OK(self): ',iri,',',prefixes,',',message)
+        #print('entry_NOT_OK(self): ',iri,',',prefixes,',',message)
 
         disconnect(self.table.cellChanged, self.cell_changed)
 
@@ -253,9 +253,9 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
     def add_remove_or_modify_task(self):
 
-        print('self.ITEM_CHANGED',self.ITEM_CHANGED)
-        print('self.ITEM_PRESSED',self.ITEM_PRESSED)
-        print('self.table.rowCount()',self.table.rowCount())
+        #print('self.ITEM_CHANGED',self.ITEM_CHANGED)
+        #print('self.ITEM_PRESSED',self.ITEM_PRESSED)
+        #print('self.table.rowCount()',self.table.rowCount())
 
         if self.ITEM_CHANGED is None or self.ITEM_PRESSED is None:
             return
@@ -402,7 +402,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
     def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
 
         #if (iri_to_update is None) and (nodes_to_update is None):
-        print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues')
+        #print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues')
         # first delete all entries from the dictionary id present
         # add standard IRIs
         # add key value pairs from dict
