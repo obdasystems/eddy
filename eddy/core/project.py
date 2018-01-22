@@ -1171,13 +1171,13 @@ class Project(QtCore.QObject):
     def check_validity_of_IRI(self,iri_inp):
 
         try:
-            parse('http://fdasdf.fdsfîășîs.fss/ăîăî', rule='IRI')
+            #d=parse('https://protege.stanford.edu/ontologies/pizza/pizza.owl', rule='IRI')
+            d = parse(iri_inp, rule='IRI')
         except (ValueError):
-            print('Exception',ValueError)
+            return False
         else:
-            pass
-
-        print('parse',parse)
+            LOGGER.info(str(d))
+            return True
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 
