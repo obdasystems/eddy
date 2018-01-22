@@ -114,7 +114,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.hide()
         self.setWindowModality(QtCore.Qt.NonModal)
         self.show()
-        self.setWindowTitle('Prefix explorer')
+        self.setWindowTitle('Prefix Manager')
 
         self.setContentsMargins(20, 20, 20, 20)
         self.setMinimumSize(QtCore.QSize(600, 400))
@@ -267,35 +267,45 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
             if column == 0:
                 # add/remove/modify IRI
-                IRI_valid = self.project.check_validity_of_IRI(self.new_text)
 
-                if IRI_valid is False:
-                    self.session.statusBar().showMessage('Invalid IRI.', 15000)
-                    self.table.item(row, column).setText(self.old_text)
-                else:
+
 
                     if (self.old_text == '' and self.new_text != '') or \
                             (self.old_text != '' and self.new_text != '' and row == self.table.rowCount()-1) :
 
-                        # Add IRI
-                        prefix_inp = self.table.item(row, 1).text().strip()
+                        IRI_valid = self.project.check_validity_of_IRI(self.new_text)
 
-                        if (prefix_inp == ''):
-                            if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
-                                pass
-                            else:
-                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add')
+                        if IRI_valid is False:
+                            self.session.statusBar().showMessage('Invalid IRI.', 15000)
+                            self.table.item(row, column).setText(self.old_text)
                         else:
-                            self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, prefix_inp, 'add')
+
+                            # Add IRI
+                            prefix_inp = self.table.item(row, 1).text().strip()
+
+                            if (prefix_inp == ''):
+                                if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
+                                    pass
+                                else:
+                                    self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add')
+                            else:
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, prefix_inp, 'add')
 
 
                     elif self.old_text != '' and self.new_text != '':
 
-                        # Modify IRI
-                        if row == self.table.rowCount()-1:
-                            pass
+                        IRI_valid = self.project.check_validity_of_IRI(self.new_text)
+
+                        if IRI_valid is False:
+                            self.session.statusBar().showMessage('Invalid IRI.', 15000)
+                            self.table.item(row, column).setText(self.old_text)
                         else:
-                            self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
+
+                            # Modify IRI
+                            if row == self.table.rowCount()-1:
+                                pass
+                            else:
+                                self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
 
                     elif self.old_text != '' and self.new_text == '':
 
@@ -404,16 +414,20 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         header_iri.setText('IRI')
         header_iri.setFont(Font('Roboto', 15, bold=True))
         header_iri.setTextAlignment(QtCore.Qt.AlignCenter)
-        header_iri.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
-        header_iri.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        #header_iri.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        #header_iri.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_iri.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_iri.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         header_iri.setFlags(QtCore.Qt.NoItemFlags)
 
         header_prefixes = QtWidgets.QTableWidgetItem()
-        header_prefixes.setText('PREFIXES')
+        header_prefixes.setText('PREFIX')
         header_prefixes.setFont(Font('Roboto', 15, bold=True))
         header_prefixes.setTextAlignment(QtCore.Qt.AlignCenter)
-        header_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
-        header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        #header_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        #header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         header_prefixes.setFlags(QtCore.Qt.NoItemFlags)
 
         self.table.setItem(self.table.rowCount() - 1, 0, header_iri)

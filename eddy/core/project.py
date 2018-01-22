@@ -1177,6 +1177,8 @@ class Project(QtCore.QObject):
             return False
         else:
             LOGGER.info(str(d))
+            if d['authority'] == '':
+                return False
             return True
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):

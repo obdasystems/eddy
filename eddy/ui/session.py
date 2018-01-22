@@ -402,10 +402,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='(decolour the nodes)', enabled=False))
 
         self.addAction(QtWidgets.QAction(
-            #QtGui.QIcon(':/icons/24/ic_refresh_black'),
-            'Open Prefix Explorer',
-            self, objectName='open_prefix_explorer', enabled=True,
-            statusTip='Open Prefix Explorer', triggered=self.doOpenPrefixExplorer))
+            QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'),
+            'Open Prefix Manager',
+            self, objectName='open_prefix_manager', enabled=True,
+            statusTip='Open Prefix Manager', triggered=self.doOpenPrefixExplorer))
         #############################################
         # DIAGRAM SPECIFIC
         #################################
@@ -763,7 +763,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('syntax_check'))
         menu.addAction(self.action('ontology_consistency_check'))
         menu.addSeparator()
-        menu.addAction(self.action('open_prefix_explorer'))
+        menu.addAction(self.action('open_prefix_manager'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Tools', objectName='tools')
@@ -797,7 +797,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('special_bottom'))
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Set prefix', objectName='Set prefix')
+        menu = QtWidgets.QMenu('Set Prefix', objectName='Set Prefix')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
         menu.addAction(self.action('special_top'))
         menu.addAction(self.action('special_bottom'))
