@@ -899,7 +899,7 @@ class Project(QtCore.QObject):
 
         if (len(corr_iri_of_prefix_inp_in_dict) > 0):
             if(iri_inp not in corr_iri_of_prefix_inp_in_dict):
-                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-' + corr_iri_of_prefix_inp_in_dict))
+                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-' + str(corr_iri_of_prefix_inp_in_dict)))
                 return None
             else:
                 self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, '[IRI-prefix] entry already exists in table')

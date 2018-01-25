@@ -213,9 +213,10 @@ class Clipboard(QtCore.QObject):
             #print('new_nd',new_nd)
 
             #print('paste    >>>',iri)
-            nodes_to_be_updated.append(n)
-            iris_to_be_updated.append(iri)
-            Duplicate_dict_1[iri][1].add(new_nd)
+            if iri is not None:
+                nodes_to_be_updated.append(n)
+                iris_to_be_updated.append(iri)
+                Duplicate_dict_1[iri][1].add(new_nd)
             count = count + 1
 
         #Dup_1B[:] = []

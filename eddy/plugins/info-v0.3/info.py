@@ -1253,7 +1253,8 @@ class PredicateNodeInfo(NodeInfo):
         self.textKey.setFont(Font('Roboto', 12))
         self.textField = String(self)
         self.textField.setFont(Font('Roboto', 12))
-        self.textField.setReadOnly(False)
+        #self.textField.setReadOnly(False)
+        self.textField.setReadOnly(True)
         connect(self.textField.editingFinished, self.editingFinished)
 
         self.brushKey = Key('Color', self)
@@ -1265,13 +1266,14 @@ class PredicateNodeInfo(NodeInfo):
         self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
-        self.nodePropLayout.addRow(self.textKey, self.textField)
+        #self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.nameKey = Key('Name', self)
         self.nameKey.setFont(Font('Roboto', 12))
         self.nameField = String(self)
         self.nameField.setFont(Font('Roboto', 12))
-        self.nameField.setReadOnly(False)
+        #self.nameField.setReadOnly(False)
+        self.nameField.setReadOnly(True)
         connect(self.nameField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('Predicate properties', self)
@@ -1360,7 +1362,7 @@ class PredicateNodeInfo(NodeInfo):
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             if node.special() is not None:
                 refactor = False
-        self.nameField.setReadOnly(not refactor)
+        #self.nameField.setReadOnly(not refactor)
 
 
 class AttributeNodeInfo(PredicateNodeInfo):
