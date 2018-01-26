@@ -49,7 +49,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
-
+from eddy.core.regex import RE_VALUE
 
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import IntegerField
@@ -197,7 +197,15 @@ class RefactorNameForm(QtWidgets.QDialog):
         self.renameField = StringField(self)
         self.renameField.setFixedWidth(200)
         self.renameField.setFont(Font('Roboto', 12))
-        self.renameField.setValue(self.node.text())
+
+        match = RE_VALUE.match(self.node.text())
+        if match:
+            self.renameField.setValue(self.node.text())
+            self.old_text = self.node.text()
+        else:
+            self.renameField.setValue(self.node.remaining_characters)
+            self.old_text = self.node.remaining_characters
+
         connect(self.renameField.textChanged, self.nameChanged)
 
         self.formWidget = QtWidgets.QWidget(self)
@@ -263,6 +271,91 @@ class RefactorNameForm(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def accept(self):
+        """
+        Accepts the rename form and perform refactoring.
+        """
+        currentData = self.renameField.value()
+
+        if currentData and currentData != self.old_text:
+
+            match = RE_VALUE.match(currentData)
+
+            commands = []
+
+            if match:
+                new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
+                new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
+                new_iri = None
+
+                for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                    std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
+                    if std_prefix == new_prefix:
+                        new_iri = std_iri
+
+                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+
+                old_iri = self.project.get_iri_of_node(self.node)
+
+                list_of_nodes_to_process = []
+
+                commands_label_change_list_1 = []
+                commands_label_change_list_2 = []
+
+                for node in self.project.predicates(self.node.type(), self.node.text()):
+
+                    list_of_nodes_to_process.append(node)
+
+                    Duplicate_dict_1[old_iri][1].remove(node)
+                    Duplicate_dict_1[new_iri][1].add(node)
+
+                    #commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
+                    #commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+
+                    commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                    commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+
+
+            else:
+                #self.setText(self.old_text)
+
+                currentData_processed = ''
+
+                flag = False
+
+                for c in currentData:
+                    if c == '':
+                        pass
+                    elif (not c.isalnum()):
+                        currentData_processed = currentData_processed + '_'
+                        flag = True
+                    else:
+                        currentData_processed = currentData_processed + c
+
+                if flag is True:
+                    self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
+
+                for node in self.project.predicates(self.node.type(), self.node.text()):
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+
+            if any(commands):
+                self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), currentData))
+                for command in commands:
+                    if command:
+                        self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+
+        else:
+            pass
+
+
+        super().accept()
+
+    #not used
+    @QtCore.pyqtSlot()
+    def accept_2(self):
         """
         Accepts the rename form and perform refactoring.
         """

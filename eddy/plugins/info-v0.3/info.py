@@ -619,13 +619,14 @@ class ProjectInfo(AbstractInfo):
         self.versionKey.setFont(Font('Roboto', 12))
         self.versionField = String(self)
         self.versionField.setFont(Font('Roboto', 12))
-        #self.versionField.setReadOnly(True)
+        self.versionField.setReadOnly(True)
         connect(self.versionField.editingFinished, self.versionEditingFinished)
 
         self.prefixKey = Key('Prefix', self)
         self.prefixKey.setFont(Font('Roboto', 12))
         self.prefixField = String(self)
         self.prefixField.setFont(Font('Roboto', 12))
+        self.prefixField.setReadOnly(True)
         connect(self.prefixField.editingFinished, self.prefixEditingFinished)
         """
         self.prefixesKey = Key('Prefix(es)', self)
@@ -639,16 +640,17 @@ class ProjectInfo(AbstractInfo):
         self.iriKey.setFont(Font('Roboto', 12))
         self.iriField = String(self)
         self.iriField.setFont(Font('Roboto', 12))
-        #self.iriField.setReadOnly(True)
+        self.iriField.setReadOnly(True)
         connect(self.iriField.editingFinished, self.iriEditingFinished)
 
+        """
         self.profileKey = Key('Profile', self)
         self.profileKey.setFont(Font('Roboto', 12))
         self.profileField = Select(self)
         self.profileField.setFont(Font('Roboto', 12))
         self.profileField.addItems(self.session.profileNames())
         connect(self.profileField.activated, self.profileChanged)
-
+        """
         self.ontologyPropHeader = Header('Ontology properties', self)
         self.ontologyPropHeader.setFont(Font('Roboto', 12))
 
@@ -658,7 +660,7 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         #self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
-        self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
+        #self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
         self.conceptsKey = Key('Concept', self)
         self.conceptsKey.setFont(Font('Roboto', 12))
@@ -1109,10 +1111,12 @@ class ProjectInfo(AbstractInfo):
         self.versionField.clearFocus()
         self.versionField.deselect()
 
+        """
         for i in range(self.profileField.count()):
             if self.profileField.itemText(i) == self.project.profile.name():
                 self.profileField.setCurrentIndex(i)
                 break
+        """
 
         self.attributesField.setValue(project.predicateNum(Item.AttributeNode))
         self.conceptsField.setValue(project.predicateNum(Item.ConceptNode))

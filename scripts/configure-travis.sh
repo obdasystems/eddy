@@ -82,6 +82,7 @@ pip install -U coveralls
 pip install -e hg+https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze/@ubuntu#egg=cx_Freeze
 pip install -e git+https://github.com/danielepantaleone/pyjnius.git@i386#egg=pyjnius --exists-action i
 pip install --pre github3.py
+pip install -U rfc3987
 
 cd ~
 rm -rf "${BUILDS_DIR}"

@@ -95,6 +95,7 @@ pip install -U coveralls
 pip install -U pyyaml
 pip install -U Pillow
 pip install --pre github3.py
+pip install -U rfc3987
 ## INSTALL PYTHON DEPENDENCIES (FROM MERCURIAL AND GIT)
 cd ${DOWNLOADS}
 pip install -e hg+https://danielepantaleone@bitbucket.org/danielepantaleone/cx_freeze/@ubuntu#egg=cx_Freeze

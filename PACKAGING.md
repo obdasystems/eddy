@@ -47,6 +47,7 @@ Install python required packages:
     >>> pip install -U coveralls
     >>> pip install -U pyyaml
     >>> pip install -U Pillow
+    >>> pip install -U rfc3987
 
 Change the current active directory and type the following:
 
