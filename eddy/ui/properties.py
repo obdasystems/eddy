@@ -39,6 +39,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramResize
@@ -572,12 +573,16 @@ class PredicateNodeProperty(NodeProperty):
 
             #print('new_rc', new_rc)
 
+            return_list.append(CommandProjectDisconnectSpecificSignals(self.project))
+
             if self.refactorField.isChecked():
                 for n in self.project.nodes():
                     if n.text() == self.node.text():
                         return_list.append(CommandNodeSetRemainingCharacters(n.remaining_characters, new_rc, n, self.project))
             else:
                 return_list.append(CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project))
+
+            return_list.append(CommandProjectConnectSpecificSignals(self.project))
 
             return return_list
 

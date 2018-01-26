@@ -34,7 +34,7 @@
 
 
 from PyQt5 import QtWidgets
-
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.datatypes.graphol import Item
 
 class CommandProjectSetIRIandPrefix(QtWidgets.QUndoCommand):
@@ -191,3 +191,41 @@ class CommandProjectSetProfile(QtWidgets.QUndoCommand):
                 # Emit updated signals.
         self.project.session.sgnUpdateState.emit()
         self.project.sgnUpdated.emit()
+
+
+class CommandProjectDisconnectSpecificSignals(QtWidgets.QUndoCommand):
+
+
+    def __init__(self, project):
+
+        super().__init__("Connect/disconnect specific signals")
+        self.project = project
+
+    def redo(self):
+
+        disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+
+    def undo(self):
+
+        connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+
+
+class CommandProjectConnectSpecificSignals(QtWidgets.QUndoCommand):
+
+    def __init__(self, project):
+
+        super().__init__("Connect/disconnect specific signals")
+        self.project = project
+
+    def redo(self):
+
+        connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+
+
+    def undo(self):
+
+        disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)

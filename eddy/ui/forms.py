@@ -40,6 +40,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange
@@ -301,6 +302,7 @@ class RefactorNameForm(QtWidgets.QDialog):
 
                 commands_label_change_list_1 = []
                 commands_label_change_list_2 = []
+                commands_rc_change = []
 
                 for node in self.project.predicates(self.node.type(), self.node.text()):
 
@@ -310,16 +312,26 @@ class RefactorNameForm(QtWidgets.QDialog):
                     Duplicate_dict_1[new_iri][1].add(node)
 
                     #commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
+                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
+                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
                     #commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
 
                     commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                    commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
                     commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
 
+                command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], list_of_nodes_to_process)
+
+                commands.extend(commands_label_change_list_1)
+                commands.extend(command_dict_change)
+                commands.extend(commands_rc_change)
+                commands.extend(commands_label_change_list_2)
 
             else:
                 #self.setText(self.old_text)
+
+                print('self.old_text',self.old_text)
+                print('currentData',currentData)
 
                 currentData_processed = ''
 
@@ -337,8 +349,13 @@ class RefactorNameForm(QtWidgets.QDialog):
                 if flag is True:
                     self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
+                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+
                 for node in self.project.predicates(self.node.type(), self.node.text()):
+                    print('node.id,node.remaining_characters,node.text()',node.id,'-',node.remaining_characters,'-',node.text())
                     commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+
+                commands.append(CommandProjectConnectSpecificSignals(self.project))
 
             if any(commands):
                 self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), currentData))
@@ -349,7 +366,6 @@ class RefactorNameForm(QtWidgets.QDialog):
 
         else:
             pass
-
 
         super().accept()
 

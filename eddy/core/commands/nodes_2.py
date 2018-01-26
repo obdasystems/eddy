@@ -117,6 +117,9 @@ class CommandCommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
         self.project.iri_of_cut_nodes = old_list
 
 
+
+
+
 class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
     def __init__(self, rc_undo, rc_redo, node, project):
@@ -136,13 +139,20 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
         self.node.remaining_characters = self.rc_redo
         old_text = self.node.text()
         new_text = GenerateNewLabel(self.project, self.node).return_label()
+        print('old_text',old_text)
+        print('new_text',new_text)
+
         CommandLabelChange(self.node.diagram, self.node, old_text, new_text).redo()
+
 
     def undo(self):
         """undo the command"""
         self.node.remaining_characters = self.rc_undo
         new_text = self.node.text()
         old_text = GenerateNewLabel(self.project, self.node).return_label()
+        print('old_text',old_text)
+        print('new_text',new_text)
+
         CommandLabelChange(self.node.diagram, self.node, old_text, new_text).undo()
 
 
