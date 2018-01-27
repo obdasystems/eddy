@@ -37,34 +37,6 @@ from PyQt5 import QtWidgets
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.datatypes.graphol import Item
 
-class CommandProjectSetIRIandPrefix(QtWidgets.QUndoCommand):
-    """
-    This command is used to set the IRI and prefix of a project.
-    """
-
-    def __init__(self, project, undo_iri, redo_iri, undo_prefix, redo_prefix):
-        super().__init__("set ontology IRI from {0} to {1} and ontology prefix from {2} to {3}".format(undo_iri, redo_iri, undo_prefix, redo_prefix))
-        self.undo_iri = undo_iri
-        self.redo_iri = redo_iri
-        self.undo_prefix = undo_prefix
-        self.redo_prefix = redo_prefix
-        self.project = project
-
-
-
-    def redo(self):
-        """redo the command"""
-        #print('CommandProjectSetIRI >>> redo')
-        self.project.iri = self.redo_iri
-        self.project.prefix = self.redo_prefix
-        self.project.sgnUpdated.emit()
-
-    def undo(self):
-        """undo the command"""
-        #print('CommandProjectSetIRI >>> undo')
-        self.project.iri = self.undo_iri
-        self.project.prefix = self.undo_prefix
-        self.project.sgnUpdated.emit()
 
 
 class CommandProjectSetIRI(QtWidgets.QUndoCommand):
@@ -195,37 +167,57 @@ class CommandProjectSetProfile(QtWidgets.QUndoCommand):
 
 class CommandProjectDisconnectSpecificSignals(QtWidgets.QUndoCommand):
 
-
-    def __init__(self, project):
+    def __init__(self, project, **kwargs):
 
         super().__init__("Connect/disconnect specific signals")
         self.project = project
-
-    def redo(self):
-
-        disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+        self.add_item_to_IRI_prefixes_nodes_dict = kwargs.get('add_item_to_IRI_prefixes_nodes_dict', True)
+        self.remove_item_from_IRI_prefixes_nodes_dict = kwargs.get('remove_item_from_IRI_prefixes_nodes_dict', True)
+        self.regenerate_label_of_nodes_for_iri = kwargs.get('regenerate_label_of_nodes_for_iri', True)
 
     def undo(self):
 
-        connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+        if self.add_item_to_IRI_prefixes_nodes_dict is True:
+            connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
+            connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+        if self.regenerate_label_of_nodes_for_iri is True:
+            connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)
+
+    def redo(self):
+
+        if self.add_item_to_IRI_prefixes_nodes_dict is True:
+            disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
+            disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+        if self.regenerate_label_of_nodes_for_iri is True:
+            disconnect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)
 
 
 class CommandProjectConnectSpecificSignals(QtWidgets.QUndoCommand):
 
-    def __init__(self, project):
+    def __init__(self, project, **kwargs):
 
         super().__init__("Connect/disconnect specific signals")
         self.project = project
+        self.add_item_to_IRI_prefixes_nodes_dict = kwargs.get('add_item_to_IRI_prefixes_nodes_dict', True)
+        self.remove_item_from_IRI_prefixes_nodes_dict = kwargs.get('remove_item_from_IRI_prefixes_nodes_dict', True)
+        self.regenerate_label_of_nodes_for_iri = kwargs.get('regenerate_label_of_nodes_for_iri', True)
 
     def redo(self):
 
-        connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
-
+        if self.add_item_to_IRI_prefixes_nodes_dict is True:
+            connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
+            connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+        if self.regenerate_label_of_nodes_for_iri is True:
+            connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)
 
     def undo(self):
 
-        disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+        if self.add_item_to_IRI_prefixes_nodes_dict is True:
+            disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
+        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
+            disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
+        if self.regenerate_label_of_nodes_for_iri is True:
+            disconnect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)

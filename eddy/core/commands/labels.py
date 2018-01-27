@@ -49,16 +49,17 @@ class GenerateNewLabel():
         self.rc_to_set = node.remaining_characters
         self.node = node
 
-        self.prefered_prefix = kwargs.get('prefered_prefix',None)
+        print('GenerateNewLabel >>> iri_to_set',self.iri_to_set)
+        print('GenerateNewLabel >>> prefix_to_set', self.prefix_to_set)
+        print('GenerateNewLabel >>> rc_to_set', self.rc_to_set)
 
     def return_label(self):
 
-        if self.prefered_prefix is None:
-
-            if (self.node.type() is Item.IndividualNode) and (self.node.identity() is Identity.Value):
-                return self.node.text()
+        if (self.node.type() is Item.IndividualNode) and (self.node.identity() is Identity.Value):
+            return_label = self.node.text()
+        else:
             if (self.prefix_to_set is None) and (self.iri_to_set is None):
-                return_label = str('No IRI|Prefix'+self.rc_to_set)
+                return_label = str('No IRI|Prefix' + self.rc_to_set)
             else:
                 if (self.prefix_to_set is not None) and ('Error multiple IRIS-' in self.prefix_to_set):
                     return_label = self.prefix_to_set
@@ -68,20 +69,17 @@ class GenerateNewLabel():
                     return return_label
                 if self.prefix_to_set is None:
                     if self.iri_to_set == self.project.iri:
-                         if self.project.prefix is not None:
+                        if self.project.prefix is not None:
                             return_label = str(self.project.prefix + ':' + self.rc_to_set)
-                         else:
+                        else:
                             return_label = self.project.get_full_IRI(self.project.iri, None, self.rc_to_set)
                     else:
                         return_label = self.project.get_full_IRI(self.iri_to_set, None, self.rc_to_set)
                 else:
                     return_label = str(self.prefix_to_set + ':' + self.rc_to_set)
-            return return_label
+        print('GenerateNewLabel >>>  return_label', return_label)
+        return return_label
 
-        else:
-
-            return_label = str(self.prefered_prefix + ':' + self.rc_to_set)
-            return return_label
 
 class CommandLabelChange(QtWidgets.QUndoCommand):
     """

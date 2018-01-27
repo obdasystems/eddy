@@ -352,13 +352,27 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     old_iri = self.project.get_iri_of_node(node)
 
+                    print('old_iri,new_iri',old_iri,'-',new_iri)
+
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)
 
+                    self.setText(self.old_text)
+
+                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
+
+                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
                     commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.diagram.project))
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
+
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
+                    commands.append(CommandProjectConnectSpecificSignals(self.project))
+
+
+
+
                 else:
                     self.setText(self.old_text)
 
@@ -378,9 +392,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     if flag is True:
                         self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
-                    commands.append(CommandProjectDisconnectSpecificSignals(self.diagram.project))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.diagram.project))
-                    commands.append(CommandProjectConnectSpecificSignals(self.diagram.project))
+                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+                    commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 if any(commands):
                     self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))

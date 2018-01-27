@@ -92,7 +92,7 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
 
 
-class CommandCommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
+class CommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
 
 
     def __init__(self, list_undo, list_redo, project):
@@ -117,12 +117,9 @@ class CommandCommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
         self.project.iri_of_cut_nodes = old_list
 
 
-
-
-
 class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
-    def __init__(self, rc_undo, rc_redo, node, project):
+    def __init__(self, rc_undo, rc_redo, node, project, **kwargs):
         """
         Initialize the command.
         :type project: Project
@@ -133,27 +130,32 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
         self.rc_redo = rc_redo
         self.node = node
         self.project = project
+        self.regenerate_label = kwargs.get('regenerate_label',True)
 
     def redo(self):
         """redo the command"""
         self.node.remaining_characters = self.rc_redo
-        old_text = self.node.text()
-        new_text = GenerateNewLabel(self.project, self.node).return_label()
-        print('old_text',old_text)
-        print('new_text',new_text)
 
-        CommandLabelChange(self.node.diagram, self.node, old_text, new_text).redo()
+        if self.regenerate_label is True:
+            old_text = self.node.text()
+            new_text = GenerateNewLabel(self.project, self.node).return_label()
+            print('CommandNodeSetRemainingCharacters    >>>     old_text',old_text)
+            print('CommandNodeSetRemainingCharacters    >>>     new_text',new_text)
+
+            CommandLabelChange(self.node.diagram, self.node, old_text, new_text).redo()
 
 
     def undo(self):
         """undo the command"""
         self.node.remaining_characters = self.rc_undo
-        new_text = self.node.text()
-        old_text = GenerateNewLabel(self.project, self.node).return_label()
-        print('old_text',old_text)
-        print('new_text',new_text)
 
-        CommandLabelChange(self.node.diagram, self.node, old_text, new_text).undo()
+        if self.regenerate_label is True:
+            new_text = self.node.text()
+            old_text = GenerateNewLabel(self.project, self.node).return_label()
+            print('CommandNodeSetRemainingCharacters    >>>     old_text',old_text)
+            print('CommandNodeSetRemainingCharacters    >>>     new_text',new_text)
+
+            CommandLabelChange(self.node.diagram, self.node, old_text, new_text).undo()
 
 
 class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):

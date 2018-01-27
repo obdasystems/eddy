@@ -104,7 +104,7 @@ from eddy.core.reasoner import ReasonerManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandCommandProjetSetIRIofCutNodes
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
 from eddy.core.update import UpdateCheckWorker
 
 from eddy.ui.about import AboutDialog
@@ -1227,7 +1227,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         commands.append(
             CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_update,
                                                  nodes_to_update))
-        commands.append(CommandCommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
+        commands.append(CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
 
         self.undostack.beginMacro('>>')
         for command in commands:

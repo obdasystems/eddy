@@ -35,7 +35,7 @@
 
 from PyQt5 import QtCore
 
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandCommandProjetSetIRIofCutNodes
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
 from eddy.core.commands.common import CommandItemsAdd
 from eddy.core.output import getLogger
 
@@ -223,11 +223,11 @@ class Clipboard(QtCore.QObject):
 
         commands = []
 
-        #commands.append(CommandCommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, diagram.project))
+        #commands.append(CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, diagram.project))
         commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated, nodes_to_be_updated))
         commands.append(CommandItemsAdd(diagram, items))
         #commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated, nodes_to_be_updated))
-        #commands.append(CommandCommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
+        #commands.append(CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
 
         self.session.undostack.beginMacro('edit paste >>')
         for command in commands:

@@ -280,10 +280,12 @@ class RefactorNameForm(QtWidgets.QDialog):
         if currentData and currentData != self.old_text:
 
             match = RE_VALUE.match(currentData)
+            match_old = RE_VALUE.match(self.old_text)
 
             commands = []
 
             if match:
+
                 new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
                 new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
                 new_iri = None
@@ -322,10 +324,14 @@ class RefactorNameForm(QtWidgets.QDialog):
 
                 command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], list_of_nodes_to_process)
 
+                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+
                 commands.extend(commands_label_change_list_1)
-                commands.extend(command_dict_change)
+                commands.append(command_dict_change)
                 commands.extend(commands_rc_change)
                 commands.extend(commands_label_change_list_2)
+
+                commands.append(CommandProjectConnectSpecificSignals(self.project))
 
             else:
                 #self.setText(self.old_text)
@@ -347,15 +353,67 @@ class RefactorNameForm(QtWidgets.QDialog):
                         currentData_processed = currentData_processed + c
 
                 if flag is True:
-                    self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
+                    self.session.statusBar().showMessage(
+                        'Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',
+                        15000)
 
-                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+                if match_old:
 
-                for node in self.project.predicates(self.node.type(), self.node.text()):
-                    print('node.id,node.remaining_characters,node.text()',node.id,'-',node.remaining_characters,'-',node.text())
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+                    new_remaining_characters = currentData_processed
+                    new_iri = self.project.iri
 
-                commands.append(CommandProjectConnectSpecificSignals(self.project))
+                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                        self.project.IRI_prefixes_nodes_dict, dict())
+                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                        self.project.IRI_prefixes_nodes_dict, dict())
+
+                    old_iri = self.project.get_iri_of_node(self.node)
+
+                    print('old_iri,new_iri',old_iri,'-',new_iri)
+
+                    list_of_nodes_to_process = []
+
+                    commands_label_change_list_1 = []
+                    commands_label_change_list_2 = []
+                    commands_rc_change = []
+
+                    for node in self.project.predicates(self.node.type(), self.node.text()):
+                        list_of_nodes_to_process.append(node)
+
+                        Duplicate_dict_1[old_iri][1].remove(node)
+                        Duplicate_dict_1[new_iri][1].add(node)
+
+                        # commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                        # commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
+                        # commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
+                        # commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+
+                        commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                        commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
+                        commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+
+                    command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
+                                                                               Duplicate_dict_1, [old_iri, new_iri],
+                                                                               list_of_nodes_to_process)
+
+                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+
+                    commands.extend(commands_label_change_list_1)
+                    commands.append(command_dict_change)
+                    commands.extend(commands_rc_change)
+                    commands.extend(commands_label_change_list_2)
+
+                    commands.append(CommandProjectConnectSpecificSignals(self.project))
+
+                else:
+
+                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+
+                    for node in self.project.predicates(self.node.type(), self.node.text()):
+                        print('node.id,node.remaining_characters,node.text()',node.id,'-',node.remaining_characters,'-',node.text())
+                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+
+                    commands.append(CommandProjectConnectSpecificSignals(self.project))
 
             if any(commands):
                 self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), currentData))

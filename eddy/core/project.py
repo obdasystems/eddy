@@ -459,7 +459,7 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
 
-        #print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
+        print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
         #print('self.iri_of_cut_nodes',self.iri_of_cut_nodes)
 
         #if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
@@ -527,12 +527,12 @@ class Project(QtCore.QObject):
 
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
-        #print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
+        print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
 
-        #print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
+        print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
         #remove the node in all the indices of the dictionary
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                     'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
@@ -550,7 +550,7 @@ class Project(QtCore.QObject):
             else:
                 LOGGER.critical('multiple IRIs found for node')
 
-        #print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
+        print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
     #not used
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
@@ -1069,7 +1069,7 @@ class Project(QtCore.QObject):
 
     def node_label_update_core_code(self,node):
 
-        #print('node_label_update_core_code   >>>>>')
+        print('node_label_update_core_code   >>>>>')
 
         old_label = node.text()
 
@@ -1078,12 +1078,10 @@ class Project(QtCore.QObject):
         #else:
             #new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
 
-       # print(' def node_label_update_core_code     >>> new_label', new_label)
+        print(' def node_label_update_core_code     >>> new_label', new_label)
 
         if old_label==new_label:
             return
-
-
 
         # CHANGE THE CONTENT OF THE LABEL
         self.doRemoveItem(node.diagram, node)
@@ -1117,10 +1115,10 @@ class Project(QtCore.QObject):
 
         if ((node_inp is None) or (node_inp is '')) and ((iri_inp is None) or (iri_inp is '')):
             return
-        #print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
+        print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
 
-        disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
-        disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+        #disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        #disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
         if (node_inp is None) or (node_inp is ''):
             #print('node_inp is None')
@@ -1136,8 +1134,8 @@ class Project(QtCore.QObject):
                     self.node_label_update_core_code(n)
                     break
 
-        connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
-        connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+        #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
     #not used
     @QtCore.pyqtSlot(str, str, str)
@@ -1147,8 +1145,8 @@ class Project(QtCore.QObject):
 
         # print('def regenerate_label_of_nodes_for_iri_2    >>>',iri_inp,' - ',node_inp)
 
-        disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
-        disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+        #disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        #disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
         if (node_inp is None) or (node_inp is ''):
             # print('node_inp is None')
@@ -1164,8 +1162,8 @@ class Project(QtCore.QObject):
                     self.node_label_update_core_code(n,prefered_prefix)
                     break
 
-        connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
-        connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+        #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
+        #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
 
     def check_validity_of_IRI(self,iri_inp):
