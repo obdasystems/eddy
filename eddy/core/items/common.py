@@ -352,8 +352,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     old_iri = self.project.get_iri_of_node(node)
 
-                    print('old_iri,new_iri',old_iri,'-',new_iri)
-
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)
 
@@ -369,9 +367,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
-
-
-
 
                 else:
                     self.setText(self.old_text)
