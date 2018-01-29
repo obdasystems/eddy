@@ -1125,7 +1125,12 @@ class Project(QtCore.QObject):
             if iri_inp in self.IRI_prefixes_nodes_dict.keys():
                 nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
                 #print('len(nodes_to_update)',len(nodes_to_update))
+
+                nodes_to_update_copy = []
                 for node in nodes_to_update:
+                    nodes_to_update_copy.append(node)
+
+                for node in nodes_to_update_copy:
                     self.node_label_update_core_code(node)
         else:
             #print('node_inp is not None')

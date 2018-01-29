@@ -522,10 +522,6 @@ class PredicateNodeProperty(NodeProperty):
         """
         commands = [self.positionChanged()]
 
-        text_changed_result = self.textChanged()
-        if text_changed_result is not None:
-            commands.extend(text_changed_result)
-
         iri_changed_result = self.IRIChanged()
 
         if iri_changed_result is not None:
@@ -533,7 +529,13 @@ class PredicateNodeProperty(NodeProperty):
                 super().reject()
                 return
             else:
-                commands.append(iri_changed_result)
+
+                commands.extend(iri_changed_result)
+
+        text_changed_result = self.textChanged()
+        if text_changed_result is not None:
+            commands.extend(text_changed_result)
+
 
         if any(commands):
             self.session.undostack.beginMacro('edit {0} properties'.format(self.node.name))
@@ -592,51 +594,84 @@ class PredicateNodeProperty(NodeProperty):
         #Change the iri of the node.
         #:rtype: Command
 
-        #if (self.iriField.value() != self.project.get_iri_of_node(node)) or (self.iriversionField.value() != self.node.IRI_version(self.project)):
-        if self.iriField.value() != self.project.get_iri_of_node(self.node):
-            connect(self.project.sgnIRINodeEntryAdded, self.metaDataChanged_ADD_OK)
-            connect(self.project.sgnIRINodeEntryRemoved, self.metaDataChanged_REMOVE_OK)
-            connect(self.project.sgnIRINodeEntryIgnored, self.metaDataChanged_IGNORE)
+        IRI_valid = self.project.check_validity_of_IRI(self.iriField.value())
 
-            # check for conflict in prefixes
-            # transaction = remove(old) + add(new)
-            # perform transaction on duplicate dict.
-            # if successful, original_dict = duplicate_dict
-            # else duplicate_dict = original_dict
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+        if IRI_valid is False:
+            self.session.statusBar().showMessage('Invalid IRI.', 15000)
+            return None
+        else:
 
-            list_of_nodes_to_process = []
+            old_iri = self.project.get_iri_of_node(self.node)
+            new_iri = self.iriField.value()
 
-            if self.refactorField.isChecked():
-                for n in self.project.nodes():
-                    if (self.project.get_iri_of_node(n) == self.project.get_iri_of_node(self.node)) and (n.remaining_characters == self.node.remaining_characters):
-                        list_of_nodes_to_process.append(n)
-            else:
-                list_of_nodes_to_process.append(self.node)
+            #if (self.iriField.value() != self.project.get_iri_of_node(node)) or (self.iriversionField.value() != self.node.IRI_version(self.project)):
+            if new_iri != old_iri:
+                connect(self.project.sgnIRINodeEntryAdded, self.metaDataChanged_ADD_OK)
+                connect(self.project.sgnIRINodeEntryRemoved, self.metaDataChanged_REMOVE_OK)
+                connect(self.project.sgnIRINodeEntryIgnored, self.metaDataChanged_IGNORE)
 
-            for nd in list_of_nodes_to_process:
+                # check for conflict in prefixes
+                # transaction = remove(old) + add(new)
+                # perform transaction on duplicate dict.
+                # if successful, original_dict = duplicate_dict
+                # else duplicate_dict = original_dict
+                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
 
-                self.project.removeIRINodeEntry(Duplicate_dict_1, self.project.get_iri_of_node(nd), nd)
-                self.project.addIRINodeEntry(Duplicate_dict_1, self.iriField.value(), nd)
+                list_of_nodes_to_process = []
 
-                if (self.metaDataChanged_REMOVE_OK_var is True) and (self.metaDataChanged_ADD_OK_var is True):
-                    self.metaDataChanged_REMOVE_OK_var = False
-                    self.metaDataChanged_ADD_OK_var = False
-                    self.metaDataChanged_IGNORE_var = False
+                if self.refactorField.isChecked():
+                    for n in self.project.nodes():
+                        if (self.project.get_iri_of_node(n) == old_iri) and (n.remaining_characters == self.node.remaining_characters):
+                            list_of_nodes_to_process.append(n)
                 else:
-                    LOGGER.warning('redo != undo but transaction was not executed correctly')
-                    self.metaDataChanged_REMOVE_OK_var = False
-                    self.metaDataChanged_ADD_OK_var = False
-                    self.metaDataChanged_IGNORE_var = False
-                    return str('Error in '+str(nd))
-            return CommandProjetSetIRIPrefixesNodesDict(self.diagram.project, Duplicate_dict_2, Duplicate_dict_1, [self.iriField.value(), self.project.get_iri_of_node(self.node)], list_of_nodes_to_process)
+                    list_of_nodes_to_process.append(self.node)
 
-        self.metaDataChanged_REMOVE_OK_var = False
-        self.metaDataChanged_ADD_OK_var = False
-        self.metaDataChanged_IGNORE_var = False
+                commands = []
 
-        return None
+                for nd in list_of_nodes_to_process:
+
+                    self.project.removeIRINodeEntry(Duplicate_dict_1, old_iri, nd)
+                    self.project.addIRINodeEntry(Duplicate_dict_1, new_iri, nd)
+
+                    if (self.metaDataChanged_REMOVE_OK_var is True) and (self.metaDataChanged_ADD_OK_var is True):
+                        self.metaDataChanged_REMOVE_OK_var = False
+                        self.metaDataChanged_ADD_OK_var = False
+                        self.metaDataChanged_IGNORE_var = False
+                    else:
+                        LOGGER.warning('redo != undo but transaction was not executed correctly')
+                        self.metaDataChanged_REMOVE_OK_var = False
+                        self.metaDataChanged_ADD_OK_var = False
+                        self.metaDataChanged_IGNORE_var = False
+                        return str('Error in '+str(nd))
+
+                if len(Duplicate_dict_1[new_iri][0]) == 0:
+                    new_label = self.project.get_full_IRI(new_iri, None, self.node.remaining_characters)
+                else:
+                    new_label = str(Duplicate_dict_1[new_iri][0][len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + self.node.remaining_characters)
+
+                print('new_label',new_label)
+
+                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+
+                for nd in list_of_nodes_to_process:
+                    commands.append(CommandLabelChange(nd.diagram, nd, nd.text(), new_label))
+
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                                     [new_iri, old_iri], list_of_nodes_to_process))
+
+                for nd in list_of_nodes_to_process:
+                    commands.append(CommandLabelChange(nd.diagram, nd, nd.text(), new_label))
+
+                commands.append(CommandProjectConnectSpecificSignals(self.project))
+
+                return commands
+
+            self.metaDataChanged_REMOVE_OK_var = False
+            self.metaDataChanged_ADD_OK_var = False
+            self.metaDataChanged_IGNORE_var = False
+
+            return None
 
     @QtCore.pyqtSlot(str, str, str)
     def metaDataChanged_REMOVE_OK(self, iri, node, message):

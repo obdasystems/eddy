@@ -797,7 +797,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('special_bottom'))
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Set Prefix', objectName='Set Prefix')
+        menu = QtWidgets.QMenu('Change Prefix', objectName='Change Prefix')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
         menu.addAction(self.action('special_top'))
         menu.addAction(self.action('special_bottom'))

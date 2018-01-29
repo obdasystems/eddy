@@ -202,10 +202,12 @@ class RefactorNameForm(QtWidgets.QDialog):
         match = RE_VALUE.match(self.node.text())
         if match:
             self.renameField.setValue(self.node.text())
-            self.old_text = self.node.text()
+
         else:
             self.renameField.setValue(self.node.remaining_characters)
-            self.old_text = self.node.remaining_characters
+            #self.old_text = self.node.remaining_characters
+
+        self.old_text = self.node.text()
 
         connect(self.renameField.textChanged, self.nameChanged)
 
@@ -277,6 +279,9 @@ class RefactorNameForm(QtWidgets.QDialog):
         """
         currentData = self.renameField.value()
 
+        print('self.old_text', self.old_text)
+        print('currentData', currentData)
+
         if currentData and currentData != self.old_text:
 
             match = RE_VALUE.match(currentData)
@@ -336,8 +341,6 @@ class RefactorNameForm(QtWidgets.QDialog):
             else:
                 #self.setText(self.old_text)
 
-                print('self.old_text',self.old_text)
-                print('currentData',currentData)
 
                 currentData_processed = ''
 
@@ -388,9 +391,14 @@ class RefactorNameForm(QtWidgets.QDialog):
                         # commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
                         # commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
 
-                        commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                        if len(Duplicate_dict_1[new_iri][0]) == 0:
+                            new_label = self.project.get_full_IRI(new_iri, None, new_remaining_characters)
+                        else:
+                            new_label = str(Duplicate_dict_1[new_iri][0][len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + new_remaining_characters)
+
+                        commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, new_label))
                         commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
-                        commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                        commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, new_label))
 
                     command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
                                                                                Duplicate_dict_1, [old_iri, new_iri],
