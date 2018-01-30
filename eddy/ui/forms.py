@@ -318,11 +318,6 @@ class RefactorNameForm(QtWidgets.QDialog):
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)
 
-                    #commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
-                    #commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
-
                     commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
                     commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
                     commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
@@ -385,11 +380,6 @@ class RefactorNameForm(QtWidgets.QDialog):
 
                         Duplicate_dict_1[old_iri][1].remove(node)
                         Duplicate_dict_1[new_iri][1].add(node)
-
-                        # commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
-                        # commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                        # commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
-                        # commands.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
 
                         if len(Duplicate_dict_1[new_iri][0]) == 0:
                             new_label = self.project.get_full_IRI(new_iri, None, new_remaining_characters)
@@ -580,7 +570,6 @@ class ValueForm(QtWidgets.QDialog):
         #print('data',data)
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
-            #self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
 
             new_prefix = datatype.value[0:datatype.value.index(':')]
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
@@ -610,10 +599,12 @@ class ValueForm(QtWidgets.QDialog):
 
             commands = []
 
+            commands.append(CommandProjectDisconnectSpecificSignals(self.project))
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
             commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
             commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
+            commands.append(CommandProjectConnectSpecificSignals(self.project))
 
             if any(commands):
                 self.session.undostack.beginMacro('edit Forms >> accept() {0}'.format(node))

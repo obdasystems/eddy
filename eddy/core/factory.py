@@ -208,7 +208,7 @@ class MenuFactory(QtCore.QObject):
         menu = self.buildGenericNodeMenu(diagram, node)
         # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
         self.customAction['occurrences'] = []
-        self.customAction['Change Prefix'] = []
+        #self.customAction['Change Prefix'] = []
 
         for pnode in self.project.predicates(node.type(), node.text()):
 
@@ -233,21 +233,33 @@ class MenuFactory(QtCore.QObject):
 
         if node.special() is None:
             self.customAction['Change Prefix'] = []
+            self.customAction['Refactor Change Prefix'] = []
 
             for iri in self.project.IRI_prefixes_nodes_dict.keys():
                 prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
                 for p in prefixes:
                     if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
                         continue
+
+                    pr_node = self.project.get_prefix_of_node(node)
+
                     action = QtWidgets.QAction(self.session)
                     action.setCheckable(True)
-                    pr_node = self.project.get_prefix_of_node(node)
                     action.setChecked(pr_node is p)
                     action.setData(node)
                     action.setText('{}'.format(p))
                     connect(action.triggered, self.session.setprefix)
                     self.customAction['Change Prefix'].append(action)
 
+                    action_2 = QtWidgets.QAction(self.session)
+                    action_2.setCheckable(True)
+                    action_2.setChecked(pr_node is p)
+                    action_2.setData(node)
+                    action_2.setText('{}'.format(p))
+                    connect(action_2.triggered, self.session.refactorsetprefix)
+                    self.customAction['Refactor Change Prefix'].append(action_2)
+
+            ############
             self.customMenu['Change Prefix'] = QtWidgets.QMenu('Change Prefix')
             self.customMenu['Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
             #self.customMenu['Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
@@ -256,6 +268,18 @@ class MenuFactory(QtCore.QObject):
                 self.customMenu['Change Prefix'].addAction(action)
 
             menu.insertMenu(self.session.action('node_properties'), self.customMenu['Change Prefix'])
+
+            ############
+
+            self.customMenu['Refactor Change Prefix'] = QtWidgets.QMenu('Refactor Change Prefix')
+            self.customMenu['Refactor Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
+            #self.customMenu['Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
+
+            for action in (self.customAction['Refactor Change Prefix']):
+                self.customMenu['Refactor Change Prefix'].addAction(action)
+
+            self.session.menu('refactor').insertMenu(self.session.action('node_properties'), self.customMenu['Refactor Change Prefix'])
+            ############
 
         return menu
 

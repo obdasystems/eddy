@@ -175,8 +175,6 @@ class Project(QtCore.QObject):
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
-        #connect(self.sgnPreferedPrefixListUpdated, self.regenerate_label_of_nodes_for_iri_2)
-
 
     @property
     def iri(self):
@@ -1141,35 +1139,6 @@ class Project(QtCore.QObject):
 
         #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
-
-    #not used
-    @QtCore.pyqtSlot(str, str, str)
-    def regenerate_label_of_nodes_for_iri_2(self, iri_inp, node_inp, prefered_prefix):
-
-        # input string/string
-
-        # print('def regenerate_label_of_nodes_for_iri_2    >>>',iri_inp,' - ',node_inp)
-
-        #disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
-        #disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
-
-        if (node_inp is None) or (node_inp is ''):
-            # print('node_inp is None')
-            if iri_inp in self.IRI_prefixes_nodes_dict.keys():
-                nodes_to_update = self.IRI_prefixes_nodes_dict[iri_inp][1]
-                # print('len(nodes_to_update)',len(nodes_to_update))
-                for node in nodes_to_update:
-                    self.node_label_update_core_code(node,prefered_prefix)
-        else:
-            # print('node_inp is not None')
-            for n in self.nodes():
-                if str(n) == node_inp:
-                    self.node_label_update_core_code(n,prefered_prefix)
-                    break
-
-        #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
-        #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
-
 
     def check_validity_of_IRI(self,iri_inp):
 

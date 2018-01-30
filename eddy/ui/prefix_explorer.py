@@ -40,18 +40,12 @@ from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.qt import Font
 
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.output import getLogger
-from eddy.core.common import HasThreadingSystem, HasWidgetSystem
+from eddy.core.common import HasThreadingSystem
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.exporters.owl2 import OWLOntologyFetcher
-from eddy.core.datatypes.owl import OWLAxiom,OWLSyntax
-from eddy.core.worker import AbstractWorker
-from jnius import autoclass, cast, detach
-from eddy.core.datatypes.graphol import Special
-import sys,math, threading
-
 
 LOGGER = getLogger()
 
@@ -536,8 +530,20 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                 pass
 
         if process is True:
-            self.session.undostack.push(CommandProjetSetIRIPrefixesNodesDict(self.project,\
+
+            commands = []
+
+            commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,\
                                         Duplicate_IRI_prefixes_nodes_dict_2,Duplicate_IRI_prefixes_nodes_dict_1, [iri_inp], None))
+            commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+
+            if any(commands):
+                self.session.undostack.beginMacro('add/remove IRI')
+                for command in commands:
+                    if command:
+                        self.session.undostack.push(command)
+                self.session.undostack.endMacro()
 
         self.ENTRY_ADD_OK_var = set()
         self.ENTRY_REMOVE_OK_var = set()
@@ -609,10 +615,22 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                 process = True
 
         if process is True:
-            self.session.undostack.push(CommandProjetSetIRIPrefixesNodesDict(self.project, \
+
+            commands = []
+
+            commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, \
                                                                              Duplicate_IRI_prefixes_nodes_dict_2,
                                                                              Duplicate_IRI_prefixes_nodes_dict_1,
                                                                              iris_to_be_updated, None))
+            commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+
+            if any(commands):
+                self.session.undostack.beginMacro('modify IRI')
+                for command in commands:
+                    if command:
+                        self.session.undostack.push(command)
+                self.session.undostack.endMacro()
 
         self.ENTRY_MODIFY_OK_var = set()
         self.ENTRY_IGNORE_var = set()
