@@ -149,7 +149,6 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
     def closeEvent(self, QCloseEvent):
 
-
         disconnect(self.table.cellPressed, self.cell_pressed)
         disconnect(self.table.cellChanged, self.cell_changed)
 
@@ -261,59 +260,60 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
             if column == 0:
                 # add/remove/modify IRI
+                if (self.old_text == '' and self.new_text != '') or \
+                        (self.old_text != '' and self.new_text != '' and row == self.table.rowCount() - 1):
 
+                    IRI_valid = self.project.check_validity_of_IRI(self.new_text)
 
+                    if IRI_valid is False:
+                        self.session.statusBar().showMessage('Invalid IRI.', 15000)
+                        self.table.item(row, column).setText(self.old_text)
+                    else:
+                        # Add IRI
+                        prefix_inp = self.table.item(row, 1).text().strip()
 
-                    if (self.old_text == '' and self.new_text != '') or \
-                            (self.old_text != '' and self.new_text != '' and row == self.table.rowCount()-1) :
-
-                        IRI_valid = self.project.check_validity_of_IRI(self.new_text)
-
-                        if IRI_valid is False:
-                            self.session.statusBar().showMessage('Invalid IRI.', 15000)
-                            self.table.item(row, column).setText(self.old_text)
-                        else:
-
-                            # Add IRI
-                            prefix_inp = self.table.item(row, 1).text().strip()
-
-                            if (prefix_inp == ''):
-                                if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
-                                    pass
-                                else:
-                                    self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add')
-                            else:
-                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, prefix_inp, 'add')
-
-
-                    elif self.old_text != '' and self.new_text != '':
-
-                        IRI_valid = self.project.check_validity_of_IRI(self.new_text)
-
-                        if IRI_valid is False:
-                            self.session.statusBar().showMessage('Invalid IRI.', 15000)
-                            self.table.item(row, column).setText(self.old_text)
-                        else:
-
-                            # Modify IRI
-                            if row == self.table.rowCount()-1:
+                        if (prefix_inp == ''):
+                            if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
                                 pass
                             else:
-                                self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add', display_in_widget=True)
+                        else:
+                            self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, prefix_inp, 'add', display_in_widget=True)
 
-                    elif self.old_text != '' and self.new_text == '':
 
-                        # Remove IRI
-                        if row == self.table.rowCount()-1:
+                elif self.old_text != '' and self.new_text != '':
+
+                    IRI_valid = self.project.check_validity_of_IRI(self.new_text)
+
+                    if IRI_valid is False:
+                        self.session.statusBar().showMessage('Invalid IRI.', 15000)
+                        self.table.item(row, column).setText(self.old_text)
+                    else:
+
+                        # Modify IRI
+                        if row == self.table.rowCount() - 1:
                             pass
                         else:
-                            prefix_inp = self.table.item(row, 1).text().strip()
-                            if (prefix_inp == ''):
-                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
-                            else:
-                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, prefix_inp, 'remove')
-                    else:
+                            self.process_entry_from_textboxes_for_task_modify(self.old_text, self.new_text, None, None)
+
+                elif self.old_text != '' and self.new_text == '':
+
+                    # Remove IRI
+                    if row == self.table.rowCount() - 1:
                         pass
+                    else:
+                        prefix_inp = self.table.item(row, 1).text().strip()
+                        if (prefix_inp == ''):
+                            self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
+                        else:
+                            if len(self.project.IRI_prefixes_nodes_dict[self.old_text][0]) == 1:
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove', display_in_widget=True)
+                            elif len(self.project.IRI_prefixes_nodes_dict[self.old_text][0]) > 1:
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, prefix_inp, 'remove', display_in_widget=True)
+                            else:
+                                pass
+                else:
+                    pass
             else:
                 # add/remove/modify prefixes
 
@@ -343,7 +343,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                         if iri_inp == '':
                             pass
                         else:
-                            self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.new_text, 'add')
+                            self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.new_text, 'add', display_in_widget=True)
 
                     elif self.old_text != '' and self.new_text != '':
 
@@ -359,7 +359,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                         if row == self.table.rowCount()-1:
                             pass
                         else:
-                            self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.old_text, 'remove')
+                            self.process_entry_from_textboxes_for_button_add_or_remove(iri_inp, self.old_text, 'remove', display_in_widget=True)
 
                     else:
                         pass
@@ -461,7 +461,8 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                 for p in prefixes:
                     self.append_row_and_column_to_table(iri, p, True, None)
             else:
-                self.append_row_and_column_to_table(iri, '', True, None)
+                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
+                    self.append_row_and_column_to_table(iri, '', True, None)
 
         self.append_row_and_column_to_table('','',True,None)
 
@@ -469,7 +470,9 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.redraw()
 
-    def process_entry_from_textboxes_for_button_add_or_remove(self,iri_inp,prefix_inp,inp_task):
+    def process_entry_from_textboxes_for_button_add_or_remove(self,iri_inp,prefix_inp,inp_task,**kwargs):
+
+        display_in_widget = kwargs.get('display_in_widget',False)
 
         self.ENTRY_ADD_OK_var = set()
         self.ENTRY_REMOVE_OK_var = set()
@@ -492,7 +495,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             if inp_task == 'remove':
                 # self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
                 self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix_inp,
-                                                       'remove_entry')
+                                                       'remove_entry', display_in_widget=display_in_widget)
                 if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
                     LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                     return
@@ -501,7 +504,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             elif inp_task == 'add':
                 # self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, prefix)
                 self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, prefix_inp,
-                                                       'add_entry')
+                                                       'add_entry', display_in_widget=display_in_widget)
                 if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var):
                     LOGGER.error('transaction was not executed correctly; problem with a prefix/IRI')
                     return
@@ -512,7 +515,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         else:
             if inp_task == 'remove':
                 #self.project.removeIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
-                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, None, 'remove_entry')
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, None, 'remove_entry', display_in_widget=display_in_widget)
                 if (False in self.ENTRY_REMOVE_OK_var) or (True in self.ENTRY_IGNORE_var):
                     LOGGER.error('transaction was not executed correctly; problem with IRI')
                     return
@@ -520,7 +523,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                     process = True
             elif inp_task == 'add':
                 #self.project.addIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri, None)
-                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, None, 'add_entry')
+                self.project.addORremoveIRIPrefixEntry(Duplicate_IRI_prefixes_nodes_dict_1, iri_inp, None, 'add_entry', display_in_widget=display_in_widget)
                 if (False in self.ENTRY_ADD_OK_var) or (True in self.ENTRY_IGNORE_var):
                     LOGGER.error('transaction was not executed correctly; problem with IRI')
                     return
@@ -549,7 +552,6 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.ENTRY_REMOVE_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
-    # has to be edited
     def process_entry_from_textboxes_for_task_modify(self, iri_old, iri_new, prefix_old, prefix_new):
 
         print('process_entry_from_textboxes_for_task_modify >>>')

@@ -207,7 +207,10 @@ class Project(QtCore.QObject):
         project_prefixes = self.prefixes
 
         if len(project_prefixes) == 0:
-            return None
+            if 'display_in_widget' in self.IRI_prefixes_nodes_dict[self.iri][2]:
+                return ''
+            else:
+                return None
         else:
             return project_prefixes[len(project_prefixes)-1]
 
@@ -262,14 +265,21 @@ class Project(QtCore.QObject):
     def get_prefix_of_node(self,node_inp):
 
         node_prefixes = self.get_prefixes_of_node(node_inp)
+        node_properties = self.get_properties_of_node(node_inp)
 
         if node_prefixes is None:
-            return None
+            if 'display_in_widget' in node_properties:
+                return ''
+            else:
+                return None
         if 'Error multiple IRIS-' in node_prefixes:
             return node_prefixes
 
         if len(node_prefixes) == 0:
-            return None
+            if 'display_in_widget' in node_properties:
+                return ''
+            else:
+                return None
         else:
             return node_prefixes[len(node_prefixes)-1]
 
@@ -291,6 +301,57 @@ class Project(QtCore.QObject):
             return iri + '#' + remaining_characters
         else:
             return iri + '/' + version + '#' + remaining_characters
+
+    def get_iri_for_prefix(self,prefix_inp):
+
+        if prefix_inp is None:
+            return None
+
+        return_list = []
+
+        for iri in self.IRI_prefixes_nodes_dict.keys():
+            prefixes = self.IRI_prefixes_nodes_dict[iri][0]
+            properties = self.IRI_prefixes_nodes_dict[iri][2]
+            if prefix_inp in prefixes:
+                return_list.append(iri)
+            if ('display_in_widget' in properties) and prefix_inp == '':
+                return_list.append(iri)
+
+        if len(return_list) == 1:
+            return return_list[0]
+        elif len(return_list) == 0:
+            return None
+        else:
+            LOGGER.critical('prefix mapped to multiple IRI(s)')
+            return return_list
+
+    def get_prefix_for_iri(self,inp_iri):
+
+        prefixes = self.IRI_prefixes_nodes_dict[inp_iri][0]
+        #sorted_lst_prefixes = sorted(list(prefixes))
+        if 'display_in_widget' in self.IRI_prefixes_nodes_dict[inp_iri][2]:
+            return ''
+
+        if len(prefixes) == 0:
+            return None
+
+        return prefixes[len(prefixes)-1]
+
+    def get_iri_with_no_prefix_displayed_in_widget(self,dictionary):
+
+        return_list = []
+
+        for iri in dictionary.keys():
+            properties = dictionary[iri][2]
+            if 'display_in_widget' in properties:
+                return_list.append(iri)
+
+        if len(return_list) == 0:
+            return None
+        elif len(return_list) == 1:
+            return return_list[0]
+        else:
+            return 'error_multiple_occurences'+str(return_list)
 
     def print_dictionary_2(self, dictionary):
 
@@ -457,7 +518,7 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
 
-        print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
+        #print('>>>     add_item_to_IRI_prefixes_nodes_dict         ', item)
         #print('self.iri_of_cut_nodes',self.iri_of_cut_nodes)
 
         #if item.type() in {Item.AttributeNode, Item.ConceptNode, Item.IndividualNode, Item.RoleNode}:
@@ -525,12 +586,12 @@ class Project(QtCore.QObject):
 
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
-        print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
+        #print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
 
-        print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
+        #print('>>>     remove_item_from_IRI_prefixes_nodes_dict        ',node)
         #remove the node in all the indices of the dictionary
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                     'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
@@ -548,7 +609,7 @@ class Project(QtCore.QObject):
             else:
                 LOGGER.critical('multiple IRIs found for node')
 
-        print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
+        #print('>>>     remove_item_from_IRI_prefixes_nodes_dict    END    ',node)
 
     #not used
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
@@ -557,36 +618,33 @@ class Project(QtCore.QObject):
         if str(node) in self.prefered_prefix_dict.keys():
             self.prefered_prefix_dict.pop(str(node))
 
+    def generate_new_prefix(self,dictionary):
+
+        new_integer = 0
+        new_prefix = 'p'+str(new_integer)
+        prefixes_in_dict = []
+
+        for iri in dictionary.keys():
+            prefixes = dictionary[iri][0]
+            prefixes_in_dict.extend(prefixes)
+
+        while(new_prefix in prefixes_in_dict):
+            new_prefix = 'p'+str(new_integer+1)
+
+        return new_prefix
+
     def check_validity_of_IRI(self,iri_inp):
 
-        return True
-
-    def get_iri_for_prefix(self,prefix_inp):
-
-        if prefix_inp is None:
-            return None
-
-        return_list = []
-
-        for iri in self.IRI_prefixes_nodes_dict.keys():
-            prefixes = self.IRI_prefixes_nodes_dict[iri][0]
-            if prefix_inp in prefixes:
-                return_list.append(iri)
-
-        if len(return_list) == 1:
-            return return_list[0]
-        elif len(return_list) == 0:
-            return None
+        try:
+            #d=parse('https://protege.stanford.edu/ontologies/pizza/pizza.owl', rule='IRI')
+            d = parse(iri_inp, rule='IRI')
+        except (ValueError):
+            return False
         else:
-            LOGGER.critical('prefix mapped to multiple IRI(s)')
-            return return_list
-
-    def get_prefix_for_iri(self,inp_iri):
-
-        prefixes = self.IRI_prefixes_nodes_dict[inp_iri][0]
-        #sorted_lst_prefixes = sorted(list(prefixes))
-
-        return prefixes[len(prefixes)-1]
+            LOGGER.info(str(d))
+            if d['authority'] == '':
+                return False
+            return True
 
     """
     #not used as of now
@@ -863,6 +921,8 @@ class Project(QtCore.QObject):
         remove_project_iri = kwargs.get('remove_project_iri',False)
         remove_project_prefixes = kwargs.get('remove_project_prefixes', False)
 
+        display_in_widget = kwargs.get('display_in_widget',False)
+
         ### cannot add standart prefixes ###
 
         if (Prefix_inp is not None) and (Prefix_inp in {'rdf', 'rdfs', 'xsd', 'owl'}):
@@ -874,14 +934,16 @@ class Project(QtCore.QObject):
             return None
 
         if inp == 'add_entry':
-            self.addIRIPrefixEntry(dictionary,IRI_inp,Prefix_inp)
+            self.addIRIPrefixEntry(dictionary,IRI_inp,Prefix_inp,display_in_widget=display_in_widget)
         elif inp == 'remove_entry':
             self.removeIRIPrefixEntry(dictionary,IRI_inp,Prefix_inp,remove_project_iri=remove_project_iri,\
-                                      remove_project_prefixes=remove_project_prefixes)
+                                      remove_project_prefixes=remove_project_prefixes,display_in_widget=display_in_widget)
         else:
             LOGGER.error('PROJECT >> addORremoveIRIPrefixEntry >> invalid command')
 
-    def addIRIPrefixEntry(self, dictionary, iri_inp, prefix_inp):
+    def addIRIPrefixEntry(self, dictionary, iri_inp, prefix_inp, **kwargs):
+
+        display_in_widget = kwargs.get('display_in_widget',False)
 
         #print('addIRIPrefixEntry    >>>')
         #if [prefix_inp-IRI'] exists => addition is not possible
@@ -889,23 +951,63 @@ class Project(QtCore.QObject):
 
         #corr_iri_of_prefix_inp = self.get_iri_for_prefix(prefix_inp)
 
-        corr_iri_of_prefix_inp_in_dict = []
+        if prefix_inp is not None:
 
-        for i in dictionary.keys():
-            if prefix_inp in dictionary[i][0]:
-                corr_iri_of_prefix_inp_in_dict.append(i)
+            corr_iri_of_prefix_inp_in_dict = []
 
-        if (len(corr_iri_of_prefix_inp_in_dict) > 0):
-            if(iri_inp not in corr_iri_of_prefix_inp_in_dict):
-                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-' + str(corr_iri_of_prefix_inp_in_dict)))
-                return None
-            else:
-                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, '[IRI-prefix] entry already exists in table')
-                return None
+            for i in dictionary.keys():
+                if prefix_inp in dictionary[i][0]:
+                    corr_iri_of_prefix_inp_in_dict.append(i)
+
+            if (len(corr_iri_of_prefix_inp_in_dict) > 0):
+                if(iri_inp not in corr_iri_of_prefix_inp_in_dict):
+                    self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, str('prefix already mapped with IRI-' + str(corr_iri_of_prefix_inp_in_dict)))
+                    return None
+                else:
+                    if display_in_widget is False:
+                        self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, '[IRI-prefix] entry already exists in the records')
+                        return None
+                    else:
+                        iri_Display = self.get_iri_with_no_prefix_displayed_in_widget(dictionary)
+                        if iri_Display == iri_inp:
+                            self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp,'[IRI-prefix] entry already visible in table')
+                            return None
+                        else:
+                            #make the iri visible
+                            if iri_Display is None:
+                                dictionary[iri_inp][2].add('display_in_widget')
+                                self.sgnIRIPrefixEntryAdded.emit(iri_inp, prefix_inp, 'IRI made visible in the table')
+                                return dictionary
+                            if 'error_multiple_occurences' in iri_Display:
+                                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, iri_Display)
+                                return None
+                            else:
+                                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'only 1 IRI in the table may not have a prefix')
+                                return None
+
 
         if (prefix_inp is None) and (iri_inp in dictionary.keys()):
-            self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, None, '[IRI] entry already exists in table')
-            return None
+
+            if display_in_widget is False:
+                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, None, '[IRI] entry already exists in the records')
+                return None
+            else:
+                iri_Display = self.get_iri_with_no_prefix_displayed_in_widget(dictionary)
+                if iri_Display == iri_inp:
+                    self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, None, '[IRI] entry already exists in table')
+                    return None
+                else:
+                    # make the iri visible
+                    if iri_Display is None:
+                        dictionary[iri_inp][2].add('display_in_widget')
+                        self.sgnIRIPrefixEntryAdded.emit(iri_inp, None, 'IRI made visible in the table')
+                        return dictionary
+                    elif 'error_multiple_occurences' in iri_Display:
+                        self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, None, iri_Display)
+                        return None
+                    else:
+                        self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, None, 'only 1 IRI in the table may not have a prefix')
+                        return None
 
         #C1 prefix_inp !None
         #C2 prefix_inp None
@@ -917,6 +1019,8 @@ class Project(QtCore.QObject):
                 #Case A1
                 #print('Case A1')
                 dictionary[iri_inp][0].append(prefix_inp)
+                if 'display_in_widget' in dictionary[iri_inp][2]:
+                    dictionary[iri_inp][2].remove('display_in_widget')
                 self.sgnIRIPrefixEntryAdded.emit(iri_inp, prefix_inp, 'prefix added to existing IRI')
                 return dictionary
             else:
@@ -932,6 +1036,8 @@ class Project(QtCore.QObject):
                 prefixes.append(prefix_inp)
                 nodes = set()
                 properties = set()
+
+
                 #version = iri_version
 
                 entry = []
@@ -949,6 +1055,20 @@ class Project(QtCore.QObject):
                 prefixes = []
                 nodes = set()
                 properties = set()
+
+                if display_in_widget is True:
+
+                    iri_Display = self.get_iri_with_no_prefix_displayed_in_widget(dictionary)
+                    if iri_Display is None:
+                        properties.add('display_in_widget')
+                    elif 'error_multiple_occurences' in iri_Display:
+                        self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, None, iri_Display)
+                        return None
+                    else:
+                        #generate a new prefix
+                        new_generated_prefix = self.generate_new_prefix(dictionary)
+                        prefixes.append(new_generated_prefix)
+
                 #version = iri_version
 
                 entry = []
@@ -1004,6 +1124,8 @@ class Project(QtCore.QObject):
         remove_project_IRI = kwargs.get('remove_project_IRI',False)
         remove_project_prefixes = kwargs.get('remove_project_prefixes',False)
 
+        display_in_widget = kwargs.get('display_in_widget', False)
+
         # iri_inp does not exist => deletion not possible as key is absent
         #prefix_inp is None
             # nodes are mapped to IRI_inp =>  deletion not possible as nodes are linked to the IRI
@@ -1013,44 +1135,67 @@ class Project(QtCore.QObject):
         #print('removeIRIPrefixEntry >>>',iri_inp, ' - ',prefix_inp)
 
         if iri_inp not in dictionary.keys():
-            self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'IRI is not present in the table')
+            self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'IRI is not present in the entry')
             return None
-        """
-        if iri_inp in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-            self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'cannot remove standard IRI')
-            return None
-
-        if prefix_inp in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
-            self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'cannot remove a standard prefix')
-            return None
-        """
 
         if prefix_inp is None:
-            if len(dictionary[iri_inp][1]) > 0:# attempt to delete entire IRI record
-                self.sgnIRIPrefixesEntryIgnored.emit(iri_inp,prefix_inp,'Nodes are mapped to this IRI, deletion not possible. However it can be modified')
-                return None
+            if len(dictionary[iri_inp][1]) > 0:  # attempt to delete entire IRI record
+                if display_in_widget is False:
+                    self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp,
+                                                         'Nodes are mapped to this IRI, deletion not possible. However it can be modified')
+                    return None
+                else:
+                    #remove all prefixes
+                    #disp->!disp
+                    dictionary[iri_inp][0].clear()
+                    if 'display_in_widget' in dictionary[iri_inp][2]:
+                        dictionary[iri_inp][2].remove('display_in_widget')
+
+                    self.sgnIRIPrefixEntryRemoved.emit(iri_inp, None, 'IRI removed from table')
+                    return dictionary
+
             if remove_project_IRI is False:
                 if 'Project_IRI' in dictionary[iri_inp][2]:
-                #if iri_inp == self.iri:
-                    self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp,'cannot remove project IRI; project IRI can only be modified')
+                    # if iri_inp == self.iri:
+                    self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp,
+                                                         'cannot remove project IRI; project IRI can only be modified')
                     return None
             # remove iri_inp i.e. a key
             dictionary.pop(iri_inp)
-            self.sgnIRIPrefixEntryRemoved.emit(iri_inp, None, 'IRI removed from table')
+            self.sgnIRIPrefixEntryRemoved.emit(iri_inp, None, 'IRI removed from entry')
             return dictionary
         else:
             if prefix_inp not in dictionary[iri_inp][0]:
                 self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'prefix not mapped with this IRI')
                 return None
-            if remove_project_prefixes is False:
-                if ('Project_IRI' in dictionary[iri_inp][2]) and (len(dictionary[iri_inp][0]) == 1):
-                #if (prefix_inp == self.prefix) and (len(dictionary[iri_inp][0]) == 1):
-                    self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'cannot remove the only project prefix, however it can me modified')
-                    return None
-            # remove prefix_inp from prefixes of iri_inp
-            dictionary[iri_inp][0].remove(prefix_inp)
-            self.sgnIRIPrefixEntryRemoved.emit(iri_inp, prefix_inp, 'Prefix is no longer mapped to this IRI')
-            return dictionary
+            if display_in_widget is False:
+                # remove prefix_inp from prefixes of iri_inp
+                dictionary[iri_inp][0].remove(prefix_inp)
+                self.sgnIRIPrefixEntryRemoved.emit(iri_inp, prefix_inp, 'Prefix is no longer mapped to this IRI')
+                return dictionary
+            else:
+                if len(dictionary[iri_inp][0]) > 1:
+                    # remove prefix_inp from prefixes of iri_inp
+                    dictionary[iri_inp][0].remove(prefix_inp)
+                    self.sgnIRIPrefixEntryRemoved.emit(iri_inp, prefix_inp, 'Prefix is no longer mapped to this IRI')
+                    return dictionary
+                elif len(dictionary[iri_inp][0]) == 1:
+
+                    iri_Display = self.get_iri_with_no_prefix_displayed_in_widget(dictionary)
+                    if iri_Display is None:
+                        dictionary[iri_inp][0].remove(prefix_inp)
+                        dictionary[iri_inp][2].add('display_in_widget')
+                        self.sgnIRIPrefixEntryRemoved.emit(iri_inp, prefix_inp, 'Prefix is no longer mapped to this IRI; This IRI is the only IRI in the table without a prefix')
+                        return dictionary
+                    elif 'error_multiple_occurences' in iri_Display:
+                        self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, iri_Display)
+                        return None
+                    else:
+                        self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'Cannot remove prefix as there is another IRI-'+str(iri_Display)+'without a prefix in the table. However it can be modified.')
+                        return None
+
+                else:
+                    pass
 
     def removeIRINodeEntry(self, dictionary, iri_inp, node_inp):
 
@@ -1139,19 +1284,6 @@ class Project(QtCore.QObject):
 
         #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
-
-    def check_validity_of_IRI(self,iri_inp):
-
-        try:
-            #d=parse('https://protege.stanford.edu/ontologies/pizza/pizza.owl', rule='IRI')
-            d = parse(iri_inp, rule='IRI')
-        except (ValueError):
-            return False
-        else:
-            LOGGER.info(str(d))
-            if d['authority'] == '':
-                return False
-            return True
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 

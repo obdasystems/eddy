@@ -437,6 +437,7 @@ class IriWidget(QtWidgets.QScrollArea):
                 self.table.setItem(self.table.rowCount() - 1, 1, item_prefixes)
 
                 if self.SHOW_NODES is True:
+
                     nodes = self.project.IRI_prefixes_nodes_dict[iri][1]
                     item_nodes = QtWidgets.QTableWidgetItem()
                     nds_ids = set()
@@ -446,6 +447,12 @@ class IriWidget(QtWidgets.QScrollArea):
                     item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                     item_nodes.setBackground(QtGui.QBrush(QtGui.QColor(50,50,205,50)))
                     self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
+
+                    properties = self.project.IRI_prefixes_nodes_dict[iri][2]
+                    item_properties = QtWidgets.QTableWidgetItem()
+                    item_properties.setText(str(properties))
+                    item_properties.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                    self.table.setItem(self.table.rowCount() - 1, 3, item_properties)
 
                 self.table.setRowCount(self.table.rowCount() + 1)
 
@@ -473,6 +480,12 @@ class IriWidget(QtWidgets.QScrollArea):
             item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             item_nodes.setBackground(QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
             self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
+
+            properties = self.project.IRI_prefixes_nodes_dict[self.project.iri][2]
+            item_properties = QtWidgets.QTableWidgetItem()
+            item_properties.setText(str(properties))
+            item_properties.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            self.table.setItem(self.table.rowCount() - 1, 3, item_properties)
 
         self.table.setRowCount(self.table.rowCount() + 1)
 
@@ -543,7 +556,7 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table.setRowCount(1)
 
         if self.SHOW_NODES is True:
-            self.table.setColumnCount(3)
+            self.table.setColumnCount(4)
         else:
             self.table.setColumnCount(2)
 
@@ -571,6 +584,14 @@ class IriWidget(QtWidgets.QScrollArea):
             header_nodes.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
             header_nodes.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
             self.table.setItem(self.table.rowCount() - 1, 2, header_nodes)
+
+            header_properties = QtWidgets.QTableWidgetItem()
+            header_properties.setText('PROPERTIES')
+            header_properties.setFont(Font('Roboto', 15, bold=True))
+            header_properties.setTextAlignment(QtCore.Qt.AlignCenter)
+            header_properties.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+            header_properties.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+            self.table.setItem(self.table.rowCount() - 1, 3, header_properties)
 
         self.table.setRowCount(self.table.rowCount() + 1)
 
@@ -603,6 +624,12 @@ class IriWidget(QtWidgets.QScrollArea):
                 item_nodes.setText(str(nds_ids))
                 item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
+
+                properties = self.project.IRI_prefixes_nodes_dict[iri][2]
+                item_properties = QtWidgets.QTableWidgetItem()
+                item_properties.setText(str(properties))
+                item_properties.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                self.table.setItem(self.table.rowCount() - 1, 3, item_properties)
 
             self.table.setRowCount(self.table.rowCount() + 1)
         self.table.setRowCount(self.table.rowCount() - 1)
@@ -987,7 +1014,7 @@ class IriWidget(QtWidgets.QScrollArea):
         Redraw the content of the widget.
         """
         if self.SHOW_NODES is True:
-            self.table.setColumnCount(3)
+            self.table.setColumnCount(4)
         else:
             self.table.setColumnCount(2)
 
@@ -1005,9 +1032,10 @@ class IriWidget(QtWidgets.QScrollArea):
         self.table.setMinimumHeight(height)
 
         if self.SHOW_NODES is True:
-            self.table.setColumnWidth(0,self.width()/3)
-            self.table.setColumnWidth(1,self.width()/3)
-            self.table.setColumnWidth(2,self.width()/3)
+            self.table.setColumnWidth(0,self.width()/4)
+            self.table.setColumnWidth(1,self.width()/4)
+            self.table.setColumnWidth(2,self.width()/4)
+            self.table.setColumnWidth(3, self.width() / 4)
         else:
             self.table.setColumnWidth(0, 2*self.width() / 3)
             self.table.setColumnWidth(1, self.width() / 3)
