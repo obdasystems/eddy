@@ -553,6 +553,7 @@ class PredicateNodeProperty(NodeProperty):
         unprocessed_new_text = self.textField.value().strip()
         unprocessed_new_text = unprocessed_new_text if not isEmpty(unprocessed_new_text) else self.node.label.template
 
+        exception_list = ['-','_','.','~']
         new_rc = ''
 
         flag = False
@@ -560,7 +561,7 @@ class PredicateNodeProperty(NodeProperty):
         for c in unprocessed_new_text:
             if c == '':
                 pass
-            elif (not c.isalnum()):
+            elif (not c.isalnum()) and (c not in exception_list):
                 new_rc = new_rc + '_'
                 flag = True
             else:
