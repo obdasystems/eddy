@@ -37,9 +37,9 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-
+from eddy.core.commands.project import CommandProjectSetVersion
 from eddy.core.datatypes.qt import Font
-
+from eddy.ui.fields import IntegerField, StringField
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
@@ -50,7 +50,7 @@ from eddy.core.functions.signals import connect, disconnect
 LOGGER = getLogger()
 
 
-class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
+class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     Extends QtWidgets.QDialog with facilities to perform Ontology Consistency check
     """
@@ -73,6 +73,29 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
+
+        """
+        self.verticalbox_2 = QtWidgets.QVBoxLayout(self)  # to be added to main layout
+        self.verticalbox_2.setAlignment(QtCore.Qt.AlignTop)
+        self.verticalbox_2.setContentsMargins(0, 0, 0, 0)
+        self.verticalbox_2.setSpacing(0)
+        """
+
+        self.versionKey = Key('Version', self)
+        self.versionKey.setFont(Font('Roboto', 12))
+        self.versionField = String(self)
+        self.versionField.setFont(Font('Roboto', 12))
+        self.versionField.setValue(self.project.version)
+        connect(self.versionField.editingFinished, self.versionEditingFinished)
+        connect(self.project.sgnUpdated, self.redraw)
+
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self)
+        self.horizontalLayout.setAlignment(QtCore.Qt.AlignLeft)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout.setSpacing(0)
+
+        self.horizontalLayout.addWidget(self.versionKey)
+        self.horizontalLayout.addWidget(self.versionField)
 
         self.verticalbox = QtWidgets.QVBoxLayout(self)  # to be added to main layout
         self.verticalbox.setAlignment(QtCore.Qt.AlignTop)
@@ -101,6 +124,8 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         #############
         self.verticalbox.addWidget(self.table)
 
+        self.mainLayout.addLayout(self.horizontalLayout)
+        self.mainLayout.addSpacing(20)
         self.mainLayout.addLayout(self.verticalbox)
         #############
 
@@ -108,7 +133,7 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.hide()
         self.setWindowModality(QtCore.Qt.NonModal)
         self.show()
-        self.setWindowTitle('Prefix Manager')
+        self.setWindowTitle('Ontology Manager')
 
         self.setContentsMargins(20, 20, 20, 20)
         self.setMinimumSize(QtCore.QSize(600, 400))
@@ -164,6 +189,17 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
     def resizeEvent(self, QResizeEvent):
 
         self.redraw()
+
+    @QtCore.pyqtSlot()
+    def versionEditingFinished(self):
+        """
+        Executed whenever we finish to edit the ontology prefix
+        """
+        version = self.versionField.value()
+        if self.project.version != version:
+            self.session.undostack.push(CommandProjectSetVersion(self.project, self.project.version, version))
+        self.versionField.clearFocus()
+        #self.versionField.deselect()
 
     @QtCore.pyqtSlot(str, str, str, str)
     def entry_MODIFY_ok(self,iri_from,prefix_from,iri_to,prefix_to):
@@ -641,6 +677,11 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Redraw the content of the widget.
         """
+        self.versionField.setValue(self.project.version)
+        self.versionField.home(True)
+        self.versionField.clearFocus()
+        self.versionField.deselect()
+
         self.table.setColumnCount(2)
 
         width = self.width()
@@ -648,13 +689,15 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         #print('dialog_width',width)
 
+        for r in range(0,self.table.rowCount()):
+            self.table.setRowHeight(r,25)
+
         total_height_of_all_rows = 0
         for r in range(0,self.table.rowCount()+1):
             total_height_of_all_rows = total_height_of_all_rows+self.table.rowHeight(r)
 
-
         self.table.setFixedWidth(width-40)
-        self.table.setFixedHeight(height-40)
+        self.table.setFixedHeight(min(total_height_of_all_rows+5,height-40-25))
 
         #print('self.table.height()',self.table.height())
         #print('total_height_of_all_rows',total_height_of_all_rows)
@@ -673,15 +716,14 @@ class PrefixExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         #print('self.table.width()',self.table.width())
         #print('scrollbar_width',scrollbar_width)
 
-        for r in range(0,self.table.rowCount()):
-            self.table.setRowHeight(r,25)
+
             #self.table.resizeRowToContents(r)
 
 
         #print('self.table.height()',self.table.height())
         #print('self.table.rowCount()',self.table.rowCount())
 
-        self.setMaximumHeight(total_height_of_all_rows+3+40)
+        #self.setMaximumHeight(total_height_of_all_rows+3+40+60)
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -706,3 +748,28 @@ class Header(QtWidgets.QLabel):
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setFixedHeight(24)
         self.setFont(Font('Roboto', 12))
+
+
+class Key(QtWidgets.QLabel):
+    """
+    This class implements the key of an info field.
+    """
+    def __init__(self, *args):
+        """
+        Initialize the key.
+        """
+        super().__init__(*args)
+        self.setFixedSize(88, 40)
+
+
+class String(StringField):
+    """
+    This class implements the string value of an info field.
+    """
+    def __init__(self,  *args):
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(30)
+        self.setFixedWidth(80)

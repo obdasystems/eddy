@@ -1069,8 +1069,8 @@ class ProjectInfo(AbstractInfo):
         version = self.versionField.value()
         if self.project.version != version:
             self.session.undostack.push(CommandProjectSetVersion(self.project, self.project.version, version))
-        self.iriField.clearFocus()
-
+        #self.iriField.clearFocus()
+        self.versionField.clearFocus()
     #############################################
     #   INTERFACE
     #################################

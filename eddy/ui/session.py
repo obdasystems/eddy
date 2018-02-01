@@ -121,7 +121,7 @@ from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
-from eddy.ui.prefix_explorer import PrefixExplorerDialog
+from eddy.ui.prefix_explorer import OntologyExplorerDialog
 from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.view import DiagramView
 from eddy.core.items.common import AbstractItem
@@ -404,7 +404,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'),
             'Open Prefix Manager',
             self, objectName='open_prefix_manager', enabled=True,
-            statusTip='Open Prefix Manager', triggered=self.doOpenPrefixExplorer))
+            statusTip='Open Ontology Manager', triggered=self.doOpenOntologyExplorer))
         #############################################
         # DIAGRAM SPECIFIC
         #################################
@@ -2258,11 +2258,11 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def doOpenPrefixExplorer(self):
+    def doOpenOntologyExplorer(self):
         """
         Perform Ontology Consistency checking on the active ontology/diagram.
         """
-        dialog = PrefixExplorerDialog(self.project, self)
+        dialog = OntologyExplorerDialog(self.project, self)
         dialog.exec_()
 
     @QtCore.pyqtSlot()
