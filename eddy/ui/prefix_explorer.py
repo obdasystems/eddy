@@ -127,6 +127,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.mainLayout.addLayout(self.horizontalLayout)
         self.mainLayout.addSpacing(20)
         self.mainLayout.addLayout(self.verticalbox)
+        self.mainLayout.addSpacing(20)
         #############
 
         self.setLayout(self.mainLayout)
@@ -142,6 +143,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         #self.setMinimumWidth(200)
         #self.setMaximumHeight(600)
 
+        self.clearFocus()
 
         self.table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         #self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
@@ -697,7 +699,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             total_height_of_all_rows = total_height_of_all_rows+self.table.rowHeight(r)
 
         self.table.setFixedWidth(width-40)
-        self.table.setFixedHeight(min(total_height_of_all_rows+5,height-40-25))
+        self.table.setFixedHeight(min(total_height_of_all_rows+5-20,height-40-25-20))
 
         #print('self.table.height()',self.table.height())
         #print('total_height_of_all_rows',total_height_of_all_rows)
@@ -759,7 +761,7 @@ class Key(QtWidgets.QLabel):
         Initialize the key.
         """
         super().__init__(*args)
-        self.setFixedSize(88, 40)
+        self.setFixedSize(88, 25)
 
 
 class String(StringField):
@@ -771,5 +773,5 @@ class String(StringField):
         Initialize the field.
         """
         super().__init__(*args)
-        self.setFixedHeight(30)
+        self.setFixedHeight(25)
         self.setFixedWidth(80)
