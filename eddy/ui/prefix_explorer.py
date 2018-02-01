@@ -699,7 +699,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             total_height_of_all_rows = total_height_of_all_rows+self.table.rowHeight(r)
 
         self.table.setFixedWidth(width-40)
-        self.table.setFixedHeight(min(total_height_of_all_rows+5-20,height-40-25-20))
+        self.table.setMinimumHeight(min(total_height_of_all_rows+5-20,height-40-25-20))
 
         #print('self.table.height()',self.table.height())
         #print('total_height_of_all_rows',total_height_of_all_rows)
