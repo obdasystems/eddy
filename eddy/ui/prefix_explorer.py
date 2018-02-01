@@ -105,6 +105,9 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         #############
 
+        self.prefixmanagerheader = Key('Prefix Manager', self)
+        self.prefixmanagerheader.setFont(Font('Roboto', 12))
+
         self.table = QtWidgets.QTableWidget(self)
         self.table.setContentsMargins(0, 0, 0, 0)
         self.table.horizontalHeader().setVisible(False)
@@ -122,10 +125,13 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
 
         #############
+        self.verticalbox.addWidget(self.prefixmanagerheader)
+        self.verticalbox.addSpacing(10)
         self.verticalbox.addWidget(self.table)
 
         self.mainLayout.addLayout(self.horizontalLayout)
         self.mainLayout.addSpacing(20)
+
         self.mainLayout.addLayout(self.verticalbox)
         self.mainLayout.addSpacing(20)
         #############
@@ -689,6 +695,8 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         width = self.width()
         height = self.height()
 
+        self.prefixmanagerheader.setFixedWidth(width - 40)
+        self.prefixmanagerheader.setAlignment(QtCore.Qt.AlignCenter)
         #print('dialog_width',width)
 
         for r in range(0,self.table.rowCount()):
@@ -699,7 +707,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             total_height_of_all_rows = total_height_of_all_rows+self.table.rowHeight(r)
 
         self.table.setFixedWidth(width-40)
-        self.table.setMinimumHeight(min(total_height_of_all_rows+5-20,height-40-25-20))
+        self.table.setMinimumHeight(min(total_height_of_all_rows+5-20-35,height-40-25-20-35))
 
         #print('self.table.height()',self.table.height())
         #print('total_height_of_all_rows',total_height_of_all_rows)
@@ -762,7 +770,6 @@ class Key(QtWidgets.QLabel):
         """
         super().__init__(*args)
         self.setFixedSize(88, 25)
-
 
 class String(StringField):
     """
