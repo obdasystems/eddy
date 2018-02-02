@@ -773,15 +773,26 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             pass
             """
             if self.sender() is not None:
-                disconnect(self.sender().toggled, self.set_project_IRI)
+
+                print('self.sender()',self.sender())
+
                 row = int(self.sender().objectName())
                 iri = self.table.item(row, 0).text()
 
-                if iri == self.project.iri:
-                    
-                    self.sender().setChecked(True)
+                iri_prev = self.table.item(row-1, 0).text()
+                iri_next = self.table.item(row+1, 0).text()
 
-                connect(self.sender().toggled, self.set_project_IRI)
+                radio_button = self.table.cellWidget(row,2)
+
+                print('radio_button',radio_button)
+
+                if (iri == iri_prev) or (iri == iri_next):
+                    
+                    disconnect(radio_button.toggled, self.set_project_IRI)
+                    radio_button.setChecked(True)
+                    connect(radio_button.toggled, self.set_project_IRI)
+                    
+                    #self.UpdateTableForIRI(None,None)
             """
 
     def redraw(self):
