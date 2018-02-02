@@ -509,7 +509,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         header_prefixes.setFlags(QtCore.Qt.NoItemFlags)
 
         header_project_prefix = QtWidgets.QTableWidgetItem()
-        header_project_prefix.setText('ONTOLOGY IRI')
+        header_project_prefix.setText('DEFAULT')
         header_project_prefix.setFont(Font('Roboto', 15, bold=True))
         header_project_prefix.setTextAlignment(QtCore.Qt.AlignCenter)
         #header_project_prefix.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
