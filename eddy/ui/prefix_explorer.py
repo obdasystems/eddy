@@ -436,8 +436,6 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         if brush is not None:
             item_prefix.setBackground(brush)
 
-
-
         checkbox = QtWidgets.QRadioButton()
 
         if checkbox_value==0:
@@ -466,12 +464,18 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         # first delete all entries from the dictionary id present
         # add standard IRIs
         # add key value pairs from dict
-        """
-        for r in range (0,self.table.rowCount()-1):
+
+        for r in range (0,self.table.rowCount()+1):
+            iri_item_to_el = self.table.item(r,0)
+            del iri_item_to_el
+            prefix_item_to_del = self.table.item(r,1)
+            del prefix_item_to_del
             cw=self.table.cellWidget(r,2)
-            disconnect(cw.toggled, self.set_project_IRI)
-            self.table.removeCellWidget(r,2)
-        """
+            if cw is not None:
+                disconnect(cw.toggled, self.set_project_IRI)
+                self.table.removeCellWidget(r,2)
+                cw.destroy()
+
         self.table.clear()
         self.table.setRowCount(1)
         self.table.setColumnCount(3)
