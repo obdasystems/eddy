@@ -270,7 +270,8 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         item_to_edit = self.table.item(r, c)
 
-        self.old_text = item_to_edit.text().strip()
+        if item_to_edit is not None:
+            self.old_text = item_to_edit.text().strip()
         """
         if c == 0:
             self.iri_old_text = item_to_edit.text().strip()
@@ -436,24 +437,26 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         if brush is not None:
             item_prefix.setBackground(brush)
 
-        checkbox = QtWidgets.QRadioButton()
+        if checkbox_value != 0:
+            checkbox = QtWidgets.QRadioButton()
 
-        if checkbox_value==0:
-            checkbox.setEnabled(False)
-        elif checkbox_value==1:
-            connect(checkbox.toggled, self.set_project_IRI)
-        elif checkbox_value==2:
-            checkbox.setChecked(True)
-            connect(checkbox.toggled, self.set_project_IRI)
-        else:
-            pass
+            if checkbox_value==0:
+                checkbox.setEnabled(False)
+            elif checkbox_value==1:
+                connect(checkbox.toggled, self.set_project_IRI)
+            elif checkbox_value==2:
+                checkbox.setChecked(True)
+                connect(checkbox.toggled, self.set_project_IRI)
+            else:
+                pass
 
-        checkbox.setObjectName(str(self.table.rowCount() - 1))
+            checkbox.setObjectName(str(self.table.rowCount() - 1))
         #checkbox.setLayout(self.checkbox_layout)
 
         self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
         self.table.setItem(self.table.rowCount() - 1, 1, item_prefix)
-        self.table.setCellWidget(self.table.rowCount() - 1, 2, checkbox)
+        if checkbox_value != 0:
+            self.table.setCellWidget(self.table.rowCount() - 1, 2, checkbox)
 
         self.table.setRowCount(self.table.rowCount() + 1)
 
