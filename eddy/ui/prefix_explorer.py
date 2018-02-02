@@ -108,6 +108,9 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.prefixmanagerheader = Key('Prefix Manager', self)
         self.prefixmanagerheader.setFont(Font('Roboto', 12))
 
+        #self.checkbox_layout = QtWidgets.QHBoxLayout(self)
+        #self.checkbox_layout.setAlignment(QtCore.Qt.AlignHCenter)
+
         self.table = QtWidgets.QTableWidget(self)
         self.table.setContentsMargins(0, 0, 0, 0)
         self.table.horizontalHeader().setVisible(False)
@@ -143,7 +146,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.setWindowTitle('Ontology Manager')
 
         self.setContentsMargins(20, 20, 20, 20)
-        self.setMinimumSize(QtCore.QSize(600, 400))
+        self.setMinimumSize(QtCore.QSize(700, 400))
         #self.setFixedWidth(600)
         #self.setFixedHeight(400)
         #self.setMinimumWidth(200)
@@ -413,7 +416,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.ITEM_CHANGED = None
         self.ITEM_EDITED = None
 
-    def append_row_and_column_to_table(self,iri,prefix,editable,brush):
+    def append_row_and_column_to_table(self,iri,prefix,editable,brush,checkbox_value):
 
         item_iri = QtWidgets.QTableWidgetItem()
         item_iri.setText(iri)
@@ -433,8 +436,27 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         if brush is not None:
             item_prefix.setBackground(brush)
 
+
+
+        checkbox = QtWidgets.QRadioButton()
+
+        if checkbox_value==0:
+            checkbox.setEnabled(False)
+        elif checkbox_value==1:
+            connect(checkbox.toggled, self.set_project_IRI)
+        elif checkbox_value==2:
+            checkbox.setChecked(True)
+            connect(checkbox.toggled, self.set_project_IRI)
+        else:
+            pass
+
+        checkbox.setObjectName(str(self.table.rowCount() - 1))
+        #checkbox.setLayout(self.checkbox_layout)
+
         self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
         self.table.setItem(self.table.rowCount() - 1, 1, item_prefix)
+        self.table.setCellWidget(self.table.rowCount() - 1, 2, checkbox)
+
         self.table.setRowCount(self.table.rowCount() + 1)
 
     def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
@@ -444,9 +466,15 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         # first delete all entries from the dictionary id present
         # add standard IRIs
         # add key value pairs from dict
+        """
+        for r in range (0,self.table.rowCount()-1):
+            cw=self.table.cellWidget(r,2)
+            disconnect(cw.toggled, self.set_project_IRI)
+            self.table.removeCellWidget(r,2)
+        """
         self.table.clear()
         self.table.setRowCount(1)
-        self.table.setColumnCount(2)
+        self.table.setColumnCount(3)
 
         header_iri = QtWidgets.QTableWidgetItem()
         header_iri.setText('IRI')
@@ -468,8 +496,19 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         header_prefixes.setFlags(QtCore.Qt.NoItemFlags)
 
+        header_project_prefix = QtWidgets.QTableWidgetItem()
+        header_project_prefix.setText('ONTOLOGY IRI')
+        header_project_prefix.setFont(Font('Roboto', 15, bold=True))
+        header_project_prefix.setTextAlignment(QtCore.Qt.AlignCenter)
+        #header_project_prefix.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        #header_project_prefix.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_project_prefix.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_project_prefix.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        header_project_prefix.setFlags(QtCore.Qt.NoItemFlags)
+
         self.table.setItem(self.table.rowCount() - 1, 0, header_iri)
         self.table.setItem(self.table.rowCount() - 1, 1, header_prefixes)
+        self.table.setItem(self.table.rowCount() - 1, 2, header_project_prefix)
 
         self.table.setRowCount(self.table.rowCount() + 1)
 
@@ -477,7 +516,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
                 standard_prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
                 standard_prefix = standard_prefixes[0]
-                self.append_row_and_column_to_table(iri, standard_prefix, False, None)
+                self.append_row_and_column_to_table(iri, standard_prefix, False, None, 0)
                                                     #QtGui.QBrush(QtGui.QColor(50, 50, 205, 50)))
 
         iri = self.project.iri
@@ -486,10 +525,10 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         if len(prefixes) > 0:
             for p in prefixes:
                 #self.append_row_and_column_to_table(iri, p, True, QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
-                self.append_row_and_column_to_table(iri, p, True, None)
+                self.append_row_and_column_to_table(iri, p, True, None, 2)
         else:
             #self.append_row_and_column_to_table(iri, '', True, QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
-            self.append_row_and_column_to_table(iri, '', True, None)
+            self.append_row_and_column_to_table(iri, '', True, None, 2)
 
 
         for iri in sorted(self.project.IRI_prefixes_nodes_dict.keys()):
@@ -503,12 +542,12 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
             if len(prefixes) > 0:
                 for p in prefixes:
-                    self.append_row_and_column_to_table(iri, p, True, None)
+                    self.append_row_and_column_to_table(iri, p, True, None, 1)
             else:
                 if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
-                    self.append_row_and_column_to_table(iri, '', True, None)
+                    self.append_row_and_column_to_table(iri, '', True, None, 1)
 
-        self.append_row_and_column_to_table('','',True,None)
+        self.append_row_and_column_to_table('', '', True, None, 0)
 
         self.table.setRowCount(self.table.rowCount() - 1)
 
@@ -681,6 +720,51 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.ENTRY_MODIFY_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
+    @QtCore.pyqtSlot(bool)
+    def set_project_IRI(self,toggled):
+
+        if toggled:
+
+            row=int(self.sender().objectName())
+            new_project_iri = self.table.item(row,0).text()
+
+            if new_project_iri!=self.project.iri:
+
+                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                    self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                    self.project.IRI_prefixes_nodes_dict, dict())
+
+                Duplicate_dict_1[self.project.iri][2].remove('Project_IRI')
+                Duplicate_dict_1[new_project_iri][2].add('Project_IRI')
+
+                commands = []
+
+                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [], []))
+                commands.append(CommandProjectConnectSpecificSignals(self.project))
+
+                self.session.undostack.beginMacro('chenge ontology IRI')
+                for command in commands:
+                    if command:
+                        self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+
+        else:
+            pass
+            """
+            if self.sender() is not None:
+                disconnect(self.sender().toggled, self.set_project_IRI)
+                row = int(self.sender().objectName())
+                iri = self.table.item(row, 0).text()
+
+                if iri == self.project.iri:
+                    
+                    self.sender().setChecked(True)
+
+                connect(self.sender().toggled, self.set_project_IRI)
+            """
+
     def redraw(self):
         """
         Redraw the content of the widget.
@@ -690,7 +774,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.versionField.clearFocus()
         self.versionField.deselect()
 
-        self.table.setColumnCount(2)
+        self.table.setColumnCount(3)
 
         width = self.width()
         height = self.height()
@@ -717,8 +801,9 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         else:
             scrollbar_width = 0
 
-        self.table.setColumnWidth(0, (7*(self.table.width() - scrollbar_width)/ 10))
-        self.table.setColumnWidth(1, (3*(self.table.width() - scrollbar_width)/ 10))
+        self.table.setColumnWidth(0, (6*(self.table.width() - scrollbar_width)/ 10))
+        self.table.setColumnWidth(1, (2*(self.table.width() - scrollbar_width)/ 10))
+        self.table.setColumnWidth(2, (2 * (self.table.width() - scrollbar_width) / 10))
 
         #print('self.table.columnWidth(0)',self.table.columnWidth(0))
         #print('self.table.columnWidth(1)', self.table.columnWidth(1))
@@ -726,9 +811,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         #print('self.table.width()',self.table.width())
         #print('scrollbar_width',scrollbar_width)
 
-
-            #self.table.resizeRowToContents(r)
-
+        #self.table.resizeRowToContents(r)
 
         #print('self.table.height()',self.table.height())
         #print('self.table.rowCount()',self.table.rowCount())
@@ -758,7 +841,6 @@ class Header(QtWidgets.QLabel):
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setFixedHeight(24)
         self.setFont(Font('Roboto', 12))
-
 
 class Key(QtWidgets.QLabel):
     """
