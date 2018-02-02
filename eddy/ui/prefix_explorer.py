@@ -83,6 +83,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.versionKey = Key('Version', self)
         self.versionKey.setFont(Font('Roboto', 12))
+        self.versionKey.setFixedWidth(60)
         self.versionField = String(self)
         self.versionField.setFont(Font('Roboto', 12))
         self.versionField.setValue(self.project.version)
@@ -498,15 +499,15 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         header_iri.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         header_iri.setFlags(QtCore.Qt.NoItemFlags)
 
-        header_prefixes = QtWidgets.QTableWidgetItem()
-        header_prefixes.setText('PREFIX')
-        header_prefixes.setFont(Font('Roboto', 15, bold=True))
-        header_prefixes.setTextAlignment(QtCore.Qt.AlignCenter)
-        #header_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
-        #header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
-        header_prefixes.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
-        header_prefixes.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
-        header_prefixes.setFlags(QtCore.Qt.NoItemFlags)
+        header_prefix = QtWidgets.QTableWidgetItem()
+        header_prefix.setText('PREFIX')
+        header_prefix.setFont(Font('Roboto', 15, bold=True))
+        header_prefix.setTextAlignment(QtCore.Qt.AlignCenter)
+        #header_prefix.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        #header_prefix.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_prefix.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_prefix.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        header_prefix.setFlags(QtCore.Qt.NoItemFlags)
 
         header_project_prefix = QtWidgets.QTableWidgetItem()
         header_project_prefix.setText('DEFAULT')
@@ -519,7 +520,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         header_project_prefix.setFlags(QtCore.Qt.NoItemFlags)
 
         self.table.setItem(self.table.rowCount() - 1, 0, header_iri)
-        self.table.setItem(self.table.rowCount() - 1, 1, header_prefixes)
+        self.table.setItem(self.table.rowCount() - 1, 1, header_prefix)
         self.table.setItem(self.table.rowCount() - 1, 2, header_project_prefix)
 
         self.table.setRowCount(self.table.rowCount() + 1)
@@ -531,6 +532,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                 self.append_row_and_column_to_table(iri, standard_prefix, False, None, 0)
                                                     #QtGui.QBrush(QtGui.QColor(50, 50, 205, 50)))
 
+        """
         iri = self.project.iri
         prefixes = self.project.IRI_prefixes_nodes_dict[self.project.iri][0]
 
@@ -541,23 +543,28 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         else:
             #self.append_row_and_column_to_table(iri, '', True, QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
             self.append_row_and_column_to_table(iri, '', True, None, 2)
-
+        """
 
         for iri in sorted(self.project.IRI_prefixes_nodes_dict.keys()):
 
             if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                continue
-            if iri == self.project.iri:
                 continue
 
             prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
 
             if len(prefixes) > 0:
                 for p in prefixes:
-                    self.append_row_and_column_to_table(iri, p, True, None, 1)
+                    if iri == self.project.iri:
+                        self.append_row_and_column_to_table(iri, p, True, None, 2)
+                    else:
+                        self.append_row_and_column_to_table(iri, p, True, None, 1)
             else:
                 if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
-                    self.append_row_and_column_to_table(iri, '', True, None, 1)
+                    if iri == self.project.iri:
+                        self.append_row_and_column_to_table(iri, '', True, None, 2)
+                    else:
+                        self.append_row_and_column_to_table(iri, '', True, None, 1)
+
 
         self.append_row_and_column_to_table('', '', True, None, 0)
 

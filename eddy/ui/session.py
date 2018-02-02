@@ -402,7 +402,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'),
-            'Open Prefix Manager',
+            'Open Ontology Manager',
             self, objectName='open_prefix_manager', enabled=True,
             statusTip='Open Ontology Manager', triggered=self.doOpenOntologyExplorer))
         #############################################
@@ -915,8 +915,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Load and initialize application plugins.
         """
-        #skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
-        skip_list = ['Explanation_explorer', 'Unsatisfiable_Entity_Explorer', 'prefix_explorer']
+        skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
         self.addPlugins(self.pmanager.init(skip_list=skip_list))
 
     def initProfiles(self):

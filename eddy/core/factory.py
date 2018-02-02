@@ -271,7 +271,7 @@ class MenuFactory(QtCore.QObject):
 
             ############
 
-            self.customMenu['Refactor Change Prefix'] = QtWidgets.QMenu('Refactor Change Prefix')
+            self.customMenu['Refactor Change Prefix'] = QtWidgets.QMenu('Change Prefix')
             self.customMenu['Refactor Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
             #self.customMenu['Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
 
