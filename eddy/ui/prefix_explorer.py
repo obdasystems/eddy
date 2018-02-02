@@ -451,12 +451,17 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                 pass
 
             checkbox.setObjectName(str(self.table.rowCount() - 1))
+        else:
+            null_item = QtWidgets.QTableWidgetItem()
+            null_item.setFlags(QtCore.Qt.NoItemFlags)
         #checkbox.setLayout(self.checkbox_layout)
 
         self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
         self.table.setItem(self.table.rowCount() - 1, 1, item_prefix)
         if checkbox_value != 0:
             self.table.setCellWidget(self.table.rowCount() - 1, 2, checkbox)
+        else:
+            self.table.setItem(self.table.rowCount() - 1, 2, null_item)
 
         self.table.setRowCount(self.table.rowCount() + 1)
 
