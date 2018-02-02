@@ -815,7 +815,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.table.setColumnWidth(0, (6*(self.table.width() - scrollbar_width)/ 10))
         self.table.setColumnWidth(1, (2*(self.table.width() - scrollbar_width)/ 10))
-        self.table.setColumnWidth(2, (2 * (self.table.width() - scrollbar_width) / 10))
+        self.table.setColumnWidth(2, (2*(self.table.width() - scrollbar_width)/ 10))
 
         #print('self.table.columnWidth(0)',self.table.columnWidth(0))
         #print('self.table.columnWidth(1)', self.table.columnWidth(1))
