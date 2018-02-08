@@ -461,11 +461,50 @@ class MenuFactory(QtCore.QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
+
+        ############################
+        #change prefix
+        ############################
+
+        OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values()
+
+        if node.value is None:
+            self.customAction['Change Prefix'] = []
+
+            for iri in self.project.IRI_prefixes_nodes_dict.keys():
+                prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+                for p in prefixes:
+                    if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
+                        continue
+
+                    pr_node = self.project.get_prefix_of_node(node)
+
+                    action = QtWidgets.QAction(self.session)
+                    action.setCheckable(True)
+                    action.setChecked(pr_node is p)
+                    action.setData(node)
+                    action.setText('{}'.format(p))
+                    connect(action.triggered, self.session.setprefix)
+                    self.customAction['Change Prefix'].append(action)
+
+            ############
+            self.customMenu['Change Prefix'] = QtWidgets.QMenu('Change Prefix')
+            self.customMenu['Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
+            # self.customMenu['Change Prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
+
+            for action in (self.customAction['Change Prefix']):
+                self.customMenu['Change Prefix'].addAction(action)
+
+            menu.insertMenu(self.session.action('node_properties'), self.customMenu['Change Prefix'])
+
+
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_individual'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
+
+
 
         #############################################
         # BEGIN CONSTRAIN IDENTITY SWITCH
@@ -488,10 +527,10 @@ class MenuFactory(QtCore.QObject):
             value = enumeration.identity() is Identity.ValueDomain or num < 2
 
         assertion = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4))
-        print('assertion',assertion)
+        #print('assertion',assertion)
         if assertion:
             operand = first(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6))
-            print('operand', operand)
+            #print('operand', operand)
             if operand:
                 if operand.identity() is Identity.Role:
                     value = False
@@ -500,7 +539,7 @@ class MenuFactory(QtCore.QObject):
                     instance = instance and (node.identity() is Identity.Individual or num < 2)
                     value = value and (node.identity() is Identity.Value or num < 2)
 
-                    print('num,instance,value',num,',',instance,',',value)
+                    #print('num,instance,value',num,',',instance,',',value)
 
         for a in self.session.action('switch_individual').actions():
             a.setChecked(a.data() is node.identity())
