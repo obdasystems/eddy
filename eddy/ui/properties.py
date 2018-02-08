@@ -617,24 +617,9 @@ class PredicateNodeProperty(NodeProperty):
                 # if successful, original_dict = duplicate_dict
                 # else duplicate_dict = original_dict
 
-                print('**************')
-                print('*******   self.project.IRI_prefixes_nodes_dict   *******')
-                self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
-                print('**************')
-
-
 
                 Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
                 Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-                print('**************')
-                print('*******   self.project.IRI_prefixes_nodes_dict   *******')
-                self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
-                print('**************')
-                print('*******   Duplicate_dict_1   *******')
-                self.project.print_dictionary(Duplicate_dict_1)
-                print('**************')
-
 
                 list_of_nodes_to_process = []
 
@@ -652,12 +637,6 @@ class PredicateNodeProperty(NodeProperty):
                     self.project.removeIRINodeEntry(Duplicate_dict_1, old_iri, nd)
                     self.project.addIRINodeEntry(Duplicate_dict_1, new_iri, nd)
 
-                    print('**************')
-                    print('******  after remove and add IRI node entry  ********')
-                    self.project.print_dictionary(Duplicate_dict_1)
-                    print('**************')
-
-
                     if (self.metaDataChanged_REMOVE_OK_var is True) and (self.metaDataChanged_ADD_OK_var is True):
                         self.metaDataChanged_REMOVE_OK_var = False
                         self.metaDataChanged_ADD_OK_var = False
@@ -673,19 +652,10 @@ class PredicateNodeProperty(NodeProperty):
                     ###
                     if 'display_in_widget' in Duplicate_dict_1[new_iri][2]:
                         new_label = ':'+self.node.remaining_characters
-                        print('new_label_A', new_label)
                     else:
                         new_label = self.project.get_full_IRI(new_iri, None, self.node.remaining_characters)
-                        print('new_label_B', new_label)
-
                 else:
-                    print('Duplicate_dict_1[new_iri][0]',Duplicate_dict_1[new_iri][0])
-                    print('len(Duplicate_dict_1[new_iri][0]) - 1',len(Duplicate_dict_1[new_iri][0]) - 1)
-
                     new_label = str(Duplicate_dict_1[new_iri][0][len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + self.node.remaining_characters)
-                    print('new_label_C', new_label)
-
-                print('new_label',new_label)
 
                 commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 
