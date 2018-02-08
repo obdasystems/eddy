@@ -206,6 +206,7 @@ class MenuFactory(QtCore.QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
+
         # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
         self.customAction['occurrences'] = []
         #self.customAction['Change Prefix'] = []
@@ -467,6 +468,26 @@ class MenuFactory(QtCore.QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
+
+        self.customAction['occurrences'] = []
+
+        for pnode in self.project.predicates(node.type(), node.text()):
+
+            action = QtWidgets.QAction(self.session)
+            action.setCheckable(True)
+            action.setChecked(pnode is node)
+            action.setData(pnode)
+            action.setText('{} ({})'.format(pnode.diagram.name, pnode.id))
+            connect(action.triggered, self.session.doLookupOccurrence)
+            self.customAction['occurrences'].append(action)
+
+        # BUILD CUSTOM MENU FOR PREDICATE OCCURRENCES
+        self.customMenu['occurrences'] = QtWidgets.QMenu('Occurrences')
+        self.customMenu['occurrences'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
+        for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
+            self.customMenu['occurrences'].addAction(action)
+        menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
+
 
         ############################
         #change prefix
