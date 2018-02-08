@@ -325,7 +325,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                             if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
                                 #generate new prefix and add it to the widget
                                 new_generated_prefix = self.project.generate_new_prefix(self.project.IRI_prefixes_nodes_dict)
-                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, new_generated_prefix, 'add', display_in_widget=True)
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, new_generated_prefix, 'add')
                             else:
                                 self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add', display_in_widget=True)
                         else:
@@ -355,7 +355,10 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                     else:
                         prefix_inp = self.table.item(row, 1).text().strip()
                         if (prefix_inp == ''):
-                            self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
+                            if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[self.old_text][2]:
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove', display_in_widget=True)
+                            else:
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove')
                         else:
                             if len(self.project.IRI_prefixes_nodes_dict[self.old_text][0]) == 1:
                                 self.process_entry_from_textboxes_for_button_add_or_remove(self.old_text, None, 'remove', display_in_widget=True)

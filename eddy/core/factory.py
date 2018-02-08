@@ -236,7 +236,13 @@ class MenuFactory(QtCore.QObject):
             self.customAction['Refactor Change Prefix'] = []
 
             for iri in self.project.IRI_prefixes_nodes_dict.keys():
-                prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+                prefixes_raw = self.project.IRI_prefixes_nodes_dict[iri][0]
+
+                prefixes = []
+                prefixes.extend(prefixes_raw)
+
+                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
+                    prefixes.append(':')
                 for p in prefixes:
                     if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
                         continue
@@ -245,7 +251,7 @@ class MenuFactory(QtCore.QObject):
 
                     action = QtWidgets.QAction(self.session)
                     action.setCheckable(True)
-                    action.setChecked(pr_node is p)
+                    action.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
                     action.setData(node)
                     action.setText('{}'.format(p))
                     connect(action.triggered, self.session.setprefix)
@@ -253,7 +259,7 @@ class MenuFactory(QtCore.QObject):
 
                     action_2 = QtWidgets.QAction(self.session)
                     action_2.setCheckable(True)
-                    action_2.setChecked(pr_node is p)
+                    action_2.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
                     action_2.setData(node)
                     action_2.setText('{}'.format(p))
                     connect(action_2.triggered, self.session.refactorsetprefix)
@@ -473,7 +479,14 @@ class MenuFactory(QtCore.QObject):
             self.customAction['Refactor Change Prefix'] = []
 
             for iri in self.project.IRI_prefixes_nodes_dict.keys():
-                prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+                prefixes_raw = self.project.IRI_prefixes_nodes_dict[iri][0]
+
+                prefixes = []
+                prefixes.extend(prefixes_raw)
+
+                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
+                    prefixes.append(':')
+
                 for p in prefixes:
                     if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
                         continue
@@ -482,7 +495,7 @@ class MenuFactory(QtCore.QObject):
 
                     action = QtWidgets.QAction(self.session)
                     action.setCheckable(True)
-                    action.setChecked(pr_node is p)
+                    action.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
                     action.setData(node)
                     action.setText('{}'.format(p))
                     connect(action.triggered, self.session.setprefix)
@@ -490,7 +503,7 @@ class MenuFactory(QtCore.QObject):
 
                     action_2 = QtWidgets.QAction(self.session)
                     action_2.setCheckable(True)
-                    action_2.setChecked(pr_node is p)
+                    action_2.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
                     action_2.setData(node)
                     action_2.setText('{}'.format(p))
                     connect(action_2.triggered, self.session.refactorsetprefix)

@@ -985,7 +985,6 @@ class Project(QtCore.QObject):
                                 self.sgnIRIPrefixesEntryIgnored.emit(iri_inp, prefix_inp, 'only 1 IRI in the table may not have a prefix')
                                 return None
 
-
         if (prefix_inp is None) and (iri_inp in dictionary.keys()):
 
             if display_in_widget is False:
@@ -1206,6 +1205,7 @@ class Project(QtCore.QObject):
             return None
 
         dictionary[iri_inp][1].remove(node_inp)
+
         #print('node_inp',node_inp)
         self.sgnIRINodeEntryRemoved.emit(iri_inp, str(node_inp), str('Node no longer mapped to IRI'+iri_inp))
         return dictionary

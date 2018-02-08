@@ -915,7 +915,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Load and initialize application plugins.
         """
-        skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
+        #skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
+        skip_list = ['Explanation_explorer', 'Unsatisfiable_Entity_Explorer', 'prefix_explorer']
         self.addPlugins(self.pmanager.init(skip_list=skip_list))
 
     def initProfiles(self):
@@ -1433,7 +1434,17 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         node = self.sender().data()
         to_prefix = self.sender().text()
-        to_iri = self.project.get_iri_for_prefix(to_prefix)
+        if to_prefix == ':':
+            to_iri = None
+            for iri_itr in self.project.IRI_prefixes_nodes_dict.keys():
+                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri_itr][2]:
+                    to_iri = iri_itr
+                    break
+            if to_iri is None:
+                self.statusBar().showMessage(
+                    ': prefix does not correspond to any IRI in the widget. please contact developer.')
+        else:
+            to_iri = self.project.get_iri_for_prefix(to_prefix)
         from_prefix = self.project.get_prefix_of_node(node)
         from_iri = self.project.get_iri_of_node(node)
 
@@ -1456,12 +1467,14 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         # case 2
         if from_iri == to_iri:
 
-            Duplicate_dict_1[from_iri][0].remove(to_prefix)
-            Duplicate_dict_1[from_iri][0].append(to_prefix)
+            if to_prefix != ':':
 
-            commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [from_iri], None))
-            commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+                Duplicate_dict_1[from_iri][0].remove(to_prefix)
+                Duplicate_dict_1[from_iri][0].append(to_prefix)
+
+                commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [from_iri], None))
+                commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         # case 3
         else:
@@ -1512,8 +1525,9 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                     return
 
             # part 2
-            Duplicate_dict_1[to_iri][0].remove(to_prefix)
-            Duplicate_dict_1[to_iri][0].append(to_prefix)
+            if to_prefix != ':':
+                Duplicate_dict_1[to_iri][0].remove(to_prefix)
+                Duplicate_dict_1[to_iri][0].append(to_prefix)
 
             commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
             commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
@@ -1532,7 +1546,16 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         node = self.sender().data()
         to_prefix = self.sender().text()
-        to_iri = self.project.get_iri_for_prefix(to_prefix)
+        if to_prefix == ':':
+            to_iri = None
+            for iri_itr in self.project.IRI_prefixes_nodes_dict.keys():
+                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri_itr][2]:
+                    to_iri = iri_itr
+                    break
+            if to_iri is None:
+                self.statusBar().showMessage(': prefix does not correspond to any IRI in the widget. please contact developer.')
+        else:
+            to_iri = self.project.get_iri_for_prefix(to_prefix)
         from_prefix = self.project.get_prefix_of_node(node)
         from_iri = self.project.get_iri_of_node(node)
 
@@ -1555,14 +1578,16 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         #case 2
         if from_iri == to_iri:
 
-            Duplicate_dict_1[from_iri][0].remove(to_prefix)
-            Duplicate_dict_1[from_iri][0].append(to_prefix)
+            if to_prefix != ':':
 
-            commands.append(
-                CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                           [from_iri], None))
-            commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+                Duplicate_dict_1[from_iri][0].remove(to_prefix)
+                Duplicate_dict_1[from_iri][0].append(to_prefix)
+
+                commands.append(
+                    CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                               [from_iri], None))
+                commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         #case 3
         else:
@@ -1605,8 +1630,9 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 return
 
             #part 2
-            Duplicate_dict_1[to_iri][0].remove(to_prefix)
-            Duplicate_dict_1[to_iri][0].append(to_prefix)
+            if to_prefix != ':':
+                Duplicate_dict_1[to_iri][0].remove(to_prefix)
+                Duplicate_dict_1[to_iri][0].append(to_prefix)
 
             commands.append(
                 CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))

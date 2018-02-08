@@ -243,7 +243,7 @@ class IriWidget(QtWidgets.QScrollArea):
         #self.buttons_layout.addWidget(self.remove_entry_button)
         #self.buttons_layout.addWidget(self.modify_entry_button)
         #self.buttons_layout.addWidget(self.test_IRI_button)
-        #self.buttons_layout.addWidget(self.dictionary_display_button)
+        self.buttons_layout.addWidget(self.dictionary_display_button)
         self.buttons_layout.addWidget(self.hide_or_show_nodes_button)
 
         #connect(self.entry_button.pressed, self.button_add)
