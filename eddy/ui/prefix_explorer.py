@@ -323,7 +323,9 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
                         if (prefix_inp == ''):
                             if self.new_text in self.project.IRI_prefixes_nodes_dict.keys():
-                                pass
+                                #generate new prefix and add it to the widget
+                                new_generated_prefix = self.project.generate_new_prefix(self.project.IRI_prefixes_nodes_dict)
+                                self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, new_generated_prefix, 'add', display_in_widget=True)
                             else:
                                 self.process_entry_from_textboxes_for_button_add_or_remove(self.new_text, None, 'add', display_in_widget=True)
                         else:
