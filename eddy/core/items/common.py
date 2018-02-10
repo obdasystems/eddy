@@ -371,13 +371,18 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 else:
                     self.setText(self.old_text)
 
-                    exception_list = ['-', '_', '.', '~']
+                    exception_list = ['-', '_', '.', '~', '\n']
                     currentData_processed = ''
 
                     flag = False
 
-                    for c in currentData:
+                    for i,c in enumerate(currentData):
+
                         if c == '':
+                            pass
+                        elif i < (len(currentData) - 1) and (c == '\\' and currentData[i + 1] == 'n'):
+                            currentData_processed = currentData_processed + '\n'
+                        elif i > 0 and (c == 'n' and currentData[i - 1] == '\\'):
                             pass
                         elif (not c.isalnum()) and (c not in exception_list):
                             currentData_processed = currentData_processed + '_'

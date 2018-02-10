@@ -49,9 +49,9 @@ class GenerateNewLabel():
         self.rc_to_set = node.remaining_characters
         self.node = node
 
-        print('GenerateNewLabel >>> iri_to_set',self.iri_to_set)
-        print('GenerateNewLabel >>> prefix_to_set', self.prefix_to_set)
-        print('GenerateNewLabel >>> rc_to_set', self.rc_to_set)
+        #print('GenerateNewLabel >>> iri_to_set',self.iri_to_set)
+        #print('GenerateNewLabel >>> prefix_to_set', self.prefix_to_set)
+        #print('GenerateNewLabel >>> rc_to_set', self.rc_to_set)
 
     def return_label(self):
 

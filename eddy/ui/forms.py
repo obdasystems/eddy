@@ -198,6 +198,7 @@ class RefactorNameForm(QtWidgets.QDialog):
         self.renameField = StringField(self)
         self.renameField.setFixedWidth(200)
         self.renameField.setFont(Font('Roboto', 12))
+        self.renameLabel.setWordWrap(True)
 
         match = RE_VALUE.match(self.node.text())
         if match:
@@ -279,9 +280,6 @@ class RefactorNameForm(QtWidgets.QDialog):
         """
         currentData = self.renameField.value()
 
-        print('self.old_text', self.old_text)
-        print('currentData', currentData)
-
         if currentData and currentData != self.old_text:
 
             match = RE_VALUE.match(currentData)
@@ -336,15 +334,22 @@ class RefactorNameForm(QtWidgets.QDialog):
             else:
                 #self.setText(self.old_text)
 
+                exception_list = ['-', '_', '.', '~', '\n']
 
                 currentData_processed = ''
 
                 flag = False
 
-                for c in currentData:
+                for i,c in enumerate(currentData):
+                    # i ranges from 0->len(currentDate)-1 inc.
+
                     if c == '':
                         pass
-                    elif (not c.isalnum()):
+                    elif i < (len(currentData)-1) and (c == '\\' and currentData[i + 1] == 'n'):
+                        currentData_processed = currentData_processed + '\n'
+                    elif i > 0 and (c == 'n' and currentData[i - 1] == '\\'):
+                        pass
+                    elif (not c.isalnum()) and (c not in exception_list):
                         currentData_processed = currentData_processed + '_'
                         flag = True
                     else:
@@ -366,8 +371,6 @@ class RefactorNameForm(QtWidgets.QDialog):
                         self.project.IRI_prefixes_nodes_dict, dict())
 
                     old_iri = self.project.get_iri_of_node(self.node)
-
-                    print('old_iri,new_iri',old_iri,'-',new_iri)
 
                     list_of_nodes_to_process = []
 
@@ -408,7 +411,7 @@ class RefactorNameForm(QtWidgets.QDialog):
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 
                     for node in self.project.predicates(self.node.type(), self.node.text()):
-                        print('node.id,node.remaining_characters,node.text()',node.id,'-',node.remaining_characters,'-',node.text())
+                        #print('node.id,node.remaining_characters,node.text()',node.id,'-',node.remaining_characters,'-',node.text())
                         commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
 
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
