@@ -2046,7 +2046,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                         new_iri = self.project.iri
 
                         if self.project.prefix is None:
-                            new_label = str(new_iri+'#'+data)
+                            new_label = self.project.get_full_IRI(new_iri,None,data)
+                            #new_label = str(new_iri+'#'+data)
                         else:
                             new_label = str(self.project.prefix+':'+data)
 

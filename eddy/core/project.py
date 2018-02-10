@@ -298,9 +298,15 @@ class Project(QtCore.QObject):
     def get_full_IRI(self,iri,version,remaining_characters):
 
         if (version is None) or (version == ''):
-            return iri + '#' + remaining_characters
+            if iri[len(iri)-1] == '#' or iri[len(iri)-1] == '/':
+                return iri + remaining_characters
+            else:
+                return iri + '#' + remaining_characters
         else:
-            return iri + '/' + version + '#' + remaining_characters
+            if iri[len(iri) - 1] == '/':
+                return iri + version + '#' + remaining_characters
+            else:
+                return iri + '/' + version + '#' + remaining_characters
 
     def get_iri_for_prefix(self,prefix_inp):
 
