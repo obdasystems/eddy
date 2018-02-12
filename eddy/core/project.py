@@ -37,6 +37,7 @@ from PyQt5 import QtCore,QtGui,QtWidgets
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramAdd
 from eddy.core.commands.nodes import CommandNodeSetMeta
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.datatypes.graphol import Item, Identity, Special
 from eddy.core.functions.owl import OWLText
 from eddy.core.functions.path import expandPath
@@ -1979,6 +1980,133 @@ class ProjectMergeWorker(QtCore.QObject):
     #   INTERFACE
     #################################
 
+    def merge_prefixes(self, home_dictionary, foreign_prefixes, iri_key):
+
+        all_home_prefixes = []
+
+        for iri in home_dictionary.keys():
+
+            prefixes = home_dictionary[iri][0]
+
+            if prefixes is not None:
+                all_home_prefixes.extend(prefixes)
+
+        old_prefixes = home_dictionary[iri_key][0]
+        new_prefixes = []
+
+        new_prefixes.extend(old_prefixes)
+
+        print('all_home_prefixes',all_home_prefixes)
+
+        foreign_prefixes_reversed = []
+
+        for pr_foreign in foreign_prefixes:
+            foreign_prefixes_reversed.insert(0,pr_foreign)
+
+        for pr_foreign in foreign_prefixes_reversed:
+
+            if pr_foreign not in all_home_prefixes:
+                print('pr_foreign not in all_home_prefixes-',pr_foreign)
+                new_prefixes.insert(0,pr_foreign)
+
+        home_dictionary[iri_key][0] = new_prefixes
+
+        print('old_prefixes',old_prefixes)
+        print('new_prefixes',new_prefixes)
+
+    def append_foreign_nodes(self, home_dictionary, foreign_nodes, iri_key):
+
+        home_nodes = home_dictionary[iri_key][1]
+
+        print('home_nodes',home_nodes)
+
+        new_home_nodes = set()
+
+        new_home_nodes = new_home_nodes.union(home_nodes)
+        new_home_nodes = new_home_nodes.union(foreign_nodes)
+
+        print('new_home_nodes', new_home_nodes)
+
+        home_dictionary[iri_key][1] = new_home_nodes
+
+    def merge_properties(self, home_dictionary, foreign_properties, iri_key):
+
+        home_properties = home_dictionary[iri_key][2]
+
+        new_home_properties = set()
+
+        new_home_properties = new_home_properties.union(home_properties)
+
+        for p in foreign_properties:
+            if (p != 'Project_IRI') and (p != 'display_in_widget'):
+                new_home_properties.add(p)
+
+        home_dictionary[iri_key][2] = new_home_properties
+
+        print('home_properties',home_properties)
+        print('new_home_properties',new_home_properties)
+
+    def merge_IRI_prefixes_nodes_dictionary(self):
+
+        other_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.other.IRI_prefixes_nodes_dict, dict())
+        home_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+        home_dictionary_old = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+
+        """
+        print('$$$      other dictionary    $$$')
+        self.project.print_dictionary(other_dictionary)
+        print('$$$      other dictionary    (END)  $$$')
+
+        print('$$$      home dictionary    $$$')
+        self.project.print_dictionary(home_dictionary)
+        print('$$$      home dictionary    (END)  $$$')
+        """
+
+        iris_to_update = []
+
+        for foreign_iri in other_dictionary.keys():
+
+            iris_to_update.append(foreign_iri)
+
+            foreign_iri_entry = other_dictionary[foreign_iri]
+
+            foreign_prefixes = foreign_iri_entry[0]
+            foreign_nodes = foreign_iri_entry[1]
+            foreign_properties = foreign_iri_entry[2]
+
+            print('')
+            print('foreign_iri',foreign_iri)
+            print('foreign_prefixes',foreign_prefixes)
+            print('foreign_nodes', foreign_nodes)
+            print('foreign_properties', foreign_properties)
+
+            if foreign_iri not in home_dictionary.keys():
+
+                print('foreign_iri not in home_dictionary.keys()')
+
+                empty_prefixes = []
+                empty_nodes = set()
+                empty_properties = set()
+
+                value = []
+
+                value.append(empty_prefixes)
+                value.append(empty_nodes)
+                value.append(empty_properties)
+
+                home_dictionary[foreign_iri] = value
+
+            self.merge_prefixes(home_dictionary, foreign_prefixes, foreign_iri)
+            self.append_foreign_nodes(home_dictionary, foreign_nodes, foreign_iri)
+            self.merge_properties(home_dictionary, foreign_properties, foreign_iri)
+
+            print('home_dictionary[foreign_iri][0]',home_dictionary[foreign_iri][0])
+            print('home_dictionary[foreign_iri][1]', home_dictionary[foreign_iri][1])
+            print('home_dictionary[foreign_iri][2]', home_dictionary[foreign_iri][2])
+
+        self.commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,home_dictionary_old,home_dictionary,iris_to_update,None))
+
+
     def mergeDiagrams(self):
         """
         Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
@@ -2097,6 +2225,9 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         try:
             LOGGER.info('Performing project import: %s <- %s...', self.project.name, self.other.name)
+
+            self.merge_IRI_prefixes_nodes_dictionary()
+
             self.mergeDiagrams()
             self.mergeMeta()
         except ProjectStopImportingError:

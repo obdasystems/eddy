@@ -915,8 +915,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Load and initialize application plugins.
         """
-        skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
-        #skip_list = ['Explanation_explorer', 'Unsatisfiable_Entity_Explorer', 'prefix_explorer']
+        #skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
+        skip_list = ['Explanation_explorer', 'Unsatisfiable_Entity_Explorer', 'prefix_explorer']
         self.addPlugins(self.pmanager.init(skip_list=skip_list))
 
     def initProfiles(self):

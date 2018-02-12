@@ -754,6 +754,8 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
 
     def convert_string_of_nodes_to_nodes(self):
 
+        LOGGER.debug('GrapholProjectLoader_v1  >>>  convert_string_of_nodes_to_nodes')
+
         nodes_in_project = self.nproject.nodes()
 
         IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
@@ -1760,7 +1762,7 @@ class GrapholLoaderMixin_v2(object):
 
     def convert_string_of_nodes_to_nodes(self):
 
-        LOGGER.debug('Convert nodes from string format to eddy nodes format in IRI-Prefixes dictionary')
+        LOGGER.debug('GrapholLoaderMixin_v2 >>> Convert nodes from string format to eddy nodes format in IRI-Prefixes dictionary')
 
         nodes_in_project = self.nproject.nodes()
 
@@ -2037,6 +2039,8 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         """
         Perform ontology import from Graphol file format and merge the loaded ontology with the current project.
         """
+        print('GrapholOntologyLoader_v2')
+
         self.createDomDocument()
         self.createProject()
         self.createDiagrams()
@@ -2097,11 +2101,11 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
         """
         try:
             self.createDomDocument()
-            #print('self.createDomDocument()')
         except (ProjectNotFoundError, ProjectVersionError):
-            #print('self.createLegacyProject()')
+            print('self.createLegacyProject()')
             self.createLegacyProject()
         else:
+            print('GrapholProjectLoader_v2')
             self.createProject()
             self.createDiagrams()
 
