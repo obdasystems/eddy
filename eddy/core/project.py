@@ -196,7 +196,7 @@ class Project(QtCore.QObject):
         elif len(return_list) == 1:
             return return_list[0]
         else:
-            LOGGER.critical('Multiple project IRIs found'+return_list)
+            LOGGER.critical('Multiple project IRIs found'+str(return_list))
             return return_list[0]
 
         #print('Project >> iri END')
