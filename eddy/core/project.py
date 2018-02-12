@@ -245,7 +245,7 @@ class Project(QtCore.QObject):
         if len(iris) == 0:
             return None
 
-        return str('Error multiple IRIS-' + iris)
+        return str('Error multiple IRIS-' + str(iris))
 
     def get_prefixes_of_node(self, node_inp):
         """
