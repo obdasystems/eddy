@@ -377,7 +377,8 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
 
                         if 'eddy.core.items' in str(type(nephew_or_child_data)):
 
-                            if nephew_or_child_data.id_with_diag == node_or_edge_or_axiom.id_with_diag:
+                            if nephew_or_child_data.id == node_or_edge_or_axiom.id:
+                            #if (nephew_or_child_data.text() == nephew_or_child_data.text()):
                                 #print('nephew_or_child_data not coloured - ',nephew_or_child_data)
                                 pass
                             else:
