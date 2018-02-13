@@ -1112,7 +1112,7 @@ class Project(QtCore.QObject):
                 self.sgnIRINodeEntryIgnored.emit(iri_inp, str(node_inp), 'Same entry already present in the table')
                 return None
             else:
-                self.sgnIRINodeEntryIgnored.emit(iri_inp, str(node_inp), 'Node mapped to another IRI-'+temp)
+                self.sgnIRINodeEntryIgnored.emit(iri_inp, str(node_inp), 'Node mapped to another IRI-'+str(temp))
                 return None
 
         msg = ''
@@ -1340,16 +1340,22 @@ class Project(QtCore.QObject):
         # looks up the dict for the raw term and then..
         # returns the string portion without the IRI and special characters
 
+        abs_nodes = self.nodes()
+
         for diag, val_in_diag in self.converted_nodes.items():
+            #print('diag, val_in_diag',diag, val_in_diag)
             for nd in val_in_diag:
-                abs_nodes = self.nodes()
+
                 abs_nd = None
                 for i in abs_nodes:
-                    if i.id == nd:
+                    #if i.id == nd:
+                    if (i.id_with_diag == str(diag + '-' + nd)):
                         abs_nd = i
                         break
+
                 if (val_in_diag[nd] is not None) and \
-                    ((nd==node.id) or ((abs_nd is not None) and (abs_nd.text()==node.text()))):
+                    ((str(diag + '-' + nd) == node.id_with_diag) or ((abs_nd is not None) and (abs_nd.text() == node.text()))):
+                    # ((nd==node.id) or ((abs_nd is not None) and (abs_nd.text()==node.text()))):
                     if str(type(val_in_diag[nd])) == '<class \'list\'>':
 
                         return_list = []

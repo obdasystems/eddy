@@ -114,6 +114,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
             temp = []
             for p in self.project.nodes():
                 OWL_term_for_p = self.project.getOWLtermfornode(p)
+                #print('p-',p,' OWL_term_for_p',OWL_term_for_p)
                 match = self.checkmatchforOWLtermandnodename(ue,OWL_term_for_p)
                 if match is True:
                     temp.append(p)
@@ -128,7 +129,7 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         count = 0
 
-        print('input_list',input_list)
+        #print('input_list',input_list)
 
         for entity in input_list:
 
@@ -145,8 +146,8 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
             else:
                 LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
 
-            print('entity', entity)
-            print('explanation_for_node', explanation_for_node)
+            #print('entity', entity)
+            #print('explanation_for_node', explanation_for_node)
 
             self.sgnFakeExplanationAdded.emit(entity[0],explanation_for_node)
 
@@ -170,9 +171,9 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         attributes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_attributes)
         roles_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_roles)
 
-        print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
-        print('attributes_only_unsatisfiable_nodes_in_diagram',attributes_only_unsatisfiable_nodes_in_diagram)
-        print('roles_only_unsatisfiable_nodes_in_diagram',roles_only_unsatisfiable_nodes_in_diagram)
+        #print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
+        #print('attributes_only_unsatisfiable_nodes_in_diagram',attributes_only_unsatisfiable_nodes_in_diagram)
+        #print('roles_only_unsatisfiable_nodes_in_diagram',roles_only_unsatisfiable_nodes_in_diagram)
 
         [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in classes_only_unsatisfiable_nodes_in_diagram]
         [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in attributes_only_unsatisfiable_nodes_in_diagram]
@@ -420,7 +421,7 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
 
         owl_term_for_node = self.project.getOWLtermfornode(node)
 
-        #print(owl_term_for_node,' - ',node.id)
+        #print(owl_term_for_node,' - ',node.id_with_diag)
         #print(self.project.nodes_of_unsatisfiable_entities)
 
         if (node not in self.project.nodes_of_unsatisfiable_entities) and ((owl_term_for_node is not None) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities)):
@@ -461,7 +462,7 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
         #self.project.uc_as_input_for_explanation_explorer = parent.text()
         self.project.uc_as_input_for_explanation_explorer = str(parent.data())
-        print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
+        #print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
         self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
 
     @QtCore.pyqtSlot(str)
@@ -480,8 +481,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
-        print('doRemoveNode >>>')
-        print('node',node)
+        #print('doRemoveNode >>>')
+        #print('node',node)
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
         #if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             if node in self.project.nodes_of_unsatisfiable_entities:
@@ -585,10 +586,10 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         :type node: AbstractNode
         :rtype: QtGui.QStandardItem
         """
-        print('parentFor(self, node)')
-        print('node',node)
+        #print('parentFor(self, node)')
+        #print('node',node)
         for i in self.model.findItems(self.parentKey(node), QtCore.Qt.MatchExactly):
-            print('i',i)
+            #print('i',i)
             #n = i.child(0).data()
             if i.text() == node.text():
                 return i
