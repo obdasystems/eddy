@@ -284,8 +284,8 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.ITEM_PRESSED = [r, c]
 
-    @QtCore.pyqtSlot(str, str)
-    def UpdateTableForIRI(self,iri_inp,nodes_inp):
+    @QtCore.pyqtSlot(str, str, str)
+    def UpdateTableForIRI(self,iri_inp,nodes_inp,diag_name):
 
         disconnect(self.table.cellChanged, self.cell_changed)
 

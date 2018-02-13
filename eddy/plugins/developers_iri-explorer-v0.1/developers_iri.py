@@ -544,8 +544,8 @@ class IriWidget(QtWidgets.QScrollArea):
                 # iri_inp in both table and dictionary (case already coverted above)
                 pass
 
-    @QtCore.pyqtSlot(str,str)
-    def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self,iri_to_update,nodes_to_update):
+    @QtCore.pyqtSlot(str,str,str)
+    def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self,iri_to_update,nodes_to_update,diag_name):
 
         #if (iri_to_update is None) and (nodes_to_update is None):
         # print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues')
@@ -650,7 +650,7 @@ class IriWidget(QtWidgets.QScrollArea):
         else:
             self.SHOW_NODES = True
 
-        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues(None,None)
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues(None,None,None)
 
     def button_add(self):
 
@@ -1048,7 +1048,7 @@ class IriWidget(QtWidgets.QScrollArea):
         """
         Set the current stacked widget.
         """
-        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues(None,None)
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues(None,None,None)
         self.redraw()
 
 

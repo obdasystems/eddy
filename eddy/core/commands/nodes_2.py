@@ -61,13 +61,13 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
             for iri in self.iris_to_update:
                 if self.nodes_to_update is None:
                     #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
-                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None, None)
                 else:
                     for n in self.nodes_to_update:
                         #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
-                        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
+                        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n), str(n.diagram.name))
         else:
-            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None)
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None, None)
 
         #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo) END')
 
@@ -81,13 +81,13 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
             for iri in self.iris_to_update:
                 if self.nodes_to_update is None:
                     #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None) -', iri)
-                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None)
+                    self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, None, None)
                 else:
                     for n in self.nodes_to_update:
                         #print('self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, n)', iri, ' - ',n)
-                        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n))
+                        self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(iri, str(n), str(n.diagram.name))
         else:
-            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None)
+            self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None, None)
 
         #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
 

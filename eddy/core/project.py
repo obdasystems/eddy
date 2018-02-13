@@ -123,7 +123,7 @@ class Project(QtCore.QObject):
     sgnIRIVersionEntryRemoved = QtCore.pyqtSignal(str,str,str)
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str,str,str)
 
-    sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str)
+    sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str,str)
     #sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
 
     def __init__(self, **kwargs):
@@ -235,6 +235,7 @@ class Project(QtCore.QObject):
         # print('self',self)
         for iri in self.IRI_prefixes_nodes_dict.keys():
             nodes = self.IRI_prefixes_nodes_dict[iri][1]
+
             if (node_inp in nodes) or (str(node_inp) in str(nodes)):
                 iris.add(iri)
             else:
@@ -431,9 +432,9 @@ class Project(QtCore.QObject):
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
 
                 if n.Type is Item.IndividualNode:
-                    print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
+                    print(str(n.type())+ ','+ str(n.id)+ ',', str(n.diagram.name),','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
                 else:
-                    print(str(n.type())+ ','+ str(n.id)+ ','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
+                    print(str(n.type())+ ','+ str(n.id)+ ',', str(n.diagram.name),',' + str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
 
         print('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
         print('<<<<<<<<<          iri_of_cut_nodes       >>>>>>>>')
@@ -598,7 +599,7 @@ class Project(QtCore.QObject):
 
             if corr_iri is not None:
                 self.IRI_prefixes_nodes_dict[corr_iri][1].add(node)
-                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri,str(node))
+                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri,str(node),str(node.diagram.name))
 
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
@@ -614,12 +615,13 @@ class Project(QtCore.QObject):
             corr_iris = []
 
             for IRI_in_dict in self.IRI_prefixes_nodes_dict.keys():
-                if node in self.IRI_prefixes_nodes_dict[IRI_in_dict][1]:
-                    corr_iris.append(IRI_in_dict)
+                if (node in self.IRI_prefixes_nodes_dict[IRI_in_dict][1]) or\
+                   (self.check_if_node_is_present_in_set(node, self.IRI_prefixes_nodes_dict[IRI_in_dict][1])):
+                        corr_iris.append(IRI_in_dict)
 
             if len(corr_iris) == 1:
                 self.IRI_prefixes_nodes_dict[corr_iris[0]][1].remove(node)
-                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iris[0],str(node))
+                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iris[0],str(node),str(node.diagram.name))
             elif len(corr_iris) == 0:
                 LOGGER.warning('node is not present in the dictionary')
             else:
@@ -1268,8 +1270,8 @@ class Project(QtCore.QObject):
         # EMIT UPDATED SIGNAL
         node.diagram.sgnUpdated.emit()
 
-    @QtCore.pyqtSlot(str,str)
-    def regenerate_label_of_nodes_for_iri(self,iri_inp,node_inp):
+    @QtCore.pyqtSlot(str,str,str)
+    def regenerate_label_of_nodes_for_iri(self,iri_inp,node_inp,diag_name):
 
         # input string/string
 
@@ -1295,7 +1297,7 @@ class Project(QtCore.QObject):
         else:
             #print('node_inp is not None')
             for n in self.nodes():
-                if str(n) == node_inp:
+                if (str(n) == node_inp) and (str(n.diagram.name) == diag_name):
                     self.node_label_update_core_code(n)
                     break
 
@@ -1334,6 +1336,20 @@ class Project(QtCore.QObject):
 
         for d in self.diagrams():
             self.diagram(d.name).sgnUpdated.emit()
+
+    def check_if_node_is_present_in_set(self,node,set):
+
+        list_inp = list(set)
+
+        for e in list_inp:
+            if node.id_with_diag is None:
+                if str(node) in str(list_inp):
+                    return True
+            else:
+                if e.id_with_diag == node.id_with_diag:
+                    return True
+
+        return False
 
     def getOWLtermfornode(self, node):
 
