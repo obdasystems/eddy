@@ -145,7 +145,10 @@ class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
     @property
     def id_with_diag(self):
 
-        return str(self.diagram.name)+'-'+str(self.id)
+        if self.diagram is None:
+            return 'None-' + str(self.id)
+        else:
+            return str(self.diagram.name)+'-'+str(self.id)
 
     @property
     def name(self):
