@@ -2027,37 +2027,42 @@ class ProjectMergeWorker(QtCore.QObject):
 
     def merge_prefixes(self, home_dictionary, foreign_prefixes, iri_key):
 
-        all_home_prefixes = []
+        old_display_in_widget = ('display_in_widget' in home_dictionary[iri_key][2])
 
-        for iri in home_dictionary.keys():
+        if old_display_in_widget is False:
 
-            prefixes = home_dictionary[iri][0]
+            all_home_prefixes = []
 
-            if prefixes is not None:
-                all_home_prefixes.extend(prefixes)
+            for iri in home_dictionary.keys():
 
-        old_prefixes = home_dictionary[iri_key][0]
-        new_prefixes = []
+                prefixes = home_dictionary[iri][0]
 
-        new_prefixes.extend(old_prefixes)
+                if prefixes is not None:
+                    all_home_prefixes.extend(prefixes)
 
-        #print('all_home_prefixes',all_home_prefixes)
+            old_prefixes = home_dictionary[iri_key][0]
 
-        foreign_prefixes_reversed = []
+            new_prefixes = []
 
-        for pr_foreign in foreign_prefixes:
-            foreign_prefixes_reversed.insert(0,pr_foreign)
+            new_prefixes.extend(old_prefixes)
 
-        for pr_foreign in foreign_prefixes_reversed:
+            #print('all_home_prefixes',all_home_prefixes)
 
-            if pr_foreign not in all_home_prefixes:
-                #print('pr_foreign not in all_home_prefixes-',pr_foreign)
-                new_prefixes.insert(0,pr_foreign)
+            foreign_prefixes_reversed = []
 
-        home_dictionary[iri_key][0] = new_prefixes
+            for pr_foreign in foreign_prefixes:
+                foreign_prefixes_reversed.insert(0,pr_foreign)
 
-        #print('old_prefixes',old_prefixes)
-        #print('new_prefixes',new_prefixes)
+            for pr_foreign in foreign_prefixes_reversed:
+
+                if pr_foreign not in all_home_prefixes:
+                    #print('pr_foreign not in all_home_prefixes-',pr_foreign)
+                    new_prefixes.insert(0,pr_foreign)
+
+            home_dictionary[iri_key][0] = new_prefixes
+
+            #print('old_prefixes',old_prefixes)
+            #print('new_prefixes',new_prefixes)
 
     def append_foreign_nodes_2(self, home_dictionary, foreign_nodes, iri_key):
 
