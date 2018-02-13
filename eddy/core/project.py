@@ -637,6 +637,7 @@ class Project(QtCore.QObject):
 
         while(new_prefix in prefixes_in_dict):
             new_prefix = 'p'+str(new_integer+1)
+            new_integer = new_integer+1
 
         return new_prefix
 

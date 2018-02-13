@@ -405,7 +405,9 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                         if row == self.table.rowCount()-1:
                             pass
                         else:
-                            self.process_entry_from_textboxes_for_task_modify(None, None, self.old_text, self.new_text)
+                            prefixes_old = self.project.IRI_prefixes_nodes_dict[iri_inp][0]
+
+                            self.process_entry_from_textboxes_for_task_modify(None, None, self.old_text, self.new_text, prefixes_old=prefixes_old)
 
                     elif self.old_text != '' and self.new_text == '':
 
@@ -659,13 +661,13 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.ENTRY_REMOVE_OK_var = set()
         self.ENTRY_IGNORE_var = set()
 
-    def process_entry_from_textboxes_for_task_modify(self, iri_old, iri_new, prefix_old, prefix_new):
+    def process_entry_from_textboxes_for_task_modify(self, iri_old, iri_new, prefix_old, prefix_new, prefixes_old=None):
 
         print('process_entry_from_textboxes_for_task_modify >>>')
         print('iri_old', iri_old)
         print('iri_new', iri_new)
-        print('prefixes_old', prefix_old)
-        print('prefixes_new', prefix_new)
+        print('prefix_old', prefix_old)
+        print('prefix_new', prefix_new)
 
         self.ENTRY_MODIFY_OK_var = set()
         self.ENTRY_IGNORE_var = set()
@@ -703,13 +705,23 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
             #prefixes_old_list = self.convert_str_prefixes_in_table_to_list(prefixes_old)
             #prefixes_new_list = self.convert_str_prefixes_in_table_to_list(prefixes_new)
 
+            prefixes_old_list = []
+            prefixes_old_list.extend(prefixes_old)
+            ind = prefixes_old_list.index(prefix_old)
+            prefixes_old_list.remove(prefix_old)
+
+            prefixes_new_list = []
+            prefixes_new_list.extend(prefixes_old_list)
+
+            prefixes_new_list.insert(ind,prefix_new)
+
             # case2     prefix->prefix'          if prefix==prefix' no need for a transaction
             if (prefix_old == prefix_new):
                 self.session.statusBar().showMessage(
                     'prefix(es) in selected cell and input box are the same. Nothing to change', 10000)
                 return
 
-            self.project.modifyIRIPrefixesEntry(None, [prefix_old], None, [prefix_new],
+            self.project.modifyIRIPrefixesEntry(None, prefixes_old, None, prefixes_new_list,
                                                 Duplicate_IRI_prefixes_nodes_dict_1)
 
             for iri_key in Duplicate_IRI_prefixes_nodes_dict_1.keys():
