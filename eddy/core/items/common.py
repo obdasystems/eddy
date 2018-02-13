@@ -138,10 +138,14 @@ class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
         """
         super().__init__(**kwargs)
         self.id = id or diagram.guid.next(self.Prefix)
-
     #############################################
     #   PROPERTIES
     #################################
+
+    @property
+    def id_with_diag(self):
+
+        return str(self.diagram.name)+'-'+str(self.id)
 
     @property
     def name(self):

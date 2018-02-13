@@ -416,12 +416,12 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
-        print('doAddNode    >>>     node',node)
+        #print('doAddNode    >>>     node',node)
 
         owl_term_for_node = self.project.getOWLtermfornode(node)
 
-        print(owl_term_for_node,' - ',node.id)
-        print(self.project.nodes_of_unsatisfiable_entities)
+        #print(owl_term_for_node,' - ',node.id)
+        #print(self.project.nodes_of_unsatisfiable_entities)
 
         if (node not in self.project.nodes_of_unsatisfiable_entities) and ((owl_term_for_node is not None) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities)):
             self.project.nodes_of_unsatisfiable_entities.append(node)

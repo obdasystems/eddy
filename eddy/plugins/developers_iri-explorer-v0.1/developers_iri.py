@@ -442,7 +442,7 @@ class IriWidget(QtWidgets.QScrollArea):
                     item_nodes = QtWidgets.QTableWidgetItem()
                     nds_ids = set()
                     for n in nodes:
-                        nds_ids.add(n.id)
+                        nds_ids.add(n.id_with_diag)
                     item_nodes.setText(str(nds_ids))
                     item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                     item_nodes.setBackground(QtGui.QBrush(QtGui.QColor(50,50,205,50)))
@@ -475,7 +475,7 @@ class IriWidget(QtWidgets.QScrollArea):
             item_nodes = QtWidgets.QTableWidgetItem()
             nds_ids = set()
             for n in nodes:
-                nds_ids.add(n.id)
+                nds_ids.add(n.id_with_diag)
             item_nodes.setText(str(nds_ids))
             item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             item_nodes.setBackground(QtGui.QBrush(QtGui.QColor(205, 50, 50, 50)))
@@ -503,7 +503,7 @@ class IriWidget(QtWidgets.QScrollArea):
                         new_nodes = self.project.IRI_prefixes_nodes_dict[iri_inp][1]
                         nds_ids = set()
                         for n in new_nodes:
-                            nds_ids.add(n.id)
+                            nds_ids.add(n.id_with_diag)
                         self.table.item(r, 2).setText(str(nds_ids))
                 # iri_inp in table and absent in dictionary
                 else:
@@ -536,7 +536,7 @@ class IriWidget(QtWidgets.QScrollArea):
                     item_nodes = QtWidgets.QTableWidgetItem()
                     nds_ids = set()
                     for n in nodes:
-                        nds_ids.add(n.id)
+                        nds_ids.add(n.id_with_diag)
                     item_nodes.setText(str(nds_ids))
                     item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                     self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
@@ -620,7 +620,7 @@ class IriWidget(QtWidgets.QScrollArea):
                 item_nodes = QtWidgets.QTableWidgetItem()
                 nds_ids = set()
                 for n in nodes:
-                    nds_ids.add(n.id)
+                    nds_ids.add(n.id_with_diag)
                 item_nodes.setText(str(nds_ids))
                 item_nodes.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 self.table.setItem(self.table.rowCount() - 1, 2, item_nodes)
