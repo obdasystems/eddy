@@ -90,7 +90,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         """
         self.prefixesLabel = QtWidgets.QLabel(self)
         self.prefixesLabel.setFont(Font('Roboto', 12))
-        self.prefixesLabel.setText('Prefix(es)')
+        self.prefixesLabel.setText('Prefix')
         self.prefixesField = StringField(self)
         self.prefixesField.setFont(Font('Roboto', 12))
         self.prefixesField.setMinimumWidth(400)

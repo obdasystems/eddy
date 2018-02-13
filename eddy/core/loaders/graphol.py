@@ -2039,7 +2039,7 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         """
         Perform ontology import from Graphol file format and merge the loaded ontology with the current project.
         """
-        print('GrapholOntologyLoader_v2')
+        #print('GrapholOntologyLoader_v2')
 
         self.createDomDocument()
         self.createProject()
@@ -2105,7 +2105,7 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
             print('self.createLegacyProject()')
             self.createLegacyProject()
         else:
-            print('GrapholProjectLoader_v2')
+            #print('GrapholProjectLoader_v2')
             self.createProject()
             self.createDiagrams()
 

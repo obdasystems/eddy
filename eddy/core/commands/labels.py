@@ -77,7 +77,7 @@ class GenerateNewLabel():
                         return_label = self.project.get_full_IRI(self.iri_to_set, None, self.rc_to_set)
                 else:
                     return_label = str(self.prefix_to_set + ':' + self.rc_to_set)
-        print('GenerateNewLabel >>>  return_label', return_label)
+        #print('GenerateNewLabel >>>  return_label', return_label)
         return return_label
 
 

@@ -663,11 +663,11 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
     def process_entry_from_textboxes_for_task_modify(self, iri_old, iri_new, prefix_old, prefix_new, prefixes_old=None):
 
-        print('process_entry_from_textboxes_for_task_modify >>>')
-        print('iri_old', iri_old)
-        print('iri_new', iri_new)
-        print('prefix_old', prefix_old)
-        print('prefix_new', prefix_new)
+        #print('process_entry_from_textboxes_for_task_modify >>>')
+        #print('iri_old', iri_old)
+        #print('iri_new', iri_new)
+        #print('prefix_old', prefix_old)
+        #print('prefix_new', prefix_new)
 
         self.ENTRY_MODIFY_OK_var = set()
         self.ENTRY_IGNORE_var = set()

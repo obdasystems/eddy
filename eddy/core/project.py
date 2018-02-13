@@ -170,6 +170,7 @@ class Project(QtCore.QObject):
         self.init_IRI_prefixes_nodes_dict_with_std_data()
 
         self.iri_of_cut_nodes = []
+        #self.iri_of_imported_nodes = []
         #self.prefered_prefix_list = kwargs.get('prefered_prefix_list')
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
@@ -538,6 +539,14 @@ class Project(QtCore.QObject):
 
             flag = False
 
+            #print('item.remaining_characters',item.remaining_characters)
+            """
+            if item.remaining_characters is not None:
+                if item.remaining_characters in self.iri_of_imported_nodes:
+                    ind = self.iri_of_imported_nodes.index(item.remaining_characters)
+                    corr_iri = self.iri_of_imported_nodes[ind-1]
+                    flag = True
+            """
             for c,ele in enumerate(self.iri_of_cut_nodes):
                 if (node is ele) or str(node) == str(ele):
                     corr_iri = self.iri_of_cut_nodes[c+1]
@@ -1220,7 +1229,7 @@ class Project(QtCore.QObject):
 
     def node_label_update_core_code(self,node):
 
-        print('node_label_update_core_code   >>>>>')
+        #print('node_label_update_core_code   >>>>>')
 
         old_label = node.text()
 
@@ -1229,7 +1238,7 @@ class Project(QtCore.QObject):
         #else:
             #new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
 
-        print(' def node_label_update_core_code     >>> new_label', new_label)
+        #print(' def node_label_update_core_code     >>> new_label', new_label)
 
         if old_label==new_label:
             return
@@ -1266,7 +1275,7 @@ class Project(QtCore.QObject):
 
         if ((node_inp is None) or (node_inp is '')) and ((iri_inp is None) or (iri_inp is '')):
             return
-        print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
+        #print('def regenerate_label_of_nodes_for_iri    >>>',iri_inp,' - ',node_inp)
 
         #disconnect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         #disconnect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
@@ -1965,6 +1974,9 @@ class ProjectMergeWorker(QtCore.QObject):
         self.project = project
         self.other = other
 
+        self.old_dictionary = None
+        self.new_dictionary = None
+
     #############################################
     #   PROPERTIES
     #################################
@@ -1997,7 +2009,7 @@ class ProjectMergeWorker(QtCore.QObject):
 
         new_prefixes.extend(old_prefixes)
 
-        print('all_home_prefixes',all_home_prefixes)
+        #print('all_home_prefixes',all_home_prefixes)
 
         foreign_prefixes_reversed = []
 
@@ -2007,26 +2019,37 @@ class ProjectMergeWorker(QtCore.QObject):
         for pr_foreign in foreign_prefixes_reversed:
 
             if pr_foreign not in all_home_prefixes:
-                print('pr_foreign not in all_home_prefixes-',pr_foreign)
+                #print('pr_foreign not in all_home_prefixes-',pr_foreign)
                 new_prefixes.insert(0,pr_foreign)
 
         home_dictionary[iri_key][0] = new_prefixes
 
-        print('old_prefixes',old_prefixes)
-        print('new_prefixes',new_prefixes)
+        #print('old_prefixes',old_prefixes)
+        #print('new_prefixes',new_prefixes)
+
+    def append_foreign_nodes_2(self, home_dictionary, foreign_nodes, iri_key):
+
+        #home_nodes = home_dictionary[iri_key][1]
+        #new_home_nodes = set()
+
+        for n in foreign_nodes:
+            self.project.iri_of_imported_nodes.append(iri_key)
+            self.project.iri_of_imported_nodes.append(n.remaining_characters)
+
+        #home_dictionary[iri_key][1] = new_home_nodes
 
     def append_foreign_nodes(self, home_dictionary, foreign_nodes, iri_key):
 
         home_nodes = home_dictionary[iri_key][1]
 
-        print('home_nodes',home_nodes)
+        #print('home_nodes',home_nodes)
 
         new_home_nodes = set()
 
         new_home_nodes = new_home_nodes.union(home_nodes)
         new_home_nodes = new_home_nodes.union(foreign_nodes)
 
-        print('new_home_nodes', new_home_nodes)
+        #print('new_home_nodes', new_home_nodes)
 
         home_dictionary[iri_key][1] = new_home_nodes
 
@@ -2044,24 +2067,15 @@ class ProjectMergeWorker(QtCore.QObject):
 
         home_dictionary[iri_key][2] = new_home_properties
 
-        print('home_properties',home_properties)
-        print('new_home_properties',new_home_properties)
+        #print('home_properties',home_properties)
+        #print('new_home_properties',new_home_properties)
 
     def merge_IRI_prefixes_nodes_dictionary(self):
 
         other_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.other.IRI_prefixes_nodes_dict, dict())
         home_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
         home_dictionary_old = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-        """
-        print('$$$      other dictionary    $$$')
-        self.project.print_dictionary(other_dictionary)
-        print('$$$      other dictionary    (END)  $$$')
-
-        print('$$$      home dictionary    $$$')
-        self.project.print_dictionary(home_dictionary)
-        print('$$$      home dictionary    (END)  $$$')
-        """
+        #self.old_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
 
         iris_to_update = []
 
@@ -2075,15 +2089,15 @@ class ProjectMergeWorker(QtCore.QObject):
             foreign_nodes = foreign_iri_entry[1]
             foreign_properties = foreign_iri_entry[2]
 
-            print('')
-            print('foreign_iri',foreign_iri)
-            print('foreign_prefixes',foreign_prefixes)
-            print('foreign_nodes', foreign_nodes)
-            print('foreign_properties', foreign_properties)
+            #print('')
+            #print('foreign_iri',foreign_iri)
+            #print('foreign_prefixes',foreign_prefixes)
+            #print('foreign_nodes', foreign_nodes)
+            #print('foreign_properties', foreign_properties)
 
             if foreign_iri not in home_dictionary.keys():
 
-                print('foreign_iri not in home_dictionary.keys()')
+                #print('foreign_iri not in home_dictionary.keys()')
 
                 empty_prefixes = []
                 empty_nodes = set()
@@ -2101,12 +2115,11 @@ class ProjectMergeWorker(QtCore.QObject):
             self.append_foreign_nodes(home_dictionary, foreign_nodes, foreign_iri)
             self.merge_properties(home_dictionary, foreign_properties, foreign_iri)
 
-            print('home_dictionary[foreign_iri][0]',home_dictionary[foreign_iri][0])
-            print('home_dictionary[foreign_iri][1]', home_dictionary[foreign_iri][1])
-            print('home_dictionary[foreign_iri][2]', home_dictionary[foreign_iri][2])
+            #print('home_dictionary[foreign_iri][0]',home_dictionary[foreign_iri][0])
+            #print('home_dictionary[foreign_iri][1]', home_dictionary[foreign_iri][1])
+            #print('home_dictionary[foreign_iri][2]', home_dictionary[foreign_iri][2])
 
         self.commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,home_dictionary_old,home_dictionary,iris_to_update,None))
-
 
     def mergeDiagrams(self):
         """
@@ -2129,6 +2142,8 @@ class ProjectMergeWorker(QtCore.QObject):
             connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
             ## MERGE THE DIAGRAM IN THE CURRENT PROJECT
             self.commands.append(CommandDiagramAdd(diagram, self.project))
+
+        #self.project.iri_of_imported_nodes = []
 
     def mergeMeta(self):
         """
@@ -2229,7 +2244,12 @@ class ProjectMergeWorker(QtCore.QObject):
 
             self.merge_IRI_prefixes_nodes_dictionary()
 
+            #print('self.project.iri_of_imported_nodes',self.project.iri_of_imported_nodes)
+
             self.mergeDiagrams()
+
+            #print('self.project.iri_of_imported_nodes', self.project.iri_of_imported_nodes)
+
             self.mergeMeta()
         except ProjectStopImportingError:
             pass
