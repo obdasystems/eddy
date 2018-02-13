@@ -599,8 +599,10 @@ class Project(QtCore.QObject):
 
             if corr_iri is not None:
                 self.IRI_prefixes_nodes_dict[corr_iri][1].add(node)
-                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri,str(node),str(node.diagram.name))
-
+                if node.diagram is not None:
+                    self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri,str(node),str(node.diagram.name))
+                else:
+                    self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri, str(node), None)
             #print('self.IRI_prefixes_nodes_dict',self.IRI_prefixes_nodes_dict)
 
         #print('>>>     add_item_to_IRI_prefixes_nodes_dict       END', item)
@@ -621,7 +623,10 @@ class Project(QtCore.QObject):
 
             if len(corr_iris) == 1:
                 self.IRI_prefixes_nodes_dict[corr_iris[0]][1].remove(node)
-                self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iris[0],str(node),str(node.diagram.name))
+                if node.diagram is not None:
+                    self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iris[0], str(node), str(node.diagram.name))
+                else:
+                    self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iris[0], str(node), None)
             elif len(corr_iris) == 0:
                 LOGGER.warning('node is not present in the dictionary')
             else:
@@ -1297,9 +1302,14 @@ class Project(QtCore.QObject):
         else:
             #print('node_inp is not None')
             for n in self.nodes():
-                if (str(n) == node_inp) and (str(n.diagram.name) == diag_name):
-                    self.node_label_update_core_code(n)
-                    break
+                if diag_name is not None:
+                    if (str(n) == node_inp) and (str(n.diagram.name) == diag_name):
+                        self.node_label_update_core_code(n)
+                        break
+                else:
+                    if (str(n) == node_inp):
+                        self.node_label_update_core_code(n)
+                        break
 
         #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
