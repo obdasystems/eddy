@@ -864,20 +864,24 @@ class WikiDialog(DescriptionDialog):
 
         # take only Individual, Concept, Attribute or Role nodes from the list of nodes
         for i in self.items:
+            element = i.text().replace('\n', '')
+            boxlist.append(element)
+            """
             if (i.type() == Item.IndividualNode):
-                element= 'IndividualNode:' + i.text()
+                element= 'IndividualNode:' + i.text().replace('\n','')
                 boxlist.append(element)
             elif (i.type() == Item.ConceptNode):
-                element = 'ConceptNode:' + i.text()
+                element = 'ConceptNode:' + i.text().replace('\n','')
                 boxlist.append(element)
             elif (i.type() == Item.AttributeNode):
-                element = 'AttributeNode:' + i.text()
+                element = 'AttributeNode:' + i.text().replace('\n','')
                 boxlist.append(element)
             elif (i.type() == Item.RoleNode):
-                element = 'RoleNode:' + i.text()
+                element = 'RoleNode:' + i.text().replace('\n','')
                 boxlist.append(element)
             else:
                 None
+            """
 
         # eliminate the duplicate nodes from the list
         self.noDuplicates=list(set(boxlist))
