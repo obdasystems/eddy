@@ -739,7 +739,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             if nodeIRI[len(nodeIRI) - 1] == '#' or nodeIRI[len(nodeIRI) - 1] == '/':
                 nodeIRI = nodeIRI[0:len(nodeIRI) - 1]
 
-            self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+            #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
             return self.df.getOWLDataProperty(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
@@ -792,7 +792,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             if nodeIRI[len(nodeIRI) - 1] == '#' or nodeIRI[len(nodeIRI) - 1] == '/':
                 nodeIRI = nodeIRI[0:len(nodeIRI) - 1]
 
-            self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+            #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
             return self.df.getOWLClass(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
@@ -974,7 +974,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 if nodeIRI[len(nodeIRI) - 1] == '#' or nodeIRI[len(nodeIRI) - 1] == '/':
                     nodeIRI = nodeIRI[0:len(nodeIRI) - 1]
 
-                self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+                #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
                 return self.df.getOWLNamedIndividual(
                     OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
             else:
@@ -1102,7 +1102,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             if nodeIRI[len(nodeIRI) - 1] == '#' or nodeIRI[len(nodeIRI) - 1] == '/':
                 nodeIRI = nodeIRI[0:len(nodeIRI) - 1]
 
-            self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+            #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
             return self.df.getOWLObjectProperty(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
@@ -1785,9 +1785,19 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.ontology = self.man.createOntology(ontologyID)
             self.pm = self.DefaultPrefixManager()
 
-            self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+            #self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
 
+            for iri_key in self.project.IRI_prefixes_nodes_dict.keys():
 
+                prefixes_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][0]
+                properties_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][2]
+
+                if prefixes_of_iri_key is None:
+                    if 'display_in_widget' in properties_of_iri_key:
+                        self.pm.setPrefix('', postfix(iri_key, '#'))
+                else:
+                    for p in prefixes_of_iri_key:
+                        self.pm.setPrefix(p, postfix(iri_key, '#'))
 
             if self.export:
                 self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
@@ -2272,7 +2282,7 @@ class OWLOntologyFetcher:
             if nodeIRI[len(nodeIRI) - 1] == '#' or nodeIRI[len(nodeIRI) - 1] == '/':
                 nodeIRI = nodeIRI[0:len(nodeIRI) - 1]
 
-            self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+            #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
             return self.df.getOWLDataProperty(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
@@ -2350,7 +2360,7 @@ class OWLOntologyFetcher:
             if nodeIRI[len(nodeIRI)-1] == '#' or nodeIRI[len(nodeIRI)-1] == '/':
                 nodeIRI = nodeIRI[0:len(nodeIRI)-1]
 
-            self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+            #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
             return self.df.getOWLClass(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
@@ -2557,7 +2567,7 @@ class OWLOntologyFetcher:
                 if nodeIRI[len(nodeIRI) - 1] == '#' or nodeIRI[len(nodeIRI) - 1] == '/':
                     nodeIRI = nodeIRI[0:len(nodeIRI) - 1]
 
-                self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+                #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
                 return self.df.getOWLNamedIndividual(
                     OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
             else:
@@ -2698,7 +2708,7 @@ class OWLOntologyFetcher:
             if nodeIRI[len(nodeIRI) - 1] == '#' or nodeIRI[len(nodeIRI) - 1] == '/':
                 nodeIRI = nodeIRI[0:len(nodeIRI) - 1]
 
-            self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
+            #self.pm.setPrefix(self.project.get_prefix_of_node(node), postfix(nodeIRI, '#'))
             return self.df.getOWLObjectProperty(
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
@@ -3741,7 +3751,19 @@ class OWLOntologyFetcher:
             self.df = self.man.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
             self.pm = self.DefaultPrefixManager()
-            self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+            #self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+
+            for iri_key in self.project.IRI_prefixes_nodes_dict.keys():
+
+                prefixes_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][0]
+                properties_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][2]
+
+                if prefixes_of_iri_key is None:
+                    if 'display_in_widget' in properties_of_iri_key:
+                        self.pm.setPrefix('', postfix(iri_key, '#'))
+                else:
+                    for p in prefixes_of_iri_key:
+                        self.pm.setPrefix(p, postfix(iri_key, '#'))
 
             cast(self.PrefixManager, self.pm)
 

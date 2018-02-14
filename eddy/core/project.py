@@ -2064,6 +2064,7 @@ class ProjectMergeWorker(QtCore.QObject):
             #print('old_prefixes',old_prefixes)
             #print('new_prefixes',new_prefixes)
 
+    #not used
     def append_foreign_nodes_2(self, home_dictionary, foreign_nodes, iri_key):
 
         #home_nodes = home_dictionary[iri_key][1]
@@ -2090,7 +2091,7 @@ class ProjectMergeWorker(QtCore.QObject):
 
         home_dictionary[iri_key][1] = new_home_nodes
 
-    def merge_properties(self, home_dictionary, foreign_properties, iri_key):
+    def merge_properties(self, home_dictionary, foreign_properties, iri_key, home_contains_display_in_widget):
 
         home_properties = home_dictionary[iri_key][2]
 
@@ -2099,8 +2100,12 @@ class ProjectMergeWorker(QtCore.QObject):
         new_home_properties = new_home_properties.union(home_properties)
 
         for p in foreign_properties:
-            if (p != 'Project_IRI') and (p != 'display_in_widget'):
-                new_home_properties.add(p)
+            if home_contains_display_in_widget is True:
+                if (p != 'Project_IRI') and (p != 'display_in_widget'):
+                    new_home_properties.add(p)
+            else:
+                if (p != 'Project_IRI'):
+                    new_home_properties.add(p)
 
         home_dictionary[iri_key][2] = new_home_properties
 
@@ -2113,6 +2118,15 @@ class ProjectMergeWorker(QtCore.QObject):
         home_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
         home_dictionary_old = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
         #self.old_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+
+        home_contains_display_in_widget = False
+
+        for home_iri in home_dictionary.keys():
+            home_properties = home_dictionary[home_iri][2]
+            if 'display_in_widget' in home_properties:
+                home_contains_display_in_widget = True
+                break
+
 
         iris_to_update = []
 
@@ -2150,7 +2164,7 @@ class ProjectMergeWorker(QtCore.QObject):
 
             self.merge_prefixes(home_dictionary, foreign_prefixes, foreign_iri)
             self.append_foreign_nodes(home_dictionary, foreign_nodes, foreign_iri)
-            self.merge_properties(home_dictionary, foreign_properties, foreign_iri)
+            self.merge_properties(home_dictionary, foreign_properties, foreign_iri, home_contains_display_in_widget)
 
             #print('home_dictionary[foreign_iri][0]',home_dictionary[foreign_iri][0])
             #print('home_dictionary[foreign_iri][1]', home_dictionary[foreign_iri][1])
