@@ -735,11 +735,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
         if (self.project.get_prefix_of_node(node) is not None):
             return self.df.getOWLDataProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
         else:
             return self.df.getOWLDataProperty(
                 self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
 
     def getComplement(self, node):
         """
@@ -782,11 +782,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
         if (self.project.get_prefix_of_node(node) is not None):
             return self.df.getOWLClass(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
         else:
             return self.df.getOWLClass(
                 self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
 
     def getDatatypeRestriction(self, node):
         """
@@ -958,10 +958,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if node.identity() is Identity.Individual:
             if (self.project.get_prefix_of_node(node) is not None):
                 return self.df.getOWLNamedIndividual(
-                    OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                    OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
             else:
                 return self.df.getOWLNamedIndividual(
-                    self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                    self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
@@ -1081,10 +1081,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if (self.project.get_prefix_of_node(node) is not None):
 
             return self.df.getOWLObjectProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
         else:
             return self.df.getOWLObjectProperty(
-                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
 
     def getRoleChain(self, node):
         """
@@ -2262,11 +2262,11 @@ class OWLOntologyFetcher:
 
         if (self.project.get_prefix_of_node(node) is not None):
             return self.df.getOWLDataProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
         else:
             return self.df.getOWLDataProperty(
                 self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
 
     def getComplement(self, node, conversion_trace):
         """
@@ -2334,10 +2334,10 @@ class OWLOntologyFetcher:
 
         if (self.project.get_prefix_of_node(node) is not None):
             return self.df.getOWLClass(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
         else:
             return self.df.getOWLClass(
-                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
 
     def getDatatypeRestriction(self, node, conversion_trace):
         """
@@ -2535,10 +2535,10 @@ class OWLOntologyFetcher:
         if node.identity() is Identity.Individual:
             if (self.project.get_prefix_of_node(node) is not None):
                 return self.df.getOWLNamedIndividual(
-                    OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                    OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
             else:
                 return self.df.getOWLNamedIndividual(
-                    self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                    self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
@@ -2670,10 +2670,10 @@ class OWLOntologyFetcher:
 
         if (self.project.get_prefix_of_node(node) is not None):
             return self.df.getOWLObjectProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters.replace('\n','')), self.pm)
         else:
             return self.df.getOWLObjectProperty(
-                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters.replace('\n',''))))
 
     def getRoleChain(self, node, conversion_trace):
         """
@@ -3895,11 +3895,16 @@ class OWLOntologyFetcher:
                         refined_value.add(v)
 
                 list_of_nodes_in_value = []
+                list_of_edges_in_value = []
 
                 for v in list(refined_value):
 
                     if 'eddy.core.items.nodes' in str(type(v)):
                         list_of_nodes_in_value.append(v)
+                    elif 'eddy.core.items.edges' in str(type(v)):
+                        list_of_edges_in_value.append(v)
+
+                print('len(list_of_edges_in_value)',len(list_of_edges_in_value))
 
                 refined_value_2=[]
 
@@ -3921,7 +3926,7 @@ class OWLOntologyFetcher:
                 entry_list = []
 
                 entry_list.extend(list(refined_value))
-                entry_list.extend(refined_value_2)
+                #entry_list.extend(refined_value_2)
 
                 self.refined_axiom_to_node_or_edge[new_key] = entry_list
 

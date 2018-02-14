@@ -466,7 +466,7 @@ class PredicateNodeProperty(NodeProperty):
         #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                     'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
-            self.textField.setValue(self.node.remaining_characters)
+            self.textField.setValue(self.node.remaining_characters.replace('\n',''))
         else:
             self.textField.setValue(self.node.text())
 
