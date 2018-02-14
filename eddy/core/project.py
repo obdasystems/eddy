@@ -428,6 +428,8 @@ class Project(QtCore.QObject):
 
         for n in self.nodes():
             #if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
+            print('n.id,str(type(n))',n.id,'-',str(type(n)))
+
             if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
 

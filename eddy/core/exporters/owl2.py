@@ -3879,6 +3879,24 @@ class OWLOntologyFetcher:
             # REFINE THE KEYS OF THE DICTIONARY(CAST WITH OWLClass + .toString() ), remove duplicate entries
             #################################
 
+            special_cases = []
+            special_cases.append('<class \'eddy.core.items.nodes.range_restriction.RangeRestrictionNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.domain_restriction.DomainRestrictionNode\'>')
+
+            special_cases.append('<class \'eddy.core.items.nodes.value_domain.ValueDomainNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.facet.FacetNode\'>')
+
+            special_cases.append('<class \'eddy.core.items.nodes.intersection.IntersectionNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.role_chain.RoleChainNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.datatype_restriction.DatatypeRestrictionNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.role_inverse.RoleInverseNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.complement.ComplementNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.enumeration.EnumerationNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.union.UnionNode\'>')
+
+            special_cases.append('<class \'eddy.core.items.nodes.disjoint_union.DisjointUnionNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.property_assertion.PropertyAssertionNode\'>')
+
             for d in self._axiom_to_node_or_edge.items():
                 key = d[0]
                 cast(self.OWLAxiom, key)
@@ -3894,23 +3912,27 @@ class OWLOntologyFetcher:
                     else:
                         refined_value.add(v)
 
-                list_of_nodes_in_value = []
-                list_of_edges_in_value = []
+                set_of_nodes_in_value = set()
+                #list_of_edges_in_value = []
 
                 for v in list(refined_value):
 
                     if 'eddy.core.items.nodes' in str(type(v)):
-                        list_of_nodes_in_value.append(v)
-                    elif 'eddy.core.items.edges' in str(type(v)):
-                        list_of_edges_in_value.append(v)
+                        set_of_nodes_in_value.add(v)
+                    #elif 'eddy.core.items.edges' in str(type(v)):
+                        #list_of_edges_in_value.append(v)
 
-                print('len(list_of_edges_in_value)',len(list_of_edges_in_value))
+                list_of_nodes_in_value = list(set_of_nodes_in_value)
 
-                refined_value_2=[]
+                refined_value_2=set()
 
                 for l1 in range(0,len(list_of_nodes_in_value)-1):
 
                     node_1 = list_of_nodes_in_value[l1]
+
+                    if str(type(node_1)) not in special_cases:
+                        continue
+
                     edges_1 = node_1.edges
 
                     for l2 in range(l1+1,len(list_of_nodes_in_value)):
@@ -3921,12 +3943,13 @@ class OWLOntologyFetcher:
                         intersection_e1_e2 = edges_1 & edges_2
 
                         if len(intersection_e1_e2)>0:
-                            refined_value_2.extend(list(intersection_e1_e2))
+                            refined_value_2 = refined_value_2.union(intersection_e1_e2)
+
 
                 entry_list = []
 
                 entry_list.extend(list(refined_value))
-                #entry_list.extend(refined_value_2)
+                entry_list.extend(list(refined_value_2))
 
                 self.refined_axiom_to_node_or_edge[new_key] = entry_list
 
