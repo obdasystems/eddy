@@ -864,8 +864,10 @@ class WikiDialog(DescriptionDialog):
 
         # take only Individual, Concept, Attribute or Role nodes from the list of nodes
         for i in self.items:
-            element = i.text().replace('\n', '')
-            boxlist.append(element)
+
+            if i.type() in {Item.IndividualNode, Item.ConceptNode, Item.AttributeNode, Item.RoleNode}:
+                element = i.text().replace('\n', '')
+                boxlist.append(element)
             """
             if (i.type() == Item.IndividualNode):
                 element= 'IndividualNode:' + i.text().replace('\n','')
