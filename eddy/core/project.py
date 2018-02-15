@@ -1608,6 +1608,7 @@ class Project(QtCore.QObject):
         :type diagram: Diagram
         :type item: AbstractItem
         """
+        #print('Project >>> doAddItem')
         if self.index.addItem(diagram, item):
             self.sgnItemAdded.emit(diagram, item)
 
@@ -1619,6 +1620,7 @@ class Project(QtCore.QObject):
         :type diagram: Diagram
         :type item: AbstractItem
         """
+        #print('Project >>> doRemoveItem')
         if self.index.removeItem(diagram, item):
             self.sgnItemRemoved.emit(diagram, item)
 

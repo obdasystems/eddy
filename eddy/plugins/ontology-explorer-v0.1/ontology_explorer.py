@@ -247,6 +247,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
+        #print('doAddNode')
+
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
             parent = self.parentFor(node)
             if not parent:
@@ -256,8 +258,18 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
             child = QtGui.QStandardItem(self.childKey(diagram, node))
             child.setData(node)
-            parent.appendRow(child)
-            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+
+            flag = True
+
+            number_of_children = parent.rowCount()
+            for c in range(0,number_of_children):
+                child_itr = parent.child(c)
+                if child_itr.text() == child.text():
+                    flag = False
+
+            if flag:
+                parent.appendRow(child)
+                self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
     @QtCore.pyqtSlot(str)
     def doFilterItem(self, key):
@@ -275,6 +287,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
+        #print('doRemoveNode')
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
             parent = self.parentFor(node)
             if parent:
