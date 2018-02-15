@@ -960,6 +960,14 @@ class WikiDialog(DescriptionDialog):
         self.insertBoxWiki.clear()
         self.close()
 
+    def get_node_type(self,nodeName):
+
+        for i in self.items:
+            if i.text().replace('\n', '') == nodeName:
+                return i.type()
+
+        return None
+
     def insert(self):
         """
         Executed when the dialog is accepted.
@@ -981,8 +989,35 @@ class WikiDialog(DescriptionDialog):
            linkFormat.setFontPointSize(self.parent.text.fontPointSize())
            linkFormat.setAnchor(True)
 
+           nodeName = valueSelected
+           node_type = self.get_node_type(nodeName)
+           node_type_to_append = None
 
+           if node_type is Item.IndividualNode:
+               node_type_to_append = '/predicate/individual/'
+           elif node_type is Item.ConceptNode:
+               node_type_to_append = '/predicate/concept/'
+           elif node_type is Item.AttributeNode:
+               node_type_to_append = '/predicate/attribute/'
+           elif node_type is Item.RoleNode:
+                node_type_to_append = '/predicate/role/'
+           else:
+               pass
 
+           if not valueLabel:
+
+               textString = node_type_to_append + nodeName
+               linkFormat.setAnchorHref(textString)
+               linkFormat.setToolTip(textString)
+               cursor.insertText(nodeName, linkFormat)
+           else:
+
+               textString = node_type_to_append + nodeName
+               linkFormat.setAnchorHref(textString)
+               linkFormat.setToolTip(textString)
+               cursor.insertText(valueLabel, linkFormat)
+
+           """
            if valueSelected.startswith('IndividualNode'):
                nodeName=valueSelected.replace('IndividualNode:','')
                if not valueLabel:
@@ -1001,8 +1036,6 @@ class WikiDialog(DescriptionDialog):
                    linkFormat.setAnchorHref(textString)
                    linkFormat.setToolTip(textString)
                    cursor.insertText(valueLabel, linkFormat)
-
-
 
            elif valueSelected.startswith('ConceptNode'):
                nodeName=valueSelected.replace('ConceptNode:','')
@@ -1061,11 +1094,9 @@ class WikiDialog(DescriptionDialog):
                    linkFormat.setAnchorHref(textString)
                    linkFormat.setToolTip(textString)
                    cursor.insertText(valueLabel, linkFormat)
-
-
            else:
                None
-
+            """
 
            # Insert the Wiki Tag in Text Editor
         cursor.insertText(" ", linkFormatSpace)
