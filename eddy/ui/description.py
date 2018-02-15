@@ -309,7 +309,7 @@ class NodeDescription(DescriptionDialog):
         self.mainLayout.addWidget(self.statusbar)
         self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
-        self.setWindowTitle('Description: {0}'.format(self.node))
+        self.setWindowTitle('Description: {0}'.format(self.node.text()))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
 
 
