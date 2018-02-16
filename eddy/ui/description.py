@@ -922,7 +922,6 @@ class WikiDialog(DescriptionDialog):
         self.confirmationBox.addButton(insert, QtWidgets.QDialogButtonBox.ActionRole)
         self.confirmationBox.addButton(cancel, QtWidgets.QDialogButtonBox.ActionRole)
 
-
         #############################################
         # WIKI LABEL BOX
         #################################
@@ -931,7 +930,6 @@ class WikiDialog(DescriptionDialog):
         self.wikiLabel.setText('Wiki Label')
         self.insertBoxWiki = QtWidgets.QTextEdit(self)
         self.insertBoxWiki.setMaximumHeight(40)
-
 
         #############################################
         # DIALOG WINDOW LAYOUT
@@ -942,8 +940,6 @@ class WikiDialog(DescriptionDialog):
         self.layout.addWidget(self.wikiLabel)
         self.layout.addWidget(self.insertBoxWiki)
         self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignCenter)
-
-
 
         self.setMaximumSize(600,300)
         self.setWindowTitle("Wiki Tag")
@@ -963,7 +959,7 @@ class WikiDialog(DescriptionDialog):
     def get_node_type(self,nodeName):
 
         for i in self.items:
-            if i.text().replace('\n', '') == nodeName:
+            if (i.text() is not None) and (i.text().replace('\n', '') == nodeName):
                 return i.type()
 
         return None
