@@ -446,6 +446,7 @@ class Project(QtCore.QObject):
 
         print('<<<<<<<<<          iri_of_cut_nodes (END)       >>>>>>>>')
 
+        """
         print('*********      metas        ***********')
 
         for m in self.metas():
@@ -459,7 +460,7 @@ class Project(QtCore.QObject):
                 print(n.text,'-',meta)
 
         print('*********      metas(END)        ***********')
-
+        """
 
     #not used
     def copy_prefered_prefix_dictionaries(self, from_dict, to_dict):
