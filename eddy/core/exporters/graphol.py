@@ -144,15 +144,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         element.setAttribute('name', name)
         description = self.document.createElement(K_DESCRIPTION)
         description.appendChild(self.document.createTextNode(meta.get(K_DESCRIPTION, '')))
-        """
-        prefix = self.document.createElement(K_PREFIX)
-        prefix.appendChild(self.document.createTextNode(meta.get(K_PREFIX, '')))
-        element.appendChild(prefix)
-        iri = self.document.createElement(K_IRI)
-        iri.appendChild(self.document.createTextNode(meta.get(K_IRI, '')))
-        element.appendChild(prefix)
-        element.appendChild(iri)
-        """
+
         element.appendChild(description)
         return element
 

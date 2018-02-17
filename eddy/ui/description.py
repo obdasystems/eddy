@@ -49,9 +49,6 @@ from eddy.core.project import K_DESCRIPTION
 from eddy.core.datatypes.graphol import Item
 
 
-
-
-
 class DescriptionDialog(QtWidgets.QDialog):
     """
     This is the base class for all the description dialogs.

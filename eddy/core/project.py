@@ -39,7 +39,7 @@ from eddy.core.commands.diagram import CommandDiagramAdd
 from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.datatypes.graphol import Item, Identity, Special
-from eddy.core.functions.owl import OWLText
+#from eddy.core.functions.owl import OWLText
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
@@ -445,6 +445,21 @@ class Project(QtCore.QObject):
             print('ele',ele)
 
         print('<<<<<<<<<          iri_of_cut_nodes (END)       >>>>>>>>')
+
+        print('*********      metas        ***********')
+
+        for m in self.metas():
+            print(m)
+
+        print('**')
+
+        for n in self.predicates():
+            meta = self.meta(n.type(), n.text())
+            if meta is not None:
+                print(n.text,'-',meta)
+
+        print('*********      metas(END)        ***********')
+
 
     #not used
     def copy_prefered_prefix_dictionaries(self, from_dict, to_dict):
@@ -1674,7 +1689,8 @@ class ProjectIndex(dict):
                     self[K_NODE][diagram.name] = dict()
                 self[K_NODE][diagram.name][item.id] = item
                 if item.isPredicate():
-                    k = OWLText(item.text())
+                    #k = OWLText(item.text())
+                    k = item.text()
                     if i not in self[K_PREDICATE]:
                         self[K_PREDICATE][i] = dict()
                     if k not in self[K_PREDICATE][i]:
@@ -1793,7 +1809,7 @@ class ProjectIndex(dict):
         :rtype: dict
         """
         try:
-            name = OWLText(name)
+            #name = OWLText(name)
             return self[K_PREDICATE][item][name][K_META]
         except KeyError:
             return dict()
@@ -1886,7 +1902,7 @@ class ProjectIndex(dict):
 
             if not item and name:
                 collection = set()
-                name = OWLText(name)
+                #name = OWLText(name)
                 if not diagram:
                     for i in self[K_PREDICATE]:
                         collection.update(*self[K_PREDICATE][i][name][K_NODE].values())
@@ -1896,7 +1912,7 @@ class ProjectIndex(dict):
                 return collection
 
             if item and name:
-                name = OWLText(name)
+                #name = OWLText(name)
                 if not diagram:
                     return set.union(*self[K_PREDICATE][item][name][K_NODE].values())
                 return self[K_PREDICATE][item][name][K_NODE][diagram.name]
@@ -1942,7 +1958,8 @@ class ProjectIndex(dict):
                         if not self[K_NODE][diagram.name]:
                             del self[K_NODE][diagram.name]
                 if item.isPredicate():
-                    k = OWLText(item.text())
+                    #k = OWLText(item.text())
+                    k = item.text()
                     if i in self[K_PREDICATE]:
                         if k in self[K_PREDICATE][i]:
                             if diagram.name in self[K_PREDICATE][i][k][K_NODE]:
@@ -1971,7 +1988,7 @@ class ProjectIndex(dict):
         :rtype: bool
         """
         try:
-            name = OWLText(name)
+            #name = OWLText(name)
             self[K_PREDICATE][item][name][K_META] = meta
         except KeyError:
             return False
@@ -1985,7 +2002,7 @@ class ProjectIndex(dict):
         :type name: str
         :rtype: bool
         """
-        name = OWLText(name)
+        #name = OWLText(name)
         if item in self[K_PREDICATE]:
             if name in self[K_PREDICATE][item]:
                 if K_META in self[K_PREDICATE][item][name]:

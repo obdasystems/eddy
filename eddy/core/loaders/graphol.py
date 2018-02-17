@@ -1753,11 +1753,47 @@ class GrapholLoaderMixin_v2(object):
         """
         section = self.document.documentElement().firstChildElement('predicates')
         element = section.firstChildElement('predicate')
+
+        all_predicate_nodes_in_project_text = []
+
+        for n in self.nproject.predicates():
+            all_predicate_nodes_in_project_text.append(n.text())
+
+        #print('all_predicate_nodes_in_project_text',all_predicate_nodes_in_project_text)
+
         while not element.isNull():
             QtWidgets.QApplication.processEvents()
             meta = self.importMeta(element)
             if meta:
-                self.nproject.setMeta(meta[0], meta[1], meta[2])
+
+                #print('meta[1]',meta[1])
+
+                if meta[1] in all_predicate_nodes_in_project_text:
+                    self.nproject.setMeta(meta[0], meta[1], meta[2])
+                else:
+                    new_meta = str(self.nproject.prefix + ':' + meta[1])
+                    new_meta_2 = str(self.nproject.iri + '#' + meta[1])
+                    new_meta_3 = str(self.nproject.iri + '/' + meta[1])
+                    new_meta_4 = str(':' + meta[1])
+
+                    all_metas = []
+
+                    all_metas.append(new_meta)
+                    all_metas.append(new_meta_2)
+                    all_metas.append(new_meta_3)
+                    all_metas.append(new_meta_4)
+
+                    flag = False
+
+                    for m in all_metas:
+                        if m in all_predicate_nodes_in_project_text:
+                            self.nproject.setMeta(meta[0], m, meta[2])
+                            flag = True
+                            break
+
+                    if flag is False:
+                        LOGGER.critical('Corresponding node not found for'+str(meta))
+
             element = element.nextSiblingElement('predicate')
 
     def convert_string_of_nodes_to_nodes(self):
@@ -2049,6 +2085,7 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
         self.createPredicatesMeta()
+
         self.projectRender()
         self.projectMerge()
 
@@ -2114,6 +2151,7 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
             #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
             self.createPredicatesMeta()
+
             self.projectRender()
             self.projectLoaded()
 
