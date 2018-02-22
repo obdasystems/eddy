@@ -2035,8 +2035,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
                         name = 'change {0} to {1}'.format(node.text(), data)
 
-                        print('old_rc, new_rc',node.remaining_characters,',',data)
-
                         Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries\
                             (self.project.IRI_prefixes_nodes_dict,dict())
                         Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries\
@@ -2050,6 +2048,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                             #new_label = str(new_iri+'#'+data)
                         else:
                             new_label = str(self.project.prefix+':'+data)
+
+                        data = data.replace('\n','')
 
                         Duplicate_dict_1[old_iri][1].remove(node)
                         Duplicate_dict_1[new_iri][1].add(node)
@@ -2107,6 +2107,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                         new_rc = new_rc_lst[1]
                     elif data == 'BOTTOM':
                         new_rc = new_rc_lst[0]
+
+                    new_rc = new_rc.replace('\n','')
 
                     Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries \
                         (self.project.IRI_prefixes_nodes_dict, dict())

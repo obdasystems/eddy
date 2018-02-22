@@ -468,7 +468,7 @@ class PredicateNodeProperty(NodeProperty):
                     'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             self.textField.setValue(self.node.remaining_characters.replace('\n',''))
         else:
-            self.textField.setValue(self.node.text())
+            self.textField.setValue(self.node.text().replace('\n',''))
 
         #if ((node.type() is Item.IndividualNode) and (node.identity() is Identity.Value)) or \
         if(('IndividualNode' in str(type(node))) and (node.identity() is Identity.Value)) or \
@@ -570,6 +570,8 @@ class PredicateNodeProperty(NodeProperty):
                 flag = True
             else:
                 new_rc = new_rc + c
+
+        new_rc = new_rc.replace('\n','')
 
         if flag is True:
             self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',15000)
@@ -1077,6 +1079,7 @@ class ValueNodeProperty(NodeProperty):
 
             new_prefix = datatype.value[0:datatype.value.index(':')]
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
+            new_remaining_characters = new_remaining_characters.replace('\n','')
             new_iri = None
 
             for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():

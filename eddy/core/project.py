@@ -1691,7 +1691,7 @@ class ProjectIndex(dict):
                 self[K_NODE][diagram.name][item.id] = item
                 if item.isPredicate():
                     #k = OWLText(item.text())
-                    k = item.text()
+                    k = item.text().replace('\n','')
                     if i not in self[K_PREDICATE]:
                         self[K_PREDICATE][i] = dict()
                     if k not in self[K_PREDICATE][i]:
@@ -1811,6 +1811,7 @@ class ProjectIndex(dict):
         """
         try:
             #name = OWLText(name)
+            name = name.replace('\n','')
             return self[K_PREDICATE][item][name][K_META]
         except KeyError:
             return dict()
@@ -1904,6 +1905,7 @@ class ProjectIndex(dict):
             if not item and name:
                 collection = set()
                 #name = OWLText(name)
+                name = name.replace('\n','')
                 if not diagram:
                     for i in self[K_PREDICATE]:
                         collection.update(*self[K_PREDICATE][i][name][K_NODE].values())
@@ -1913,6 +1915,7 @@ class ProjectIndex(dict):
                 return collection
 
             if item and name:
+                name = name.replace('\n','')
                 #name = OWLText(name)
                 if not diagram:
                     return set.union(*self[K_PREDICATE][item][name][K_NODE].values())
@@ -1960,7 +1963,7 @@ class ProjectIndex(dict):
                             del self[K_NODE][diagram.name]
                 if item.isPredicate():
                     #k = OWLText(item.text())
-                    k = item.text()
+                    k = item.text().replace('\n','')
                     if i in self[K_PREDICATE]:
                         if k in self[K_PREDICATE][i]:
                             if diagram.name in self[K_PREDICATE][i][k][K_NODE]:
@@ -1990,6 +1993,7 @@ class ProjectIndex(dict):
         """
         try:
             #name = OWLText(name)
+            name = name.replace('\n','')
             self[K_PREDICATE][item][name][K_META] = meta
         except KeyError:
             return False
@@ -2004,6 +2008,7 @@ class ProjectIndex(dict):
         :rtype: bool
         """
         #name = OWLText(name)
+        name = name.replace('\n','')
         if item in self[K_PREDICATE]:
             if name in self[K_PREDICATE][item]:
                 if K_META in self[K_PREDICATE][item][name]:
