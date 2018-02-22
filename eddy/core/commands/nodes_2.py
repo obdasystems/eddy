@@ -140,7 +140,7 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        self.node.remaining_characters = self.rc_redo
+        self.node.remaining_characters = self.rc_redo.replace('\n','')
 
         if self.regenerate_label is True:
             old_text = self.node.text()
@@ -153,7 +153,7 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
     def undo(self):
         """undo the command"""
-        self.node.remaining_characters = self.rc_undo
+        self.node.remaining_characters = self.rc_undo.replace('\n','')
 
         if self.regenerate_label is True:
             new_text = self.node.text()
