@@ -571,7 +571,7 @@ class PredicateNodeProperty(NodeProperty):
             else:
                 new_rc = new_rc + c
 
-        new_rc = new_rc.replace('\n','')
+        #new_rc = new_rc.replace('\n','')
 
         if flag is True:
             self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',15000)
@@ -1079,7 +1079,7 @@ class ValueNodeProperty(NodeProperty):
 
             new_prefix = datatype.value[0:datatype.value.index(':')]
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
-            new_remaining_characters = new_remaining_characters.replace('\n','')
+            #new_remaining_characters = new_remaining_characters.replace('\n','')
             new_iri = None
 
             for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
