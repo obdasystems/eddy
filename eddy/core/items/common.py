@@ -345,6 +345,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 if match:
                     new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
                     new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
+                    new_remaining_characters = new_remaining_characters.replace('\n','')
                     new_iri = None
 
                     for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
@@ -401,7 +402,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                         self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed.replace('\n',''), node, self.project))
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 if any(commands):

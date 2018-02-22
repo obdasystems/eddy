@@ -428,15 +428,15 @@ class Project(QtCore.QObject):
 
         for n in self.nodes():
             #if (n.Type is Item.AttributeNode) or (n.Type is Item.ConceptNode) or (n.Type is Item.IndividualNode) or (n.Type is Item.RoleNode):
-            print('n.id,str(type(n))',n.id,'-',str(type(n)))
+            print('                                     n.id,str(type(n))',n.id,'-',str(type(n)))
 
             if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
 
                 if n.Type is Item.IndividualNode:
-                    print(str(n.type())+ ','+ str(n.id)+ ',', str(n.diagram.name),','+ str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters)+ ','+ str(n.identity()))
+                    print(str(n.type()), ',', str(n.id), ',', str(n.diagram.name),',', str(self.get_iri_of_node(n)), ',', str(self.get_prefix_of_node(n)), ',', str(n.remaining_characters), ',', str(n.identity()))
                 else:
-                    print(str(n.type())+ ','+ str(n.id)+ ',', str(n.diagram.name),',' + str(self.get_iri_of_node(n))+ ','+ str(self.get_prefix_of_node(n))+ ','+ str(n.remaining_characters))
+                    print(str(n.type()), ',', str(n.id), ',', str(n.diagram.name),',' , str(self.get_iri_of_node(n)), ',', str(self.get_prefix_of_node(n)), ',', str(n.remaining_characters))
 
         print('<<<<<<<<<          print_dictionary (END)       >>>>>>>>')
         print('<<<<<<<<<          iri_of_cut_nodes       >>>>>>>>')
