@@ -144,9 +144,7 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
         if self.regenerate_label is True:
             old_text = self.node.text()
-            new_text = GenerateNewLabel(self.project, self.node).return_label()
-            #print('CommandNodeSetRemainingCharacters    >>>     old_text',old_text)
-            #print('CommandNodeSetRemainingCharacters    >>>     new_text',new_text)
+            new_text = GenerateNewLabel(self.project, self.node, remaining_characters=self.rc_redo).return_label()
 
             CommandLabelChange(self.node.diagram, self.node, old_text, new_text).redo()
 
@@ -157,9 +155,7 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
         if self.regenerate_label is True:
             new_text = self.node.text()
-            old_text = GenerateNewLabel(self.project, self.node).return_label()
-            #print('CommandNodeSetRemainingCharacters    >>>     old_text',old_text)
-            #print('CommandNodeSetRemainingCharacters    >>>     new_text',new_text)
+            old_text = GenerateNewLabel(self.project, self.node, remaining_characters=self.rc_undo).return_label()
 
             CommandLabelChange(self.node.diagram, self.node, old_text, new_text).undo()
 

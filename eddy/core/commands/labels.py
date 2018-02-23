@@ -46,12 +46,8 @@ class GenerateNewLabel():
         self.project = project
         self.iri_to_set = self.project.get_iri_of_node(node)
         self.prefix_to_set = self.project.get_prefix_of_node(node)
-        self.rc_to_set = node.remaining_characters
+        self.rc_to_set = kwargs.get('remaining_characters',node.remaining_characters)
         self.node = node
-
-        #print('GenerateNewLabel >>> iri_to_set',self.iri_to_set)
-        #print('GenerateNewLabel >>> prefix_to_set', self.prefix_to_set)
-        #print('GenerateNewLabel >>> rc_to_set', self.rc_to_set)
 
     def return_label(self):
 
