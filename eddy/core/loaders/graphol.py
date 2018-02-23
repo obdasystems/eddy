@@ -1757,7 +1757,7 @@ class GrapholLoaderMixin_v2(object):
         all_predicate_nodes_in_project_text = []
 
         for n in self.nproject.predicates():
-            all_predicate_nodes_in_project_text.append(n.text())
+            all_predicate_nodes_in_project_text.append(n.text().replace('\n',''))
 
         #print('all_predicate_nodes_in_project_text',all_predicate_nodes_in_project_text)
 
