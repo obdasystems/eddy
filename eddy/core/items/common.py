@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
@@ -402,7 +402,11 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                         self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+                    if NewlineFeedInsensitive(node.remaining_characters,currentData_processed).result() is True:
+                        commands.append(
+                            CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project, refactor=True))
+                    else:
+                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 if any(commands):

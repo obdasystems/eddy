@@ -318,9 +318,9 @@ class RefactorNameForm(QtWidgets.QDialog):
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)
 
-                    commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
-                    commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
-                    commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData))
+                    commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
+                    commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, refactor=True))
+                    commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
 
                 command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], list_of_nodes_to_process)
 
@@ -392,9 +392,9 @@ class RefactorNameForm(QtWidgets.QDialog):
                         else:
                             new_label = str(Duplicate_dict_1[new_iri][0][len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + new_remaining_characters)
 
-                        commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, new_label))
-                        commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
-                        commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, new_label))
+                        commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
+                        commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, refactor=True))
+                        commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
 
                     command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
                                                                                Duplicate_dict_1, [old_iri, new_iri],
@@ -414,7 +414,7 @@ class RefactorNameForm(QtWidgets.QDialog):
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 
                     for node in self.project.predicates(self.node.type(), self.node.text()):
-                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project, refactor=True))
 
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
 

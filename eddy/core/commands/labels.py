@@ -39,6 +39,25 @@ from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.signals import connect, disconnect
 
 
+class NewlineFeedInsensitive():
+
+    def __init__(self, label_1, label_2):
+
+        self.label_1 = label_1
+        self.label_2 = label_2
+
+    def result(self):
+
+        label_1_filtered = self.label_1.replace('\n', '')
+        label_2_filtered = self.label_2.replace('\n', '')
+
+        if label_1_filtered==label_2_filtered:
+
+            return True
+        else:
+            return False
+
+
 class GenerateNewLabel():
     #Generate a new label for a non value node
     def __init__(self, project, node, **kwargs):
@@ -113,6 +132,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         self.item.setText(self.data['redo'])
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
+
 
         # RESTORE METADATA
         if meta:

@@ -138,6 +138,8 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
         self.project = project
         self.regenerate_label = kwargs.get('regenerate_label',True)
 
+        self.refactor = kwargs.get('refactor',False)
+
     def redo(self):
         """redo the command"""
         self.node.remaining_characters = self.rc_redo.replace('\n','')
@@ -146,7 +148,7 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
             old_text = self.node.text()
             new_text = GenerateNewLabel(self.project, self.node, remaining_characters=self.rc_redo).return_label()
 
-            CommandLabelChange(self.node.diagram, self.node, old_text, new_text).redo()
+            CommandLabelChange(self.node.diagram, self.node, old_text, new_text, refactor=self.refactor).redo()
 
 
     def undo(self):
@@ -157,7 +159,7 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
             new_text = self.node.text()
             old_text = GenerateNewLabel(self.project, self.node, remaining_characters=self.rc_undo).return_label()
 
-            CommandLabelChange(self.node.diagram, self.node, old_text, new_text).undo()
+            CommandLabelChange(self.node.diagram, self.node, old_text, new_text, refactor=self.refactor).undo()
 
 
 class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):

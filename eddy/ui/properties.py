@@ -43,7 +43,7 @@ from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, 
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramResize
-from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive
 from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.nodes import CommandNodeMove
@@ -576,26 +576,34 @@ class PredicateNodeProperty(NodeProperty):
         if flag is True:
             self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',15000)
 
+        return_list = []
+
         if (unprocessed_new_text != self.node.remaining_characters):
 
-            return_list = []
-
-            #print('new_rc', new_rc)
+            #print('unprocessed_new_text',unprocessed_new_text)
+            #print('self.node.remaining_characters',self.node.remaining_characters)
+            #print(NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result())
 
             return_list.append(CommandProjectDisconnectSpecificSignals(self.project))
 
             if self.refactorField.isChecked():
                 for n in self.project.nodes():
                     if n.text() == self.node.text():
-                        return_list.append(CommandNodeSetRemainingCharacters(n.remaining_characters, new_rc, n, self.project))
+                        return_list.append(
+                            CommandNodeSetRemainingCharacters(n.remaining_characters, new_rc, n, self.project,
+                                                              refactor=True))
             else:
-                return_list.append(CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project))
+                refactor_var = NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result()
+
+                return_list.append(
+                        CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project, refactor=refactor_var))
 
             return_list.append(CommandProjectConnectSpecificSignals(self.project))
 
             return return_list
 
         return None
+
 
     def IRIChanged(self):
         #Change the iri of the node.
