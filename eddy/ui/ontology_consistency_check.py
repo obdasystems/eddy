@@ -492,7 +492,13 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
 
         self.manager = self.OWLManager.createOWLOntologyManager()
         configuration = self.Configuration();
-        hermit = self.Reasoner(configuration, ontology);
+        try:
+            hermit = self.Reasoner(configuration, ontology);
+        except Exception as e0:
+            self.project.inconsistent_ontology = None
+            LOGGER.error(str(e0))
+            return
+
         progressMonitor = self.SilentExplanationProgressMonitor()
 
         self.status_bar.showMessage('Running reasoner over ontology')
