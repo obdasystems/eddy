@@ -1350,10 +1350,10 @@ class PredicateNodeInfo(NodeInfo):
         # NAME / TEXT FIELDS
         #################################
 
-        self.nameField.setValue(node.text())
+        self.nameField.setValue(node.text().replace('\n',''))
         self.nameField.home(True)
         self.nameField.deselect()
-        self.textField.setValue(node.text())
+        self.textField.setValue(node.text().replace('\n',''))
         self.textField.home(True)
         self.textField.deselect()
 
