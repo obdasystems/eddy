@@ -35,17 +35,18 @@
 from PyQt5 import QtCore,QtGui,QtWidgets
 
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.commands.diagram import CommandDiagramAdd
 from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.datatypes.graphol import Item, Identity, Special
+from eddy.core.commands.labels import GenerateNewLabel
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 #from eddy.core.functions.owl import OWLText
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
 
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
@@ -2197,7 +2198,9 @@ class ProjectMergeWorker(QtCore.QObject):
             #print('home_dictionary[foreign_iri][1]', home_dictionary[foreign_iri][1])
             #print('home_dictionary[foreign_iri][2]', home_dictionary[foreign_iri][2])
 
+        self.commands.append(CommandProjectDisconnectSpecificSignals(self.project))
         self.commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,home_dictionary_old,home_dictionary,iris_to_update,None))
+        self.commands.append(CommandProjectConnectSpecificSignals(self.project))
 
     def mergeDiagrams(self):
         """
