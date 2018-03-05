@@ -87,6 +87,7 @@ from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
+from eddy.core.exporters.graphreferences import GraphReferences
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory, DescriptionFactory
 from eddy.core.functions.fsystem import fexists
@@ -683,8 +684,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(PdfDiagramExporter)
+        self.addDiagramExporter(GraphReferences)
         self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholProjectExporter)
+
 
     def initLoaders(self):
         """
@@ -1308,7 +1311,12 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(
-                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol})))
+                # self.ontologyExporterNameFilters()                -> .owl
+                # self.projectExporterNameFilters(except{File.Graphol})   -> .csv
+                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol})\
+                + self.diagramExporterNameFilters({File.Pdf, File.GraphML})
+                       ))
+
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
@@ -1317,7 +1325,14 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 try:
                     worker = self.createOntologyExporter(filetype, self.project, self)
                 except ValueError:
-                    worker = self.createProjectExporter(filetype, self.project, self)
+                    try:
+                        worker = self.createProjectExporter(filetype, self.project, self)
+                    except ValueError:
+                        arbitrary_diagram = list(self.project.diagrams())[0]
+                        if arbitrary_diagram:
+                            worker = self.createDiagramExporter(filetype, arbitrary_diagram, self)
+                        else:
+                            LOGGER.critical('no diagram present in the project')
                 worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot('QGraphicsScene')
@@ -1927,7 +1942,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(self.diagramExporterNameFilters())
+            dialog.setNameFilters(self.diagramExporterNameFilters({File.Xml}))
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(diagram.name)
             dialog.selectNameFilter(File.Pdf.value)
