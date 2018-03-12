@@ -83,9 +83,9 @@ class UpdateCheckWorker(AbstractWorker):
             for release in repository.releases():
                 if self.channel is Channel.Beta or not release.prerelease:
                     try:
-                        if NormalizedVersion(release.tag_name[1:]) > NormalizedVersion(update_version):
+                        if NormalizedVersion(release.tag_name.replace('v','')) > NormalizedVersion(update_version):
                             update_name = release.name
-                            update_version = release.tag_name[1:]
+                            update_version = release.tag_name.replace('v','')
                             update_url = release.html_url
                     except IrrationalVersionError as e:
                         LOGGER.warning('Failed to parse version number from TAG: %s', e)
