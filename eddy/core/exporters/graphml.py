@@ -665,7 +665,8 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         polyLineEdge.appendChild(lineStyle)
         polyLineEdge.appendChild(arrows)
         if label:
-            polyLineEdge.appendChild(label)
+            #polyLineEdge.appendChild(label)
+            polyLineEdge.appendChild(edgeLabel)
         polyLineEdge.appendChild(bendStyle)
 
         #############################################
