@@ -84,18 +84,17 @@ class GraphReferences(AbstractDiagramExporter):
                         node_diagrams_dict[full_IRI].append(node.type().realName.replace(' node',''))
 
                     node_diagrams_dict[full_IRI].append(diagram.name)
-                    node_diagrams_dict[full_IRI].append(str(node.pos().x()))
-                    node_diagrams_dict[full_IRI].append(str(node.pos().y()))
-                    node_diagrams_dict[full_IRI].append(str(node.width()))
-                    node_diagrams_dict[full_IRI].append(str(node.height()))
+                    node_diagrams_dict[full_IRI].append(str(int(node.pos().x())))
+                    node_diagrams_dict[full_IRI].append(str(int(node.pos().y())))
+                    node_diagrams_dict[full_IRI].append(str(int(node.width())))
+                    node_diagrams_dict[full_IRI].append(str(int(node.height())))
 
         # 3) GENERATE NODES
         for node_full_text in node_diagrams_dict.keys():
 
             value = node_diagrams_dict[node_full_text]
 
-            node_to_append = self.document.createElement(value[0])
-            node_to_append.setAttribute('name',node_full_text)
+
 
             for i in range(1,len(value)-4,5):
 
@@ -120,13 +119,16 @@ class GraphReferences(AbstractDiagramExporter):
                 h_to_append = self.document.createElement('h')
                 h_to_append.appendChild(self.document.createTextNode(h))
 
+                node_to_append = self.document.createElement(value[0])
+                node_to_append.setAttribute('name', node_full_text)
+
                 node_to_append.appendChild(diag_to_append)
                 node_to_append.appendChild(x_to_append)
                 node_to_append.appendChild(y_to_append)
                 node_to_append.appendChild(w_to_append)
                 node_to_append.appendChild(h_to_append)
 
-            root.appendChild(node_to_append)
+                root.appendChild(node_to_append)
 
         # 4) APPEND THE GRAPH TO THE DOCUMENT
         self.document.appendChild(root)
