@@ -119,9 +119,14 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
+        count = 0
+        for n in self.project.nodes():
+            if n.text() == self.data['undo']:
+                count = count+1
+
         meta = None
         # BACKUP METADATA
-        if self.item.isNode() and self.refactor:
+        if self.item.isNode() and (self.refactor or (count==1)):
             meta = self.project.meta(self.item.type(), self.data['undo'])
             if meta:
                 self.project.unsetMeta(self.item.type(), self.data['undo'])
@@ -159,9 +164,14 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
     def undo(self):
         """undo the command"""
+        count = 0
+        for n in self.project.nodes():
+            if n.text() == self.data['redo']:
+                count = count+1
+
         meta = None
         # BACKUP METADATA
-        if self.item.isNode() and self.refactor:
+        if self.item.isNode() and (self.refactor or (count==1)):
             meta = self.project.meta(self.item.type(), self.data['redo'])
             if meta:
                 self.project.unsetMeta(self.item.type(), self.data['redo'])
