@@ -806,11 +806,11 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('special_bottom'))
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Change Prefix', objectName='Change Prefix')
-        menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
-        menu.addAction(self.action('special_top'))
-        menu.addAction(self.action('special_bottom'))
-        self.addMenu(menu)
+        #menu = QtWidgets.QMenu('Change Prefix', objectName='Change Prefix')
+        #menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
+        #menu.addAction(self.action('special_top'))
+        #menu.addAction(self.action('special_bottom'))
+        #self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Select color', objectName='refactor_brush')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_color_fill_black'))

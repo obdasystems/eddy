@@ -245,8 +245,8 @@ class MenuFactory(QtCore.QObject):
                 if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
                     prefixes.append(':')
                 for p in prefixes:
-                    if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
-                        continue
+                    #if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
+                        #continue
 
                     pr_node = self.project.get_prefix_of_node(node)
 
