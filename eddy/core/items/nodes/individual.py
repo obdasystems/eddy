@@ -172,7 +172,9 @@ class IndividualNode(AbstractResizableNode):
         :rtype: int
         """
         polygon = self.polygon.geometry()
-        return polygon[self.IndexTR].y() - polygon[self.IndexBR].y()
+
+        #return polygon[self.IndexTR].y() - polygon[self.IndexBR].y()
+        return polygon[self.IndexBR].y() - polygon[self.IndexTR].y()
 
     def identity(self):
         """

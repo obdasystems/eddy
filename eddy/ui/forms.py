@@ -205,7 +205,7 @@ class RefactorNameForm(QtWidgets.QDialog):
             self.renameField.setValue(self.node.text())
 
         else:
-            self.renameField.setValue(self.node.remaining_characters)
+            self.renameField.setValue(self.node.remaining_characters.replace('\n',''))
             #self.old_text = self.node.remaining_characters
 
         self.old_text = self.node.text()

@@ -110,14 +110,19 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         return_list = []
 
         for ue in input_list:
+
             #OWL_term_for_uc = uc
             temp = []
+
             for p in self.project.nodes():
                 OWL_term_for_p = self.project.getOWLtermfornode(p)
-                #print('p-',p,' OWL_term_for_p',OWL_term_for_p)
+
                 match = self.checkmatchforOWLtermandnodename(ue,OWL_term_for_p)
                 if match is True:
+                    #print('p-',p,' OWL_term_for_p',OWL_term_for_p)
+                    #print('ue',ue)
                     temp.append(p)
+
             if len(temp) == 0:
                 LOGGER.critical('no nodes found for WOL term-'+ue)
 
@@ -148,8 +153,8 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
             #print('entity', entity)
             #print('explanation_for_node', explanation_for_node)
-
-            self.sgnFakeExplanationAdded.emit(entity[0],explanation_for_node)
+            if len(entity)>0:
+                self.sgnFakeExplanationAdded.emit(entity[0],explanation_for_node)
 
             count = count + 1
 
@@ -166,6 +171,10 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
         # FILL IN UnsatisfiableEntitiesExplorer WITH DATA
         connect(self.sgnFakeItemAdded, widget.doAddNode)
         connect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
+
+        #print('self.project.unsatisfiable_classes',self.project.unsatisfiable_classes)
+        #print('self.project.unsatisfiable_attributes',self.project.unsatisfiable_attributes)
+        #print('self.project.unsatisfiable_roles',self.project.unsatisfiable_roles)
 
         classes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_classes)
         attributes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_attributes)
@@ -453,7 +462,8 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
 
                 node.diagram.sgnUpdated.emit()
         else:
-            print('node not in self.project.nodes_of_unsatisfiable_entities:',node)
+            #print('node not in self.project.nodes_of_unsatisfiable_entities:',node)
+            pass
 
     def start_explanation_explorer(self, item=None):
 
