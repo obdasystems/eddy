@@ -1193,89 +1193,46 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
+
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
+                strDescription = meta.get(K_DESCRIPTION, '')
+                convHTML = QtWidgets.QTextBrowser()
+                convHTML.setHtml(strDescription)
+                strDescriptionHTML = convHTML.toHtml()
+
+                # TODO: properly parse the HTML rather than performing a plain string replace
+                filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
+
+                # Remove font-family and font-size style attributes. See redmine issue #396
+                import re
+                filterDescription = re.sub(r'font-family:.+?;', "", filterDescription)
+                filterDescription = re.sub(r'font-size:.+?;', "", filterDescription)
+
+                exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
 
                 if (node.type() == Item.IndividualNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
 
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    convHTML = QtWidgets.QTextBrowser()
-                    convHTML.setHtml(strDescription)
-                    strDescriptionHTML = convHTML.toHtml()
-                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body','<OntologyDescription')
-                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
-
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
                 elif (node.type() == Item.ConceptNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
 
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    convHTML = QtWidgets.QTextBrowser()
-                    convHTML.setHtml(strDescription)
-                    strDescriptionHTML = convHTML.toHtml()
-                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
-                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
-
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
                 elif (node.type() == Item.AttributeNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
 
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    convHTML = QtWidgets.QTextBrowser()
-                    convHTML.setHtml(strDescription)
-                    strDescriptionHTML = convHTML.toHtml()
-                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
-                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
-
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
                 elif (node.type() == Item.RoleNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    convHTML = QtWidgets.QTextBrowser()
-                    convHTML.setHtml(strDescription)
-                    strDescriptionHTML = convHTML.toHtml()
-                    filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
-                    exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
-
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
 
                 else:
                     raise ValueError('no conversion of description is available for node %s' % node)
 
+                value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
+                value = cast(self.OWLAnnotationValue, value)
+                annotation = self.df.getOWLAnnotation(aproperty, value)
+                conversion = self.convert(node)
+
+                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
 
     def createAnnotationAssertionAxiomPlainMastroVersion(self, node):
-
         """
         Generate a OWL 2 annotation in Plain Text Format for Mastro.
         :type node: AbstractNode
@@ -1283,76 +1240,34 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
+
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
+                strDescription = meta.get(K_DESCRIPTION, '')
+                strPlain = QtWidgets.QTextEdit()
+                strPlain.setHtml(strDescription)
+                descPlain= strPlain.toPlainText()
 
                 if (node.type() == Item.IndividualNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
 
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    strPlain = QtWidgets.QTextEdit()
-                    strPlain.setHtml(strDescription)
-                    descPlain= strPlain.toPlainText()
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
                 elif (node.type() == Item.ConceptNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
 
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    strPlain = QtWidgets.QTextEdit()
-                    strPlain.setHtml(strDescription)
-                    descPlain= strPlain.toPlainText()
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
                 elif (node.type() == Item.AttributeNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
 
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    strPlain = QtWidgets.QTextEdit()
-                    strPlain.setHtml(strDescription)
-                    descPlain= strPlain.toPlainText()
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
                 elif (node.type() == Item.RoleNode):
-
                     aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
-
-                    strDescription = meta.get(K_DESCRIPTION, '')
-                    strPlain = QtWidgets.QTextEdit()
-                    strPlain.setHtml(strDescription)
-                    descPlain= strPlain.toPlainText()
-
-                    value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
-                    value = cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
 
                 else:
                     raise ValueError('no conversion of description is available for node %s' % node)
 
+                value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
+                value = cast(self.OWLAnnotationValue, value)
+                annotation = self.df.getOWLAnnotation(aproperty, value)
+                conversion = self.convert(node)
 
+                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
 
     def createClassAssertionAxiom(self, edge):
         """

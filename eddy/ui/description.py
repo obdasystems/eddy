@@ -124,7 +124,7 @@ class NodeDescription(DescriptionDialog):
         self.text.setMouseTracking(True)
         self.text.setReadOnly(False)
         self.text.setFixedSize(650, 450)
-        self.text.setFont(Font('Roboto', 12))
+        self.text.setFont(self.session.font())
         self.text.setText(meta.get(K_DESCRIPTION, ''))
         self.text.setTabStopWidth(33)
         self.text.setMaximumSize(1000,800)
@@ -265,6 +265,16 @@ class NodeDescription(DescriptionDialog):
 
         self.toolbar.addSeparator()
 
+        ############################################################
+        # Moved from lower toolbar to upper toolbar
+        # after disabling font selection: redmine issue 414
+        self.toolbar.addAction(self.boldAction)
+        self.toolbar.addAction(self.italicAction)
+        self.toolbar.addAction(self.underlAction)
+        self.toolbar.addAction(self.superAction)
+        self.toolbar.addAction(self.subAction)
+        ############################################################
+
         self.toolbar.addAction(self.alignLeftText)
         self.toolbar.addAction(self.alignCenterText)
         self.toolbar.addAction(self.alignRightText)
@@ -276,23 +286,23 @@ class NodeDescription(DescriptionDialog):
         self.toolbar.addAction(self.dedentAction)
 
         # Lower Toolbar
-        self.formatbar = QtWidgets.QToolBar()
-        self.formatbar.setObjectName("Format")
-        self.formatbar.addWidget(self.fontBox)
-        self.formatbar.addWidget(self.fontSize)
+        #self.formatbar = QtWidgets.QToolBar()
+        #self.formatbar.setObjectName("Format")
+        #self.formatbar.addWidget(self.fontBox)
+        #self.formatbar.addWidget(self.fontSize)
 
-        self.formatbar.addSeparator()
+        #self.formatbar.addSeparator()
 
-        self.formatbar.addAction(self.fontColor)
-        self.formatbar.addAction(self.backColor)
+        #self.formatbar.addAction(self.fontColor)
+        #self.formatbar.addAction(self.backColor)
 
-        self.formatbar.addSeparator()
+        #self.formatbar.addSeparator()
 
-        self.formatbar.addAction(self.boldAction)
-        self.formatbar.addAction(self.italicAction)
-        self.formatbar.addAction(self.underlAction)
-        self.formatbar.addAction(self.superAction)
-        self.formatbar.addAction(self.subAction)
+        #self.formatbar.addAction(self.boldAction)
+        #self.formatbar.addAction(self.italicAction)
+        #self.formatbar.addAction(self.underlAction)
+        #self.formatbar.addAction(self.superAction)
+        #self.formatbar.addAction(self.subAction)
 
         # Status Toolbar
         self.statusbar = QtWidgets.QStatusBar()
@@ -301,7 +311,7 @@ class NodeDescription(DescriptionDialog):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.toolbar, 0, QtCore.Qt.AlignTop)
-        self.mainLayout.addWidget(self.formatbar)
+        #self.mainLayout.addWidget(self.formatbar)
         self.mainLayout.addWidget(self.text)
         self.mainLayout.addWidget(self.statusbar)
         self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
