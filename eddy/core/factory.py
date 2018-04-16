@@ -52,7 +52,7 @@ from eddy.ui.properties import PredicateNodeProperty
 from eddy.ui.properties import ValueDomainNodeProperty
 from eddy.ui.properties import ValueNodeProperty
 
-from eddy.ui.description import NodeDescription
+from eddy.ui.description import NodeDescriptionDialog
 
 
 class MenuFactory(QtCore.QObject):
@@ -990,7 +990,7 @@ class DescriptionFactory(QtCore.QObject):
         :type node: AbstractNode
         :rtype: QDialog
         """
-        description = NodeDescription(diagram, node, self.session)
+        description = NodeDescriptionDialog(diagram, node, self.session)
 
         description.setFixedSize(description.sizeHint())
 
