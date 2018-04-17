@@ -1259,8 +1259,12 @@ class Project(QtCore.QObject):
 
         old_label = node.text()
 
+        #print(' def node_label_update_core_code     >>> old_label', old_label)
+
         #if prefered_prefix is None:
-        new_label = GenerateNewLabel(self, node).return_label()
+        new_label = GenerateNewLabel(self, node, old_label=old_label).return_label()
+
+
         #else:
             #new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
 

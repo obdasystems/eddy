@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive
+from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive, Compute_RC_with_spaces
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
@@ -322,7 +322,12 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 self.setText(self.template)
 
             focusInData = self.focusInData
-            currentData = self.text()
+            #currentData = self.text()
+            currentData = self.toPlainText()
+
+            #print('self.text()',self.text())
+            #print('self.toHtml()',self.toHtml())
+            #print('self.toPlainText()',self.toPlainText())
 
             ###########################################################
             # IMPORTANT!                                              #
@@ -345,7 +350,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 if match:
                     new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
                     new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
-                    #new_remaining_characters = new_remaining_characters.replace('\n','')
+
                     new_iri = None
 
                     for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
@@ -401,12 +406,20 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     if flag is True:
                         self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
+                    #print('self.old_text',self.old_text)
+                    #print('currentData', currentData)
+                    #print('currentData_processed',currentData_processed)
+
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+                    """
                     if NewlineFeedInsensitive(node.remaining_characters,currentData_processed).result() is True:
                         commands.append(
                             CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project, refactor=True))
                     else:
                         commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
+                    """
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 if any(commands):
@@ -467,7 +480,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             super().mouseDoubleClickEvent(mouseEvent)
 
             self.old_text = self.text()
-            prev_rc = self._parent.remaining_characters
+            prev_rc_without_whitespace = self._parent.remaining_characters
+
+            prev_rc = Compute_RC_with_spaces(prev_rc_without_whitespace, self.old_text).return_result()
 
             self.setText(prev_rc)
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)

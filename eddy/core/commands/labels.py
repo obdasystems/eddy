@@ -37,6 +37,9 @@ from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.output import getLogger
+
+LOGGER = getLogger()
 
 
 class NewlineFeedInsensitive():
@@ -52,11 +55,157 @@ class NewlineFeedInsensitive():
         label_2_filtered = self.label_2.replace('\n', '')
 
         if label_1_filtered==label_2_filtered:
-
             return True
         else:
             return False
 
+
+class Compute_RC_with_spaces():
+
+    def __init__(self,rc_without_space,old_label):
+
+        self.rc_without_space = rc_without_space
+        self.old_label = old_label
+
+    def return_result(self):
+
+        if self.old_label is None:
+            return self.rc_without_space
+        else:
+            old_label_no_space = self.old_label.replace('\n','')
+            if self.rc_without_space in old_label_no_space:
+
+                #print(rc_without_space,' in ',old_label_no_space)
+
+                b_start = -1
+                b_end = len(self.old_label)-1
+                a_end = -1
+
+                q_start = 0
+                q_end = len(self.rc_without_space)-1
+
+
+                """
+                print('****************')
+                print('old_label', old_label)
+
+                for c, ch in enumerate(old_label):
+                    print('c,ch', c, ch)
+
+                print('rc_without_space', rc_without_space)
+
+                for c, ch in enumerate(rc_without_space):
+                    print('c,ch', c, ch)
+
+                print('a_end', a_end, ' old_label[a_end]', old_label[a_end])
+                print('b_start', b_start, ' old_label[b_start]', old_label[b_start])
+                print('b_end', b_end, ' old_label[b_end]', old_label[b_end])
+                print('q_start', q_start, ' rc_without_space[q_start]', rc_without_space[q_start])
+                print('q_end', q_end, ' rc_without_space[q_end]', rc_without_space[q_end])
+                print('****************')
+                """
+
+                while(self.old_label[b_end] != self.rc_without_space[q_end]):
+                    b_end=b_end-1
+
+                j = q_end
+                i = b_end
+
+                error = []
+
+                while ((j >= 0) and (i >= 0)):
+                    if self.rc_without_space[j] == self.old_label[i]:
+                        i = i - 1
+                        j = j - 1
+                    elif self.old_label[i] == '\n':
+                        i = i - 1
+                    else:
+                        error.append(self.old_label[i])
+                        break
+
+                i=i+1
+                j=j+1
+
+                """
+                print('*****')
+                print(' at this point j should be equal to 0 \n index i should point to the same content as index j')
+                print('i',i)
+                print('j',j)
+                print('rc_without_space[j]',rc_without_space[j])
+                print('old_label[i]', old_label[i])
+                print('*****')
+                """
+
+                # at this point j should be equal to -1
+                # index i should point to the same content as index j
+
+
+                b_start=i
+
+                """
+                print('****************')
+                print('old_label',old_label)
+
+                for c,ch in enumerate(old_label):
+                    print('c,ch',c,ch)
+
+                print('rc_without_space',rc_without_space)
+
+                for c,ch in enumerate(rc_without_space):
+                    print('c,ch',c,ch)
+
+                print('a_end',a_end,' old_label[a_end]',old_label[a_end])
+                print('b_start', b_start,' old_label[b_start]',old_label[b_start])
+                print('b_end', b_end,' old_label[b_end]',old_label[b_end])
+                print('q_start', q_start,' rc_without_space[q_start]',rc_without_space[q_start])
+                print('q_end', q_end,' rc_without_space[q_end]',rc_without_space[q_end])
+                print('****************')
+                """
+
+
+                if j>0 or len(error)>0:
+                    print('error',error)
+                    LOGGER.critical('Programming fault in module Compute_RC_with_spaces, contact programmer')
+                    return self.rc_without_space
+                else:
+
+                    a_end=b_start
+
+                    while self.old_label[a_end-1] == '\n':
+                        a_end=a_end-1
+
+                    a_end = a_end - 1
+
+                    """
+                    print('****************')
+                    print('old_label', old_label)
+
+                    for c, ch in enumerate(old_label):
+                        print('c,ch', c, ch)
+
+                    print('rc_without_space',rc_without_space)
+
+                    for c, ch in enumerate(rc_without_space):
+                        print('c,ch', c, ch)
+
+                    print('a_end', a_end, ' old_label[a_end]', old_label[a_end])
+                    print('b_start', b_start, ' old_label[b_start]', old_label[b_start])
+                    print('b_end', b_end, ' old_label[b_end]', old_label[b_end])
+                    print('q_start', q_start, ' rc_without_space[q_start]', rc_without_space[q_start])
+                    print('q_end', q_end, ' rc_without_space[q_end]', rc_without_space[q_end])
+                    print('****************')
+
+                    print('old_label[len(old_label)-1]',old_label[len(old_label)-1])
+                    """
+
+                    rc_to_return = self.old_label[a_end+1:len(self.old_label)]
+
+                    #print('rc_to_return',rc_to_return)
+
+                    return rc_to_return
+
+            else:
+                return self.rc_without_space
 
 class GenerateNewLabel():
     #Generate a new label for a non value node
@@ -66,7 +215,9 @@ class GenerateNewLabel():
         self.iri_to_set = self.project.get_iri_of_node(node)
         self.prefix_to_set = self.project.get_prefix_of_node(node)
         self.rc_to_set = kwargs.get('remaining_characters',node.remaining_characters)
+        self.old_label = kwargs.get('old_label',None)
         self.node = node
+
 
     def return_label(self):
 
@@ -85,13 +236,13 @@ class GenerateNewLabel():
                 if self.prefix_to_set is None:
                     if self.iri_to_set == self.project.iri:
                         if self.project.prefix is not None:
-                            return_label = str(self.project.prefix + ':' + self.rc_to_set)
+                            return_label = str(self.project.prefix + ':' + Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
                         else:
-                            return_label = self.project.get_full_IRI(self.project.iri, None, self.rc_to_set)
+                            return_label = self.project.get_full_IRI(self.project.iri, None, Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
                     else:
-                        return_label = self.project.get_full_IRI(self.iri_to_set, None, self.rc_to_set)
+                        return_label = self.project.get_full_IRI(self.iri_to_set, None, Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
                 else:
-                    return_label = str(self.prefix_to_set + ':' + self.rc_to_set)
+                    return_label = str(self.prefix_to_set + ':' + Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
         #print('GenerateNewLabel >>>  return_label', return_label)
         return return_label
 

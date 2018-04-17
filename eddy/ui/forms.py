@@ -194,7 +194,7 @@ class RefactorNameForm(QtWidgets.QDialog):
 
         self.renameLabel = QtWidgets.QLabel(self)
         self.renameLabel.setFont(Font('Roboto', 12))
-        self.renameLabel.setText('Name')
+        self.renameLabel.setText('IRI label')
         self.renameField = StringField(self)
         self.renameField.setFixedWidth(200)
         self.renameField.setFont(Font('Roboto', 12))
@@ -205,7 +205,7 @@ class RefactorNameForm(QtWidgets.QDialog):
             self.renameField.setValue(self.node.text())
 
         else:
-            self.renameField.setValue(self.node.remaining_characters.replace('\n',''))
+            self.renameField.setValue(self.node.remaining_characters)
             #self.old_text = self.node.remaining_characters
 
         self.old_text = self.node.text()
@@ -291,7 +291,6 @@ class RefactorNameForm(QtWidgets.QDialog):
 
                 new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
                 new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
-                #new_remaining_characters = new_remaining_characters.replace('\n','')
 
                 new_iri = None
 
@@ -365,7 +364,6 @@ class RefactorNameForm(QtWidgets.QDialog):
                 if match_old:
 
                     new_remaining_characters = currentData_processed
-                    #new_remaining_characters = new_remaining_characters.replace('\n','')
                     new_iri = self.project.iri
 
                     Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
@@ -578,7 +576,6 @@ class ValueForm(QtWidgets.QDialog):
 
             new_prefix = datatype.value[0:datatype.value.index(':')]
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
-            #new_remaining_characters = new_remaining_characters.replace('\n','')
             new_iri = None
 
             for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
