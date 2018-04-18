@@ -50,13 +50,14 @@ from eddy.core.project import K_DESCRIPTION
 from eddy.core.datatypes.graphol import Item
 from eddy.ui.fields import StringField
 
-class DescriptionDialog(QtWidgets.QDialog):
+
+class AbstractDialog(QtWidgets.QDialog):
     """
-    This is the base class for all the description dialogs.
+    This is the base abstract class for all the dialogs.
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, session):
+    def __init__(self, session=None):
         """
         Initialize the property dialog.
         :type session: Session
@@ -83,10 +84,12 @@ class DescriptionDialog(QtWidgets.QDialog):
         """
         return self.parent()
 
-class NodeDescriptionDialog(DescriptionDialog):
+
+class NodeDescriptionDialog(AbstractDialog):
     """
     This class implements the 'Node description' dialog.
     """
+
     def __init__(self, diagram, node, session):
         """
         Initialize the node description dialog.
@@ -98,7 +101,6 @@ class NodeDescriptionDialog(DescriptionDialog):
 
         self.diagram = diagram
         self.node = node
-        meta = diagram.project.meta(node.type(), node.text())
 
         #############################################
         # DEFAULT CHAR FORMAT
@@ -111,25 +113,21 @@ class NodeDescriptionDialog(DescriptionDialog):
         # CONFIRMATION BOX
         #################################
 
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                                          QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # MAIN WIDGET
         #################################
-        self.text = QtWidgets.QTextEdit()
-        self.text.setText(meta.get(K_DESCRIPTION, ''))
-        self.text.setMouseTracking(True)
-        self.text.setReadOnly(False)
+        meta = self.diagram.project.meta(node.type(), node.text())
+        description = meta.get(K_DESCRIPTION, '')
+        self.text = DescriptionEditor(self)
+        self.text.setText(self.stripFontAttributes(description))
         self.text.moveCursor(QtGui.QTextCursor.End)
-        self.text.setFont(Font('Roboto', 12))
-        self.text.setCurrentFont(Font('Roboto', 12))
-        self.text.setTabStopWidth(33)
         self.text.setFixedSize(800, 600)
-        self.text.setMaximumSize(1000,800)
+        self.text.setMaximumSize(1000, 800)
 
         #############################################
         # UPPER TOOLBAR WIDGET
@@ -170,13 +168,15 @@ class NodeDescriptionDialog(DescriptionDialog):
 
         # TODO: add EditSource dialog and connect it
         self.editSourceAction = QtWidgets.QAction(QtGui.QIcon(":icons/48/ic_code_black"), "Edit Source", self)
-        self.editSourceAction.triggered.connect(lambda: print(self.text.toHtml()))
+        #self.editSourceAction.triggered.connect(lambda: self.text.setPlainText(self.text.toHtml()))
 
-        self.insertURL = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_insert_link_black"), "Insert URL Link", self)
-        self.insertURL.triggered.connect(UrlDialog(self).show)
+        self.urlDialog = UrlDialog(self)
+        self.insertURLAction = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_insert_link_black"), "Insert URL Link", self)
+        self.insertURLAction.triggered.connect(self.urlDialog.show)
 
-        self.insertImage = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_photo_black"), "Insert URL Image", self)
-        self.insertImage.triggered.connect(UrlImageDialog(self).show)
+        self.imageDialog = UrlImageDialog(self)
+        self.insertImageAction = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_photo_black"), "Insert URL Image", self)
+        self.insertImageAction.triggered.connect(self.imageDialog.show)
 
         self.wikiTagDialog = WikiTagDialog(self)
         self.wikiTag = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_insert_wiki_link_black"), "Insert Wiki Tag", self)
@@ -201,7 +201,7 @@ class NodeDescriptionDialog(DescriptionDialog):
         self.backColor = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_highlight_black"), "Change Background Color", self)
         self.backColor.triggered.connect(self.highlight)
 
-        #code for active and deactive format buttons
+        # code for active and deactive format buttons
         self.boldAction = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_format_bold_black"), "Bold", self)
         self.boldAction.triggered.connect(self.bold)
 
@@ -221,7 +221,7 @@ class NodeDescriptionDialog(DescriptionDialog):
         #  SET UP TOOLBAR WIDGETS
         #################################
 
-        #Upper Toolbar
+        # Upper Toolbar
         self.toolbar = QtWidgets.QToolBar()
         self.toolbar.setObjectName("Options")
 
@@ -257,7 +257,6 @@ class NodeDescriptionDialog(DescriptionDialog):
 
         self.toolbar.addSeparator()
 
-
         self.toolbar.addAction(self.bulletAction)
         self.toolbar.addAction(self.numberedAction)
         self.toolbar.addAction(self.indentAction)
@@ -265,28 +264,28 @@ class NodeDescriptionDialog(DescriptionDialog):
 
         self.toolbar.addSeparator()
 
-        self.toolbar.addAction(self.insertURL)
-        self.toolbar.addAction(self.insertImage)
+        self.toolbar.addAction(self.insertURLAction)
+        self.toolbar.addAction(self.insertImageAction)
         self.toolbar.addAction(self.wikiTag)
 
         # Lower Toolbar
-        #self.formatbar = QtWidgets.QToolBar()
-        #self.formatbar.setObjectName("Format")
-        #self.formatbar.addWidget(self.fontBox)
-        #self.formatbar.addWidget(self.fontSize)
+        # self.formatbar = QtWidgets.QToolBar()
+        # self.formatbar.setObjectName("Format")
+        # self.formatbar.addWidget(self.fontBox)
+        # self.formatbar.addWidget(self.fontSize)
 
-        #self.formatbar.addSeparator()
+        # self.formatbar.addSeparator()
 
-        #self.formatbar.addAction(self.fontColor)
-        #self.formatbar.addAction(self.backColor)
+        # self.formatbar.addAction(self.fontColor)
+        # self.formatbar.addAction(self.backColor)
 
-        #self.formatbar.addSeparator()
+        # self.formatbar.addSeparator()
 
-        #self.formatbar.addAction(self.boldAction)
-        #self.formatbar.addAction(self.italicAction)
-        #self.formatbar.addAction(self.underlAction)
-        #self.formatbar.addAction(self.superAction)
-        #self.formatbar.addAction(self.subAction)
+        # self.formatbar.addAction(self.boldAction)
+        # self.formatbar.addAction(self.italicAction)
+        # self.formatbar.addAction(self.underlAction)
+        # self.formatbar.addAction(self.superAction)
+        # self.formatbar.addAction(self.subAction)
 
         # Status Toolbar
         self.statusbar = QtWidgets.QStatusBar()
@@ -295,318 +294,34 @@ class NodeDescriptionDialog(DescriptionDialog):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.toolbar, 0, QtCore.Qt.AlignTop)
-        #self.mainLayout.addWidget(self.formatbar)
+        # self.mainLayout.addWidget(self.formatbar)
         self.mainLayout.addWidget(self.text)
         self.mainLayout.addWidget(self.statusbar)
         self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
-        self.setWindowTitle('Description: {0}'.format(self.node.text().replace('\n','')))
+        self.setWindowTitle('Description of {0}'.format(self.node.text().replace("\n", '')))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
 
-        connect(self.confirmationBox.accepted, self.complete)
-        connect(self.confirmationBox.rejected, self.reject)
         connect(self.text.cursorPositionChanged, self.cursorPosition)
+        connect(self.urlDialog.sgnURLSelected, self.insertURL)
+        connect(self.imageDialog.sgnImageURLSelected, self.insertImage)
         connect(self.wikiTagDialog.sgnWikiTagSelected, self.insertWikiTag)
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
-    def cursorPosition(self):
+    def stripFontAttributes(self, description):
         """
-        Returns the position of the curson in  QTextEdit
+        Strip font family and size. See redmine issue: 414
+        :param description: the description text
+        :type description: str
+        :return: the description stripped of font attributes
+        :rtype: str
         """
-        cursor = self.text.textCursor()
-
-        line = cursor.blockNumber() + 1
-        col = cursor.columnNumber()
-
-        self.statusbar.showMessage("Line: {} | Column: {}".format(line,col))
-
-    def bulletList(self):
-        """
-        Create the bullet list in QTextEditor
-        """
-        cursor = self.text.textCursor()
-
-        # Insert bulleted list
-        cursor.insertList(QtGui.QTextListFormat.ListDisc)
-
-    def numberList(self):
-        """
-        Create the number list in QTextEditor
-        """
-        cursor = self.text.textCursor()
-
-        # Insert list with numbers
-        cursor.insertList(QtGui.QTextListFormat.ListDecimal)
-
-    def fontColorChanged(self):
-        """
-        Change the font color in QTextEditor
-        """
-
-        # Get a color from the text dialog
-        color = QtWidgets.QColorDialog.getColor()
-
-        # Set it as the new text color
-        self.text.setTextColor(color)
-
-    def highlight(self):
-        """
-        Change the background color of font in QTextEditor
-        """
-        color = QtWidgets.QColorDialog.getColor()
-
-        self.text.setTextBackgroundColor(color)
-
-    def bold(self):
-        """
-        Change the character font in bold
-        """
-        if self.text.fontWeight() == QtGui.QFont.Bold:
-
-            self.text.setFontWeight(QtGui.QFont.Normal)
-
-        else:
-
-            self.text.setFontWeight(QtGui.QFont.Bold)
-
-    def italic(self):
-        """
-        Change the character font in italic
-        """
-        state = self.text.fontItalic()
-
-        self.text.setFontItalic(not state)
-
-    def underline(self):
-        """
-        Change the character font in underline
-        """
-        state = self.text.fontUnderline()
-
-        self.text.setFontUnderline(not state)
-
-    def strike(self):
-        """
-        Change the character font in strike
-        """
-        # Grab the text's format
-        fmt = self.text.currentCharFormat()
-
-        # Set the fontStrikeOut property to its opposite
-        fmt.setFontStrikeOut(not fmt.fontStrikeOut())
-
-        # And set the next char format
-        self.text.setCurrentCharFormat(fmt)
-
-    def superScript(self):
-        """
-        Allow to create the character super script
-        """
-
-        # Grab the current format
-        fmt = self.text.currentCharFormat()
-
-        # And get the vertical alignment property
-        align = fmt.verticalAlignment()
-
-        # Toggle the state
-        if align == QtGui.QTextCharFormat.AlignNormal:
-
-            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignSuperScript)
-
-        else:
-
-            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
-
-        # Set the new format
-        self.text.setCurrentCharFormat(fmt)
-
-    def subScript(self):
-        """
-        Allow to create the character sub script
-        """
-        # Grab the current format
-        fmt = self.text.currentCharFormat()
-
-        # And get the vertical alignment property
-        align = fmt.verticalAlignment()
-
-        # Toggle the state
-        if align == QtGui.QTextCharFormat.AlignNormal:
-
-            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignSubScript)
-
-        else:
-
-            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
-
-        # Set the new format
-        self.text.setCurrentCharFormat(fmt)
-
-    def clearFormatting(self):
-        """
-        Restore the char format that is used when inserting new text.
-        If the editor has a selection then clear the char format of the selection.
-        """
-        self.text.setCurrentCharFormat(self.defaultCharFormat)
-
-    def alignLeft(self):
-        """
-        Align the text to left
-        """
-        self.text.setAlignment(Qt.AlignLeft)
-
-    def alignRight(self):
-        """
-        Align the text to right
-        """
-        self.text.setAlignment(Qt.AlignRight)
-
-    def alignCenter(self):
-        """
-        Align the text to center
-        """
-        self.text.setAlignment(Qt.AlignCenter)
-
-    def alignJustify(self):
-        """
-        Align the text in justify mode
-        """
-        self.text.setAlignment(Qt.AlignJustify)
-
-    def indent(self):
-        """
-        Ident the text
-        """
-
-        # Grab the cursor
-        cursor = self.text.textCursor()
-
-        if cursor.hasSelection():
-
-            # Store the current line/block number
-            temp = cursor.blockNumber()
-
-            # Move to the selection's end
-            cursor.setPosition(cursor.anchor())
-
-            # Calculate range of selection
-            diff = cursor.blockNumber() - temp
-
-            direction = QtGui.QTextCursor.Up if diff > 0 else QtGui.QTextCursor.Down
-
-            # Iterate over lines (diff absolute value)
-            for n in range(abs(diff) + 1):
-                # Move to start of each line
-                cursor.movePosition(QtGui.QTextCursor.StartOfLine)
-
-                # Insert tabbing
-                cursor.insertText("\t")
-
-
-                # And move back up
-                cursor.movePosition(direction)
-
-        # If there is no selection, just insert a tab
-        else:
-
-            cursor.insertText("\t")
-
-    def handleDedent(self, cursor):
-        """
-        Manage the Dedent of the text
-        """
-
-        cursor.movePosition(QtGui.QTextCursor.StartOfLine)
-
-        # Grab the current line
-        line = cursor.block().text()
-
-        # If the line starts with a tab character, delete it
-        if line.startswith("\t"):
-
-            # Delete next character
-            cursor.deleteChar()
-
-        # Otherwise, delete all spaces until a non-space character is met
-        else:
-            for char in line[:8]:
-
-                if char != " ":
-                    break
-
-                cursor.deleteChar()
-
-    def dedent(self):
-        """
-        Dedent the text
-        """
-
-        cursor = self.text.textCursor()
-
-        if cursor.hasSelection():
-
-            # Store the current line/block number
-            temp = cursor.blockNumber()
-
-            # Move to the selection's last line
-            cursor.setPosition(cursor.anchor())
-
-            # Calculate range of selection
-            diff = cursor.blockNumber() - temp
-
-            direction = QtGui.QTextCursor.Up if diff > 0 else QtGui.QTextCursor.Down
-
-            # Iterate over lines
-            for n in range(abs(diff) + 1):
-                self.handleDedent(cursor)
-
-                # Move up
-                cursor.movePosition(direction)
-
-        else:
-            self.handleDedent(cursor)
-
-
-    ############################################################
-    # SLOTS
-    ############################################################
-
-    @QtCore.pyqtSlot(str, str)
-    def insertWikiTag(self, wikiTagURL, wikiLabel):
-        """
-        Executed to insert a wiki tag.
-        :param wikiTag: the wiki tag URL to insert
-        :type wikiTagURL: str
-        :param wikiLabel: the wiki tag label to insert
-        :type wikiLabel: str
-        """
-        linkFormat = QtGui.QTextCharFormat()
-        linkFormat.setForeground(QtGui.QColor("blue"))
-        linkFormat.setFont(self.text.currentFont())
-        linkFormat.setFontPointSize(self.text.fontPointSize())
-        linkFormat.setAnchor(True)
-        linkFormat.setAnchorHref(wikiTagURL)
-        linkFormat.setToolTip(wikiTagURL)
-        linkFormatSpace = QtGui.QTextCharFormat()
-        linkFormatSpace.setFont(self.text.currentFont())
-        linkFormatSpace.setFontPointSize(self.text.fontPointSize())
-
-        self.text.textCursor().insertText(wikiLabel, linkFormat)
-        self.text.textCursor().insertText(" ", linkFormatSpace)
-
-    @QtCore.pyqtSlot()
-    def complete(self):
-        """
-        Executed when the dialog is accepted.
-        """
-        commands = [self.metaDataChanged()]
-        if any(commands):
-            self.session.undostack.beginMacro('edit {0} description'.format(self.node.name))
-            for command in commands:
-                if command:
-                    self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-        super().accept()
+        import re
+        desc = re.sub(r'font-family:.+?;', "", description)
+        desc = re.sub(r'font-size:.+?;', "", description)
+
+        return desc
 
     def metaDataChanged(self):
         """
@@ -625,34 +340,356 @@ class NodeDescriptionDialog(DescriptionDialog):
                 undo, redo)
         return None
 
+    ############################################################
+    # SLOTS
+    ############################################################
+    @QtCore.pyqtSlot()
+    def cursorPosition(self):
+        """
+        Returns the position of the cursor in QTextEdit
+        """
+        cursor = self.text.textCursor()
+        line = cursor.blockNumber() + 1
+        col = cursor.columnNumber()
+        charFormat = cursor.charFormat()
+        anchor = charFormat.anchorHref()
+        anchorStatus = " | Anchor: {}".format(anchor) if charFormat.isAnchor() else ""
+
+        self.statusbar.showMessage("Line: {} | Column: {} {}".format(line, col, anchorStatus))
+
+    @QtCore.pyqtSlot()
+    def bulletList(self):
+        """
+        Create the bullet list in QTextEditor
+        """
+        cursor = self.text.textCursor()
+
+        # Insert bulleted list
+        cursor.insertList(QtGui.QTextListFormat.ListDisc)
+
+    @QtCore.pyqtSlot()
+    def numberList(self):
+        """
+        Create the number list in QTextEditor
+        """
+        cursor = self.text.textCursor()
+
+        # Insert list with numbers
+        cursor.insertList(QtGui.QTextListFormat.ListDecimal)
+
+    @QtCore.pyqtSlot()
+    def fontColorChanged(self):
+        """
+        Change the font color in QTextEditor
+        """
+        # Get a color from the text dialog
+        color = QtWidgets.QColorDialog.getColor()
+
+        # Set it as the new text color
+        self.text.setTextColor(color)
+
+    @QtCore.pyqtSlot()
+    def highlight(self):
+        """
+        Change the background color of font in QTextEditor
+        """
+        color = QtWidgets.QColorDialog.getColor()
+
+        self.text.setTextBackgroundColor(color)
+
+    @QtCore.pyqtSlot()
+    def bold(self):
+        """
+        Change the character font in bold
+        """
+        if self.text.fontWeight() == QtGui.QFont.Bold:
+            self.text.setFontWeight(QtGui.QFont.Normal)
+        else:
+            self.text.setFontWeight(QtGui.QFont.Bold)
+
+    @QtCore.pyqtSlot()
+    def italic(self):
+        """
+        Change the character font in italic
+        """
+        state = self.text.fontItalic()
+
+        self.text.setFontItalic(not state)
+
+    @QtCore.pyqtSlot()
+    def underline(self):
+        """
+        Change the character font in underline
+        """
+        state = self.text.fontUnderline()
+
+        self.text.setFontUnderline(not state)
+
+    @QtCore.pyqtSlot()
+    def strike(self):
+        """
+        Change the character font in strike
+        """
+        # Grab the text's format
+        fmt = self.text.currentCharFormat()
+
+        # Set the fontStrikeOut property to its opposite
+        fmt.setFontStrikeOut(not fmt.fontStrikeOut())
+
+        # And set the next char format
+        self.text.setCurrentCharFormat(fmt)
+
+    @QtCore.pyqtSlot()
+    def superScript(self):
+        """
+        Allow to create the character super script
+        """
+        # Grab the current format
+        fmt = self.text.currentCharFormat()
+
+        # And get the vertical alignment property
+        align = fmt.verticalAlignment()
+
+        # Toggle the state
+        if align == QtGui.QTextCharFormat.AlignNormal:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignSuperScript)
+        else:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
+
+        # Set the new format
+        self.text.setCurrentCharFormat(fmt)
+
+    @QtCore.pyqtSlot()
+    def subScript(self):
+        """
+        Allow to create the character sub script
+        """
+        # Grab the current format
+        fmt = self.text.currentCharFormat()
+
+        # And get the vertical alignment property
+        align = fmt.verticalAlignment()
+
+        # Toggle the state
+        if align == QtGui.QTextCharFormat.AlignNormal:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignSubScript)
+        else:
+            fmt.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
+
+        # Set the new format
+        self.text.setCurrentCharFormat(fmt)
+
+    @QtCore.pyqtSlot()
+    def clearFormatting(self):
+        """
+        Restore the char format that is used when inserting new text.
+        If the editor has a selection then clear the char format of the selection.
+        """
+        self.text.setCurrentCharFormat(self.defaultCharFormat)
+
+    @QtCore.pyqtSlot()
+    def alignLeft(self):
+        """
+        Align the text to left
+        """
+        self.text.setAlignment(Qt.AlignLeft)
+
+    @QtCore.pyqtSlot()
+    def alignRight(self):
+        """
+        Align the text to right
+        """
+        self.text.setAlignment(Qt.AlignRight)
+
+    @QtCore.pyqtSlot()
+    def alignCenter(self):
+        """
+        Align the text to center
+        """
+        self.text.setAlignment(Qt.AlignCenter)
+
+    @QtCore.pyqtSlot()
+    def alignJustify(self):
+        """
+        Align the text in justify mode
+        """
+        self.text.setAlignment(Qt.AlignJustify)
+
+    @QtCore.pyqtSlot()
+    def indent(self):
+        """
+        Ident the text
+        """
+        # Grab the cursor
+        cursor = self.text.textCursor()
+
+        if cursor.hasSelection():
+            # Store the current line/block number
+            temp = cursor.blockNumber()
+
+            # Move to the selection's end
+            cursor.setPosition(cursor.anchor())
+
+            # Calculate range of selection
+            diff = cursor.blockNumber() - temp
+            direction = QtGui.QTextCursor.Up if diff > 0 else QtGui.QTextCursor.Down
+
+            # Iterate over lines (diff absolute value)
+            for n in range(abs(diff) + 1):
+                # Move to start of each line
+                cursor.movePosition(QtGui.QTextCursor.StartOfLine)
+
+                # Insert tabbing
+                cursor.insertText("\t")
+
+                # And move back up
+                cursor.movePosition(direction)
+        # If there is no selection, just insert a tab
+        else:
+            cursor.insertText("\t")
+
+    @QtCore.pyqtSlot()
+    def handleDedent(self, cursor):
+        """
+        Manage the Dedent of the text
+        """
+        cursor.movePosition(QtGui.QTextCursor.StartOfLine)
+
+        # Grab the current line
+        line = cursor.block().text()
+
+        # If the line starts with a tab character, delete it
+        if line.startswith("\t"):
+            # Delete next character
+            cursor.deleteChar()
+
+        # Otherwise, delete all spaces until a non-space character is met
+        else:
+            for char in line[:8]:
+                if char != " ":
+                    break
+
+                cursor.deleteChar()
+
+    @QtCore.pyqtSlot()
+    def dedent(self):
+        """
+        Dedent the text
+        """
+        cursor = self.text.textCursor()
+
+        if cursor.hasSelection():
+            # Store the current line/block number
+            temp = cursor.blockNumber()
+
+            # Move to the selection's last line
+            cursor.setPosition(cursor.anchor())
+
+            # Calculate range of selection
+            diff = cursor.blockNumber() - temp
+            direction = QtGui.QTextCursor.Up if diff > 0 else QtGui.QTextCursor.Down
+
+            # Iterate over lines
+            for n in range(abs(diff) + 1):
+                self.handleDedent(cursor)
+
+                # Move up
+                cursor.movePosition(direction)
+        else:
+            self.handleDedent(cursor)
+
+    @QtCore.pyqtSlot(str, str)
+    def insertURL(self, url, alias):
+        """
+        Executed to insert a URL in the description.
+        :param url: the URL to insert
+        :type url: str
+        :param alias: the URL anchor text
+        :type alias: str
+        """
+        linkFormat = QtGui.QTextCharFormat()
+        linkFormat.setForeground(QtGui.QColor("blue"))
+        linkFormat.setFont(self.text.currentFont())
+        linkFormat.setFontPointSize(self.text.fontPointSize())
+        linkFormat.setAnchorHref(url)
+        linkFormat.setFontUnderline(True)
+        linkFormat.setAnchor(True)
+        linkFormat.setToolTip(url)
+        cursor = self.text.textCursor()
+        cursor.insertText(alias if alias else url, linkFormat)
+        cursor.insertText(" ", self.defaultCharFormat)
+
+    @QtCore.pyqtSlot(str)
+    def insertImage(self, imageURL):
+        """
+        Executed to insert an image in the description.
+        :param imageURL: the image URL
+        :type imageURL: str
+        """
+        imgTag = '<img src= "{0}"/>'.format(imageURL)
+        cursor = self.text.textCursor()
+        cursor.insertHtml(imgTag)
+        cursor.insertText(" ", self.defaultCharFormat)
+
+    @QtCore.pyqtSlot(str, str)
+    def insertWikiTag(self, wikiTagURL, wikiLabel):
+        """
+        Executed to insert a wiki tag.
+        :param wikiTag: the wiki tag URL to insert
+        :type wikiTagURL: str
+        :param wikiLabel: the wiki tag label to insert
+        :type wikiLabel: str
+        """
+        linkFormat = QtGui.QTextCharFormat()
+        linkFormat.setForeground(QtGui.QColor("blue"))
+        linkFormat.setFont(self.text.currentFont())
+        linkFormat.setFontPointSize(self.text.fontPointSize())
+        linkFormat.setAnchor(True)
+        linkFormat.setAnchorHref(wikiTagURL)
+        linkFormat.setToolTip(wikiTagURL)
+
+        self.text.textCursor().insertText(wikiLabel, linkFormat)
+        self.text.textCursor().insertText(" ", self.defaultCharFormat)
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        commands = [self.metaDataChanged()]
+        if any(commands):
+            self.session.undostack.beginMacro('edit {0} description'.format(self.node.name))
+            for command in commands:
+                if command:
+                    self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+        super().accept()
+
 
 class UrlDialog(QtWidgets.QDialog):
     """
     This is the class that manages the insertion of url address for description dialogs.
     """
+    sgnURLSelected = QtCore.pyqtSignal(str, str)
+
     def __init__(self, parent=None):
-        QtWidgets.QDialog.__init__(self, parent)
+        super().__init__(parent)
 
         self.parent = parent
         self.initUI()
+
+        connect(self.insertBoxURL.textChanged, self.validateURL)
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
     def initUI(self):
         #############################################
         # CONFIRMATION BOX
         #################################
-
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                                          QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
-
-        insert = QtWidgets.QPushButton("Insert", self)
-        insert.clicked.connect(self.insert)
-
-        cancel = QtWidgets.QPushButton("Cancel", self)
-        cancel.clicked.connect(self.closeDialog)
-
-        self.confirmationBox.addButton(cancel, QtWidgets.QDialogButtonBox.ActionRole)
-        self.confirmationBox.addButton(insert, QtWidgets.QDialogButtonBox.ActionRole)
 
         #############################################
         # URL BOX
@@ -660,7 +697,7 @@ class UrlDialog(QtWidgets.QDialog):
         self.URLLabel = QtWidgets.QLabel(self)
         self.URLLabel.setFont(Font('Roboto', 12))
         self.URLLabel.setText('URL Link')
-        self.insertBoxURL = QtWidgets.QTextEdit(self)
+        self.insertBoxURL = QtWidgets.QLineEdit(self)
         self.insertBoxURL.setMaximumHeight(40)
 
         #############################################
@@ -669,7 +706,7 @@ class UrlDialog(QtWidgets.QDialog):
         self.AliasLabel = QtWidgets.QLabel(self)
         self.AliasLabel.setFont(Font('Roboto', 12))
         self.AliasLabel.setText('Alias')
-        self.insertBoxAlias = QtWidgets.QTextEdit(self)
+        self.insertBoxAlias = QtWidgets.QLineEdit(self)
         self.insertBoxAlias.setMaximumHeight(40)
 
         #############################################
@@ -680,63 +717,76 @@ class UrlDialog(QtWidgets.QDialog):
         self.layout.addWidget(self.insertBoxURL)
         self.layout.addWidget(self.AliasLabel)
         self.layout.addWidget(self.insertBoxAlias)
-        self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignCenter)
+        self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignRight)
 
-        self.setMaximumSize(500,200)
+        self.setMaximumSize(500, 200)
         self.setWindowTitle("Insert URL")
         self.setLayout(self.layout)
 
         self.setWindowModality(QtCore.Qt.WindowModal)
 
-    def closeDialog(self):
+    ############################################################
+    # PROPERTIES
+    ############################################################
+    @property
+    def url(self):
+        return self.insertBoxURL.text()
+
+    @property
+    def alias(self):
+        return self.insertBoxAlias.text()
+
+    ############################################################
+    # SLOTS
+    ############################################################
+    @QtCore.pyqtSlot(str)
+    def validateURL(self, url):
         """
-        Executed when the dialog is closed.
+        Executed to validate the current URL.
+        :param url: the url to validate
+        :return: True if the URL is valid, False otherwise.
+        """
+        if len(url) > 4:  # naive URL validation
+            self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+            return True
+        else:
+            self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+            return False
+
+    @QtCore.pyqtSlot()
+    def show(self):
+        """
+        Shows the widget and its child widgets.
         """
         self.insertBoxAlias.clear()
         self.insertBoxURL.clear()
-        self.close()
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+        super().show()
 
-    def insert(self):
+    @QtCore.pyqtSlot()
+    def accept(self):
         """
         Executed when the dialog is accepted.
         """
+        self.sgnURLSelected.emit(self.url, self.alias)
+        super().accept()
 
-        # Grab cursor
-        cursor = self.parent.text.textCursor()
-        valid= len(self.insertBoxURL.toPlainText())
-
-        if valid > 4:
-             linkFormat = QtGui.QTextCharFormat()
-             linkFormatSpace = QtGui.QTextCharFormat()
-             linkFormatSpace.setFont(self.parent.text.currentFont())
-             linkFormatSpace.setFontPointSize(self.parent.text.fontPointSize())
-             linkFormat.setForeground(QtGui.QColor("blue"))
-             linkFormat.setFont(self.parent.text.currentFont())
-             linkFormat.setFontPointSize(self.parent.text.fontPointSize())
-             linkFormat.setFontUnderline(True)
-             linkFormat.setAnchor(True)
-             linkFormat.setAnchorHref(self.insertBoxURL.toPlainText())
-             linkFormat.setToolTip(self.insertBoxURL.toPlainText())
-             cursor.insertText(self.insertBoxAlias.toPlainText(),linkFormat)
-             cursor.insertText(" ",linkFormatSpace)
-
-        # Close the window
-        self.insertBoxAlias.clear()
-        self.insertBoxURL.clear()
-        self.close()
 
 class UrlImageDialog(QtWidgets.QDialog):
     """
     This is the class that manages the insertion of image url address for description dialogs.
     """
+    sgnImageURLSelected = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
-        QtWidgets.QDialog.__init__(self, parent)
+        super().__init__(parent)
 
         self.parent = parent
-
-
         self.initUI()
+
+        connect(self.insertBoxURL.textChanged, self.validateURL)
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
     def initUI(self):
         #############################################
@@ -745,44 +795,16 @@ class UrlImageDialog(QtWidgets.QDialog):
         self.URLLabel = QtWidgets.QLabel(self)
         self.URLLabel.setFont(Font('Roboto', 12))
         self.URLLabel.setText('URL Image')
-        self.insertBoxURL = QtWidgets.QTextEdit(self)
+        self.insertBoxURL = QtWidgets.QLineEdit(self)
         self.insertBoxURL.setMaximumHeight(40)
-
-
-        #############################################
-        # HEIGHT BOX
-        #################################
-        #self.heightLabel = QtWidgets.QLabel(self)
-        #self.heightLabel.setFont(Font('Roboto', 12))
-        #self.heightLabel.setText('Height of Image (px)')
-        #self.heightBox = QtWidgets.QTextEdit(self)
-        #self.heightBox.setMaximumHeight(40)
-
-
-        #############################################
-        # WIDTH BOX
-        #################################
-        #self.widthLabel = QtWidgets.QLabel(self)
-        #self.widthLabel.setFont(Font('Roboto', 12))
-        #self.widthLabel.setText('Width of Image (px)')
-        #self.widthBox = QtWidgets.QTextEdit(self)
-        #self.widthBox.setMaximumHeight(40)
 
         #############################################
         # CONFIRMATION BOX
         #################################
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                                          QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
-
-        insert = QtWidgets.QPushButton("Insert", self)
-        insert.clicked.connect(self.insert)
-
-        cancel = QtWidgets.QPushButton("Cancel", self)
-        cancel.clicked.connect(self.closeDialog)
-
-        self.confirmationBox.addButton(cancel, QtWidgets.QDialogButtonBox.ActionRole)
-        self.confirmationBox.addButton(insert, QtWidgets.QDialogButtonBox.ActionRole)
 
         #############################################
         # DIALOG WINDOW LAYOUT
@@ -790,52 +812,57 @@ class UrlImageDialog(QtWidgets.QDialog):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.URLLabel)
         self.layout.addWidget(self.insertBoxURL)
+        self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignRight)
 
-        #self.layout.addWidget(self.heightLabel)
-        #self.layout.addWidget(self.heightBox)
-        #self.layout.addWidget(self.widthLabel)
-        #self.layout.addWidget(self.widthBox)
-
-        self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignCenter)
-
-        self.setMaximumSize(350,150)
+        self.setMaximumSize(350, 150)
         self.setWindowTitle("Insert URL")
         self.setLayout(self.layout)
 
         self.setWindowModality(QtCore.Qt.WindowModal)
 
-    def closeDialog(self):
+    ############################################################
+    # PROPERTIES
+    ############################################################
+    @property
+    def imageURL(self):
+        return self.insertBoxURL.text()
+
+    ############################################################
+    # SLOTS
+    ############################################################
+    @QtCore.pyqtSlot(str)
+    def validateURL(self, url):
         """
-        Executed when the dialog is closed.
+        Executed to validate the current URL.
+        :param url: the url to validate
+        :return: True if the URL is valid, False otherwise.
+        """
+        if len(url) > 4:  # naive URL validation
+            self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+            return True
+        else:
+            self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+            return False
+
+    @QtCore.pyqtSlot()
+    def show(self):
+        """
+        Shows the widget and its child widgets.
         """
         self.insertBoxURL.clear()
-        self.close()
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+        super().show()
 
-    def insert(self):
+    @QtCore.pyqtSlot()
+    def accept(self):
         """
         Executed when the dialog is accepted.
         """
+        self.sgnImageURLSelected.emit(self.imageURL)
+        super().accept()
 
-        # Grab cursor
-        cursor = self.parent.text.textCursor()
-        valid= len(self.insertBoxURL.toPlainText())
-        linkFormat = QtGui.QTextCharFormat()
-        linkFormat.setFont(self.parent.text.currentFont())
-        linkFormat.setFontPointSize(self.parent.text.fontPointSize())
 
-        if valid > 4:
-               completeURL= '<img src= "'+self.insertBoxURL.toPlainText()+'" />'
-               #completeURL = '<img src="' + self.insertBoxURL.toPlainText() + '" width="'+self.widthBox.toPlainText()+ '" height="'+self.heightBox.toPlainText()+ '" />'
-
-        # Insert the url link
-               cursor.insertHtml(completeURL)
-               cursor.insertText(" ", linkFormat)
-
-        # Close the window
-        self.insertBoxURL.clear()
-        self.close()
-
-class WikiTagDialog(DescriptionDialog):
+class WikiTagDialog(AbstractDialog):
     """
     This is the class that manages the insertion of wiki tag for the description dialogs.
     """
@@ -843,7 +870,7 @@ class WikiTagDialog(DescriptionDialog):
 
     def __init__(self, parent=None):
         """
-        Initialize the WikiDialog widget.
+        Initialize the WikiTagDialog widget.
         :param parent: the parent widget
         """
         super().__init__(parent)
@@ -867,7 +894,7 @@ class WikiTagDialog(DescriptionDialog):
         self.nodeKeys = set()
 
         # extract the list of nodes in the diagram
-        for node in [node for node in self.session.diagram.project.nodes() if node.type() in self.nodeTypes]:
+        for node in [node for node in self.project.nodes() if node.type() in self.nodeTypes]:
             if self.nodeKey(node) not in self.nodeKeys:
                 self.nodeKeys.add(self.nodeKey(node))
                 self.doAddNode(node)
@@ -876,7 +903,8 @@ class WikiTagDialog(DescriptionDialog):
         connect(self.search.returnPressed, self.onSearchReturnPressed)
         connect(self.predicateView.doubleClicked, self.onItemDoubleClicked)
         connect(self.predicateView.sgnCurrentItemChanged, self.onItemChanged)
-        connect(self.sgnWikiTagSelected, self.dismissDialog)
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
     def initUI(self):
         """
@@ -899,19 +927,11 @@ class WikiTagDialog(DescriptionDialog):
         #############################################
         # CONFIRMATION BOX
         #################################
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                                          QtWidgets.QDialogButtonBox.Cancel, self)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
-
-        self.cancelButton = QtWidgets.QPushButton("Cancel", self)
-        self.cancelButton.clicked.connect(self.dismissDialog)
-
-        self.insertButton = QtWidgets.QPushButton("Insert", self)
-        self.insertButton.clicked.connect(self.confirmDialog)
-        self.insertButton.setEnabled(False)
-
-        self.confirmationBox.addButton(self.cancelButton, QtWidgets.QDialogButtonBox.ActionRole)
-        self.confirmationBox.addButton(self.insertButton, QtWidgets.QDialogButtonBox.ActionRole)
 
         #############################################
         # WIKI LABEL BOX
@@ -932,13 +952,13 @@ class WikiTagDialog(DescriptionDialog):
         self.layout.addWidget(self.predicateView)
         self.layout.addWidget(self.wikiLabel)
         self.layout.addWidget(self.wikiLabelLineEdit)
-        self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignCenter)
+        self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignRight)
         self.setTabOrder(self.search, self.predicateView)
         self.setTabOrder(self.predicateView, self.wikiLabelLineEdit)
         self.setTabOrder(self.wikiLabelLineEdit, self.confirmationBox)
 
         self.setFixedSize(450, 400)
-        self.setMaximumSize(800,600)
+        self.setMaximumSize(800, 600)
         self.setWindowTitle("Insert Wiki Tag")
         self.setLayout(self.layout)
 
@@ -1003,7 +1023,7 @@ class WikiTagDialog(DescriptionDialog):
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                self.wikiTagSelected(item.data())
+                self.accept()
 
     @QtCore.pyqtSlot(str)
     def doFilterItem(self, key):
@@ -1020,12 +1040,12 @@ class WikiTagDialog(DescriptionDialog):
         """
         Executed when the enter key is pressed in the search field.
         """
-        self.predicateView.setFocus()
+        self.doFilterItem()
 
     @QtCore.pyqtSlot('QModelIndex', 'QModelIndex')
     def onItemChanged(self, currentIndex, previousIndex):
         if currentIndex is not None:
-            self.insertButton.setEnabled(currentIndex.isValid())
+            self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(currentIndex.isValid())
 
     @QtCore.pyqtSlot('QGraphicsItem')
     def wikiTagSelected(self, item):
@@ -1059,7 +1079,20 @@ class WikiTagDialog(DescriptionDialog):
         self.sgnWikiTagSelected.emit(wikiTagURL, wikiLabel if wikiLabel else nodeName)
 
     @QtCore.pyqtSlot()
-    def confirmDialog(self):
+    def show(self):
+        """
+        Shows the widget and its child widgets.
+        """
+        self.search.clear()
+        self.predicateView.clearSelection()
+        self.predicateView.clearFocus()
+        self.predicateView.scrollToTop()
+        self.wikiLabelLineEdit.clear()
+        self.search.setFocus()
+        super().show()
+
+    @QtCore.pyqtSlot()
+    def accept(self):
         """
         Executed to when the dialog is accepted.
         """
@@ -1069,15 +1102,51 @@ class WikiTagDialog(DescriptionDialog):
             item = self.model.itemFromIndex(self.proxy.mapToSource(itemIndex))
             self.wikiTagSelected(item.data())
 
-    @QtCore.pyqtSlot()
-    def dismissDialog(self):
+        super().accept()
+
+
+class DescriptionEditor(QtWidgets.QTextEdit):
+    """
+    This class implements the description editor
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setMouseTracking(True)
+        self.setReadOnly(False)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction |
+                                     Qt.LinksAccessibleByMouse |
+                                     Qt.LinksAccessibleByKeyboard)
+        self.setFont(Font('Roboto', 12))
+        self.setCurrentFont(Font('Roboto', 12))
+        self.setTabStopWidth(33)
+
+    ########################################################
+    # EVENTS
+    ########################################################
+
+    def mouseReleaseEvent(self, event):
         """
-        Executed when the dialog is closed.
+        Called when the mouse button is released in the editor.
+        :param event: the triggering event
+        :type event: QMouseEvent
+        :return: True if the event is handled, False otherwise
+        :rtype: bool
         """
-        self.search.clear()
-        self.predicateView.clearSelection()
-        self.wikiLabelLineEdit.clear()
-        self.close()
+        # Check if the word under cursor is part of a link
+        # and set the tooltip if so.
+        cursor = self.textCursor()
+        charFormat = cursor.charFormat()
+        anchor = charFormat.anchorHref()
+
+        if charFormat.isAnchor():
+            cursor.select(QtGui.QTextCursor.WordUnderCursor)
+            charFormat.setToolTip(anchor)
+            cursor.mergeCharFormat(charFormat)
+
+        return super().mouseReleaseEvent(event)
+
 
 class OntologyPredicateView(QtWidgets.QListView):
     """
@@ -1116,4 +1185,3 @@ class OntologyPredicateView(QtWidgets.QListView):
         """
         self.scrollTo(currentIndex, QtWidgets.QAbstractItemView.EnsureVisible)
         self.sgnCurrentItemChanged.emit(currentIndex, previousIndex)
-
