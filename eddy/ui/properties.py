@@ -459,14 +459,14 @@ class PredicateNodeProperty(NodeProperty):
 
         self.textLabel = QtWidgets.QLabel(self)
         self.textLabel.setFont(Font('Roboto', 12))
-        self.textLabel.setText('Label')
+        self.textLabel.setText('IRI Label')
         self.textField = StringField(self)
         self.textField.setFixedWidth(300)
         self.textField.setFont(Font('Roboto', 12))
         #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                     'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
-            self.textField.setValue(self.node.remaining_characters.replace('\n',''))
+            self.textField.setValue(self.node.remaining_characters)
         else:
             self.textField.setValue(self.node.text().replace('\n',''))
 
@@ -593,10 +593,12 @@ class PredicateNodeProperty(NodeProperty):
                             CommandNodeSetRemainingCharacters(n.remaining_characters, new_rc, n, self.project,
                                                               refactor=True))
             else:
-                refactor_var = NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result()
+                #refactor_var = NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result()
 
+                #return_list.append(
+                #        CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project, refactor=refactor_var))
                 return_list.append(
-                        CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project, refactor=refactor_var))
+                            CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project))
 
             return_list.append(CommandProjectConnectSpecificSignals(self.project))
 
@@ -1087,7 +1089,7 @@ class ValueNodeProperty(NodeProperty):
 
             new_prefix = datatype.value[0:datatype.value.index(':')]
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
-            #new_remaining_characters = new_remaining_characters.replace('\n','')
+
             new_iri = None
 
             for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():

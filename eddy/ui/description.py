@@ -306,16 +306,12 @@ class NodeDescription(DescriptionDialog):
         self.mainLayout.addWidget(self.statusbar)
         self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
-        self.setWindowTitle('Description: {0}'.format(self.node.text()))
+        self.setWindowTitle('Description: {0}'.format(self.node.text().replace('\n','')))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-
-
 
         connect(self.confirmationBox.accepted, self.complete)
         connect(self.confirmationBox.rejected, self.reject)
         connect(self.text.cursorPositionChanged, self.cursorPosition)
-
-
 
     def cursorPosition(self):
         """
@@ -693,9 +689,7 @@ class UrlDialog(QtWidgets.QDialog):
         cursor = self.parent.text.textCursor()
         valid= len(self.insertBoxURL.toPlainText())
 
-
         if valid > 4:
-
 
              linkFormat = QtGui.QTextCharFormat()
              linkFormatSpace = QtGui.QTextCharFormat()
@@ -710,11 +704,6 @@ class UrlDialog(QtWidgets.QDialog):
              linkFormat.setToolTip(self.insertBoxURL.toPlainText())
              cursor.insertText(self.insertBoxAlias.toPlainText(),linkFormat)
              cursor.insertText(" ",linkFormatSpace)
-
-
-
-
-
 
         # Close the window
         self.insertBoxAlias.clear()

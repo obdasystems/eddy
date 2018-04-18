@@ -39,7 +39,7 @@ from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.commands.diagram import CommandDiagramAdd
 from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.labels import GenerateNewLabel
+from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 #from eddy.core.functions.owl import OWLText
 from eddy.core.functions.path import expandPath
@@ -1259,8 +1259,12 @@ class Project(QtCore.QObject):
 
         old_label = node.text()
 
+        #print(' def node_label_update_core_code     >>> old_label', old_label)
+
         #if prefered_prefix is None:
-        new_label = GenerateNewLabel(self, node).return_label()
+        new_label = GenerateNewLabel(self, node, old_label=old_label).return_label()
+
+
         #else:
             #new_label = GenerateNewLabel(self, node,prefered_prefix=prefered_prefix).return_label()
 
@@ -1269,6 +1273,9 @@ class Project(QtCore.QObject):
         if old_label==new_label:
             return
 
+        CommandLabelChange(node.diagram, node, old_label, new_label).redo()
+
+        """
         # CHANGE THE CONTENT OF THE LABEL
         self.doRemoveItem(node.diagram, node)
         node.setText(new_label)
@@ -1293,6 +1300,7 @@ class Project(QtCore.QObject):
 
         # EMIT UPDATED SIGNAL
         node.diagram.sgnUpdated.emit()
+        """
 
     @QtCore.pyqtSlot(str,str,str)
     def regenerate_label_of_nodes_for_iri(self,iri_inp,node_inp,diag_name):
