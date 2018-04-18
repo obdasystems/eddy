@@ -121,13 +121,13 @@ class NodeDescriptionDialog(AbstractDialog):
         #############################################
         # MAIN WIDGET
         #################################
-        meta = self.diagram.project.meta(node.type(), node.text())
-        description = meta.get(K_DESCRIPTION, '')
         self.text = DescriptionEditor(self)
-        self.text.setText(self.stripFontAttributes(description))
         self.text.moveCursor(QtGui.QTextCursor.End)
         self.text.setFixedSize(800, 600)
         self.text.setMaximumSize(1000, 800)
+
+        meta = self.diagram.project.meta(node.type(), node.text())
+        self.description = meta.get(K_DESCRIPTION, '')
 
         #############################################
         # UPPER TOOLBAR WIDGET
@@ -166,9 +166,9 @@ class NodeDescriptionDialog(AbstractDialog):
         self.clearAction = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_format_clear_black"), "Clear Formatting", self)
         self.clearAction.triggered.connect(self.clearFormatting)
 
-        # TODO: add EditSource dialog and connect it
+        self.editSourceDialog = EditSourceDialog("", self)
         self.editSourceAction = QtWidgets.QAction(QtGui.QIcon(":icons/48/ic_code_black"), "Edit Source", self)
-        #self.editSourceAction.triggered.connect(lambda: self.text.setPlainText(self.text.toHtml()))
+        self.editSourceAction.triggered.connect(self.editSource)
 
         self.urlDialog = UrlDialog(self)
         self.insertURLAction = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_insert_link_black"), "Insert URL Link", self)
@@ -299,15 +299,27 @@ class NodeDescriptionDialog(AbstractDialog):
         self.mainLayout.addWidget(self.statusbar)
         self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
 
-        self.setWindowTitle('Description of {0}'.format(self.node.text().replace("\n", '')))
+        self.setWindowTitle('Description for {0}'.format(self.node.text().replace("\n", '')))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
 
         connect(self.text.cursorPositionChanged, self.cursorPosition)
+        connect(self.editSourceDialog.sgnSourceEdited, self.sourceEdited)
         connect(self.urlDialog.sgnURLSelected, self.insertURL)
         connect(self.imageDialog.sgnImageURLSelected, self.insertImage)
         connect(self.wikiTagDialog.sgnWikiTagSelected, self.insertWikiTag)
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
+
+    ###########################################################
+    # PROPERTIES
+    ###########################################################
+    @property
+    def description(self):
+        return self.stripFontAttributes(self.text.toHtml())
+
+    @description.setter
+    def description(self, desc):
+        self.text.setHtml(self.stripFontAttributes(desc))
 
     def stripFontAttributes(self, description):
         """
@@ -318,8 +330,9 @@ class NodeDescriptionDialog(AbstractDialog):
         :rtype: str
         """
         import re
-        desc = re.sub(r'font-family:.+?;', "", description)
-        desc = re.sub(r'font-size:.+?;', "", description)
+        desc = description
+        desc = re.sub(r'font-family:.+?;', "", desc)
+        desc = re.sub(r'font-size:.+?;', "", desc)
 
         return desc
 
@@ -356,6 +369,23 @@ class NodeDescriptionDialog(AbstractDialog):
         anchorStatus = " | Anchor: {}".format(anchor) if charFormat.isAnchor() else ""
 
         self.statusbar.showMessage("Line: {} | Column: {} {}".format(line, col, anchorStatus))
+
+    @QtCore.pyqtSlot()
+    def editSource(self):
+        """
+        Shows the dialog for editing the description source HTML.
+        """
+        self.editSourceDialog.description = self.description
+        self.editSourceDialog.setWindowTitle("Description Source of {0}".format(self.node.text().replace("\n", "")))
+        self.editSourceDialog.show()
+
+    @QtCore.pyqtSlot(str)
+    def sourceEdited(self, description):
+        """
+        Update the node description
+        :param description: the updated description source
+        """
+        self.description = description
 
     @QtCore.pyqtSlot()
     def bulletList(self):
@@ -1105,6 +1135,112 @@ class WikiTagDialog(AbstractDialog):
         super().accept()
 
 
+class EditSourceDialog(QtWidgets.QDialog):
+    """
+    This class manages the editing of the description source
+    """
+    sgnSourceEdited = QtCore.pyqtSignal(str)
+
+    def __init__(self, description="", parent=None):
+        super().__init__(parent)
+
+        #############################################
+        # SEARCH BAR
+        #################################
+        self.searchBar = StringField(self)
+        self.searchBar.setAcceptDrops(False)
+        self.searchBar.setClearButtonEnabled(True)
+        self.searchBar.setPlaceholderText('Search...')
+        self.searchBar.setFixedHeight(30)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+        self.editor = DescriptionSourceEditor(self)
+        self.editor.setPlainText(description)
+        self.editor.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+        self.editor.setFixedSize(600, 400)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                                          QtWidgets.QDialogButtonBox.Cancel, self)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.setFont(Font('Roboto', 12))
+
+        #############################################
+        # DIALOG WINDOW LAYOUT
+        #################################
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.addWidget(self.searchBar)
+        self.layout.addWidget(self.editor)
+        self.layout.addWidget(self.confirmationBox, 5, QtCore.Qt.AlignRight)
+
+        self.setMaximumSize(800, 600)
+        self.setWindowTitle("Description Source HTML")
+        self.setLayout(self.layout)
+        self.setWindowModality(QtCore.Qt.WindowModal)
+
+        connect(self.searchBar.textChanged, self.doFindNextOccurrence)
+        connect(self.searchBar.returnPressed, self.onReturnPressed)
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
+
+    #############################################
+    # PROPERTIES
+    #################################
+    @property
+    def description(self):
+        return self.editor.toPlainText()
+
+    @description.setter
+    def description(self, desc):
+        self.editor.setPlainText(desc)
+
+    #############################################
+    # SLOTS
+    #################################
+    @QtCore.pyqtSlot(str)
+    def doFindNextOccurrence(self, text):
+        if not self.editor.find(text):
+            # Restart from the beginning if match fails
+            cursor = self.editor.textCursor()
+            cursor.setPosition(0)
+            self.editor.setTextCursor(cursor)
+
+    @QtCore.pyqtSlot()
+    def onReturnPressed(self):
+        self.doFindNextOccurrence(self.searchBar.text())
+
+    @QtCore.pyqtSlot()
+    def show(self):
+        self.searchBar.clear()
+        self.searchBar.setFocus()
+        super().show()
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        self.sgnSourceEdited.emit(self.editor.toPlainText())
+        super().accept()
+
+    #############################################
+    # EVENTS
+    #################################
+    def keyPressEvent(self, event):
+        """
+        Called to handle key presses inside the dialog.
+        :param event: the keyboard event
+        :type event: QKeyEvent
+        """
+        # Avoid closing the dialog when return is pressed in the search bar
+        if event.key() == Qt.Key_Return:
+            if self.searchBar.hasFocus() or self.editor.hasFocus():
+                return
+
+        return super().keyPressEvent(event)
+
+
 class DescriptionEditor(QtWidgets.QTextEdit):
     """
     This class implements the description editor
@@ -1115,9 +1251,8 @@ class DescriptionEditor(QtWidgets.QTextEdit):
 
         self.setMouseTracking(True)
         self.setReadOnly(False)
-        self.setTextInteractionFlags(Qt.TextEditorInteraction |
-                                     Qt.LinksAccessibleByMouse |
-                                     Qt.LinksAccessibleByKeyboard)
+        self.setUndoRedoEnabled(True)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction)
         self.setFont(Font('Roboto', 12))
         self.setCurrentFont(Font('Roboto', 12))
         self.setTabStopWidth(33)
@@ -1134,18 +1269,34 @@ class DescriptionEditor(QtWidgets.QTextEdit):
         :return: True if the event is handled, False otherwise
         :rtype: bool
         """
-        # Check if the word under cursor is part of a link
-        # and set the tooltip if so.
-        cursor = self.textCursor()
-        charFormat = cursor.charFormat()
-        anchor = charFormat.anchorHref()
+        if event.button() == Qt.LeftButton:
+            # Check if the word under cursor is part of a link
+            # and set the tooltip if so.
+            cursor = self.textCursor()
+            charFormat = cursor.charFormat()
+            anchor = charFormat.anchorHref()
 
-        if charFormat.isAnchor():
-            cursor.select(QtGui.QTextCursor.WordUnderCursor)
-            charFormat.setToolTip(anchor)
-            cursor.mergeCharFormat(charFormat)
+            if charFormat.isAnchor():
+                cursor.select(QtGui.QTextCursor.WordUnderCursor)
+                charFormat.setToolTip(anchor)
+                cursor.mergeCharFormat(charFormat)
 
         return super().mouseReleaseEvent(event)
+
+
+class DescriptionSourceEditor(QtWidgets.QPlainTextEdit):
+    """
+    This class implements the description source HTML editor
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setMouseTracking(True)
+        self.setReadOnly(False)
+        self.setUndoRedoEnabled(True)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction)
+        self.setFont(Font('Roboto', 12))
+        self.setTabStopWidth(33)
 
 
 class OntologyPredicateView(QtWidgets.QListView):
