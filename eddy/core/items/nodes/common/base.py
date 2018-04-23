@@ -223,6 +223,22 @@ class AbstractNode(AbstractItem):
                 return intersection
         return None
 
+    def intersections(self, line):
+        """
+        Returns the list of intersections of the shape with the given line (in scene coordinates).
+        :type line: QtCore.QLineF
+        :rtype: list
+        """
+        intersections = []
+        path = self.painterPath()
+        polygon = self.mapToScene(path.toFillPolygon(self.transform()))
+        for i in range(0, polygon.size() - 1):
+            intersection = QtCore.QPointF()
+            polyline = QtCore.QLineF(polygon[i], polygon[i + 1])
+            if polyline.intersect(line, intersection) == QtCore.QLineF.BoundedIntersection:
+                intersections.append(intersection)
+        return intersections
+
     def isConstructor(self):
         """
         Returns True if this node is a contructor node, False otherwise.
