@@ -1,0 +1,9 @@
+# Requiremenst for packaging the application
+
+# Recursive
+-r requirements.txt
+
+# From PyPi
+cx_Freeze==5.1.1
+pyyaml>=3.11
+Pillow>=3.1.1

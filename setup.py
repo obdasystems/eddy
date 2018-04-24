@@ -99,11 +99,6 @@ QT_BASE_PATH = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.Pre
 QT_LIB_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibrariesPath)
 QT_PLUGINS_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
 
-#the path for the below 3 variables depends on the folder layout of Qt in the system
-QT_BASE_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/'
-QT_LIB_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/lib/'
-QT_PLUGINS_PATH = 'C:/Qt/Qt5.5.1/5.5/mingw492_32/plugins/'
-
 ###################################
 # CUSTOM COMMANDS IMPLEMENTATION
 ###########################
@@ -173,7 +168,7 @@ class BuildExe(cx_Freeze.build_exe):
         self.execute(self.make_win32, ())
         self.execute(self.make_linux, ())
         self.execute(self.make_clean, ())
-        self.execute(self.make_zip, ())
+        #self.execute(self.make_zip, ())
         self.execute(self.make_installer, ())
 
     def make_clean(self):
@@ -315,7 +310,7 @@ class BuildExe(cx_Freeze.build_exe):
         """
         Makes sure text files from directory have 'Windows style' end of lines.
         """
-        if sys.platform == 'win32':
+        if WIN32:
             for root, dirs, files in os.walk(self.build_exe):
                 for filename in files:
                     path = expandPath(os.path.join(root, filename))
@@ -326,9 +321,6 @@ class BuildExe(cx_Freeze.build_exe):
                         if new_data != data:
                             with open(path, mode='wb') as f:
                                 f.write(new_data.encode(encoding='UTF-8'))
-        else:
-            LOGGER.info('sys.platform is not win32')
-            sys.exit(1)
 
     def make_linux(self):
         """
@@ -627,6 +619,7 @@ if MACOS:
 packages = [
     'eddy.core',
     'eddy.ui',
+    'packaging'
 ]
 
 excludes = [
@@ -646,6 +639,7 @@ includes = [
     'PyQt5.QtWidgets',
     'PyQt5.QtXml',
     # REQUIRED + 3RD PARTY MODULES
+    'appdirs',
     'csv',
     'github3',
     'jnius',
@@ -662,7 +656,7 @@ include_files = [
     (requests.certs.where(), 'cacert.pem'),
     (os.path.join(QT_PLUGINS_PATH, 'printsupport'), 'printsupport'),
     ('examples', 'examples'),
-    ('resources/java', 'resources/java'),
+    #('resources/java', 'resources/java'),
     ('resources/lib', 'resources/lib'),
     ('resources/styles', 'resources/styles'),
     ('LICENSE', 'LICENSE'),
@@ -714,7 +708,6 @@ cx_Freeze.setup(
             'volume_icon': expandPath('@resources/images/macos_icon_dmg.icns'),
         },
         'build_exe': {
-            'append_script_to_exe': not MACOS,
             'build_exe': DIST_PATH,
             'dist_dir': DIST_DIR,
             'excludes': excludes,
