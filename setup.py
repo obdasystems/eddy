@@ -161,6 +161,7 @@ class BuildExe(cx_Freeze.build_exe):
         """
         Command execution.
         """
+        self.execute(self.make_symlinks, ())
         super().run()
         self.execute(self.make_dist, ())
         self.execute(self.make_plugins, ())
@@ -182,6 +183,25 @@ class BuildExe(cx_Freeze.build_exe):
         Create 'dist' directory.
         """
         mkdir(self.dist_dir)
+
+    def make_symlinks(self):
+        """
+        Symlink Qt Framework bundles into prefix lib dir on macOS.
+
+        Workaround for: https://github.com/anthony-tuininga/cx_Freeze/issues/299
+        """
+        if MACOS:
+            distutils.log.info("Linking Frameworks to Python lib dir...")
+            for framework in os.listdir(QT_LIB_PATH):
+                source = os.path.relpath(os.path.join(QT_LIB_PATH, framework), os.path.join(sys.exec_prefix, "lib"))
+                target = os.path.join(os.path.join(sys.exec_prefix, "lib"), framework)
+
+                if not os.path.exists(target):
+                    distutils.log.info("Linking %s to %s", source, target)
+                    os.symlink(source, target)
+                else:
+                    distutils.log.info("Target file %s exists, skipping", target)
+                    pass
 
     def make_zip(self):
         """
@@ -367,17 +387,6 @@ if MACOS:
         contentsDir = None
         frameworksDir = None
         resourcesDir = None
-
-        def find_qt_menu_nib(self):
-            """
-            Returns the location of the qt_menu.nib.
-            """
-            if self.qt_menu_nib:
-                return self.qt_menu_nib
-            path = expandPath(os.path.join(QT_BASE_PATH, 'Src/qtbase/src/plugins/platforms/cocoa/qt_menu.nib'))
-            if os.path.exists(path):
-                return path
-            raise IOError("could not find qt_menu.nib: please install Qt5 source components")
 
         def setRelativeReferencePaths(self):
             """
@@ -619,7 +628,8 @@ if MACOS:
 packages = [
     'eddy.core',
     'eddy.ui',
-    'packaging'
+    'packaging',
+    'idna'
 ]
 
 excludes = [
@@ -640,6 +650,7 @@ includes = [
     'PyQt5.QtXml',
     # REQUIRED + 3RD PARTY MODULES
     'appdirs',
+    'queue',
     'csv',
     'github3',
     'jnius',
