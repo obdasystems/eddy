@@ -33,33 +33,33 @@
 ##########################################################################
 
 
-import os,sys
-
-from jnius import autoclass, cast, detach
+import os
+import sys
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from jnius import autoclass, cast, detach
 
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
-from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax
+from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
 from eddy.core.exporters.common import AbstractOntologyExporter
 from eddy.core.functions.fsystem import fwrite, fremove
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.misc import rstrip, postfix, format_exception
-from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.owl import OWLFunctionalDocumentFilter
+from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.project import K_DESCRIPTION
 from eddy.core.worker import AbstractWorker
-
+from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
 from eddy.ui.fields import ComboBox, CheckBox
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationWorker
@@ -72,7 +72,6 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into a valid OWL 2 ontology.
     """
-
     def __init__(self, project, session=None):
         """
         Initialize the OWL Project exporter
@@ -83,6 +82,8 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         self.items = list(project.edges()) + list(filter(lambda n: not n.adjacentNodes(), project.nodes()))
         self.path = None
         self.progress = None
+
+        self.selected_diagrams = None
 
     #############################################
     #   SLOTS
@@ -95,7 +96,7 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         """
         self.progress.sleep()
         self.progress.close()
-        dialog = OWLOntologyExporterDialog(self.project, self.path, self.session)
+        dialog = OWLOntologyExporterDialog(self.project, self.path, self.session, self.selected_diagrams)
         dialog.exec_()
 
     @QtCore.pyqtSlot(str)
@@ -133,7 +134,16 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         :type path: str
         """
         if not self.project.isEmpty():
+            #############################################
+            # Diagram selection dialog
+            #################################
+
             self.path = path
+
+            diagrams_selection_dialog = DiagramsSelectionDialog(self.project, self.session)
+            diagrams_selection_dialog.exec_()
+            self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
+
             self.progress = BusyProgressDialog('Performing syntax check...')
             self.progress.show()
             worker = SyntaxValidationWorker(0, self.items, self.project)
@@ -146,8 +156,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
     """
     Extends QtWidgets.QDialog providing the form used to perform Graphol -> OWL ontology translation.
     """
-
-    def __init__(self, project, path, session):
+    def __init__(self, project, path, session, selected_diagrams):
         """
         Initialize the form dialog.
         :type project: Project
@@ -160,6 +169,8 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         self.project = project
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+
+        self.selected_diagrams = selected_diagrams
 
         #############################################
         # MAIN FORM AREA
@@ -470,7 +481,9 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
         worker = OWLOntologyExporterWorker(self.project, self.path,
                                            axioms=self.axioms(), normalize=self.normalize(),
-                                           syntax=self.syntax(), export=self.exportInRichText())
+                                           syntax=self.syntax(), export=self.exportInRichText(),
+                                           selected_diagrams=self.selected_diagrams)
+
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
         connect(worker.sgnErrored, self.onErrored)
@@ -520,6 +533,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.normalize = kwargs.get('normalize', False)
         self.export= kwargs.get('export', False)
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
+
+        self.selected_diagrams = kwargs.get('selected_diagrams', [])
 
         self._axioms = set()
         self._converted = dict()
@@ -1794,9 +1809,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # NODES PRE-PROCESSING
             #################################
 
-            for node in self.project.nodes():
-                self.convert(node)
-                self.step(+1)
+            #for node in self.project.nodes():
+            for diagram in self.selected_diagrams:
+                for node in diagram.nodes():
+                    self.convert(node)
+                    self.step(+1)
 
             LOGGER.debug('Pre-processed %s nodes into OWL 2 expressions', len(self.converted()))
 
@@ -1804,32 +1821,33 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # AXIOMS FROM NODES
             #################################
 
-            for node in self.project.nodes():
+            #for node in self.project.nodes():
+            for diagram in self.selected_diagrams:
+                for node in diagram.nodes():
 
-                if node.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode}:
-                    self.createDeclarationAxiom(node)
-                    if node.type() is Item.AttributeNode:
-                        self.createDataPropertyAxiom(node)
-                    elif node.type() is Item.RoleNode:
-                        self.createObjectPropertyAxiom(node)
-                elif node.type() is Item.DisjointUnionNode:
-                    self.createDisjointClassesAxiom(node)
-                elif node.type() is Item.ComplementNode:
-                    if node.identity() is Identity.Concept:
+                    if node.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode}:
+                        self.createDeclarationAxiom(node)
+                        if node.type() is Item.AttributeNode:
+                            self.createDataPropertyAxiom(node)
+                        elif node.type() is Item.RoleNode:
+                            self.createObjectPropertyAxiom(node)
+                    elif node.type() is Item.DisjointUnionNode:
                         self.createDisjointClassesAxiom(node)
-                elif node.type() is Item.DomainRestrictionNode:
-                    self.createPropertyDomainAxiom(node)
-                elif node.type() is Item.RangeRestrictionNode:
-                    self.createPropertyRangeAxiom(node)
+                    elif node.type() is Item.ComplementNode:
+                        if node.identity() is Identity.Concept:
+                            self.createDisjointClassesAxiom(node)
+                    elif node.type() is Item.DomainRestrictionNode:
+                        self.createPropertyDomainAxiom(node)
+                    elif node.type() is Item.RangeRestrictionNode:
+                        self.createPropertyRangeAxiom(node)
 
-                if node.isMeta():
-                    if self.export:
-                        self.createAnnotationAssertionAxiomRichVersion(node)
-                    else:
-                        self.createAnnotationAssertionAxiom(node)
+                    if node.isMeta():
+                        if self.export:
+                            self.createAnnotationAssertionAxiomRichVersion(node)
+                        else:
+                            self.createAnnotationAssertionAxiom(node)
 
-
-                self.step(+1)
+                    self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from nodes (axioms = %s)', len(self.axioms()))
 
@@ -1837,86 +1855,88 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # AXIOMS FROM EDGES
             #################################
 
-            for edge in self.project.edges():
+            #for edge in self.project.edges():
+            for diagram in self.selected_diagrams:
+                for edge in diagram.edges():
 
-                #############################################
-                # INCLUSION
-                #################################
+                    #############################################
+                    # INCLUSION
+                    #################################
 
-                if edge.type() is Item.InclusionEdge:
+                    if edge.type() is Item.InclusionEdge:
 
-                    # CONCEPTS
-                    if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
-                        self.createSubclassOfAxiom(edge)
-                    # ROLES
-                    elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                        if edge.source.type() is Item.RoleChainNode:
-                            self.createSubPropertyChainOfAxiom(edge)
-                        elif edge.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                        # CONCEPTS
+                        if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
+                            self.createSubclassOfAxiom(edge)
+                        # ROLES
+                        elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
+                            if edge.source.type() is Item.RoleChainNode:
+                                self.createSubPropertyChainOfAxiom(edge)
+                            elif edge.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                                if edge.target.type() is Item.ComplementNode:
+                                    self.createDisjointObjectPropertiesAxiom(edge)
+                                elif edge.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                                    self.createSubObjectPropertyOfAxiom(edge)
+                        # ATTRIBUTES
+                        elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
+                            if edge.source.type() is Item.AttributeNode:
+                                if edge.target.type() is Item.ComplementNode:
+                                    self.createDisjointDataPropertiesAxiom(edge)
+                                elif edge.target.type() is Item.AttributeNode:
+                                    self.createSubDataPropertyOfAxiom(edge)
+                        # VALUE DOMAIN (ONLY DATA PROPERTY RANGE)
+                        elif edge.source.type() is Item.RangeRestrictionNode and edge.target.identity() is Identity.ValueDomain:
+                            # This is being handled already in createPropertyRangeAxiom.
+                            pass
+                        else:
+                            raise DiagramMalformedError(edge, 'invalid inclusion assertion')
+
+                    #############################################
+                    # EQUIVALENCE
+                    #################################
+
+                    elif edge.type() is Item.EquivalenceEdge:
+
+                        # CONCEPTS
+                        if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
+                            self.createEquivalentClassesAxiom(edge)
+                        # ROLES
+                        elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
+                            if Item.RoleInverseNode in {edge.source.type(), edge.target.type()}:
+                                self.createInverseObjectPropertiesAxiom(edge)
+                            else:
+                                self.createEquivalentObjectPropertiesAxiom(edge)
+                        # ATTRIBUTES
+                        elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
+                            self.createEquivalentDataPropertiesAxiom(edge)
+                        else:
+                            raise DiagramMalformedError(edge, 'invalid equivalence assertion')
+
+                    #############################################
+                    # MEMBERSHIP
+                    #################################
+
+                    elif edge.type() is Item.MembershipEdge:
+
+                        # CONCEPTS
+                        if edge.source.identity() is Identity.Individual and edge.target.identity() is Identity.Concept:
+                            self.createClassAssertionAxiom(edge)
+                        # ROLES
+                        elif edge.source.identity() is Identity.RoleInstance:
                             if edge.target.type() is Item.ComplementNode:
-                                self.createDisjointObjectPropertiesAxiom(edge)
-                            elif edge.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
-                                self.createSubObjectPropertyOfAxiom(edge)
-                    # ATTRIBUTES
-                    elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
-                        if edge.source.type() is Item.AttributeNode:
+                                self.createNegativeObjectPropertyAssertionAxiom(edge)
+                            else:
+                                self.createObjectPropertyAssertionAxiom(edge)
+                        # ATTRIBUTES
+                        elif edge.source.identity() is Identity.AttributeInstance:
                             if edge.target.type() is Item.ComplementNode:
-                                self.createDisjointDataPropertiesAxiom(edge)
-                            elif edge.target.type() is Item.AttributeNode:
-                                self.createSubDataPropertyOfAxiom(edge)
-                    # VALUE DOMAIN (ONLY DATA PROPERTY RANGE)
-                    elif edge.source.type() is Item.RangeRestrictionNode and edge.target.identity() is Identity.ValueDomain:
-                        # This is being handled already in createPropertyRangeAxiom.
-                        pass
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid inclusion assertion')
-
-                #############################################
-                # EQUIVALENCE
-                #################################
-
-                elif edge.type() is Item.EquivalenceEdge:
-
-                    # CONCEPTS
-                    if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
-                        self.createEquivalentClassesAxiom(edge)
-                    # ROLES
-                    elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                        if Item.RoleInverseNode in {edge.source.type(), edge.target.type()}:
-                            self.createInverseObjectPropertiesAxiom(edge)
+                                self.createNegativeDataPropertyAssertionAxiom(edge)
+                            else:
+                                self.createDataPropertyAssertionAxiom(edge)
                         else:
-                            self.createEquivalentObjectPropertiesAxiom(edge)
-                    # ATTRIBUTES
-                    elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
-                        self.createEquivalentDataPropertiesAxiom(edge)
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid equivalence assertion')
+                            raise DiagramMalformedError(edge, 'invalid membership assertion')
 
-                #############################################
-                # MEMBERSHIP
-                #################################
-
-                elif edge.type() is Item.MembershipEdge:
-
-                    # CONCEPTS
-                    if edge.source.identity() is Identity.Individual and edge.target.identity() is Identity.Concept:
-                        self.createClassAssertionAxiom(edge)
-                    # ROLES
-                    elif edge.source.identity() is Identity.RoleInstance:
-                        if edge.target.type() is Item.ComplementNode:
-                            self.createNegativeObjectPropertyAssertionAxiom(edge)
-                        else:
-                            self.createObjectPropertyAssertionAxiom(edge)
-                    # ATTRIBUTES
-                    elif edge.source.identity() is Identity.AttributeInstance:
-                        if edge.target.type() is Item.ComplementNode:
-                            self.createNegativeDataPropertyAssertionAxiom(edge)
-                        else:
-                            self.createDataPropertyAssertionAxiom(edge)
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid membership assertion')
-
-                self.step(+1)
+                    self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
 

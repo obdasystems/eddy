@@ -35,21 +35,20 @@
 
 import csv
 import io
-
 from operator import itemgetter
 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractProjectExporter
-from eddy.core.functions.misc import lstrip
 from eddy.core.functions.fsystem import fwrite
+from eddy.core.functions.misc import lstrip
 from eddy.core.functions.owl import OWLShortIRI
 from eddy.core.functions.path import openPath
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import K_DESCRIPTION
-
+from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
 
 LOGGER = getLogger()
 
@@ -91,6 +90,7 @@ class CsvExporter(AbstractProjectExporter):
         Item.AttributeNode,
         Item.ConceptNode,
         Item.RoleNode,
+        Item.IndividualNode
     ]
 
     def __init__(self, project, session=None):
@@ -101,7 +101,9 @@ class CsvExporter(AbstractProjectExporter):
         """
         super().__init__(project, session)
 
-    #############################################
+        self.selected_diagrams = None
+
+        #############################################
     #   INTERFACE
     #################################
 
@@ -110,19 +112,25 @@ class CsvExporter(AbstractProjectExporter):
         Perform CSV file generation.
         :type path: str
         """
-        LOGGER.info('Exporting project %s in CSV format: %s', self.project.name, path)
+        diagrams_selection_dialog = DiagramsSelectionDialog(self.project, self.session)
+        diagrams_selection_dialog.exec_()
+        self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
+
+        LOGGER.info('Exporting selected diagrams in project %s in CSV format: %s', self.project.name, path)
         collection = {x: {} for x in self.Types}
 
-        for node in self.project.predicates():
-            if node.type() in collection:
-                if not node.text() in collection[node.type()]:
-                    meta = self.project.meta(node.type(), node.text())
-                    collection[node.type()][node.text()] = {
-                        CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
-                        CsvExporter.KeyType: node.shortName,
-                        CsvExporter.KeyDescription: meta.get(K_DESCRIPTION, ''),
-                        CsvExporter.KeyDiagrams: DistinctList()}
-                collection[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
+        for diag in self.selected_diagrams:
+            nodes = self.project.predicates(diagram=diag)
+            for node in nodes:
+                if node.type() in collection:
+                    if not node.text() in collection[node.type()]:
+                        meta = self.project.meta(node.type(), node.text())
+                        collection[node.type()][node.text()] = {
+                            CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
+                            CsvExporter.KeyType: node.shortName,
+                            CsvExporter.KeyDescription: meta.get(K_DESCRIPTION, ''),
+                            CsvExporter.KeyDiagrams: DistinctList()}
+                    collection[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
 
         buffer = io.StringIO()
         writer = csv.writer(buffer)
