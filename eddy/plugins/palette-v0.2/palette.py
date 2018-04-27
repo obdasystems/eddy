@@ -294,6 +294,8 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.EquivalenceEdge,
             Item.InputEdge,
             Item.MembershipEdge,
+            Item.SameEdge,
+            Item.DifferentEdge,
         ]
 
         # CREATE BUTTONS
@@ -351,7 +353,7 @@ class PaletteWidget(QtWidgets.QWidget):
             else:
                 if Item.ConceptNode <= button.item < Item.InclusionEdge:
                     diagram.setMode(DiagramMode.NodeAdd, button.item)
-                elif Item.InclusionEdge <= button.item <= Item.MembershipEdge:
+                elif Item.InclusionEdge <= button.item <= Item.DifferentEdge:
                     diagram.setMode(DiagramMode.EdgeAdd, button.item)
 
     @QtCore.pyqtSlot(bool)
@@ -1007,6 +1009,46 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.drawPolygon(H1)
                 painter.setFont(Font('Roboto', 9, Font.Light))
                 painter.drawText(PP1.x() + S1, 18, 'instanceOf')
+                painter.end()
+
+            #############################################
+            # SAME EDGE
+            #################################
+
+            elif item is Item.SameEdge:
+
+                PP1 = QtCore.QPointF(2, 22)
+                PP2 = QtCore.QPointF(55, 22)
+                L1 = QtCore.QLineF(PP1, PP2)
+                S1 = (PP2.x() - PP1.x() - 25) / 2
+                painter = QtGui.QPainter(pixmap)
+                painter.setRenderHint(QtGui.QPainter.Antialiasing)
+                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                painter.drawLine(L1)
+                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
+                painter.setFont(Font('Roboto', 9, Font.Light))
+                painter.drawText(PP1.x() + S1, 18, 'same')
+                painter.end()
+
+            #############################################
+            # DIFFERENT EDGE
+            #################################
+
+            elif item is Item.DifferentEdge:
+
+                PP1 = QtCore.QPointF(2, 22)
+                PP2 = QtCore.QPointF(55, 22)
+                L1 = QtCore.QLineF(PP1, PP2)
+                S1 = (PP2.x() - PP1.x() - 35) / 2
+                painter = QtGui.QPainter(pixmap)
+                painter.setRenderHint(QtGui.QPainter.Antialiasing)
+                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                painter.drawLine(L1)
+                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
+                painter.setFont(Font('Roboto', 9, Font.Light))
+                painter.drawText(PP1.x() + S1, 18, 'different')
                 painter.end()
 
             #############################################
