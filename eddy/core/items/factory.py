@@ -41,6 +41,8 @@ from eddy.core.items.edges.equivalence import EquivalenceEdge
 from eddy.core.items.edges.inclusion import InclusionEdge
 from eddy.core.items.edges.input import InputEdge
 from eddy.core.items.edges.membership import MembershipEdge
+from eddy.core.items.edges.same import SameEdge
+from eddy.core.items.edges.different import DifferentEdge
 from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.complement import ComplementNode
 from eddy.core.items.nodes.concept import ConceptNode
@@ -137,6 +139,10 @@ class ItemFactory(QtCore.QObject):
             return InputEdge
         if item is Item.MembershipEdge:
             return MembershipEdge
+        if item is Item.SameEdge:
+            return SameEdge
+        if item is Item.DifferentEdge:
+            return DifferentEdge
         raise RuntimeError('unknown item type ({0})'.format(item))
 
     def create(self, item, **kwargs):

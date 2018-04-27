@@ -97,7 +97,7 @@ class DiagramItemMixin:
         Returns True if this element is an edge, False otherwise.
         :rtype: bool
         """
-        return Item.InclusionEdge <= self.type() <= Item.MembershipEdge
+        return Item.InclusionEdge <= self.type() <= Item.DifferentEdge
 
     def isLabel(self):
         """
