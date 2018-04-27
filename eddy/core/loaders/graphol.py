@@ -1050,6 +1050,8 @@ class GrapholLoaderMixin_v2(object):
             'equivalence': Item.EquivalenceEdge,
             'input': Item.InputEdge,
             'membership': Item.MembershipEdge,
+            'same': Item.SameEdge,
+            'different': Item.DifferentEdge,
         }
 
         self.importFuncForItem = {
@@ -1074,6 +1076,8 @@ class GrapholLoaderMixin_v2(object):
             Item.EquivalenceEdge: self.importEquivalenceEdge,
             Item.InputEdge: self.importInputEdge,
             Item.MembershipEdge: self.importMembershipEdge,
+            Item.SameEdge: self.importSameEdge,
+            Item.DifferentEdge: self.importDifferentEdge,
         }
 
         self.importMetaFuncForItem = {
@@ -1406,6 +1410,24 @@ class GrapholLoaderMixin_v2(object):
         :rtype: MembershipEdge
         """
         return self.importGenericEdge(d, Item.MembershipEdge, e)
+
+    def importSameEdge(self, d, e):
+        """
+        Build a Same edge using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: SameEdge
+        """
+        return self.importGenericEdge(d, Item.SameEdge, e)
+
+    def importDifferentEdge(self, d, e):
+        """
+        Build a Different edge using the given QDomElement.
+        :type d: Diagram
+        :type e: QDomElement
+        :rtype: DifferentEdge
+        """
+        return self.importGenericEdge(d, Item.DifferentEdge, e)
 
     #############################################
     #   ONTOLOGY DIAGRAMS IMPORT : GENERICS

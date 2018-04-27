@@ -94,6 +94,8 @@ class GrapholProjectExporter(AbstractProjectExporter):
             Item.EquivalenceEdge: 'equivalence',
             Item.InputEdge: 'input',
             Item.MembershipEdge: 'membership',
+            Item.SameEdge: 'same',
+            Item.DifferentEdge: 'different',
         }
         
         self.exportFuncForItem = {
@@ -118,6 +120,8 @@ class GrapholProjectExporter(AbstractProjectExporter):
             Item.EquivalenceEdge: self.exportEquivalenceEdge,
             Item.InputEdge: self.exportInputEdge,
             Item.MembershipEdge: self.exportMembershipEdge,
+            Item.SameEdge: self.exportSameEdge,
+            Item.DifferentEdge: self.exportDifferentEdge,
         }
 
         self.exportMetaFuncForItem = {
@@ -391,6 +395,22 @@ class GrapholProjectExporter(AbstractProjectExporter):
         """
         Export the given edge into a QDomElement.
         :type edge: MembershipEdge
+        :rtype: QDomElement
+        """
+        return self.exportGenericEdge(edge)
+
+    def exportSameEdge(self, edge):
+        """
+        Export the given edge into a QDomElement.
+        :type edge: SameEdge
+        :rtype: QDomElement
+        """
+        return self.exportGenericEdge(edge)
+
+    def exportDifferentEdge(self, edge):
+        """
+        Export the given edge into a QDomElement.
+        :type edge: DifferentEdge
         :rtype: QDomElement
         """
         return self.exportGenericEdge(edge)
