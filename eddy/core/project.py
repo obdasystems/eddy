@@ -47,7 +47,7 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode
-
+from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 from jnius import autoclass, cast, detach
@@ -2232,7 +2232,12 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
         """
-        for diagram in self.other.diagrams():
+        diagrams_selection_dialog = DiagramsSelectionDialog(self.other, self.session)
+        diagrams_selection_dialog.exec_()
+        self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
+
+        #for diagram in self.other.diagrams():
+        for diagram in self.selected_diagrams:
             # We may be in the situation in which we are importing a diagram with name 'X'
             # even though we already have a diagram 'X' in our project. Because we do not
             # want to overwrite diagrams, we perform a rename of the diagram being imported,

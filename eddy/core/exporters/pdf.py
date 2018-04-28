@@ -79,54 +79,74 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         diagrams_selection_dialog.exec_()
         selected_diagrams = diagrams_selection_dialog.diagrams_selected
 
+        selected_diagrams_sorted = diagrams_selection_dialog.sort(selected_diagrams)
+
         printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
         printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
         printer.setOutputFileName(path)
-        printer.setPaperSize(QtPrintSupport.QPrinter.Custom)
+        #printer.setPaperSize(QtPrintSupport.QPrinter.Custom)
+        printer.setPrinterName(self.diagram.project.name)
 
-        max_height = 0.0
-        max_width = 0.0
+        #max_height = 0.0
+        #max_width = 0.0
 
-        for c, diag in enumerate(selected_diagrams):
+        size_of_pages = []
 
-            shape = diag.visibleRect(margin=220)
+        for c, diag in enumerate(selected_diagrams_sorted):
 
-            max_height = max(max_height,shape.height())
-            max_width = max(max_width, shape.width())
+            shape = diag.visibleRect(margin=200)
 
-        valid = printer.setPageSize(
-            QtGui.QPageSize(QtCore.QSizeF(max_width, max_height), QtGui.QPageSize.Point))
+            #print(diag.name,'-',shape.height(), '-', shape.width())
 
-        if not valid:
-            LOGGER.critical('Error in setting page size. please contact programmer')
-            return
+            page_size = []
+
+            page_size.append(shape.width())
+            page_size.append(shape.height())
+
+            size_of_pages.append(page_size)
+
+            #max_height = max(max_height,shape.height())
+            #max_width = max(max_width, shape.width())
+
+        #print('max-',max_height, '-', max_width)
 
         painter = QtGui.QPainter()
 
-        if painter.begin(printer):
+        for c, diag in enumerate(selected_diagrams_sorted):
 
-            for c,diag in enumerate(selected_diagrams):
+            LOGGER.info('Exporting diagram %s to %s', diag.name, path)
 
-                if c!=0:
-                    printer.newPage()
+            shape = diag.visibleRect(margin=200)
 
-                if shape:
-                    LOGGER.info('Exporting diagram %s to %s', diag.name, path)
+            width_to_set = size_of_pages[c][0]
+            height_to_set = size_of_pages[c][1]
 
-                    #valid=printer.setPageSize(QtGui.QPageSize(QtCore.QSizeF(shape.width(), shape.height()), QtGui.QPageSize.Point))
+            valid = printer.setPageSize(
+               QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtGui.QPageSize.Point))
 
-                    # TURN CACHING OFF
-                    for item in diag.items():
-                        if item.isNode() or item.isEdge():
-                            item.setCacheMode(AbstractItem.NoCache)
-                    # RENDER THE DIAGRAM IN THE PAINTER
-                    diag.render(painter, source=shape)
-                    # TURN CACHING ON
-                    for item in diag.items():
-                        if item.isNode() or item.isEdge():
-                            item.setCacheMode(AbstractItem.DeviceCoordinateCache)
+            if not valid:
+                LOGGER.critical('Error in setting page size. please contact programmer')
+                return
 
+            if c != 0:
+                printer.newPage()
+
+            if painter.isActive() or painter.begin(printer):
+                # TURN CACHING OFF
+                for item in diag.items():
+                    if item.isNode() or item.isEdge():
+                        item.setCacheMode(AbstractItem.NoCache)
+                # RENDER THE DIAGRAM IN THE PAINTER
+                diag.render(painter, source=shape)
+                # TURN CACHING ON
+                for item in diag.items():
+                    if item.isNode() or item.isEdge():
+                        item.setCacheMode(AbstractItem.DeviceCoordinateCache)
+
+        LOGGER.info('All diagrams exported ')
+
+        if painter.isActive():
             # COMPLETE THE EXPORT
             painter.end()
-            # OPEN THE DOCUMENT
-            #openPath(path)
+        # OPEN THE DOCUMENT
+        # openPath(path)

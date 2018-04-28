@@ -374,7 +374,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='Export the current project in a different format'))
 
         self.addAction(QtWidgets.QAction(
-            'Export Diagram', self, objectName='export_diagram', triggered=self.doExportDiagram,
+            'Export Diagrams', self, objectName='export_diagrams', triggered=self.doExportDiagram,
             statusTip='Export a in a different format'))
 
         self.addAction(QtWidgets.QAction(
@@ -733,7 +733,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         #menu.addSeparator()
         #menu.addAction(self.action('export'))
         menu.addSeparator()
-        menu.addAction(self.action('export_diagram'))
+        menu.addAction(self.action('export_diagrams'))
         menu.addSeparator()
         for action in self.action('recent_projects').actions():
             menu.addAction(action)

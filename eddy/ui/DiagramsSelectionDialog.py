@@ -37,13 +37,11 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
-from eddy.core.functions.path import expandPath, openPath
 from eddy.core.output import getLogger
 from eddy.core.functions.signals import connect
 from eddy.core.datatypes.qt import Font
-from eddy.ui.fields import ComboBox, CheckBox
+from eddy.ui.fields import CheckBox
 
 
 LOGGER = getLogger()
@@ -95,7 +93,9 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         self.diagrams_selected = []
         self.diagrams = self.project.diagrams()
 
-        for diagram in self.diagrams:
+        self.diagrams_list = self.sort(self.diagrams)
+
+        for diagram in self.diagrams_list:
             self.addWidget(CheckBox(diagram.name, self,
                                     enabled=True, objectName=diagram.name,
                                     checked=True, clicked=self.onDiagramCheckClicked))
@@ -105,7 +105,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         DiagramNamesLayout.setColumnMinimumWidth(1, 230)
         DiagramNamesLayout.setColumnMinimumWidth(2, 230)
 
-        for i, d in enumerate(self.diagrams):
+        for i, d in enumerate(self.diagrams_list):
             #print(i,'-',d.name)
             DiagramNamesLayout.addWidget(self.widget(d.name), i, 0)
 
@@ -120,11 +120,30 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         DiagramsLayout.addLayout(ButtonsLayout)
         DiagramsLayout.addLayout(confirmationLayout)
 
+
         self.setLayout(DiagramsLayout)
-        self.setFixedSize(self.sizeHint())
+        self.setFixedSize(400,300)
         self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Diagram selection')
+
+    def sort(self, inp_diagrams):
+
+        diagrams_list = []
+
+        # sort the diagrams by name
+        for diagram in inp_diagrams:
+
+            i = 0
+            while (i < (len(diagrams_list))):
+                element = diagrams_list[i]
+                if diagram.name < element.name:
+                    break
+                else:
+                    i = i + 1
+            diagrams_list.insert(i, diagram)
+
+        return diagrams_list
 
     #############################################
     #   PROPERTIES
@@ -148,7 +167,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         Executed when an diagram checkbox is clicked.
         """
         self.widget('confirmation').setEnabled(
-            any(x.isChecked() for x in (self.widget(d.name) for d in self.diagrams)))
+            any(x.isChecked() for x in (self.widget(d.name) for d in self.diagrams_list)))
 
     @QtCore.pyqtSlot()
     def doCheckDiagramMarks(self):
@@ -156,7 +175,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         Check diagrams marks according to the action that triggered the slot.
         """
         checked = self.sender() is self.widget('btn_check_all')
-        for diagram in self.diagrams:
+        for diagram in self.diagrams_list:
             checkbox = self.widget(diagram.name)
             checkbox.setChecked(checked)
         self.widget('confirmation').setEnabled(checked)
@@ -170,7 +189,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         self.widget('btn_clear_all').setEnabled(False)
         self.widget('btn_check_all').setEnabled(False)
 
-        for diagram in self.diagrams:
+        for diagram in self.diagrams_list:
             checkbox = self.widget(diagram.name)
             #print('checkbox.isEnabled()',checkbox.isEnabled(), ' checkbox.isChecked()-', checkbox.isChecked(), ' checkbox.text()-', checkbox.text(), ' diagram.name-', diagram.name)
             checkbox.setEnabled(False)
