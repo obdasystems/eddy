@@ -1642,8 +1642,11 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             list_of_nodes_to_process = []
 
             for n in self.project.nodes():
-                if (self.project.get_iri_of_node(n) == from_iri) and (n.remaining_characters == node.remaining_characters):
-                    list_of_nodes_to_process.append(n)
+                if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                            'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+
+                    if (self.project.get_iri_of_node(n) == from_iri) and (n.remaining_characters == node.remaining_characters):
+                        list_of_nodes_to_process.append(n)
 
             for n in list_of_nodes_to_process:
 
