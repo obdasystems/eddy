@@ -47,7 +47,7 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode
-
+from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 from jnius import autoclass, cast, detach
@@ -1888,9 +1888,10 @@ class ProjectIndex(dict):
         :rtype: set
         """
         try:
-
             if not item and not name:
+
                 collection = set()
+
                 if not diagram:
                     for i in self[K_PREDICATE]:
                         for j in self[K_PREDICATE][i]:
@@ -1898,36 +1899,53 @@ class ProjectIndex(dict):
                 else:
                     for i in self[K_PREDICATE]:
                         for j in self[K_PREDICATE][i]:
-                            collection.update(self[K_PREDICATE][i][j][K_NODE][diagram.name])
+                            #collection.update(self[K_PREDICATE][i][j][K_NODE][diagram.name])
+                            if diagram.name in self[K_PREDICATE][i][j][K_NODE]:   #Ashwin
+                                collection.update(self[K_PREDICATE][i][j][K_NODE][diagram.name])
+
                 return collection
 
             if item and not name:
+
                 collection = set()
-                if not diagram:
-                    for i in self[K_PREDICATE][item]:
-                        collection.update(*self[K_PREDICATE][item][i][K_NODE].values())
-                else:
-                    for i in self[K_PREDICATE][item]:
-                        collection.update(self[K_PREDICATE][item][i][K_NODE][diagram.name])
+
+                if item in self[K_PREDICATE]:    #Ashwin
+                    if not diagram:
+                        for i in self[K_PREDICATE][item]:
+                            collection.update(*self[K_PREDICATE][item][i][K_NODE].values())
+                    else:
+                        for i in self[K_PREDICATE][item]:
+                            #collection.update(self[K_PREDICATE][item][i][K_NODE][diagram.name])
+                            if diagram.name in self[K_PREDICATE][item][i][K_NODE]:   #Ashwin
+                                collection.update(self[K_PREDICATE][item][i][K_NODE][diagram.name])
                 return collection
 
             if not item and name:
+
                 collection = set()
                 #name = OWLText(name)
                 name = name.replace('\n','')
+
                 if not diagram:
                     for i in self[K_PREDICATE]:
-                        collection.update(*self[K_PREDICATE][i][name][K_NODE].values())
+                        if name in self[K_PREDICATE][i]:  #Ashwin
+                            collection.update(*self[K_PREDICATE][i][name][K_NODE].values())
                 else:
                     for i in self[K_PREDICATE]:
-                        collection.update(self[K_PREDICATE][i][name][K_NODE][diagram.name])
+                        if name in self[K_PREDICATE][i]:  # Ashwin
+                            if diagram.name in self[K_PREDICATE][i][name][K_NODE]:  # Ashwin
+                                collection.update(self[K_PREDICATE][i][name][K_NODE][diagram.name])
+
                 return collection
 
             if item and name:
+
                 name = name.replace('\n','')
                 #name = OWLText(name)
                 if not diagram:
+
                     return set.union(*self[K_PREDICATE][item][name][K_NODE].values())
+
                 return self[K_PREDICATE][item][name][K_NODE][diagram.name]
 
         except KeyError:
@@ -2214,7 +2232,12 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
         """
-        for diagram in self.other.diagrams():
+        diagrams_selection_dialog = DiagramsSelectionDialog(self.other, self.session)
+        diagrams_selection_dialog.exec_()
+        self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
+
+        #for diagram in self.other.diagrams():
+        for diagram in self.selected_diagrams:
             # We may be in the situation in which we are importing a diagram with name 'X'
             # even though we already have a diagram 'X' in our project. Because we do not
             # want to overwrite diagrams, we perform a rename of the diagram being imported,

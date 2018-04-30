@@ -60,8 +60,6 @@ class GraphReferences(AbstractDiagramExporter):
 
         project = self.diagram.project
 
-        all_documents = []
-
         # 1) CREATE THE DOCUMENT
         self.document = QtXml.QDomDocument()
         instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"')
@@ -93,8 +91,6 @@ class GraphReferences(AbstractDiagramExporter):
         for node_full_text in node_diagrams_dict.keys():
 
             value = node_diagrams_dict[node_full_text]
-
-
 
             for i in range(1,len(value)-4,5):
 

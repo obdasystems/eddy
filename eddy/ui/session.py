@@ -36,7 +36,6 @@
 import os
 import sys
 import textwrap
-
 from collections import OrderedDict
 
 from PyQt5 import QtCore
@@ -55,13 +54,15 @@ from eddy.core.commands.diagram import CommandDiagramRemove
 from eddy.core.commands.diagram import CommandDiagramRename
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
-from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.nodes import CommandNodeSwitchTo
+from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.nodes import CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSetDepth
-from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
+from eddy.core.commands.nodes import CommandNodeSwitchTo
+from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
+from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectDisconnectSpecificSignals, \
+    CommandProjectConnectSpecificSignals
 from eddy.core.common import HasActionSystem
 from eddy.core.common import HasDiagramExportSystem
 from eddy.core.common import HasDiagramLoadSystem
@@ -70,10 +71,10 @@ from eddy.core.common import HasNotificationSystem
 from eddy.core.common import HasOntologyExportSystem
 from eddy.core.common import HasOntologyLoadSystem
 from eddy.core.common import HasPluginSystem
-from eddy.core.common import HasReasoningSystem
 from eddy.core.common import HasProfileSystem
 from eddy.core.common import HasProjectExportSystem
 from eddy.core.common import HasProjectLoadSystem
+from eddy.core.common import HasReasoningSystem
 from eddy.core.common import HasThreadingSystem
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
@@ -85,9 +86,10 @@ from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
+from eddy.core.exporters.graphreferences import GraphReferences
+from eddy.core.exporters.image import ImageExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
-from eddy.core.exporters.graphreferences import GraphReferences
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory, DescriptionFactory
 from eddy.core.functions.fsystem import fexists
@@ -95,19 +97,19 @@ from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.misc import snap, snapF
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.path import shortPath
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.functions.signals import connect
+from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
-from eddy.core.reasoner import ReasonerManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
+from eddy.core.reasoner import ReasonerManager
 from eddy.core.update import UpdateCheckWorker
-
+from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
@@ -118,14 +120,13 @@ from eddy.ui.forms import ValueForm
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
+from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
+from eddy.ui.prefix_explorer import OntologyExplorerDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
-from eddy.ui.prefix_explorer import OntologyExplorerDialog
-from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.view import DiagramView
-from eddy.core.items.common import AbstractItem
 
 _LINUX = sys.platform.startswith('linux')
 _MACOS = sys.platform.startswith('darwin')
@@ -355,14 +356,26 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='Create a copy of the active diagram',
             enabled=False, triggered=self.doSaveAs))
 
-        self.addAction(QtWidgets.QAction(
-            'Import...', self, objectName='import', triggered=self.doImport,
-            statusTip='Import a document in the current project'))
+        #self.addAction(QtWidgets.QAction(
+        #    'Import...', self, objectName='import', triggered=self.doImport,
+        #    statusTip='Import a document in the current project'))
 
         self.addAction(QtWidgets.QAction(
             'Export...', self, objectName='export', triggered=self.doExport,
             statusTip='Export the current project in a different format',
             enabled=False))
+
+        self.addAction(QtWidgets.QAction(
+            'Import Ontology', self, objectName='import_ontology', triggered=self.doImport,
+            statusTip='Import a document in the current project'))
+
+        self.addAction(QtWidgets.QAction(
+            'Export Ontology', self, objectName='export_ontology', triggered=self.doExportOntology,
+            statusTip='Export the current project in a different format'))
+
+        self.addAction(QtWidgets.QAction(
+            'Export Diagrams', self, objectName='export_diagrams', triggered=self.doExportDiagram,
+            statusTip='Export a in a different format'))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_print_black'), 'Print...', self,
@@ -684,6 +697,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(PdfDiagramExporter)
+        self.addDiagramExporter(ImageExporter)
         self.addDiagramExporter(GraphReferences)
         self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholProjectExporter)
@@ -713,8 +727,13 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('save_as'))
         menu.addAction(self.action('close_project'))
         menu.addSeparator()
-        menu.addAction(self.action('import'))
-        menu.addAction(self.action('export'))
+        #menu.addAction(self.action('import'))
+        menu.addAction(self.action('import_ontology'))
+        menu.addAction(self.action('export_ontology'))
+        #menu.addSeparator()
+        #menu.addAction(self.action('export'))
+        menu.addSeparator()
+        menu.addAction(self.action('export_diagrams'))
         menu.addSeparator()
         for action in self.action('recent_projects').actions():
             menu.addAction(action)
@@ -1300,6 +1319,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
                 self.common_commands_for_cut_delete_purge(diagram, items)
 
+
+    #not used
     @QtCore.pyqtSlot()
     def doExport(self):
         """
@@ -1391,6 +1412,104 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                     msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                     msgbox.setWindowTitle('Import failed!')
                     msgbox.exec_()
+
+    @QtCore.pyqtSlot()
+    def doExportDiagram(self):
+
+        #diagram = self.mdi.activeDiagram()
+        #if diagram:
+        if len(self.project.diagrams()) > 0:
+
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+            dialog.setDirectory(expandPath('~/'))
+            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+            #dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
+
+            #dialog.setNameFilters(self.diagramExporterNameFilters({File.Xml}))
+            dialog.setNameFilters(self.diagramExporterNameFilters())
+            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+            dialog.selectNameFilter(File.Pdf.value)
+            dialog.selectFile(self.project.name)
+
+            if dialog.exec_():
+                filetype = File.valueOf(dialog.selectedNameFilter())
+
+                flag = False
+
+                if filetype in {File.Pdf, File.Xml}:
+                    selected_diagrams = [list(self.project.diagrams())[0]]
+                else:
+                    diagrams_selection_dialog = DiagramsSelectionDialog(self.project, self)
+                    diagrams_selection_dialog.exec_()
+                    selected_diagrams = diagrams_selection_dialog.diagrams_selected
+
+                    flag = True
+
+                file_names = []
+
+                for diag in selected_diagrams:
+
+                    if flag is False:
+                        path = expandPath(first(dialog.selectedFiles()))
+                    else:
+                        short_path = first(dialog.selectedFiles())
+                        last_dot_index = short_path.rindex('.')
+                        new_path = short_path[0:last_dot_index]+'_'+diag.name+short_path[last_dot_index:len(short_path)]
+
+                        path = expandPath(new_path)
+
+                    worker = self.createDiagramExporter(filetype, diag, self)
+                    worker.run(path)
+
+                    file_names.append(path)
+
+                if flag:
+
+                    text_to_display = str(len(file_names))+' files were created with filenames having the following pattern - [diagram_name]_[filename given in the file dialog].\n\n The files are \n'
+
+                    for f in file_names:
+                        text_to_display = text_to_display+'     '+f+'\n'
+
+                    dialog_filename_changed = QtWidgets.QMessageBox()
+                    dialog_filename_changed.setText(text_to_display)
+                    dialog_filename_changed.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    dialog_filename_changed.exec_()
+
+    @QtCore.pyqtSlot()
+    def doExportOntology(self):
+        """
+        Export the current project.
+        """
+        if not self.project.isEmpty():
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+            dialog.setDirectory(expandPath('~/'))
+            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+            dialog.setNameFilters(
+                # self.ontologyExporterNameFilters()                -> .owl
+                # self.projectExporterNameFilters(except{File.Graphol})   -> .csv
+                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol}) \
+                       #+ self.diagramExporterNameFilters({File.Pdf, File.GraphML})
+                       ))
+
+            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+            dialog.selectFile(self.project.name)
+            dialog.selectNameFilter(File.Owl.value)
+            if dialog.exec_():
+                filetype = File.valueOf(dialog.selectedNameFilter())
+                try:
+                    worker = self.createOntologyExporter(filetype, self.project, self)
+                except ValueError:
+                    try:
+                        worker = self.createProjectExporter(filetype, self.project, self)
+                    except ValueError:
+                        arbitrary_diagram = list(self.project.diagrams())[0]
+                        if arbitrary_diagram:
+                            worker = self.createDiagramExporter(filetype, arbitrary_diagram, self)
+                        else:
+                            LOGGER.critical('no diagram present in the project')
+                worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
     def doInvertRole(self):
@@ -1523,8 +1642,11 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             list_of_nodes_to_process = []
 
             for n in self.project.nodes():
-                if (self.project.get_iri_of_node(n) == from_iri) and (n.remaining_characters == node.remaining_characters):
-                    list_of_nodes_to_process.append(n)
+                if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                            'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+
+                    if (self.project.get_iri_of_node(n) == from_iri) and (n.remaining_characters == node.remaining_characters):
+                        list_of_nodes_to_process.append(n)
 
             for n in list_of_nodes_to_process:
 

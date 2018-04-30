@@ -641,8 +641,11 @@ class PredicateNodeProperty(NodeProperty):
 
                 if self.refactorField.isChecked():
                     for n in self.project.nodes():
-                        if (self.project.get_iri_of_node(n) == old_iri) and (n.remaining_characters == self.node.remaining_characters):
-                            list_of_nodes_to_process.append(n)
+                        if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                                    'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+
+                            if (self.project.get_iri_of_node(n) == old_iri) and (n.remaining_characters == self.node.remaining_characters):
+                                list_of_nodes_to_process.append(n)
                 else:
                     list_of_nodes_to_process.append(self.node)
 
