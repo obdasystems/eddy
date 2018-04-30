@@ -42,6 +42,7 @@ from eddy.core.profiles.rules.owl2rl import InclusionBetweenConceptExpressionRul
 from eddy.core.profiles.rules.owl2rl import InputValueToEnumerationNodeRule
 from eddy.core.profiles.rules.owl2rl import InputValueDomainToUnionNodeRule
 
+from eddy.core.profiles.rules.owl2rl import ReflexivityUnsupported
 
 class OWL2RLProfile(OWL2Profile):
     """
@@ -59,6 +60,8 @@ class OWL2RLProfile(OWL2Profile):
         self.addEdgeRule(InclusionBetweenConceptExpressionRule)
         self.addEdgeRule(InputValueToEnumerationNodeRule)
         self.addEdgeRule(InputValueDomainToUnionNodeRule)
+
+        self.addNodeRule(ReflexivityUnsupported)
 
     #############################################
     #   INTERFACE

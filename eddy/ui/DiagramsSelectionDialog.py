@@ -120,7 +120,6 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         DiagramsLayout.addLayout(ButtonsLayout)
         DiagramsLayout.addLayout(confirmationLayout)
 
-
         self.setLayout(DiagramsLayout)
         self.setFixedSize(400,300)
         self.setFont(Font('Roboto', 12))

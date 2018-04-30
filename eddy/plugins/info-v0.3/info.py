@@ -1080,7 +1080,6 @@ class ProjectInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type project: Project
         """
-
         self.prefixField.setValue(project.prefix)
         self.prefixField.home(True)
         self.prefixField.clearFocus()
@@ -1428,9 +1427,10 @@ class AttributeNodeInfo(PredicateNodeInfo):
         """
         super().updateData(node)
         self.functBox.setChecked(node.isFunctional())
-        self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
-        self.functKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
-
+        #self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        #self.functKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.functBox.setEnabled(True)
+        self.functKey.setEnabled(True)
 
 class RoleNodeInfo(PredicateNodeInfo):
     """
@@ -1552,20 +1552,30 @@ class RoleNodeInfo(PredicateNodeInfo):
         super().updateData(node)
         self.asymmetricBox.setChecked(node.isAsymmetric())
         self.functBox.setChecked(node.isFunctional())
-        self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
-        self.functKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        #self.functBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        #self.functKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.functBox.setEnabled(True)
+        self.functKey.setEnabled(True)
+
         self.invFunctBox.setChecked(node.isInverseFunctional())
-        self.invFunctBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
-        self.invFunctKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        #self.invFunctBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        #self.invFunctKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.invFunctBox.setEnabled(True)
+        self.invFunctKey.setEnabled(True)
+
         self.irreflexiveBox.setChecked(node.isIrreflexive())
         self.reflexiveBox.setChecked(node.isReflexive())
-        self.reflexiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2RL)
-        self.reflexiveKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2RL)
+        #self.reflexiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2RL)
+        #self.reflexiveKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2RL)
+        self.reflexiveBox.setEnabled(True)
+        self.reflexiveKey.setEnabled(True)
+
         self.symmetricBox.setChecked(node.isSymmetric())
         self.transitiveBox.setChecked(node.isTransitive())
-        self.transitiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
-        self.transitiveKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
-
+        #self.transitiveBox.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        #self.transitiveKey.setEnabled(self.project.profile.type() is not OWLProfile.OWL2QL)
+        self.transitiveBox.setEnabled(True)
+        self.transitiveKey.setEnabled(True)
 
 class ValueDomainNodeInfo(NodeInfo):
     """

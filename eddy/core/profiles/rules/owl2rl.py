@@ -40,6 +40,17 @@ from eddy.core.profiles.rules.common import ProfileNodeRule
 from eddy.core.profiles.rules.common import ProfileEdgeRule
 
 
+#Ashwin
+class ReflexivityUnsupported(ProfileNodeRule):
+    """
+    Prevents from using reflexivity in roles which is outside of the OWL 2 QL profile.
+    """
+    def __call__(self, node):
+        if ('RoleNode' in str(type(node))):
+            if node.isReflexive():
+                raise ProfileError('Reflexivity of roles is forbidden in OWL 2 RL')
+
+
 class UnsupportedDatatypeRule(ProfileNodeRule):
     """
     Prevents from using datatypes which are outside of the OWL 2 RL profile.

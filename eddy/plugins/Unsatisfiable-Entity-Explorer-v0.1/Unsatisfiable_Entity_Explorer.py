@@ -601,7 +601,7 @@ class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
         for i in self.model.findItems(self.parentKey(node), QtCore.Qt.MatchExactly):
             #print('i',i)
             #n = i.child(0).data()
-            if i.text() == node.text():
+            if (i.text() == node.text()) or (i.text() == node.text().replace('\n', '')):
                 return i
             #if str(type(n)) != '<class \'list\'>':
             #if node.type() is n.type():
