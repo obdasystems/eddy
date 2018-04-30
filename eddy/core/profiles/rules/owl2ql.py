@@ -41,6 +41,39 @@ from eddy.core.profiles.rules.common import ProfileNodeRule
 from eddy.core.profiles.rules.common import ProfileEdgeRule
 
 
+#Ashwin
+class FunctionalityUnsupported(ProfileNodeRule):
+    """
+    Prevents from using functionality in attributes or roles which is outside of the OWL 2 QL profile.
+    """
+    def __call__(self, node):
+        if (('AttributeNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+            if node.isFunctional():
+                raise ProfileError('Functionality of roles and attributes is forbidden in OWL 2 QL')
+
+
+#Ashwin
+class InverseFunctionalityUnsupported(ProfileNodeRule):
+    """
+    Prevents from using inverse-functionality in roles which is outside of the OWL 2 QL profile.
+    """
+    def __call__(self, node):
+        if ('RoleNode' in str(type(node))):
+            if node.isInverseFunctional():
+                raise ProfileError('Inverse Functionality of roles is forbidden in OWL 2 QL')
+
+
+#Ashwin
+class TransitivityUnsupported(ProfileNodeRule):
+    """
+    Prevents from using transitivity in  roles which is outside of the OWL 2 QL profile.
+    """
+    def __call__(self, node):
+        if ('RoleNode' in str(type(node))):
+            if node.isTransitive():
+                raise ProfileError('Transitivity of roles is forbidden in OWL 2 QL')
+
+
 class UnsupportedDatatypeRule(ProfileNodeRule):
     """
     Prevents from using datatypes which are outside of the OWL 2 QL profile.

@@ -132,8 +132,10 @@ class AttributeNode(AbstractNode):
         :rtype: bool
         """
         try:
-            return self.project.meta(self.type(), self.text())[K_FUNCTIONAL] and \
-                   self.project.profile.type() is not OWLProfile.OWL2QL
+            return self.project.meta(self.type(), self.text())[K_FUNCTIONAL] #\
+                   #and \
+                   #self.project.profile.type() is not OWLProfile.OWL2QL
+
         except (AttributeError, KeyError):
             return False
 

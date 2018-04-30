@@ -145,10 +145,12 @@ class CommandProjectSetProfile(QtWidgets.QUndoCommand):
     def redo(self):
         """redo the command"""
         self.project.profile = self.project.session.createProfile(self.data['redo'], self.project)
+
         # Reshape all the Role and Attribute nodes to show/hide functionality and inverse functionality.
         for node in self.project.nodes():
             if node.type() in {Item.RoleNode, Item.AttributeNode}:
                 node.updateNode(selected=node.isSelected())
+
         # Emit updated signals.
         self.project.session.sgnUpdateState.emit()
         self.project.sgnUpdated.emit()
@@ -156,11 +158,14 @@ class CommandProjectSetProfile(QtWidgets.QUndoCommand):
     def undo(self):
         """undo the command"""
         self.project.profile = self.project.session.createProfile(self.data['undo'], self.project)
+
         # Reshape all the Role and Attribute nodes to show/hide functionality and inverse functionality.
         for node in self.project.nodes():
             if node.type() in {Item.RoleNode, Item.AttributeNode}:
                 node.updateNode(selected=node.isSelected())
                 # Emit updated signals.
+
+        # Emit updated signals.
         self.project.session.sgnUpdateState.emit()
         self.project.sgnUpdated.emit()
 

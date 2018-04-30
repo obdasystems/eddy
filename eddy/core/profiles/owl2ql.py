@@ -47,6 +47,9 @@ from eddy.core.profiles.rules.owl2ql import MembershipFromPropertyAssertionToCom
 from eddy.core.profiles.rules.owl2ql import UnsupportedDatatypeRule
 from eddy.core.profiles.rules.owl2ql import UnsupportedOperatorRule
 
+from eddy.core.profiles.rules.owl2ql import FunctionalityUnsupported
+from eddy.core.profiles.rules.owl2ql import InverseFunctionalityUnsupported
+from eddy.core.profiles.rules.owl2ql import TransitivityUnsupported
 
 class OWL2QLProfile(OWL2Profile):
     """
@@ -60,6 +63,11 @@ class OWL2QLProfile(OWL2Profile):
         super().__init__(project)
         self.addNodeRule(UnsupportedDatatypeRule)
         self.addNodeRule(UnsupportedOperatorRule)
+
+        self.addNodeRule(FunctionalityUnsupported)
+        self.addNodeRule(InverseFunctionalityUnsupported)
+        self.addNodeRule(TransitivityUnsupported)
+
         self.addEdgeRule(EquivalenceBetweenConceptExpressionRule)
         self.addEdgeRule(InclusionBetweenConceptExpressionRule)
         self.addEdgeRule(InputConceptToRestrictionNodeRule)
