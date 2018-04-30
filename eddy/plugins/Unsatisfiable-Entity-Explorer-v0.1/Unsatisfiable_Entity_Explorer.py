@@ -710,4 +710,3 @@ class UnsatisfiableEntityExplorerView(QtWidgets.QTreeView):
         :rtype: int
         """
         return max(super().sizeHintForColumn(column), self.viewport().width())
-
