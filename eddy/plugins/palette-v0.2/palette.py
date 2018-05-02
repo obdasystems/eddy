@@ -94,6 +94,7 @@ class PalettePlugin(AbstractPlugin):
         widget.button(Item.FacetNode).setEnabled(profile not in {OWLProfile.OWL2QL, OWLProfile.OWL2RL})
         widget.button(Item.EnumerationNode).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.RoleChainNode).setEnabled(profile is not OWLProfile.OWL2QL)
+        widget.button(Item.SameEdge).setEnabled(profile is not OWLProfile.OWL2QL)
 
     @QtCore.pyqtSlot('QGraphicsScene')
     def onDiagramAdded(self, diagram):

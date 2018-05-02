@@ -937,6 +937,30 @@ class MembershipFromNeutralPropertyAssertionRule(ProfileEdgeRule):
                                     raise ProfileError('Detected unsupported operator sequence on {}'.format(node.name))
 
 
+class SameFromCompatibleNodeRule(ProfileEdgeRule):
+    """
+    Permit same edges only for nodes of the same type. This also accounts for OWL 2 punning.
+    """
+    def __call__(self, source, edge, target):
+        if edge.type() == Item.SameEdge:
+            if source.type() not in {Item.IndividualNode, Item.ConceptNode, Item.RoleNode, Item.AttributeNode}:
+                raise ProfileError('Invalid source for same assertion: {0}'.format(source.name))
+            if source.type() != target.type():
+                raise ProfileError('Invalid target for same assertion: {0}'.format(target.name))
+
+
+class DifferentFromCompatibleNodeRule(ProfileEdgeRule):
+    """
+    Permit different edges only for nodes of the same type. This also accounts for OWL 2 punning.
+    """
+    def __call__(self, source, edge, target):
+        if edge.type() == Item.DifferentEdge:
+            if source.type() not in {Item.IndividualNode, Item.ConceptNode, Item.RoleNode, Item.AttributeNode}:
+                raise ProfileError('Invalid source for different assertion: {0}'.format(source.name))
+            if source.type() != target.type():
+                raise ProfileError('Invalid target for different assertion: {0}'.format(target.name))
+
+
 class SelfConnectionRule(ProfileEdgeRule):
     """
     Prevents from generating self connections.
