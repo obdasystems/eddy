@@ -291,3 +291,95 @@ class CommandEdgeSwap(QtWidgets.QUndoCommand):
                 self.diagram.sgnNodeIdentification.emit(node)
         # Emit updated signal.
         self.diagram.sgnUpdated.emit()
+
+
+class CommandSwitchSameDifferentEdge(QtWidgets.QUndoCommand):
+    """
+    This command is used to switch between same/different edges.
+    """
+    def __init__(self, diagram, edges):
+        """
+        Initialize the command.
+        :type diagram: Diagram
+        :type edges: T <= tuple|list|set
+        """
+        self.diagram = diagram
+        self.edges = []
+
+        for edge in edges:
+            # Switch edge type
+            if edge.type() == Item.SameEdge:
+                switchedEdge = self.diagram.factory.create(Item.DifferentEdge,
+                                                           source=edge.source, target=edge.target,
+                                                           breakpoints=edge.breakpoints[:])
+            elif edge.type() == Item.DifferentEdge:
+                switchedEdge = self.diagram.factory.create(Item.SameEdge,
+                                                           source=edge.source, target=edge.target,
+                                                           breakpoints=edge.breakpoints[:])
+            else: # Skip other edges
+                continue
+
+            self.edges.append({'undo': edge, 'redo': switchedEdge})
+
+        if len(edges) == 1:
+            name = "switch {0}".format(first(edges).name)
+        else:
+            name = "switch {0} edges".format(len(edges))
+
+        super().__init__(name)
+
+    def redo(self):
+        """redo the command"""
+        for edge in self.edges:
+            source = edge['undo'].source
+            target = edge['undo'].target
+
+            # Update source and target node
+            source.removeEdge(edge['undo'])
+            source.addEdge(edge['redo'])
+            source.setAnchor(edge['redo'], source.anchor(edge['undo']))
+            source.anchors.pop(edge['undo'])
+            target.removeEdge(edge['undo'])
+            target.addEdge(edge['redo'])
+            target.setAnchor(edge['redo'], target.anchor(edge['undo']))
+            target.anchors.pop(edge['undo'])
+
+            # Update diagram
+            self.diagram.removeItem(edge['undo'])
+            self.diagram.sgnItemRemoved.emit(self.diagram, edge['undo'])
+            self.diagram.addItem(edge['redo'])
+            self.diagram.sgnItemAdded.emit(self.diagram, edge['redo'])
+
+            # Update edge
+            edge['redo'].anchors.clear()
+            edge['redo'].updateEdge()
+            edge['redo'].setSelected(True)
+        self.diagram.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        for edge in self.edges:
+            source = edge['redo'].source
+            target = edge['redo'].target
+
+            # Update source and target node
+            source.removeEdge(edge['redo'])
+            source.addEdge(edge['undo'])
+            source.setAnchor(edge['undo'], source.anchor(edge['redo']))
+            source.anchors.pop(edge['redo'])
+            target.removeEdge(edge['redo'])
+            target.addEdge(edge['undo'])
+            target.setAnchor(edge['undo'], target.anchor(edge['redo']))
+            target.anchors.pop(edge['redo'])
+
+            # Update diagram
+            self.diagram.removeItem(edge['redo'])
+            self.diagram.sgnItemRemoved.emit(self.diagram, edge['redo'])
+            self.diagram.addItem(edge['undo'])
+            self.diagram.sgnItemAdded.emit(self.diagram, edge['undo'])
+
+            # Update edge
+            edge['undo'].anchors.clear()
+            edge['undo'].updateEdge()
+            edge['undo'].setSelected(True)
+        self.diagram.sgnUpdated.emit()

@@ -172,6 +172,44 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('delete'))
         return menu
 
+    def buildSameEdgeMenu(self, diagram, edge, pos):
+        """
+        Build and return a QMenu instance for same edges.
+        :type diagram: Diagram
+        :type edge: SameEdge
+        :type pos: QPointF
+        :rtype: QMenu
+        """
+        menu = QtWidgets.QMenu()
+        breakpoint = edge.breakPointAt(pos)
+        if breakpoint is not None:
+            action = self.session.action('remove_breakpoint')
+            action.setData((edge, breakpoint))
+            menu.addAction(action)
+        else:
+            menu.addAction(self.session.action('delete'))
+            menu.addAction(self.session.action('switch_same_different'))
+        return menu
+
+    def buildDifferentEdgeMenu(self, diagram, edge, pos):
+        """
+        Build and return a QMenu instance for different edges.
+        :type diagram: Diagram
+        :type edge: DifferentEdge
+        :type pos: QPointF
+        :rtype: QMenu
+        """
+        menu = QtWidgets.QMenu()
+        breakpoint = edge.breakPointAt(pos)
+        if breakpoint is not None:
+            action = self.session.action('remove_breakpoint')
+            action.setData((edge, breakpoint))
+            menu.addAction(action)
+        else:
+            menu.addAction(self.session.action('delete'))
+            menu.addAction(self.session.action('switch_different_same'))
+        return menu
+
     #############################################
     #   NODES
     #################################
@@ -868,6 +906,10 @@ class MenuFactory(QtCore.QObject):
             return self.buildMembershipEdgeMenu(diagram, item, pos)
         if item.type() is Item.EquivalenceEdge:
             return self.buildGenericEdgeMenu(diagram, item, pos)
+        if item.type() is Item.SameEdge:
+            return self.buildSameEdgeMenu(diagram, item, pos)
+        if item.type() is Item.DifferentEdge:
+            return self.buildDifferentEdgeMenu(diagram, item, pos)
 
         ## GENERIC
         if item.isNode():
