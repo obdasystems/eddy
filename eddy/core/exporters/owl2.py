@@ -1913,7 +1913,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.finished.emit()
 
 
-class OWLOntologyFetcher:
+class OWLOntologyFetcher(AbstractWorker):
 
     def __init__(self, project, **kwargs):
         """
@@ -3908,3 +3908,4 @@ class OWLOntologyFetcher:
             LOGGER.debug('OWL 2 fetch could be completed')
         finally:
             detach()
+            self.finished.emit()
