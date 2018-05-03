@@ -42,9 +42,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QRegExp
 
 from eddy.core.commands.nodes import CommandNodeSetMeta
-from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
+from eddy.core.functions.misc import rtfStripFontAttributes
 from eddy.core.functions.signals import connect
 from eddy.core.project import K_DESCRIPTION
 from eddy.core.datatypes.graphol import Item
@@ -315,26 +316,11 @@ class NodeDescriptionDialog(AbstractDialog):
     ###########################################################
     @property
     def description(self):
-        return self.stripFontAttributes(self.text.toHtml())
+        return rtfStripFontAttributes(self.text.toHtml())
 
     @description.setter
     def description(self, desc):
-        self.text.setHtml(self.stripFontAttributes(desc))
-
-    def stripFontAttributes(self, description):
-        """
-        Strip font family and size. See redmine issue: 414
-        :param description: the description text
-        :type description: str
-        :return: the description stripped of font attributes
-        :rtype: str
-        """
-        import re
-        desc = description
-        desc = re.sub(r'font-family:.+?;', "", desc)
-        desc = re.sub(r'font-size:.+?;', "", desc)
-
-        return desc
+        self.text.setHtml(rtfStripFontAttributes(desc))
 
     def metaDataChanged(self):
         """
@@ -343,7 +329,7 @@ class NodeDescriptionDialog(AbstractDialog):
         """
         undo = self.diagram.project.meta(self.node.type(), self.node.text())
         redo = undo.copy()
-        redo[K_DESCRIPTION] = self.text.toHtml()
+        redo[K_DESCRIPTION] = self.description
 
         if redo != undo:
             return CommandNodeSetMeta(
@@ -674,6 +660,7 @@ class NodeDescriptionDialog(AbstractDialog):
         linkFormat.setForeground(QtGui.QColor("blue"))
         linkFormat.setFont(self.text.currentFont())
         linkFormat.setFontPointSize(self.text.fontPointSize())
+        linkFormat.setFontUnderline(True)
         linkFormat.setAnchor(True)
         linkFormat.setAnchorHref(wikiTagURL)
         linkFormat.setToolTip(wikiTagURL)

@@ -35,6 +35,7 @@
 
 import os
 import sys
+import re
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -50,7 +51,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
 from eddy.core.exporters.common import AbstractOntologyExporter
 from eddy.core.functions.fsystem import fwrite, fremove
-from eddy.core.functions.misc import first, clamp, isEmpty
+from eddy.core.functions.misc import first, clamp, isEmpty, rtfStripFontAttributes
 from eddy.core.functions.misc import rstrip, postfix, format_exception
 from eddy.core.functions.owl import OWLFunctionalDocumentFilter
 from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
@@ -1199,14 +1200,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 convHTML = QtWidgets.QTextBrowser()
                 convHTML.setHtml(strDescription)
                 strDescriptionHTML = convHTML.toHtml()
+                filterDescription = re.sub(r'^.*?<body', "<OntologyDescription", strDescriptionHTML, flags=re.DOTALL)
 
-                # TODO: properly parse the HTML rather than performing a plain string replace
-                filterDescription = strDescriptionHTML.replace('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n<html><head><meta name="qrichtext" content="1" /><style type="text/css">\np, li { white-space: pre-wrap; }\n</style></head><body', '<OntologyDescription')
-
-                # Remove font-family and font-size style attributes. See redmine issue #396
-                import re
-                filterDescription = re.sub(r'font-family:.+?;', "", filterDescription)
-                filterDescription = re.sub(r'font-size:.+?;', "", filterDescription)
+                ##################################################
+                # Remove font attributes. See redmine issue 414
+                filterDescription = rtfStripFontAttributes(filterDescription)
+                ##################################################
 
                 exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
 

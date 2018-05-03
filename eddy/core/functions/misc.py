@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+import re
 import itertools
 
 from PyQt5 import QtCore
@@ -224,3 +225,23 @@ def uncapitalize(s):
     :rtype: str
     """
     return '{0}{1}'.format(s[:1].lower(), s[1:])
+
+
+def rtfStripFontAttributes(rtf):
+    """
+    Returns a copy of the Rich Text Document, stripped of all the font attributes.
+    :param rtf: A string representation of the Rich Text Document
+    :type rtf: str
+    :rtype: str
+    """
+    strippedRtf = rtf
+    strippedRtf = re.sub(r'font-family:.+?;', "", strippedRtf)
+    strippedRtf = re.sub(r'font-size:.+?;', "", strippedRtf)
+    strippedRtf = re.sub(r'font-weight:.+?;', "", strippedRtf)
+    strippedRtf = re.sub(r'font-style:.+?;', "", strippedRtf)
+    strippedRtf = re.sub(r'text-decoration:.+?;', "", strippedRtf)
+    strippedRtf = re.sub(r'color:.+?;', "", strippedRtf)
+    strippedRtf = re.sub(r'background-color:.+?;', "", strippedRtf)
+    # finally replace empty style attributes that remain after substitution
+    strippedRtf = re.sub(r'style="\s*?"', "", strippedRtf)
+    return strippedRtf
