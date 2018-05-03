@@ -1170,14 +1170,14 @@ class OWLOntologyExporterWorker(AbstractWorker):
         Generate a OWL 2 annotation axiom as rdfs:comment.
         :type node: AbstractNode
         """
-        text = QtWidgets.QTextEdit()
+        text = QtGui.QTextDocument()
 
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
 
                 aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
-                text.setText(meta.get(K_DESCRIPTION, ''))
+                text.setHtml(meta.get(K_DESCRIPTION, ''))
 
                 value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
                 value = cast(self.OWLAnnotationValue, value)
@@ -1197,7 +1197,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
                 strDescription = meta.get(K_DESCRIPTION, '')
-                convHTML = QtWidgets.QTextBrowser()
+                convHTML = QtGui.QTextDocument()
                 convHTML.setHtml(strDescription)
                 strDescriptionHTML = convHTML.toHtml()
                 filterDescription = re.sub(r'^.*?<body', "<OntologyDescription", strDescriptionHTML, flags=re.DOTALL)
@@ -1242,7 +1242,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
                 strDescription = meta.get(K_DESCRIPTION, '')
-                strPlain = QtWidgets.QTextEdit()
+                strPlain = QtGui.QTextDocument()
                 strPlain.setHtml(strDescription)
                 descPlain= strPlain.toPlainText()
 
