@@ -50,7 +50,7 @@ from eddy.core.diagram import DiagramNotFoundError
 from eddy.core.diagram import DiagramNotValidError
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir
-from eddy.core.functions.misc import rstrip, postfix
+from eddy.core.functions.misc import rstrip, postfix, rtfStripFontAttributes
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.common import AbstractDiagramLoader
@@ -727,9 +727,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         item = self.itemFromXml[element.attribute('type')]
         name = element.attribute('name')
         meta = self.project.meta(item, name)
-        meta[K_DESCRIPTION] = element.firstChildElement(K_DESCRIPTION).text()
-        #meta[K_IRI] = element.firstChildElement(K_IRI).text()
-        #meta[K_PREFIX] = element.firstChildElement(K_PREFIX).text()
+        meta[K_DESCRIPTION] = rtfStripFontAttributes(element.firstChildElement(K_DESCRIPTION).text())
         return meta
 
     def importRoleMetadata(self, element):
@@ -1108,9 +1106,7 @@ class GrapholLoaderMixin_v2(object):
         item = self.itemFromXml[e.attribute('type')]
         name = e.attribute('name')
         meta = self.nproject.meta(item, name)
-        meta[K_DESCRIPTION] = e.firstChildElement(K_DESCRIPTION).text()
-        #meta[K_IRI] = e.firstChildElement(K_IRI).text()
-        #meta[K_PREFIX] = e.firstChildElement(K_PREFIX).text()
+        meta[K_DESCRIPTION] = rtfStripFontAttributes(e.firstChildElement(K_DESCRIPTION).text())
         return meta
 
     def importRoleMeta(self, e):
