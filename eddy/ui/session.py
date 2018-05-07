@@ -582,8 +582,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 group.addAction(action)
             self.addAction(group)
 
-
-
         #############################################
         # ROLE SPECIFIC
         #################################

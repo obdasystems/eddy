@@ -448,7 +448,59 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         :type mouseEvent: QMouseEvent
         """
         self.clearSelection()
+
+        if mouseEvent.buttons() & QtCore.Qt.LeftButton:
+            self.startPos = mouseEvent.pos()
+
         super().mousePressEvent(mouseEvent)
+
+    def mouseMoveEvent(self, mouseEvent):
+        """
+        Executed when the mouse if moved while a button is being pressed.
+        :type mouseEvent: QMouseEvent
+        """
+        if mouseEvent.buttons() & QtCore.Qt.LeftButton:
+            #if Item.ConceptNode <= self.item < Item.InclusionEdge:
+                distance = (mouseEvent.pos() - self.startPos).manhattanLength()
+                if distance >= QtWidgets.QApplication.startDragDistance():
+
+                    index = first(self.selectedIndexes())
+                    if index:
+
+                        model = self.model().sourceModel()
+                        index = self.model().mapToSource(index)
+
+                        item = model.itemFromIndex(index)
+                        node = item.data()
+
+                        if node:
+                            pass
+                        else:
+                            if item.hasChildren():
+                                node = item.child(0).data()
+
+                        if node:
+                            mimeData = QtCore.QMimeData()
+
+                            mimeData.setText(str(node.Type.value))
+
+                            node_iri = self.session.project.get_iri_of_node(node)
+                            node_remaining_characters = node.remaining_characters
+
+                            comma_seperated_text = str(node_iri + ',' + node_remaining_characters + ',' + node.text())
+
+                            byte_array = QtCore.QByteArray()
+                            byte_array.append(comma_seperated_text)
+
+                            mimeData.setData(str(node.Type.value), byte_array)
+
+                            drag = QtGui.QDrag(self)
+                            drag.setMimeData(mimeData)
+                            # drag.setPixmap(self.icon().pixmap(60, 40))
+                            # drag.setHotSpot(self.startPos - self.rect().topLeft())
+                            drag.exec_(QtCore.Qt.CopyAction)
+
+        super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
         """

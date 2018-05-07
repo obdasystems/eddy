@@ -39,7 +39,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals, \
+    FetchReasonerVariables, CommandProjectSetVariablesControlledByReasoner
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive, Compute_RC_with_spaces
@@ -342,6 +343,12 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
             if focusInData and focusInData != currentData:
 
+                reasoner_active = self.project.check_if_reasoner_was_active()
+                if (reasoner_active == 'was_unsatisfiable') or (reasoner_active == 'was_inconsistent'):
+                    reasoner_variables = FetchReasonerVariables(self.project)
+                else:
+                    reasoner_variables = 'empty'
+
                 node = self.parentItem()
                 match = RE_VALUE.match(currentData)
 
@@ -369,6 +376,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     Duplicate_dict_1[new_iri][1].add(node)
 
                     self.setText(self.old_text)
+
+                    commands.append(CommandProjectSetVariablesControlledByReasoner(self.project, self.session, reasoner_variables, 'empty', reasoner_active=reasoner_active))
 
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
@@ -409,6 +418,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     #print('self.old_text',self.old_text)
                     #print('currentData', currentData)
                     #print('currentData_processed',currentData_processed)
+
+                    commands.append(
+                        CommandProjectSetVariablesControlledByReasoner(self.project, self.session, reasoner_variables, 'empty', reasoner_active=reasoner_active))
 
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 

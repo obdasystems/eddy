@@ -63,7 +63,7 @@ from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_DESCRIPTION
+from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -731,6 +731,14 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         name = element.attribute('name')
         meta = self.project.meta(item, name)
         meta[K_DESCRIPTION] = rtfStripFontAttributes(element.firstChildElement(K_DESCRIPTION).text())
+
+        if element.firstChildElement(K_DESCRIPTION).hasAttribute('status'):
+            meta[K_DESCRIPTION_STATUS] = element.firstChildElement(K_DESCRIPTION).attribute('status')
+            #print('meta[K_DESCRIPTION_STATUS]', meta[K_DESCRIPTION_STATUS])
+        else:
+            #print('Set Final by default')
+            meta[K_DESCRIPTION_STATUS] = 'Final'
+
         return meta
 
     def importRoleMetadata(self, element):
@@ -1114,6 +1122,14 @@ class GrapholLoaderMixin_v2(object):
         name = e.attribute('name')
         meta = self.nproject.meta(item, name)
         meta[K_DESCRIPTION] = rtfStripFontAttributes(e.firstChildElement(K_DESCRIPTION).text())
+
+        if e.firstChildElement(K_DESCRIPTION).hasAttribute('status'):
+            meta[K_DESCRIPTION_STATUS] = e.firstChildElement(K_DESCRIPTION).attribute('status')
+            #print('meta[K_DESCRIPTION_STATUS]',meta[K_DESCRIPTION_STATUS])
+        else:
+            #print('Set Final by default')
+            meta[K_DESCRIPTION_STATUS] = 'Final'
+
         return meta
 
     def importRoleMeta(self, e):

@@ -47,9 +47,10 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import rtfStripFontAttributes
 from eddy.core.functions.signals import connect
-from eddy.core.project import K_DESCRIPTION
+from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.core.datatypes.graphol import Item
 from eddy.ui.fields import StringField
+from eddy.ui.fields import ComboBox
 
 
 class AbstractDialog(QtWidgets.QDialog):
@@ -183,6 +184,23 @@ class NodeDescriptionDialog(AbstractDialog):
         self.wikiTag = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_insert_wiki_link_black"), "Insert Wiki Tag", self)
         self.wikiTag.triggered.connect(self.wikiTagDialog.show)
 
+        self.description_status = ComboBox(objectName='select_description_status')
+        self.description_status.setEditable(False)
+        self.description_status.setFont(Font('Roboto', 12))
+        self.description_status.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.description_status.setScrollEnabled(False)
+        self.description_status.setStatusTip('Select description status')
+
+        description_set = set()
+        description_set.add(meta.get(K_DESCRIPTION_STATUS,''))
+        description_set.add('Final')
+        description_set.add('Draft')
+
+        self.description_status.addItems(list(description_set))
+        self.description_status.setEnabled(True)
+        self.description_status.setCurrentText(meta.get(K_DESCRIPTION_STATUS,''))
+        #connect(self.description_status.activated, self.doSetDescriptionStatus)
+
         #############################################
         # LOWER TOOLBAR WIDGET
         #################################
@@ -217,6 +235,8 @@ class NodeDescriptionDialog(AbstractDialog):
 
         self.subAction = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_subscript_black"), "Subscript", self)
         self.subAction.triggered.connect(self.subScript)
+
+
 
         #############################################
         #  SET UP TOOLBAR WIDGETS
@@ -269,6 +289,10 @@ class NodeDescriptionDialog(AbstractDialog):
         self.toolbar.addAction(self.insertImageAction)
         self.toolbar.addAction(self.wikiTag)
 
+        self.toolbar.addSeparator()
+
+        self.toolbar.addWidget(self.description_status)
+
         # Lower Toolbar
         # self.formatbar = QtWidgets.QToolBar()
         # self.formatbar.setObjectName("Format")
@@ -311,6 +335,21 @@ class NodeDescriptionDialog(AbstractDialog):
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
 
+    #########################################################
+    """
+    @QtCore.pyqtSlot()
+    def doSetDescriptionStatus(self):
+    """
+    #Set the currently used project profile.
+    """
+        widget = self.description_status
+        current_status = widget.currentText()
+
+        K_DESCRIPTION.setAttribute('status',current_status)
+
+        widget.clearFocus()
+
+    """
     ###########################################################
     # PROPERTIES
     ###########################################################
@@ -330,8 +369,10 @@ class NodeDescriptionDialog(AbstractDialog):
         undo = self.diagram.project.meta(self.node.type(), self.node.text())
         redo = undo.copy()
         redo[K_DESCRIPTION] = self.description
+        redo[K_DESCRIPTION_STATUS] = self.description_status.currentText()
 
-        if redo != undo:
+        #if redo != undo:
+        if (redo[K_DESCRIPTION] != undo[K_DESCRIPTION]) or (redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS]):
             return CommandNodeSetMeta(
                 self.diagram.project,
                 self.node.type(),

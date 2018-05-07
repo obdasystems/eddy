@@ -36,7 +36,140 @@
 from PyQt5 import QtWidgets
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.datatypes.graphol import Item
+#from eddy.ui.ontology_consistency_check import InconsistentOntologyDialog
 
+class FetchReasonerVariables:
+
+    def __init__(self, project, **kwargs):
+
+        ###  variables controlled by reasoners  ###
+        self.ontology_OWL = project.ontology_OWL
+        self.axioms_to_nodes_edges_mapping = project.axioms_to_nodes_edges_mapping
+
+        self.unsatisfiable_classes = project.unsatisfiable_classes
+        self.explanations_for_unsatisfiable_classes = project.explanations_for_unsatisfiable_classes
+        self.unsatisfiable_attributes = project.unsatisfiable_attributes
+        self.explanations_for_unsatisfiable_attributes = project.explanations_for_unsatisfiable_attributes
+        self.unsatisfiable_roles = project.unsatisfiable_roles
+        self.explanations_for_unsatisfiable_roles = project.explanations_for_unsatisfiable_roles
+
+        self.inconsistent_ontology = project.inconsistent_ontology
+        self.explanations_for_inconsistent_ontology = project.explanations_for_inconsistent_ontology
+
+        self.uc_as_input_for_explanation_explorer = project.uc_as_input_for_explanation_explorer
+        self.nodes_of_unsatisfiable_entities = project.nodes_of_unsatisfiable_entities
+        self.nodes_or_edges_of_axioms_to_display_in_widget = project.nodes_or_edges_of_axioms_to_display_in_widget
+        self.nodes_or_edges_of_explanations_to_display_in_widget = project.nodes_or_edges_of_explanations_to_display_in_widget
+
+        self.converted_nodes = project.converted_nodes
+
+        ### $$ END $$ variables controlled by reasoners $$ END $$ ###
+
+
+
+class CommandProjectSetVariablesControlledByReasoner(QtWidgets.QUndoCommand):
+
+    def __init__(self, project, session, undo, redo, **kwargs):
+        super().__init__("set variables controlled by reasoner ")
+        self._project = project
+        self._undo = undo
+        self._redo = redo
+        self._session = session
+        self.reasoner_active = kwargs.get('reasoner_active', 'inactive')
+
+    def redo(self):
+        """redo the command"""
+        if (self._redo is None) or (self._redo == 'empty'):
+
+            ###  variables controlled by reasoners  ###
+            self._session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
+            self._session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
+            self._session.BackgrounddeColourNodesAndEdges(call_ClearInconsistentEntitiesAndDiagItemsData=True)
+
+            ### $$ END $$ variables controlled by reasoners $$ END $$ ###
+
+        else:
+
+            ###  variables controlled by reasoners  ###
+            self._project.ontology_OWL = self._redo.ontology_OWL
+            self._project.axioms_to_nodes_edges_mapping = self._redo.axioms_to_nodes_edges_mapping
+
+            self._project.unsatisfiable_classes = self._redo.unsatisfiable_classes
+            self._project.explanations_for_unsatisfiable_classes = self._redo.explanations_for_unsatisfiable_classes
+            self._project.unsatisfiable_attributes = self._redo.unsatisfiable_attributes
+            self._project.explanations_for_unsatisfiable_attributes = self._redo.explanations_for_unsatisfiable_attributes
+            self._project.unsatisfiable_roles = self._redo.unsatisfiable_roles
+            self._project.explanations_for_unsatisfiable_roles = self._redo.explanations_for_unsatisfiable_roles
+
+            self._project.inconsistent_ontology = self._redo.inconsistent_ontology
+            self._project.explanations_for_inconsistent_ontology = self._redo.explanations_for_inconsistent_ontology
+
+            self._project.uc_as_input_for_explanation_explorer = self._redo.uc_as_input_for_explanation_explorer
+            self._project.nodes_of_unsatisfiable_entities = self._redo.nodes_of_unsatisfiable_entities
+            self._project.nodes_or_edges_of_axioms_to_display_in_widget = self._redo.nodes_or_edges_of_axioms_to_display_in_widget
+            self._project.nodes_or_edges_of_explanations_to_display_in_widget = self._redo.nodes_or_edges_of_explanations_to_display_in_widget
+
+            self._project.converted_nodes = self._redo.converted_nodes
+
+            if self.reasoner_active == 'was_unsatisfiable':
+                self._session.pmanager.create_add_and_start_plugin('Unsatisfiable_Entity_Explorer')
+            elif self.reasoner_active == 'was_inconsistent':
+                pass
+                #dialog = InconsistentOntologyDialog(self.project, None, self.session)
+                #dialog.exec_()
+            else:
+                pass
+
+            ### $$ END $$ variables controlled by reasoners $$ END $$ ###
+
+        self._project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        if (self._undo is None) or (self._undo == 'empty'):
+
+            ###  variables controlled by reasoners  ###
+            self._session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
+            self._session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
+            self._session.BackgrounddeColourNodesAndEdges(call_ClearInconsistentEntitiesAndDiagItemsData=True)
+
+            ### $$ END $$ variables controlled by reasoners $$ END $$ ###
+
+        else:
+
+            ###  variables controlled by reasoners  ###
+            self._project.ontology_OWL = self._undo.ontology_OWL
+            self._project.axioms_to_nodes_edges_mapping = self._undo.axioms_to_nodes_edges_mapping
+
+            self._project.unsatisfiable_classes = self._undo.unsatisfiable_classes
+            self._project.explanations_for_unsatisfiable_classes = self._undo.explanations_for_unsatisfiable_classes
+            self._project.unsatisfiable_attributes = self._undo.unsatisfiable_attributes
+            self._project.explanations_for_unsatisfiable_attributes = self._undo.explanations_for_unsatisfiable_attributes
+            self._project.unsatisfiable_roles = self._undo.unsatisfiable_roles
+            self._project.explanations_for_unsatisfiable_roles = self._undo.explanations_for_unsatisfiable_roles
+
+            self._project.inconsistent_ontology = self._undo.inconsistent_ontology
+            self._project.explanations_for_inconsistent_ontology = self._undo.explanations_for_inconsistent_ontology
+
+            self._project.uc_as_input_for_explanation_explorer = self._undo.uc_as_input_for_explanation_explorer
+            self._project.nodes_of_unsatisfiable_entities = self._undo.nodes_of_unsatisfiable_entities
+            self._project.nodes_or_edges_of_axioms_to_display_in_widget = self._undo.nodes_or_edges_of_axioms_to_display_in_widget
+            self._project.nodes_or_edges_of_explanations_to_display_in_widget = self._undo.nodes_or_edges_of_explanations_to_display_in_widget
+
+            self._project.converted_nodes = self._undo.converted_nodes
+
+            if self.reasoner_active == 'was_unsatisfiable':
+                self._session.pmanager.create_add_and_start_plugin('Unsatisfiable_Entity_Explorer')
+            elif self.reasoner_active == 'was_inconsistent':
+                pass
+                #dialog = InconsistentOntologyDialog(self.project, None, self.session)
+                #dialog.exec_()
+            else:
+                pass
+
+            ### $$ END $$ variables controlled by reasoners $$ END $$ ###
+
+        self._project.sgnUpdated.emit()
 
 
 class CommandProjectSetIRI(QtWidgets.QUndoCommand):

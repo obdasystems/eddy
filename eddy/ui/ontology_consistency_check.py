@@ -478,7 +478,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             LOGGER.error(errored_message)
             return
 
-
         dict = worker.refined_axiom_to_node_or_edge
         ontology = worker.ontology
 
@@ -554,8 +553,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             """
             hermit.flush();
             hermit.dispose();
-
-
 
         except Exception as e:
 

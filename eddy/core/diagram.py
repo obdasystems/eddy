@@ -184,6 +184,27 @@ class Diagram(QtWidgets.QGraphicsScene):
         if dropEvent.mimeData().hasFormat('text/plain'):
             snapToGrid = self.session.action('toggle_grid').isChecked()
             node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
+
+            data = dropEvent.mimeData().data(dropEvent.mimeData().text())
+
+            if data is not None:
+
+                data_str = ''
+
+                for i in range(0, data.size()):
+                    data_str = data_str + data.at(i)
+
+                if data_str is not '':
+
+                    data_comma_seperated = data_str.split(',')
+
+                    iri = data_comma_seperated[0]
+                    rc = data_comma_seperated[1]
+                    txt = data_comma_seperated[2]
+
+                    node.setText(txt)
+                    node.remaining_characters = rc
+
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             self.session.undostack.push(CommandNodeAdd(self, node))
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())

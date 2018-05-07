@@ -79,6 +79,7 @@ K_PROPERTY = 'property'
 
 # PREDICATES META KEYS
 K_DESCRIPTION = 'description'
+K_DESCRIPTION_STATUS = 'status'
 
 K_FUNCTIONAL = 'functional'
 K_ASYMMETRIC = 'asymmetric'
@@ -161,6 +162,8 @@ class Project(QtCore.QObject):
         self.nodes_or_edges_of_explanations_to_display_in_widget = []
 
         self.converted_nodes = dict()
+
+        ### $$ END $$ variables controlled by reasoners $$ END $$ ###
 
         self.brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
         self.brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 100))
@@ -1340,6 +1343,29 @@ class Project(QtCore.QObject):
 
         #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
+    def check_if_reasoner_was_active(self):
+
+        A = len(self.unsatisfiable_classes) > 0
+        B = len(self.unsatisfiable_attributes)  > 0
+        C = len(self.unsatisfiable_roles)  > 0
+
+        D = self.inconsistent_ontology is not None
+
+        if (A is True) and (B is True) and (C is True) and (D is True):
+
+            return 'inactive'
+
+        else:
+
+            if (D is True) and ((A is False) or (B is False) or (C is False)):
+
+                return 'was_unsatisfiable'
+
+            elif (D is False) :
+
+                return 'was_inconsistent'
+
 
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 
