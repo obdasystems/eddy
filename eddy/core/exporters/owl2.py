@@ -2781,6 +2781,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 dict_entry.append(node)
                 dict_entry.extend(conversion_trace)
                 self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+
     def createClassAssertionAxiom(self, edge):
         """
         Generate a OWL 2 ClassAssertion axiom.
@@ -4013,7 +4014,8 @@ class OWLOntologyFetcher(AbstractWorker):
 
                 refined_value_2=set()
 
-                for l1 in range(0,len(list_of_nodes_in_value)-1):
+                #for l1 in range(0,len(list_of_nodes_in_value)-1):
+                for l1 in range(0, len(list_of_nodes_in_value)):
 
                     node_1 = list_of_nodes_in_value[l1]
 
@@ -4022,7 +4024,11 @@ class OWLOntologyFetcher(AbstractWorker):
 
                     edges_1 = node_1.edges
 
-                    for l2 in range(l1+1,len(list_of_nodes_in_value)):
+                    #for l2 in range(l1+1,len(list_of_nodes_in_value)):
+                    for l2 in range(0, len(list_of_nodes_in_value)):
+
+                        if l1==l2:
+                            continue
 
                         node_2 = list_of_nodes_in_value[l2]
                         edges_2 = node_2.edges
@@ -4031,7 +4037,6 @@ class OWLOntologyFetcher(AbstractWorker):
 
                         if len(intersection_e1_e2)>0:
                             refined_value_2 = refined_value_2.union(intersection_e1_e2)
-
 
                 entry_list = []
 

@@ -35,6 +35,7 @@
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 from PyQt5 import QtPrintSupport
 
 from eddy.core.datatypes.system import File
@@ -42,6 +43,9 @@ from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.items.common import AbstractItem
 from eddy.core.output import getLogger
 from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
+from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.qt import Font
+
 
 LOGGER = getLogger()
 
@@ -56,6 +60,115 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         :type session: Session
         """
         super().__init__(diagram, session)
+
+        self.project = diagram.project
+
+    def append_row_and_column_to_table(self,iri,prefix,brush):
+
+        item_iri = QtWidgets.QTableWidgetItem()
+        item_iri.setText(iri)
+
+        if brush is not None:
+            item_iri.setBackground(brush)
+
+        item_prefix = QtWidgets.QTableWidgetItem()
+        item_prefix.setText(prefix)
+
+        if brush is not None:
+            item_prefix.setBackground(brush)
+
+        self.table.setItem(self.table.rowCount() - 1, 0, item_iri)
+        self.table.setItem(self.table.rowCount() - 1, 1, item_prefix)
+
+        self.table.setRowCount(self.table.rowCount() + 1)
+
+
+    def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
+
+        #if (iri_to_update is None) and (nodes_to_update is None):
+        #print('>>>  FillTableWithIRIPrefixNodesDictionaryKeysAndValues')
+        # first delete all entries from the dictionary id present
+        # add standard IRIs
+        # add key value pairs from dict
+
+
+        """
+        for r in range (0,self.table.rowCount()+1):
+            iri_item_to_el = self.table.item(r,0)
+            del iri_item_to_el
+            prefix_item_to_del = self.table.item(r,1)
+            del prefix_item_to_del
+            cw=self.table.cellWidget(r,2)
+            if cw is not None:
+                disconnect(cw.toggled, self.set_project_IRI)
+                self.table.removeCellWidget(r,2)
+                cw.destroy()
+        """
+
+        self.table.clear()
+        self.table.setRowCount(1)
+        self.table.setColumnCount(3)
+
+        header_iri = QtWidgets.QTableWidgetItem()
+        header_iri.setText('IRI')
+        header_iri.setFont(Font('Roboto', 15, bold=True))
+        header_iri.setTextAlignment(QtCore.Qt.AlignCenter)
+        #header_iri.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        #header_iri.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_iri.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_iri.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        header_iri.setFlags(QtCore.Qt.NoItemFlags)
+
+        header_prefix = QtWidgets.QTableWidgetItem()
+        header_prefix.setText('PREFIX')
+        header_prefix.setFont(Font('Roboto', 15, bold=True))
+        header_prefix.setTextAlignment(QtCore.Qt.AlignCenter)
+        #header_prefix.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        #header_prefix.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_prefix.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
+        header_prefix.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
+        header_prefix.setFlags(QtCore.Qt.NoItemFlags)
+
+
+        self.table.setItem(self.table.rowCount() - 1, 0, header_iri)
+        self.table.setItem(self.table.rowCount() - 1, 1, header_prefix)
+
+        self.table.setRowCount(self.table.rowCount() + 1)
+
+        for iri in self.project.IRI_prefixes_nodes_dict.keys():
+            if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                standard_prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+                standard_prefix = standard_prefixes[0]
+                self.append_row_and_column_to_table(iri, standard_prefix, None)
+                                                    #QtGui.QBrush(QtGui.QColor(50, 50, 205, 50)))
+
+
+        for iri in sorted(self.project.IRI_prefixes_nodes_dict.keys()):
+
+            if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+                continue
+
+            prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
+
+            if len(prefixes) > 0:
+                for p in prefixes:
+                    if iri == self.project.iri:
+                        self.append_row_and_column_to_table(iri, p, None)
+                    else:
+                        self.append_row_and_column_to_table(iri, p, None)
+            else:
+                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
+                    if iri == self.project.iri:
+                        self.append_row_and_column_to_table(iri, '', None)
+                    else:
+                        self.append_row_and_column_to_table(iri, '', None)
+
+
+        self.append_row_and_column_to_table('', '', None)
+
+        self.table.setRowCount(self.table.rowCount() - 1)
+
+
 
     #############################################
     #   INTERFACE
@@ -144,6 +257,28 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                         item.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
         LOGGER.info('All diagrams exported ')
+
+        self.table = QtWidgets.QTableWidget()
+
+        self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
+        self.table.setFixedWidth(600)
+        total_height_of_all_rows = 0
+        for r in range(0, self.table.rowCount() + 1):
+            total_height_of_all_rows = total_height_of_all_rows + self.table.rowHeight(r)
+        self.table.setMinimumHeight(total_height_of_all_rows + 100)
+        shape = self.table.visibleRegion().boundingRect()
+
+        valid = printer.setPageSize(
+            QtGui.QPageSize(QtCore.QSizeF(shape.width()+200, shape.height()+200), QtGui.QPageSize.Point))
+
+        if not valid:
+            LOGGER.critical('Error in setting page size. please contact programmer')
+            return
+
+        printer.newPage()
+
+        if painter.isActive() or painter.begin(printer):
+            self.table.render(painter, sourceRegion=QtGui.QRegion(self.table.rect()))
 
         if painter.isActive():
             # COMPLETE THE EXPORT
