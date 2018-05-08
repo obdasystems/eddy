@@ -2530,10 +2530,11 @@ class OWLOntologyFetcher(AbstractWorker):
     def getIndividual(self, node, conversion_trace):
         """
         Build and returns a OWL 2 individual using the given graphol node.
-        :type node: IndividualNode
+        Also perform punning if the node is not an IndividualNode
+        :type node: IndividualNode|ConceptNode|RoleNode|AttributeNode
         :rtype: OWLNamedIndividual
         """
-        if node.identity() is Identity.Individual:
+        if node.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute}:
             if (self.project.get_prefix_of_node(node) is not None):
                 return self.df.getOWLNamedIndividual(
                     OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
@@ -2866,6 +2867,33 @@ class OWLOntologyFetcher(AbstractWorker):
             dict_entry.append(node)
             dict_entry.extend(conversion_trace)
             self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+
+    def createDifferentIndividualsAxiom(self, edge):
+        """
+        Generate a OWL 2 DifferentIndividuals axiom.
+        :type edge: DifferentEdge
+        """
+        if OWLAxiom.DifferentIndividuals in self.axiomsList:
+            conversions = []
+            dict_entry = []
+            dict_entry.extend([edge, edge.source, edge.target])
+            for node in [edge.source, edge.target]:
+                if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
+                    # Perform punning of node
+                    conversion = self.getIndividual(node, [])
+                    dict_entry.append(conversion)
+                else: # Node is already an IndividualNode
+                    conversion_trace = []
+                    self.convert(node, conversion_trace)
+                    conversion = conversion_trace[-1]
+                    dict_entry.extend(conversion_trace)
+                conversions.append(conversion)
+            collection = self.HashSet()
+            for conversion in conversions:
+                collection.add(conversion)
+            axiom = self.df.getOWLDifferentIndividualsAxiom(cast(self.Set, collection))
+            self.addAxiom(axiom)
+            self._axiom_to_node_or_edge[axiom] = dict_entry
 
     def createDisjointClassesAxiom(self, node):
         """
@@ -3519,6 +3547,33 @@ class OWLOntologyFetcher(AbstractWorker):
                         dict_entry.append(node)
                         self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
 
+    def createSameIndividualAxiom(self, edge):
+        """
+        Generate a OWL2 SameIndividual axiom.
+        :type edge: SameEdge
+        """
+        if OWLAxiom.SameIndividual in self.axiomsList:
+            conversions = []
+            dict_entry = []
+            dict_entry.extend([edge, edge.source, edge.target])
+            for node in [edge.source, edge.target]:
+                if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
+                    # Perform punning of node
+                    conversion = self.getIndividual(node, [])
+                    dict_entry.append(conversion)
+                else: # Node is already an IndividualNode
+                    conversion_trace = []
+                    self.convert(node, conversion_trace)
+                    conversion = conversion_trace[-1]
+                    dict_entry.extend(conversion_trace)
+                conversions.append(conversion)
+            collection = self.HashSet()
+            for conversion in conversions:
+                collection.add(conversion)
+            axiom = self.df.getOWLSameIndividualAxiom(cast(self.Set, collection))
+            self.addAxiom(axiom)
+            self._axiom_to_node_or_edge[axiom] = dict_entry
+
     def createSubclassOfAxiom(self, edge):
         """
         Generate a OWL 2 SubclassOf axiom.
@@ -3860,6 +3915,30 @@ class OWLOntologyFetcher(AbstractWorker):
                             self.createDataPropertyAssertionAxiom(edge)
                     else:
                         raise DiagramMalformedError(edge, 'invalid membership assertion')
+
+                #############################################
+                # SAME
+                #################################
+
+                elif edge.type() is Item.SameEdge:
+                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                            edge.source.identity() == edge.target.identity():
+                        self.createSameIndividualAxiom(edge)
+                    else:
+                        raise DiagramMalformedError(edge, 'invalid sameIndividual assertion')
+
+                #############################################
+                # DIFFERENT
+                #################################
+
+                elif edge.type() is Item.DifferentEdge:
+                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                            edge.source.identity() == edge.target.identity():
+                        self.createDifferentIndividualsAxiom(edge)
+                    else:
+                        raise DiagramMalformedError(edge, 'invalid differentIndividuals assertion')
 
                 self.step(+1)
 
