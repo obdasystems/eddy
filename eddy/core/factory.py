@@ -188,7 +188,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(action)
         else:
             menu.addAction(self.session.action('delete'))
-            menu.addAction(self.session.action('switch_same_different'))
+            menu.addAction(self.session.action('switch_same_to_different'))
         return menu
 
     def buildDifferentEdgeMenu(self, diagram, edge, pos):
@@ -207,7 +207,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(action)
         else:
             menu.addAction(self.session.action('delete'))
-            menu.addAction(self.session.action('switch_different_same'))
+            menu.addAction(self.session.action('switch_different_to_same'))
         return menu
 
     #############################################

@@ -81,7 +81,7 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import Datatype, Facet
+from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
@@ -517,12 +517,12 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_transform_black'), 'Switch to different', self,
-            objectName='switch_same_different', statusTip='Switch same edge to different edge',
+            objectName='switch_same_to_different', statusTip='Switch same edge to different edge',
             triggered=self.doSwitchSameDifferentEdge))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_transform_black'), 'Switch to same', self,
-            objectName='switch_different_same', statusTip='Switch different edge to same edge',
+            objectName='switch_different_to_same', statusTip='Switch different edge to same edge',
             triggered=self.doSwitchSameDifferentEdge))
 
         #############################################
@@ -2542,6 +2542,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         isEdgeSwapEnabled = False
         isNodeSelected = False
         isPredicateSelected = False
+        isSwitchToSameEnabled = self.project.profile.type() is not OWLProfile.OWL2QL
+        isSwitchToDifferentEnabled = True
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.undostack.isClean()
 
@@ -2582,6 +2584,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.action('snap_to_grid').setEnabled(isDiagramActive)
         self.action('syntax_check').setEnabled(not isProjectEmpty)
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
+        self.action('switch_same_to_different').setEnabled(isSwitchToDifferentEnabled)
+        self.action('switch_different_to_same').setEnabled(isSwitchToSameEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
