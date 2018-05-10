@@ -1858,6 +1858,7 @@ class ProjectIndex(dict):
         :rtype: list
         """
         filter_ = lambda x: not types or x in types
+        print('filter_',filter_)
         return [(k1, k2) for k1 in self[K_PREDICATE] \
                             for k2 in self[K_PREDICATE][k1] \
                                 if filter_(k1) and K_META in self[K_PREDICATE][k1][k2]]
