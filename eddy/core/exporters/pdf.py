@@ -250,8 +250,6 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         wanted_attributes = ['functional','inverseFunctional','reflexive','irreflexive','symmetric','asymmetric','transitive']
 
-
-
         attribute_predicates_filtered = set()
         for attribute_predicate in self.project.predicates(item=Item.AttributeNode):
             if (attribute_predicate.text() in Special.return_group(Special.AllTopEntities)) or (attribute_predicate.text() in Special.return_group(Special.AllBottomEntities)):
@@ -262,7 +260,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         for attribute_predicate_txt in attribute_predicates_filtered:
             meta_data = self.project.meta(Item.AttributeNode, attribute_predicate_txt)
 
-            print('meta_data',meta_data)
+            #print('meta_data',meta_data)
 
             attributes = []
 
@@ -282,7 +280,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 attributes.append(False)
                 attributes.append(False)
 
-            print(attribute_predicate_txt, '-', attributes)
+            #print(attribute_predicate_txt, '-', attributes)
 
             attribute_predicate_plus_attributes = []
 
@@ -317,7 +315,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 attributes.append(False)
                 attributes.append(False)
 
-            print(role_predicate_txt,'-',attributes)
+            #print(role_predicate_txt,'-',attributes)
 
             role_predicate_plus_attributes = []
 
@@ -589,11 +587,6 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         shape_2 = self.table_2.rect()
         # shape_2 = self.table.visibleRegion().boundingRect()
-
-        print(shape_2.height())
-        print(shape_2.width())
-        print(self.table_2.rowCount())
-        print(self.table_2.columnCount())
 
         width_to_set = (shape_2.width() + 220) / 15
         height_to_set = (shape_2.height() + 220) / 15
