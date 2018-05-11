@@ -202,7 +202,10 @@ class NodeDescriptionDialog(AbstractDialog):
         self.description_status.setCurrentText(meta.get(K_DESCRIPTION_STATUS,''))
         self.description_status_initial_value = meta.get(K_DESCRIPTION_STATUS,'')
 
-        #connect(self.description_status.currentTextChanged,self.description_status_focused)
+        self.description_status_prev_value = meta.get(K_DESCRIPTION_STATUS,'')
+
+        #connect(self.description_status.currentTextChanged,self.description_status_currentTextChanged)
+
         #############################################
         # LOWER TOOLBAR WIDGET
         #################################
@@ -367,11 +370,17 @@ class NodeDescriptionDialog(AbstractDialog):
 
     def text_changed(self):
 
+        if self.description_status_prev_value != self.description_status.currentText():
+            disconnect(self.text.textChanged, self.text_changed)
+            return
+
         print('self.text.toPlainText()',self.text.toPlainText())
         if self.text.toPlainText() == '':
             self.description_status.setCurrentText('')
+            self.description_status_prev_value = ''
         else:
             self.description_status.setCurrentText('Draft')
+            self.description_status_prev_value = 'Draft'
 
     def metaDataChanged(self):
         """
