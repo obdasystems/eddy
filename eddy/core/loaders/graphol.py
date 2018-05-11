@@ -737,7 +737,10 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
             #print('meta[K_DESCRIPTION_STATUS]', meta[K_DESCRIPTION_STATUS])
         else:
             #print('Set Final by default')
-            meta[K_DESCRIPTION_STATUS] = 'Final'
+            if meta[K_DESCRIPTION] == '':
+                meta[K_DESCRIPTION_STATUS] = ''
+            else:
+                meta[K_DESCRIPTION_STATUS] = 'Final'
 
         return meta
 
@@ -1128,7 +1131,10 @@ class GrapholLoaderMixin_v2(object):
             #print('meta[K_DESCRIPTION_STATUS]',meta[K_DESCRIPTION_STATUS])
         else:
             #print('Set Final by default')
-            meta[K_DESCRIPTION_STATUS] = 'Final'
+            if meta[K_DESCRIPTION] == '':
+                meta[K_DESCRIPTION_STATUS] = ''
+            else:
+                meta[K_DESCRIPTION_STATUS] = 'Final'
 
         return meta
 

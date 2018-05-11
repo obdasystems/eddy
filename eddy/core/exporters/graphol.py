@@ -147,7 +147,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         element.setAttribute('type', self.itemToXml[item])
         element.setAttribute('name', name)
         description = self.document.createElement(K_DESCRIPTION)
-        description.setAttribute('status',meta.get(K_DESCRIPTION_STATUS, 'Final'))
+        description.setAttribute('status',meta.get(K_DESCRIPTION_STATUS, ''))
         description.appendChild(self.document.createTextNode(meta.get(K_DESCRIPTION, '')))
 
         element.appendChild(description)

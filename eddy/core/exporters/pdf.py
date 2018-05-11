@@ -48,6 +48,8 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.graphol import Special
 
+import math
+
 LOGGER = getLogger()
 
 
@@ -257,7 +259,9 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             else:
                 attribute_predicates_filtered.add(attribute_predicate.text())
 
-        for attribute_predicate_txt in attribute_predicates_filtered:
+        #print('len(attribute_predicates_filtered)',len(attribute_predicates_filtered))
+
+        for attribute_predicate_txt in sorted(attribute_predicates_filtered):
             meta_data = self.project.meta(Item.AttributeNode, attribute_predicate_txt)
 
             #print('meta_data',meta_data)
@@ -297,7 +301,9 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             else:
                 role_predicates_filtered.add(role_predicate.text())
 
-        for role_predicate_txt in role_predicates_filtered:
+        #print('len(role_predicates_filtered)', len(role_predicates_filtered))
+
+        for role_predicate_txt in sorted(role_predicates_filtered):
             meta_data = self.project.meta(Item.RoleNode, role_predicate_txt)
 
             attributes = []
@@ -384,6 +390,169 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         self.table.setRowCount(self.table.rowCount() - 1)
 
+    def set_properties_of_table(self,table):
+
+        table.horizontalHeader().setVisible(False)
+        table.verticalHeader().setVisible(True)
+        table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    def split_table(self,table,n):
+
+        if n == 1:
+            return [table]
+
+        headers = []
+
+        for c in range(0,table.columnCount()):
+            cell_widget = table.item(0,c)
+            headers.append(cell_widget)
+
+        #print('table.rowCount()',table.rowCount())
+
+        #table.rowCount()-1 as 1st row contains headers
+        base_row_count = math.floor((table.rowCount()-1)/n)
+        remainder = (table.rowCount()-1) % n
+
+        row_nos_of_tables = []
+        max = 1
+        for i in range(0,n):
+
+            rows = []
+            for j in range(max,max+base_row_count):
+                rows.append(j)
+
+            r=0
+            if remainder>0:
+                rows.append(max+base_row_count)
+                remainder = remainder-1
+                r=1
+
+            max = max + base_row_count + r
+
+            row_nos_of_tables.append(rows)
+
+
+        tables = []
+
+        all_predicates_in_table_list = []
+        all_predicates_in_table_set = set()
+
+        for r in range(0,table.rowCount()):
+            pred = table.item(r,0).text()
+            all_predicates_in_table_list.append(pred)
+            all_predicates_in_table_set.add(pred)
+
+        all_predicates_in_split_tables_list = []
+        all_predicates_in_split_tables_set = set()
+
+        for i in range(0,n):
+            t = QtWidgets.QTableWidget()
+            self.set_properties_of_table(t)
+
+            t.setRowCount(1)
+            t.setColumnCount(table.columnCount())
+
+            for c,h in enumerate(headers):
+                t.setItem(0,c,h.clone())
+                t.setRowHeight(0, table.rowHeight(0))
+            t.setRowCount(t.rowCount()+1)
+
+            row_nos = row_nos_of_tables[i]
+
+            count = 0
+
+            for i,row_no in enumerate(row_nos):
+                for col_no in range(0,table.columnCount()):
+
+                    original_item = table.item(row_no,col_no)
+                    original_cell_widget = table.cellWidget(row_no,col_no)
+
+                    if original_cell_widget is None:
+                        if original_item is None:
+                            LOGGER.critical('Programming error, please contact programmer')
+                        else:
+                            #t.setItem(t.rowCount() - 1, col_no, original_item.clone())
+                            if col_no == 0:
+                                all_predicates_in_split_tables_list.append(original_item.text())
+                                all_predicates_in_split_tables_set.add(original_item.text())
+
+                            t.setItem(i + 1, col_no, original_item.clone())
+                            count = count + 1
+                    else:
+                        checkbox = QtWidgets.QCheckBox()
+                        checkbox.setEnabled(True)
+                        checkbox.setChecked(True)
+                        #t.setCellWidget(t.rowCount() - 1, col_no, checkbox)
+                        t.setCellWidget(i + 1, col_no, checkbox)
+                        count = count + 1
+
+                #t.setRowHeight(t.rowCount()-1,table.rowHeight(row_no))
+                t.setRowHeight(i + 1, table.rowHeight(row_no))
+                t.setRowCount(t.rowCount() + 1)
+
+            for col_no in range(0,t.columnCount()):
+                t.setColumnWidth(col_no,table.columnWidth(col_no))
+
+            t.setRowCount(t.rowCount() - 1)
+
+            sum_height_rows = 0
+            for r in range(0,t.rowCount()):
+                sum_height_rows = sum_height_rows+t.rowHeight(r)
+
+            t.setFixedHeight(sum_height_rows+1)
+            t.setFixedWidth(table.width())
+
+            #print('t.rowCount()',t.rowCount())
+            #print('count',count)
+
+            tables.append(t)
+
+        #print('A',len(all_predicates_in_table_list))
+        #print('B',len(all_predicates_in_table_set))
+
+        #print('C',len(all_predicates_in_split_tables_list))
+        #print('D',len(all_predicates_in_split_tables_set))
+
+        return tables
+
+    def split_table_if_necessary_and_render_it(self,table,printer,painter):
+
+        #size of A4 sheet = 210 × 297 mm
+        #if height of the table > 297/210*width of the table, split the table into 2 or more tables
+        # if height of the table > 297/210*width && < 2*297/210*width of the table, split the table into 2 tables
+        # if height of the table > 2*297/210*width && < 3*297/210*width of the table, split the table into 3 tables
+        # if height of the table > n*297/210*width && < (n+1)*297/210*width of the table, split the table into n tables
+
+        n=0
+        while(table.height() > (n*297/210)*table.width()):
+            n=n+1
+        #n=1
+
+        #print('n',n)
+
+        #n is the number of pages or number of tables that will result after the split
+        tables = self.split_table(table,n)
+
+        for t in tables:
+
+            shape = t.rect()
+            # shape_2 = self.table.visibleRegion().boundingRect()
+
+            width_to_set = (shape.width() + 220) / 15
+            height_to_set = (shape.height() + 220) / 15
+
+            valid = printer.setPageSize(
+                QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtGui.QPageSize.Point))
+
+            if not valid:
+                LOGGER.critical('Error in setting page size. please contact programmer')
+                return
+
+            printer.newPage()
+
+            if painter.isActive() or painter.begin(printer):
+                t.render(painter, sourceRegion=QtGui.QRegion(shape))
 
     #############################################
     #   INTERFACE
@@ -440,6 +609,8 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         painter = QtGui.QPainter()
 
+
+        """
         for c, diag in enumerate(selected_diagrams_sorted):
 
             LOGGER.info('Exporting diagram %s to %s', diag.name, path)
@@ -470,15 +641,12 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 for item in diag.items():
                     if item.isNode() or item.isEdge():
                         item.setCacheMode(AbstractItem.DeviceCoordinateCache)
-
+        
         LOGGER.info('All diagrams exported ')
-
+        """
         self.table = QtWidgets.QTableWidget()
 
-        self.table.horizontalHeader().setVisible(False)
-        self.table.verticalHeader().setVisible(False)
-        self.table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.set_properties_of_table(self.table)
 
         self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
 
@@ -508,7 +676,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         self.table.setColumnWidth(0, max_A*10)
         self.table.setColumnWidth(1, max_B*30)
 
-        self.table.setFixedWidth(self.table.columnWidth(0) + self.table.columnWidth(1))
+        self.table.setFixedWidth(self.table.columnWidth(0) + self.table.columnWidth(1) + 25)
 
         #does not work; self.table.horizontalScrollBar().isVisible() method always returns false
         #while(self.table.horizontalScrollBar().isVisible()):
@@ -521,23 +689,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             total_height_of_all_rows = total_height_of_all_rows + self.table.rowHeight(r)
         self.table.setFixedHeight(total_height_of_all_rows+5)
 
-        shape = self.table.rect()
-        #shape_2 = self.table.visibleRegion().boundingRect()
-
-        width_to_set = (shape.width()+220)/15
-        height_to_set = (shape.height()+220)/15
-
-        valid = printer.setPageSize(
-            QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtGui.QPageSize.Point))
-
-        if not valid:
-            LOGGER.critical('Error in setting page size. please contact programmer')
-            return
-
-        printer.newPage()
-
-        if painter.isActive() or painter.begin(printer):
-            self.table.render(painter, sourceRegion=QtGui.QRegion(shape))
+        self.split_table_if_necessary_and_render_it(self.table,printer,painter)
 
         LOGGER.info('IRI-Prefix table exported')
 
@@ -546,10 +698,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         self.table_2 = QtWidgets.QTableWidget()
 
-        self.table_2.horizontalHeader().setVisible(False)
-        self.table_2.verticalHeader().setVisible(False)
-        self.table_2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.table_2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.set_properties_of_table(self.table_2)
 
         self.FillTableWithMetaDataInfoForRolesAndAttributes()
 
@@ -583,28 +732,9 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         self.table_2.setFixedWidth(self.table_2.columnWidth(0) + self.table_2.columnWidth(1) + \
                                  self.table_2.columnWidth(2) + self.table_2.columnWidth(3) + \
                                  self.table_2.columnWidth(4) + self.table_2.columnWidth(5) + \
-                                 self.table_2.columnWidth(6) + self.table_2.columnWidth(7))
+                                 self.table_2.columnWidth(6) + self.table_2.columnWidth(7) + 25)
 
-        shape_2 = self.table_2.rect()
-        # shape_2 = self.table.visibleRegion().boundingRect()
-
-        width_to_set = (shape_2.width() + 220) / 15
-        height_to_set = (shape_2.height() + 220) / 15
-
-        valid = printer.setPageSize(
-            QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtGui.QPageSize.Point))
-
-        if not valid:
-            LOGGER.critical('Error in setting page size. please contact programmer')
-            return
-
-        printer.newPage()
-
-        if painter.isActive() or painter.begin(printer):
-            self.table_2.render(painter, sourceRegion=QtGui.QRegion(shape_2))
-
-        LOGGER.info('Meta-Data table for attributes and roles exported')
-
+        self.split_table_if_necessary_and_render_it(self.table_2, printer, painter)
 
         if painter.isActive():
             # COMPLETE THE EXPORT

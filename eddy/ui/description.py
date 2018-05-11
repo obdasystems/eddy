@@ -46,7 +46,7 @@ from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import rtfStripFontAttributes
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.core.datatypes.graphol import Item
 from eddy.ui.fields import StringField
@@ -192,15 +192,17 @@ class NodeDescriptionDialog(AbstractDialog):
         self.description_status.setStatusTip('Select description status')
 
         description_set = set()
-        description_set.add(meta.get(K_DESCRIPTION_STATUS,''))
+        #description_set.add(meta.get(K_DESCRIPTION_STATUS,''))
+        description_set.add('')
         description_set.add('Final')
         description_set.add('Draft')
 
         self.description_status.addItems(list(description_set))
         self.description_status.setEnabled(True)
         self.description_status.setCurrentText(meta.get(K_DESCRIPTION_STATUS,''))
-        #connect(self.description_status.activated, self.doSetDescriptionStatus)
+        self.description_status_initial_value = meta.get(K_DESCRIPTION_STATUS,'')
 
+        #connect(self.description_status.currentTextChanged,self.description_status_focused)
         #############################################
         # LOWER TOOLBAR WIDGET
         #################################
@@ -235,8 +237,6 @@ class NodeDescriptionDialog(AbstractDialog):
 
         self.subAction = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_subscript_black"), "Subscript", self)
         self.subAction.triggered.connect(self.subScript)
-
-
 
         #############################################
         #  SET UP TOOLBAR WIDGETS
@@ -335,6 +335,9 @@ class NodeDescriptionDialog(AbstractDialog):
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
 
+        if self.description_status_initial_value == '':
+            connect(self.text.textChanged,self.text_changed)
+
     #########################################################
     """
     @QtCore.pyqtSlot()
@@ -350,6 +353,7 @@ class NodeDescriptionDialog(AbstractDialog):
         widget.clearFocus()
 
     """
+
     ###########################################################
     # PROPERTIES
     ###########################################################
@@ -361,6 +365,14 @@ class NodeDescriptionDialog(AbstractDialog):
     def description(self, desc):
         self.text.setHtml(rtfStripFontAttributes(desc))
 
+    def text_changed(self):
+
+        print('self.text.toPlainText()',self.text.toPlainText())
+        if self.text.toPlainText() == '':
+            self.description_status.setCurrentText('')
+        else:
+            self.description_status.setCurrentText('Draft')
+
     def metaDataChanged(self):
         """
         Change the description of the node.
@@ -369,10 +381,23 @@ class NodeDescriptionDialog(AbstractDialog):
         undo = self.diagram.project.meta(self.node.type(), self.node.text())
         redo = undo.copy()
         redo[K_DESCRIPTION] = self.description
+
+        undo[K_DESCRIPTION_STATUS] = undo.get(K_DESCRIPTION_STATUS, '')
         redo[K_DESCRIPTION_STATUS] = self.description_status.currentText()
 
+        #print('undo[K_DESCRIPTION_STATUS]',undo[K_DESCRIPTION_STATUS])
+        #print('undo[K_DESCRIPTION]',undo[K_DESCRIPTION])
+        #print('redo[K_DESCRIPTION_STATUS]',redo[K_DESCRIPTION_STATUS])
+        #print('redo[K_DESCRIPTION]',redo[K_DESCRIPTION])
+
+        #print('')
+        #print('redo[K_DESCRIPTION] != undo[K_DESCRIPTION]',redo[K_DESCRIPTION] != undo[K_DESCRIPTION])
+        #print('redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS]',redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS])
+
         #if redo != undo:
-        if (redo[K_DESCRIPTION] != undo[K_DESCRIPTION]) or (redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS]):
+        #if (redo[K_DESCRIPTION] != undo[K_DESCRIPTION]) or (redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS]):
+        #if (redo[K_DESCRIPTION] != undo[K_DESCRIPTION]):
+        if redo != undo:
             return CommandNodeSetMeta(
                 self.diagram.project,
                 self.node.type(),
