@@ -192,19 +192,14 @@ class NodeDescriptionDialog(AbstractDialog):
         self.description_status.setStatusTip('Select description status')
 
         description_set = set()
-        #description_set.add(meta.get(K_DESCRIPTION_STATUS,''))
-        description_set.add('')
+        if self.text.toPlainText() == '':
+            description_set.add('')
         description_set.add('Final')
         description_set.add('Draft')
 
         self.description_status.addItems(list(description_set))
         self.description_status.setEnabled(True)
         self.description_status.setCurrentText(meta.get(K_DESCRIPTION_STATUS,''))
-        self.description_status_initial_value = meta.get(K_DESCRIPTION_STATUS,'')
-
-        self.description_status_prev_value = meta.get(K_DESCRIPTION_STATUS,'')
-
-        #connect(self.description_status.currentTextChanged,self.description_status_currentTextChanged)
 
         #############################################
         # LOWER TOOLBAR WIDGET
@@ -338,24 +333,8 @@ class NodeDescriptionDialog(AbstractDialog):
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
 
-        if self.description_status_initial_value == '':
-            connect(self.text.textChanged,self.text_changed)
-
-    #########################################################
-    """
-    @QtCore.pyqtSlot()
-    def doSetDescriptionStatus(self):
-    """
-    #Set the currently used project profile.
-    """
-        widget = self.description_status
-        current_status = widget.currentText()
-
-        K_DESCRIPTION.setAttribute('status',current_status)
-
-        widget.clearFocus()
-
-    """
+        if (self.description_status.currentText() == '') or (self.description_status.currentText() == 'Draft'):
+            connect(self.text.textChanged, self.text_changed)
 
     ###########################################################
     # PROPERTIES
@@ -370,17 +349,46 @@ class NodeDescriptionDialog(AbstractDialog):
 
     def text_changed(self):
 
-        if self.description_status_prev_value != self.description_status.currentText():
+        #print('self.text.toPlainText()',self.text.toPlainText())
+
+        if self.description_status.currentText() == 'Final':
             disconnect(self.text.textChanged, self.text_changed)
             return
 
-        print('self.text.toPlainText()',self.text.toPlainText())
         if self.text.toPlainText() == '':
+
+            #print('Case empty')
+
+            description_list = []
+
+            description_list.append('')
+            description_list.append('Final')
+            description_list.append('Draft')
+
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+
+            self.description_status.addItems(description_list)
+
             self.description_status.setCurrentText('')
-            self.description_status_prev_value = ''
         else:
+
+            #print('Case non-empty')
+
+            description_list = []
+
+            description_list.append('Final')
+            description_list.append('Draft')
+
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+
+            self.description_status.addItems(description_list)
+
             self.description_status.setCurrentText('Draft')
-            self.description_status_prev_value = 'Draft'
+
 
     def metaDataChanged(self):
         """

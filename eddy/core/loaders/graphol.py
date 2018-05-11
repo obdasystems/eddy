@@ -1843,6 +1843,27 @@ class GrapholLoaderMixin_v2(object):
 
             element = element.nextSiblingElement('predicate')
 
+    def remove_invalid_nodes_from_the_dict(self):
+
+        invalid_nodes = []
+
+        for iri in self.nproject.IRI_prefixes_nodes_dict.keys():
+            nodes = self.nproject.IRI_prefixes_nodes_dict[iri][1]
+            new_nodes = set()
+
+            for n in nodes:
+                if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                            'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+                    new_nodes.add(n)
+                else:
+                    invalid_nodes.append(n)
+
+            self.nproject.IRI_prefixes_nodes_dict[iri][1] = new_nodes
+
+        if len(invalid_nodes) >0:
+            print('invalid_nodes present in the dictionary were removed. They are -',invalid_nodes)
+            LOGGER.info('invalid_nodes present in the dictionary were removed')
+
     def convert_string_of_nodes_to_nodes(self):
 
         LOGGER.debug('GrapholLoaderMixin_v2 >>> Convert nodes from string format to eddy nodes format in IRI-Prefixes dictionary')
@@ -2129,6 +2150,8 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         self.createDiagrams()
 
         self.convert_string_of_nodes_to_nodes()
+
+        self.remove_invalid_nodes_from_the_dict()
         #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
         self.createPredicatesMeta()
@@ -2195,6 +2218,8 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
 
             #self.update_label_of_nodes()
             self.convert_string_of_nodes_to_nodes()
+
+            self.remove_invalid_nodes_from_the_dict()
             #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
             self.createPredicatesMeta()

@@ -66,7 +66,7 @@ class FetchReasonerVariables:
         ### $$ END $$ variables controlled by reasoners $$ END $$ ###
 
 
-
+#not used
 class CommandProjectSetVariablesControlledByReasoner(QtWidgets.QUndoCommand):
 
     def __init__(self, project, session, undo, redo, **kwargs):

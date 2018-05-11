@@ -50,6 +50,7 @@ from eddy.core.datatypes.graphol import Special
 
 import math
 
+
 LOGGER = getLogger()
 
 
@@ -528,7 +529,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         while(table.height() > (n*297/210)*table.width()):
             n=n+1
         #n=1
-
+        n=n*2
         #print('n',n)
 
         #n is the number of pages or number of tables that will result after the split
@@ -539,8 +540,8 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             shape = t.rect()
             # shape_2 = self.table.visibleRegion().boundingRect()
 
-            width_to_set = (shape.width() + 220) / 15
-            height_to_set = (shape.height() + 220) / 15
+            width_to_set = (shape.width() + 50) / 15
+            height_to_set = (shape.height() + 50) / 15
 
             valid = printer.setPageSize(
                 QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtGui.QPageSize.Point))

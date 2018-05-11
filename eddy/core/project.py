@@ -179,6 +179,7 @@ class Project(QtCore.QObject):
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
 
@@ -1344,6 +1345,17 @@ class Project(QtCore.QObject):
         #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
+    def reset_changes_made_after_reasoning_task(self):
+
+        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
+        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
+        self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,
+                                                     call_ClearInconsistentEntitiesAndDiagItemsData=True)
+
+        disconnect(self.sgnItemAdded, self.reset_changes_made_after_reasoning_task)
+        disconnect(self.sgnItemRemoved, self.reset_changes_made_after_reasoning_task)
+
+    #not used
     def check_if_reasoner_was_active(self):
 
         A = len(self.unsatisfiable_classes) > 0
