@@ -103,11 +103,11 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
 
         DiagramsGroup = QtWidgets.QGroupBox('Diagrams', self)
         DiagramsGroup.setLayout(DiagramNamesLayout)
-        DiagramsGroup.setFixedHeight(max((DiagramNamesLayout.rowCount()*25+5),120))
+        DiagramsGroup.setFixedHeight((DiagramNamesLayout.rowCount()*25+50))
 
         DiagramsGroupLayout = QtWidgets.QHBoxLayout()
         DiagramsGroupLayout.addWidget(DiagramsGroup)
-        DiagramsGroupLayout.setGeometry(QtCore.QRect(0,0,690,max((DiagramNamesLayout.rowCount()*25+5),120)))
+        #DiagramsGroupLayout.setGeometry(QtCore.QRect(0,0,690,(DiagramNamesLayout.rowCount()*25+5)))
 
         ButtonsLayout = QtWidgets.QHBoxLayout()
         #ButtonsLayout.setContentsMargins(0, 6, 0, 0)
@@ -115,12 +115,14 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         ButtonsLayout.addWidget(self.widget('btn_clear_all'), 0, QtCore.Qt.AlignRight)
         ButtonsLayout.addWidget(self.widget('btn_check_all'), 0, QtCore.Qt.AlignRight)
         ButtonsLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
-        ButtonsLayout.setGeometry(QtCore.QRect(0,0,690,50))
+        #ButtonsLayout.setGeometry(QtCore.QRect(0,0,690,50))
 
         Area_1 = QtWidgets.QWidget()
         Area_1.setLayout(DiagramsGroupLayout)
+        Area_1.setFixedHeight(DiagramsGroup.height())
         Area_2 = QtWidgets.QWidget()
         Area_2.setLayout(ButtonsLayout)
+        Area_2.setFixedHeight(50)
 
         MainLayout = QtWidgets.QVBoxLayout()
         MainLayout.setContentsMargins(10, 10, 10, 10)
@@ -131,10 +133,17 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
 
         self.setLayout(MainLayout)
 
+        #print('DiagramsGroup.height()',DiagramsGroup.height())
+        #print('Area_1.height()',Area_1.height())
+        #print('Area_2.height()', Area_2.height())
+        #print('DiagramsGroupLayout.geometry().height()',DiagramsGroupLayout.geometry().height())
+        #print('ButtonsLayout.geometry()', ButtonsLayout.geometry().height())
+
+
         #self.setFixedSize(max(DiagramsGroup.width(),400),DiagramsGroup.height()+100)
         #self.setMaximumHeight(400)
         #self.setMinimumHeight(400)
-        self.setFixedHeight(200)
+        self.setFixedHeight(Area_1.height()+Area_2.height()+50)
         self.setFixedWidth(600)
 
         self.setFont(Font('Roboto', 12))
