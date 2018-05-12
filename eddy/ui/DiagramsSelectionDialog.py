@@ -135,7 +135,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         #self.setMaximumHeight(400)
         #self.setMinimumHeight(400)
         self.setFixedHeight(200)
-        self.setFixedWidth(400)
+        self.setFixedWidth(600)
 
         self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
