@@ -185,7 +185,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_entity.setFlags(QtCore.Qt.NoItemFlags)
 
         header_functional = QtWidgets.QTableWidgetItem()
-        header_functional.setText('FUNCTIONAL')
+        header_functional.setText('FUNCT')
         header_functional.setFont(Font('Roboto', 15, bold=True))
         header_functional.setTextAlignment(QtCore.Qt.AlignCenter)
         header_functional.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -193,7 +193,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_functional.setFlags(QtCore.Qt.NoItemFlags)
 
         header_inversefunctional = QtWidgets.QTableWidgetItem()
-        header_inversefunctional.setText('INVERSE\nFUNCTIONAL')
+        header_inversefunctional.setText('INV\nFUNCT')
         header_inversefunctional.setFont(Font('Roboto', 15, bold=True))
         header_inversefunctional.setTextAlignment(QtCore.Qt.AlignCenter)
         header_inversefunctional.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -201,7 +201,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_inversefunctional.setFlags(QtCore.Qt.NoItemFlags)
 
         header_transitive = QtWidgets.QTableWidgetItem()
-        header_transitive.setText('TRANSITIVE')
+        header_transitive.setText('TRANS')
         header_transitive.setFont(Font('Roboto', 15, bold=True))
         header_transitive.setTextAlignment(QtCore.Qt.AlignCenter)
         header_transitive.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -209,7 +209,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_transitive.setFlags(QtCore.Qt.NoItemFlags)
 
         header_reflexive = QtWidgets.QTableWidgetItem()
-        header_reflexive.setText('REFLEXIVE')
+        header_reflexive.setText('REFL')
         header_reflexive.setFont(Font('Roboto', 15, bold=True))
         header_reflexive.setTextAlignment(QtCore.Qt.AlignCenter)
         header_reflexive.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -217,7 +217,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_reflexive.setFlags(QtCore.Qt.NoItemFlags)
         
         header_irreflexive = QtWidgets.QTableWidgetItem()
-        header_irreflexive.setText('IRREFLEXIVE')
+        header_irreflexive.setText('IRREFL')
         header_irreflexive.setFont(Font('Roboto', 15, bold=True))
         header_irreflexive.setTextAlignment(QtCore.Qt.AlignCenter)
         header_irreflexive.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -225,7 +225,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_irreflexive.setFlags(QtCore.Qt.NoItemFlags)
         
         header_symmetric = QtWidgets.QTableWidgetItem()
-        header_symmetric.setText('SYMMETRIC')
+        header_symmetric.setText('SYMM')
         header_symmetric.setFont(Font('Roboto', 15, bold=True))
         header_symmetric.setTextAlignment(QtCore.Qt.AlignCenter)
         header_symmetric.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -233,7 +233,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_symmetric.setFlags(QtCore.Qt.NoItemFlags)
 
         header_asymmetric = QtWidgets.QTableWidgetItem()
-        header_asymmetric.setText('ASYMMETRIC')
+        header_asymmetric.setText('ASYMM')
         header_asymmetric.setFont(Font('Roboto', 15, bold=True))
         header_asymmetric.setTextAlignment(QtCore.Qt.AlignCenter)
         header_asymmetric.setBackground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -394,7 +394,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
     def set_properties_of_table(self,table):
 
         table.horizontalHeader().setVisible(False)
-        table.verticalHeader().setVisible(True)
+        table.verticalHeader().setVisible(False)
         table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
@@ -517,7 +517,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         return tables
 
-    def split_table_if_necessary_and_render_it(self,table,printer,painter):
+    def split_table_if_necessary_and_render_it(self,table,printer,painter,meta_tada_table=False):
 
         #size of A4 sheet = 210 × 297 mm
         #if height of the table > 297/210*width of the table, split the table into 2 or more tables
@@ -526,10 +526,14 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         # if height of the table > n*297/210*width && < (n+1)*297/210*width of the table, split the table into n tables
 
         n=0
-        while(table.height() > (n*297/210)*table.width()):
-            n=n+1
+        if meta_tada_table is False:
+            while(table.height() > (n*297/210)*table.width()):
+                n=n+1
+        else:
+            while (table.height() > (n * 210 / 297) * table.width()):
+                n = n + 1
         #n=1
-        n=n*2
+
         #print('n',n)
 
         #n is the number of pages or number of tables that will result after the split
@@ -540,21 +544,26 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             shape = t.rect()
             # shape_2 = self.table.visibleRegion().boundingRect()
 
-            width_to_set = (shape.width() + 50) / 15
-            height_to_set = (shape.height() + 50) / 15
+            width_to_set = (shape.width())/17
+            height_to_set = (shape.height())/17
 
-            valid = printer.setPageSize(
-                QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtGui.QPageSize.Point))
-
+            #valid = printer.setPageSize(QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtPrintSupport.QPrinter.DevicePixel))
+            valid = printer.setPageSize(QtGui.QPageSize(QtCore.QSizeF(width_to_set+3, height_to_set+3), QtGui.QPageSize.Point))
             if not valid:
                 LOGGER.critical('Error in setting page size. please contact programmer')
                 return
+
+            # 5 points = 83 QSize() units
+            # 1 point = 17 QSize() units
+            # 10 points = 167 QSize() units
+            # 100 points = 167 QSize() units  i.e. margin with 100 points was not set correctly
+
+            printer.setPageMargins(1,1,1,1, QtPrintSupport.QPrinter.Point)
 
             printer.newPage()
 
             if painter.isActive() or painter.begin(printer):
                 t.render(painter, sourceRegion=QtGui.QRegion(shape))
-
     #############################################
     #   INTERFACE
     #################################
@@ -585,16 +594,11 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         #printer.setPaperSize(QtPrintSupport.QPrinter.Custom)
         printer.setPrinterName(self.diagram.project.name)
 
-        #max_height = 0.0
-        #max_width = 0.0
-
         size_of_pages = []
 
         for c, diag in enumerate(selected_diagrams_sorted):
 
             shape = diag.visibleRect(margin=200)
-
-            #print(diag.name,'-',shape.height(), '-', shape.width())
 
             page_size = []
 
@@ -603,15 +607,8 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
             size_of_pages.append(page_size)
 
-            #max_height = max(max_height,shape.height())
-            #max_width = max(max_width, shape.width())
-
-        #print('max-',max_height, '-', max_width)
-
         painter = QtGui.QPainter()
 
-
-        """
         for c, diag in enumerate(selected_diagrams_sorted):
 
             LOGGER.info('Exporting diagram %s to %s', diag.name, path)
@@ -644,11 +641,9 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                         item.setCacheMode(AbstractItem.DeviceCoordinateCache)
         
         LOGGER.info('All diagrams exported ')
-        """
+
         self.table = QtWidgets.QTableWidget()
-
         self.set_properties_of_table(self.table)
-
         self.FillTableWithIRIPrefixNodesDictionaryKeysAndValues()
 
         max_size = 0
@@ -667,17 +662,15 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 if c == 1:
                     max_B = max(max_B,len(cell_item.text()))
 
-                #cell_item.setFont(font)
-
                 max_size = max(max_size,font.pointSize())
 
         for r in range(0, self.table.rowCount()+1):
-            self.table.setRowHeight(r,max_size+10)
+            self.table.setRowHeight(r,max_size+5)
 
         self.table.setColumnWidth(0, max_A*10)
         self.table.setColumnWidth(1, max_B*30)
 
-        self.table.setFixedWidth(self.table.columnWidth(0) + self.table.columnWidth(1) + 25)
+        self.table.setFixedWidth(self.table.columnWidth(0) + self.table.columnWidth(1))
 
         #does not work; self.table.horizontalScrollBar().isVisible() method always returns false
         #while(self.table.horizontalScrollBar().isVisible()):
@@ -688,7 +681,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         total_height_of_all_rows = 0
         for r in range(0, self.table.rowCount()):
             total_height_of_all_rows = total_height_of_all_rows + self.table.rowHeight(r)
-        self.table.setFixedHeight(total_height_of_all_rows+5)
+        self.table.setFixedHeight(total_height_of_all_rows+1)
 
         self.split_table_if_necessary_and_render_it(self.table,printer,painter)
 
@@ -698,9 +691,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         #table for meta data of roles and attributes
 
         self.table_2 = QtWidgets.QTableWidget()
-
         self.set_properties_of_table(self.table_2)
-
         self.FillTableWithMetaDataInfoForRolesAndAttributes()
 
         for r in range(0, self.table_2.rowCount() + 1):
@@ -711,7 +702,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         total_height_of_all_rows = 0
         for r in range(0, self.table_2.rowCount()):
             total_height_of_all_rows = total_height_of_all_rows + self.table_2.rowHeight(r)
-        self.table_2.setFixedHeight(total_height_of_all_rows + 3)
+        self.table_2.setFixedHeight(total_height_of_all_rows + 1)
 
         max_size = 0
 
@@ -722,20 +713,20 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             max_size = max(max_size,font.pointSize(),len(cell_item.text()))
 
         self.table_2.setColumnWidth(0, max_size*10)
-        self.table_2.setColumnWidth(1, 120)
-        self.table_2.setColumnWidth(2, 120)
-        self.table_2.setColumnWidth(3, 120)
-        self.table_2.setColumnWidth(4, 120)
-        self.table_2.setColumnWidth(5, 120)
-        self.table_2.setColumnWidth(6, 120)
-        self.table_2.setColumnWidth(7, 120)
+        self.table_2.setColumnWidth(1, 70)
+        self.table_2.setColumnWidth(2, 70)
+        self.table_2.setColumnWidth(3, 70)
+        self.table_2.setColumnWidth(4, 70)
+        self.table_2.setColumnWidth(5, 70)
+        self.table_2.setColumnWidth(6, 70)
+        self.table_2.setColumnWidth(7, 70)
 
         self.table_2.setFixedWidth(self.table_2.columnWidth(0) + self.table_2.columnWidth(1) + \
                                  self.table_2.columnWidth(2) + self.table_2.columnWidth(3) + \
                                  self.table_2.columnWidth(4) + self.table_2.columnWidth(5) + \
-                                 self.table_2.columnWidth(6) + self.table_2.columnWidth(7) + 25)
+                                 self.table_2.columnWidth(6) + self.table_2.columnWidth(7))
 
-        self.split_table_if_necessary_and_render_it(self.table_2, printer, painter)
+        self.split_table_if_necessary_and_render_it(self.table_2, printer, painter, meta_tada_table=True)
 
         if painter.isActive():
             # COMPLETE THE EXPORT
