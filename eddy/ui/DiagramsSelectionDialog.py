@@ -42,16 +42,15 @@ from eddy.core.output import getLogger
 from eddy.core.functions.signals import connect
 from eddy.core.datatypes.qt import Font
 from eddy.ui.fields import CheckBox
-
+import math
 
 LOGGER = getLogger()
 
 
 class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
-        Extends QtWidgets.QDialog providing the form used to select the diagrams for a specific task like speficif export/import
+    Extends QtWidgets.QDialog providing the form used to select the diagrams for a specific task like export/import
     """
-
     def __init__(self, project, session):
         """
         Initialize the form dialog.
@@ -65,7 +64,6 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         #############################################
         # MAIN FORM AREA
         #################################
-
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
@@ -74,14 +72,6 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         connect(confirmation.accepted, self.run)
         connect(confirmation.rejected, self.reject)
         self.addWidget(confirmation)
-
-        confirmationLayout = QtWidgets.QHBoxLayout()
-        confirmationLayout.setContentsMargins(0, 0, 0, 0)
-        confirmationLayout.addWidget(self.widget('normalization'), 0, QtCore.Qt.AlignLeft)
-        confirmationLayout.addWidget(self.widget('exportRichText'), 0, QtCore.Qt.AlignLeft)
-        confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
-        #confirmationArea = QtWidgets.QWidget()
-        #confirmationArea.setLayout(confirmationLayout)
 
         self.addWidget(QtWidgets.QPushButton('All', self,
                                              clicked=self.doCheckDiagramMarks,
@@ -106,22 +96,47 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         DiagramNamesLayout.setColumnMinimumWidth(2, 230)
 
         for i, d in enumerate(self.diagrams_list):
-            #print(i,'-',d.name)
-            DiagramNamesLayout.addWidget(self.widget(d.name), i, 0)
+            r=i%3
+            q=math.floor(i/3)
+            DiagramNamesLayout.addWidget(self.widget(d.name), q, r)
+            DiagramNamesLayout.setRowMinimumHeight(q, 20)
+
+        DiagramsGroup = QtWidgets.QGroupBox('Diagrams', self)
+        DiagramsGroup.setLayout(DiagramNamesLayout)
+        DiagramsGroup.setFixedHeight(max((DiagramNamesLayout.rowCount()*25+5),120))
+
+        DiagramsGroupLayout = QtWidgets.QHBoxLayout()
+        DiagramsGroupLayout.addWidget(DiagramsGroup)
+        DiagramsGroupLayout.setGeometry(QtCore.QRect(0,0,690,max((DiagramNamesLayout.rowCount()*25+5),120)))
 
         ButtonsLayout = QtWidgets.QHBoxLayout()
-        ButtonsLayout.setContentsMargins(0, 6, 0, 0)
+        #ButtonsLayout.setContentsMargins(0, 6, 0, 0)
         ButtonsLayout.setAlignment(QtCore.Qt.AlignRight)
         ButtonsLayout.addWidget(self.widget('btn_clear_all'), 0, QtCore.Qt.AlignRight)
         ButtonsLayout.addWidget(self.widget('btn_check_all'), 0, QtCore.Qt.AlignRight)
+        ButtonsLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+        ButtonsLayout.setGeometry(QtCore.QRect(0,0,690,50))
 
-        DiagramsLayout = QtWidgets.QVBoxLayout()
-        DiagramsLayout.addLayout(DiagramNamesLayout)
-        DiagramsLayout.addLayout(ButtonsLayout)
-        DiagramsLayout.addLayout(confirmationLayout)
+        Area_1 = QtWidgets.QWidget()
+        Area_1.setLayout(DiagramsGroupLayout)
+        Area_2 = QtWidgets.QWidget()
+        Area_2.setLayout(ButtonsLayout)
 
-        self.setLayout(DiagramsLayout)
-        self.setFixedSize(400,300)
+        MainLayout = QtWidgets.QVBoxLayout()
+        MainLayout.setContentsMargins(10, 10, 10, 10)
+        MainLayout.addWidget(Area_1)
+        MainLayout.addWidget(Area_2)
+        #MainLayout.addLayout(DiagramsGroupLayout)
+        #MainLayout.addLayout(ButtonsLayout)
+
+        self.setLayout(MainLayout)
+
+        #self.setFixedSize(max(DiagramsGroup.width(),400),DiagramsGroup.height()+100)
+        #self.setMaximumHeight(400)
+        #self.setMinimumHeight(400)
+        self.setFixedHeight(400)
+        self.setFixedWidth(600)
+
         self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Diagram selection')
@@ -177,7 +192,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         for diagram in self.diagrams_list:
             checkbox = self.widget(diagram.name)
             checkbox.setChecked(checked)
-        self.widget('confirmation').setEnabled(checked)
+        #self.widget('confirmation').setEnabled(checked)
 
     @QtCore.pyqtSlot()
     def run(self):

@@ -66,6 +66,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         super().__init__(diagram, session)
 
         self.project = diagram.project
+        self.success = False
 
     def append_row_and_column_to_table_2(self,list_inp,entity=None):
 
@@ -586,6 +587,9 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         diagrams_selection_dialog.exec_()
         selected_diagrams = diagrams_selection_dialog.diagrams_selected
 
+        if len(selected_diagrams) == 0:
+            return
+
         selected_diagrams_sorted = diagrams_selection_dialog.sort(selected_diagrams)
 
         printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
@@ -732,4 +736,4 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             # COMPLETE THE EXPORT
             painter.end()
         # OPEN THE DOCUMENT
-        # openPath(path)
+        self.success = True

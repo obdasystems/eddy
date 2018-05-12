@@ -1460,9 +1460,13 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                     diagrams_selection_dialog.exec_()
                     selected_diagrams = diagrams_selection_dialog.diagrams_selected
 
+                    if len(selected_diagrams) == 0:
+                        return
+
                     flag = True
 
                 file_names = []
+                success_set = set()
 
                 for diag in selected_diagrams:
 
@@ -1478,19 +1482,30 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                     worker = self.createDiagramExporter(filetype, diag, self)
                     worker.run(path)
 
+                    if worker.success is not None:
+                        success_set.add(worker.success)
+
                     file_names.append(path)
 
-                if flag:
+                if (len(file_names) > 0) and (False not in success_set):
 
-                    text_to_display = str(len(file_names))+' files were created with filenames having the following pattern - [diagram_name]_[filename given in the file dialog].\n\n The files are \n'
+                    dialog_export_completed = QtWidgets.QMessageBox()
+                    dialog_export_completed.setWindowTitle('Export Completed')
+                    dialog_export_completed.setStandardButtons(QtWidgets.QMessageBox.Ok)
 
-                    for f in file_names:
-                        text_to_display = text_to_display+'     '+f+'\n'
+                    if flag:
 
-                    dialog_filename_changed = QtWidgets.QMessageBox()
-                    dialog_filename_changed.setText(text_to_display)
-                    dialog_filename_changed.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    dialog_filename_changed.exec_()
+                        text_to_display = str(len(
+                            file_names)) + ' files were created with filenames having the following pattern - [diagram_name]_[filename given in the file dialog].\n\n The files are \n'
+
+                        for f in file_names:
+                            text_to_display = text_to_display + '     ' + f + '\n'
+
+                    else:
+                        text_to_display = 'The exported file is - ' + file_names[0]
+
+                    dialog_export_completed.setText(text_to_display)
+                    dialog_export_completed.exec_()
 
     @QtCore.pyqtSlot()
     def doExportOntology(self):

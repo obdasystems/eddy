@@ -53,6 +53,8 @@ class ImageExporter(AbstractDiagramExporter):
         """
         super().__init__(diagram, session)
 
+        self.success = False
+
     #############################################
     #   INTERFACE
     #################################
@@ -92,3 +94,4 @@ class ImageExporter(AbstractDiagramExporter):
 
             painter.end()
 
+            self.success = True

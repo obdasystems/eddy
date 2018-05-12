@@ -66,6 +66,8 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         """
         super().__init__(diagram, session)
 
+        self.success = False
+
         self.document = None
         self.missing = {Item.FacetNode, Item.PropertyAssertionNode}
 
@@ -832,3 +834,5 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
         # 8) GENERATE THE FILE
         fwrite(self.document.toString(2), path)
+
+        self.success = True
