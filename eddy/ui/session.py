@@ -368,15 +368,15 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         self.addAction(QtWidgets.QAction(
             'Import Ontology', self, objectName='import_ontology', triggered=self.doImport,
-            statusTip='Import a document in the current project'))
+            shortcut='CTRL+I', statusTip='Import a document in the current project'))
 
         self.addAction(QtWidgets.QAction(
             'Export Ontology', self, objectName='export_ontology', triggered=self.doExportOntology,
-            statusTip='Export the current project in a different format'))
+            shortcut='CTRL+E', statusTip='Export the current project in a different format'))
 
         self.addAction(QtWidgets.QAction(
             'Export Diagrams', self, objectName='export_diagrams', triggered=self.doExportDiagram,
-            statusTip='Export a in a different format'))
+            shortcut='CTRL+SHIFT+E', statusTip='Export a in a different format'))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_print_black'), 'Print...', self,
@@ -418,7 +418,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'),
             'Open Ontology Manager',
-            self, objectName='open_prefix_manager', enabled=True,
+            self, objectName='open_prefix_manager', enabled=True, shortcut='CTRL+M',
             statusTip='Open Ontology Manager', triggered=self.doOpenOntologyExplorer))
         #############################################
         # DIAGRAM SPECIFIC
