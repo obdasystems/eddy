@@ -80,6 +80,18 @@ class File(Enum_):
                 return x
         return None
 
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the File matching the given value.
+        :type value: str
+        :rtype: File
+        """
+        for x in cls:
+            if x.value == value:
+                return x
+        return None
+
     @property
     def extension(self):
         """

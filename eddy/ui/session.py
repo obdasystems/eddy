@@ -1439,13 +1439,16 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            #dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
-
-            #dialog.setNameFilters(self.diagramExporterNameFilters({File.Xml}))
             dialog.setNameFilters(self.diagramExporterNameFilters())
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            dialog.selectNameFilter(File.Pdf.value)
             dialog.selectFile(self.project.name)
+            dialog.selectNameFilter(File.Pdf.value)
+            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
+                # When this is set on macOS, for some reason the native file dialog requires to set
+                # the file filter twice before changing the default suffix, but it already
+                # does this without setting this action. Tested on Qt 5.10.1
+                connect(dialog.filterSelected, lambda value: \
+                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
 
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
@@ -1469,7 +1472,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                         path = expandPath(first(dialog.selectedFiles()))
                     else:
                         short_path = first(dialog.selectedFiles())
-                        last_dot_index = short_path.rindex('.')
+                        last_dot_index = short_path.rfind('.')
                         new_path = short_path[0:last_dot_index]+'_'+diag.name+short_path[last_dot_index:len(short_path)]
 
                         path = expandPath(new_path)
@@ -1504,13 +1507,18 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             dialog.setNameFilters(
                 # self.ontologyExporterNameFilters()                -> .owl
                 # self.projectExporterNameFilters(except{File.Graphol})   -> .csv
-                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol}) \
-                       #+ self.diagramExporterNameFilters({File.Pdf, File.GraphML})
-                       ))
+                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol}))
+            )
 
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
+            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
+                # When this is set on macOS, for some reason the native file dialog requires to set
+                # the file filter twice before changing the default suffix, but it already
+                # does this without setting this action. Tested on Qt 5.10.1
+                connect(dialog.filterSelected, lambda value: \
+                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
                 try:
