@@ -2326,14 +2326,20 @@ class ProjectMergeWorker(QtCore.QObject):
             for name in conflicts[item]:
                 metac = conflicts[item][name][K_CURRENT]
                 metai = conflicts[item][name][K_IMPORTING]
+
                 ## RESOLVE DOCUMENTATION CONFLICTS
                 docc = metac.get(K_DESCRIPTION, '')
+                statusc = metac.get(K_DESCRIPTION_STATUS, '')
+
                 doci = metai.get(K_DESCRIPTION, '')
-                if docc != doci:
-                    resolver = PredicateDocumentationConflictResolver(item, name, docc, doci)
+                statusi = metai.get(K_DESCRIPTION_STATUS, '')
+
+                if (docc != doci) or (statusc != statusi):
+                    resolver = PredicateDocumentationConflictResolver(item, name, docc, doci, current_status=statusc, importing_status=statusi)
                     if resolver.exec_() == PredicateDocumentationConflictResolver.Rejected:
                         raise ProjectStopImportingError
-                    resolutions[item][name][K_DESCRIPTION] = resolver.result()
+                    resolutions[item][name][K_DESCRIPTION] = resolver.result()[0]
+                    resolutions[item][name][K_DESCRIPTION_STATUS] = resolver.result()[1]
                 ## COLLECT ASSERTIONS CONFLICTS FOR ATTRIBUTES
                 if item is Item.AttributeNode:
                     vc = metac.get(K_FUNCTIONAL, False)
