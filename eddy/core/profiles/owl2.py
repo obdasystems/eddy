@@ -64,6 +64,8 @@ from eddy.core.profiles.rules.owl2 import MembershipFromIndividualRule
 from eddy.core.profiles.rules.owl2 import MembershipFromRoleInstanceRule
 from eddy.core.profiles.rules.owl2 import MembershipFromAttributeInstanceRule
 from eddy.core.profiles.rules.owl2 import MembershipFromNeutralPropertyAssertionRule
+from eddy.core.profiles.rules.owl2 import SameFromCompatibleNodeRule
+from eddy.core.profiles.rules.owl2 import DifferentFromCompatibleNodeRule
 from eddy.core.profiles.rules.owl2 import SelfConnectionRule
 from eddy.core.profiles.rules.owl2 import CardinalityRestrictionNodeRule
 from eddy.core.profiles.rules.owl2 import UnknownIdentityNodeRule
@@ -110,6 +112,8 @@ class OWL2Profile(AbstractProfile):
         self.addEdgeRule(MembershipFromRoleInstanceRule)
         self.addEdgeRule(MembershipFromAttributeInstanceRule)
         self.addEdgeRule(MembershipFromNeutralPropertyAssertionRule)
+        self.addEdgeRule(SameFromCompatibleNodeRule)
+        self.addEdgeRule(DifferentFromCompatibleNodeRule)
 
     #############################################
     #   INTERFACE

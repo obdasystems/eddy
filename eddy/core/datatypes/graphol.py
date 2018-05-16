@@ -89,10 +89,12 @@ class Item(IntEnum_):
     EquivalenceEdge = 65555
     InputEdge = 65556
     MembershipEdge = 65557
+    SameEdge = 65558
+    DifferentEdge = 65559
 
     # EXTRA
-    Label = 65558
-    Undefined = 65559
+    Label = 65560
+    Undefined = 65561
 
     @property
     def realName(self):

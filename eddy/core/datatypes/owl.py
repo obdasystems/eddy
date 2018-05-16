@@ -183,6 +183,7 @@ class OWLAxiom(Enum_):
     DataPropertyDomain = 'DataPropertyDomain'
     DataPropertyRange = 'DataPropertyRange'
     Declaration = 'Declaration'
+    DifferentIndividuals = 'DifferentIndividuals'
     DisjointClasses = 'DisjointClasses'
     DisjointDataProperties = 'DisjointDataProperties'
     DisjointObjectProperties = 'DisjointObjectProperties'
@@ -200,6 +201,7 @@ class OWLAxiom(Enum_):
     ObjectPropertyDomain = 'ObjectPropertyDomain'
     ObjectPropertyRange = 'ObjectPropertyRange'
     ReflexiveObjectProperty = 'ReflexiveObjectProperty'
+    SameIndividual = 'SameIndividual'
     SubClassOf = 'SubClassOf'
     SubDataPropertyOf = 'SubDataPropertyOf'
     SubObjectPropertyOf = 'SubObjectPropertyOf'
@@ -219,7 +221,7 @@ class OWLAxiom(Enum_):
             return {x for x in OWLAxiom} - {OWLAxiom.FunctionalDataProperty,
                 OWLAxiom.FunctionalObjectProperty, OWLAxiom.InverseFunctionalObjectProperty,
                 OWLAxiom.TransitiveObjectProperty, OWLAxiom.NegativeDataPropertyAssertion,
-                OWLAxiom.NegativeObjectPropertyAssertion}
+                OWLAxiom.NegativeObjectPropertyAssertion, OWLAxiom.SameIndividual}
         elif profile is OWLProfile.OWL2RL:
             return {x for x in OWLAxiom} - {OWLAxiom.ReflexiveObjectProperty}
         raise ValueError('unsupported profile: %s' % profile)

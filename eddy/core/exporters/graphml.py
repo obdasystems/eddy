@@ -91,6 +91,8 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
             Item.EquivalenceEdge: self.exportEquivalenceEdge,
             Item.InputEdge: self.exportInputEdge,
             Item.MembershipEdge: self.exportMembershipEdge,
+            Item.SameEdge: self.exportSameEdge,
+            Item.DifferentEdge: self.exportDifferentEdge,
         }
 
     #############################################
@@ -291,6 +293,22 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :rtype: QDomElement
         """
         return self.exportGenericEdge(edge, 'line', 'standard', '', 'instanceOf')
+
+    def exportSameEdge(self, edge):
+        """
+        Export the given edge into a QDomElement.
+        :type edge: SameEdge
+        :rtype: QDomElement
+        """
+        return self.exportGenericEdge(edge, 'line', 'none', '', 'same')
+
+    def exportDifferentEdge(self, edge):
+        """
+        Export the given edge into a QDomElement.
+        :type edge: DifferentEdge
+        :rtype: QDomElement
+        """
+        return self.exportGenericEdge(edge, 'line', 'none', '', 'different')
 
     #############################################
     #   AUXILIARY METHODS

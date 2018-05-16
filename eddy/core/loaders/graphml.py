@@ -99,6 +99,8 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
             Item.EquivalenceEdge: self.importEquivalenceEdge,
             Item.InputEdge: self.importInputEdge,
             Item.MembershipEdge: self.importMembershipEdge,
+            Item.SameEdge: self.importSameEdge,
+            Item.DifferentEdge: self.importDifferentEdge,
         }
 
     #############################################
@@ -308,9 +310,31 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         """
         Build a Membership edge using the given QDomElement.
         :type element: QDomElement
-        :rtype: InputEdge
+        :rtype: MembershipEdge
         """
         edge = self.importEdgeFromGenericEdge(Item.MembershipEdge, element)
+        if edge:
+            edge.updateEdge()
+        return edge
+
+    def importSameEdge(self, element):
+        """
+        Build a Same edge using the given QDomElement.
+        :type element: QDomElement
+        :rtype: SameEdge
+        """
+        edge = self.importEdgeFromGenericEdge(Item.SameEdge, element)
+        if edge:
+            edge.updateEdge()
+        return edge
+
+    def importDifferentEdge(self, element):
+        """
+        Build a Different edge using the given QDomElement.
+        :type element: QDomElement
+        :rtype: DifferentEdge
+        """
+        edge = self.importEdgeFromGenericEdge(Item.DifferentEdge, element)
         if edge:
             edge.updateEdge()
         return edge
@@ -548,6 +572,10 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
                                 edgeText = edgeLabel.text().strip()
                                 if edgeText == 'instanceOf':
                                     return Item.MembershipEdge
+                                elif edgeText == 'same':
+                                    return Item.SameEdge
+                                elif edgeText == 'different':
+                                    return Item.DifferentEdge
                             return Item.InclusionEdge
                         if lineType == 'dashed':
                             return Item.InputEdge

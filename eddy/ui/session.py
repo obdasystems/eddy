@@ -54,6 +54,8 @@ from eddy.core.commands.diagram import CommandDiagramRemove
 from eddy.core.commands.diagram import CommandDiagramRename
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
+from eddy.core.commands.edges import CommandSwitchSameDifferentEdge
+from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.nodes import CommandNodeSetBrush
@@ -61,8 +63,7 @@ from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
-from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectDisconnectSpecificSignals, \
-    CommandProjectConnectSpecificSignals
+from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.common import HasActionSystem
 from eddy.core.common import HasDiagramExportSystem
 from eddy.core.common import HasDiagramLoadSystem
@@ -80,7 +81,7 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import Datatype, Facet
+from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
@@ -509,6 +510,20 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             objectName='swap_edge', shortcut='ALT+S', enabled=False,
             statusTip='Swap the direction of all the selected edges',
             triggered=self.doSwapEdge))
+
+        #############################################
+        # SAME/DIFFERENT SPECIFIC
+        #################################
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_transform_black'), 'Switch to different', self,
+            objectName='switch_same_to_different', statusTip='Switch same edge to different edge',
+            triggered=self.doSwitchSameDifferentEdge))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_transform_black'), 'Switch to same', self,
+            objectName='switch_different_to_same', statusTip='Switch different edge to same edge',
+            triggered=self.doSwitchSameDifferentEdge))
 
         #############################################
         # NODE RELATED
@@ -2362,6 +2377,19 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 self.undostack.push(CommandEdgeSwap(diagram, selected))
 
     @QtCore.pyqtSlot()
+    def doSwitchSameDifferentEdge(self):
+        """
+        Switch selected same/different edges to different/same respectively.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            fe = lambda e: e.type() in {Item.SameEdge, Item.DifferentEdge}
+            selected = diagram.selectedEdges(filter_on_edges=fe)
+            if selected:
+                self.undostack.push(CommandSwitchSameDifferentEdge(diagram, selected))
+
+    @QtCore.pyqtSlot()
     def doSwitchOperatorNode(self):
         """
         Switch the selected operator node to a different type.
@@ -2514,6 +2542,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         isEdgeSwapEnabled = False
         isNodeSelected = False
         isPredicateSelected = False
+        isSwitchToSameEnabled = self.project.profile.type() is not OWLProfile.OWL2QL
+        isSwitchToDifferentEnabled = True
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.undostack.isClean()
 
@@ -2554,6 +2584,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.action('snap_to_grid').setEnabled(isDiagramActive)
         self.action('syntax_check').setEnabled(not isProjectEmpty)
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
+        self.action('switch_same_to_different').setEnabled(isSwitchToDifferentEnabled)
+        self.action('switch_different_to_same').setEnabled(isSwitchToSameEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())

@@ -95,6 +95,15 @@ class UnsupportedOperatorRule(ProfileNodeRule):
             raise ProfileError('Usage of {} operator is forbidden in OWL 2 QL'.format(node.shortName))
 
 
+class UnsupportedIndividualEqualityRule(ProfileEdgeRule):
+    """
+    Prevents from using individual equality assertion edges which are not supported by the OWL 2 QL profile.
+    """
+    def __call__(self, source, edge, target):
+        if edge.type() is Item.SameEdge:
+            raise ProfileError('Usage of SameIndividual assertion is forbidden in OWL 2 QL')
+
+
 class EquivalenceBetweenConceptExpressionRule(ProfileEdgeRule):
     """
     Make sure that equivalence edges are not from/to intersection or complement nodes.

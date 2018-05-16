@@ -46,7 +46,7 @@ from eddy.core.profiles.rules.owl2ql import MembershipFromRoleInstanceToCompleme
 from eddy.core.profiles.rules.owl2ql import MembershipFromPropertyAssertionToComplementNodeRule
 from eddy.core.profiles.rules.owl2ql import UnsupportedDatatypeRule
 from eddy.core.profiles.rules.owl2ql import UnsupportedOperatorRule
-
+from eddy.core.profiles.rules.owl2ql import UnsupportedIndividualEqualityRule
 from eddy.core.profiles.rules.owl2ql import FunctionalityUnsupported
 from eddy.core.profiles.rules.owl2ql import InverseFunctionalityUnsupported
 from eddy.core.profiles.rules.owl2ql import TransitivityUnsupported
@@ -63,11 +63,10 @@ class OWL2QLProfile(OWL2Profile):
         super().__init__(project)
         self.addNodeRule(UnsupportedDatatypeRule)
         self.addNodeRule(UnsupportedOperatorRule)
-
+        self.addEdgeRule(UnsupportedIndividualEqualityRule)
         self.addNodeRule(FunctionalityUnsupported)
         self.addNodeRule(InverseFunctionalityUnsupported)
         self.addNodeRule(TransitivityUnsupported)
-
         self.addEdgeRule(EquivalenceBetweenConceptExpressionRule)
         self.addEdgeRule(InclusionBetweenConceptExpressionRule)
         self.addEdgeRule(InputConceptToRestrictionNodeRule)
