@@ -237,9 +237,6 @@ def rtfStripFontAttributes(rtf):
     strippedRtf = rtf
     strippedRtf = re.sub(r'font-family:.+?;', "", strippedRtf)
     strippedRtf = re.sub(r'font-size:.+?;', "", strippedRtf)
-    strippedRtf = re.sub(r'font-weight:.+?;', "", strippedRtf)
-    strippedRtf = re.sub(r'font-style:.+?;', "", strippedRtf)
-    strippedRtf = re.sub(r'text-decoration:.+?;', "", strippedRtf)
     strippedRtf = re.sub(r'color:.+?;', "", strippedRtf)
     strippedRtf = re.sub(r'background-color:.+?;', "", strippedRtf)
     # finally replace empty style attributes that remain after substitution
