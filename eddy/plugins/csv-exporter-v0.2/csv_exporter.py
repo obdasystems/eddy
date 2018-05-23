@@ -105,18 +105,9 @@ class CsvExporter(AbstractProjectExporter):
 
         self.selected_diagrams = None
 
-        #############################################
+    #############################################
     #   INTERFACE
     #################################
-    def get_plain_text(self, raw_text):
-
-        text = QtWidgets.QTextEdit()
-        text.setText(raw_text)
-
-        plain_text=text.toPlainText()
-
-        print('raw_text',raw_text)
-        print('plain_text',plain_text)
 
     def run(self, path):
         """
@@ -137,7 +128,8 @@ class CsvExporter(AbstractProjectExporter):
                     if not node.text() in collection[node.type()]:
                         meta = self.project.meta(node.type(), node.text())
                         collection[node.type()][node.text()] = {
-                            CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
+                            #CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
+                            CsvExporter.KeyName: node.text().replace('\n',''),
                             CsvExporter.KeyType: node.shortName,
                             #CsvExporter.KeyDescription: meta.get(K_DESCRIPTION, ''),
                             CsvExporter.KeyDescription: QtWidgets.QTextEdit(meta.get(K_DESCRIPTION, '')).toPlainText(),
