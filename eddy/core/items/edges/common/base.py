@@ -227,7 +227,23 @@ class AbstractEdge(AbstractItem):
         :type mousePos: QtCore.QPointF
         """
         snapToGrid = self.session.action('toggle_grid').isChecked()
-        self.breakpoints[breakpoint] = snap(mousePos, self.diagram.GridSize, snapToGrid)
+        mousePos = snap(mousePos, self.diagram.GridSize, snapToGrid)
+        source = self.source
+        target = self.target
+        breakpointPos = self.breakpoints[breakpoint]
+        sourcePath = self.mapFromItem(source, source.painterPath())
+        targetPath = self.mapFromItem(target, target.painterPath())
+        if sourcePath.contains(mousePos):
+            # Mouse is inside the source node, use the intersection as the breakpoint position
+            pos = source.intersection(QtCore.QLineF(source.pos(), breakpointPos))
+        elif targetPath.contains(mousePos):
+            # Mouse is inside the target node, use the intersection as the breakpoint position
+            pos = target.intersection(QtCore.QLineF(target.pos(), breakpointPos))
+        else:
+            # Mouse is outside both source and target node, use this as the breakpoint position.
+            pos = mousePos
+
+        self.breakpoints[breakpoint] = pos
 
     def canDraw(self):
         """

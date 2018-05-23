@@ -422,11 +422,14 @@ class GrapholDiagramLoader_v1(AbstractDiagramLoader):
             points.append(QtCore.QPointF(int(point.attribute('x')), int(point.attribute('y'))))
             point = self.getPointBesideElement(point)
 
+        source = self.nodes[e.attribute('source')]
+        target = self.nodes[e.attribute('target')]
         edge = self.diagram.factory.create(item, **{
             'id': e.attribute('id'),
-            'source': self.nodes[e.attribute('source')],
-            'target': self.nodes[e.attribute('target')],
-            'breakpoints': points[1:-1]
+            'source': source,
+            'target': target,
+            'breakpoints': [p for p in points[1:-1] \
+                            if not (source.painterPath().contains(p) or target.painterPath().contains(p))]
         })
 
         path = edge.source.painterPath()
@@ -1447,11 +1450,15 @@ class GrapholLoaderMixin_v2(object):
             points.append(QtCore.QPointF(int(point.attribute('x')), int(point.attribute('y'))))
             point = point.nextSiblingElement('point')
 
+        source = self.buffer[d.name][e.attribute('source')]
+        target = self.buffer[d.name][e.attribute('target')]
         edge = d.factory.create(i, **{
             'id': e.attribute('id'),
-            'source': self.buffer[d.name][e.attribute('source')],
-            'target': self.buffer[d.name][e.attribute('target')],
-            'breakpoints': points[1:-1]
+            'source': source,
+            'target': target,
+            'breakpoints': [p for p in points[1:-1]
+                            if not (source.painterPath().contains(source.mapFromScene(p)) or
+                                    target.painterPath().contains(target.mapFromScene(p)))]
         })
 
         path = edge.source.painterPath()
