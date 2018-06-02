@@ -1690,8 +1690,10 @@ class GrapholLoaderMixin_v2(object):
             except Exception:
                 LOGGER.exception('Failed to create node %s', sube.attribute('id'))
             else:
+
                 if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                             'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+                    #print('importDiagram >>> str(type(node))',str(type(node)))
                     if self.nproject.get_iri_of_node(node) is None:
                         if self.nproject.iri is not None:
                             self.nproject.IRI_prefixes_nodes_dict[self.nproject.iri][1].add(node)
@@ -2147,9 +2149,12 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
 
         self.createDomDocument()
         self.createProject()
-        self.createDiagrams()
 
         self.convert_string_of_nodes_to_nodes()
+
+        self.createDiagrams()
+
+        #self.convert_string_of_nodes_to_nodes()
 
         self.remove_invalid_nodes_from_the_dict()
         #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
@@ -2214,12 +2219,17 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
         else:
             #print('GrapholProjectLoader_v2')
             self.createProject()
+
+            self.convert_string_of_nodes_to_nodes()
+
             self.createDiagrams()
 
             #self.update_label_of_nodes()
-            self.convert_string_of_nodes_to_nodes()
+            #self.convert_string_of_nodes_to_nodes()
 
             self.remove_invalid_nodes_from_the_dict()
+
+
             #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
 
             self.createPredicatesMeta()

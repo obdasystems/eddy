@@ -237,16 +237,17 @@ class Project(QtCore.QObject):
 
         iris = set()
 
-        # print('self',self)
+        #print('str(type(node_inp))',str(type(node_inp)))
         for iri in self.IRI_prefixes_nodes_dict.keys():
             nodes = self.IRI_prefixes_nodes_dict[iri][1]
 
-            if (node_inp in nodes) or (str(node_inp) in str(nodes)):
-                iris.add(iri)
-            else:
-                for n in nodes:
-                    if (node_inp is n) or (str(node_inp) == str(n)):
-                        iris.add(iri)
+            #if (node_inp in nodes) or (str(node_inp) in str(nodes)):
+                #iris.add(iri)
+            #else:
+            for n in nodes:
+                #print('str(type(n))',str(type(n)))
+                if (node_inp is n) or ((str(node_inp) == str(n)) and (node_inp.id_with_diag == n.id_with_diag)):
+                   iris.add(iri)
 
         if len(iris) == 1:
             return list(iris)[0]
@@ -428,6 +429,8 @@ class Project(QtCore.QObject):
 
                 if self.get_iri_of_node(n) is None:
                     print('No IRI for ',n.id,' ',n.text())
+            else:
+                print('invalid node type; str(type(n))-',str(type(n)))
 
         print('*********        No IRI for Nodes (END)       ***********')
 
@@ -577,10 +580,12 @@ class Project(QtCore.QObject):
                     flag = True
                     break
 
+            #print('flag',flag)
+
             if flag is False:
                 if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
 
-                    # print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    #print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
                     if (self.get_iri_of_node(node) is None):
                         prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
 
@@ -596,11 +601,11 @@ class Project(QtCore.QObject):
                         pass
                 else:
 
-                    # print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    #print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
 
                     if (self.get_iri_of_node(node) is None):
 
-                        # print('if       (self.get_iri_of_node(node) is None):')
+                        #print('if       (self.get_iri_of_node(node) is None):')
 
                         if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
 
@@ -614,13 +619,15 @@ class Project(QtCore.QObject):
                             corr_iri = self.iri
                     else:
 
-                        # print('else       (self.get_iri_of_node(node) is None):')
-
+                        #print('else       (self.get_iri_of_node(node) is None):')
+                        #print('self.get_iri_of_node(node)',self.get_iri_of_node(node))
+                        #print('node.id',node.id_with_diag)
                         corr_iri = None
 
             # print('corr_iri',corr_iri)
 
             if corr_iri is not None:
+                #print('corr_iri',corr_iri)
                 self.IRI_prefixes_nodes_dict[corr_iri][1].add(node)
                 if node.diagram is not None:
                     self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri,str(node),str(node.diagram.name))
@@ -2101,6 +2108,9 @@ class ProjectMergeWorker(QtCore.QObject):
         self.old_dictionary = None
         self.new_dictionary = None
 
+        self.selected_diagrams = None
+        self.all_names_in_selected_diagrams = []
+
     #############################################
     #   PROPERTIES
     #################################
@@ -2274,6 +2284,14 @@ class ProjectMergeWorker(QtCore.QObject):
         diagrams_selection_dialog.exec_()
         self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
 
+        for d in self.selected_diagrams:
+            #print('d.name', d.name)
+            #print('len(d.nodes())', len(d.nodes()))
+            for n in d.nodes():
+                #print('     n', n)
+                if n.text() is not None:
+                    self.all_names_in_selected_diagrams.append(n.text().replace('\n', ''))
+
         #for diagram in self.other.diagrams():
         for diagram in self.selected_diagrams:
             # We may be in the situation in which we are importing a diagram with name 'X'
@@ -2302,7 +2320,62 @@ class ProjectMergeWorker(QtCore.QObject):
         conflicts = dict()
         resolutions = dict()
 
+        """
+        project_diags = self.project.diagrams()
+        other_diags = self.other.diagrams()
+
+        other_meats_filtered = []
+        print('****     project predicates     ***')
+        for i in self.project.predicates():
+            print('     ',i)
+
+        for d in project_diags:
+            print('diagram_name',d.name)
+            for i in self.project.predicates(diagram=d):
+                print('     ',i)
+
+        print('\n****     project metas     ***')
+        #print('metas', self.project.metas())
+        for item, name in self.project.metas():
+            print('     ',item)
+            print('     ',name)
+            print('     -')
+
+        print('\n****     other predicates     ***')
+        for i in self.other.predicates():
+            print('     ',i)
+
+        for d in other_diags:
+            print('diagram_name',d.name)
+            for i in self.other.predicates(diagram=d):
+                print('     ',i)
+
+        print('\n****     other metas     ***')
+        #print('metas',self.other.metas())
         for item, name in self.other.metas():
+            print('     ',item)
+            print('     ',name)
+            print('     -')
+        
+
+        all_names_in_selected_diagrams = []
+
+        for d in self.selected_diagrams:
+            print('d.name',d.name)
+            print('len(d.nodes())',len(d.nodes()))
+            for n in d.nodes():
+                print('     n',n)
+                all_names_in_selected_diagrams.append(n.text().replace('\n',''))
+
+        print('all_names_in_selected_diagrams',all_names_in_selected_diagrams)
+        """
+
+        for item, name in self.other.metas():
+
+            if name not in self.all_names_in_selected_diagrams:
+                #print(name,'skipped')
+                continue
+
             if not self.project.predicates(item, name):
                 ## NO PREDICATE => NO CONFLICT
                 undo = self.project.meta(item, name).copy()
