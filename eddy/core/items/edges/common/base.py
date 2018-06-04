@@ -45,7 +45,7 @@ from eddy.core.commands.edges import CommandEdgeBreakpointMove
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.geometry import distance, projection
 from eddy.core.functions.misc import snap
-from eddy.core.items.common import AbstractItem
+from eddy.core.items.common import AbstractItem, Item
 from eddy.core.items.common import Polygon
 
 
@@ -108,21 +108,61 @@ class AbstractEdge(AbstractItem):
         :type node: AbstractNode
         :type mousePos: QtCore.QPointF
         """
+        # Only allow anchor movement for concept nodes
+        if node.type() != Item.ConceptNode:
+            node.setAnchor(self, node.pos())
+            return
+
         nodePos = node.pos()
         snapToGrid = self.session.action('toggle_grid').isChecked()
         mousePos = snap(mousePos, self.diagram.GridSize, snapToGrid)
         path = self.mapFromItem(node, node.painterPath())
+        breakpoint = (self.breakpoints[-1] if node == self.target else self.breakpoints[0]) \
+            if len(self.breakpoints) > 0 else self.other(node).anchor(self)
+
+        if path.contains(breakpoint):
+            # If the source is inside the node then there will be no intersection
+            if path.contains(self.other(node).anchor(self)):
+                return
+
+            # Breakpoint is inside the shape => use the source anchor
+            breakpoint = self.other(node).anchor(self)
+
         if path.contains(mousePos):
-            # Mouse is inside the shape => use this position as anchor point.
-            pos = nodePos if distance(mousePos, nodePos) < 10.0 else mousePos
+            # Mouse is inside the shape => use its position as the endpoint.
+            endpoint = mousePos
         else:
-            # Mouse is outside the shape => use the intersection point as anchor point.
-            pos = node.intersection(QtCore.QLineF(mousePos, nodePos))
-            for pair in set(permutations([-1, -1, 0, 0, 1, 1], 2)):
-                p = pos + QtCore.QPointF(*pair)
-                if path.contains(p):
-                    pos = p
-                    break
+            # Mouse is outside the shape => use the intersection as the endpoint.
+            endpoint = node.intersection(QtCore.QLineF(nodePos, mousePos))
+
+        if distance(nodePos, endpoint) < 10.0:
+            # When close enough use the node center as the anchor point.
+            pos = nodePos
+        else:
+            # Otherwise compute the closest intersection between the breakpoint and the endpoint.
+            pos = node.intersection(QtCore.QLineF(breakpoint, endpoint))
+            minDistance = distance(breakpoint, pos)
+            for intersection in node.intersections(QtCore.QLineF(breakpoint, endpoint)):
+                intersDistance = distance(breakpoint, intersection)
+                if (intersDistance < minDistance):
+                    minDistance = intersDistance
+                    pos = intersection
+
+            if not path.contains(pos):
+                # Ensure anchor is inside the path
+                lineToBreakpoint = QtCore.QLineF(breakpoint, endpoint)
+                direction = lineToBreakpoint.unitVector()
+                normal = lineToBreakpoint.normalVector().unitVector()
+                if path.contains(pos + QtCore.QPointF(direction.dx(), direction.dy())):
+                    pos = pos + QtCore.QPointF(direction.dx(), direction.dy())
+                elif path.contains(pos - QtCore.QPointF(direction.dx(), direction.dy())):
+                    pos = pos - QtCore.QPointF(direction.dx(), direction.dy())
+                elif path.contains(pos + QtCore.QPointF(normal.dx(), normal.dy())):
+                    pos = pos + QtCore.QPointF(normal.dx(), normal.dy())
+                elif path.contains(pos - QtCore.QPointF(normal.dx(), normal.dy())):
+                    pos = pos - QtCore.QPointF(normal.dx(), normal.dy())
+                else: # Lower right corner
+                    pos = pos - QtCore.QPointF(0.5 , 0.5)
 
         node.setAnchor(self, pos)
 
@@ -187,7 +227,23 @@ class AbstractEdge(AbstractItem):
         :type mousePos: QtCore.QPointF
         """
         snapToGrid = self.session.action('toggle_grid').isChecked()
-        self.breakpoints[breakpoint] = snap(mousePos, self.diagram.GridSize, snapToGrid)
+        mousePos = snap(mousePos, self.diagram.GridSize, snapToGrid)
+        source = self.source
+        target = self.target
+        breakpointPos = self.breakpoints[breakpoint]
+        sourcePath = self.mapFromItem(source, source.painterPath())
+        targetPath = self.mapFromItem(target, target.painterPath())
+        if sourcePath.contains(mousePos):
+            # Mouse is inside the source node, use the intersection as the breakpoint position
+            pos = source.intersection(QtCore.QLineF(source.pos(), breakpointPos))
+        elif targetPath.contains(mousePos):
+            # Mouse is inside the target node, use the intersection as the breakpoint position
+            pos = target.intersection(QtCore.QLineF(target.pos(), breakpointPos))
+        else:
+            # Mouse is outside both source and target node, use this as the breakpoint position.
+            pos = mousePos
+
+        self.breakpoints[breakpoint] = pos
 
     def canDraw(self):
         """
