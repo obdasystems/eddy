@@ -42,7 +42,7 @@ from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
-from eddy.core.project import K_DESCRIPTION
+from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 
 
 LOGGER = getLogger()
@@ -65,6 +65,8 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         :type session: Session
         """
         super().__init__(diagram, session)
+
+        self.success = False
 
         self.document = None
         self.missing = {Item.FacetNode, Item.PropertyAssertionNode}
@@ -832,3 +834,5 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
         # 8) GENERATE THE FILE
         fwrite(self.document.toString(2), path)
+
+        self.success = True

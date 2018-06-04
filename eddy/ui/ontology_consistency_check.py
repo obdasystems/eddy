@@ -126,6 +126,9 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
         self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,call_ClearInconsistentEntitiesAndDiagItemsData=True)
 
+        connect(self.project.sgnItemAdded, self.project.reset_changes_made_after_reasoning_task)
+        connect(self.project.sgnItemRemoved, self.project.reset_changes_made_after_reasoning_task)
+
     #############################################
     #   INTERFACE
     #################################
@@ -478,7 +481,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             LOGGER.error(errored_message)
             return
 
-
         dict = worker.refined_axiom_to_node_or_edge
         ontology = worker.ontology
 
@@ -554,8 +556,6 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             """
             hermit.flush();
             hermit.dispose();
-
-
 
         except Exception as e:
 

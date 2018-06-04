@@ -342,6 +342,13 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
             if focusInData and focusInData != currentData:
 
+                """
+                reasoner_active = self.project.check_if_reasoner_was_active()
+                if (reasoner_active == 'was_unsatisfiable') or (reasoner_active == 'was_inconsistent'):
+                    reasoner_variables = FetchReasonerVariables(self.project)
+                else:
+                    reasoner_variables = 'empty'
+                """
                 node = self.parentItem()
                 match = RE_VALUE.match(currentData)
 

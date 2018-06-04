@@ -44,7 +44,7 @@ from eddy.core.functions.misc import postfix
 from eddy.core.functions.fsystem import fwrite, mkdir
 from eddy.core.output import getLogger
 from eddy.core.project import Project
-from eddy.core.project import K_DESCRIPTION
+from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -147,6 +147,7 @@ class GrapholProjectExporter(AbstractProjectExporter):
         element.setAttribute('type', self.itemToXml[item])
         element.setAttribute('name', name)
         description = self.document.createElement(K_DESCRIPTION)
+        description.setAttribute('status',meta.get(K_DESCRIPTION_STATUS, ''))
         description.appendChild(self.document.createTextNode(meta.get(K_DESCRIPTION, '')))
 
         element.appendChild(description)

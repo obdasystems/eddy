@@ -51,6 +51,8 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
         """
         super().__init__(diagram, session)
 
+        self.success = False
+
     #############################################
     #   INTERFACE
     #################################
@@ -88,3 +90,5 @@ class PrinterDiagramExporter(AbstractDiagramExporter):
                             item.setCacheMode(AbstractItem.DeviceCoordinateCache)
                     # COMPLETE THE PRINT
                     painter.end()
+
+                    self.success = True

@@ -48,6 +48,8 @@ class GraphReferences(AbstractDiagramExporter):
         self.document = None
         self.missing = {Item.FacetNode, Item.PropertyAssertionNode}
 
+        self.success = False
+
     @classmethod
     def filetype(cls):
         """
@@ -132,4 +134,5 @@ class GraphReferences(AbstractDiagramExporter):
         # 5) GENERATE THE FILE
         fwrite(self.document.toString(2), path)
 
+        self.success = True
 

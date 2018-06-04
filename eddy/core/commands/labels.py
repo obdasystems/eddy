@@ -218,7 +218,6 @@ class GenerateNewLabel():
         self.old_label = kwargs.get('old_label',None)
         self.node = node
 
-
     def return_label(self):
 
         if (self.node.type() is Item.IndividualNode) and (self.node.identity() is Identity.Value):
@@ -288,7 +287,6 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         self.item.setText(self.data['redo'])
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
-
 
         # RESTORE METADATA
         if meta:

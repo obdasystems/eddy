@@ -195,6 +195,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         Executed when the abort button is pressed.
         :type _: bool
         """
+        self.sgnWork.emit(self.i + 1)  #previous dialog pops up if this command is not executed.
         self.close()
 
     @QtCore.pyqtSlot(bool)

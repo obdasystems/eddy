@@ -79,6 +79,7 @@ K_PROPERTY = 'property'
 
 # PREDICATES META KEYS
 K_DESCRIPTION = 'description'
+K_DESCRIPTION_STATUS = 'status'
 
 K_FUNCTIONAL = 'functional'
 K_ASYMMETRIC = 'asymmetric'
@@ -162,6 +163,8 @@ class Project(QtCore.QObject):
 
         self.converted_nodes = dict()
 
+        ### $$ END $$ variables controlled by reasoners $$ END $$ ###
+
         self.brush_blue = QtGui.QBrush(QtGui.QColor(43, 63, 173, 160))
         self.brush_light_red = QtGui.QBrush(QtGui.QColor(250, 150, 150, 100))
         self.brush_orange = QtGui.QBrush(QtGui.QColor(255, 165, 0, 160))
@@ -176,6 +179,7 @@ class Project(QtCore.QObject):
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
 
@@ -233,16 +237,17 @@ class Project(QtCore.QObject):
 
         iris = set()
 
-        # print('self',self)
+        #print('str(type(node_inp))',str(type(node_inp)))
         for iri in self.IRI_prefixes_nodes_dict.keys():
             nodes = self.IRI_prefixes_nodes_dict[iri][1]
 
-            if (node_inp in nodes) or (str(node_inp) in str(nodes)):
-                iris.add(iri)
-            else:
-                for n in nodes:
-                    if (node_inp is n) or (str(node_inp) == str(n)):
-                        iris.add(iri)
+            #if (node_inp in nodes) or (str(node_inp) in str(nodes)):
+                #iris.add(iri)
+            #else:
+            for n in nodes:
+                #print('str(type(n))',str(type(n)))
+                if (node_inp is n) or ((str(node_inp) == str(n)) and (node_inp.id_with_diag == n.id_with_diag)):
+                   iris.add(iri)
 
         if len(iris) == 1:
             return list(iris)[0]
@@ -424,6 +429,8 @@ class Project(QtCore.QObject):
 
                 if self.get_iri_of_node(n) is None:
                     print('No IRI for ',n.id,' ',n.text())
+            else:
+                print('invalid node type; str(type(n))-',str(type(n)))
 
         print('*********        No IRI for Nodes (END)       ***********')
 
@@ -573,10 +580,12 @@ class Project(QtCore.QObject):
                     flag = True
                     break
 
+            #print('flag',flag)
+
             if flag is False:
                 if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
 
-                    # print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    #print('if           (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
                     if (self.get_iri_of_node(node) is None):
                         prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
 
@@ -592,11 +601,11 @@ class Project(QtCore.QObject):
                         pass
                 else:
 
-                    # print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
+                    #print('else          (node.type() is Item.IndividualNode) and (item.identity() is Identity.Value):')
 
                     if (self.get_iri_of_node(node) is None):
 
-                        # print('if       (self.get_iri_of_node(node) is None):')
+                        #print('if       (self.get_iri_of_node(node) is None):')
 
                         if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
 
@@ -610,13 +619,15 @@ class Project(QtCore.QObject):
                             corr_iri = self.iri
                     else:
 
-                        # print('else       (self.get_iri_of_node(node) is None):')
-
+                        #print('else       (self.get_iri_of_node(node) is None):')
+                        #print('self.get_iri_of_node(node)',self.get_iri_of_node(node))
+                        #print('node.id',node.id_with_diag)
                         corr_iri = None
 
             # print('corr_iri',corr_iri)
 
             if corr_iri is not None:
+                #print('corr_iri',corr_iri)
                 self.IRI_prefixes_nodes_dict[corr_iri][1].add(node)
                 if node.diagram is not None:
                     self.sgnIRIPrefixNodeDictionaryUpdated.emit(corr_iri,str(node),str(node.diagram.name))
@@ -1341,6 +1352,40 @@ class Project(QtCore.QObject):
         #connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
+    def reset_changes_made_after_reasoning_task(self):
+
+        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
+        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
+        self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,
+                                                     call_ClearInconsistentEntitiesAndDiagItemsData=True)
+
+        disconnect(self.sgnItemAdded, self.reset_changes_made_after_reasoning_task)
+        disconnect(self.sgnItemRemoved, self.reset_changes_made_after_reasoning_task)
+
+    #not used
+    def check_if_reasoner_was_active(self):
+
+        A = len(self.unsatisfiable_classes) > 0
+        B = len(self.unsatisfiable_attributes)  > 0
+        C = len(self.unsatisfiable_roles)  > 0
+
+        D = self.inconsistent_ontology is not None
+
+        if (A is True) and (B is True) and (C is True) and (D is True):
+
+            return 'inactive'
+
+        else:
+
+            if (D is True) and ((A is False) or (B is False) or (C is False)):
+
+                return 'was_unsatisfiable'
+
+            elif (D is False) :
+
+                return 'was_inconsistent'
+
+
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 
         for node_or_edge in self.nodes_or_edges_of_explanations_to_display_in_widget:
@@ -2063,6 +2108,9 @@ class ProjectMergeWorker(QtCore.QObject):
         self.old_dictionary = None
         self.new_dictionary = None
 
+        self.selected_diagrams = None
+        self.all_names_in_selected_diagrams = []
+
     #############################################
     #   PROPERTIES
     #################################
@@ -2236,6 +2284,14 @@ class ProjectMergeWorker(QtCore.QObject):
         diagrams_selection_dialog.exec_()
         self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
 
+        for d in self.selected_diagrams:
+            #print('d.name', d.name)
+            #print('len(d.nodes())', len(d.nodes()))
+            for n in d.nodes():
+                #print('     n', n)
+                if n.text() is not None:
+                    self.all_names_in_selected_diagrams.append(n.text().replace('\n', ''))
+
         #for diagram in self.other.diagrams():
         for diagram in self.selected_diagrams:
             # We may be in the situation in which we are importing a diagram with name 'X'
@@ -2264,7 +2320,62 @@ class ProjectMergeWorker(QtCore.QObject):
         conflicts = dict()
         resolutions = dict()
 
+        """
+        project_diags = self.project.diagrams()
+        other_diags = self.other.diagrams()
+
+        other_meats_filtered = []
+        print('****     project predicates     ***')
+        for i in self.project.predicates():
+            print('     ',i)
+
+        for d in project_diags:
+            print('diagram_name',d.name)
+            for i in self.project.predicates(diagram=d):
+                print('     ',i)
+
+        print('\n****     project metas     ***')
+        #print('metas', self.project.metas())
+        for item, name in self.project.metas():
+            print('     ',item)
+            print('     ',name)
+            print('     -')
+
+        print('\n****     other predicates     ***')
+        for i in self.other.predicates():
+            print('     ',i)
+
+        for d in other_diags:
+            print('diagram_name',d.name)
+            for i in self.other.predicates(diagram=d):
+                print('     ',i)
+
+        print('\n****     other metas     ***')
+        #print('metas',self.other.metas())
         for item, name in self.other.metas():
+            print('     ',item)
+            print('     ',name)
+            print('     -')
+        
+
+        all_names_in_selected_diagrams = []
+
+        for d in self.selected_diagrams:
+            print('d.name',d.name)
+            print('len(d.nodes())',len(d.nodes()))
+            for n in d.nodes():
+                print('     n',n)
+                all_names_in_selected_diagrams.append(n.text().replace('\n',''))
+
+        print('all_names_in_selected_diagrams',all_names_in_selected_diagrams)
+        """
+
+        for item, name in self.other.metas():
+
+            if name not in self.all_names_in_selected_diagrams:
+                #print(name,'skipped')
+                continue
+
             if not self.project.predicates(item, name):
                 ## NO PREDICATE => NO CONFLICT
                 undo = self.project.meta(item, name).copy()
@@ -2288,14 +2399,20 @@ class ProjectMergeWorker(QtCore.QObject):
             for name in conflicts[item]:
                 metac = conflicts[item][name][K_CURRENT]
                 metai = conflicts[item][name][K_IMPORTING]
+
                 ## RESOLVE DOCUMENTATION CONFLICTS
                 docc = metac.get(K_DESCRIPTION, '')
+                statusc = metac.get(K_DESCRIPTION_STATUS, '')
+
                 doci = metai.get(K_DESCRIPTION, '')
-                if docc != doci:
-                    resolver = PredicateDocumentationConflictResolver(item, name, docc, doci)
+                statusi = metai.get(K_DESCRIPTION_STATUS, '')
+
+                if (docc != doci) or (statusc != statusi):
+                    resolver = PredicateDocumentationConflictResolver(item, name, docc, doci, current_status=statusc, importing_status=statusi)
                     if resolver.exec_() == PredicateDocumentationConflictResolver.Rejected:
                         raise ProjectStopImportingError
-                    resolutions[item][name][K_DESCRIPTION] = resolver.result()
+                    resolutions[item][name][K_DESCRIPTION] = resolver.result()[0]
+                    resolutions[item][name][K_DESCRIPTION_STATUS] = resolver.result()[1]
                 ## COLLECT ASSERTIONS CONFLICTS FOR ATTRIBUTES
                 if item is Item.AttributeNode:
                     vc = metac.get(K_FUNCTIONAL, False)

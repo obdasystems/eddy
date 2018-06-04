@@ -50,6 +50,8 @@ from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import K_DESCRIPTION
 from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
 
+from PyQt5 import QtWidgets
+
 LOGGER = getLogger()
 
 
@@ -103,7 +105,7 @@ class CsvExporter(AbstractProjectExporter):
 
         self.selected_diagrams = None
 
-        #############################################
+    #############################################
     #   INTERFACE
     #################################
 
@@ -126,9 +128,11 @@ class CsvExporter(AbstractProjectExporter):
                     if not node.text() in collection[node.type()]:
                         meta = self.project.meta(node.type(), node.text())
                         collection[node.type()][node.text()] = {
-                            CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
+                            #CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
+                            CsvExporter.KeyName: node.text().replace('\n',''),
                             CsvExporter.KeyType: node.shortName,
-                            CsvExporter.KeyDescription: meta.get(K_DESCRIPTION, ''),
+                            #CsvExporter.KeyDescription: meta.get(K_DESCRIPTION, ''),
+                            CsvExporter.KeyDescription: QtWidgets.QTextEdit(meta.get(K_DESCRIPTION, '')).toPlainText(),
                             CsvExporter.KeyDiagrams: DistinctList()}
                     collection[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
 

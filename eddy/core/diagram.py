@@ -50,6 +50,8 @@ from eddy.core.generators import GUID
 from eddy.core.items.factory import ItemFactory
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 
 
 LOGGER = getLogger()
@@ -184,8 +186,61 @@ class Diagram(QtWidgets.QGraphicsScene):
         if dropEvent.mimeData().hasFormat('text/plain'):
             snapToGrid = self.session.action('toggle_grid').isChecked()
             node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
+
+            data = dropEvent.mimeData().data(dropEvent.mimeData().text())
+
+            iri = None
+
+            if data is not None:
+
+                data_str = ''
+
+                for i in range(0, data.size()):
+                    data_str = data_str + data.at(i)
+
+                if data_str is not '':
+
+                    data_comma_seperated = data_str.split(',')
+
+                    iri = data_comma_seperated[0]
+                    rc = data_comma_seperated[1]
+                    txt = data_comma_seperated[2]
+
+                    node.setText(txt)
+                    node.remaining_characters = rc
+
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-            self.session.undostack.push(CommandNodeAdd(self, node))
+
+            commands = []
+
+            if iri is not None:
+                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                                     dict())
+                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                                     dict())
+                Duplicate_dict_1 = self.project.addIRINodeEntry(Duplicate_dict_1, iri, node)
+
+                if Duplicate_dict_1 is not None:
+                    pass
+
+                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                                 [iri], None))
+            commands.append(CommandNodeAdd(self, node))
+
+            if iri is not None:
+
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                                     [iri], None))
+                commands.append(CommandProjectConnectSpecificSignals(self.project))
+
+            if any(commands):
+                self.session.undostack.beginMacro('node Add - {0}'.format(node.name))
+                for command in commands:
+                    if command:
+                        self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(QtCore.Qt.CopyAction)
             dropEvent.accept()

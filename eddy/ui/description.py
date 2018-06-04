@@ -46,10 +46,11 @@ from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import rtfStripFontAttributes
-from eddy.core.functions.signals import connect
-from eddy.core.project import K_DESCRIPTION
+from eddy.core.functions.signals import connect, disconnect
+from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.core.datatypes.graphol import Item
 from eddy.ui.fields import StringField
+from eddy.ui.fields import ComboBox
 
 
 class AbstractDialog(QtWidgets.QDialog):
@@ -183,6 +184,23 @@ class NodeDescriptionDialog(AbstractDialog):
         self.wikiTag = QtWidgets.QAction(QtGui.QIcon(":/icons/48/ic_insert_wiki_link_black"), "Insert Wiki Tag", self)
         self.wikiTag.triggered.connect(self.wikiTagDialog.show)
 
+        self.description_status = ComboBox(objectName='select_description_status')
+        self.description_status.setEditable(False)
+        self.description_status.setFont(Font('Roboto', 12))
+        self.description_status.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.description_status.setScrollEnabled(False)
+        self.description_status.setStatusTip('Select description status')
+
+        description_set = set()
+        if self.text.toPlainText() == '':
+            description_set.add('')
+        description_set.add('Final')
+        description_set.add('Draft')
+
+        self.description_status.addItems(list(description_set))
+        self.description_status.setEnabled(True)
+        self.description_status.setCurrentText(meta.get(K_DESCRIPTION_STATUS,''))
+
         #############################################
         # LOWER TOOLBAR WIDGET
         #################################
@@ -269,6 +287,10 @@ class NodeDescriptionDialog(AbstractDialog):
         self.toolbar.addAction(self.insertImageAction)
         self.toolbar.addAction(self.wikiTag)
 
+        self.toolbar.addSeparator()
+
+        self.toolbar.addWidget(self.description_status)
+
         # Lower Toolbar
         # self.formatbar = QtWidgets.QToolBar()
         # self.formatbar.setObjectName("Format")
@@ -311,6 +333,9 @@ class NodeDescriptionDialog(AbstractDialog):
         connect(self.confirmationBox.accepted, self.accept)
         connect(self.confirmationBox.rejected, self.reject)
 
+        if (self.description_status.currentText() == '') or (self.description_status.currentText() == 'Draft'):
+            connect(self.text.textChanged, self.text_changed)
+
     ###########################################################
     # PROPERTIES
     ###########################################################
@@ -322,6 +347,49 @@ class NodeDescriptionDialog(AbstractDialog):
     def description(self, desc):
         self.text.setHtml(rtfStripFontAttributes(desc))
 
+    def text_changed(self):
+
+        #print('self.text.toPlainText()',self.text.toPlainText())
+
+        if self.description_status.currentText() == 'Final':
+            disconnect(self.text.textChanged, self.text_changed)
+            return
+
+        if self.text.toPlainText() == '':
+
+            #print('Case empty')
+
+            description_list = []
+
+            description_list.append('')
+            description_list.append('Final')
+            description_list.append('Draft')
+
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+
+            self.description_status.addItems(description_list)
+
+            self.description_status.setCurrentText('')
+        else:
+
+            #print('Case non-empty')
+
+            description_list = []
+
+            description_list.append('Final')
+            description_list.append('Draft')
+
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+            self.description_status.removeItem(0)
+
+            self.description_status.addItems(description_list)
+
+            self.description_status.setCurrentText('Draft')
+
+
     def metaDataChanged(self):
         """
         Change the description of the node.
@@ -331,6 +399,21 @@ class NodeDescriptionDialog(AbstractDialog):
         redo = undo.copy()
         redo[K_DESCRIPTION] = self.description
 
+        undo[K_DESCRIPTION_STATUS] = undo.get(K_DESCRIPTION_STATUS, '')
+        redo[K_DESCRIPTION_STATUS] = self.description_status.currentText()
+
+        #print('undo[K_DESCRIPTION_STATUS]',undo[K_DESCRIPTION_STATUS])
+        #print('undo[K_DESCRIPTION]',undo[K_DESCRIPTION])
+        #print('redo[K_DESCRIPTION_STATUS]',redo[K_DESCRIPTION_STATUS])
+        #print('redo[K_DESCRIPTION]',redo[K_DESCRIPTION])
+
+        #print('')
+        #print('redo[K_DESCRIPTION] != undo[K_DESCRIPTION]',redo[K_DESCRIPTION] != undo[K_DESCRIPTION])
+        #print('redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS]',redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS])
+
+        #if redo != undo:
+        #if (redo[K_DESCRIPTION] != undo[K_DESCRIPTION]) or (redo[K_DESCRIPTION_STATUS] != undo[K_DESCRIPTION_STATUS]):
+        #if (redo[K_DESCRIPTION] != undo[K_DESCRIPTION]):
         if redo != undo:
             return CommandNodeSetMeta(
                 self.diagram.project,

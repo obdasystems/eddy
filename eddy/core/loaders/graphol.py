@@ -63,7 +63,7 @@ from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_DESCRIPTION
+from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -731,6 +731,17 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         name = element.attribute('name')
         meta = self.project.meta(item, name)
         meta[K_DESCRIPTION] = rtfStripFontAttributes(element.firstChildElement(K_DESCRIPTION).text())
+
+        if element.firstChildElement(K_DESCRIPTION).hasAttribute('status'):
+            meta[K_DESCRIPTION_STATUS] = element.firstChildElement(K_DESCRIPTION).attribute('status')
+            #print('meta[K_DESCRIPTION_STATUS]', meta[K_DESCRIPTION_STATUS])
+        else:
+            #print('Set Final by default')
+            if meta[K_DESCRIPTION] == '':
+                meta[K_DESCRIPTION_STATUS] = ''
+            else:
+                meta[K_DESCRIPTION_STATUS] = 'Final'
+
         return meta
 
     def importRoleMetadata(self, element):
@@ -1114,6 +1125,17 @@ class GrapholLoaderMixin_v2(object):
         name = e.attribute('name')
         meta = self.nproject.meta(item, name)
         meta[K_DESCRIPTION] = rtfStripFontAttributes(e.firstChildElement(K_DESCRIPTION).text())
+
+        if e.firstChildElement(K_DESCRIPTION).hasAttribute('status'):
+            meta[K_DESCRIPTION_STATUS] = e.firstChildElement(K_DESCRIPTION).attribute('status')
+            #print('meta[K_DESCRIPTION_STATUS]',meta[K_DESCRIPTION_STATUS])
+        else:
+            #print('Set Final by default')
+            if meta[K_DESCRIPTION] == '':
+                meta[K_DESCRIPTION_STATUS] = ''
+            else:
+                meta[K_DESCRIPTION_STATUS] = 'Final'
+
         return meta
 
     def importRoleMeta(self, e):
@@ -1670,11 +1692,18 @@ class GrapholLoaderMixin_v2(object):
             else:
                 if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                             'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
-                    if self.nproject.get_iri_of_node(node) is None:
+
+                    iri_to_set = self.get_iri_of_node_from_string_format_in_dict(node)
+
+                    if iri_to_set is None:
+                        LOGGER.critical('IRI of node not found in Dictionary - ' + str(node))
                         if self.nproject.iri is not None:
                             self.nproject.IRI_prefixes_nodes_dict[self.nproject.iri][1].add(node)
                             new_text = GenerateNewLabel(self.nproject, node).return_label()
                             node.setText(new_text)
+                    else:
+                        self.nproject.IRI_prefixes_nodes_dict[iri_to_set][1].add(node)
+                        self.nproject.IRI_prefixes_nodes_dict[iri_to_set][1].remove(str(node))
 
                 diagram.addItem(node)
                 diagram.guid.update(node.id)
@@ -1784,15 +1813,10 @@ class GrapholLoaderMixin_v2(object):
         for n in self.nproject.predicates():
             all_predicate_nodes_in_project_text.append(n.text().replace('\n',''))
 
-        #print('all_predicate_nodes_in_project_text',all_predicate_nodes_in_project_text)
-
         while not element.isNull():
             QtWidgets.QApplication.processEvents()
             meta = self.importMeta(element)
             if meta:
-
-                #print('meta[1]',meta[1])
-
                 if meta[1] in all_predicate_nodes_in_project_text:
                     self.nproject.setMeta(meta[0], meta[1], meta[2])
                 else:
@@ -1820,6 +1844,39 @@ class GrapholLoaderMixin_v2(object):
                         LOGGER.critical('Corresponding node not found for'+str(meta))
 
             element = element.nextSiblingElement('predicate')
+
+    def remove_invalid_nodes_from_the_dict(self):
+
+        invalid_nodes = []
+
+        for iri in self.nproject.IRI_prefixes_nodes_dict.keys():
+            nodes = self.nproject.IRI_prefixes_nodes_dict[iri][1]
+            new_nodes = set()
+
+            for n in nodes:
+                if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
+                            'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+                    new_nodes.add(n)
+                else:
+                    invalid_nodes.append(n)
+
+            self.nproject.IRI_prefixes_nodes_dict[iri][1] = new_nodes
+
+        if len(invalid_nodes) >0:
+            #print('invalid_nodes present in the dictionary were removed. They are -',invalid_nodes)
+            LOGGER.info('invalid_nodes present in the dictionary were removed')
+
+    def get_iri_of_node_from_string_format_in_dict(self,node_inp):
+
+        for iri in self.nproject.IRI_prefixes_nodes_dict.keys():
+            str_of_nodes = self.nproject.IRI_prefixes_nodes_dict[iri][1]
+            #print('iri',iri)
+            for n in str_of_nodes:
+                #print('     n',n)
+                if (str(node_inp) == n):
+                    return iri
+
+        return None
 
     def convert_string_of_nodes_to_nodes(self):
 
@@ -1854,22 +1911,35 @@ class GrapholLoaderMixin_v2(object):
             to_nodes = to_nodes.union(nodes)
             to_properties = to_properties.union(properties)
 
+            #print('iri',iri,' - to_prefixes',to_prefixes,' -len(to_nodes)',len(to_nodes), ' - to_properties',to_properties)
+
             values.append(to_prefixes)
             values.append(to_nodes)
             values.append(to_properties)
 
             IRI_prefixes_nodes_dict_new[iri] = values
 
+        #print('')
+
         for iri in IRI_prefixes_nodes_dict_new.keys():
             nodes_str_or_just_node = IRI_prefixes_nodes_dict_new[iri][1]
             new_nodes_entry = set()
 
+            #print('iri',iri,' -len(nodes_str_or_just_node)',len(nodes_str_or_just_node))
+
             for node_str_or_just_node in nodes_str_or_just_node:
+
+                #print('     node_str_or_just_node',node_str_or_just_node)
+                #print('     str(type(node_str_or_just_node))',str(type(node_str_or_just_node)))
+
                 if str(type(node_str_or_just_node)) == '<class \'str\'>':
+                    #print('         TE 1')
                     node_str = node_str_or_just_node
                     for node in nodes_in_project:
                         if node_str == str(node):
+                            #print('         T 2')
                             new_nodes_entry.add(node)
+                            break
                 else:
                     node = node_str_or_just_node
                     new_nodes_entry.add(node)
@@ -1880,110 +1950,7 @@ class GrapholLoaderMixin_v2(object):
 
             IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
 
-        #self.nproject.print_dictionary(IRI_prefixes_nodes_dict_new)
-
-        self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(
-            IRI_prefixes_nodes_dict_new, dict())
-
-    def convert_string_of_nodes_to_nodes_2(self):
-
-        LOGGER.debug('Convert nodes from string format to eddy nodes format in IRI-Prefixes dictionary')
-
-        nodes_in_project = self.nproject.nodes()
-
-        IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
-
-        IRI_prefixes_nodes_dict_new = dict()
-
-        for iri in IRI_prefixes_nodes_dict_old.keys():
-            prefixes = IRI_prefixes_nodes_dict_old[iri][0]
-            nodes = IRI_prefixes_nodes_dict_old[iri][1]
-            properties = IRI_prefixes_nodes_dict_old[iri][2]
-
-            values = []
-            to_prefixes = set()
-            to_nodes = set()
-            to_properties = set()
-
-            to_prefixes = to_prefixes.union(prefixes)
-            to_nodes = to_nodes.union(nodes)
-            to_properties = to_properties.union(properties)
-
-            values.append(to_prefixes)
-            values.append(to_nodes)
-            values.append(to_properties)
-
-            IRI_prefixes_nodes_dict_new[iri] = values
-
-        for iri in IRI_prefixes_nodes_dict_new.keys():
-            nodes_str_or_just_node = IRI_prefixes_nodes_dict_new[iri][1]
-            new_nodes_entry = set()
-
-            for node_str_or_just_node in nodes_str_or_just_node:
-                if str(type(node_str_or_just_node)) == '<class \'str\'>':
-                    node_str = node_str_or_just_node
-                    for node in nodes_in_project:
-                        if node_str == str(node):
-                            new_nodes_entry.add(node)
-                else:
-                    node=node_str_or_just_node
-                    new_nodes_entry.add(node)
-
-            for node in new_nodes_entry:
-                if (str(node) not in nodes_str_or_just_node) and (node not in new_nodes_entry):
-                    LOGGER.critical('node is missing'+str(node))
-
-            IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
-
-        self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
-
-    #not used
-    def convert_string_of_nodes_to_nodes_for_prefered_prefix(self):
-
-        old_list = self.nproject.prefered_prefix_list
-
-        nodes_in_project = self.nproject.nodes()
-
-        key_list = old_list[0]
-        value_list = old_list[1]
-
-        new_key_list = []
-        new_value_list = []
-
-        errored_keys = []
-        errored_values = []
-
-        for c,key in enumerate(key_list):
-            pass
-            flag = False
-
-            for n in nodes_in_project:
-                if str(n) == key:
-                    new_key_list.append(n)
-                    new_value_list.append(value_list[c])
-                    flag = True
-                    break
-
-            if key == self.nproject.iri:
-                flag = True
-                new_key_list.append(key)
-                new_value_list.append(value_list[c])
-
-            if flag is False:
-                errored_keys.append(key)
-                errored_values.append(value_list[c])
-
-        if len(errored_keys) >0:
-            LOGGER.critical('prefered_prefix not imported correctly')
-        else:
-
-            self.nproject.prefered_prefix_list.clear()
-
-            new_list = []
-            new_list.append(new_key_list)
-            new_list.append(new_value_list)
-
-            self.nproject.prefered_prefix_list = new_list
+        self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new, dict())
 
     def createProject(self):
         """
@@ -2100,14 +2067,11 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         """
         Perform ontology import from Graphol file format and merge the loaded ontology with the current project.
         """
-        #print('GrapholOntologyLoader_v2')
-
         self.createDomDocument()
         self.createProject()
         self.createDiagrams()
 
-        self.convert_string_of_nodes_to_nodes()
-        #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
+        self.remove_invalid_nodes_from_the_dict()
 
         self.createPredicatesMeta()
 
@@ -2164,19 +2128,14 @@ class GrapholProjectLoader_v2(AbstractProjectLoader, GrapholLoaderMixin_v2):
         try:
             self.createDomDocument()
         except (ProjectNotFoundError, ProjectVersionError):
-            print('self.createLegacyProject()')
             self.createLegacyProject()
         else:
-            #print('GrapholProjectLoader_v2')
             self.createProject()
             self.createDiagrams()
 
-            #self.update_label_of_nodes()
-            self.convert_string_of_nodes_to_nodes()
-            #self.convert_string_of_nodes_to_nodes_for_prefered_prefix()
+            self.remove_invalid_nodes_from_the_dict()
 
             self.createPredicatesMeta()
-
             self.projectRender()
             self.projectLoaded()
 
