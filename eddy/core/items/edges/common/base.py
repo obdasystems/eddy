@@ -234,11 +234,11 @@ class AbstractEdge(AbstractItem):
         sourcePath = self.mapFromItem(source, source.painterPath())
         targetPath = self.mapFromItem(target, target.painterPath())
         if sourcePath.contains(mousePos):
-            # Mouse is inside the source node, use the intersection as the breakpoint position
-            pos = source.intersection(QtCore.QLineF(source.pos(), breakpointPos))
+            # Mouse is inside the source node, use the intersection as the breakpoint position if it exists.
+            pos = source.intersection(QtCore.QLineF(source.pos(), breakpointPos)) or mousePos
         elif targetPath.contains(mousePos):
-            # Mouse is inside the target node, use the intersection as the breakpoint position
-            pos = target.intersection(QtCore.QLineF(target.pos(), breakpointPos))
+            # Mouse is inside the target node, use the intersection as the breakpoint position if it exists.
+            pos = target.intersection(QtCore.QLineF(target.pos(), breakpointPos)) or mousePos
         else:
             # Mouse is outside both source and target node, use this as the breakpoint position.
             pos = mousePos
