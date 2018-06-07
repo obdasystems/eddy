@@ -32,10 +32,8 @@
 #                                                                        #
 ##########################################################################
 
-import shutil
 import cx_Freeze
-import distutils.core
-import distutils.log
+import distutils
 import os
 import platform
 import py_compile
@@ -45,6 +43,7 @@ import stat
 import subprocess
 import sys
 import textwrap
+import tarfile
 import zipfile
 
 from eddy import APPNAME, APPID, BUG_TRACKER, COPYRIGHT
@@ -67,15 +66,10 @@ MACOS = sys.platform.startswith('darwin')
 WIN32 = sys.platform.startswith('win32')
 
 BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
-
-# remove build directory if it exists.
-# It might cause problems otherwise as files would be present from the previous runs.
-if isdir(BUILD_DIR):
-    shutil.rmtree(BUILD_DIR)
-
 DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
 DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), platform.machine().lower())
 DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)
+JRE_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'resources', 'java')
 EXEC_BASE = None
 EXEC_ICON = None
 EXEC_NAME = None
@@ -104,10 +98,11 @@ QT_PLUGINS_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
 ###########################
 
 
-class Clean(distutils.core.Command):
+class clean(distutils.core.Command):
     """
     Custom clean command to tidy up the project root.
     """
+    description = "clean up temporary files from 'build' command"
     user_options = []
 
     def initialize_options(self):
@@ -131,58 +126,61 @@ class Clean(distutils.core.Command):
 
 
 # noinspection PyUnresolvedReferences
-class BuildExe(cx_Freeze.build_exe):
+class build_exe(cx_Freeze.build_exe):
     """
     Extends the build_exe command to:
        - add option 'dist_dir' (or --dist-dir as a command line parameter)
-       - produce a zip file
-       - produce a windows installer using InnoSetup (ony on windows platform)
+       - add option 'jre_dir' (or --jre-dir as a command line parameter)
     """
     dist_dir = None
     user_options = cx_Freeze.build_exe.user_options
-    user_options.extend([('dist-dir=', 'd', "directory where to put final distributions in [default: dist]")])
+    user_options.extend([
+        ('jre-dir=', None,
+         "directory where to search for the bundled jre [default: {}]".format(os.path.relpath(JRE_DIR))),
+        ('no-jre', None,
+         "create a distribution without a bundled jre [default: False]"),
+    ])
+    boolean_options = cx_Freeze.build_exe.boolean_options
+    boolean_options.extend(['no-jre'])
 
     def initialize_options(self):
         """
         Initialize command options.
         """
-        self.dist_dir = None
         super().initialize_options()
+        self.jre_dir = None
+        self.no_jre = 0
 
     def finalize_options(self):
         """
         Finalize command options.
         """
-        if self.dist_dir is None:
-            self.dist_dir = self.build_exe
         super().finalize_options()
+        if self.jre_dir is None:
+            self.jre_dir = JRE_DIR
+        if self.no_jre is None:
+            self.no_jre = 0
 
     def run(self):
         """
         Command execution.
         """
+        # Symlink Qt libraries into the virtualenv on macOS, since cx_Freeze assumes
+        # the linker @rpath command to point there.
         self.execute(self.make_symlinks, ())
         super().run()
-        self.execute(self.make_dist, ())
         self.execute(self.make_plugins, ())
         self.execute(self.make_reasoners, ())
+        self.execute(self.make_jre, ())
         self.execute(self.make_win32, ())
         self.execute(self.make_linux, ())
         self.execute(self.make_clean, ())
-        #self.execute(self.make_zip, ())
-        self.execute(self.make_installer, ())
 
     def make_clean(self):
         """
         Cleanup the build directory from garbage files.
         """
         fremove(os.path.join(self.build_exe, 'jvm.dll'))
-
-    def make_dist(self):
-        """
-        Create 'dist' directory.
-        """
-        mkdir(self.dist_dir)
 
     def make_symlinks(self):
         """
@@ -203,6 +201,23 @@ class BuildExe(cx_Freeze.build_exe):
                     distutils.log.info("Target file %s exists, skipping", target)
                     pass
 
+    def make_jre(self):
+        """
+        Bundles a Java Runtime Environment.
+        """
+        if self.no_jre:
+            distutils.log.info('Skip bundling of Java Runtime Environment in the distribution')
+            return
+
+        try:
+            dest_dir = os.path.join(self.build_exe, 'resources', 'java', 'jre')
+            if isdir(os.path.join(self.jre_dir, 'jre')): # Probably a JDK distribution
+                self.jre_dir = os.path.join(self.jre_dir, 'jre')
+            distutils.log.info("Copying JRE from {0}".format(self.jre_dir))
+            distutils.dir_util.copy_tree(self.jre_dir, os.path.join(self.build_exe, dest_dir))
+        except Exception as e:
+            distutils.log.error('Failed to bundle JRE: {0}'.format(e))
+
     def make_zip(self):
         """
         Create a ZIP distribution.
@@ -214,6 +229,18 @@ class BuildExe(cx_Freeze.build_exe):
                     path = expandPath(os.path.join(root, filename))
                     arcname = os.path.join(DIST_NAME, os.path.relpath(path, self.build_exe))
                     zipf.write(path, arcname)
+
+    def make_tarball(self):
+        """
+        Create a tarball distribution.
+        """
+        tarpath = os.path.join(self.dist_dir, '%s.tar.gz' % DIST_NAME)
+        with tarfile.open(tarpath, 'w:gz') as tarf:
+            for root, dirs, files in os.walk(self.build_exe):
+                for filename in files:
+                    path = expandPath(os.path.join(root, filename))
+                    arcname = os.path.join(DIST_NAME, os.path.relpath(path, self.build_exe))
+                    tarf.add(path, arcname)
 
     def make_plugins(self):
         """
@@ -267,12 +294,175 @@ class BuildExe(cx_Freeze.build_exe):
                                         arcname = os.path.join(file_or_directory, os.path.relpath(path, reasoner))
                                         zipf.write(path, arcname)
 
-    def make_installer(self):
+    def make_win32(self):
         """
-        Create a Windows installer using InnoSetup
+        Makes sure text files from directory have 'Windows style' end of lines.
         """
         if WIN32:
+            for root, dirs, files in os.walk(self.build_exe):
+                for filename in files:
+                    path = expandPath(os.path.join(root, filename))
+                    if not isdir(path) and path.rsplit('.', 1)[-1] in ('txt', 'md'):
+                        with open(path, mode='rb') as f:
+                            data = f.read()
+                        new_data = re.sub("\r?\n", "\r\n", data.decode(encoding='UTF-8'))
+                        if new_data != data:
+                            with open(path, mode='wb') as f:
+                                f.write(new_data.encode(encoding='UTF-8'))
 
+    def make_linux(self):
+        """
+        Properly create a Linux executable.
+        """
+        if LINUX:
+            path = os.path.join(self.build_exe, 'run.sh')
+            with open(path, mode='w') as f:
+                f.write(textwrap.dedent("""
+                #!/bin/sh
+                
+                APP="{0}"
+                EXEC="{1}"
+                VERSION="{2}"
+                DIRNAME=`dirname $0`
+                export LD_LIBRARY_PATH=$DIRNAME
+                echo "Starting $APP $VERSION ..."
+                $DIRNAME/$EXEC "$@"
+                """[1:].format(APPNAME, EXEC_NAME, VERSION)))
+
+            # Set exec bit on executables
+            for filename in [EXEC_NAME, 'run.sh']:
+                filepath = os.path.join(self.build_exe, filename)
+                st = os.stat(filepath)
+                os.chmod(filepath, st.st_mode | stat.S_IEXEC)
+
+class bdist_gztar(distutils.core.Command):
+    """
+    Create a distribution tarball archive.
+    """
+    description = 'create a gzipped tar distribution archive'
+    user_options = [
+        ('bdist-dir=', 'b',
+         "directory where to build the distribution [default: {}]".format(os.path.relpath(DIST_PATH))),
+        ('dist-dir=', 'd',
+         "directory to put final built distributions in [default: {}]".format(os.path.relpath(DIST_DIR))),
+        ('skip-build', None,
+         "skip rebuilding everything (for testing/debugging)"),
+        ('owner=', 'u',
+         "Owner name used when creating a tar file [default: current user]"),
+        ('group=', 'g',
+         "Group name used when creating a tar file [default: current group]"),
+    ]
+    boolean_options = ['skip-build']
+
+    def initialize_options(self):
+        self.bdist_dir = None
+        self.dist_dir = None
+        self.skip_build = 0
+        self.owner = None
+        self.group = None
+
+    def finalize_options(self):
+        if self.bdist_dir is None:
+            self.bdist_dir = DIST_PATH
+        if self.dist_dir is None:
+            self.dist_dir = DIST_DIR
+
+    def run(self):
+        if not self.skip_build:
+            self.run_command('build')
+        # package the archive
+        distutils.archive_util.make_archive(os.path.join(self.dist_dir, DIST_NAME),
+                                            'gztar', root_dir=os.path.dirname(self.bdist_dir),
+                                            owner=self.owner, group=self.group)
+
+class bdist_zip(distutils.core.Command):
+    """
+    Create a distribution zip archive.
+    """
+    description = 'create a distribution zip archive'
+    user_options = [
+        ('bdist-dir=', 'b',
+         "directory where to build the distribution [default: {}]".format(os.path.relpath(DIST_PATH))),
+        ('dist-dir=', 'd',
+         "directory to put final built distributions in [default: {}]".format(os.path.relpath(DIST_DIR))),
+        ('skip-build', None,
+         "skip rebuilding everything (for testing/debugging)"),
+    ]
+    boolean_options = ['skip-build']
+
+    def initialize_options(self):
+        self.bdist_dir = None
+        self.dist_dir = None
+        self.skip_build = 0
+
+    def finalize_options(self):
+        if self.bdist_dir is None:
+            self.bdist_dir = DIST_PATH
+        if self.dist_dir is None:
+            self.dist_dir = DIST_DIR
+
+    def run(self):
+        if not self.skip_build:
+            self.run_command('build')
+        # package the archive
+        distutils.archive_util.make_archive(os.path.join(self.dist_dir, DIST_NAME),
+                                            'zip', root_dir=os.path.dirname(self.bdist_dir))
+
+commands = {
+    'clean': clean,
+    'build_exe': build_exe,
+    'bdist_gztar': bdist_gztar,
+    'bdist_zip': bdist_zip,
+}
+
+if WIN32:
+    class bdist_innosetup(distutils.core.Command):
+        """
+        Generate a Windows installer using InnoSetup.
+        """
+        description = 'create a MS Windows installer using InnoSetup'
+        user_options = [
+            ('bdist-dir=', 'b',
+             "directory where to build the distribution [default: {}]".format(os.path.relpath(DIST_PATH))),
+            ('dist-dir=', 'd',
+             "directory to put final built distributions in [default: {}]".format(os.path.relpath(DIST_DIR))),
+            ('skip-build', None,
+             "skip rebuilding everything (for testing/debugging)"),
+        ]
+        boolean_options = ['skip-build']
+
+        def initialize_options(self):
+            self.bdist_dir = None
+            self.dist_dir = None
+            self.skip_build = 0
+
+        def finalize_options(self):
+            if self.bdist_dir is None:
+                self.bdist_dir = DIST_PATH
+            if self.dist_dir is None:
+                self.dist_dir = DIST_DIR
+            if self.skip_build is None:
+                self.skip_build = 0
+
+        def run(self):
+            """
+            Command execution.
+            """
+            if not self.skip_build:
+                self.run_command('build')
+            self.execute(self.make_dist_dir, ())
+            self.execute(self.make_installer, ())
+
+        def make_dist_dir(self):
+            """
+            Create a distribution directory.
+            """
+            mkdir(self.dist_dir)
+
+        def make_installer(self):
+            """
+            Create a Windows installer using InnoSetup
+            """
             import yaml
             with open(os.path.join('support', 'innosetup', 'build.yaml'), 'r') as f:
                 config = yaml.load(f)
@@ -311,7 +501,7 @@ class BuildExe(cx_Freeze.build_exe):
                         '/dEDDY_APPNAME={0}'.format(APPNAME),
                         '/dEDDY_ARCHITECTURE={0}'.format(platform.machine().lower()),
                         '/dEDDY_BUGTRACKER={0}'.format(BUG_TRACKER),
-                        '/dEDDY_BUILD_PATH={0}'.format(self.build_exe),
+                        '/dEDDY_BUILD_PATH={0}'.format(self.bdist_dir),
                         '/dEDDY_COPYRIGHT={0}'.format(COPYRIGHT),
                         '/dEDDY_DOWNLOAD_URL={0}'.format(GRAPHOL_HOME),
                         '/dEDDY_EXECUTABLE={0}'.format(EXEC_NAME),
@@ -326,61 +516,17 @@ class BuildExe(cx_Freeze.build_exe):
                 except Exception as e:
                     distutils.log.error('Failed to build {0}: {1}'.format(script_file, e))
 
-    def make_win32(self):
-        """
-        Makes sure text files from directory have 'Windows style' end of lines.
-        """
-        if WIN32:
-            for root, dirs, files in os.walk(self.build_exe):
-                for filename in files:
-                    path = expandPath(os.path.join(root, filename))
-                    if not isdir(path) and path.rsplit('.', 1)[-1] in ('txt', 'md'):
-                        with open(path, mode='rb') as f:
-                            data = f.read()
-                        new_data = re.sub("\r?\n", "\r\n", data.decode(encoding='UTF-8'))
-                        if new_data != data:
-                            with open(path, mode='wb') as f:
-                                f.write(new_data.encode(encoding='UTF-8'))
-
-    def make_linux(self):
-        """
-        Properly create a Linux executable.
-        """
-        if LINUX:
-             path = os.path.join(self.build_exe, 'run.sh')
-             with open(path, mode='w') as f:
-                f.write(textwrap.dedent("""#!/bin/sh
-                APP="{0}"
-                EXEC="{1}"
-                VERSION="{2}"
-                DIRNAME=`dirname $0`
-                LD_LIBRARY_PATH=$DIRNAME
-                export LD_LIBRARY_PATH
-                echo "Starting $APP $VERSION ..."
-                chmod +x $DIRNAME/$EXEC
-                $DIRNAME/$EXEC "$@"
-                echo "... bye!"
-                """.format(APPNAME, EXEC_NAME, VERSION)))
-
-             for filename in [EXEC_NAME, 'run.sh']:
-                 filepath = os.path.join(self.build_exe, filename)
-                 st = os.stat(filepath)
-                 os.chmod(filepath, st.st_mode | stat.S_IEXEC)
-
-commands = {
-    'clean': Clean,
-    'build_exe': BuildExe
-}
+    commands['bdist_innosetup'] = bdist_innosetup
 
 
 if MACOS:
-
-    class BDistMac(cx_Freeze.bdist_mac):
+    class bdist_mac(cx_Freeze.bdist_mac):
         """
         Extends bdist_mac adding the following changes:
            - properly lookup build_exe path (using DIST_PATH)
            - generate a customized Info.plist
         """
+        description = 'create a macOS .app application bundle'
         binDir = None
         bundleDir = None
         bundle_executable = None
@@ -467,7 +613,6 @@ if MACOS:
             self.execute(self.prepare_qt_app, ())
 
             if self.codesign_identity:
-
                 signargs = ['codesign', '-s', self.codesign_identity]
 
                 if self.codesign_entitlements:
@@ -510,31 +655,41 @@ if MACOS:
             plistlib.dump(contents, plist)
             plist.close()
 
-    class BDistDmg(cx_Freeze.bdist_dmg):
+    class bdist_dmg(cx_Freeze.bdist_dmg):
         """
         Extends bdist_dmg adding the following changes:
            - correctly package app bundle instead of app bundle content.
         """
-        dist_dir = None
-        volume_background = None
-        volume_icon = None
         user_options = cx_Freeze.bdist_dmg.user_options
         user_options.extend([
-            ('dist-dir=', 'd', "directory where to put final distributions in [default: dist]"),
-            ('volume-background=', 'b', "the path to use as background of the generated volume"),
-            ('volume-icon=', 'i', "the icon for the generated volume"),
+            ('bdist-dir=', 'b',
+             "directory where to build the distribution [default: {}]".format(os.path.relpath(DIST_PATH))),
+            ('dist-dir=', 'd',
+             "directory to put final built distributions in [default: {}]".format(os.path.relpath(DIST_DIR))),
+            ('skip-build', None,
+             "skip rebuilding everything (for testing/debugging)"),
+            ('volume-background=', None,
+             "the path to use as background of the generated volume"),
+            ('volume-icon=', None,
+             "the icon for the generated volume"),
         ])
-
+        boolean_options = cx_Freeze.bdist_dmg.boolean_options
+        boolean_options.extend(['skip-build'])
+        buildDir = None
         bundleDir = None
         bundleName = None
-        buildDir = None
+        dist_dir = None
         dmgName = None
+        volume_background = None
+        volume_icon = None
 
         def initialize_options(self):
             """
             Initialize command options.
             """
+            self.bdist_dir = None
             self.dist_dir = None
+            self.skip_build = 0
             self.volume_background = None
             self.volume_icon = None
             super().initialize_options()
@@ -543,8 +698,12 @@ if MACOS:
             """
             Finalize command options.
             """
+            if self.bdist_dir is None:
+                self.bdist_dir = DIST_PATH
             if self.dist_dir is None:
-                self.dist_dir = 'dist'
+                self.dist_dir = DIST_DIR
+            if self.skip_build is None:
+                self.skip_build = 0
             super().finalize_options()
 
         def buildDMG(self):
@@ -607,8 +766,9 @@ if MACOS:
             """
             Command execution.
             """
+            if not self.skip_build:
+                self.run_command('bdist_mac')
             self.make_dist()
-            self.run_command('bdist_mac')
             self.bundleDir = self.get_finalized_command('bdist_mac').bundleDir
             self.bundleName = self.get_finalized_command('bdist_mac').bundle_name
             self.buildDir = self.get_finalized_command('build').build_base
@@ -616,8 +776,8 @@ if MACOS:
             self.execute(self.buildDMG, ())
             self.move_file(self.dmgName, self.dist_dir)
 
-    commands['bdist_mac'] = BDistMac
-    commands['bdist_dmg'] = BDistDmg
+    commands['bdist_mac'] = bdist_mac
+    commands['bdist_dmg'] = bdist_dmg
 
 
 #############################################
@@ -665,9 +825,7 @@ if not WIN32:
 
 include_files = [
     (requests.certs.where(), 'cacert.pem'),
-    (os.path.join(QT_PLUGINS_PATH, 'printsupport'), 'printsupport'),
     ('examples', 'examples'),
-    #('resources/java', 'resources/java'),
     ('resources/lib', 'resources/lib'),
     ('resources/styles', 'resources/styles'),
     ('LICENSE', 'LICENSE'),
@@ -694,7 +852,7 @@ cx_Freeze.setup(
     license=LICENSE,
     url="https://github.com/danielepantaleone/eddy",
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X :: Cocoa',
         'Environment :: Win32 (MS Windows)'
         'Environment :: X11 Applications :: Qt',
@@ -702,7 +860,7 @@ cx_Freeze.setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Utilities'
     ],
@@ -718,15 +876,25 @@ cx_Freeze.setup(
             'volume_background': expandPath('@resources/images/macos_background_dmg.png'),
             'volume_icon': expandPath('@resources/images/macos_icon_dmg.icns'),
         },
+        'bdist_gztar': {
+            'dist_dir': DIST_DIR,
+        },
+        'bdist_zip': {
+            'dist_dir': DIST_DIR,
+        },
         'build_exe': {
             'build_exe': DIST_PATH,
-            'dist_dir': DIST_DIR,
+            'jre_dir': JRE_DIR,
             'excludes': excludes,
             'includes': includes,
             'include_files': include_files,
             'optimize': 1,
             'packages': packages,
             'silent': 0,
+        },
+        'install_exe': {
+            'build_dir': DIST_PATH,
+            'install_dir': os.path.join(DIST_DIR, DIST_NAME),
         }
     },
     executables=[
