@@ -673,8 +673,7 @@ if MACOS:
             ('volume-icon=', None,
              "the icon for the generated volume"),
         ])
-        boolean_options = cx_Freeze.bdist_dmg.boolean_options
-        boolean_options.extend(['skip-build'])
+        boolean_options = ['skip-build']
         buildDir = None
         bundleDir = None
         bundleName = None
@@ -850,7 +849,7 @@ cx_Freeze.setup(
     description="Eddy is a graphical editor for the specification and visualization of Graphol ontologies.",
     keywords = "eddy graphol sapienza",
     license=LICENSE,
-    url="https://github.com/danielepantaleone/eddy",
+    url="https://github.com/obdasystems/eddy",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X :: Cocoa',
