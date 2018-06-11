@@ -65,30 +65,37 @@ LINUX = sys.platform.startswith('linux')
 MACOS = sys.platform.startswith('darwin')
 WIN32 = sys.platform.startswith('win32')
 
-BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
-DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
-DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), platform.machine().lower())
-DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)
-JRE_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'resources', 'java')
+EXEC_ARCH = None
 EXEC_BASE = None
 EXEC_ICON = None
 EXEC_NAME = None
 
 if LINUX:
+    EXEC_ARCH = platform.machine().lower()
     EXEC_BASE = None
     EXEC_ICON = expandPath('@resources/images/eddy.png')
     EXEC_NAME = APPNAME
 
 if MACOS:
+    EXEC_ARCH = platform.machine().lower()
     EXEC_BASE = None
     EXEC_ICON = expandPath('@resources/images/eddy.icns')
     EXEC_NAME = APPNAME
 
 if WIN32:
+    # On Windows use the PROCESSOR_ARCHITECTURE environment variable to detect if we
+    # are running a 32-bit or 64-bit version of Python
+    EXEC_ARCH = os.environ['PROCESSOR_ARCHITECTURE'].lower() if 'PROCESSOR_ARCHITECTURE' in os.environ else platform.machine().lower()
     EXEC_BASE = 'Win32GUI'
     EXEC_ICON = expandPath('@resources/images/eddy.ico')
     EXEC_NAME = '%s.exe' % APPNAME
 
+BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
+DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
+DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), EXEC_ARCH)
+DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)
+
+JRE_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'resources', 'java')
 QT_BASE_PATH = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PrefixPath), '..')
 QT_LIB_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibrariesPath)
 QT_PLUGINS_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
@@ -464,6 +471,7 @@ if WIN32:
             Create a Windows installer using InnoSetup
             """
             import yaml
+
             with open(os.path.join('support', 'innosetup', 'build.yaml'), 'r') as f:
                 config = yaml.load(f)
             if 'scripts' not in config:
@@ -472,22 +480,25 @@ if WIN32:
             if not len(config['scripts']):
                 print("ERROR: invalid config file: no entry found in 'scripts' section")
                 sys.exit(1)
+
+            # Location of the InnoSetup Compiler program taken from environment.
+            config['iscc'] = os.environ.get('ISCC_EXE', config['iscc'])
+
             if 'iscc' not in config:
                 print("ERROR: invalid config file: could not find 'iscc' entry")
+                sys.exit(1)
+            if not config['iscc'].lower().endswith('iscc.exe'):
+                print("ERROR: invalid location for the ISCC.exe program: {0}".format(config['iscc']))
                 sys.exit(1)
             if not fexists(os.path.join('support', 'innosetup', config['iscc'])):
                 print("ERROR: invalid config file: '{0}' is not a file".format(config['iscc']))
                 sys.exit(1)
 
-            # Location of the InnoSetup Compiler program taken from environment.
-            config['iscc'] = os.environ.get('ISCC_EXE', config['iscc'])
-            if not config['iscc'].lower().endswith('iscc.exe'):
-                print("ERROR: invalid location for the ISCC.exe program: {0}".format(config['iscc']))
-                sys.exit(1)
+            # Disable installation of 64 bit executables on 32 bit Windows
+            architecturesAllowed = 'x64' if platform.architecture()[0] == '64bit' else ''
 
             # Build each given innosetup script
             for filename in config['scripts']:
-
                 script_file = os.path.join('support', 'innosetup', filename)
                 distutils.log.info("building: {0}".format(script_file))
 
@@ -499,7 +510,8 @@ if WIN32:
                         '/O{0}'.format(DIST_DIR),
                         '/dEDDY_APPID={0}'.format(APPID),
                         '/dEDDY_APPNAME={0}'.format(APPNAME),
-                        '/dEDDY_ARCHITECTURE={0}'.format(platform.machine().lower()),
+                        '/dEDDY_ARCHITECTURE={0}'.format(EXEC_ARCH),
+                        '/dEDDY_ARCHITECTURES_ALLOWED={0}'.format(architecturesAllowed),
                         '/dEDDY_BUGTRACKER={0}'.format(BUG_TRACKER),
                         '/dEDDY_BUILD_PATH={0}'.format(self.bdist_dir),
                         '/dEDDY_COPYRIGHT={0}'.format(COPYRIGHT),

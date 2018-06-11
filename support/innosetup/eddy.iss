@@ -7,6 +7,7 @@
 ;#define public EDDY_APPID ""
 ;#define public EDDY_APPNAME ""
 ;#define public EDDY_ARCHITECTURE ""
+;#define public EDDY_ARCHITECTURES_ALLOWED ""
 ;#define public EDDY_BUGTRACKER ""
 ;#define public EDDY_BUILD_PATH ""
 ;#define public EDDY_COPYRIGHT ""
@@ -31,11 +32,13 @@ AppVerName={#EDDY_APPNAME} {#EDDY_VERSION}
 
 AlwaysShowDirOnReadyPage=yes
 AlwaysShowGroupOnReadyPage=yes
+ArchitecturesAllowed={#EDDY_ARCHITECTURES_ALLOWED}
+ArchitecturesInstallIn64BitMode={#EDDY_ARCHITECTURES_ALLOWED}
 BackColor=clBlack
 BackColor2=clGray
 Compression=lzma/Ultra64
 ChangesAssociations=yes
-DefaultDirName={pf32}\{#EDDY_APPNAME}
+DefaultDirName={pf}\{#EDDY_APPNAME}
 DefaultGroupName={#EDDY_APPNAME}
 DirExistsWarning=yes
 DisableProgramGroupPage=auto

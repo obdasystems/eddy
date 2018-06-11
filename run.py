@@ -54,7 +54,11 @@ if os.path.isdir(expandPath('@resources/java/')):
 if _WIN32:
     path = os.getenv('Path', '')
     path = path.split(os.pathsep)
-    path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'client'))
+    path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin'))
+    if platform.architecture()[0] == '32bit':
+        path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'client'))
+    else:
+        path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'server'))
     os.environ['Path'] = os.pathsep.join(path)
 
 classpath = []
