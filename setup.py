@@ -136,10 +136,9 @@ class clean(distutils.core.Command):
 class build_exe(cx_Freeze.build_exe):
     """
     Extends the build_exe command to:
-       - add option 'dist_dir' (or --dist-dir as a command line parameter)
        - add option 'jre_dir' (or --jre-dir as a command line parameter)
     """
-    dist_dir = None
+    description = "build executables from Python scripts"
     user_options = cx_Freeze.build_exe.user_options
     user_options.extend([
         ('jre-dir=', None,
@@ -181,13 +180,23 @@ class build_exe(cx_Freeze.build_exe):
         self.execute(self.make_jre, ())
         self.execute(self.make_win32, ())
         self.execute(self.make_linux, ())
-        self.execute(self.make_clean, ())
+        self.execute(self.make_cleanup, ())
 
-    def make_clean(self):
+    def make_cleanup(self):
         """
         Cleanup the build directory from garbage files.
         """
-        fremove(os.path.join(self.build_exe, 'jvm.dll'))
+        if WIN32:
+            fremove(os.path.join(self.build_exe, 'jvm.dll'))
+        elif MACOS:
+            # Delete symlinks to Qt frameworks created during build
+            for framework in os.listdir(QT_LIB_PATH):
+                source = os.path.relpath(os.path.join(QT_LIB_PATH, framework), os.path.join(sys.exec_prefix, "lib"))
+                target = os.path.join(os.path.join(sys.exec_prefix, "lib"), framework)
+
+                if os.path.islink(target) and os.readlink(target) == source:
+                    distutils.log.info("Removing symlink %s to %s", target, source)
+                    os.unlink(target)
 
     def make_symlinks(self):
         """
@@ -206,7 +215,6 @@ class build_exe(cx_Freeze.build_exe):
                     os.symlink(source, target)
                 else:
                     distutils.log.info("Target file %s exists, skipping", target)
-                    pass
 
     def make_jre(self):
         """
@@ -581,8 +589,8 @@ if MACOS:
                     os.chmod(filepath, mode | stat.S_IWUSR)
 
                 subprocess.call(('install_name_tool', '-id', '@executable_path/{0}'.format(filename), filepath))
-                otool = subprocess.Popen(('otool', '-L', filepath), stdout=subprocess.PIPE)
-                references = otool.stdout.readlines()[1:]
+                with subprocess.Popen(('otool', '-L', filepath), stdout=subprocess.PIPE) as otool:
+                    references = otool.stdout.readlines()[1:]
 
                 for reference in references:
                     referenced_file = reference.decode().strip().split()[0]
@@ -705,6 +713,7 @@ if MACOS:
         Extends bdist_dmg adding the following changes:
            - correctly package app bundle instead of app bundle content.
         """
+        description = "create a Mac DMG disk image containing the Mac application bundle"
         user_options = cx_Freeze.bdist_dmg.user_options
         user_options.extend([
             ('bdist-dir=', 'b',
