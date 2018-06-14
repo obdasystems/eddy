@@ -539,12 +539,26 @@ if MACOS:
            - generate a customized Info.plist
         """
         description = 'create a macOS .app application bundle'
-        binDir = None
-        bundleDir = None
-        bundle_executable = None
-        contentsDir = None
-        frameworksDir = None
-        resourcesDir = None
+        user_options = cx_Freeze.bdist_mac.user_options
+        user_options.extend([
+            ('bdist-dir=', 'b',
+             "directory where to build the distribution [default: {}]".format(os.path.relpath(DIST_PATH))),
+            ('skip-build', None,
+             "skip rebuilding everything (for testing/debugging)"),
+        ])
+        boolean_options = ['skip-build']
+
+        def initialize_options(self):
+            super().initialize_options()
+            self.bdist_dir = None
+            self.skip_build = 0
+
+        def finalize_options(self):
+            super().finalize_options()
+            if self.bdist_dir is None:
+                self.bdist_dir = DIST_PATH
+            if self.skip_build is None:
+                self.skip_build = 0
 
         def setRelativeReferencePaths(self):
             """
@@ -554,7 +568,9 @@ if MACOS:
             """
             files = []
             for root, dirs, dir_files in os.walk(self.binDir):
-                files.extend([os.path.join(root, f).replace(self.binDir + '/', '') for f in dir_files])
+                # Skip changing symbols in the resources folder
+                if not root == os.path.join(self.binDir, 'resources'):
+                    files.extend([os.path.join(root, f).replace(self.binDir + '/', '') for f in dir_files])
 
             for filename in files:
                 if filename.endswith('.zip'):
@@ -593,39 +609,55 @@ if MACOS:
                         subprocess.call(('install_name_tool', '-change', referenced_file, new_reference, filepath))
 
         def run(self):
-            """
-            Command execution.
-            """
-            self.run_command('build')
+            if not self.skip_build:
+                build = self.reinitialize_command('build', reinit_subcommands=1)
+                build.build_exe = self.bdist_dir
+                self.run_command('build')
             build = self.get_finalized_command('build')
 
-            self.bundleDir = os.path.join(build.build_base, self.bundle_name + ".app")
+            # Define the paths within the application bundle
+            self.bundleDir = os.path.join(build.build_base,
+                                          self.bundle_name + ".app")
             self.contentsDir = os.path.join(self.bundleDir, 'Contents')
             self.resourcesDir = os.path.join(self.contentsDir, 'Resources')
             self.binDir = os.path.join(self.contentsDir, 'MacOS')
             self.frameworksDir = os.path.join(self.contentsDir, 'Frameworks')
 
+            #Find the executable name
             executable = self.distribution.executables[0].targetName
             _, self.bundle_executable = os.path.split(executable)
 
+            # Build the app directory structure
             self.mkpath(self.resourcesDir)
             self.mkpath(self.binDir)
             self.mkpath(self.frameworksDir)
 
-            self.copy_tree(DIST_PATH, self.binDir)
+            self.copy_tree(build.build_exe, self.binDir)
 
+            # Copy the icon
             if self.iconfile:
-                self.copy_file(self.iconfile, os.path.join(self.resourcesDir, 'icon.icns'))
+                self.copy_file(self.iconfile, os.path.join(self.resourcesDir,
+                                                           'icon.icns'))
 
+            # Copy in Frameworks
             for framework in self.include_frameworks:
-                self.copy_tree(framework, os.path.join(self.frameworksDir, os.path.basename(framework)))
+                self.copy_tree(framework, self.frameworksDir + '/' +
+                               os.path.basename(framework))
 
+            # Create the Info.plist file
             self.execute(self.create_plist, ())
+
+            # Make all references to libraries relative
             self.execute(self.setRelativeReferencePaths, ())
+
+            # For a Qt application, run some tweaks
             self.execute(self.prepare_qt_app, ())
 
+            # Sign the app bundle if a key is specified
             if self.codesign_identity:
-                signargs = ['codesign', '-s', self.codesign_identity]
+                signargs = [
+                    'codesign', '-s', self.codesign_identity
+                ]
 
                 if self.codesign_entitlements:
                     signargs.append('--entitlements')
@@ -635,7 +667,8 @@ if MACOS:
                     signargs.insert(1, '--deep')
 
                 if self.codesign_resource_rules:
-                    signargs.insert(1, '--resource-rules=' + self.codesign_resource_rules)
+                    signargs.insert(1, '--resource-rules=' +
+                                    self.codesign_resource_rules)
 
                 signargs.append(self.bundleDir)
 
@@ -686,13 +719,6 @@ if MACOS:
              "the icon for the generated volume"),
         ])
         boolean_options = ['skip-build']
-        buildDir = None
-        bundleDir = None
-        bundleName = None
-        dist_dir = None
-        dmgName = None
-        volume_background = None
-        volume_icon = None
 
         def initialize_options(self):
             """
@@ -778,11 +804,15 @@ if MACOS:
             Command execution.
             """
             if not self.skip_build:
+                bdist = self.reinitialize_command('bdist_mac', reinit_subcommands=1)
+                bdist.bdist_dir = self.bdist_dir
                 self.run_command('bdist_mac')
+            build = self.get_finalized_command('build')
+            bdist = self.get_finalized_command('bdist_mac')
             self.make_dist()
-            self.bundleDir = self.get_finalized_command('bdist_mac').bundleDir
-            self.bundleName = self.get_finalized_command('bdist_mac').bundle_name
-            self.buildDir = self.get_finalized_command('build').build_base
+            self.bundleDir = os.path.join(build.build_base, bdist.bundle_name + ".app")
+            self.bundleName = bdist.bundle_name
+            self.buildDir = build.build_base
             self.dmgName = os.path.join(self.buildDir, DIST_NAME + '.dmg')
             self.execute(self.buildDMG, ())
             self.move_file(self.dmgName, self.dist_dir)
