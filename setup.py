@@ -846,7 +846,7 @@ excludes = [
     'tcl',
     'ttk',
     'tkinter',
-    'Tkinter'
+    'Tkinter',
 ]
 
 includes = [
@@ -883,12 +883,6 @@ include_files = [
     ('PACKAGING.md', 'PACKAGING.md'),
     ('README.md', 'README.md'),
 ]
-
-if LINUX:
-    include_files.extend([
-        (os.path.join(QT_LIB_PATH, 'libQt5DBus.so.5'), 'libQt5DBus.so.5'),
-        (os.path.join(QT_LIB_PATH, 'libQt5XcbQpa.so.5'), 'libQt5XcbQpa.so.5'),
-    ])
 
 
 cx_Freeze.setup(
