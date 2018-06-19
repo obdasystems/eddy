@@ -169,8 +169,7 @@ def openPath(path):
     path = expandPath(path)
     if os.path.isfile(path) or os.path.isdir(path):
         if __WIN32:
-            #os.system('start {0}'.format('"'+path+'"'))
-            os.open(path,os.O_RDWR)
+            os.startfile(path)
         elif __MACOS:
             os.system('open "{0}"'.format(path))
         elif __LINUX:
