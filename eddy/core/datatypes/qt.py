@@ -58,9 +58,6 @@ class Font(QtGui.QFont):
         """
         if not _MACOS:
             size = int(round(size * 0.75))
-        if not self.isHDPI():
-            if family == 'Roboto':
-                family = 'Arial'
         super().__init__(family, size, weight)
         self.setBold(kwargs.get('bold', False))
         self.setItalic(kwargs.get('italic', False))

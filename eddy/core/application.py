@@ -166,6 +166,8 @@ class Eddy(QtWidgets.QApplication):
         fontDB.addApplicationFont(':/fonts/RobotoCondensed-Italic')
         fontDB.addApplicationFont(':/fonts/RobotoCondensed-Light')
         fontDB.addApplicationFont(':/fonts/RobotoCondensed-LightItalic')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Medium')
+        fontDB.addApplicationFont(':/fonts/RobotoCondensed-MediumItalic')
         fontDB.addApplicationFont(':/fonts/RobotoCondensed-Regular')
         fontDB.addApplicationFont(':/fonts/RobotoMono-Bold')
         fontDB.addApplicationFont(':/fonts/RobotoMono-BoldItalic')

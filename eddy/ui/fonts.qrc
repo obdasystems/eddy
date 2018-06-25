@@ -18,6 +18,8 @@
   <file alias="RobotoCondensed-Italic">../../resources/fonts/RobotoCondensed-Italic.ttf</file>
   <file alias="RobotoCondensed-Light">../../resources/fonts/RobotoCondensed-Light.ttf</file>
   <file alias="RobotoCondensed-LightItalic">../../resources/fonts/RobotoCondensed-LightItalic.ttf</file>
+  <file alias="RobotoCondensed-Medium">../../resources/fonts/RobotoCondensed-Medium.ttf</file>
+  <file alias="RobotoCondensed-MediumItalic">../../resources/fonts/RobotoCondensed-MediumItalic.ttf</file>
   <file alias="RobotoCondensed-Regular">../../resources/fonts/RobotoCondensed-Regular.ttf</file>
   <file alias="RobotoMono-Bold">../../resources/fonts/RobotoMono-Bold.ttf</file>
   <file alias="RobotoMono-BoldItalic">../../resources/fonts/RobotoMono-BoldItalic.ttf</file>
