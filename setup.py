@@ -231,7 +231,7 @@ class build_exe(cx_Freeze.build_exe):
             distutils.log.info("Copying JRE from {0}".format(self.jre_dir))
             distutils.dir_util.copy_tree(self.jre_dir, os.path.join(self.build_exe, dest_dir))
         except Exception as e:
-            distutils.log.error('Failed to bundle JRE: {0}'.format(e))
+            raise distutils.errors.DistutilsFileError('Failed to bundle JRE: {0}'.format(e))
 
     def make_zip(self):
         """
