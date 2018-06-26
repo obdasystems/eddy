@@ -463,11 +463,9 @@ if WIN32:
         def initialize_options(self):
             self.bdist_dir = None
             self.dist_dir = None
+            self.jre_dir = None
+            self.no_jre = 0
             self.skip_build = 0
-            if self.no_jre is None:
-                self.no_jre = 0
-            if self.skip_build is None:
-                self.skip_build = 0
 
         def finalize_options(self):
             if self.bdist_dir is None:
@@ -486,19 +484,15 @@ if WIN32:
             Command execution.
             """
             if not self.skip_build:
+                build = self.reinitialize_command('build', reinit_subcommands=1)
                 build_exe = self.reinitialize_command('build_exe', reinit_subcommands=1)
+                build.build_exe = self.bdist_dir
                 build_exe.build_exe = self.bdist_dir
                 build_exe.jre_dir = self.jre_dir
                 build_exe.no_jre = self.no_jre
                 self.run_command('build')
-            self.execute(self.make_dist_dir, ())
-            self.execute(self.make_installer, ())
-
-        def make_dist_dir(self):
-            """
-            Create a distribution directory.
-            """
-            mkdir(self.dist_dir)
+            self.mkpath(self.dist_dir)
+            self.execute(self.make_installer, (), msg='Creating InnoSetup installer...')
 
         def make_installer(self):
             """
@@ -541,7 +535,7 @@ if WIN32:
                         config['iscc'],
                         script_file,
                         '/Q',
-                        '/O{0}'.format(DIST_DIR),
+                        '/O{0}'.format(self.dist_dir),
                         '/dEDDY_APPID={0}'.format(APPID),
                         '/dEDDY_APPNAME={0}'.format(APPNAME),
                         '/dEDDY_ARCHITECTURE={0}'.format(EXEC_ARCH),
@@ -654,7 +648,9 @@ if MACOS:
 
         def run(self):
             if not self.skip_build:
+                build = self.reinitialize_command('build', reinit_subcommands=1)
                 build_exe = self.reinitialize_command('build_exe', reinit_subcommands=1)
+                build.build_exe = self.bdist_dir
                 build_exe.build_exe = self.bdist_dir
                 build_exe.jre_dir = self.jre_dir
                 build_exe.no_jre = self.no_jre
@@ -850,12 +846,6 @@ if MACOS:
             subprocess.call(params)
             rmdir(stagingDir)
 
-        def make_dist(self):
-            """
-            Create 'dist' directory.
-            """
-            mkdir(self.dist_dir)
-
         def run(self):
             """
             Command execution.
@@ -872,8 +862,8 @@ if MACOS:
             self.bundleName = bdist.bundle_name
             self.buildDir = build.build_base
             self.dmgName = os.path.join(self.buildDir, DIST_NAME + '.dmg')
-            self.execute(self.buildDMG, ())
-            self.execute(self.make_dist, ())
+            self.execute(self.buildDMG, (), msg='Building disk image...')
+            self.mkpath(self.dist_dir)
             self.move_file(self.dmgName, self.dist_dir)
 
     commands['bdist_mac'] = bdist_mac
