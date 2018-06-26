@@ -43,7 +43,6 @@ import stat
 import subprocess
 import sys
 import textwrap
-import tarfile
 import zipfile
 
 from eddy import APPNAME, APPID, BUG_TRACKER, COPYRIGHT
@@ -96,6 +95,7 @@ DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), EXEC_A
 DIST_PATH = os.path.join(BUILD_DIR, DIST_NAME)
 
 JRE_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'resources', 'java')
+
 QT_BASE_PATH = os.path.join(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PrefixPath), '..')
 QT_LIB_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibrariesPath)
 QT_PLUGINS_PATH = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
@@ -173,14 +173,17 @@ class build_exe(cx_Freeze.build_exe):
         """
         # Symlink Qt libraries into the virtualenv on macOS, since cx_Freeze assumes
         # the linker @rpath command to point there.
-        self.execute(self.make_symlinks, ())
-        super().run()
-        self.execute(self.make_plugins, ())
-        self.execute(self.make_reasoners, ())
-        self.execute(self.make_jre, ())
-        self.execute(self.make_win32, ())
-        self.execute(self.make_linux, ())
-        self.execute(self.make_cleanup, ())
+        if MACOS:
+            self.execute(self.make_symlinks, (), msg='Symlinking Qt frameworks to Python lib dir...')
+        # cx_Freeze's build_exe does not respect global dry-run option
+        if not self.dry_run:
+            super().run()
+        self.execute(self.make_plugins, (), msg='Packaging Eddy plugins...')
+        self.execute(self.make_reasoners, (), msg='Packaging Eddy reasoners...')
+        self.execute(self.make_jre, (), msg='Bundling Java Runtime Environment...')
+        if WIN32:
+            self.execute(self.make_win32, (), msg='Setting DOS line endings...')
+        self.execute(self.make_cleanup, (), msg='Removing temporary files...')
 
     def make_cleanup(self):
         """
@@ -232,30 +235,6 @@ class build_exe(cx_Freeze.build_exe):
             distutils.dir_util.copy_tree(self.jre_dir, os.path.join(self.build_exe, dest_dir))
         except Exception as e:
             raise distutils.errors.DistutilsFileError('Failed to bundle JRE: {0}'.format(e))
-
-    def make_zip(self):
-        """
-        Create a ZIP distribution.
-        """
-        zippath = os.path.join(self.dist_dir, '%s.zip' % DIST_NAME)
-        with zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, dirs, files in os.walk(self.build_exe):
-                for filename in files:
-                    path = expandPath(os.path.join(root, filename))
-                    arcname = os.path.join(DIST_NAME, os.path.relpath(path, self.build_exe))
-                    zipf.write(path, arcname)
-
-    def make_tarball(self):
-        """
-        Create a tarball distribution.
-        """
-        tarpath = os.path.join(self.dist_dir, '%s.tar.gz' % DIST_NAME)
-        with tarfile.open(tarpath, 'w:gz') as tarf:
-            for root, dirs, files in os.walk(self.build_exe):
-                for filename in files:
-                    path = expandPath(os.path.join(root, filename))
-                    arcname = os.path.join(DIST_NAME, os.path.relpath(path, self.build_exe))
-                    tarf.add(path, arcname)
 
     def make_plugins(self):
         """
@@ -325,9 +304,9 @@ class build_exe(cx_Freeze.build_exe):
                             with open(path, mode='wb') as f:
                                 f.write(new_data.encode(encoding='UTF-8'))
 
-    def make_linux(self):
+    def make_run_script(self):
         """
-        Properly create a Linux executable.
+        Properly create a shell executable launcher.
         """
         if LINUX:
             path = os.path.join(self.build_exe, 'run.sh')
@@ -401,9 +380,9 @@ class bdist_gztar(distutils.core.Command):
             build_exe.no_jre = self.no_jre
             self.run_command('build')
         # package the archive
-        distutils.archive_util.make_archive(os.path.join(self.dist_dir, DIST_NAME),
-                                            'gztar', root_dir=os.path.dirname(self.bdist_dir),
-                                            owner=self.owner, group=self.group)
+        self.make_archive(os.path.join(self.dist_dir, DIST_NAME),
+                          'gztar', root_dir=os.path.dirname(self.bdist_dir),
+                          owner=self.owner, group=self.group)
 
 class bdist_zip(distutils.core.Command):
     """
@@ -451,8 +430,8 @@ class bdist_zip(distutils.core.Command):
             build_exe.no_jre = self.no_jre
             self.run_command('build')
         # package the archive
-        distutils.archive_util.make_archive(os.path.join(self.dist_dir, DIST_NAME),
-                                            'zip', root_dir=os.path.dirname(self.bdist_dir))
+        self.make_archive(os.path.join(self.dist_dir, DIST_NAME),
+                          'zip', root_dir=os.path.dirname(self.bdist_dir))
 
 commands = {
     'clean': clean,
@@ -889,12 +868,12 @@ if MACOS:
                 self.run_command('bdist_mac')
             build = self.get_finalized_command('build')
             bdist = self.get_finalized_command('bdist_mac')
-            self.make_dist()
             self.bundleDir = os.path.join(build.build_base, bdist.bundle_name + ".app")
             self.bundleName = bdist.bundle_name
             self.buildDir = build.build_base
             self.dmgName = os.path.join(self.buildDir, DIST_NAME + '.dmg')
             self.execute(self.buildDMG, ())
+            self.execute(self.make_dist, ())
             self.move_file(self.dmgName, self.dist_dir)
 
     commands['bdist_mac'] = bdist_mac
