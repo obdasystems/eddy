@@ -330,16 +330,19 @@ class build_exe(cx_Freeze.build_exe):
                 os.chmod(filepath, st.st_mode | stat.S_IEXEC)
 
 
-class bdist_gztar(distutils.core.Command):
+class bdist_archive(distutils.core.Command):
     """
-    Create a distribution tarball archive.
+    Create a distribution archive using the given format.
     """
-    description = 'create a gzipped tar distribution archive'
+    description = 'create a distribution archive using the given format'
     user_options = [
         ('bdist-dir=', 'b',
          "directory where to build the distribution [default: {}]".format(os.path.relpath(DIST_PATH))),
         ('dist-dir=', 'd',
          "directory to put final built distributions in [default: {}]".format(os.path.relpath(DIST_DIR))),
+        ('format=', 'f',
+         "archive format to create (tar, gztar, bztar, xztar, "
+         "ztar, zip)"),
         ('jre-dir=', None,
          "directory where to search for the bundled jre [default: {}]".format(os.path.relpath(JRE_DIR))),
         ('no-jre', None,
@@ -353,9 +356,14 @@ class bdist_gztar(distutils.core.Command):
     ]
     boolean_options = ['no-jre', 'skip-build']
 
+    # Default format by platform
+    default_format = { 'posix': 'gztar',
+                       'nt': 'zip' }
+
     def initialize_options(self):
         self.bdist_dir = None
         self.dist_dir = None
+        self.format = None
         self.jre_dir = None
         self.no_jre = 0
         self.skip_build = 0
@@ -371,6 +379,12 @@ class bdist_gztar(distutils.core.Command):
             self.jre_dir = JRE_DIR
         if self.no_jre is None:
             self.no_jre = 0
+        if self.format is None:
+            try:
+                self.format = self.default_format[os.name]
+            except KeyError:
+                raise distutils.errors.DistutilsPlatformError(
+                    "don't know how to create archive distribution on platform %s" % os.name)
 
     def run(self):
         if not self.skip_build:
@@ -381,63 +395,14 @@ class bdist_gztar(distutils.core.Command):
             self.run_command('build')
         # package the archive
         self.make_archive(os.path.join(self.dist_dir, DIST_NAME),
-                          'gztar', root_dir=os.path.dirname(self.bdist_dir),
+                          self.format, root_dir=os.path.dirname(self.bdist_dir),
                           owner=self.owner, group=self.group)
 
-class bdist_zip(distutils.core.Command):
-    """
-    Create a distribution zip archive.
-    """
-    description = 'create a distribution zip archive'
-    user_options = [
-        ('bdist-dir=', 'b',
-         "directory where to build the distribution [default: {}]".format(os.path.relpath(DIST_PATH))),
-        ('dist-dir=', 'd',
-         "directory to put final built distributions in [default: {}]".format(os.path.relpath(DIST_DIR))),
-        ('jre-dir=', None,
-         "directory where to search for the bundled jre [default: {}]".format(os.path.relpath(JRE_DIR))),
-        ('no-jre', None,
-         "create a distribution without a bundled jre [default: False]"),
-        ('skip-build', None,
-         "skip rebuilding everything (for testing/debugging)"),
-    ]
-    boolean_options = ['no-jre', 'skip-build']
-
-    def initialize_options(self):
-        self.bdist_dir = None
-        self.dist_dir = None
-        self.jre_dir = None
-        self.no_jre = 0
-        self.skip_build = 0
-
-    def finalize_options(self):
-        if self.bdist_dir is None:
-            self.bdist_dir = DIST_PATH
-        if self.dist_dir is None:
-            self.dist_dir = DIST_DIR
-        if self.jre_dir is None:
-            self.jre_dir = JRE_DIR
-        if self.no_jre is None:
-            self.no_jre = 0
-        if self.skip_build is None:
-            self.skip_build = 0
-
-    def run(self):
-        if not self.skip_build:
-            build_exe = self.reinitialize_command('build_exe', reinit_subcommands=1)
-            build_exe.build_exe = self.bdist_dir
-            build_exe.jre_dir = self.jre_dir
-            build_exe.no_jre = self.no_jre
-            self.run_command('build')
-        # package the archive
-        self.make_archive(os.path.join(self.dist_dir, DIST_NAME),
-                          'zip', root_dir=os.path.dirname(self.bdist_dir))
 
 commands = {
     'clean': clean,
     'build_exe': build_exe,
-    'bdist_gztar': bdist_gztar,
-    'bdist_zip': bdist_zip,
+    'bdist_archive': bdist_archive,
 }
 
 if WIN32:
