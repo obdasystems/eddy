@@ -32,10 +32,22 @@
 #                                                                        #
 ##########################################################################
 
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "WARNING: It seems you are running this command without any virtualenv active."
+    echo "         Unless you are using a system-wide python installation, this will most likely fail."
+
+    if which pyrcc5 >/dev/null 2>&1; then
+        PYRCC5_EXEC="`which pyrcc5`"
+        echo "Using pyrcc5: ${PYRCC5_EXEC}"
+    else
+        echo "ERROR: Unable to locate pyrcc5 executable in PATH, exiting..."
+        exit 1
+    fi
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARENT_DIR="$(dirname "${SCRIPT_DIR}")"
-VIRTUAL_ENV="${HOME}/python34"
+PYRCC5_EXEC="${PYRCC5_EXEC:-pyrcc5}"
 
-source "${VIRTUAL_ENV}/bin/activate"
-pyrcc5 "${PARENT_DIR}/eddy/ui/fonts.qrc" -o "${PARENT_DIR}/eddy/ui/fonts_rc.py"
+"${PYRCC5_EXEC}" "${PARENT_DIR}/eddy/ui/fonts.qrc" -o "${PARENT_DIR}/eddy/ui/fonts_rc.py"
+
