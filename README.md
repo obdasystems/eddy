@@ -1,16 +1,14 @@
 ![Eddy](/resources/images/eddy_banner.png?raw=true)
 
-[![Code Health](https://landscape.io/github/danielepantaleone/eddy/master/landscape.svg?style=flat)](https://landscape.io/github/danielepantaleone/eddy/master)
-[![Coverage Status](https://coveralls.io/repos/github/danielepantaleone/eddy/badge.svg?branch=master&bust=1)](https://coveralls.io/github/danielepantaleone/eddy?branch=master)
-[![Python version](https://img.shields.io/badge/python-3.4.4-blue.svg)](https://www.python.org)
-[![GitHub issues](https://img.shields.io/github/issues/danielepantaleone/eddy.svg)](https://github.com/danielepantaleone/eddy/issues)
-[![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/danielepantaleone/eddy/master/LICENSE)
+[![Python version](https://img.shields.io/badge/python-3.5.4-blue.svg)](https://www.python.org)
+[![GitHub issues](https://img.shields.io/github/issues/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/pulls)
+[![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/obdasystems/eddy/master/LICENSE)
 [![Download eddy](https://img.shields.io/sourceforge/dt/eddy-editor.svg)](https://sourceforge.net/projects/eddy-editor/files/latest/download)
-[![Gitter](https://img.shields.io/gitter/room/danielepantaleone/eddy.svg)](https://gitter.im/danielepantaleone/eddy)
 
 | Branch    | Status  |
 |-----------|---------------|
-| [master](https://github.com/danielepantaleone/eddy/tree/master)  |[![Build Status](https://travis-ci.org/danielepantaleone/eddy.svg?branch=master)](https://travis-ci.org/danielepantaleone/eddy)|
+| [master](https://github.com/obdasystems/eddy/tree/master)   |[![Build Status](https://travis-ci.org/obdasystems/eddy.svg?branch=master)](https://travis-ci.org/obdasystems/eddy)|
 
 Eddy is a graphical editor for the specification and visualization of Graphol ontologies. 
 Eddy features a design environment specifically thought out for generating Graphol ontologies through 
@@ -71,9 +69,9 @@ See the LICENSE file included with the distribution.
 
 ### Resources
 
-* [Bug tracker](https://github.com/danielepantaleone/eddy/issues)
+* [Bug tracker](https://github.com/obdasystems/eddy/issues)
 * [Graphol website](http://www.dis.uniroma1.it/~graphol/)
-* [Source code](https://github.com/danielepantaleone/eddy)
+* [Source code](https://github.com/obdasystems/eddy)
 
 [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"]: http://www.dis.uniroma1.it/en
 [Graphol]: http://www.dis.uniroma1.it/~graphol/

@@ -26,7 +26,7 @@ should have enough information to understand and reproduce the issue and validat
 We prefer contributors to submit their code change throught GitHub [pull requests](http://help.github.com/send-pull-requests/). 
 
 * Make sure you have a [GitHub account](https://github.com/signup/free).
-* [Fork](https://github.com/danielepantaleone/eddy) this repository on GitHub.
+* [Fork](https://github.com/obdasystems/eddy) this repository on GitHub.
 * Create a topic branch from where you want to base your work.
     * This is **NOT** the `master` branch. You should push your changes to the `dev` branch. 
     * Please avoid working directly on the `master` branch.
@@ -72,7 +72,7 @@ def myFunc(self, param1, param2):
    :type param2: The type of the second parameter (i.e: int, str, bool, ...).
    :raise MyError: The exception class if your function may raise an exception.
    :rtype: The return type of your function.
-   """"
+   """
    ...
 ```
 * Always use `self` for the first argument to instance methods.
@@ -85,6 +85,6 @@ def myFunc(self, param1, param2):
 
 # Additional Resources
 
-* [Bug tracker](https://github.com/danielepantaleone/eddy/issues)
+* [Bug tracker](https://github.com/obdasystems/eddy/issues)
 * [General GitHub documentation](http://help.github.com/)
 * [GitHub pull request documentation](http://help.github.com/send-pull-requests/)
