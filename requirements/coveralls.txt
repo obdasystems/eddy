@@ -1,0 +1,7 @@
+##
+## coveralls.io requirements
+##
+## Used to upload coverage statistics to coveralls.io
+##
+
+coveralls==1.3.0

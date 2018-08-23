@@ -1,4 +1,8 @@
-mock>=2.0.0
-mockito-without-hardcoded-distribute-version>=0.5.4
-nose>=1.3.7
-nose-cov>=1.6
+# Recursive
+-r requirements.txt
+
+# From PyPi
+mock==2.0.0
+mockito==1.1.0
+nose==1.3.7
+nose-cov==1.6
