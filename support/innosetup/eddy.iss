@@ -83,6 +83,7 @@ Source: {#EDDY_BUILD_PATH}\*; DestDir: {app}; Flags: recursesubdirs
 
 [UninstallDelete]
 Name: {app}\*; Type: filesandordirs
+Name: {app}; Type: dirifempty
 
 [Run]
 Filename: {app}\{#EDDY_EXECUTABLE}; Description: Run {#EDDY_APPNAME}; Flags: postinstall nowait skipifsilent unchecked
@@ -106,18 +107,30 @@ begin
     Result := sUnInstallString;
 end;
 
+function GetUninstallString32(): String;
+var
+    sUnInstPath: String;
+    sUnInstallString: String;
+begin
+    sUnInstPath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting("AppId")}_is1');
+    sUnInstallString := '';
+    if is64BitInstallMode then begin
+        if not RegQueryStringValue(HKLM32, sUnInstPath, 'UninstallString', sUnInstallString) then
+            RegQueryStringValue(HKCU32, sUnInstPath, 'UninstallString', sUnInstallString);
+    end
+    Result := sUnInstallString;
+end;
+
 function IsUpgrade(): Boolean;
 begin
     Result := (GetUninstallString() <> '');
 end;
 
-function UnInstallOldVersion(): Integer;
+function UnInstallOldVersion(sUnInstallString: String): Integer;
 var
-    sUnInstallString: String;
     iResultCode: Integer;
 begin
     Result := 0;
-    sUnInstallString := GetUninstallString();
     if sUnInstallString <> '' then begin
         sUnInstallString := RemoveQuotes(sUnInstallString);
         if Exec(sUnInstallString, '/SILENT /NORESTART /SUPPRESSMSGBOXES','', SW_HIDE, ewWaitUntilTerminated, iResultCode) then
@@ -129,12 +142,22 @@ begin
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
+var
+    sUnInstallString32: String;
 begin
     if (CurStep=ssInstall) then
     begin
+        if Is64BitInstallMode then begin
+            // Check if a 32-bit version of the application is installed and ask the user if he wants to uninstall it.
+            sUnInstallString32 := GetUninstallString32();
+            if sUnInstallString32 <> '' then begin
+                if MsgBox('We have detected an existing 32 bit installation of {#EDDY_APPNAME}, do you wish to uninstall it?', mbConfirmation, MB_YESNO) = IDYES then
+                    UnInstallOldVersion(sUnInstallString32);
+            end
+        end
         if (IsUpgrade()) then
         begin
-            UnInstallOldVersion();
+            UnInstallOldVersion(GetUninstallString());
         end;
     end;
 end;
