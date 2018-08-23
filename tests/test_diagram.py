@@ -67,7 +67,7 @@ class DiagramTestCase(EddyTestCase):
         num_nodes_in_diagram = len(diagram.nodes())
         num_items_in_project = len(self.project.items())
         num_nodes_in_project = len(self.project.nodes())
-        node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
         # WHEN
         QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, position)
@@ -75,7 +75,7 @@ class DiagramTestCase(EddyTestCase):
         self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 1)
         self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
         self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 1)
-        self.assertLen(1, self.project.predicates(Item.ConceptNode, 'concept'))
+        self.assertLen(1, self.project.predicates(Item.ConceptNode, 'test:concept'))
 
     def test_insert_single_concept_node_with_control_modifier(self):
         # GIVEN
@@ -85,7 +85,7 @@ class DiagramTestCase(EddyTestCase):
         num_nodes_in_diagram = len(diagram.nodes())
         num_items_in_project = len(self.project.items())
         num_nodes_in_project = len(self.project.nodes())
-        node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
         # WHEN
         QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
@@ -93,7 +93,7 @@ class DiagramTestCase(EddyTestCase):
         self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 1)
         self.assertEqual(num_items_in_project, len(self.project.items()) - 1)
         self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 1)
-        self.assertLen(1, self.project.predicates(Item.ConceptNode, 'concept'))
+        self.assertLen(1, self.project.predicates(Item.ConceptNode, 'test:concept'))
 
     def test_insert_multiple_concept_nodes_with_control_modifier(self):
         # GIVEN
@@ -103,7 +103,7 @@ class DiagramTestCase(EddyTestCase):
         num_nodes_in_diagram = len(diagram.nodes())
         num_items_in_project = len(self.project.items())
         num_nodes_in_project = len(self.project.nodes())
-        node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         positions = (view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200))
         # WHEN
         for position in positions:
@@ -112,7 +112,7 @@ class DiagramTestCase(EddyTestCase):
         self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 3)
         self.assertEqual(num_items_in_project, len(self.project.items()) - 3)
         self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 3)
-        self.assertLen(3, self.project.predicates(Item.ConceptNode, 'concept'))
+        self.assertLen(3, self.project.predicates(Item.ConceptNode, 'test:concept'))
 
     def test_insert_multiple_concept_nodes_with_control_modifier_released_after_insertion(self):
         # GIVEN
@@ -122,7 +122,7 @@ class DiagramTestCase(EddyTestCase):
         num_nodes_in_diagram = len(diagram.nodes())
         num_items_in_project = len(self.project.items())
         num_nodes_in_project = len(self.project.nodes())
-        node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         positions = (view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200))
         # WHEN
         for position in positions:
@@ -132,7 +132,7 @@ class DiagramTestCase(EddyTestCase):
         self.assertEqual(num_nodes_in_diagram, len(diagram.nodes()) - 3)
         self.assertEqual(num_items_in_project, len(self.project.items()) - 3)
         self.assertEqual(num_nodes_in_project, len(self.project.nodes()) - 3)
-        self.assertLen(3, self.project.predicates(Item.ConceptNode, 'concept'))
+        self.assertLen(3, self.project.predicates(Item.ConceptNode, 'test:concept'))
 
     #############################################
     #   EDGE INSERTION
@@ -146,8 +146,8 @@ class DiagramTestCase(EddyTestCase):
         num_edges_in_diagram = len(diagram.edges())
         num_items_in_project = len(self.project.items())
         num_edges_in_project = len(self.project.edges())
-        node1 = first(self.project.predicates(Item.ConceptNode, 'Male', diagram))
-        node2 = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node1 = first(self.project.predicates(Item.ConceptNode, 'test:Male', diagram))
+        node2 = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         num_edges_in_node1 = len(node1.edges)
         num_edges_in_node2 = len(node2.edges)
         pos1 = view.mapFromScene(node1.pos())
@@ -175,8 +175,8 @@ class DiagramTestCase(EddyTestCase):
         num_edges_in_diagram = len(diagram.edges())
         num_items_in_project = len(self.project.items())
         num_edges_in_project = len(self.project.edges())
-        node1 = first(self.project.predicates(Item.ConceptNode, 'Male', diagram))
-        node2 = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node1 = first(self.project.predicates(Item.ConceptNode, 'test:Male', diagram))
+        node2 = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         pos1 = view.mapFromScene(node1.pos())
         pos2 = view.mapFromScene(node2.pos() - QtCore.QPointF(-200, 0))
         # WHEN

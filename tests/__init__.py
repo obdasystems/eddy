@@ -151,6 +151,7 @@ class EddyTestCase(TestCase):
         """
         # SHUTDOWN EDDY
         self.eddy.quit()
+        self.eddy.closeAllWindows()
         # REMOVE TEST DIRECTORY
         rmdir('@tests/.tests/')
         # RELEASE LOCK AND FLUSH STREAMS

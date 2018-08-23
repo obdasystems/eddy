@@ -66,7 +66,7 @@ class PaletteTestCase(EddyTestCase):
         plugin = self.session.plugin('palette')
         palette = plugin.widget('palette')
         button = palette.button(Item.ConceptNode)
-        node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
         # WHEN
         QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
@@ -88,7 +88,7 @@ class PaletteTestCase(EddyTestCase):
         plugin = self.session.plugin('palette')
         palette = plugin.widget('palette')
         button = palette.button(Item.ConceptNode)
-        node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
         # WHEN
         QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
@@ -110,7 +110,7 @@ class PaletteTestCase(EddyTestCase):
         plugin = self.session.plugin('palette')
         palette = plugin.widget('palette')
         button = palette.button(Item.RoleNode)
-        node = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         positions = (view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200))
         # WHEN
         QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
@@ -137,8 +137,8 @@ class PaletteTestCase(EddyTestCase):
         plugin = self.session.plugin('palette')
         palette = plugin.widget('palette')
         button = palette.button(Item.InclusionEdge)
-        node1 = first(self.project.predicates(Item.ConceptNode, 'Male', diagram))
-        node2 = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node1 = first(self.project.predicates(Item.ConceptNode, 'test:Male', diagram))
+        node2 = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         pos1 = view.mapFromScene(node1.pos())
         pos2 = view.mapFromScene(node2.pos())
         # WHEN
@@ -166,8 +166,8 @@ class PaletteTestCase(EddyTestCase):
         plugin = self.session.plugin('palette')
         palette = plugin.widget('palette')
         button = palette.button(Item.InclusionEdge)
-        node1 = first(self.project.predicates(Item.ConceptNode, 'Male', diagram))
-        node2 = first(self.project.predicates(Item.ConceptNode, 'Person', diagram))
+        node1 = first(self.project.predicates(Item.ConceptNode, 'test:Male', diagram))
+        node2 = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
         pos1 = view.mapFromScene(node1.pos())
         pos2 = view.mapFromScene(node2.pos())
         # WHEN
