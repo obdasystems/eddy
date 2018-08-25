@@ -1,17 +1,12 @@
+# Recursive
+-r requirements/cython.txt
+
 # From PyPi
-Cython>=0.23.4
-verlib>=0.1
-natsort>=5.0.1
-requests==2.11.1
-
-# Works perfectly for
-#Cython==0.23.4
-#verlib==0.1
-#natsort==5.0.1
-#certainly gives an error if either one or both of {Cython,natsort} are upgraded.
-
-# Pre-releases
---pre github3.py
-
-# From GitHub
--e git+https://github.com/kivy/pyjnius.git#egg=pyjnius
+appdirs==1.4.3
+packaging==17.1
+rfc3987==1.3.7
+verlib==0.1
+github3.py==1.1.0
+natsort==5.0.1
+requests==2.18.4
+pyjnius==1.1.1

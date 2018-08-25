@@ -1,0 +1,5 @@
+# PyQt5 requirements
+#
+
+# From PyPI
+PyQt5==5.10.1

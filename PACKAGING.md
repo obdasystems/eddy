@@ -1,88 +1,208 @@
-## Eddy packaging documentation
+# Eddy packaging documentation
 
 Eddy is distributed as different packages:
 
+* `Windows x64` installer (built with InnoSetup)
 * `Windows x86` installer (built with InnoSetup)
-* `Windows x86` standalone package
+* `Windows x64` standalone package (.zip archive)
+* `Windows x86` standalone package (.zip archive)
 * `macOS (Intel)` app bundle (distributed as `.dmg)
-* `Linux i386` standalone package
-* `Linux amd64` standalone package
+* `Linux x86_64` standalone package (.tar.gz archive)
+* `Linux i686` standalone package (.tar.gz archive)
+
+To create distribution packages you need to have installed [Python 3.5](https://www.python.org) on your system. 
+You also need to have installed [Git](http://git-scm.com/) on your system and make sure that the `git` command
+is in your `PATH` environment variable.
 
 # Packaging
 
-To create distribution packages you need to have installed [Python 3.4](https://www.python.org) on your system. 
-You also need to have installed [GIT](http://git-scm.com/) on your system and make sure that the `git` command
-is in your `$PATH` environment variable. Once the building process is completed you will find the built 
-package(s) inside the *dist* directory.
+The recommended way to package Eddy is from an isolated [virtual environment](https://docs.python.org/3/tutorial/venv.html). This makes 
+sure that only the required dependencies are installed, avoiding possible conflicts that can be
+caused with packages managed by the system-wide Python installation.
 
-## Windows
+**NOTE**: When installing dependencies make sure to select the correct architecture corresponding
+to your OS architecture, as cross-compiling to other architectures is untested and generally not supported
+in the packaging process.
 
-Install [Qt 5.5](http://download.qt.io/official_releases/qt/5.5/5.5.1/qt-opensource-windows-x86-mingw492-5.5.1.exe).    
-Install [cx_Freeze](https://pypi.python.org/pypi/cx_Freeze/4.3.4).  
-Install [InnoSetup](http://www.jrsoftware.org/isinfo.php).  
-Install [Oracle JRE 1.8](http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-windows-i586.exe).  
-Download and uncompress [SIP 4.18.1](http://downloads.sourceforge.net/project/pyqt/sip/sip-4.18.1/sip-4.18.1.zip).  
-Download and uncompress [PyQt5.5.1](http://downloads.sourceforge.net/project/pyqt/PyQt5/PyQt-5.5.1/PyQt-gpl-5.5.1.zip).  
-Bring up command prompt window and navigate to the uncompressed SIP 4.18.1 directory:
+## On Windows
 
-    >>> PATH=C:\Qt\5.5\mingw492_32\bin;C:\Qt\Tools\mingw492_32\bin;%PATH%
-    >>> python configure.py -p win32-g++
-    >>> mingw32-make && mingw32-make install
+Install [Python 3.5](https://www.python.org/downloads/release/python-354/).  
+Install [Git](https://git-scm.com/downloads).  
+Install [Visual C++ Build Tools v14.0](https://visualstudio.microsoft.com/visual-cpp-build-tools/).  Make sure to select
+`VC++ 2015.3 v14.00 toolset for Desktop` from the individual components tab in the installer menu.  
+Install [Oracle JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  
+Install [InnoSetup](http://www.jrsoftware.org/isinfo.php) (optional if you don't wish to generate the binary installer).  
+Set the `JAVA_HOME` environment variable to point to the location where the JDK is installed.
+
+Open Visual Studio 2015 Native Tools Command Prompt corresponding to your OS architecture,
+e.g. for x64 Windows it is located in:
+
+    Start -> Visual Studio 2015 -> Visual Studio Tools -> Windows Desktop Command Prompts -> VS2015 x64 Native Tools Command Prompt 
+
+Switch to the user home directory:
+
+    C:\> cd %USERPROFILE%
     
-Navigate using the command prompt to the uncompressed PyQt5.5.1 directory:
+Create a new virtual environment using the command:
 
-    >>> python configure.py --spec win32-g++ --disable QtPositioning --no-qsci-api --no-designer-plugin --no-qml-plugin --confirm-license
-    >>> mingw32-make && mingw32-make install
-
-Install python required packages:
-
-    >>> pip install -U pip
-    >>> pip install -U cython
-    >>> pip install -U verlib
-    >>> pip install -U mockito-without-hardcoded-distribute-version
-    >>> pip install -U mock
-    >>> pip install -U nose
-    >>> pip install -U nose-cov
-    >>> pip install -U natsort
-    >>> pip install -U coveralls
-    >>> pip install -U pyyaml
-    >>> pip install -U Pillow
-    >>> pip install -U rfc3987
-
-Change the current active directory and type the following:
-
-    >>> git clone https://github.com/danielepantaleone/eddy.git
+    C:\> python -m venv --copies eddy-venv-py35
     
-Make sure to copy Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
-Go back to the command prompt, and type the following: 
+Activate the virtual environment with:
 
-    >>> cd eddy
-    >>> python setup.py build_exe
-    
-## Mac OS
+    C:\> eddy-venv-py35\Scripts\activate.bat
 
-Install Xcode and Xcode command line tools.  
-Install [homebrew](http://brew.sh/).  
-Install [Python 3.4.4](https://www.python.org/ftp/python/3.4.4/python-3.4.4-macosx10.6.pkg).  
-Install [Oracle JRE 1.8](http://download.oracle.com/otn-pub/java/jdk/8u102-b14/jdk-8u102-macosx-x64.dmg).  
-Make use of the `configure-build-linux-macOS.sh` to configure the build environment.  
-Bring up a terminal window and type the following:
-    
-    >>> cd ~/Downloads/eddy
-    >>> python setup.py bdist_dmg
+Clone Eddy repository by running the command:
 
-## Linux 32 (debian based distro)
+    C:\> git clone --recursive https://github.com/obdasystems/eddy.git
+    
+Update `pip` and install required Python dependencies from PyPI:
+    
+    C:\> cd eddy
+    C:\> pip install -U pip setuptools
+    C:\> pip install -U -r requirements/cython.txt
+    C:\> pip install -U -r requirements/pyqt5.txt
+    C:\> pip install -U -r requirements-packaging.txt
+    
+Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
+You can copy it directly from the JDK installation directory or download the JRE tarball
+from the [Oracle JRE 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) 
+download page:
 
-Make use of the `configure-build-linux-i386.sh` to configure the build environment.  
-Bring up a terminal window and type the following:
+    C:\> md resources\java
+    C:\> robocopy /s "%JAVA_HOME%\jre" resources\java\jre
     
-    >>> cd ~/Downloads/eddy
-    >>> python setup.py build_exe
-    
-## Linux 64 (debian based distro)
+To build a Windows binary installer, run the command:
 
-Make use of the `configure-build-linux-amd64.sh` to configure the build environment.  
-Bring up a terminal window and type the following:
+    $ python setup.py bdist_innosetup
+
+To build a Windows standalone (.zip) distribution, run the command:
+
+    $ python setup.py bdist_archive --format=zip
     
-    >>> cd ~/Downloads/eddy
-    >>> python setup.py build_exe
+Once the building process is completed you will find the built 
+package(s) inside the *dist* directory. 
+
+## On macOS
+
+Make sure Xcode command line tools are installed. From a terminal window, type:
+
+    $ xcode-select --install
+ 
+Install [Homebrew](http://brew.sh/).  
+Install [Python 3.5](https://www.python.org/downloads/release/python-354/) and [pyenv](https://github.com/pyenv/pyenv) using Homebrew
+(alternatively, you can install Python 3.5 from the official binary installer):
+
+    $ brew install pyenv
+    $ pyenv init
+    $ pyenv install 3.5.4
+    
+Install [Oracle JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  
+Set the `JAVA_HOME` environment variable to point to the location where the JDK is installed.
+
+    $ export JAVA_HOME="`/usr/libexec/java_home -v 1.8`"
+
+Create a new virtual environment with:
+
+    $ PYENV_VERSION=3.5.4 pyenv exec python -m venv --copies eddy-venv-py35
+    
+Activate the virtual environment with:
+
+    $ source ./eddy-venv-py35/bin/activate
+    
+Clone Eddy repository by running the command:
+
+    $ git clone --recursive https://github.com/obdasystems/eddy.git
+    
+Update `pip` and install required Python dependencies from PyPI:
+    
+    $ cd eddy
+    $ pip install -U pip setuptools
+    $ pip install -U -r requirements/cython.txt
+    $ pip install -U -r requirements/pyqt5.txt
+    $ pip install -U -r requirements-packaging.txt
+
+Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
+You can copy it directly from the JDK installation directory or download the JRE tarball
+from the [Oracle JRE 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) 
+download page:
+    
+    $ mkdir resources/java
+    $ cp -R "`/usr/libexec/java_home -v 1.8`/jre" resources/java/jre
+    
+Alternatively, you can make use of the `configure-virtualenv.sh` script 
+located in the `scripts` directory to set up a customized virtual environment.
+Invoke the script with the `--help` argument to get a list of the available options.
+
+To build a macOS disk image (.dmg) containing the app bundle, run the command:
+
+    $ python setup.py bdist_dmg
+
+Once the building process is completed you will find the built 
+package(s) inside the *dist* directory. 
+
+## On GNU/Linux 
+
+**NOTE**: In order to build distribution packages for 32 bit Linux distros it is required 
+to build Qt5 and PyQt5 from source, as binary wheels from PyPI are not available. 
+
+### Installing dependencies
+
+In order to setup the virtual environment you will have to install Python 3.5, Git, and a JDK 1.8:
+
+##### On Ubuntu / Debian / Mint
+
+    $ sudo apt-get install build-essential libsqlite3-dev libssl-dev libbz2-dev libreadline-dev openjdk-8-jdk git
+
+##### On Fedora
+
+    $ sudo dnf install gcc sqlite-devel openssl-devel bzip2-devel readline-devel java-8-openjdk git
+
+Clone [pyenv](https://github.com/pyenv/pyenv) repository:
+
+    $ git clone https://github.com/pyenv/pyenv ~/.pyenv
+    
+Install Python 3.5:
+
+    $ export PYENV_ROOT="$HOME/.pyenv"
+    $ export PATH="PYENV_ROOT/bin:$PATH"
+    $ pyenv init
+    $ pyenv install 3.5.4
+    
+Create a new virtual environment:
+
+    $ PYENV_VERSION=3.5.4 pyenv exec python -m venv --copies eddy-venv-py35
+    
+Activate the virtual environment:
+
+    $ source ~/eddy-venv-py35/bin/activate
+    
+Clone Eddy repository by running the command:
+
+    $ git clone --recursive https://github.com/obdasystems/eddy.git
+    
+Update `pip` and install required Python dependencies from PyPI:
+    
+    $ cd eddy
+    $ pip install -U pip setuptools
+    $ pip install -U -r requirements/cython.txt
+    $ pip install -U -r requirements/pyqt5.txt
+    $ pip install -U -r requirements-packaging.txt
+
+Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
+You can download the JRE tarball from the [Oracle JRE 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) 
+download page:
+
+    $ mkdir resources/java
+    $ tar xzf jre-8*.tar.gz
+    $ mv jre1.8.0* resources/java/jre
+    
+Alternatively, you can make use of the `configure-virtualenv.sh` script 
+located in the `scripts` directory to set up a customized virtual environment.
+Invoke the script with the `--help` argument to get a list of the available options.
+
+To build Linux distribution packages, run the command:
+
+    $ python setup.py bdist_archive --format=gztar
+
+Once the building process is completed you will find the built 
+package(s) inside the *dist* directory. 

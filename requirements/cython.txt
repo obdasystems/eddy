@@ -1,0 +1,9 @@
+# Cython requirements
+# 
+# Stick with 0.23.4 as new versions cause issues with pyjnius<=1.1.1
+#
+# https://github.com/kivy/pyjnius/issues/300
+#
+
+# From PyPi
+Cython==0.23.4
