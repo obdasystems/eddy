@@ -613,10 +613,13 @@ class Project(QtCore.QObject):
 
                             corr_iri = 'http://www.w3.org/2002/07/owl'
                         else:
-
-                            # print('else       (node.type() is not (Item.IndividualNode)) and (node.special() is not None):')
-
-                            corr_iri = self.iri
+                            # Check if the node contains the prefix separator character and use the associated IRI
+                            nodeLabel = node.text().replace('\n', '')
+                            if ':' in nodeLabel:
+                                prefix = nodeLabel[0:nodeLabel.find(':')]
+                                corr_iri = self.get_iri_for_prefix(prefix)
+                            else:
+                                corr_iri = self.iri
                     else:
 
                         #print('else       (self.get_iri_of_node(node) is None):')
