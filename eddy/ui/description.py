@@ -125,8 +125,8 @@ class NodeDescriptionDialog(AbstractDialog):
         #################################
         self.text = DescriptionEditor(self)
         self.text.moveCursor(QtGui.QTextCursor.End)
-        self.text.setFixedSize(800, 600)
-        self.text.setMaximumSize(1000, 800)
+        self.text.setMinimumSize(600, 400)
+        self.text.setMaximumSize(1024, 768)
 
         meta = self.diagram.project.meta(node.type(), node.text())
         self.description = meta.get(K_DESCRIPTION, '')

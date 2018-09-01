@@ -96,7 +96,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.IndividualNode, 'I1'), (Item.IndividualNode, 'I2'))
+        self.__insert_edge_between(Item.InclusionEdge, (Item.IndividualNode, 'test:I1'), (Item.IndividualNode, 'test:I2'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion must involve two graphol expressions')
@@ -107,7 +107,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.ConceptNode, 'C1'), (Item.RoleNode, 'R1'))
+        self.__insert_edge_between(Item.InclusionEdge, (Item.ConceptNode, 'test:C1'), (Item.RoleNode, 'test:R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between Concept and Role')
@@ -118,7 +118,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.ConceptNode, 'C1'), (Item.AttributeNode, 'A1'))
+        self.__insert_edge_between(Item.InclusionEdge, (Item.ConceptNode, 'test:C1'), (Item.AttributeNode, 'test:A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between Concept and Attribute')
@@ -129,7 +129,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.ConceptNode, 'C1'), (Item.ValueDomainNode, 'xsd:string'))
+        self.__insert_edge_between(Item.InclusionEdge, (Item.ConceptNode, 'test:C1'), (Item.ValueDomainNode, 'xsd:string'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between Concept and Value Domain')
@@ -140,7 +140,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), (Item.AttributeNode, 'A1'))
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'test:R1'), (Item.AttributeNode, 'test:A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between Role and Attribute')
@@ -151,7 +151,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), (Item.ValueDomainNode, 'xsd:string'))
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'test:R1'), (Item.ValueDomainNode, 'xsd:string'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between Role and Value Domain')
@@ -162,7 +162,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), (Item.ValueDomainNode, 'xsd:string'))
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'test:A1'), (Item.ValueDomainNode, 'xsd:string'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: inclusion between Attribute and Value Domain')
@@ -174,7 +174,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and union node are not compatible')
@@ -186,7 +186,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and disjoint union node are not compatible')
@@ -198,7 +198,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and intersection node are not compatible')
@@ -210,7 +210,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'test:A1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and union node are not compatible')
@@ -222,7 +222,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'test:A1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and disjoint union node are not compatible')
@@ -234,7 +234,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'test:A1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and intersection node are not compatible')
@@ -258,7 +258,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, source, (Item.RoleNode, 'R1'))
+        self.__insert_edge_between(Item.InclusionEdge, source, (Item.RoleNode, 'test:R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for Role inclusion: complement node')
@@ -270,7 +270,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, source, (Item.AttributeNode, 'A1'))
+        self.__insert_edge_between(Item.InclusionEdge, source, (Item.AttributeNode, 'test:A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for Attribute inclusion: complement node')
@@ -295,7 +295,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Role chain nodes cannot be target of a Role inclusion')
@@ -307,7 +307,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'R9'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.RoleNode, 'test:R9'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Detected unsupported operator sequence on intersection node')
@@ -319,7 +319,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'A1'), target)
+        self.__insert_edge_between(Item.InclusionEdge, (Item.AttributeNode, 'test:A1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Detected unsupported operator sequence on intersection node')
@@ -334,7 +334,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.IndividualNode, 'I1'), (Item.IndividualNode, 'I2'))
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.IndividualNode, 'test:I1'), (Item.IndividualNode, 'test:I2'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(),'Type mismatch: equivalence must involve two graphol expressions')
@@ -345,7 +345,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.ConceptNode, 'C1'), (Item.RoleNode, 'R1'))
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.ConceptNode, 'test:C1'), (Item.RoleNode, 'test:R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: equivalence between Concept and Role')
@@ -356,7 +356,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.ConceptNode, 'C1'), (Item.AttributeNode, 'A1'))
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.ConceptNode, 'test:C1'), (Item.AttributeNode, 'test:A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: equivalence between Concept and Attribute')
@@ -367,7 +367,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.ConceptNode, 'C1'), (Item.ValueDomainNode, 'xsd:string'))
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.ConceptNode, 'test:C1'), (Item.ValueDomainNode, 'xsd:string'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: equivalence between Concept and Value Domain')
@@ -378,7 +378,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'R1'), (Item.AttributeNode, 'A1'))
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'test:R1'), (Item.AttributeNode, 'test:A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: equivalence between Role and Attribute')
@@ -389,7 +389,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'R1'), (Item.ValueDomainNode, 'xsd:string'))
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'test:R1'), (Item.ValueDomainNode, 'xsd:string'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: equivalence between Role and Value Domain')
@@ -400,7 +400,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'A1'), (Item.ValueDomainNode, 'xsd:string'))
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'test:A1'), (Item.ValueDomainNode, 'xsd:string'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: equivalence between Attribute and Value Domain')
@@ -412,7 +412,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and union node are not compatible')
@@ -424,7 +424,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and disjoint union node are not compatible')
@@ -436,7 +436,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: role node and intersection node are not compatible')
@@ -448,7 +448,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'A1'), target)
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'test:A1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and union node are not compatible')
@@ -460,7 +460,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'A1'), target)
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'test:A1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and disjoint union node are not compatible')
@@ -472,7 +472,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'A1'), target)
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.AttributeNode, 'test:A1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Type mismatch: attribute node and intersection node are not compatible')
@@ -496,7 +496,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, source, (Item.RoleNode, 'R1'))
+        self.__insert_edge_between(Item.EquivalenceEdge, source, (Item.RoleNode, 'test:R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden when expressing Role disjointness')
@@ -508,7 +508,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, source, (Item.AttributeNode, 'A1'))
+        self.__insert_edge_between(Item.EquivalenceEdge, source, (Item.AttributeNode, 'test:A1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden when expressing Attribute disjointness')
@@ -533,7 +533,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.RoleChainNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.EquivalenceEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Equivalence is forbidden in presence of a role chain node')
@@ -548,7 +548,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C1'), (Item.ConceptNode, 'C2'))
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C1'), (Item.ConceptNode, 'test:C2'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Input edges can only target constructor nodes')
@@ -559,7 +559,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram1')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R1'), (Item.RoleNode, 'R2'))
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'test:R1'), (Item.RoleNode, 'test:R2'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Input edges can only target constructor nodes')
@@ -571,7 +571,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I1'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'test:I1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to complement node: Individual')
@@ -583,7 +583,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.UnionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I1'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'test:I1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to union node: Individual')
@@ -595,7 +595,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.IntersectionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I1'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'test:I1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to intersection node: Individual')
@@ -619,7 +619,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C2'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C2'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to complement node')
@@ -631,7 +631,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.ComplementNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R1'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'test:R1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid negative Role expression')
@@ -692,7 +692,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.EnumerationNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C5'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C5'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to enumeration node: Concept')
@@ -755,7 +755,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C6'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C6'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to datatype restriction node: concept node')
@@ -804,7 +804,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C1'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to property assertion node: concept node')
@@ -816,7 +816,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I3'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'test:I3'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to property assertion node')
@@ -840,7 +840,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I2'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'test:I2'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Too many individuals in input to Attribute Instance')
@@ -864,7 +864,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C2'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C2'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to domain restriction node')
@@ -876,7 +876,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I4'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'test:I4'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to domain restriction node: Individual')
@@ -914,7 +914,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C1'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C1'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid restriction type for qualified domain restriction: self')
@@ -926,7 +926,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C7'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C7'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified domain restriction: Concept + Attribute')
@@ -938,7 +938,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R5'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'test:R5'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified domain restriction: Role + Value Domain')
@@ -950,7 +950,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'A4'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'test:A4'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Attributes do not have self')
@@ -962,7 +962,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'A4'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'test:A4'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified domain restriction: Attribute + Concept')
@@ -998,7 +998,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'C2'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.ConceptNode, 'test:C2'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Too many inputs to range restriction node')
@@ -1022,7 +1022,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'I4'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.IndividualNode, 'test:I4'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid input to range restriction node: Individual')
@@ -1060,7 +1060,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'R5'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.RoleNode, 'test:R5'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid qualified range restriction: Role + Role')
@@ -1072,7 +1072,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'A4'), target)
+        self.__insert_edge_between(Item.InputEdge, (Item.AttributeNode, 'test:A4'), target)
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Attributes do not have self')
@@ -1099,7 +1099,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram42')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.MembershipEdge, (Item.ConceptNode, 'C1'), (Item.ConceptNode, 'C2'))
+        self.__insert_edge_between(Item.MembershipEdge, (Item.ConceptNode, 'test:C1'), (Item.ConceptNode, 'test:C2'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid source for membership edge: Concept')
@@ -1110,7 +1110,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         self.__give_focus_to_diagram('diagram44')
         num_edges_in_project = len(self.project.edges())
         # WHEN
-        self.__insert_edge_between(Item.MembershipEdge, (Item.IndividualNode, 'I1'), (Item.RoleNode, 'R4'))
+        self.__insert_edge_between(Item.MembershipEdge, (Item.IndividualNode, 'test:I1'), (Item.RoleNode, 'test:R4'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Concept assertion: Role')
@@ -1148,7 +1148,7 @@ class OWL2ProfileTestCase(EddyTestCase):
         num_edges_in_project = len(self.project.edges())
         source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, self.project.nodes(self.session.mdi.activeDiagram())))
         # WHEN
-        self.__insert_edge_between(Item.MembershipEdge, source, (Item.RoleNode, 'R1'))
+        self.__insert_edge_between(Item.MembershipEdge, source, (Item.RoleNode, 'test:R1'))
         # THEN
         self.assertEqual(len(self.project.edges()), num_edges_in_project)
         self.assertEqual(self.project.profile.pvr().message(), 'Invalid target for Attribute assertion: Role')
