@@ -38,10 +38,10 @@ branches:
 
 ## Install dependencies from PyPI
 install:
-  - pip install -U -r requirements/cython.txt
-  - pip install -U -r requirements/pyqt5.txt
-  - pip install -U -r requirements.txt
-  - pip install -U -r requirements-tests.txt
+  - travis_retry pip install -U -r requirements/cython.txt
+  - travis_retry pip install -U -r requirements/pyqt5.txt
+  - travis_retry pip install -U -r requirements.txt
+  - travis_retry pip install -U -r requirements-tests.txt
     
 ## Start X Virtual Framebuffer
 #before_script:
