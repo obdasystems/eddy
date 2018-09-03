@@ -28,13 +28,14 @@ branches:
 
 matrix:
   include:
-  - os: linux
-    language: python
-    dist: trusty
-    sudo: false
   - os: osx
     language: generic
+    python: 3.5
     osx_image: xcode9.4
+  #- os: linux
+  #  language: python
+  #  dist: trusty
+  #  sudo: false
 
 ## Prepare build environment
 #before_install:
