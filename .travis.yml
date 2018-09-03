@@ -32,11 +32,9 @@ matrix:
     language: python
     dist: trusty
     sudo: false
-    env: XVFB_RUN="xvfb-run --server-args='-screen 0 1024x768x24'"
   - os: osx
     language: generic
     osx_image: xcode9
-    env: XVFB_RUN=""
 
 ## Prepare build environment
 #before_install:
@@ -57,7 +55,8 @@ install:
 
 ## Run automated tests using nose
 script:
-  - $XVFB_RUN nosetests --tests=tests/test_${TEST}.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then xvfb-run --server-args='-screen 0 1024x768x24' nosetests --tests=tests/test_${TEST}.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then nosetests --tests=tests/test_${TEST}.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc; fi
 
 # Report tests coverage
 after_success:
