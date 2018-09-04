@@ -54,7 +54,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
 
     # Manually set environment variables
     export PYENV_VERSION=$PYTHON_VERSION
-    export PATH="/Users/travis/.pyenv/shims:${PATH}"
+    export PATH="$HOME/.pyenv/shims:${PATH}"
 
     # Create virtual environment
     pyenv exec python -m venv --copies "$VENV_DIR"
