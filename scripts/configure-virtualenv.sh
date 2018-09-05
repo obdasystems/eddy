@@ -405,18 +405,10 @@ if [ "$BUILD_PYQT5" = "1" ]; then
 fi
 
 ############################################################
-## Clone Eddy
-############################################################
-heading "Cloning Eddy..."
-cd "${BUILD_DIR}"
-rm -rf "${BUILD_DIR}/eddy"
-git clone --recursive --branch "${BRANCH}" https://github.com/obdasystems/eddy.git
-
-############################################################
 ## Install Python dependencies (from PYPI)
 ############################################################
 heading "Installing Eddy dependencies..."
-cd "${BUILD_DIR}/eddy"
+cd "${SCRIPT_DIR}/.."
 pip install -r requirements/cython.txt
 if [ "$BUILD_PYQT5" = "0" ]; then
     pip install -r requirements/pyqt5.txt
@@ -459,9 +451,7 @@ fi
 ## Setup completed
 ############################################################
 echo
-echo "Setup completed, a checkout of Eddy repository is available in"
-echo "${BUILD_DIR}/eddy."
-echo "You can activate the virtualenv with:"
+echo "Setup completed. You can activate the virtualenv with:"
 echo "source ${VIRTUALENV_DIR}/bin/activate"
 
 exit 0
