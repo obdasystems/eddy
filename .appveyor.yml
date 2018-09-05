@@ -4,7 +4,7 @@ image: Visual Studio 2015
 
 branches:
   only:
-    - travis-ci
+    - appveyor-ci
     - /^build-.*$/
 
 cache:
@@ -15,6 +15,7 @@ environment:
     - PYTHON: "C:\\Python35"
       PYTHON_VERSION: "3.5.3"
       PYTHON_ARCH: "32"
+      ARCH: "32"
       JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
       ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
       VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
@@ -22,17 +23,18 @@ environment:
     - PYTHON: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5.3"
       PYTHON_ARCH: "64"
+      ARCH: "64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
       ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
       VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
 
 init:
   - echo %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%
-  - if "%ARCH%"=="32" (call "%VCVARS%" x86))
-  - if "%ARCH%"=="64" (call "%VCVARS%" amd64))
+  - if "%ARCH%"=="32" (call "%VCVARS%" x86 8.1)
+  - if "%ARCH%"=="64" (call "%VCVARS%" amd64 8.1)
 
 install:
-  - set HOME="%APPVEYOR_BUILD_FOLDER%"
+  - set PATH="C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1A\\Bin;%PATH%"
   - set PATH="%PATH%;%APPVEYOR_BUILD_FOLDER%"
   - "%PYTHON%\\python -m ensurepip"
   - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
