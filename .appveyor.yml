@@ -4,7 +4,7 @@ image: Visual Studio 2015
 
 branches:
   only:
-    - appveyor-ci
+    - travis-ci
     - /^build-.*$/
 
 cache:
@@ -55,15 +55,18 @@ build: off
 artifacts:
   - path: 'dist\*'
 
-#deploy:
-#- provider: BinTray
-#  username: '%BINTRAY_USER%'
-#  api_key: '%BINTRAY_KEY%'
-#  subject: '%BINTRAY_USER%'
-#  repo: '%BINTRAY_REPO%'
-#  package: Eddy
-#  version: version
-#  publish: true
-#  override: true
-#  explode: true
+before_deploy:
+  - for /f %i in ('python -c "from eddy import VERSION; print(VERSION)"') do set APPVERSION=%i
+
+deploy:
+  - provider: BinTray
+    username: '%BINTRAY_USER%'
+    api_key: '%BINTRAY_KEY%'
+    subject: '%BINTRAY_USER%'
+    repo: '%BINTRAY_REPO%'
+    package: Eddy
+    version: '%APPVERSION%'
+    publish: true
+    override: true
+    explode: false
 
