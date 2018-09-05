@@ -75,9 +75,6 @@ jnius_config.set_classpath(*classpath)
 # BEGIN ENVIRONMENT SPECIFIC SETUP
 #################################
 
-if _LINUX:
-    os.environ['LD_LIBRARY_PATH'] = expandPath('@root/')
-
 if hasattr(sys, 'frozen'):
     os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')
 
