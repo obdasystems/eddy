@@ -43,8 +43,9 @@ install:
   - "%PYTHON%\\python -m pip install -U -r requirements.txt"
   - "%PYTHON%\\python -m pip install -U -r requirements-tests.txt"
   - "%PYTHON%\\python -m pip install -U -r requirements-packaging.txt"
-  - "%PYTHON%\\python setup.py bdist_archive --jre-dir=\"%JAVA_HOME%\\jre\""
-  - "%PYTHON%\\python setup.py bdist_innosetup --jre-dir=\"%JAVA_HOME%\\jre\""
+  - md resources\java
+  - robocopy /E "%JAVA_HOME%\jre" resources\java\jre || exit 0
+  - "%PYTHON%\\python setup.py bdist_innosetup"
 
 # Appveyor's build step is specific to .NET projects
 build: off
