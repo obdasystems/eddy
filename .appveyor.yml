@@ -46,6 +46,7 @@ install:
   - md resources\java
   - robocopy /E "%JAVA_HOME%\jre" resources\java\jre || exit 0
   - "%PYTHON%\\python setup.py bdist_innosetup"
+  - "%PYTHON%\\python setup.py bdist_archive --format=zip --no-jre"
 
 # Appveyor's build step is specific to .NET projects
 build: off
@@ -57,7 +58,7 @@ artifacts:
   - path: 'dist\*'
 
 before_deploy:
-  - for /f %i in ('python -c "from eddy import VERSION; print(VERSION)"') do set APPVERSION=%i
+  - for /f %%i in ('python -c "from eddy import VERSION; print(VERSION)"') do set APPVERSION=%%i
 
 deploy:
   - provider: BinTray
