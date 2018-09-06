@@ -36,9 +36,9 @@ import os
 import json
 from eddy import APPNAME, VERSION, PROJECT_HOME, BUG_TRACKER
 
-OS_NAME = os.getenv('TRAVIS_OS_NAME') or os.uname()[0]
-BRANCH = os.getenv('TRAVIS_BRANCH') or 'master'
-BUILD_DIR = os.getenv('TRAVIS_BUILD_DIR') or os.getenv('PWD')
+OS_NAME = os.getenv('TRAVIS_OS_NAME') or 'windows'
+BRANCH = os.getenv('TRAVIS_BRANCH') or os.getenv('APPVEYOR_REPO_BRANCH') or 'master'
+BUILD_DIR = os.getenv('TRAVIS_BUILD_DIR') or os.getenv('APPVEYOR_BUILD_FOLDER') or os.getenv('PWD')
 BINTRAY_USER = os.getenv('BINTRAY_USER') or os.getenv('USER')
 BINTRAY_REPO = os.getenv('BINTRAY_REPO')
 
@@ -60,8 +60,8 @@ descriptor = {
     },
     'files': [
         {
-            'includePattern': os.path.join('dist', '(.*)'),
-            'uploadPattern': os.path.join(VERSION, BRANCH, '$1'),
+            'includePattern': 'dist/(.*)',
+            'uploadPattern': '/'.join([VERSION, BRANCH, '$1']),
             'matrixParams': { 'override': 1 }
         },
     ],

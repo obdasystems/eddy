@@ -36,6 +36,8 @@ init:
 install:
   - set PATH="C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1A\\Bin;%PATH%"
   - set PATH="%PATH%;%APPVEYOR_BUILD_FOLDER%"
+  - set PATH=C:\Ruby24\bin;%PATH%
+  - gem install dpl
   - "%PYTHON%\\python -m ensurepip"
   - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
   - "%PYTHON%\\python -m pip install -U -r requirements\\cython.txt"
@@ -58,17 +60,8 @@ artifacts:
   - path: 'dist\*'
 
 before_deploy:
-  - for /f %%i in ('python -c "from eddy import VERSION; print(VERSION)"') do set APPVERSION=%%i
+  - copy scripts\travis\before_deploy.py .
+  - "%PYTHON%\\python before_deploy.py"
 
-deploy:
-  - provider: BinTray
-    username: '%BINTRAY_USER%'
-    api_key: '%BINTRAY_KEY%'
-    subject: '%BINTRAY_USER%'
-    repo: '%BINTRAY_REPO%'
-    package: Eddy
-    version: '%APPVERSION%'
-    publish: true
-    override: true
-    explode: false
-
+deploy_script:
+  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=bintray --user=%BINTRAY_USER% --key=%BINTRAY_KEY% --file=descriptor.json --skip-cleanup
