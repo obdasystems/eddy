@@ -31,8 +31,9 @@ env:
 ## Setup branches to test
 branches:
   only:
-    - travis-ci
-    - /^build-.*$/
+    - master
+    - develop
+    - /^deploy-.*$/
 
 ## Include an osx build job
 matrix:

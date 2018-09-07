@@ -4,8 +4,9 @@ image: Visual Studio 2015
 
 branches:
   only:
-    - travis-ci
-    - /^build-.*$/
+    - master
+    - develop
+    - /^deploy-.*$/
 
 cache:
   - '%LOCALAPPDATA%\pip\Cache'
