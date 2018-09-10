@@ -117,7 +117,7 @@ begin
     if is64BitInstallMode then begin
         if not RegQueryStringValue(HKLM32, sUnInstPath, 'UninstallString', sUnInstallString) then
             RegQueryStringValue(HKCU32, sUnInstPath, 'UninstallString', sUnInstallString);
-    end
+    end;
     Result := sUnInstallString;
 end;
 
@@ -153,8 +153,8 @@ begin
             if sUnInstallString32 <> '' then begin
                 if MsgBox('We have detected an existing 32 bit installation of {#EDDY_APPNAME}, do you wish to uninstall it?', mbConfirmation, MB_YESNO) = IDYES then
                     UnInstallOldVersion(sUnInstallString32);
-            end
-        end
+            end;
+        end;
         if (IsUpgrade()) then
         begin
             UnInstallOldVersion(GetUninstallString());

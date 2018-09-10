@@ -852,17 +852,22 @@ excludes = [
     'ttk',
     'tkinter',
     'Tkinter',
+    # QT MODULES
+    'PyQt5.QtQml',
+    'PyQt5.QtQuick',
+    'PyQt5.QtWebEngine',
+    'PyQt5.QtMultimedia',
 ]
 
 includes = [
     # QT MODULES
     'PyQt5.QtCore',
     'PyQt5.QtGui',
-    'PyQt5.QtPrintSupport',
-    'PyQt5.QtNetwork',
+    'PyQt5.QtXml',
     'PyQt5.QtSvg',
     'PyQt5.QtWidgets',
-    'PyQt5.QtXml',
+    'PyQt5.QtNetwork',
+    'PyQt5.QtPrintSupport',
     # REQUIRED + 3RD PARTY MODULES
     'appdirs',
     'queue',
@@ -889,6 +894,11 @@ include_files = [
     ('README.md', 'README.md'),
 ]
 
+if LINUX:
+    include_files.extend([
+        (os.path.join(QT_LIB_PATH, 'libQt5DBus.so.5'), 'lib/libQt5DBus.so.5'),
+        (os.path.join(QT_LIB_PATH, 'libQt5XcbQpa.so.5'), 'lib/libQt5XcbQpa.so.5'),
+    ])
 
 cx_Freeze.setup(
     cmdclass=commands,
@@ -939,6 +949,8 @@ cx_Freeze.setup(
             'include_files': include_files,
             'optimize': 1,
             'packages': packages,
+            'zip_include_packages': '*',
+            'zip_exclude_packages': '',
             'silent': 0,
         },
         'install_exe': {
@@ -949,6 +961,7 @@ cx_Freeze.setup(
     executables=[
         cx_Freeze.Executable(
             script='run.py',
+            initScript=expandPath('@root/scripts/initscripts/ConsoleSetLibPath.py'),
             base=EXEC_BASE,
             targetName=EXEC_NAME,
             icon=EXEC_ICON,

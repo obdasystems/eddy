@@ -1,22 +1,19 @@
-## Enable sudo
-sudo:
-  required
+## Use trusty
+dist: trusty
 
-# Test on Trusty
-dist:
-  trusty
+## Use container-based environment
+sudo: false
 
 ## Cache PIP installs across jobs
 cache:
   - pip
 
 ## Select test language
-language:
-  python
+language: python
 
 ## Select python version
 python:
-  - 3.4
+  - 3.5
 
 # Jobs environment variables
 env:
@@ -29,39 +26,66 @@ env:
     - TEST=palette
     - TEST=profiles
     - TEST=tools
+    - TEST=packaging
 
-## Test only master and dev branches
+## Setup branches to test
 branches:
   only:
     - master
+    - develop
+    - /^deploy-.*$/
+
+## Include an osx build job
+matrix:
+  include:
+  - os: osx
+    language: generic
+    osx_image: xcode9
+    env:
+      - PYTHON_VERSION="3.5.4"
+      - VENV_DIR="$HOME/eddy-venv"
+      - TEST=packaging
 
 ## Prepare build environment
 before_install:
-  - ./scripts/configure-travis.sh
+  - ./scripts/travis/before_install.sh
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source "$VENV_DIR/bin/activate"; fi
 
-## Skip install step
+## Install dependencies from PyPI
 install:
-  true
-
-## Start X Virtual Framebuffer
-before_script:
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-  - sleep 5
+  - travis_retry pip install -U -r requirements/cython.txt
+  - travis_retry pip install -U -r requirements/pyqt5.txt
+  - travis_retry pip install -U -r requirements.txt
+  - travis_retry pip install -U -r requirements-tests.txt
+  - travis_retry pip install -U -r requirements-packaging.txt
 
 ## Run automated tests using nose
 script:
-  - nosetests --tests=tests/test_${TEST}.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TEST" != "packaging" ]]; then
+      xvfb-run --server-args='-screen 0 1024x768x24' nosetests --tests=tests/test_${TEST}.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc;
+    fi;
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TEST" == "packaging" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false"]]; then
+      travis_wait 30 python setup.py bdist_archive --jre-dir="$JAVA_HOME/jre";
+    fi;
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]] && [[ "$TEST" == "packaging" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false"]]; then
+      travis_wait 30 python setup.py bdist_dmg --jre-dir="`/usr/libexec/java_home -v 1.8`/jre";
+    fi;
 
 # Report tests coverage
-after_success:
-  - coveralls
+#after_success:
+#  - coveralls
 
-# Setup notifications
-notifications:
-  webhooks:
-    urls:
-      - https://webhooks.gitter.im/e/aafeec4156a7fb26ef0c
-    on_success: always  # options: [always|never|change] default: always
-    on_failure: change  # options: [always|never|change] default: always
-    on_start: never     # default: never
+before_deploy:
+  - PYTHONPATH=".:$PYTHONPATH" python ./scripts/travis/before_deploy.py
+
+## Package up and send
+deploy:
+  provider: bintray
+  file: "descriptor.json"
+  user: "$BINTRAY_USER"
+  key: "$BINTRAY_KEY"
+  skip_cleanup: true
+  on:
+    all_branches: true
+    condition: $TEST = packaging
+

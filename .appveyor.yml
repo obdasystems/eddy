@@ -1,0 +1,68 @@
+version: '{build}'
+
+image: Visual Studio 2015
+
+branches:
+  only:
+    - master
+    - develop
+    - /^deploy-.*$/
+
+cache:
+  - '%LOCALAPPDATA%\pip\Cache'
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python35"
+      PYTHON_VERSION: "3.5.3"
+      PYTHON_ARCH: "32"
+      ARCH: "32"
+      JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
+      ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
+      VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
+
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_VERSION: "3.5.3"
+      PYTHON_ARCH: "64"
+      ARCH: "64"
+      JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
+      ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
+      VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
+
+init:
+  - echo %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%
+  - if "%ARCH%"=="32" (call "%VCVARS%" x86 8.1)
+  - if "%ARCH%"=="64" (call "%VCVARS%" amd64 8.1)
+
+install:
+  - set PATH="C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1A\\Bin;%PATH%"
+  - set PATH="%PATH%;%APPVEYOR_BUILD_FOLDER%"
+  - set PATH=C:\Ruby24\bin;%PATH%
+  - gem install dpl
+  - "%PYTHON%\\python -m ensurepip"
+  - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\cython.txt"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.txt"
+  - "%PYTHON%\\python -m pip install -U -r requirements.txt"
+  - "%PYTHON%\\python -m pip install -U -r requirements-tests.txt"
+  - "%PYTHON%\\python -m pip install -U -r requirements-packaging.txt"
+  - md resources\java
+  - robocopy /E "%JAVA_HOME%\jre" resources\java\jre /XF classes.jsa || exit 0
+  - "%PYTHON%\\python setup.py bdist_innosetup"
+  - "%PYTHON%\\python setup.py bdist_archive --format=zip"
+
+# Appveyor's build step is specific to .NET projects
+build: off
+
+#test_script:
+#  - "%PYTHON%\\Scripts\\nosetests --tests=tests\\test_actions.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc"
+
+artifacts:
+  - path: 'dist\*'
+
+before_deploy:
+  - copy scripts\travis\before_deploy.py .
+  - "%PYTHON%\\python before_deploy.py"
+
+deploy_script:
+  - IF NOT DEFINED APPVEYOR_PULL_REQUEST_NUMBER dpl --provider=bintray --user=%BINTRAY_USER% --key=%BINTRAY_KEY% --file=descriptor.json --skip-cleanup
