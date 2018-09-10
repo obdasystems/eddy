@@ -4,7 +4,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/pulls)
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/obdasystems/eddy/master/LICENSE)
-[![Download eddy](https://img.shields.io/sourceforge/dt/eddy-editor.svg)](https://sourceforge.net/projects/eddy-editor/files/latest/download)
+[![Download eddy](https://img.shields.io/sourceforge/dt/obda-eddy.svg)](https://sourceforge.net/projects/obda-eddy/files/latest/download)
 
 | Branch    | Status  |
 |-----------|---------------|
