@@ -894,11 +894,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 if min_cardinality:
                     cardinalities.add(self.df.getOWLDataMinCardinality(min_cardinality, dpe, dre))
                 if max_cardinality is not None:
-                    cardinalities.add(self.df.getOWLDataMinCardinality(max_cardinality, dpe, dre))
+                    cardinalities.add(self.df.getOWLDataMaxCardinality(max_cardinality, dpe, dre))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLDataIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -2445,11 +2445,11 @@ class OWLOntologyFetcher(AbstractWorker):
                 if min_cardinality:
                     cardinalities.add(self.df.getOWLDataMinCardinality(min_cardinality, dpe, dre))
                 if max_cardinality is not None:
-                    cardinalities.add(self.df.getOWLDataMinCardinality(max_cardinality, dpe, dre))
+                    cardinalities.add(self.df.getOWLDataMaxCardinality(max_cardinality, dpe, dre))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLDataIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
