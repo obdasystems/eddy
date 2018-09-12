@@ -6,7 +6,9 @@ sudo: false
 
 ## Cache PIP installs across jobs
 cache:
-  - pip
+  pip: true
+  directories:
+    - $HOME/.pyenv
 
 ## Select test language
 language: python

@@ -50,7 +50,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     brew outdated pyenv || brew upgrade pyenv
 
     # Install Python
-    pyenv install $PYTHON_VERSION
+    pyenv install --skip-existing $PYTHON_VERSION
 
     # Manually set environment variables
     export PYENV_VERSION=$PYTHON_VERSION
