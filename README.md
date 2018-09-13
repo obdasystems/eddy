@@ -1,14 +1,17 @@
-![Eddy](/resources/images/eddy_banner.png?raw=true)
+Eddy
+====
 
-[![Python version](https://img.shields.io/badge/python-3.5.4-blue.svg)](https://www.python.org)
+[![Python version](https://img.shields.io/badge/python-3.5-blue.svg)](https://www.python.org)
 [![GitHub issues](https://img.shields.io/github/issues/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/pulls)
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/obdasystems/eddy/master/LICENSE)
-[![Download eddy](https://img.shields.io/sourceforge/dt/obda-eddy.svg)](https://sourceforge.net/projects/obda-eddy/files/latest/download)
+[![Release](https://img.shields.io/github/release/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/releases)
+[![Download](https://img.shields.io/sourceforge/dt/obda-eddy.svg)](https://sourceforge.net/projects/obda-eddy/files/latest/download)
 
 | Branch    | Status  |
 |-----------|---------------|
 | [master](https://github.com/obdasystems/eddy/tree/master)   |[![Build Status](https://travis-ci.org/obdasystems/eddy.svg?branch=master)](https://travis-ci.org/obdasystems/eddy)|
+| [develop](https://github.com/obdasystems/eddy/tree/develop) |[![Build Status](https://travis-ci.org/obdasystems/eddy.svg?branch=develop)](https://travis-ci.org/obdasystems/eddy)|
 
 Eddy is a graphical editor for the specification and visualization of Graphol ontologies. 
 Eddy features a design environment specifically thought out for generating Graphol ontologies through 
@@ -60,7 +63,7 @@ Graphol is licensed under a [Creative Commons Attribution-NonCommercial-NoDeriva
 
 ### Screenshot
 
-![screenshot](/resources/images/shot01.png?raw=true)
+![screenshot](resources/images/shot01.png?raw=true)
 
 ### License
 
