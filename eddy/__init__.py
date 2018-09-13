@@ -35,8 +35,8 @@
 
 __appname__ = 'Eddy'
 __author__ = 'Daniele Pantaleone' + 'Ashwin Ravishankar' + 'Giulio Ganino'
-__copyright__ = 'Copyright © 2015 Daniele Pantaleone'
-__email__ = 'danielepantaleone@me.com'+'ashwingoldfish@yahoo.co.in'+'ganino@dis.uniroma1.it'
+__copyright__ = 'Copyright © 2018 OBDA Systems'
+__email__ = 'info@obdasystems.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'
 __status__ = 'Beta'
