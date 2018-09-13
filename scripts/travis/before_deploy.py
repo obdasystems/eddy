@@ -40,6 +40,7 @@ OS_NAME = os.getenv('TRAVIS_OS_NAME') or 'windows'
 BRANCH = os.getenv('TRAVIS_BRANCH') or os.getenv('APPVEYOR_REPO_BRANCH') or 'master'
 BUILD_DIR = os.getenv('TRAVIS_BUILD_DIR') or os.getenv('APPVEYOR_BUILD_FOLDER') or os.getenv('PWD')
 BINTRAY_USER = os.getenv('BINTRAY_USER') or os.getenv('USER')
+BINTRAY_SUBJECT = os.getenv('BINTRAY_SUBJECT') or os.getenv('BINTRAY_USER') or os.getenv('USER')
 BINTRAY_REPO = os.getenv('BINTRAY_REPO')
 
 ## Setup package descriptor
@@ -47,7 +48,7 @@ descriptor = {
     'package': {
         'name': APPNAME,
         'repo': BINTRAY_REPO,
-        'subject': BINTRAY_USER,
+        'subject': BINTRAY_SUBJECT,
         'issue_tracker_url': BUG_TRACKER,
         'vcs_url': PROJECT_HOME,
         'labels': ['Graphol', 'OWL 2', 'Modeling'],
