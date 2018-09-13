@@ -942,6 +942,7 @@ cx_Freeze.setup(
             'dist_dir': DIST_DIR,
         },
         'build_exe': {
+            'bin_includes': ['libssl.so', 'libcrypto.so'],
             'build_exe': DIST_PATH,
             'jre_dir': JRE_DIR,
             'excludes': excludes,

@@ -46,11 +46,9 @@ from eddy.core.functions.misc import rangeF
 
 
 COPYRIGHT = '  Copyright © 2015-2017 Sapienza Università di Roma\n' \
-            '          Copyright © 2017 OBDA Systems srl'
+            '  Copyright © 2017-2018 OBDA Systems'
 LICENSE =   '   Licensed under the GNU General Public License v3'
-CREDITS =   '      Eddy is developed by Daniele Pantaleone,\n' \
-            '        Ashwin Ravishankar, Giulio Ganino,\n' \
-            'Domenico Lembo, Valerio Santarelli, Domenico Fabio Savo'
+CREDITS =   '      Developed by OBDA Systems'
 
 
 class Splash(QtWidgets.QSplashScreen):
@@ -79,11 +77,11 @@ class Splash(QtWidgets.QSplashScreen):
         self.setPixmap(pixmap)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.mtime = time() + mtime
-        self.font1 = Font('Arial', 40, Font.Light)
+        self.font1 = Font('Roboto', 40, Font.Light)
         self.font1.setCapitalization(Font.SmallCaps)
-        self.font2 = Font('Arial', 18, Font.Light)
+        self.font2 = Font('Roboto', 18, Font.Light)
         self.font2.setCapitalization(Font.SmallCaps)
-        self.font3 = Font('Arial', 11, Font.Light)
+        self.font3 = Font('Roboto', 11, Font.Light)
         self.__spaceX = 0
         self.__spaceY = 0
 
@@ -150,7 +148,7 @@ class Splash(QtWidgets.QSplashScreen):
         # VERSION
         painter.setFont(self.font2)
         painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255), 1.0, QtCore.Qt.SolidLine))
-        painter.drawText(QtCore.QRect(34 + self.__spaceX, 180 + self.__spaceY, 380, 400), QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft, 'Version {0}'.format(VERSION))
+        painter.drawText(QtCore.QRect(34 + self.__spaceX, 185 + self.__spaceY, 380, 400), QtCore.Qt.AlignTop|QtCore.Qt.AlignLeft, 'Version {0}'.format(VERSION))
         # COPYRIGHT
         painter.setFont(self.font3)
         painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
@@ -158,8 +156,8 @@ class Splash(QtWidgets.QSplashScreen):
         # CREDITS
         painter.setFont(self.font3)
         painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
-        painter.drawText(QtCore.QRect(0 + self.__spaceX, 252 + self.__spaceY, 360, 80), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, CREDITS)
+        painter.drawText(QtCore.QRect(0 + self.__spaceX, 273 + self.__spaceY, 360, 80), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, CREDITS)
         # LICENSE
         painter.setFont(self.font3)
         painter.setPen(QtGui.QPen(QtGui.QColor(122, 101, 104), 1.0, QtCore.Qt.SolidLine))
-        painter.drawText(QtCore.QRect(0 + self.__spaceX, 296 + self.__spaceY, 360, 40), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, LICENSE)
+        painter.drawText(QtCore.QRect(0 + self.__spaceX, 286 + self.__spaceY, 360, 40), QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter, LICENSE)
