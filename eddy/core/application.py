@@ -124,7 +124,6 @@ class Eddy(QtWidgets.QApplication):
             expandPath('@examples/Family'),
             expandPath('@examples/LUBM'),
             expandPath('@examples/Pizza'),
-            expandPath('@examples/tests'),
         ]
 
         if not settings.contains('project/recent'):
