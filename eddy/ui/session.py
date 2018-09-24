@@ -732,7 +732,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         # MENU BAR RELATED
         #################################
 
-        menu = QtWidgets.QMenu('File', objectName='file')
+        menu = QtWidgets.QMenu('&File', objectName='file')
         menu.addAction(self.action('new_diagram'))
         menu.addAction(self.action('open'))
         menu.addSeparator()
@@ -756,7 +756,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('quit'))
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('\u200CEdit', objectName='edit')
+        menu = QtWidgets.QMenu('\u200C&Edit', objectName='edit')
         menu.addAction(self.action('undo'))
         menu.addAction(self.action('redo'))
         menu.addSeparator()
@@ -777,7 +777,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('open_preferences'))
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Compose', objectName='compose')
+        menu = QtWidgets.QMenu('&Compose', objectName='compose')
         menu.addAction(self.action('property_domain'))
         menu.addAction(self.action('property_range'))
         menu.addAction(self.action('property_domain_range'))
@@ -793,27 +793,27 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('\u200CView', objectName='view')
+        menu = QtWidgets.QMenu('\u200C&View', objectName='view')
         menu.addAction(self.action('toggle_grid'))
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Ontology', objectName='ontology')
+        menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
         menu.addAction(self.action('ontology_consistency_check'))
         menu.addSeparator()
         menu.addAction(self.action('open_prefix_manager'))
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Tools', objectName='tools')
+        menu = QtWidgets.QMenu('&Tools', objectName='tools')
         menu.addAction(self.action('install_plugin'))
         menu.addSeparator()
         menu.addAction(self.action('system_log'))
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Help', objectName='help')
+        menu = QtWidgets.QMenu('&Help', objectName='help')
         menu.addAction(self.action('about'))
         if not _MACOS:
             menu.addSeparator()
