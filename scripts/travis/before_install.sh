@@ -32,7 +32,7 @@
 ##########################################################################
 
 # Terminate in case of errors
-set -e
+#set -e
 
 # Set Python version to use as an environment variable
 PYTHON_VERSION=${PYTHON_VERSION:-"3.5.4"}
@@ -46,7 +46,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     brew outdated openssl || brew upgrade openssl
     brew outdated readline || brew upgrade readline
 
-    # See https://docs.travis-ci.com/user/osx-ci-environment/#A-note-on-upgrading-packages.
+    # See https://docs.travis-ci.com/user/reference/osx#a-note-on-upgrading-packages
     brew outdated pyenv || brew upgrade pyenv
 
     # Install Python
