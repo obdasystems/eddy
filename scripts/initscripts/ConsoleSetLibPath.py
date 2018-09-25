@@ -12,14 +12,20 @@ import os
 import sys
 import zipimport
 
+LINUX = sys.platform.startswith('linux')
+MACOS = sys.platform.startswith('darwin')
+WIN32 = sys.platform.startswith('win32')
+
 FILE_NAME = sys.executable
 DIR_NAME = os.path.dirname(sys.executable)
+LIBRARY_PATH = "DYLD_LIBRARY_PATH" if MACOS else "LD_LIBRARY_PATH"
 
-paths = os.environ.get("LD_LIBRARY_PATH", "lib").split(os.pathsep)
+paths = os.environ.get(LIBRARY_PATH, "").split(os.pathsep)
 
 if DIR_NAME not in paths:
     paths.insert(0, DIR_NAME)
-    os.environ["LD_LIBRARY_PATH"] = os.pathsep.join(paths)
+    paths.insert(0, os.path.join(DIR_NAME, "lib"))
+    os.environ[LIBRARY_PATH] = os.pathsep.join(paths)
     os.execv(sys.executable, sys.argv)
 
 sys.frozen = True
