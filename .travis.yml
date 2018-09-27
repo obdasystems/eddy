@@ -88,12 +88,22 @@ before_deploy:
 
 ## Package up and send
 deploy:
-  provider: bintray
-  file: "descriptor.json"
-  user: "$BINTRAY_USER"
-  key: "$BINTRAY_KEY"
-  skip_cleanup: true
-  on:
-    all_branches: true
-    condition: $TEST = packaging
+  - provider: bintray
+    file: "descriptor.json"
+    user: "$BINTRAY_USER"
+    key: "$BINTRAY_KEY"
+    skip_cleanup: true
+    on:
+      all_branches: true
+      condition: $TEST = packaging
+  - provider: releases
+    api_key:
+      secure: Uvp3flGfCc1uDaQshC1wopgZbkHTA0K7mw7CPiFwxRpxXHepgqBv1otoC4DD0nJvsu1c9p7255jF4pom40ONjmoC0Va4xhS3M1ZnUDt9p2n2Bu6LLoS0e6Zkg7H35uAlH+oWvFGDqdOD3y2ujf3KRD5iwgEEpsDvVUbjEIb7RTTF2HLlSTL1dIAgYEOC09NUWhhFz0kgrUMsGfdtt7VvNaxBcWJsQVMsSgWrrHBgN40DZyE08BQnEfhXPfTqvY94rIsxHTDnr6WBPAfKqRtFlcoAbqmj1RDtUMIAH4PthrgDlyHOb1Vw7izZVJv2PjX82xk0olPlq5PzvHuafCnRn38yhT8JkVn04RgNNOvwIFdL5HcpL4BVAiz+jtyHgkr9VqfzNnveFZM0+lvv7h3csdHDgqGFiAyNZPgj9tglwi1iwa3RT3n2d+yXWH7ugXGETYncX6CJk3OOHi28fzHva+vEcFJFKsfPH5kKn/Nrhqtwh8AyCF8mW8kS90WyWajsIZzvPtHcUgw4tXQtqHkTJoEBiU4BZYVq/wpKmkNfH6xYmDpSupHGjpNVdsWMsVlJXpBr5fpn45/8UfJDqT9XXUnEuoHY0vFw47XN3t2Rag9xqHaDTUC8P/fjiXD3vgPz2BnNqyTbGUHVEGm0Q6LjQk9TRy5bjZHId5A8mbkvrV4=
+    file_glob: true
+    file: dist/*
+    draft: true
+    on:
+      tags: true
+      repo: obdasystems/eddy
+      condition: $TEST = packaging
 
