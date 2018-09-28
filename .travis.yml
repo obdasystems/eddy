@@ -70,7 +70,9 @@ script:
       mkdir -p resources/java;
       cp -R "$JAVA_HOME/jre" resources/java/jre;
       ./scripts/prepare_jre.sh;
-      travis_wait 30 python setup.py bdist_archive --format=gztar;
+      python setup.py build_exe;
+      find build -iname 'libpython*' -exec cp -f {} build/Eddy-*/ \;;
+      travis_wait 30 python setup.py bdist_archive --skip-build --format=gztar;
     fi;
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]] && [[ "$TEST" == "packaging" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       mkdir -p resources/java;
