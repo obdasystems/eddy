@@ -81,7 +81,10 @@ class IntEnum_(IntEnum):
         """
         if isinstance(value, IntEnum_):
             return value
-        value = int(value)
+        try:
+            value = int(value)
+        except ValueError:
+            return None
         for x in cls:
             if x.value == value:
                 return x
