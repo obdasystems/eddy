@@ -181,6 +181,8 @@ class build_exe(cx_Freeze.build_exe):
         self.execute(self.make_plugins, (), msg='Packaging Eddy plugins...')
         self.execute(self.make_reasoners, (), msg='Packaging Eddy reasoners...')
         self.execute(self.make_jre, (), msg='Bundling Java Runtime Environment...')
+        if LINUX:
+            self.execute(self.make_run_script, (), msg='Generating launcher script')
         if WIN32:
             self.execute(self.make_win32, (), msg='Setting DOS line endings...')
         self.execute(self.make_cleanup, (), msg='Removing temporary files...')
@@ -318,7 +320,7 @@ class build_exe(cx_Freeze.build_exe):
                 EXEC="{1}"
                 VERSION="{2}"
                 DIRNAME=`dirname $0`
-                export LD_LIBRARY_PATH=$DIRNAME
+                export LD_LIBRARY_PATH="$DIRNAME:$DIRNAME/lib:$LD_LIBRARY_PATH"
                 echo "Starting $APP $VERSION ..."
                 $DIRNAME/$EXEC "$@"
                 """[1:].format(APPNAME, EXEC_NAME, VERSION)))
