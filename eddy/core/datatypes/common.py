@@ -53,7 +53,7 @@ class Enum_(Enum):
         """
         if isinstance(value, Enum_):
             return value
-        if value:
+        if isinstance(value, str):
             for x in cls:
                 if str(type(x.value)) == '<class \'dict\'>':
                     for k in x.value.keys():
