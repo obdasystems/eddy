@@ -32,60 +32,14 @@
 #                                                                        #
 ##########################################################################
 
+from enum import unique
+from eddy.core.datatypes.common import Enum_
 
-from abc import ABCMeta
-
-from enum import IntEnum, Enum
-
-
-class Enum_(Enum):
+@unique
+class Status(Enum_):
     """
-    Extends Enum class providing some additional methods.
+    Extends Enum providing all available values for annotation status
     """
-    __metaclass__  = ABCMeta
-
-    @classmethod
-    def valueOf(cls, value):
-        """
-        Returns the Enum_ entry matching the given value.
-        :type value: str
-        :rtype: Enum_
-        """
-        if isinstance(value, Enum_):
-            return value
-        if isinstance(value, str):
-            for x in cls:
-                if str(type(x.value)) == '<class \'dict\'>':
-                    for k in x.value.keys():
-                        v=x.value[k]
-                        if v.strip() == value.strip():
-                            return x
-                else:
-                    if x.value.strip() == value.strip():
-                        return x
-        return None
-
-
-class IntEnum_(IntEnum):
-    """
-    Extends IntEnum class providing some additional methods.
-    """
-    __metaclass__  = ABCMeta
-
-    @classmethod
-    def valueOf(cls, value):
-        """
-        Returns the IntEnum_ entry matching the given value.
-        :type value: T <= int | str | Item
-        :rtype: IntEnum_
-        """
-        if isinstance(value, IntEnum_):
-            return value
-        try:
-            value = int(value)
-        except ValueError:
-            return None
-        for x in cls:
-            if x.value == value:
-                return x
-        return None
+    DEFAULT = ''
+    DRAFT = 'Draft'
+    FINAL = 'Final'

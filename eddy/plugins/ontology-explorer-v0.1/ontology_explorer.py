@@ -40,8 +40,10 @@ from PyQt5 import QtWidgets
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
+from eddy.core.datatypes.annotation import Status
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.project import K_DESCRIPTION_STATUS
 from eddy.core.plugin import AbstractPlugin
 
 from eddy.ui.dock import DockWidget
@@ -68,10 +70,13 @@ class OntologyExplorerPlugin(AbstractPlugin):
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnItemAdded, widget.doAddNode)
         connect(self.project.sgnItemRemoved, widget.doRemoveNode)
+        connect(self.project.sgnMetaAdded, widget.onMetaUpdated)
+        connect(self.project.sgnMetaRemoved, widget.onMetaUpdated)
         # FILL IN ONTOLOGY EXPLORER WITH DATA
         connect(self.sgnFakeItemAdded, widget.doAddNode)
         for node in self.project.nodes():
             self.sgnFakeItemAdded.emit(node.diagram, node)
+        widget.doFilterItem('')
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
 
     #############################################
@@ -87,6 +92,8 @@ class OntologyExplorerPlugin(AbstractPlugin):
         self.debug('Disconnecting from project: %s', self.project.name)
         disconnect(self.project.sgnItemAdded, widget.doAddNode)
         disconnect(self.project.sgnItemRemoved, widget.doRemoveNode)
+        disconnect(self.project.sgnMetaAdded, widget.onMetaUpdated)
+        disconnect(self.project.sgnMetaRemoved, widget.onMetaUpdated)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')
@@ -111,9 +118,54 @@ class OntologyExplorerPlugin(AbstractPlugin):
         widget.setObjectName('ontology_explorer')
         self.addWidget(widget)
 
+        # CREATE TOGGLE ACTIONS
+        self.debug('Creating explorer toggle actions')
+        group = QtWidgets.QActionGroup(self, objectName='explorer_item_toggle')
+        group.setExclusive(False)
+        for item in widget.items:
+            action = QtWidgets.QAction(item.realName.title(), group, objectName=item.name, checkable=True)
+            action.setChecked(True)
+            action.setData(item)
+            action.setFont(Font('Roboto', 11))
+            connect(action.triggered, widget.onMenuButtonClicked)
+            group.addAction(action)
+        self.addAction(group)
+
+        group = QtWidgets.QActionGroup(self, objectName='explorer_status_toggle')
+        group.setExclusive(False)
+        for status in widget.status:
+            action = QtWidgets.QAction(status.value if status.value else 'Default', group, objectName=status.name, checkable=True)
+            action.setChecked(True)
+            action.setData(status)
+            action.setFont(Font('Roboto', 11))
+            connect(action.triggered, widget.onMenuButtonClicked)
+            group.addAction(action)
+        self.addAction(group)
+
+        # CREATE TOGGLE MENU
+        self.debug('Creating explorer toggle menu')
+        menu = QtWidgets.QMenu(objectName='explorer_toggle')
+        menu.addSection('Items')
+        menu.addActions(self.action('explorer_item_toggle').actions())
+        menu.addSection('Description')
+        menu.addActions(self.action('explorer_status_toggle').actions())
+        self.addMenu(menu)
+
+        # CREATE CONTROL WIDGET
+        self.debug('Creating explorer toggle control widget')
+        button = QtWidgets.QToolButton(objectName='explorer_toggle')
+        button.setIcon(QtGui.QIcon(':/icons/18/ic_settings_black'))
+        button.setContentsMargins(0, 0, 0, 0)
+        button.setFixedSize(18, 18)
+        button.setMenu(self.menu('explorer_toggle'))
+        button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.addWidget(button)
+
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
         widget = DockWidget('Ontology Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
+        widget.addTitleBarButton(self.widget('explorer_toggle'))
+        widget.installEventFilter(self)
         widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('ontology_explorer_dock')
         widget.setWidget(self.widget('ontology_explorer'))
@@ -149,6 +201,17 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         super().__init__(plugin.session)
 
         self.plugin = plugin
+        self.items = [
+            Item.ConceptNode,
+            Item.RoleNode,
+            Item.AttributeNode,
+            Item.IndividualNode
+        ]
+        self.status = [
+            Status.DEFAULT,
+            Status.DRAFT,
+            Status.FINAL
+        ]
 
         self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
         self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
@@ -162,7 +225,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.search.setPlaceholderText('Search...')
         self.search.setFixedHeight(30)
         self.model = QtGui.QStandardItemModel(self)
-        self.proxy = QtCore.QSortFilterProxyModel(self)
+        self.proxy = OntologyExplorerFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
@@ -247,28 +310,21 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
-        #print('doAddNode')
-
-        if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+        if node.type() in self.items:
             parent = self.parentFor(node)
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKey(node))
                 parent.setIcon(self.iconFor(node))
                 self.model.appendRow(parent)
-                self.proxy.sort(0, QtCore.Qt.AscendingOrder)
             child = QtGui.QStandardItem(self.childKey(diagram, node))
             child.setData(node)
-
-            flag = True
-
-            number_of_children = parent.rowCount()
-            for c in range(0,number_of_children):
-                child_itr = parent.child(c)
-                if child_itr.text() == child.text():
-                    flag = False
-
-            if flag:
+            # CHECK FOR DUPLICATE NODES
+            children = [parent.child(i) for i in range(parent.rowCount())]
+            if not any([child.text() == c.text() for c in children]):
                 parent.appendRow(child)
+            # APPLY FILTERS AND SORT
+            if self.sender() != self.plugin:
+                self.proxy.invalidateFilter()
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
     @QtCore.pyqtSlot(str)
@@ -287,8 +343,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
-        #print('doRemoveNode')
-        if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+        if node.type() in self.items:
             parent = self.parentFor(node)
             if parent:
                 child = self.childFor(parent, diagram, node)
@@ -320,6 +375,31 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
                 self.sgnItemClicked.emit(item.data())
+
+    @QtCore.pyqtSlot(bool)
+    def onMenuButtonClicked(self, checked=False):
+        """
+        Executed when a button in the widget menu is clicked.
+        """
+        # UPDATE THE PALETTE LAYOUT
+        data = self.sender().data()
+        elems = self.proxy.items if isinstance(data, Item) else self.proxy.status
+        if checked:
+            elems.add(data)
+        else:
+            elems.discard(data)
+        self.proxy.invalidateFilter()
+        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+
+    @QtCore.pyqtSlot(Item, str)
+    def onMetaUpdated(self, item, name):
+        """
+        Executed when metadata of the predicate for the given item/name combination is updated
+        :type item: Item
+        :type name: str
+        """
+        self.proxy.invalidateFilter()
+        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
     #############################################
     #   INTERFACE
@@ -407,6 +487,7 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         :type widget: OntologyExplorerWidget
         """
         super().__init__(widget)
+        self.startPos = None
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.setFont(Font('Roboto', 12))
@@ -533,3 +614,48 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         :rtype: int
         """
         return max(super().sizeHintForColumn(column), self.viewport().width())
+
+
+class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
+    """
+    Extends QSortFilterProxyModel adding filtering functionalities for the explorer widget
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.items = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+        self.status = {Status.DEFAULT, Status.DRAFT, Status.FINAL}
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        return self.parent().project
+
+    @property
+    def session(self):
+        return self.parent().session
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def filterAcceptsRow(self, sourceRow, sourceIndex):
+        """
+        Overrides filterAcceptsRow to include extra filtering conditions
+        :type sourceRow: int
+        :type sourceIndex: QModelIndex
+        :rtype: bool
+        """
+        index = self.sourceModel().index(sourceRow, 0, sourceIndex)
+        item = self.sourceModel().itemFromIndex(index)
+        # PARENT NODE
+        if item.hasChildren():
+            children = [item.child(c).data() for c in range(item.rowCount())]
+            return super().filterAcceptsRow(sourceRow, sourceIndex) and \
+                   any([Status.valueOf(meta.get(K_DESCRIPTION_STATUS, '')) in self.status for meta in
+                        [self.project.meta(node.type(), node.text()) for node in children
+                         if node.type() in self.items]])
+        # LEAF NODE
+        return super().filterAcceptsRow(sourceRow, sourceIndex)
