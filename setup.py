@@ -846,7 +846,8 @@ packages = [
     'eddy.core',
     'eddy.ui',
     'packaging',
-    'idna'
+    'idna',
+    'cffi',
 ]
 
 excludes = [
