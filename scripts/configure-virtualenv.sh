@@ -413,8 +413,8 @@ pip install -r requirements/cython.txt
 if [ "$BUILD_PYQT5" = "0" ]; then
     pip install -r requirements/pyqt5.txt
 fi
-pip install -r requirements-packaging.txt
-pip install -r requirements-tests.txt
+pip install -r requirements/packaging.txt
+pip install -r requirements/tests.txt
 
 ############################################################
 ## Bundle Java Runtime Environment

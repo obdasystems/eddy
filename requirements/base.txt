@@ -1,0 +1,12 @@
+# Recursive
+-r cython.txt
+
+# From PyPi
+appdirs==1.4.3
+packaging==18.0
+rfc3987==1.3.8
+verlib==0.1
+github3.py==1.2.0
+natsort==5.4.1
+requests==2.20.1
+pyjnius==1.1.1

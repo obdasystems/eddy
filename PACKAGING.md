@@ -58,10 +58,11 @@ Clone Eddy repository by running the command:
 Update `pip` and install required Python dependencies from PyPI:
     
     C:\> cd eddy
-    C:\> pip install -U pip setuptools
-    C:\> pip install -U -r requirements/cython.txt
-    C:\> pip install -U -r requirements/pyqt5.txt
-    C:\> pip install -U -r requirements-packaging.txt
+    C:\> pip install -U pip setuptools wheel
+    C:\> pip install -U -r requirements\cython.txt
+    C:\> pip install -U -r requirements\pyqt5.txt
+    C:\> pip install -U -r requirements\base.txt
+    C:\> pip install -U -r requirements\packaging.txt
     
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
 You can copy it directly from the JDK installation directory or download the JRE tarball
@@ -119,7 +120,8 @@ Update `pip` and install required Python dependencies from PyPI:
     $ pip install -U pip setuptools
     $ pip install -U -r requirements/cython.txt
     $ pip install -U -r requirements/pyqt5.txt
-    $ pip install -U -r requirements-packaging.txt
+    $ pip install -U -r requirements/base.txt
+    $ pip install -U -r requirements/packaging.txt
 
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
 You can copy it directly from the JDK installation directory or download the JRE tarball
@@ -186,7 +188,8 @@ Update `pip` and install required Python dependencies from PyPI:
     $ pip install -U pip setuptools
     $ pip install -U -r requirements/cython.txt
     $ pip install -U -r requirements/pyqt5.txt
-    $ pip install -U -r requirements-packaging.txt
+    $ pip install -U -r requirements/base.txt
+    $ pip install -U -r requirements/packaging.txt
 
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
 You can download the JRE tarball from the [Oracle JRE 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) 

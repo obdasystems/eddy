@@ -71,11 +71,11 @@ make
 sudo make install
 
 # Install PIP packages
-pip install -U pip
+pip install -U pip setuptools wheel
 pip install -U -r requirements/cython.txt
-pip install -U -r requirements.txt
-pip install -U -r requirements-packaging.txt
-pip install -U -r requirements-tests.txt
+pip install -U -r requirements/base.txt
+pip install -U -r requirements/packaging.txt
+pip install -U -r requirements/tests.txt
 
 cd ~
 rm -rf "${BUILDS_DIR}"
