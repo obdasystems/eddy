@@ -36,6 +36,7 @@ branches:
     - master
     - develop
     - /^deploy-.*$/
+    - /^v\d+\.\d+(\.\d+)?(\S*)?$/
 
 ## Include an osx build job
 matrix:
@@ -105,6 +106,7 @@ deploy:
     file_glob: true
     file: dist/*
     draft: true
+    skip_cleanup: true
     on:
       tags: true
       repo: obdasystems/eddy
