@@ -40,7 +40,7 @@ __email__ = 'info@obdasystems.com'
 __license__ = 'GPL'
 __organization__ = 'Sapienza University'
 __status__ = 'Beta'
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
