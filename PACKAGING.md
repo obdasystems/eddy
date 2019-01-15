@@ -153,11 +153,11 @@ In order to setup the virtual environment you will have to install Python 3.5, G
 
 ##### On Ubuntu / Debian / Mint
 
-    $ sudo apt-get install build-essential libsqlite3-dev libssl-dev libbz2-dev libreadline-dev openjdk-8-jdk git
+    $ sudo apt-get install build-essential libsqlite3-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev openjdk-8-jdk git
 
 ##### On Fedora
 
-    $ sudo dnf install gcc sqlite-devel openssl-devel bzip2-devel readline-devel java-8-openjdk git
+    $ sudo dnf install gcc sqlite-devel openssl-devel zlib-devel bzip2-devel readline-devel java-8-openjdk git
 
 Clone [pyenv](https://github.com/pyenv/pyenv) repository:
 
@@ -166,7 +166,7 @@ Clone [pyenv](https://github.com/pyenv/pyenv) repository:
 Install Python 3.5:
 
     $ export PYENV_ROOT="$HOME/.pyenv"
-    $ export PATH="PYENV_ROOT/bin:$PATH"
+    $ export PATH="$PYENV_ROOT/bin:$PATH"
     $ pyenv init
     $ pyenv install 3.5.4
     
