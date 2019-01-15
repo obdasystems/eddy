@@ -102,12 +102,12 @@ install_dependencies() {
             sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev libxext-dev libxfixes-dev libxi-dev \
                                     libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev libfontconfig1-dev \
                                     libpcre2-dev libfreetype6-dev libglu1-mesa-dev libssl-dev libcups2-dev libbz2-dev \
-                                    libsqlite3-dev libreadline-dev openjdk-8-jdk wget git
+                                    zlib1g-dev libsqlite3-dev libreadline-dev openjdk-8-jdk wget git
         elif [ -x "`which yum`" ]; then ## Assuming RH-based distro
             sudo yum install -y gcc gcc-c++ libxcb libxcb-devel xcb-util xcb-util-devel xcb-util-*-devel \
                                 libX11-devel libXrender-devel mesa-libGL-devel libXi-devel fontconfig-devel \
                                 openssl-devel bzip2-devel cups-devel pcre2-devel freetype-devel readline-devel \
-                                sqlite-devel java-8-openjdk perl-version git wget
+                                zlib-devel sqlite-devel java-8-openjdk perl-version git wget
         else
             echo "Unsupported distro, please install requirements manually"
             echo "then re-run the script with the --skip-dependecies option."
