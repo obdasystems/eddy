@@ -1468,6 +1468,15 @@ class Project(QtCore.QObject):
                             return_list.append(ele.toString())
 
                         return return_list
+                    elif abs_nd.type() == Item.RoleChainNode:
+                        chainList = []
+                        listIter = val_in_diag[nd].iterator()
+
+                        while listIter.hasNext():
+                            chainList.append(listIter.next())
+                        detach()
+
+                        return chainList
                     else:
                         java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
                         cast(autoclass(java_class), val_in_diag[nd])
