@@ -33,6 +33,10 @@
 ##########################################################################
 
 
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+from PyQt5 import QtTest
+
 from tests import EddyTestCase
 
 from eddy.core.functions.misc import first
@@ -528,3 +532,52 @@ class ActionsTestCase(EddyTestCase):
         # THEN
         self.assertAll([x.isSelected() for x in diagram.nodes()])
         self.assertAll([x.isSelected() for x in diagram.edges()])
+
+    #############################################
+    #   PROPERTIES DIALOG
+    #################################
+
+    def test_action_open_properties_dialog(self):
+        # GIVEN
+        diagram = self.session.mdi.activeDiagram()
+        action = self.session.action('node_properties')
+        diagram.clearSelection()
+        for node in self.project.nodes(diagram):
+            node.setSelected(True)
+            # WHEN
+            action.trigger()
+            # THEN
+            self.assertTrue(node.isSelected())
+            attempts = 0
+            while not QtWidgets.QApplication.activeModalWidget():
+                if attempts >= 20:
+                    self.fail('Timeout exceeded waiting for dialog to activate')
+                QtTest.QTest.qWait(250)
+                attempts += 1
+            QtTest.QTest.keyClick(self.session, QtCore.Qt.Key_Escape, QtCore.Qt.NoModifier, 100)
+            node.setSelected(False)
+
+    #############################################
+    #   DESCRIPTION DIALOG
+    #################################
+
+    def test_action_open_description_dialog(self):
+        # GIVEN
+        diagram = self.session.mdi.activeDiagram()
+        action = self.session.action('node_description')
+        diagram.clearSelection()
+        for node in self.project.nodes(diagram):
+            if node.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}:
+                node.setSelected(True)
+                # WHEN
+                action.trigger()
+                # THEN
+                self.assertTrue(node.isSelected())
+                attempts = 0
+                while not QtWidgets.QApplication.activeModalWidget():
+                    if attempts >= 20:
+                        self.fail('Timeout exceeded waiting for dialog to activate')
+                    QtTest.QTest.qWait(250)
+                    attempts += 1
+                QtTest.QTest.keyClick(self.session, QtCore.Qt.Key_Escape, QtCore.Qt.NoModifier, 100)
+                node.setSelected(False)
