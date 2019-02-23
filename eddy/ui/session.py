@@ -1872,11 +1872,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         action = self.sender()
         dialog = action.data()
         window = dialog(self)
-
-        window.hide()
-        window.setWindowModality(QtCore.Qt.NonModal)
+        window.setModal(True)
         window.show()
-        window.exec_()
+        window.raise_()
+        window.activateWindow()
 
     @QtCore.pyqtSlot()
     def doOpenURL(self):
@@ -1898,7 +1897,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             properties = self.pf.create(diagram)
-            properties.exec_()
+            properties.setModal(True)
+            properties.show()
+            properties.raise_()
+            properties.activateWindow()
 
     @QtCore.pyqtSlot()
     def doOpenNodeProperties(self):
@@ -1911,7 +1913,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             node = first(diagram.selectedNodes())
             if node:
                 properties = self.pf.create(diagram, node)
-                properties.exec_()
+                properties.setModal(True)
+                properties.show()
+                properties.raise_()
+                properties.activateWindow()
 
     @QtCore.pyqtSlot()
     def doOpenNodeDescription(self):
@@ -1922,9 +1927,12 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first(diagram.selectedNodes())
-            if node:
+            if node and node.type() in {Item.ConceptNode, Item.RoleNode, Item.RoleNode, Item.IndividualNode}:
                 description = self.df.create(diagram, node)
-                description.exec()
+                description.setModal(True)
+                description.show()
+                description.raise_()
+                description.activateWindow()
 
     @QtCore.pyqtSlot()
     def doPaste(self):

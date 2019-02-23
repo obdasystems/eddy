@@ -1033,7 +1033,5 @@ class DescriptionFactory(QtCore.QObject):
         :rtype: QDialog
         """
         description = NodeDescriptionDialog(diagram, node, self.session)
-
         description.setFixedSize(description.sizeHint())
-
         return description

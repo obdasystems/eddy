@@ -435,4 +435,4 @@ class ConceptNode(AbstractResizableNode):
         """
         Returns repr(self).
         """
-        return '{0}:{1}:{2}'.format(self.__class__.__name__, self.text(), self.id)
+        return '{0}:{1}:{2}'.format(self.__class__.__name__, self.text().replace('\n', ''), self.id)
