@@ -2603,6 +2603,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.action('purge').setEnabled(isNodeSelected)
         self.action('export').setEnabled(not isProjectEmpty)
         self.action('paste').setEnabled(not isClipboardEmpty)
+        self.action('print').setEnabled(isDiagramActive)
         self.action('property_domain').setEnabled(isDomainRangeUsable)
         self.action('property_domain_range').setEnabled(isDomainRangeUsable)
         self.action('property_range').setEnabled(isDomainRangeUsable)
@@ -2620,7 +2621,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
 
         if self.mdi.activeDiagram():
-
             self.widget('select_reasoner').setEnabled(not isProjectEmpty)
             self.action('decolour_nodes').setEnabled(not isProjectEmpty)
             self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
