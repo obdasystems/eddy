@@ -888,6 +888,7 @@ if not WIN32:
 
 include_files = [
     (requests.certs.where(), 'cacert.pem'),
+    (os.path.join(QT_PLUGINS_PATH, 'printsupport'), 'printsupport'),
     ('examples', 'examples'),
     ('resources/lib', 'resources/lib'),
     ('resources/styles', 'resources/styles'),
