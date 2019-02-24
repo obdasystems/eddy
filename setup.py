@@ -883,6 +883,9 @@ includes = [
     'verlib',
 ]
 
+if QtCore.QVersionNumber.fromString(QtCore.QT_VERSION_STR) > QtCore.QVersionNumber.fromString('5.10.1'):
+    includes.append('PyQt5.sip')
+
 if not WIN32:
     includes.append('PyQt5.QtDBus')
 

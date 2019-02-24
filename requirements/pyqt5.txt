@@ -1,5 +1,7 @@
+#
 # PyQt5 requirements
 #
 
 # From PyPI
 PyQt5==5.10.1
+sip==4.19.8

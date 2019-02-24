@@ -78,7 +78,6 @@ jnius_config.set_classpath(*classpath)
 if hasattr(sys, 'frozen'):
     os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')
 
-from PyQt5 import Qt
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
@@ -162,7 +161,7 @@ def main():
     LOGGER.frame('OS: %s %s', platform.system(), platform.release(), separator='|')
     LOGGER.frame('Python version: %s', platform.python_version(), separator='|')
     LOGGER.frame('Qt version: %s', QtCore.QT_VERSION_STR, separator='|')
-    LOGGER.frame('PyQt version: %s', Qt.PYQT_VERSION_STR, separator='|')
+    LOGGER.frame('PyQt version: %s', QtCore.PYQT_VERSION_STR, separator='|')
     LOGGER.frame('SIP version: %s', SIP_VERSION_STR, separator='|')
     LOGGER.separator(separator='-')
 

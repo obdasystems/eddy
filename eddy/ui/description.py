@@ -38,19 +38,17 @@ from abc import ABCMeta
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QRegExp
 
 from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.datatypes.graphol import Identity
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import rtfStripFontAttributes
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
-from eddy.core.datatypes.graphol import Item
-from eddy.ui.fields import StringField
 from eddy.ui.fields import ComboBox
+from eddy.ui.fields import StringField
 
 
 class AbstractDialog(QtWidgets.QDialog):
@@ -591,28 +589,28 @@ class NodeDescriptionDialog(AbstractDialog):
         """
         Align the text to left
         """
-        self.text.setAlignment(Qt.AlignLeft)
+        self.text.setAlignment(QtCore.Qt.AlignLeft)
 
     @QtCore.pyqtSlot()
     def alignRight(self):
         """
         Align the text to right
         """
-        self.text.setAlignment(Qt.AlignRight)
+        self.text.setAlignment(QtCore.Qt.AlignRight)
 
     @QtCore.pyqtSlot()
     def alignCenter(self):
         """
         Align the text to center
         """
-        self.text.setAlignment(Qt.AlignCenter)
+        self.text.setAlignment(QtCore.Qt.AlignCenter)
 
     @QtCore.pyqtSlot()
     def alignJustify(self):
         """
         Align the text in justify mode
         """
-        self.text.setAlignment(Qt.AlignJustify)
+        self.text.setAlignment(QtCore.Qt.AlignJustify)
 
     @QtCore.pyqtSlot()
     def indent(self):
@@ -1131,7 +1129,7 @@ class WikiTagDialog(AbstractDialog):
         Executed when the search box is filled with data.
         :type key: str
         """
-        self.proxy.setFilterRegExp(QRegExp(key.replace(' ', '.*')))
+        self.proxy.setFilterRegExp(QtCore.QRegExp(key.replace(' ', '.*')))
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.sort(QtCore.Qt.AscendingOrder)
 
@@ -1304,7 +1302,7 @@ class EditSourceDialog(QtWidgets.QDialog):
         :type event: QKeyEvent
         """
         # Avoid closing the dialog when return is pressed in the search bar
-        if event.key() == Qt.Key_Return:
+        if event.key() == QtCore.Qt.Key_Return:
             if self.searchBar.hasFocus() or self.editor.hasFocus():
                 return
 
@@ -1322,7 +1320,7 @@ class DescriptionEditor(QtWidgets.QTextEdit):
         self.setMouseTracking(True)
         self.setReadOnly(False)
         self.setUndoRedoEnabled(True)
-        self.setTextInteractionFlags(Qt.TextEditorInteraction)
+        self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
         self.setFont(Font('Roboto', 12))
         self.setCurrentFont(Font('Roboto', 12))
         self.setTabStopWidth(33)
@@ -1339,7 +1337,7 @@ class DescriptionEditor(QtWidgets.QTextEdit):
         :return: True if the event is handled, False otherwise
         :rtype: bool
         """
-        if event.button() == Qt.LeftButton:
+        if event.button() == QtCore.Qt.LeftButton:
             # Check if the word under cursor is part of a link
             # and set the tooltip if so.
             cursor = self.textCursor()
@@ -1364,7 +1362,7 @@ class DescriptionSourceEditor(QtWidgets.QPlainTextEdit):
         self.setMouseTracking(True)
         self.setReadOnly(False)
         self.setUndoRedoEnabled(True)
-        self.setTextInteractionFlags(Qt.TextEditorInteraction)
+        self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
         self.setFont(Font('Roboto', 12))
         self.setTabStopWidth(33)
 
