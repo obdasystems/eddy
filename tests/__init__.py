@@ -132,11 +132,8 @@ class EddyTestCase(TestCase):
         sys.stdout.flush()
         # MAKE SURE TO USE CORRECT SETTINGS
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        settings.setValue('workspace/home', WORKSPACE)
         settings.setValue('update/check_on_startup', False)
         settings.sync()
-        # MAKE SURE THE WORKSPACE DIRECTORY EXISTS
-        mkdir(expandPath(WORKSPACE))
         # MAKE SURE TO HAVE A CLEAN TEST ENVIRONMENT
         rmdir('@tests/.tests/')
         mkdir('@tests/.tests/')
@@ -171,7 +168,7 @@ class EddyTestCase(TestCase):
         # COPY TEST PROJECT OVER
         cpdir('@tests/%s/' % project, '@tests/.tests/%s' % project)
         # CREATE AN INSTANCE OF EDDY
-        arguments = ['--nosplash', '--tests', '--open', '@tests/.tests/%s' % project]
+        arguments = [APPNAME, '--nosplash', '--tests', '--open', '@tests/.tests/%s' % project]
         parser = ArgumentParser()
         parser.add_argument('--nosplash', dest='nosplash', action='store_true')
         parser.add_argument('--tests', dest='tests', action='store_true')
