@@ -40,7 +40,6 @@ import re
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-from jnius import autoclass, cast, detach
 
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
@@ -60,6 +59,7 @@ from eddy.core.functions.owl import TurtleDocumentFilter
 from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
+from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
 from eddy.core.project import K_DESCRIPTION
 from eddy.core.worker import AbstractWorker
@@ -516,24 +516,28 @@ class OWLOntologyExporterWorker(AbstractWorker):
         """
         super().__init__()
 
-        self.DefaultPrefixManager = autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
-        self.FunctionalSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
-        self.HashSet = autoclass('java.util.HashSet')
-        self.IRI = autoclass('org.semanticweb.owlapi.model.IRI')
-        self.LinkedList = autoclass('java.util.LinkedList')
-        self.List = autoclass('java.util.List')
-        self.ManchesterSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
-        self.OWLAnnotationValue = autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
-        self.OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
-        self.OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
-        self.OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
-        self.OWLOntologyID = autoclass('org.semanticweb.owlapi.model.OWLOntologyID')
-        self.OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
-        self.RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
-        self.PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
-        self.Set = autoclass('java.util.Set')
-        self.StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
-        self.TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
+        self.vm = getJavaVM()
+        if not self.vm.isRunning():
+            self.vm.initialize()
+        self.vm.attachThreadToJVM()
+        self.DefaultPrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.util.DefaultPrefixManager')
+        self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+        self.HashSet = self.vm.getJavaClass('java.util.HashSet')
+        self.IRI = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+        self.LinkedList = self.vm.getJavaClass('java.util.LinkedList')
+        self.List = self.vm.getJavaClass('java.util.List')
+        self.ManchesterSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.OWLAnnotationValue = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationValue')
+        self.OWLFacet = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWLFacet')
+        self.OWL2Datatype = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
+        self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.OWLOntologyID = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLOntologyID')
+        self.OWLOntologyDocumentTarget = self.vm.getJavaClass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
+        self.RDFXMLDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.PrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.model.PrefixManager')
+        self.Set = self.vm.getJavaClass('java.util.Set')
+        self.StringDocumentTarget = self.vm.getJavaClass('org.semanticweb.owlapi.io.StringDocumentTarget')
+        self.TurtleDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
         self.path = path
         self.project = project
@@ -848,7 +852,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         # BUILD DATATYPE RESTRICTION
         #################################
 
-        return self.df.getOWLDatatypeRestriction(de, cast(self.Set, collection))
+        return self.df.getOWLDatatypeRestriction(de, self.vm.cast(self.Set, collection))
 
     def getDomainRestriction(self, node):
         """
@@ -898,7 +902,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -937,7 +941,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -957,7 +961,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             individuals.add(conversion)
         if individuals.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return self.df.getOWLObjectOneOf(cast(self.Set, individuals))
+        return self.df.getOWLObjectOneOf(self.vm.cast(self.Set, individuals))
 
     def getFacet(self, node):
         """
@@ -1007,8 +1011,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectIntersectionOf(cast(self.Set, collection))
-        return self.df.getOWLDataIntersectionOf(cast(self.Set, collection))
+            return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, collection))
+        return self.df.getOWLDataIntersectionOf(self.vm.cast(self.Set, collection))
 
     def getPropertyAssertion(self, node):
         """
@@ -1087,7 +1091,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -1126,7 +1130,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return cast(self.List, collection)
+        return self.vm.cast(self.List, collection)
 
     def getRoleInverse(self, node):
         """
@@ -1158,8 +1162,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectUnionOf(cast(self.Set, collection))
-        return self.df.getOWLDataUnionOf(cast(self.Set, collection))
+            return self.df.getOWLObjectUnionOf(self.vm.cast(self.Set, collection))
+        return self.df.getOWLDataUnionOf(self.vm.cast(self.Set, collection))
 
     def getValueDomain(self, node):
         """
@@ -1188,7 +1192,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 text.setHtml(meta.get(K_DESCRIPTION, ''))
 
                 value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
-                value = cast(self.OWLAnnotationValue, value)
+                value = self.vm.cast(self.OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(aproperty, value)
                 conversion = self.convert(node)
                 self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
@@ -1233,7 +1237,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     raise ValueError('no conversion of description is available for node %s' % node)
 
                 value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
-                value = cast(self.OWLAnnotationValue, value)
+                value = self.vm.cast(self.OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(aproperty, value)
                 conversion = self.convert(node)
 
@@ -1270,7 +1274,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     raise ValueError('no conversion of description is available for node %s' % node)
 
                 value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
-                value = cast(self.OWLAnnotationValue, value)
+                value = self.vm.cast(self.OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(aproperty, value)
                 conversion = self.convert(node)
 
@@ -1333,7 +1337,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             collection = self.HashSet()
             for conversion in conversions:
                 collection.add(conversion)
-            self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(cast(self.Set, collection)))
+            self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
 
     def createDisjointClassesAxiom(self, node):
         """
@@ -1346,7 +1350,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
                     conversion = self.convert(operand)
                     collection.add(conversion)
-                self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection)))
+                self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
             elif node.type() is Item.ComplementNode:
                 operand = first(node.incomingNodes(lambda x: x.type() is Item.InputEdge))
                 conversionA = self.convert(operand)
@@ -1355,7 +1359,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     collection = self.HashSet()
                     collection.add(conversionA)
                     collection.add(conversionB)
-                    self.addAxiom(self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection)))
+                    self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
 
     def createDisjointDataPropertiesAxiom(self, edge):
         """
@@ -1368,7 +1372,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(cast(self.Set, collection)))
+            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createDisjointObjectPropertiesAxiom(self, edge):
         """
@@ -1381,7 +1385,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(cast(self.Set, collection)))
+            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentClassesAxiom(self, edge):
         """
@@ -1425,7 +1429,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                self.addAxiom(self.df.getOWLEquivalentClassesAxiom(cast(self.Set, collection)))
+                self.addAxiom(self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
         """
@@ -1444,7 +1448,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(cast(self.Set, collection)))
+                self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
         """
@@ -1463,7 +1467,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(cast(self.Set, collection)))
+                self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createInverseObjectPropertiesAxiom(self, edge):
         """
@@ -1635,7 +1639,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             collection = self.HashSet()
             for conversion in conversions:
                 collection.add(conversion)
-            self.addAxiom(self.df.getOWLSameIndividualAxiom(cast(self.Set, collection)))
+            self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection)))
 
     def createSubclassOfAxiom(self, edge):
         """
@@ -1723,6 +1727,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         try:
 
             self.sgnStarted.emit()
+            self.vm.attachThreadToJVM()
 
             #############################################
             # INITIALIZE ONTOLOGY
@@ -1761,7 +1766,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             if self.export:
                 self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
 
-            cast(self.PrefixManager, self.pm)
+            self.vm.cast(self.PrefixManager, self.pm)
 
             LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
@@ -1964,11 +1969,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
             # CREARE TARGET STREAM
             stream = self.StringDocumentTarget()
-            stream = cast(self.OWLOntologyDocumentTarget, stream)
+            stream = self.vm.cast(self.OWLOntologyDocumentTarget, stream)
             # SAVE THE ONTOLOGY TO DISK
             self.man.setOntologyFormat(self.ontology, ontoFormat)
             self.man.saveOntology(self.ontology, stream)
-            stream = cast(self.StringDocumentTarget, stream)
+            stream = self.vm.cast(self.StringDocumentTarget, stream)
             string = DocumentFilter(stream.toString(), skipDefaultPrefix=not isDefaultPrefixDefined)
             fwrite(string, self.path)
             # REMOVE RANDOM FILES GENERATED BY OWL API
@@ -1983,7 +1988,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         else:
             self.sgnCompleted.emit()
         finally:
-            detach()
+            self.vm.detachThreadFromJVM()
             self.finished.emit()
 
 
@@ -1997,27 +2002,30 @@ class OWLOntologyFetcher(AbstractWorker):
         """
         super().__init__()
 
-        self.DefaultPrefixManager = autoclass('org.semanticweb.owlapi.util.DefaultPrefixManager')
-        self.FunctionalSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
-        self.HashSet = autoclass('java.util.HashSet')
-        self.IRI = autoclass('org.semanticweb.owlapi.model.IRI')
-        self.LinkedList = autoclass('java.util.LinkedList')
-        self.List = autoclass('java.util.List')
-        self.ManchesterSyntaxDocumentFormat = autoclass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
-        self.OWLAnnotationValue = autoclass('org.semanticweb.owlapi.model.OWLAnnotationValue')
-        self.OWLFacet = autoclass('org.semanticweb.owlapi.vocab.OWLFacet')
-        self.OWL2Datatype = autoclass('org.semanticweb.owlapi.vocab.OWL2Datatype')
-        self.OWLManager = autoclass('org.semanticweb.owlapi.apibinding.OWLManager')
-        self.OWLOntologyID = autoclass('org.semanticweb.owlapi.model.OWLOntologyID')
-        self.OWLOntologyDocumentTarget = autoclass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
-        self.RDFXMLDocumentFormat = autoclass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
-        self.PrefixManager = autoclass('org.semanticweb.owlapi.model.PrefixManager')
-        self.Set = autoclass('java.util.Set')
-        self.StringDocumentTarget = autoclass('org.semanticweb.owlapi.io.StringDocumentTarget')
-        self.TurtleDocumentFormat = autoclass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
-        self.OWLAxiom = autoclass('org.semanticweb.owlapi.model.OWLAxiom')
-
-        self.OWLOntology = autoclass('org.semanticweb.owlapi.model.OWLOntology')
+        self.vm = getJavaVM()
+        if not self.vm.isRunning():
+            self.vm.initialize()
+        self.vm.attachThreadToJVM()
+        self.DefaultPrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.util.DefaultPrefixManager')
+        self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+        self.HashSet = self.vm.getJavaClass('java.util.HashSet')
+        self.IRI = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+        self.LinkedList = self.vm.getJavaClass('java.util.LinkedList')
+        self.List = self.vm.getJavaClass('java.util.List')
+        self.ManchesterSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.OWLAnnotationValue = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationValue')
+        self.OWLFacet = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWLFacet')
+        self.OWL2Datatype = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
+        self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.OWLOntologyID = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLOntologyID')
+        self.OWLOntologyDocumentTarget = self.vm.getJavaClass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
+        self.RDFXMLDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.PrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.model.PrefixManager')
+        self.Set = self.vm.getJavaClass('java.util.Set')
+        self.StringDocumentTarget = self.vm.getJavaClass('org.semanticweb.owlapi.io.StringDocumentTarget')
+        self.TurtleDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
+        self.OWLAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAxiom')
+        self.OWLOntology = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLOntology')
 
         self.project = project
         self.axiomsList = kwargs.get('axioms', set())
@@ -2392,7 +2400,7 @@ class OWLOntologyFetcher(AbstractWorker):
         # BUILD DATATYPE RESTRICTION
         #################################
 
-        return self.df.getOWLDatatypeRestriction(de, cast(self.Set, collection))
+        return self.df.getOWLDatatypeRestriction(de, self.vm.cast(self.Set, collection))
 
     def getDomainRestriction(self, node, conversion_trace):
         """
@@ -2449,7 +2457,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -2496,7 +2504,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -2519,7 +2527,7 @@ class OWLOntologyFetcher(AbstractWorker):
             individuals.add(conversion)
         if individuals.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return self.df.getOWLObjectOneOf(cast(self.Set, individuals))
+        return self.df.getOWLObjectOneOf(self.vm.cast(self.Set, individuals))
 
     def getFacet(self, node, conversion_trace):
         """
@@ -2572,8 +2580,8 @@ class OWLOntologyFetcher(AbstractWorker):
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectIntersectionOf(cast(self.Set, collection))
-        return self.df.getOWLDataIntersectionOf(cast(self.Set, collection))
+            return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, collection))
+        return self.df.getOWLDataIntersectionOf(self.vm.cast(self.Set, collection))
 
     def getPropertyAssertion(self, node, conversion_trace):
         """
@@ -2662,7 +2670,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
-                    return self.df.getOWLObjectIntersectionOf(cast(self.Set, cardinalities))
+                    return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
@@ -2703,7 +2711,7 @@ class OWLOntologyFetcher(AbstractWorker):
             collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
-        return cast(self.List, collection)
+        return self.vm.cast(self.List, collection)
 
     def getRoleInverse(self, node, conversion_trace):
         """
@@ -2743,8 +2751,8 @@ class OWLOntologyFetcher(AbstractWorker):
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         if node.identity() is Identity.Concept:
-            return self.df.getOWLObjectUnionOf(cast(self.Set, collection))
-        return self.df.getOWLDataUnionOf(cast(self.Set, collection))
+            return self.df.getOWLObjectUnionOf(self.vm.cast(self.Set, collection))
+        return self.df.getOWLDataUnionOf(self.vm.cast(self.Set, collection))
 
     def getValueDomain(self, node, conversion_trace):
         """
@@ -2768,7 +2776,7 @@ class OWLOntologyFetcher(AbstractWorker):
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
                 aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("rdfs:comment"))
                 value = self.df.getOWLLiteral(OWLAnnotationText(meta.get(K_DESCRIPTION, '')))
-                value = cast(self.OWLAnnotationValue, value)
+                value = self.vm.cast(self.OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(aproperty, value)
                 conversion_trace = []
                 self.convert(node,conversion_trace)
@@ -2899,7 +2907,7 @@ class OWLOntologyFetcher(AbstractWorker):
             collection = self.HashSet()
             for conversion in conversions:
                 collection.add(conversion)
-            axiom = self.df.getOWLDifferentIndividualsAxiom(cast(self.Set, collection))
+            axiom = self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection))
             self.addAxiom(axiom)
             self._axiom_to_node_or_edge[axiom] = dict_entry
 
@@ -2920,7 +2928,7 @@ class OWLOntologyFetcher(AbstractWorker):
                     conversion_trace_collection.extend(conversion_trace)
                     #conversion = self.convert(operand)
                     collection.add(conversion)
-                axiom_to_add = self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection))
+                axiom_to_add = self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
 
                 dict_entry = []
@@ -2945,7 +2953,7 @@ class OWLOntologyFetcher(AbstractWorker):
                     collection = self.HashSet()
                     collection.add(conversionA)
                     collection.add(conversionB)
-                    axiom_to_add = self.df.getOWLDisjointClassesAxiom(cast(self.Set, collection))
+                    axiom_to_add = self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection))
                     self.addAxiom(axiom_to_add)
 
                     dict_entry = []
@@ -2973,7 +2981,7 @@ class OWLOntologyFetcher(AbstractWorker):
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            axiom_to_add = self.df.getOWLDisjointDataPropertiesAxiom(cast(self.Set, collection))
+            axiom_to_add = self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection))
             self.addAxiom(axiom_to_add)
 
             dict_entry = []
@@ -3001,7 +3009,7 @@ class OWLOntologyFetcher(AbstractWorker):
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            axiom_to_add = self.df.getOWLDisjointObjectPropertiesAxiom(cast(self.Set, collection))
+            axiom_to_add = self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection))
             self.addAxiom(axiom_to_add)
 
             dict_entry = []
@@ -3066,7 +3074,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                axiom_to_add = self.df.getOWLEquivalentClassesAxiom(cast(self.Set, collection))
+                axiom_to_add = self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
                 #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
@@ -3117,7 +3125,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                axiom_to_add = self.df.getOWLEquivalentDataPropertiesAxiom(cast(self.Set, collection))
+                axiom_to_add = self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
                 #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
@@ -3168,7 +3176,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                axiom_to_add = self.df.getOWLEquivalentObjectPropertiesAxiom(cast(self.Set, collection))
+                axiom_to_add = self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
                 #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
@@ -3578,7 +3586,7 @@ class OWLOntologyFetcher(AbstractWorker):
             collection = self.HashSet()
             for conversion in conversions:
                 collection.add(conversion)
-            axiom = self.df.getOWLSameIndividualAxiom(cast(self.Set, collection))
+            axiom = self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection))
             self.addAxiom(axiom)
             self._axiom_to_node_or_edge[axiom] = dict_entry
 
@@ -3763,6 +3771,7 @@ class OWLOntologyFetcher(AbstractWorker):
         Main worker.
         """
         try:
+            self.vm.attachThreadToJVM()
 
             #############################################
             # INITIALIZE ONTOLOGY
@@ -3796,7 +3805,7 @@ class OWLOntologyFetcher(AbstractWorker):
                     for p in prefixes_of_iri_key:
                         self.pm.setPrefix(p, postfix(iri_key_to_append, postfix_special_character))
 
-            cast(self.PrefixManager, self.pm)
+            self.vm.cast(self.PrefixManager, self.pm)
 
             LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
@@ -3987,7 +3996,7 @@ class OWLOntologyFetcher(AbstractWorker):
 
             for d in self._axiom_to_node_or_edge.items():
                 key = d[0]
-                cast(self.OWLAxiom, key)
+                self.vm.cast(self.OWLAxiom, key)
                 new_key = key.toString()
                 value = d[1]
 
@@ -4054,7 +4063,7 @@ class OWLOntologyFetcher(AbstractWorker):
             for axiom in self.axioms():
                 self.man.addAxiom(self.ontology, axiom)
 
-            cast(self.OWLOntology, self.ontology)
+            self.vm.cast(self.OWLOntology, self.ontology)
 
         except DiagramMalformedError as e:
             LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
@@ -4065,5 +4074,5 @@ class OWLOntologyFetcher(AbstractWorker):
         else:
             LOGGER.debug('OWL 2 fetch could be completed')
         finally:
-            detach()
+            self.vm.detachThreadFromJVM()
             self.finished.emit()
