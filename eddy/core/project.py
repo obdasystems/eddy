@@ -32,7 +32,9 @@
 #                                                                        #
 ##########################################################################
 
-from PyQt5 import QtCore,QtGui,QtWidgets
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.datatypes.graphol import Item, Identity
@@ -41,16 +43,16 @@ from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-#from eddy.core.functions.owl import OWLText
+from eddy.core.functions.owl import OWLText
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
-from jnius import autoclass, cast, detach
 
 from rfc3987 import parse
 
@@ -1365,30 +1367,6 @@ class Project(QtCore.QObject):
         disconnect(self.sgnItemAdded, self.reset_changes_made_after_reasoning_task)
         disconnect(self.sgnItemRemoved, self.reset_changes_made_after_reasoning_task)
 
-    #not used
-    def check_if_reasoner_was_active(self):
-
-        A = len(self.unsatisfiable_classes) > 0
-        B = len(self.unsatisfiable_attributes)  > 0
-        C = len(self.unsatisfiable_roles)  > 0
-
-        D = self.inconsistent_ontology is not None
-
-        if (A is True) and (B is True) and (C is True) and (D is True):
-
-            return 'inactive'
-
-        else:
-
-            if (D is True) and ((A is False) or (B is False) or (C is False)):
-
-                return 'was_unsatisfiable'
-
-            elif (D is False) :
-
-                return 'was_inconsistent'
-
-
     def colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology(self):
 
         for node_or_edge in self.nodes_or_edges_of_explanations_to_display_in_widget:
@@ -1444,9 +1422,7 @@ class Project(QtCore.QObject):
         abs_nodes = self.nodes()
 
         for diag, val_in_diag in self.converted_nodes.items():
-            #print('diag, val_in_diag',diag, val_in_diag)
             for nd in val_in_diag:
-
                 abs_nd = None
                 for i in abs_nodes:
                     #if i.id == nd:
@@ -1458,13 +1434,8 @@ class Project(QtCore.QObject):
                     ((str(diag + '-' + nd) == node.id_with_diag) or ((abs_nd is not None) and (abs_nd.text() == node.text()))):
                     # ((nd==node.id) or ((abs_nd is not None) and (abs_nd.text()==node.text()))):
                     if str(type(val_in_diag[nd])) == '<class \'list\'>':
-
                         return_list = []
                         for ele in val_in_diag[nd]:
-                            java_class = str(val_in_diag[nd])[2:str(val_in_diag[nd]).index(' ')]
-                            cast(autoclass(java_class), ele)
-                            detach()
-
                             return_list.append(ele.toString())
 
                         return return_list
@@ -1474,14 +1445,9 @@ class Project(QtCore.QObject):
 
                         while listIter.hasNext():
                             chainList.append(listIter.next())
-                        detach()
 
                         return chainList
                     else:
-                        java_class = str(val_in_diag[nd])[1:str(val_in_diag[nd]).index(' ')]
-                        cast(autoclass(java_class), val_in_diag[nd])
-                        detach()
-
                         return val_in_diag[nd].toString()
 
         return None
