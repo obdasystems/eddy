@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -33,11 +32,11 @@
 #                                                                        #
 ##########################################################################
 
-"""Launcher script for Eddy."""
+"""Entry point for Eddy."""
 
 import sys
 
-from eddy.core.application import main
+from .core.application import main
 
 if __name__ == '__main__':
-    sys.exit(main())
+   sys.exit(main())

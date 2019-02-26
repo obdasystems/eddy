@@ -33,14 +33,18 @@
 ##########################################################################
 
 
+import argparse
 import os
+import platform
+import sip
+import sys
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtNetwork
 from PyQt5 import QtWidgets
 
-from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE
+from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
@@ -48,6 +52,7 @@ from eddy.core.functions.fsystem import isdir, fexists, fread
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
+from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
 from eddy.core.reasoner import ReasonerManager
@@ -62,10 +67,18 @@ from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
 from eddy.ui.workspace import WorkspaceDialog
 from eddy.ui.welcome import Welcome
+# noinspection PyUnresolvedReferences
+from eddy.ui import fonts_rc
+# noinspection PyUnresolvedReferences
+from eddy.ui import images_rc
 
-import jnius_config
+_LINUX = sys.platform.startswith('linux')
+_MACOS = sys.platform.startswith('darwin')
+_WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger()
+app = None
+msgbox = None
 
 
 class Eddy(QtWidgets.QApplication):
@@ -112,6 +125,15 @@ class Eddy(QtWidgets.QApplication):
         if not options.nosplash:
             splash = Splash(mtime=4)
             splash.show()
+
+        #############################################
+        # CONFIGURE APPLICATION INFO
+        #################################
+
+        self.setOrganizationName(ORGANIZATION)
+        self.setApplicationName(APPNAME)
+        self.setApplicationDisplayName(APPNAME)
+        self.setApplicationVersion(VERSION)
 
         #############################################
         # CONFIGURE RECENT PROJECTS
@@ -344,3 +366,157 @@ class Eddy(QtWidgets.QApplication):
         else:
             self.welcome = Welcome(self)
             self.welcome.show()
+
+
+def getArgumentParser():
+    """
+    Get an ArgumentParser that parses options accepted by this application.
+
+    :rtype: ArgumentParser
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--nosplash', dest='nosplash', action='store_true')
+    parser.add_argument('--tests', dest='tests', action='store_true')
+    parser.add_argument('--open', dest='open', default=None)
+    return parser
+
+
+def base_except_hook(exc_type, exc_value, exc_traceback):
+    """
+    Used to handle all uncaught exceptions.
+
+    :type exc_type: class
+    :type exc_value: Exception
+    :type exc_traceback: Traceback
+    """
+    if issubclass(exc_type, KeyboardInterrupt):
+        app.quit()
+    else:
+        global msgbox
+        if not msgbox:
+            LOGGER.critical(format_exception(exc_value))
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Fatal error!')
+            msgbox.setText('This is embarrassing ...\n\n' \
+                           'A critical error has just occurred. {0} will continue to work, ' \
+                           'however a reboot is highly recommended.'.format(APPNAME))
+            msgbox.setInformativeText('If the problem persists you can '
+                                      '<a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
+            msgbox.setDetailedText(format_exception(exc_value))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close | QtWidgets.QMessageBox.Ok)
+            buttonOk = msgbox.button(QtWidgets.QMessageBox.Ok)
+            buttonOk.setText('Close')
+            buttonQuit = msgbox.button(QtWidgets.QMessageBox.Close)
+            buttonQuit.setText('Quit {0}'.format(APPNAME))
+            connect(buttonOk.clicked, msgbox.close)
+            connect(buttonQuit.clicked, app.quit)
+            # noinspection PyArgumentList
+            QtWidgets.QApplication.beep()
+            msgbox.exec_()
+            msgbox = None
+
+
+def main():
+    """
+    Application entry point.
+    """
+    #############################################
+    # PARSE ARGUMENTS AND CREATE THE APPLICATION
+    #################################
+    parser = getArgumentParser()
+    sys.excepthook = base_except_hook
+    options, _ = parser.parse_known_args(args=sys.argv)
+    settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+
+    global app
+    app = Eddy(options, sys.argv)
+    if app.isRunning():
+        sys.exit(0)
+
+    #############################################
+    # JVM SETUP
+    #################################
+
+    JAVA_HOME = findJavaHome()
+
+    if not JAVA_HOME or not os.path.isdir(JAVA_HOME):
+        shouldDisplayDialog = settings.value('dialogs/skipMissingJREWarning')
+        if not shouldDisplayDialog:
+            # CHECKBOX CALLBACK
+            def checkboxStateChanged(state):
+                settings.setValue('dialogs/missingJRE', state == QtCore.Qt.Checked)
+                settings.sync()
+            chkbox = QtWidgets.QCheckBox("Don't show this warning again.")
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Missing Java Runtime Environment')
+            msgbox.setText('Unable to locate a valid Java installation on your system.')
+            msgbox.setInformativeText('<p>Some features in {0} require access to a <br/>' \
+                                      '<a href="{1}">Java Runtime Environment</a> version 8 ' \
+                                      'and will not be available if you continue.</p>' \
+                                      '<p>You can download a copy of the Java Runtime Environment ' \
+                                      'from the <a href={2}>Java Downloads</a> page.</p>'
+                                      .format(APPNAME, 'https://www.java.com/download',
+                                              'https://www.oracle.com/technetwork/java/javase/downloads/index.html'))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Abort | QtWidgets.QMessageBox.Ok)
+            msgbox.setDefaultButton(QtWidgets.QMessageBox.Abort)
+            msgbox.setCheckBox(chkbox)
+            buttonOk = msgbox.button(QtWidgets.QMessageBox.Ok)
+            buttonOk.setText('Continue without JRE')
+            buttonQuit = msgbox.button(QtWidgets.QMessageBox.Abort)
+            buttonQuit.setText('Quit {0}'.format(APPNAME))
+            connect(chkbox.stateChanged, checkboxStateChanged)
+            ret = msgbox.exec_()
+            if ret == QtWidgets.QMessageBox.Abort:
+                return 1
+
+    os.environ['JAVA_HOME'] = JAVA_HOME or ''
+
+    # ADD THE DIRECTORY CONTAINING JVM.DLL TO THE PATH VARIABLE ON WINDOWS
+    if _WIN32:
+        path = os.getenv('PATH', '')
+        path = path.split(os.pathsep)
+        path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin'))
+        if platform.architecture()[0] == '32bit':
+            path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'client'))
+        else:
+            path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'server'))
+        os.environ['PATH'] = os.pathsep.join(path)
+
+    # SET CLASSPATH AND OPTIONS
+    resources = expandPath('@resources/lib/')
+    for name in os.listdir(resources):
+        path = os.path.join(resources, name)
+        if os.path.isfile(path):
+            addJVMClasspath(path)
+    addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC', '-XX:+UseConcMarkSweepGC', '-XX:-UseAdaptiveSizePolicy')
+
+    #############################################
+    # BEGIN ENVIRONMENT SPECIFIC SETUP
+    #################################
+
+    if hasattr(sys, 'frozen'):
+        os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')
+
+    #############################################
+    # START THE APPLICATION
+    #################################
+
+    LOGGER.separator(separator='-')
+    LOGGER.frame('%s v%s', APPNAME, VERSION, separator='|')
+    LOGGER.frame(COPYRIGHT, separator='|')
+    LOGGER.separator(separator='-')
+    LOGGER.frame('OS: %s %s', platform.system(), platform.release(), separator='|')
+    LOGGER.frame('Python version: %s', platform.python_version(), separator='|')
+    LOGGER.frame('Qt version: %s', QtCore.QT_VERSION_STR, separator='|')
+    LOGGER.frame('PyQt version: %s', QtCore.PYQT_VERSION_STR, separator='|')
+    LOGGER.frame('SIP version: %s', sip.SIP_VERSION_STR, separator='|')
+    LOGGER.separator(separator='-')
+
+    app.configure(options)
+    app.start(options)
+    sys.exit(app.exec_())
+
