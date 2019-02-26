@@ -3966,11 +3966,9 @@ class OWLOntologyFetcher(AbstractWorker):
             #################################
 
             if len(self._axiom_to_node_or_edge) != len(self._axioms):
-
                 LOGGER.error('len(_axiom_to_node_or_edge) != len(_axioms)')
                 LOGGER.error('len(_axiom_to_node_or_edge)',len(self._axiom_to_node_or_edge))
                 LOGGER.error('len(self._axioms)',len(self._axioms))
-                sys.exit(0)
 
             #############################################
             # REFINE THE KEYS OF THE DICTIONARY(CAST WITH OWLClass + .toString() ), remove duplicate entries

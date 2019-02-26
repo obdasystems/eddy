@@ -87,7 +87,6 @@ class ExplanationExplorerPlugin(AbstractPlugin):
 
         if len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:
             LOGGER.error('Error, len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:')
-            sys.exit(0)
 
         #choose the explanation
         if len(self.project.explanations_for_inconsistent_ontology) > 0:
@@ -138,7 +137,6 @@ class ExplanationExplorerPlugin(AbstractPlugin):
 
                 if len(q_exp_items) !=1:
                     LOGGER.error('multiple or 0 QStandardItems found for q_exp_item')
-                    sys.exit(0)
 
                 self.sgnFakeAxiomAdded.emit(q_exp_items[0], axiom_e.toString())
 

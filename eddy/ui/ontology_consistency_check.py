@@ -392,8 +392,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
                 exists_for_some_objects = self.OWLFunctionalSyntaxFactory.ObjectSomeValuesFrom(unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLThing());
                 axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(exists_for_some_objects, self.OWLFunctionalSyntaxFactory.OWLNothing());
             else:
-                LOGGER.error('invalid unsatisfiable entity')
-                sys.exit(0)
+                raise RuntimeError('Invalid unsatisfiable entity {0}'.format(java_class))
 
             axiom_err_sc = axiom_err.getSubClass()
             explanations_raw = self.generator_unsatisfiable_entities.getExplanations(axiom_err_sc)
@@ -415,31 +414,14 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
         if java_class == self.OWLClass:
             self.project.unsatisfiable_classes = unsatisfiable_entities_string
             self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_entities
-
-            if len(self.project.unsatisfiable_classes) != len(self.project.explanations_for_unsatisfiable_classes):
-                LOGGER.critical('len(self.project.unsatisfiable_classes) != len(explanations_for_all_unsatisfiable_classes)')
-                sys.exit(0)
-        
         elif java_class == self.OWLDataProperty:
             self.project.unsatisfiable_attributes = unsatisfiable_entities_string
             self.project.explanations_for_unsatisfiable_attributes = explanations_for_all_unsatisfiable_entities
-
-            if len(self.project.unsatisfiable_attributes) != len(self.project.explanations_for_unsatisfiable_attributes):
-                LOGGER.critical(
-                    'len(self.project.unsatisfiable_attributes) != len(explanations_for_all_unsatisfiable_attributes)')
-                sys.exit(0)
-        
         elif java_class == self.OWLObjectPropertyExpression:
             self.project.unsatisfiable_roles = unsatisfiable_entities_string
             self.project.explanations_for_unsatisfiable_roles = explanations_for_all_unsatisfiable_entities
-
-            if len(self.project.unsatisfiable_roles) != len(self.project.explanations_for_unsatisfiable_roles):
-                LOGGER.critical(
-                    'len(self.project.unsatisfiable_roles) != len(explanations_for_all_unsatisfiable_roles)')
-                sys.exit(0)
         else:
-            LOGGER.error('invalid unsatisfiable entity')
-            sys.exit(0)
+            raise RuntimeError('invalid unsatisfiable entity {0}'.format(java_class))
 
     def reason_over_ontology(self):
         self.status_bar.showMessage('Fetching ontology')
@@ -485,8 +467,7 @@ class OntologyConsistencyCheckWorker(AbstractWorker):
             if hermit.isConsistent() is True:
                 self.project.inconsistent_ontology = False
             else:
-                LOGGER.info('ontology is inconsistent however exception was not thrown')
-                sys.exit(0)
+                raise RuntimeError('ontology is inconsistent however exception was not thrown')
 
             factory = self.ReasonerFactory()
 
