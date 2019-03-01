@@ -9,4 +9,4 @@ verlib==0.1
 github3.py==1.2.0
 natsort==5.2.0
 requests==2.20.1
-pyjnius==1.1.1
+pyjnius==1.2.0

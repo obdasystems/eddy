@@ -1,15 +1,6 @@
-# Cython requirements
-# 
-# Stick with 0.26 as new versions cause issues with pyjnius<=1.1.1
 #
-# https://github.com/kivy/pyjnius/issues/300
+# Cython requirement
 #
-# As of Oct 22, 2018 pyjnius has updated to 1.1.3 effectively closing issue #300,
-# we cannot however update to 1.1.3 as it causes problems with cx_Freeze.
-# In particular, jnius_config relies on resource_filename from pkg_resources
-# to add Java classes from the jnius package to the classpath, and for this to work
-# in the bundled version of Eddy it is required for jnius_config to be left outside 
-# of the zip file, which is not currently possible in cx_Freeze 5.1.1 for single file modules.
 
 # From PyPi
-Cython==0.26
+Cython==0.29.6

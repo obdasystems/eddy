@@ -7,7 +7,7 @@ cov-core==1.15.0
 coverage==4.5.1
 cryptography==2.3.1
 cx-Freeze==5.1.1
-Cython==0.26
+Cython==0.29.6
 github3.py==1.2.0
 idna==2.7
 jwcrypto==0.6.0
@@ -20,7 +20,7 @@ packaging==18.0
 pbr==5.1.1
 Pillow==5.3.0
 pycparser==2.19
-pyjnius==1.1.1
+pyjnius==1.2.0
 pyparsing==2.3.0
 PyQt5==5.10.1
 python-dateutil==2.7.5
