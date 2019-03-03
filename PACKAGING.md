@@ -10,7 +10,7 @@ Eddy is distributed as different packages:
 * `Linux x86_64` standalone package (.tar.gz archive)
 * `Linux i686` standalone package (.tar.gz archive)
 
-To create distribution packages you need to have installed [Python 3.5](https://www.python.org) on your system. 
+To create distribution packages you need to have installed [Python 3.6](https://www.python.org) on your system. 
 You also need to have installed [Git](http://git-scm.com/) on your system and make sure that the `git` command
 is in your `PATH` environment variable.
 
@@ -26,7 +26,7 @@ in the packaging process.
 
 ## On Windows
 
-Install [Python 3.5](https://www.python.org/downloads/release/python-354/).  
+Install [Python 3.6](https://www.python.org/downloads/release/python-368/).  
 Install [Git](https://git-scm.com/downloads).  
 Install [Visual C++ Build Tools v14.0](https://visualstudio.microsoft.com/visual-cpp-build-tools/).  Make sure to select
 `VC++ 2015.3 v14.00 toolset for Desktop` from the individual components tab in the installer menu.  
@@ -45,11 +45,11 @@ Switch to the user home directory:
     
 Create a new virtual environment using the command:
 
-    C:\> python -m venv --copies eddy-venv-py35
+    C:\> python -m venv --copies eddy-venv-py36
     
 Activate the virtual environment with:
 
-    C:\> eddy-venv-py35\Scripts\activate.bat
+    C:\> eddy-venv-py36\Scripts\activate.bat
 
 Clone Eddy repository by running the command:
 
@@ -90,12 +90,12 @@ Make sure Xcode command line tools are installed. From a terminal window, type:
     $ xcode-select --install
  
 Install [Homebrew](http://brew.sh/).  
-Install [Python 3.5](https://www.python.org/downloads/release/python-354/) and [pyenv](https://github.com/pyenv/pyenv) using Homebrew
-(alternatively, you can install Python 3.5 from the official binary installer):
+Install [Python 3.6](https://www.python.org/downloads/release/python-368/) and [pyenv](https://github.com/pyenv/pyenv) using Homebrew
+(alternatively, you can install Python 3.6 from the official binary installer):
 
     $ brew install pyenv
     $ pyenv init
-    $ pyenv install 3.5.4
+    $ pyenv install 3.6.8
     
 Install [Oracle JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  
 Set the `JAVA_HOME` environment variable to point to the location where the JDK is installed.
@@ -104,11 +104,11 @@ Set the `JAVA_HOME` environment variable to point to the location where the JDK 
 
 Create a new virtual environment with:
 
-    $ PYENV_VERSION=3.5.4 pyenv exec python -m venv --copies eddy-venv-py35
+    $ PYENV_VERSION=3.6.8 pyenv exec python -m venv --copies eddy-venv-py36
     
 Activate the virtual environment with:
 
-    $ source ./eddy-venv-py35/bin/activate
+    $ source ./eddy-venv-py36/bin/activate
     
 Clone Eddy repository by running the command:
 
@@ -149,7 +149,7 @@ to build Qt5 and PyQt5 from source, as binary wheels from PyPI are not available
 
 ### Installing dependencies
 
-In order to setup the virtual environment you will have to install Python 3.5, Git, and a JDK 1.8:
+In order to setup the virtual environment you will have to install Python 3.6, Git, and a JDK 1.8:
 
 ##### On Ubuntu / Debian / Mint
 
@@ -163,20 +163,20 @@ Clone [pyenv](https://github.com/pyenv/pyenv) repository:
 
     $ git clone https://github.com/pyenv/pyenv ~/.pyenv
     
-Install Python 3.5:
+Install Python 3.6:
 
     $ export PYENV_ROOT="$HOME/.pyenv"
     $ export PATH="$PYENV_ROOT/bin:$PATH"
     $ pyenv init
-    $ pyenv install 3.5.4
+    $ pyenv install 3.6.8
     
 Create a new virtual environment:
 
-    $ PYENV_VERSION=3.5.4 pyenv exec python -m venv --copies eddy-venv-py35
+    $ PYENV_VERSION=3.6.8 pyenv exec python -m venv --copies eddy-venv-py36
     
 Activate the virtual environment:
 
-    $ source ~/eddy-venv-py35/bin/activate
+    $ source ~/eddy-venv-py36/bin/activate
     
 Clone Eddy repository by running the command:
 
