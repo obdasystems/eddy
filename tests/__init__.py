@@ -130,13 +130,17 @@ class EddyTestCase(TestCase):
         testcase_lock.acquire()
         sys.stderr.flush()
         sys.stdout.flush()
-        # MAKE SURE TO USE CORRECT SETTINGS
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        settings.setValue('update/check_on_startup', False)
-        settings.sync()
         # MAKE SURE TO HAVE A CLEAN TEST ENVIRONMENT
         rmdir('@tests/.tests/')
         mkdir('@tests/.tests/')
+        # MAKE SURE TO USE CORRECT SETTINGS
+        QtCore.QSettings.setPath(QtCore.QSettings.NativeFormat, QtCore.QSettings.UserScope, expandPath('@tests/.tests/'))
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('workspace/home', expandPath('@tests/.tests/'))
+        settings.setValue('update/check_on_startup', False)
+        settings.sync()
+        # MAKE SURE THE WORKSPACE DIRECTORY EXISTS
+        mkdir(expandPath('@tests/.tests/'))
         # INITIALIZED VARIABLES
         self.eddy = None
         self.project = None
