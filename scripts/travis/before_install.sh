@@ -35,7 +35,7 @@
 #set -e
 
 # Set Python version to use as an environment variable
-PYTHON_VERSION=${PYTHON_VERSION:-"3.5.4"}
+PYTHON_VERSION=${PYTHON_VERSION:-"3.6.8"}
 VENV_DIR="${VENV_DIR:-$HOME/eddy-venv}"
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
