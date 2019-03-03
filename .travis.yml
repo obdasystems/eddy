@@ -15,7 +15,7 @@ language: python
 
 ## Select python version
 python:
-  - 3.5
+  - 3.6
 
 # Jobs environment variables
 env:
@@ -45,7 +45,7 @@ matrix:
     language: generic
     osx_image: xcode9
     env:
-      - PYTHON_VERSION="3.5.4"
+      - PYTHON_VERSION="3.6.8"
       - VENV_DIR="$HOME/eddy-venv"
       - TEST=packaging
 
