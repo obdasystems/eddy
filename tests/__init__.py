@@ -32,14 +32,14 @@
 #                                                                        #
 ##########################################################################
 
-
-import jnius_config
 import os
+import platform
 import sys
 import threading
 
-from eddy.core.functions.path import expandPath
 from eddy.core.functions.fsystem import cpdir, isdir, mkdir, rmdir, fexists
+from eddy.core.functions.path import expandPath
+from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
 
 LINUX = sys.platform.startswith('linux')
 MACOS = sys.platform.startswith('darwin')
@@ -49,24 +49,23 @@ WIN32 = sys.platform.startswith('win32')
 # BEGIN JAVA VIRTUAL MACHINE SETUP
 #################################
 
-if os.path.isdir(expandPath('@resources/java/')):
-    os.environ['JAVA_HOME'] = expandPath('@resources/java/')
+os.environ['JAVA_HOME'] = findJavaHome()
 
 if WIN32:
-    path = os.getenv('Path', '')
+    path = os.getenv('PATH', '')
     path = path.split(os.pathsep)
-    path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'bin', 'client'))
-    os.environ['Path'] = os.pathsep.join(path)
-
-classpath = []
+    path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin'))
+    if platform.architecture()[0] == '32bit':
+        path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'client'))
+    else:
+        path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'server'))
+    os.environ['PATH'] = os.pathsep.join(path)
 resources = expandPath('@resources/lib/')
 for name in os.listdir(resources):
     path = os.path.join(resources, name)
     if os.path.isfile(path):
-        classpath.append(path)
-
-jnius_config.add_options('-ea', '-Xmx512m')
-jnius_config.set_classpath(*classpath)
+        addJVMClasspath(path)
+addJVMOptions('-ea', '-Xmx512m')
 
 #############################################
 # END JAVA VIRTUAL MACHINE SETUP
@@ -79,10 +78,12 @@ from unittest.util import safe_repr
 from PyQt5 import QtCore
 from PyQt5 import QtTest
 
-from eddy import APPNAME, ORGANIZATION, WORKSPACE
+from eddy import APPNAME, ORGANIZATION
 from eddy.core.application import Eddy
 from eddy.core.output import getLogger
+# noinspection PyUnresolvedReferences
 from eddy.ui import fonts_rc
+# noinspection PyUnresolvedReferences
 from eddy.ui import images_rc
 
 
@@ -91,7 +92,8 @@ testcase_lock = threading.Lock()
 
 class LoggingDisabled(object):
     """
-    context manager that temporarily disable logging.
+    Context manager that temporarily disable logging.
+
     USAGE:
         with LoggingDisabled():
             # do stuff

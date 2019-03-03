@@ -5,19 +5,12 @@
 #                                                         #
 ###########################################################
 
-import sys
-
+from eddy.core.common import HasThreadingSystem
+from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
+from eddy.core.reasoner import AbstractReasoner
 
 LOGGER = getLogger()
-
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-
-from eddy.core.reasoner import AbstractReasoner
-from eddy.core.common import HasThreadingSystem
-from jnius import autoclass, cast, detach
 
 
 class HermitReasoner(AbstractReasoner, HasThreadingSystem):
@@ -30,11 +23,11 @@ class HermitReasoner(AbstractReasoner, HasThreadingSystem):
     #############################################
     #   SLOTS
     #################################
+
     def onErrored(self, exception):
         """
         """
         LOGGER.info('exception occured -')
-
 
     #############################################
     #   HOOKS
@@ -44,24 +37,24 @@ class HermitReasoner(AbstractReasoner, HasThreadingSystem):
         """
         Executed whenever the plugin is going to be destroyed.
         """
-        detach()
-
+        pass
 
     def start(self):
         """
         Perform initialization tasks for the plugin.
         """
         try:
-
-            self.Configuration = autoclass('org.semanticweb.HermiT.Configuration')
-            self.Reasoner = autoclass('org.semanticweb.HermiT.Reasoner')
-            self.ReasonerFactory = autoclass('org.semanticweb.HermiT.ReasonerFactory')
-            self.Explanation = autoclass('org.semanticweb.owl.explanation.api.Explanation')
-            self.ExplanationGenerator = autoclass('org.semanticweb.owl.explanation.api.ExplanationGenerator')
-            self.InconsistentOntologyExplanationGeneratorFactory = autoclass(
+            self.vm = getJavaVM()
+            if not self.vm.isRunning():
+                self.vm.initialize()
+            self.vm.attachThreadToJVM()
+            self.Configuration = self.vm.getJavaClass('org.semanticweb.HermiT.Configuration')
+            self.Reasoner = self.vm.getJavaClass('org.semanticweb.HermiT.Reasoner')
+            self.ReasonerFactory = self.vm.getJavaClass('org.semanticweb.HermiT.ReasonerFactory')
+            self.Explanation = self.vm.getJavaClass('org.semanticweb.owl.explanation.api.Explanation')
+            self.ExplanationGenerator = self.vm.getJavaClass('org.semanticweb.owl.explanation.api.ExplanationGenerator')
+            self.InconsistentOntologyExplanationGeneratorFactory = self.vm.getJavaClass(
                 'org.semanticweb.owl.explanation.impl.blackbox.checker.InconsistentOntologyExplanationGeneratorFactory')
-            self.BlackBoxExplanation = autoclass('com.clarkparsia.owlapi.explanation.BlackBoxExplanation')
-
+            self.BlackBoxExplanation = self.vm.getJavaClass('com.clarkparsia.owlapi.explanation.BlackBoxExplanation')
         except Exception as e:
-
             self.onErrored(e)

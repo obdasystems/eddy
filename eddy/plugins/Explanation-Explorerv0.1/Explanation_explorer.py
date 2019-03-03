@@ -33,25 +33,23 @@
 ##########################################################################
 
 
+import sys
+
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.output import getLogger
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.plugin import AbstractPlugin
 from eddy.core.items.common import AbstractItem
-
+from eddy.core.jvm import getJavaVM
+from eddy.core.output import getLogger
+from eddy.core.plugin import AbstractPlugin
 from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
-
-import inspect
-import sys
-from jnius import autoclass, cast, detach
 
 
 LOGGER = getLogger()
@@ -82,9 +80,13 @@ class ExplanationExplorerPlugin(AbstractPlugin):
         connect(self.sgnFakeAxiomAdded, widget.doAddAxiom)
         connect(self.sgnFakeItemAdded, widget.doAddNodeOREdge)
 
+        self.vm = getJavaVM()
+        if not self.vm.isRunning():
+            self.vm.initialize()
+        self.vm.attachThreadToJVM()
+
         if len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:
             LOGGER.error('Error, len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:')
-            sys.exit(0)
 
         #choose the explanation
         if len(self.project.explanations_for_inconsistent_ontology) > 0:
@@ -99,10 +101,6 @@ class ExplanationExplorerPlugin(AbstractPlugin):
             elif 'RoleNode' in self.project.uc_as_input_for_explanation_explorer:
                 unsatisfiable_entities = self.project.unsatisfiable_roles
                 explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_roles
-
-            #print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
-
-            #print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
 
             inp_node = None
 
@@ -139,9 +137,6 @@ class ExplanationExplorerPlugin(AbstractPlugin):
 
                 if len(q_exp_items) !=1:
                     LOGGER.error('multiple or 0 QStandardItems found for q_exp_item')
-                    sys.exit(0)
-
-                cast(autoclass('org.semanticweb.owlapi.model.OWLAxiom'), axiom_e)
 
                 self.sgnFakeAxiomAdded.emit(q_exp_items[0], axiom_e.toString())
 
@@ -228,6 +223,7 @@ class ExplanationExplorerPlugin(AbstractPlugin):
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea ,self.widget('Explanation_explorer_dock'))
+
 
 class ExplanationExplorerWidget(QtWidgets.QWidget):
     """

@@ -35,6 +35,7 @@
 import cx_Freeze
 import distutils
 import os
+import pkg_resources
 import platform
 import py_compile
 import re
@@ -900,6 +901,11 @@ include_files = [
     ('PACKAGING.md', 'PACKAGING.md'),
     ('README.md', 'README.md'),
 ]
+
+# INCLUDE JNIUS > 1.1.0 JAVA HELPERS
+jnius_src = os.path.realpath(pkg_resources.resource_filename('jnius_config', 'jnius/src'))
+if os.path.isdir(jnius_src):
+    include_files.append((jnius_src, 'resources/lib'))
 
 if LINUX:
     include_files.extend([
