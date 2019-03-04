@@ -102,7 +102,7 @@ class Item(IntEnum_):
         Returns the item readable name, i.e: attribute node, concept node.
         :rtype: str
         """
-        return RE_CAMEL_SPACE.sub('\g<1> \g<2>', self.name).lower()
+        return RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', self.name).lower()
 
     @property
     def shortName(self):

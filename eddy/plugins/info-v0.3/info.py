@@ -1407,7 +1407,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         redo = undo.copy()
         redo[key] = checked
         if redo != undo:
-            prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
+            prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
             name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
             self.session.undostack.push(
                 CommandNodeSetMeta(
@@ -1538,7 +1538,7 @@ class RoleNodeInfo(PredicateNodeInfo):
         redo = undo.copy()
         redo[key] = checked
         if redo != undo:
-            prop = RE_CAMEL_SPACE.sub('\g<1> \g<2>', key).lower()
+            prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
             name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
             self.session.undostack.push(
                 CommandNodeSetMeta(
