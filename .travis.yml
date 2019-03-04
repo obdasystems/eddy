@@ -1,5 +1,5 @@
-## Use trusty
-dist: trusty
+## Use xenial
+dist: xenial
 
 ## Use container-based environment
 sudo: false
@@ -9,6 +9,10 @@ addons:
   apt:
     packages:
       - libxkbcommon-x11-0
+
+## Set JVM version
+jdk:
+  - openjdk8
 
 ## Cache PIP installs across jobs
 cache:
