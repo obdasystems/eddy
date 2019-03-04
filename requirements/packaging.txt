@@ -1,4 +1,4 @@
-# Requiremenst for packaging the application
+# Requirements for packaging the application
 
 # Recursive
 -r base.txt
@@ -6,4 +6,4 @@
 # From PyPi
 cx_Freeze==5.1.1
 pyyaml==3.13
-Pillow==5.3.0
+Pillow==5.4.1

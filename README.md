@@ -1,7 +1,7 @@
 Eddy
 ====
 
-[![Python version](https://img.shields.io/badge/python-3.5-blue.svg)](https://www.python.org)
+[![Python version](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org)
 [![GitHub issues](https://img.shields.io/github/issues/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/obdasystems/eddy.svg)](https://github.com/obdasystems/eddy/pulls)
 [![GitHub license](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/obdasystems/eddy/master/LICENSE)

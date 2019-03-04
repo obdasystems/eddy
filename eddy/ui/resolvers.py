@@ -471,7 +471,7 @@ class PredicateBooleanConflictResolver(QtWidgets.QDialog, HasWidgetSystem):
             w_prop = QtWidgets.QLabel(self)
             w_prop.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
             w_prop.setFont(Font('Roboto', 14, bold=True, capitalization=Font.SmallCaps))
-            w_prop.setText(RE_CAMEL_SPACE.sub('\g<1> \g<2>', e[K_PROPERTY]).lower())
+            w_prop.setText(RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', e[K_PROPERTY]).lower())
             gridLayout.addWidget(w_type, row, 0)
             gridLayout.addWidget(w_name, row, 1)
             gridLayout.addWidget(w_prop, row, 2)

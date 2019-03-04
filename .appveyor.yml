@@ -13,16 +13,16 @@ cache:
 
 environment:
   matrix:
-    - PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5.3"
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.8"
       PYTHON_ARCH: "32"
       ARCH: "32"
       JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
       ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
       VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
 
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.3"
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.8"
       PYTHON_ARCH: "64"
       ARCH: "64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"

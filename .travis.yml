@@ -1,8 +1,18 @@
-## Use trusty
-dist: trusty
+## Use xenial
+dist: xenial
 
 ## Use container-based environment
 sudo: false
+
+## Additional packages to install
+addons:
+  apt:
+    packages:
+      - libxkbcommon-x11-0
+
+## Set JVM version
+jdk:
+  - openjdk8
 
 ## Cache PIP installs across jobs
 cache:
@@ -15,7 +25,7 @@ language: python
 
 ## Select python version
 python:
-  - 3.5
+  - 3.6
 
 # Jobs environment variables
 env:
@@ -45,7 +55,7 @@ matrix:
     language: generic
     osx_image: xcode9
     env:
-      - PYTHON_VERSION="3.5.4"
+      - PYTHON_VERSION="3.6.8"
       - VENV_DIR="$HOME/eddy-venv"
       - TEST=packaging
 

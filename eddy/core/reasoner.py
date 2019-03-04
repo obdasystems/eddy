@@ -252,7 +252,7 @@ class ReasonerSpec(ConfigParser):
         :type option: str
         :rtype: list
         """
-        return list(filter(None, re.split("[,\s\-]+", self.get(section, option))))
+        return list(filter(None, re.split(r'[,\s\-]+', self.get(section, option))))
 
     def getPath(self, section, option):
         """
@@ -333,7 +333,7 @@ class ReasonerManager(QtCore.QObject):
         :type name: str
         :rtype: class
         """
-        return getattr(mod, '%sReasoner' % ''.join(i.title() for i in list(filter(None, re.split("[_\-]+", name)))))
+        return getattr(mod, '%sReasoner' % ''.join(i.title() for i in list(filter(None, re.split(r'[_\-]+', name)))))
 
     @classmethod
     def import_reasoner_from_directory(cls, directory):
