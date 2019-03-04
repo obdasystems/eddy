@@ -4,6 +4,12 @@ dist: trusty
 ## Use container-based environment
 sudo: false
 
+## Additional packages to install
+addons:
+  apt:
+    packages:
+      - libxkbcommon-x11-0
+
 ## Cache PIP installs across jobs
 cache:
   pip: true
