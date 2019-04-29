@@ -1872,7 +1872,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         action = self.sender()
         dialog = action.data()
         window = dialog(self)
-        window.setModal(True)
+        window.setWindowModality(QtCore.Qt.ApplicationModal)
         window.show()
         window.raise_()
         window.activateWindow()
@@ -1897,7 +1897,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             properties = self.pf.create(diagram)
-            properties.setModal(True)
+            properties.setWindowModality(QtCore.Qt.ApplicationModal)
             properties.show()
             properties.raise_()
             properties.activateWindow()
@@ -1913,7 +1913,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             node = first(diagram.selectedNodes())
             if node:
                 properties = self.pf.create(diagram, node)
-                properties.setModal(True)
+                properties.setWindowModality(QtCore.Qt.ApplicationModal)
                 properties.show()
                 properties.raise_()
                 properties.activateWindow()
@@ -1927,9 +1927,9 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first(diagram.selectedNodes())
-            if node and node.type() in {Item.ConceptNode, Item.RoleNode, Item.RoleNode, Item.IndividualNode}:
+            if node and node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
                 description = self.df.create(diagram, node)
-                description.setModal(True)
+                description.setWindowModality(QtCore.Qt.ApplicationModal)
                 description.show()
                 description.raise_()
                 description.activateWindow()
