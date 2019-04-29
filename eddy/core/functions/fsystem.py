@@ -124,6 +124,29 @@ def isdir(path):
     return os.path.isdir(expandPath(path))
 
 
+def make_archive(path, dst, base_dir=None, format='zip'):
+    """
+    Create an archive file (such as zip or tar) and return its name.
+
+    'path' is the root directory to archive.
+
+    'dst' is the name of the archive file to create, without the file extension.
+
+    'base_dir' will be the common prefix of all the files and directories in the archive.
+
+    'format' is the archive format; Valid values are 'zip', 'tar', 'gztar'
+    (if the zlib module is available), 'bztar' (if the bz2 module is available),
+    'xztar' (if the lzma module is available, requires Python >= 3.5).
+
+    :type path: str
+    :type dst: str
+    :type base_dir: str
+    :type format: str
+    :rtype: str
+    """
+    return shutil.make_archive(expandPath(dst), format, expandPath(path), base_dir)
+
+
 def mkdir(path):
     """
     Create the directory identified by the given path if it doesn't exists.

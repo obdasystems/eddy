@@ -35,6 +35,7 @@
 
 import os
 import textwrap
+from time import time
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -49,7 +50,7 @@ from eddy.core.diagram import Diagram
 from eddy.core.diagram import DiagramNotFoundError
 from eddy.core.diagram import DiagramNotValidError
 from eddy.core.exporters.graphol import GrapholProjectExporter
-from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir
+from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir, make_archive
 from eddy.core.functions.misc import rstrip, postfix, rtfStripFontAttributes
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
@@ -730,18 +731,6 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         item = self.itemFromXml[element.attribute('type')]
         name = element.attribute('name')
         meta = self.project.meta(item, name)
-        meta[K_DESCRIPTION] = rtfStripFontAttributes(element.firstChildElement(K_DESCRIPTION).text())
-
-        if element.firstChildElement(K_DESCRIPTION).hasAttribute('status'):
-            meta[K_DESCRIPTION_STATUS] = element.firstChildElement(K_DESCRIPTION).attribute('status')
-            #print('meta[K_DESCRIPTION_STATUS]', meta[K_DESCRIPTION_STATUS])
-        else:
-            #print('Set Final by default')
-            if meta[K_DESCRIPTION] == '':
-                meta[K_DESCRIPTION_STATUS] = ''
-            else:
-                meta[K_DESCRIPTION_STATUS] = 'Final'
-
         return meta
 
     def importRoleMetadata(self, element):
@@ -764,65 +753,11 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
     #   IMPORT PROJECT FROM XML
     #################################
 
-    def convert_string_of_nodes_to_nodes(self):
-
-        LOGGER.debug('GrapholProjectLoader_v1  >>>  convert_string_of_nodes_to_nodes')
-
-        nodes_in_project = self.nproject.nodes()
-
-        IRI_prefixes_nodes_dict_old = self.nproject.IRI_prefixes_nodes_dict
-
-        IRI_prefixes_nodes_dict_new = dict()
-
-        for iri in IRI_prefixes_nodes_dict_old.keys():
-            prefixes = IRI_prefixes_nodes_dict_old[iri][0]
-            nodes = IRI_prefixes_nodes_dict_old[iri][1]
-            properties = IRI_prefixes_nodes_dict_old[iri][2]
-
-            values = []
-            to_prefixes = []
-            to_nodes = set()
-            to_properties = set()
-
-            to_prefixes.extend(prefixes)
-            to_nodes = to_nodes.union(nodes)
-            to_properties = to_properties.union(properties)
-
-            values.append(to_prefixes)
-            values.append(to_nodes)
-            values.append(to_properties)
-
-            IRI_prefixes_nodes_dict_new[iri] = values
-
-        for iri in IRI_prefixes_nodes_dict_new.keys():
-            nodes_str_or_just_node = IRI_prefixes_nodes_dict_new[iri][1]
-            new_nodes_entry = set()
-
-            for node_str_or_just_node in nodes_str_or_just_node:
-                if str(type(node_str_or_just_node)) == '<class \'str\'>':
-                    node_str = node_str_or_just_node
-                    for node in nodes_in_project:
-                        if node_str == str(node):
-                            new_nodes_entry.add(node)
-                else:
-                    node=node_str_or_just_node
-                    new_nodes_entry.add(node)
-
-            for node in new_nodes_entry:
-                if (str(node) not in nodes_str_or_just_node) and (node not in new_nodes_entry):
-                    LOGGER.critical('node is missing'+str(node))
-
-            IRI_prefixes_nodes_dict_new[iri][1] = new_nodes_entry
-
-        self.nproject.IRI_prefixes_nodes_dict = self.nproject.copy_IRI_prefixes_nodes_dictionaries(IRI_prefixes_nodes_dict_new,dict())
-
     def importProjectFromXML(self):
         """
         Initialize the project instance by reading project metadata from XML file.
         :raise ProjectNotValidError: If the project metadata file is missing or not readable.
         """
-        #print('importProjectFromXML >>> ')
-
         QtWidgets.QApplication.processEvents()
 
         LOGGER.info('Loading ontology metadata from %s', self.projectMetaDataPath)
@@ -842,11 +777,6 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         iri = ontology.firstChildElement('iri').text()
         LOGGER.debug('Loaded ontology IRI: %s', iri)
         profileName = ontology.firstChildElement('profile').text()
-
-        IRI_prefixes_nodes_dict = ontology.firstChildElement('IRI_prefixes_nodes_dict').text()
-
-        LOGGER.debug('Loaded ontology IRI_prefixes_nodes_dict: %s', IRI_prefixes_nodes_dict)
-
         if not profileName:
             profileName = 'OWL 2'
             LOGGER.warning('Missing ontology profile, using default: %s', profileName)
@@ -856,38 +786,19 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
             name=os.path.basename(path), 
             path=path,
             #prefix=prefix, iri=iri,
-            IRI_prefixes_nodes_dict=IRI_prefixes_nodes_dict,
+            IRI_prefixes_nodes_dict={},
             profile=profile, session=self.session)
 
-        saved_iri = iri
-        saved_prefix = prefix
+        projectIRI = iri if iri else 'file://{}#'.format(self.projectMainPath)
 
-        # print('self.project.iri',self.project.iri)
-        # self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
-
-        if (saved_iri is not None) and (saved_iri not in self.project.IRI_prefixes_nodes_dict.keys()):
-
-            # print('(saved_iri is not None) and (saved_iri not in self.project.IRI_prefixes_nodes_dict.keys())')
-
+        if (projectIRI is not None) and (projectIRI not in self.project.IRI_prefixes_nodes_dict.keys()):
             prefixes = []
-            if saved_prefix is not None:
-                prefixes.append(saved_prefix)
             nodes = set()
             properties = set()
             properties.add('Project_IRI')
-
-            value = []
-
-            value.append(prefixes)
-            value.append(nodes)
-            value.append(properties)
-
-            self.project.IRI_prefixes_nodes_dict[saved_iri] = value
-
-        # print('self.project.iri',self.project.iri)
-        # self.project.print_dictionary(self.project.IRI_prefixes_nodes_dict)
-
-        #print('importProjectFromXML >>> END')
+            properties.add('display_in_widget')
+            value = [prefixes, nodes, properties]
+            self.project.IRI_prefixes_nodes_dict[projectIRI] = value
 
     def importMetaFromXML(self):
         """
@@ -1014,6 +925,17 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
         self.importProjectFromXML()
         self.importModulesFromXML()
         self.importMetaFromXML()
+
+        #############################################
+        # BACKUP PROJECT DIRECTORY
+        #################################
+
+        projectName = os.path.basename(self.projectMainPath)
+        archivePath = os.path.join(self.projectMainPath, os.path.pardir)
+        archiveName = '{}-{}'.format(projectName, int(round(time() * 1000)))
+        archiveFullName = os.path.join(archivePath, archiveName)
+        LOGGER.info('Archiving legacy project to: {}'.format(archiveFullName))
+        make_archive(archivePath, expandPath(archiveFullName), projectName)
 
         #############################################
         # CLEANUP PROJECT DIRECTORY
