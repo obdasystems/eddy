@@ -36,6 +36,7 @@
 import time
 
 from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.exporters.common import AbstractDiagramExporter
@@ -439,6 +440,79 @@ class HasPluginSystem(object):
         self._pluginList.remove(plugin)
         del self._pluginDict[plugin.objectName()]
         return plugin
+
+
+class HasShortcutSystem(object):
+    """
+    Mixin which adds the ability to store and retrieve keyboard shortcuts.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the object with default parameters.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self._shortcutDict = {}
+        self._shortcutKeys = {}
+
+    def shortcut(self, nameOrKey):
+        """
+        Returns the reference to a QShortcut given it's objectName or QKeySequence.
+        :type nameOrKey: str|QKeySequence
+        :rtype: T <= QShortcut
+        """
+        if isinstance(nameOrKey, QtGui.QKeySequence):
+            return self._shortcutKeys.get(nameOrKey, None)
+        else:
+            return self._shortcutDict.get(nameOrKey, None)
+
+    def shortcuts(self):
+        """
+        Returns the list of QShortcut.
+        :rtype: list
+        """
+        return list(self._shortcutDict.values())
+
+    def addShortcut(self, shortcut):
+        """
+        Add a QShortcut to the set.
+        :type shortcut: T <= QShortcut
+        :rtype: T <= QShortcut
+        """
+        if isEmpty(shortcut.objectName()):
+            raise ValueError("missing objectName in %s" % shortcut.__class__.__name__)
+        if shortcut.objectName() in self._shortcutDict:
+            raise ValueError("duplicate shortcut name found: %s" % shortcut.objectName())
+        if shortcut.key() in self._shortcutKeys:
+            raise ValueError("duplicate shortcut sequence found: %s" % shortcut.key().toString())
+        self._shortcutKeys[shortcut.key()] = shortcut
+        self._shortcutDict[shortcut.objectName()] = shortcut
+        return shortcut
+
+    def addShortcuts(self, shortcuts):
+        """
+        Add the given list of QShortcut to the set.
+        :type shortcuts: T <= list|tuple
+        """
+        for shortcut in shortcuts:
+            self.addShortcut(shortcut)
+
+    def clearShortcuts(self):
+        """
+        Remove all the shortcuts.
+        """
+        self._shortcutDict.clear()
+        self._shortcutKeys.clear()
+
+    def removeShortcut(self, shortcut):
+        """
+        Removes the given QShortcut from the set.
+        :type shortcut: T <= QShortcut
+        :rtype: T <= QShortcut
+        """
+        del self._shortcutKeys[shortcut.key()]
+        del self._shortcutDict[shortcut.objectName()]
+        return shortcut
 
 
 class HasWidgetSystem(object):
