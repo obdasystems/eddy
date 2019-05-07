@@ -229,10 +229,15 @@ class InfoPlugin(AbstractPlugin):
         self.debug('Creating docking area widget')
         widget = DockWidget('Info', QtGui.QIcon(':/icons/18/ic_info_outline_black'), self.session)
         widget.installEventFilter(self)
-        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
         widget.setObjectName('info_dock')
         widget.setWidget(self.widget('info'))
         self.addWidget(widget)
+
+        # CREATE SHORTCUTS
+        action = widget.toggleViewAction()
+        action.setParent(self.session)
+        action.setShortcut(QtGui.QKeySequence('Alt+2'))
 
         # CREATE ENTRY IN VIEW MENU
         self.debug('Creating docking area widget toggle in "view" menu')

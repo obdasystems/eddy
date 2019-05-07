@@ -46,7 +46,7 @@ from verlib import NormalizedVersion
 
 from PyQt5 import QtCore
 
-from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem
+from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem, HasShortcutSystem
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, lstrip, rstrip
 from eddy.core.functions.fsystem import fcopy, fexists, fread, fremove
@@ -58,7 +58,7 @@ from eddy.core.output import getLogger
 LOGGER = getLogger()
 
 
-class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasWidgetSystem):
+class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasShortcutSystem, HasWidgetSystem):
     """
     Extension QtCore.QObject which implements a plugin.
     """

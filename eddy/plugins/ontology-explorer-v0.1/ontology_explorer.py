@@ -108,6 +108,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
         self.debug('Uninstalling docking area widget')
         self.session.removeDockWidget(self.widget('ontology_explorer_dock'))
 
+    # noinspection PyArgumentList
     def start(self):
         """
         Perform initialization tasks for the plugin.
@@ -157,6 +158,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
         button.setIcon(QtGui.QIcon(':/icons/18/ic_settings_black'))
         button.setContentsMargins(0, 0, 0, 0)
         button.setFixedSize(18, 18)
+        button.setFocusPolicy(QtCore.Qt.NoFocus)
         button.setMenu(self.menu('explorer_toggle'))
         button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.addWidget(button)
@@ -166,10 +168,15 @@ class OntologyExplorerPlugin(AbstractPlugin):
         widget = DockWidget('Ontology Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
         widget.addTitleBarButton(self.widget('explorer_toggle'))
         widget.installEventFilter(self)
-        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
         widget.setObjectName('ontology_explorer_dock')
         widget.setWidget(self.widget('ontology_explorer'))
         self.addWidget(widget)
+
+        # CREATE SHORTCUTS
+        action = widget.toggleViewAction()
+        action.setParent(self.session)
+        action.setShortcut(QtGui.QKeySequence('Alt+4'))
 
         # CREATE ENTRY IN VIEW MENU
         self.debug('Creating docking area widget toggle in "view" menu')
@@ -189,6 +196,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the ontology explorer used to list ontology predicates.
     """
+    sgnItemActivated = QtCore.pyqtSignal('QGraphicsItem')
     sgnItemClicked = QtCore.pyqtSignal('QGraphicsItem')
     sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsItem')
     sgnItemRightClicked = QtCore.pyqtSignal('QGraphicsItem')
@@ -219,10 +227,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.iconRole = QtGui.QIcon(':/icons/18/ic_treeview_role')
         self.iconValue = QtGui.QIcon(':/icons/18/ic_treeview_value')
 
+        self.searchShortcut = QtWidgets.QShortcut(QtGui.QKeySequence('Ctrl+f'), self.session)
         self.search = StringField(self)
         self.search.setAcceptDrops(False)
         self.search.setClearButtonEnabled(True)
-        self.search.setPlaceholderText('Search...')
+        self.search.setPlaceholderText('Search... ({})'.format(self.searchShortcut.key().toString()))
         self.search.setFixedHeight(30)
         self.model = QtGui.QStandardItemModel(self)
         self.proxy = OntologyExplorerFilterProxyModel(self)
@@ -236,7 +245,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addWidget(self.search)
         self.mainLayout.addWidget(self.ontoview)
-
+        self.setTabOrder(self.search, self.ontoview)
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
 
@@ -258,9 +267,13 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         header.setStretchLastSection(False)
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
 
+        connect(self.ontoview.activated, self.onItemActivated)
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
         connect(self.ontoview.pressed, self.onItemPressed)
         connect(self.search.textChanged, self.doFilterItem)
+        connect(self.search.returnPressed, self.onReturnPressed)
+        connect(self.searchShortcut.activated, self.doFocusSearch)
+        connect(self.sgnItemActivated, self.session.doFocusItem)
         connect(self.sgnItemDoubleClicked, self.session.doFocusItem)
         connect(self.sgnItemRightClicked, self.session.doFocusItem)
 
@@ -336,6 +349,21 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.proxy.setFilterFixedString(key)
         self.proxy.sort(QtCore.Qt.AscendingOrder)
 
+    @QtCore.pyqtSlot()
+    def doFocusSearch(self):
+        """
+        Focus the search bar.
+        """
+        # RAISE THE ENTIRE WIDGET TREE IF IT IS NOT VISIBLE
+        if not self.isVisible():
+            widget = self
+            while widget != self.session:
+                widget.show()
+                widget.raise_()
+                widget = widget.parent()
+        self.search.setFocus()
+        self.search.selectAll()
+
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doRemoveNode(self, diagram, node):
         """
@@ -351,6 +379,28 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                     parent.removeRow(child.index().row())
                 if not parent.rowCount():
                     self.model.removeRow(parent.index().row())
+
+    @QtCore.pyqtSlot('QModelIndex')
+    def onItemActivated(self, index):
+        """
+        Executed when an item in the treeview is activated (e.g. by pressing Return or Enter key).
+        :type index: QModelIndex
+        """
+        # noinspection PyArgumentList
+        if QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton:
+            item = self.model.itemFromIndex(self.proxy.mapToSource(index))
+            if item and item.data():
+                self.sgnItemActivated.emit(item.data())
+                # KEEP FOCUS ON THE TREE VIEW UNLESS SHIFT IS PRESSED
+                if QtWidgets.QApplication.queryKeyboardModifiers() & QtCore.Qt.SHIFT:
+                    return
+                self.ontoview.setFocus()
+            elif item:
+                # EXPAND/COLLAPSE PARENT ITEM
+                if self.ontoview.isExpanded(index):
+                    self.ontoview.collapse(index)
+                else:
+                    self.ontoview.expand(index)
 
     @QtCore.pyqtSlot('QModelIndex')
     def onItemDoubleClicked(self, index):
@@ -400,6 +450,13 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         self.proxy.invalidateFilter()
         self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+
+    @QtCore.pyqtSlot()
+    def onReturnPressed(self):
+        """
+        Executed when the Return or Enter key is pressed in the search field.
+        """
+        self.focusNextChild()
 
     #############################################
     #   INTERFACE
@@ -491,7 +548,7 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.setFont(Font('Roboto', 12))
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setHeaderHidden(True)
         self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)

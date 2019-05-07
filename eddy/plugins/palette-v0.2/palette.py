@@ -229,6 +229,7 @@ class PalettePlugin(AbstractPlugin):
         button.setIcon(QtGui.QIcon(':/icons/18/ic_settings_black'))
         button.setContentsMargins(0, 0, 0, 0)
         button.setFixedSize(18, 18)
+        button.setFocusPolicy(QtCore.Qt.NoFocus)
         button.setMenu(self.menu('palette_toggle'))
         button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.addWidget(button)
@@ -238,10 +239,15 @@ class PalettePlugin(AbstractPlugin):
         widget = DockWidget('Palette', QtGui.QIcon(':/icons/18/ic_palette_black'), self.session)
         widget.addTitleBarButton(self.widget('palette_toggle'))
         widget.installEventFilter(self)
-        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         widget.setObjectName('palette_dock')
         widget.setWidget(self.widget('palette'))
         self.addWidget(widget)
+
+        # CREATE SHORTCUTS
+        action = widget.toggleViewAction()
+        action.setParent(self.session)
+        action.setShortcut(QtGui.QKeySequence('Alt+1'))
 
         # CREATE ENTRY IN VIEW MENU
         self.debug('Creating docking area widget toggle in "view" menu')
@@ -298,11 +304,39 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.SameEdge,
             Item.DifferentEdge,
         ]
+        self.shortcutPrefix = 'Shift+Alt'
+        self.itemShortcuts = {
+            Item.ConceptNode: '{}+c'.format(self.shortcutPrefix),
+            Item.RoleNode: '{}+r'.format(self.shortcutPrefix),
+            Item.AttributeNode: '{}+a'.format(self.shortcutPrefix),
+            Item.ValueDomainNode: '{}+v'.format(self.shortcutPrefix),
+            Item.IndividualNode: '{}+i'.format(self.shortcutPrefix),
+            Item.FacetNode: '{}+n,f'.format(self.shortcutPrefix),
+            Item.DomainRestrictionNode: '{}+n,e'.format(self.shortcutPrefix),
+            Item.RangeRestrictionNode: '{}+n,g'.format(self.shortcutPrefix),
+            Item.IntersectionNode: '{}+n,a'.format(self.shortcutPrefix),
+            Item.RoleChainNode: '{}+n,h'.format(self.shortcutPrefix),
+            Item.DatatypeRestrictionNode: '{}+n,d'.format(self.shortcutPrefix),
+            Item.RoleInverseNode: '{}+n,-'.format(self.shortcutPrefix),
+            Item.ComplementNode: '{}+n,n'.format(self.shortcutPrefix),
+            Item.EnumerationNode: '{}+n,y'.format(self.shortcutPrefix),
+            Item.UnionNode: '{}+o'.format(self.shortcutPrefix),
+            Item.DisjointUnionNode: '{}+h'.format(self.shortcutPrefix),
+            Item.PropertyAssertionNode: '{}+x'.format(self.shortcutPrefix),
+            Item.InclusionEdge: '{}+e,i'.format(self.shortcutPrefix),
+            Item.EquivalenceEdge: '{}+e,e'.format(self.shortcutPrefix),
+            Item.InputEdge: '{}+e,n'.format(self.shortcutPrefix),
+            Item.MembershipEdge: '{}+e,m'.format(self.shortcutPrefix),
+            Item.SameEdge: '{}+e,s'.format(self.shortcutPrefix),
+            Item.DifferentEdge: '{}+e,d'.format(self.shortcutPrefix),
+        }
 
         # CREATE BUTTONS
         for item in self.items:
             button = PaletteButton(item)
             button.installEventFilter(self)
+            button.setShortcut(QtGui.QKeySequence(self.itemShortcuts[item]))
+            button.setToolTip('{} ({})'.format(item.shortName, button.shortcut().toString()))
             connect(button.clicked, self.onButtonClicked)
             self.addButton(item, button)
 
@@ -338,6 +372,29 @@ class PaletteWidget(QtWidgets.QWidget):
     #############################################
     #   SLOTS
     #################################
+
+    @QtCore.pyqtSlot(Item)
+    def doFocusButton(self, item):
+        """
+        Set the active widget to be the palette button for the specified item.
+        Executed when the palette button shortcut is activated.
+        TODO: Currently button shortcuts are dealt with button's internal shortcut()
+        :type item: Item
+        """
+        button = self.buttons.get(item, None)
+        if not button:
+            return
+        # RAISE THE PALETTE IF IT IS HIDDEN
+        if not self.isVisible():
+            widget = self
+            while widget != self.session:
+                widget.show()
+                widget.raise_()
+                widget = widget.parent()
+        # FOCUS THE BUTTON
+        if button.isEnabled():
+            button.setSelected(True)
+            button.setFocus()
 
     @QtCore.pyqtSlot()
     def onButtonClicked(self, _=False):
@@ -469,6 +526,7 @@ class PaletteButton(QtWidgets.QToolButton):
         self.item = item
         self.startPos = None
         self.setCheckable(True)
+        self.setFocusPolicy(QtCore.Qt.TabFocus)
         self.setContentsMargins(0, 0, 0, 0)
         self.setIcon(self.iconFor(item))
         self.setIconSize(QtCore.QSize(60, 44))
@@ -519,6 +577,10 @@ class PaletteButton(QtWidgets.QToolButton):
         """
         icon = self.icon()
         painter = QtGui.QPainter(self)
+        if self.hasFocus():
+            painter.setBrush(QtGui.QBrush(QtGui.QColor(191, 202, 208)))
+            painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(191, 202, 208)), 1.0))
+            painter.drawRect(0, 0, 60, 44)
         if self.isChecked():
             painter.setBrush(QtGui.QBrush(QtGui.QColor(66, 165, 245)))
             painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(66, 165, 245)), 1.0))

@@ -161,10 +161,15 @@ class OverviewPlugin(AbstractPlugin):
         self.debug('Creating docking area widget')
         widget = DockWidget('Overview', QtGui.QIcon(':/icons/18/ic_zoom_black'), self.session)
         widget.installEventFilter(self)
-        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
         widget.setObjectName('overview_dock')
         widget.setWidget(self.widget('overview'))
         self.addWidget(widget)
+
+        # CREATE SHORTCUTS
+        action = widget.toggleViewAction()
+        action.setParent(self.session)
+        action.setShortcut(QtGui.QKeySequence('Alt+3'))
 
         # CREATE ENTRY IN VIEW MENU
         self.debug('Creating docking area widget toggle in "view" menu')
