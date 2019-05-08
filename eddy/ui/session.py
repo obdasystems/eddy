@@ -135,6 +135,7 @@ _WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger()
 
+
 class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
               HasDiagramExportSystem, HasOntologyExportSystem, HasProjectExportSystem,
               HasDiagramLoadSystem, HasOntologyLoadSystem, HasProjectLoadSystem,
@@ -228,6 +229,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.setAcceptDrops(False)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
+        self.setCorner(QtCore.Qt.TopLeftCorner, QtCore.Qt.LeftDockWidgetArea)
+        self.setCorner(QtCore.Qt.BottomLeftCorner, QtCore.Qt.LeftDockWidgetArea)
+        self.setCorner(QtCore.Qt.TopRightCorner, QtCore.Qt.RightDockWidgetArea)
+        self.setCorner(QtCore.Qt.BottomRightCorner, QtCore.Qt.RightDockWidgetArea)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
 
@@ -239,6 +244,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
     #   SESSION CONFIGURATION
     #################################
 
+    # noinspection PyArgumentList
     def initActions(self):
         """
         Configure application built-in actions.
@@ -341,8 +347,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             triggered=self.doOpen))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_close_black'), 'Close', self,
-            objectName='close_project', shortcut=QtGui.QKeySequence.Close,
+            QtGui.QIcon(':/icons/24/ic_close_black'), 'Close Project', self,
+            objectName='close_project', shortcut='CTRL+SHIFT+W',
             statusTip='Close the current project', triggered=self.doClose))
 
         self.addAction(QtWidgets.QAction(
@@ -420,9 +426,14 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             'Open Ontology Manager',
             self, objectName='open_prefix_manager', enabled=True, shortcut='CTRL+M',
             statusTip='Open Ontology Manager', triggered=self.doOpenOntologyExplorer))
+
         #############################################
         # DIAGRAM SPECIFIC
         #################################
+
+        self.addAction(QtWidgets.QAction(
+            'Editor', self, objectName='focus_editor', shortcut='ALT+0',
+            statusTip='Focus active diagram', triggered=self.doFocusMdiArea))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_center_focus_strong_black'), 'Center diagram', self,
@@ -715,7 +726,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholProjectExporter)
 
-
     def initLoaders(self):
         """
         Initialize diagram and project loaders.
@@ -724,6 +734,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.addOntologyLoader(GrapholOntologyLoader_v2)
         self.addProjectLoader(GrapholProjectLoader_v2)
 
+    # noinspection PyArgumentList
     def initMenus(self):
         """
         Configure application built-in menus.
@@ -798,6 +809,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()
+        menu.addAction(self.action('focus_editor'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
@@ -936,6 +948,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menuBar.addMenu(self.menu('tools'))
         menuBar.addMenu(self.menu('help'))
 
+    # noinspection PyArgumentList,PyTypeChecker
     def initPre(self):
         """
         Initialize stuff that are shared by actions, menus, widgets etc.
@@ -951,7 +964,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         Load and initialize application plugins.
         """
         skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
-        #skip_list = ['Explanation_explorer', 'Unsatisfiable_Entity_Explorer', 'prefix_explorer']
         self.addPlugins(self.pmanager.init(skip_list=skip_list))
 
     def initProfiles(self):
@@ -1045,6 +1057,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('graphol_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
 
+    # noinspection PyArgumentList
     def initWidgets(self):
         """
         Configure application built-in widgets.
@@ -1317,7 +1330,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
                 self.common_commands_for_cut_delete_purge(diagram, items)
 
-
     @QtCore.pyqtSlot()
     def doDelete(self):
         """
@@ -1332,8 +1344,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
 
                 self.common_commands_for_cut_delete_purge(diagram, items)
 
-
-    #not used
     @QtCore.pyqtSlot()
     def doExport(self):
         """
@@ -1368,6 +1378,15 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                         else:
                             LOGGER.critical('no diagram present in the project')
                 worker.run(expandPath(first(dialog.selectedFiles())))
+
+    @QtCore.pyqtSlot()
+    def doFocusMdiArea(self):
+        """
+        Focus the active MDI area subwindow, if any.
+        """
+        subwindow = self.mdi.currentSubWindow()
+        if subwindow:
+            subwindow.setFocus()
 
     @QtCore.pyqtSlot('QGraphicsScene')
     def doFocusDiagram(self, diagram):

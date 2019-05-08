@@ -34,6 +34,7 @@
 
 
 from PyQt5 import QtCore
+from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.misc import DiagramMode
@@ -56,12 +57,7 @@ class MdiArea(QtWidgets.QMdiArea):
         self.setTabPosition(QtWidgets.QTabWidget.North)
         self.setTabsClosable(True)
         self.setTabsMovable(True)
-
-        for child in self.children():
-            if isinstance(child, QtWidgets.QTabBar):
-                child.setExpanding(False)
-                break
-
+        self.tabBar.setExpanding(False)
         connect(self.subWindowActivated, self.onSubWindowActivated)
 
     #############################################
@@ -75,6 +71,14 @@ class MdiArea(QtWidgets.QMdiArea):
         :rtype: Session
         """
         return self.parent()
+
+    @property
+    def tabBar(self):
+        """
+        Returns the reference to the MdiArea's QTabBar.
+        :rtype: QTabBar
+        """
+        return self.findChild(QtWidgets.QTabBar)
 
     #############################################
     #   SLOTS
@@ -148,12 +152,14 @@ class MdiArea(QtWidgets.QMdiArea):
         :type flags: int
         """
         menu = subwindow.systemMenu()
+        action = menu.actions()[7] # CLOSE ACTION
+        action.setShortcut(QtGui.QKeySequence.Close)
         action = QtWidgets.QAction('Close All', subwindow)
-        action.setIcon(menu.actions()[7].icon())
+        action.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_TitleBarCloseButton))
         connect(action.triggered, self.closeAllSubWindows)
         menu.addAction(action)
         action = QtWidgets.QAction('Close Others', subwindow)
-        action.setIcon(menu.actions()[7].icon())
+        action.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_TitleBarCloseButton))
         connect(action.triggered, self.doCloseOtherSubWindows)
         menu.addAction(action)
         return super().addSubWindow(subwindow)
