@@ -416,6 +416,7 @@ def getArgumentParser():
     return parser
 
 
+# noinspection PyArgumentList,PyUnusedLocal
 def base_except_hook(exc_type, exc_value, exc_traceback):
     """
     Used to handle all uncaught exceptions.
@@ -446,8 +447,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             buttonQuit = msgbox.button(QtWidgets.QMessageBox.Close)
             buttonQuit.setText('Quit {0}'.format(APPNAME))
             connect(buttonOk.clicked, msgbox.close)
-            connect(buttonQuit.clicked, app.quit)
-            # noinspection PyArgumentList
+            buttonQuit.clicked.connect(app.doQuit, QtCore.Qt.QueuedConnection)
             QtWidgets.QApplication.beep()
             msgbox.exec_()
             msgbox = None
