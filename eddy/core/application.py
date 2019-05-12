@@ -86,6 +86,8 @@ class Eddy(QtWidgets.QApplication):
     This class implements the main QtCore.Qt application.
     """
     sgnCreateSession = QtCore.pyqtSignal(str)
+    sgnSessionCreated = QtCore.pyqtSignal('QMainWindow')
+    sgnSessionClosed = QtCore.pyqtSignal('QMainWindow')
 
     def __init__(self, options, argv):
         """
@@ -336,8 +338,9 @@ class Eddy(QtWidgets.QApplication):
                     connect(session.sgnQuit, self.doQuit)
                     connect(session.sgnClosed, self.onSessionClosed)
                     self.sessions.append(session)
+                    self.sgnSessionCreated.emit(session)
                     session.show()
-    
+
     @QtCore.pyqtSlot()
     def doQuit(self):
         """
@@ -346,6 +349,37 @@ class Eddy(QtWidgets.QApplication):
         for session in self.sessions:
             session.save()
         self.quit()
+
+    @QtCore.pyqtSlot()
+    def doFocusSession(self):
+        """
+        Make the session specified in the action data the application active window.
+        """
+        action = self.sender()
+        if isinstance(action, QtWidgets.QAction):
+            session = action.data()
+            if session in self.sessions:
+                self.setActiveWindow(session)
+
+    @QtCore.pyqtSlot()
+    def doFocusNextSession(self):
+        """
+        Make the next session the application active window.
+        """
+        session = self.activeWindow()
+        if session and session in self.sessions:
+            nextSession = self.sessions[(self.sessions.index(session) + 1) % len(self.sessions)]
+            self.setActiveWindow(nextSession)
+
+    @QtCore.pyqtSlot()
+    def doFocusPreviousSession(self):
+        """
+        Make the previous session the application active window.
+        """
+        session = self.activeWindow()
+        if session and session in self.sessions:
+            prevSession = self.sessions[(self.sessions.index(session) - 1) % len(self.sessions)]
+            self.setActiveWindow(prevSession)
 
     @QtCore.pyqtSlot()
     def onSessionClosed(self):
@@ -357,6 +391,7 @@ class Eddy(QtWidgets.QApplication):
         if session:
             session.save()
             self.sessions.remove(session)
+            self.sgnSessionClosed.emit(session)
         ## CLEANUP POSSIBLE LEFTOVERS
         self.sessions = DistinctList(filter(None, self.sessions))
         ## SWITCH TO AN ACTIVE WINDOW OR WELCOME PANEL
@@ -399,8 +434,8 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Fatal error!')
-            msgbox.setText('This is embarrassing ...\n\n' \
-                           'A critical error has just occurred. {0} will continue to work, ' \
+            msgbox.setText('This is embarrassing ...\n\n'
+                           'A critical error has just occurred. {0} will continue to work, '
                            'however a reboot is highly recommended.'.format(APPNAME))
             msgbox.setInformativeText('If the problem persists you can '
                                       '<a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
@@ -418,6 +453,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             msgbox = None
 
 
+# noinspection PyUnresolvedReferences,PyTypeChecker
 def main():
     """
     Application entry point.
@@ -454,10 +490,10 @@ def main():
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Missing Java Runtime Environment')
             msgbox.setText('Unable to locate a valid Java installation on your system.')
-            msgbox.setInformativeText('<p>Some features in {0} require access to a <br/>' \
-                                      '<a href="{1}">Java Runtime Environment</a> version 8 ' \
-                                      'and will not be available if you continue.</p>' \
-                                      '<p>You can download a copy of the Java Runtime Environment ' \
+            msgbox.setInformativeText('<p>Some features in {0} require access to a <br/>'
+                                      '<a href="{1}">Java Runtime Environment</a> version 8 '
+                                      'and will not be available if you continue.</p>'
+                                      '<p>You can download a copy of the Java Runtime Environment '
                                       'from the <a href={2}>Java Downloads</a> page.</p>'
                                       .format(APPNAME, 'https://www.java.com/download',
                                               'https://www.oracle.com/technetwork/java/javase/downloads/index.html'))

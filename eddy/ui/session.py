@@ -266,6 +266,21 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='Quit {0}'.format(APPNAME), triggered=self.doQuit))
 
         action = QtWidgets.QAction(
+            'Next Project Window', self, objectName='next_project_window',
+            triggered=self.app.doFocusNextSession)
+        action.setData(self)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Previous Project Window', self, objectName='previous_project_window',
+            triggered=self.app.doFocusPreviousSession)
+        action.setData(self)
+        self.addAction(action)
+
+        action = QtWidgets.QActionGroup(self, objectName='sessions')
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_help_outline_black'), 'About {0}'.format(APPNAME),
             self, objectName='about', shortcut=QtGui.QKeySequence.HelpContents,
             statusTip='About {0}'.format(APPNAME), triggered=self.doOpenDialog)
@@ -289,7 +304,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_message_black'), 'System log...',
             self, objectName='system_log', statusTip='Show application system log',
-            triggered=self.doOpenDialog)
+            shortcut='SHIFT+F12', triggered=self.doOpenDialog)
         action.setData(LogDialog)
         self.addAction(action)
 
@@ -767,6 +782,12 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('quit'))
         self.addMenu(menu)
 
+        menu = QtWidgets.QMenu('Compose', objectName='compose')
+        menu.addAction(self.action('property_domain'))
+        menu.addAction(self.action('property_range'))
+        menu.addAction(self.action('property_domain_range'))
+        self.addMenu(menu)
+
         menu = QtWidgets.QMenu('\u200C&Edit', objectName='edit')
         menu.addAction(self.action('undo'))
         menu.addAction(self.action('redo'))
@@ -785,13 +806,9 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('snap_to_grid'))
         menu.addAction(self.action('center_diagram'))
         menu.addSeparator()
+        menu.addMenu(self.menu('compose'))
+        menu.addSeparator()
         menu.addAction(self.action('open_preferences'))
-        self.addMenu(menu)
-
-        menu = QtWidgets.QMenu('&Compose', objectName='compose')
-        menu.addAction(self.action('property_domain'))
-        menu.addAction(self.action('property_range'))
-        menu.addAction(self.action('property_domain_range'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Toolbars', objectName='toolbars')
@@ -809,7 +826,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
         menu.addSeparator()
-        menu.addAction(self.action('focus_editor'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
@@ -823,6 +839,12 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('install_plugin'))
         menu.addSeparator()
         menu.addAction(self.action('system_log'))
+        self.addMenu(menu)
+
+        menu = QtWidgets.QMenu('&Window', objectName='window')
+        menu.addAction(self.action('next_project_window'))
+        menu.addAction(self.action('previous_project_window'))
+        menu.addSeparator()
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('&Help', objectName='help')
@@ -942,10 +964,10 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menuBar = self.menuBar()
         menuBar.addMenu(self.menu('file'))
         menuBar.addMenu(self.menu('edit'))
-        menuBar.addMenu(self.menu('compose'))
         menuBar.addMenu(self.menu('view'))
         menuBar.addMenu(self.menu('ontology'))
         menuBar.addMenu(self.menu('tools'))
+        menuBar.addMenu(self.menu('window'))
         menuBar.addMenu(self.menu('help'))
 
     # noinspection PyArgumentList,PyTypeChecker
@@ -978,6 +1000,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Connect session specific signals to their slots.
         """
+        connect(self.app.sgnSessionCreated, self.onSessionCreated)
+        connect(self.app.sgnSessionClosed, self.onSessionClosed)
         connect(self.undostack.cleanChanged, self.doUpdateState)
         connect(self.sgnCheckForUpdate, self.doCheckForUpdate)
         connect(self.sgnFocusDiagram, self.doFocusDiagram)
@@ -2594,6 +2618,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         isSwitchToDifferentEnabled = True
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.undostack.isClean()
+        isSessionSwitchEnabled = len(self.app.sessions) > 1
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram()
@@ -2636,6 +2661,8 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.action('switch_same_to_different').setEnabled(isSwitchToDifferentEnabled)
         self.action('switch_different_to_same').setEnabled(isSwitchToSameEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
+        self.action('next_project_window').setEnabled(isSessionSwitchEnabled)
+        self.action('previous_project_window').setEnabled(isSessionSwitchEnabled)
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
 
@@ -2672,6 +2699,9 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Executed when the session is initialized.
         """
+        # CREATE SESSION SWITCH ACTIONS
+        for session in self.app.sessions:
+            self.onSessionCreated(session)
         ## CONNECT PROJECT SPECIFIC SIGNALS
         connect(self.project.sgnDiagramRemoved, self.mdi.onDiagramRemoved)
         ## CHECK FOR UPDATES ON STARTUP
@@ -2679,6 +2709,42 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         if settings.value('update/check_on_startup', True, bool):
             action = self.action('check_for_updates')
             action.trigger()
+
+    @QtCore.pyqtSlot('QMainWindow')
+    def onSessionCreated(self, session):
+        """
+        Executed when a new session is created.
+        :type session: Session
+        """
+        if session:
+            # noinspection PyArgumentList
+            action = QtWidgets.QAction(session.project.name, self, triggered=self.app.doFocusSession)
+            action.setData(session)
+            self.action('sessions').addAction(action)
+            if session == self:
+                # DRAW A CHECK MARK NEAR THE CURRENT SESSION
+                pixmap = QtGui.QPixmap(18, 18)
+                pixmap.fill(QtCore.Qt.transparent)
+                painter = QtGui.QPainter(pixmap)
+                painter.setPen(QtCore.Qt.black)
+                painter.drawText(QtCore.QRectF(pixmap.rect()), QtCore.Qt.AlignCenter, '\u2713')
+                painter.end()
+                action.setIcon(QtGui.QIcon(pixmap))
+            self.menu('window').addAction(action)
+            self.sgnUpdateState.emit()
+
+    @QtCore.pyqtSlot('QMainWindow')
+    def onSessionClosed(self, session):
+        """
+        Executed when a session is closed.
+        :type session: Session
+        """
+        if session:
+            # REMOVE THE CORRESPONDING ACTION FROM THE MENU BAR
+            action = first(self.action('sessions').actions(), filter_on_item=lambda i: i.data() == session)
+            if action:
+                self.action('sessions').removeAction(action)
+            self.sgnUpdateState.emit()
 
     @QtCore.pyqtSlot(str, str)
     def onUpdateAvailable(self, name, url):
