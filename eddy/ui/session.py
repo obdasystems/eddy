@@ -786,7 +786,9 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('open'))
         menu.addSeparator()
         menu.addAction(self.action('save'))
-        menu.addAction(self.action('save_as'))
+        # DISABLE SAVE AS ACTION
+        # See: https://github.com/obdasystems/eddy/issues/9
+        #menu.addAction(self.action('save_as'))
         menu.addAction(self.action('close_project'))
         menu.addSeparator()
         #menu.addAction(self.action('import'))
