@@ -106,10 +106,15 @@ class ProjectExplorerPlugin(AbstractPlugin):
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
         widget = DockWidget('Project Explorer', QtGui.QIcon(':icons/18/ic_storage_black'), self.session)
-        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
         widget.setObjectName('project_explorer_dock')
         widget.setWidget(self.widget('project_explorer'))
         self.addWidget(widget)
+
+        # CREATE SHORTCUTS
+        action = widget.toggleViewAction()
+        action.setParent(self.session)
+        action.setShortcut(QtGui.QKeySequence('Alt+5'))
 
         # CREATE ENTRY IN VIEW MENU
         self.debug('Creating docking area widget toggle in "view" menu')
@@ -130,6 +135,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
     This class implements the project explorer used to display the project structure.
     """
     sgnFakeDiagramAdded = QtCore.pyqtSignal('QGraphicsScene')
+    sgnItemActivated = QtCore.pyqtSignal('QGraphicsScene')
     sgnItemClicked = QtCore.pyqtSignal('QGraphicsScene')
     sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsScene')
 
@@ -153,6 +159,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         self.root.setFont(Font('Roboto', 12, bold=True))
         self.root.setIcon(self.iconRoot)
 
+        self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence('Ctrl+Shift+d'), self.session)
         self.model = QtGui.QStandardItemModel(self)
         self.proxy = ProjectExplorerSortedProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
@@ -172,8 +179,11 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         header.setStretchLastSection(False)
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
 
+        connect(self.projectview.activated, self.onItemActivated)
         connect(self.projectview.doubleClicked, self.onItemDoubleClicked)
         connect(self.projectview.pressed, self.onItemPressed)
+        connect(self.shortcut.activated, self.doFocusProjectView)
+        connect(self.sgnItemActivated, self.session.doFocusDiagram)
         connect(self.sgnItemDoubleClicked, self.session.doFocusDiagram)
 
     #############################################
@@ -216,6 +226,42 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         item = self.findItem(diagram.name)
         if item:
             self.root.removeRow(item.index().row())
+
+    @QtCore.pyqtSlot()
+    def doFocusProjectView(self):
+        """
+        Focus the project view.
+        """
+        # RAISE THE ENTIRE WIDGET TREE IF IT IS NOT VISIBLE
+        if not self.isVisible():
+            widget = self
+            while widget != self.session:
+                widget.show()
+                widget.raise_()
+                widget = widget.parent()
+        self.projectview.setFocus()
+
+    @QtCore.pyqtSlot('QModelIndex')
+    def onItemActivated(self, index):
+        """
+        Executed when an item in the tree view is activated (e.g. by pressing Return or Enter key).
+        :type index: QModelIndex
+        """
+        # noinspection PyArgumentList
+        if QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton:
+            item = self.model.itemFromIndex(self.proxy.mapToSource(index))
+            if item and item.data():
+                self.sgnItemActivated.emit(item.data())
+                # KEEP FOCUS ON THE TREE VIEW UNLESS SHIFT IS PRESSED
+                if QtWidgets.QApplication.queryKeyboardModifiers() & QtCore.Qt.SHIFT:
+                    return
+                self.projectview.setFocus()
+            elif item:
+                # EXPAND/COLLAPSE PARENT ITEM
+                if self.projectview.isExpanded(index):
+                    self.projectview.collapse(index)
+                else:
+                    self.projectview.expand(index)
 
     @QtCore.pyqtSlot('QModelIndex')
     def onItemDoubleClicked(self, index):
@@ -307,7 +353,7 @@ class ProjectExplorerView(QtWidgets.QTreeView):
         super().__init__(widget)
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setHeaderHidden(True)
         self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)

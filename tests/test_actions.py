@@ -554,7 +554,7 @@ class ActionsTestCase(EddyTestCase):
                     self.fail('Timeout exceeded waiting for dialog to activate')
                 QtTest.QTest.qWait(250)
                 attempts += 1
-            QtTest.QTest.keyClick(self.session, QtCore.Qt.Key_Escape, QtCore.Qt.NoModifier, 100)
+            QtWidgets.QApplication.activeModalWidget().close()
             node.setSelected(False)
 
     #############################################
@@ -579,5 +579,5 @@ class ActionsTestCase(EddyTestCase):
                         self.fail('Timeout exceeded waiting for dialog to activate')
                     QtTest.QTest.qWait(250)
                     attempts += 1
-                QtTest.QTest.keyClick(self.session, QtCore.Qt.Key_Escape, QtCore.Qt.NoModifier, 100)
+                QtWidgets.QApplication.activeModalWidget().close()
                 node.setSelected(False)
