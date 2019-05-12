@@ -266,21 +266,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             statusTip='Quit {0}'.format(APPNAME), triggered=self.doQuit))
 
         action = QtWidgets.QAction(
-            'Next Project Window', self, objectName='next_project_window',
-            triggered=self.app.doFocusNextSession)
-        action.setData(self)
-        self.addAction(action)
-
-        action = QtWidgets.QAction(
-            'Previous Project Window', self, objectName='previous_project_window',
-            triggered=self.app.doFocusPreviousSession)
-        action.setData(self)
-        self.addAction(action)
-
-        action = QtWidgets.QActionGroup(self, objectName='sessions')
-        self.addAction(action)
-
-        action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_help_outline_black'), 'About {0}'.format(APPNAME),
             self, objectName='about', shortcut=QtGui.QKeySequence.HelpContents,
             statusTip='About {0}'.format(APPNAME), triggered=self.doOpenDialog)
@@ -335,6 +320,48 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
             self.action('about').setIcon(QtGui.QIcon())
             self.action('open_preferences').setIcon(QtGui.QIcon())
             self.action('quit').setIcon(QtGui.QIcon())
+
+        #############################################
+        # APPLICATION NAVIGATION
+        #################################
+
+        action = QtWidgets.QAction(
+            'Next Project Window', self, objectName='next_project_window',
+            statusTip='Switch to the next open project', triggered=self.app.doFocusNextSession)
+        action.setData(self)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Previous Project Window', self, objectName='previous_project_window',
+            statusTip='Switch to the previous open project', triggered=self.app.doFocusPreviousSession)
+        action.setData(self)
+        self.addAction(action)
+
+        self.addAction(QtWidgets.QAction(
+            'Focus Active Tab', self, objectName='focus_active_tab', shortcut='ALT+0',
+            statusTip='Focus active tab', triggered=self.doFocusMdiArea))
+
+        self.addAction(QtWidgets.QAction(
+            'Next Tab', self, objectName='next_tab', shortcut='ALT+RIGHT',
+            statusTip='Switch to next tab', triggered=self.mdi.activateNextSubWindow))
+
+        self.addAction(QtWidgets.QAction(
+            'Previous Tab', self, objectName='previous_tab', shortcut='ALT+LEFT',
+            statusTip='Switch to previous tab', triggered=self.mdi.activatePreviousSubWindow))
+
+        self.addAction(QtWidgets.QAction(
+            'Close Tab', self, objectName='close_tab',
+            statusTip='Close active tab', triggered=self.mdi.closeActiveSubWindow))
+
+        self.addAction(QtWidgets.QAction(
+            'Close Other Tabs', self, objectName='close_other_tabs',
+            statusTip='Close other tabs', triggered=self.mdi.doCloseOtherSubWindows))
+
+        self.addAction(QtWidgets.QAction(
+            'Close All Tabs', self, objectName='close_all_tabs',
+            statusTip='Close all tabs', triggered=self.mdi.closeAllSubWindows))
+
+        self.addAction(QtWidgets.QActionGroup(self, objectName='sessions'))
 
         #############################################
         # PROJECT / DIAGRAM MANAGEMENT
@@ -445,10 +472,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         #############################################
         # DIAGRAM SPECIFIC
         #################################
-
-        self.addAction(QtWidgets.QAction(
-            'Editor', self, objectName='focus_editor', shortcut='ALT+0',
-            statusTip='Focus active diagram', triggered=self.doFocusMdiArea))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_center_focus_strong_black'), 'Center diagram', self,
@@ -841,9 +864,22 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.action('system_log'))
         self.addMenu(menu)
 
+        menu = QtWidgets.QMenu('Diagram Tabs', objectName='diagrams')
+        menu.addAction(self.action('focus_active_tab'))
+        menu.addAction(self.action('next_tab'))
+        menu.addAction(self.action('previous_tab'))
+        menu.addSeparator()
+        menu.addAction(self.action('close_tab'))
+        menu.addAction(self.action('close_other_tabs'))
+        menu.addAction(self.action('close_all_tabs'))
+        menu.addSeparator()
+        self.addMenu(menu)
+
         menu = QtWidgets.QMenu('&Window', objectName='window')
         menu.addAction(self.action('next_project_window'))
         menu.addAction(self.action('previous_project_window'))
+        menu.addSeparator()
+        menu.addMenu(self.menu('diagrams'))
         menu.addSeparator()
         self.addMenu(menu)
 
@@ -2618,6 +2654,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         isSwitchToDifferentEnabled = True
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.undostack.isClean()
+        isDiagramSwitchEnabled = False
         isSessionSwitchEnabled = len(self.app.sessions) > 1
 
         if self.mdi.subWindowList():
@@ -2628,6 +2665,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
                 nodes = diagram.selectedNodes()
                 edges = diagram.selectedEdges()
                 isDiagramActive = True
+                isDiagramSwitchEnabled = len(self.mdi.subWindowList()) > 1
                 isClipboardEmpty = self.clipboard.empty()
                 isEdgeSelected = first(edges) is not None
                 isNodeSelected = first(nodes) is not None
@@ -2663,6 +2701,12 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.action('toggle_grid').setEnabled(isDiagramActive)
         self.action('next_project_window').setEnabled(isSessionSwitchEnabled)
         self.action('previous_project_window').setEnabled(isSessionSwitchEnabled)
+        self.action('focus_active_tab').setEnabled(isDiagramActive)
+        self.action('next_tab').setEnabled(isDiagramSwitchEnabled)
+        self.action('previous_tab').setEnabled(isDiagramSwitchEnabled)
+        self.action('close_tab').setEnabled(isDiagramActive)
+        self.action('close_other_tabs').setEnabled(isDiagramSwitchEnabled)
+        self.action('close_all_tabs').setEnabled(isDiagramSwitchEnabled)
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
 

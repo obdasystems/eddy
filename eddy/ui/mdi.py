@@ -111,10 +111,14 @@ class MdiArea(QtWidgets.QMdiArea):
     @QtCore.pyqtSlot()
     def doCloseOtherSubWindows(self):
         """
-        Closes all the subwindows except the one from which the action has been triggered.
+        Closes all the sub-windows except the one from which the action has been triggered.
+        If the triggering action does not correspond to any sub-window, then close
+        all sub-windows except the currently active one.
         """
         action = self.sender()
         window = action.parent()
+        if window not in self.subWindowList():
+            window = self.activeSubWindow()
         for subwindow in self.subWindowList():
             if subwindow is not window:
                 subwindow.close()
