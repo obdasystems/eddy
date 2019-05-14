@@ -58,6 +58,7 @@ class File(Enum_):
     GraphML = 'GraphML (*.graphml)'
     Graphol = 'Graphol (*.graphol)'
     Html = 'Hyper-Text Markup Language (*.html)'
+    Jar = 'Java Archive (*.jar)'
     Jpeg = 'JPEG (*.jpg)'
     Owl = 'Web Ontology Language (*.owl)'
     Pdf = 'Portable Document Format (*.pdf)'

@@ -35,6 +35,7 @@
 
 import argparse
 import os
+import pkg_resources
 import platform
 import sip
 import sys
@@ -516,16 +517,16 @@ def main():
         os.environ['PATH'] = os.pathsep.join(path)
 
     # SET CLASSPATH AND OPTIONS
-    resources = expandPath('@resources/lib/')
-    for name in os.listdir(resources):
-        path = os.path.join(resources, name)
-        if os.path.isfile(path):
-            addJVMClasspath(path)
+    if hasattr(sys, 'frozen'):
+        resources = expandPath('@resources/lib/')
+        for name in os.listdir(resources):
+            path = os.path.join(resources, name)
+            if os.path.isfile(path):
+                addJVMClasspath(path)
+    for path in pkg_resources.resource_listdir(eddy.core.jvm.__name__, 'lib'):
+        if File.forPath(path) is File.Jar:
+            addJVMClasspath(pkg_resources.resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
     addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC', '-XX:+UseConcMarkSweepGC', '-XX:-UseAdaptiveSizePolicy')
-
-    #############################################
-    # BEGIN ENVIRONMENT SPECIFIC SETUP
-    #################################
 
     if hasattr(sys, 'frozen'):
         os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')
