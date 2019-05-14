@@ -47,26 +47,24 @@ from PyQt5 import QtWidgets
 from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
-from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import isdir, fexists, fread
+from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
-from eddy.core.reasoner import ReasonerManager
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
-from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-
+from eddy.core.project import ProjectVersionError
+from eddy.core.reasoner import ReasonerManager
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
-from eddy.ui.workspace import WorkspaceDialog
 from eddy.ui.welcome import Welcome
+from eddy.ui.workspace import WorkspaceDialog
 # noinspection PyUnresolvedReferences
 from eddy.ui import fonts_rc
 # noinspection PyUnresolvedReferences
@@ -209,15 +207,10 @@ class Eddy(QtWidgets.QApplication):
         # CONFIGURE LAYOUT
         #################################
 
-        buffer = ''
-        resources = expandPath('@resources/styles/')
-        for name in os.listdir(resources):
-            path = os.path.join(resources, name)
-            if fexists(path) and File.forPath(path) is File.Qss:
-                buffer += fread(path)
+        style = EddyProxyStyle('Fusion')
         self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-        self.setStyle(EddyProxyStyle('Fusion'))
-        self.setStyleSheet(buffer)
+        self.setStyle(style)
+        self.setStyleSheet(style.stylesheet)
 
         #############################################
         # LOOKUP PLUGINS
