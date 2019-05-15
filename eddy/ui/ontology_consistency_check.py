@@ -119,8 +119,8 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         connect(self.sgnWork, self.doWork)
         self.sgnWork.emit()
 
-        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
-        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
+        #self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
+        #self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
         self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,call_ClearInconsistentEntitiesAndDiagItemsData=True)
 
         connect(self.project.sgnItemAdded, self.project.reset_changes_made_after_reasoning_task)
@@ -267,8 +267,10 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
         self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-        self.msgbox_done.setText('Ontology is consistent however some class(es) are unsatisfiable.\n See Unsatisfiable Entity Explorer for details.\n\
-                                 To reset the background colouring of the nodes in the diagram, press the Reset button in the toolbar')
+        self.msgbox_done.setText('Ontology is consistent however some class(es) are unsatisfiable.\n'
+                                 'See Unsatisfiable Entity Explorer for details.\n'
+                                 'To reset the background colouring of the nodes in the diagram, '
+                                 'press the Reset button in the toolbar')
 
         if sys.platform.startswith('linux'):
 
@@ -280,7 +282,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.close()
         self.msgbox_done.exec_()
-        self.session.pmanager.create_add_and_start_plugin('Unsatisfiable_Entity_Explorer')
+        #self.session.pmanager.create_add_and_start_plugin('unsatisfiable_entity_explorer')
 
 
 class OntologyConsistencyCheckWorker(AbstractWorker):
@@ -594,174 +596,5 @@ class InconsistentOntologyDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.project = project
         self.session = session
-
         self.setLayout(self.mainLayout)
-
-        self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
-
-        #self.close() giulio
-
-
-#executed if the explanation buttons needs to be displayed in the message box.
-class InconsistentOntologyDialog_2(QtWidgets.QDialog, HasThreadingSystem):
-
-    sgnWork = QtCore.pyqtSignal()
-
-    def __init__(self,project, path, session):
-
-        super().__init__(session)
-
-        self.msgbox_done = QtWidgets.QMessageBox(self, objectName='msgbox_done')
-
-        self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.msgbox_done.setWindowTitle('Ontology consistency check complete')
-        self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.NoButton)
-        self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
-        self.msgbox_done.setText('Ontology is inconsistent.\n The link(s) for the explanation(s) are displayed below.\n You may choose to display one explanation at a time in the Explanation\
-                                 Explorer in the bottom-right portion of the screen.\
-                                 To reset the background colouring of the nodes in the diagram, press the Reset button in the toolbar')
-
-        if sys.platform.startswith('linux'):
-
-            size = self.size()
-            desktopsize = QtWidgets.QDesktopWidget().screenGeometry()
-            top = (desktopsize.height()/2) - (size.height()/2)
-            left = (desktopsize.width() / 2) - (size.width() / 2)
-            self.move(left,top)
-
-        self.addWidget(self.msgbox_done)
-
-        self.messageBoxLayout = QtWidgets.QHBoxLayout()
-        self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
-        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignCenter)
-        self.messageBoxLayout.addWidget(self.widget('msgbox_done'))
-
-        self.messageBoxArea = QtWidgets.QWidget()
-        self.messageBoxArea.setLayout(self.messageBoxLayout)
-
-        self.confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
-        self.confirmation.addButton(QtWidgets.QDialogButtonBox.Close)
-        self.confirmation.setFont(Font('Roboto', 12))
-        self.confirmation.setObjectName('confirmation')
-
-        connect(self.confirmation.rejected, self.close)
-
-        self.addWidget(self.confirmation)
-
-        self.confirmationLayout = QtWidgets.QHBoxLayout()
-        self.confirmationLayout.setContentsMargins(0, 0, 0, 0)
-        self.confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignCenter)
-
-        self.confirmationArea = QtWidgets.QWidget()
-        self.confirmationArea.setLayout(self.confirmationLayout)
-
-        self.mainLayout = QtWidgets.QVBoxLayout()
-        self.mainLayout.addWidget(self.messageBoxArea)
-        self.mainLayout.addWidget(self.confirmationArea)
-
-        self.setLayout(self.mainLayout)
-        self.setFont(Font('Roboto', 12))
-        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle('Ontology consistency check complete')
-
-        self.explanationButtonsLayout = QtWidgets.QHBoxLayout()
-        self.explanationButtonsArea = QtWidgets.QWidget()
-
-        #self.setWindowFlags(QtCore.Qt.Window)
-
-        self.hide()
-        self.setWindowModality(QtCore.Qt.NonModal)
-        self.show()
-
-        self.project = project
-        self.session = session
-
-        connect(self.sgnWork, self.doWork)
-
-        self.sgnWork.emit()
-
-    @QtCore.pyqtSlot()
-    def minimize(self):
-
-        self.hide()
-        self.setWindowModality(QtCore.Qt.NonModal)
-        self.show()
-
-    def set_explanation_to_display_in_widget(self,ip=0):
-
-        axioms = self.project.explanations_for_inconsistency[ip - 1].getAxioms()
-        itr = axioms.iterator()
-
-        list_of_axioms = []
-
-        while itr.hasNext():
-            ele = itr.next()
-            list_of_axioms.append(ele.toString())
-
-        self.project.get_axioms_of_explanation_to_display_in_widget = list_of_axioms
-        self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
-
-    def addAColumnOfButtons(self, floor, ceiling):
-
-        explanationButtonsColumnLayout = QtWidgets.QVBoxLayout()
-        explanationButtonsColumnArea = QtWidgets.QWidget()
-
-        for e in range(floor,ceiling+1):
-
-            widget = QtWidgets.QPushButton(objectName=str(e))
-            widget.setText('Explanation ' + str(e))
-            widget.setFont(Font('Roboto', 12))
-
-            connect(widget.clicked, self.set_explanation_to_display_in_widget, e)
-
-            explanationButtonsColumnLayout.addWidget(widget)
-        explanationButtonsColumnArea.setLayout(explanationButtonsColumnLayout)
-        self.explanationButtonsLayout.addWidget(explanationButtonsColumnArea)
-
-    @QtCore.pyqtSlot()
-    def doWork(self):
-
-        total_no_of_buttons = len(self.project.explanations_for_inconsistency)
-        #total_no_of_buttons = 44
-
-        sb = math.sqrt(total_no_of_buttons)
-        total_number_of_rows = math.ceil(sb)
-        total_no_of_columns = math.ceil(sb)
-
-        if (total_number_of_rows>15) | (total_no_of_buttons > 45):
-            total_number_of_rows = 15
-            total_no_of_columns = math.ceil(total_no_of_buttons/15)
-
-        if total_no_of_buttons <=45:
-            total_no_of_columns = 3
-            total_number_of_rows = math.ceil(total_no_of_buttons/3)
-
-        total_number_of_extra_spaces = (total_number_of_rows*total_no_of_columns) - total_no_of_buttons
-        extra_space_dec = math.floor(total_number_of_extra_spaces / total_no_of_columns)
-        extra_extra_space = int(math.fmod(total_number_of_extra_spaces,total_no_of_columns))
-
-        sp = 1
-        ep = sp+total_number_of_rows-1
-
-        for c in range(1,total_no_of_columns+1):
-
-            if extra_extra_space > 0:
-                ep = ep - 1
-                extra_extra_space = extra_extra_space - 1
-
-            if total_number_of_extra_spaces>0:
-
-                ep = ep-extra_space_dec
-                total_number_of_extra_spaces=total_number_of_extra_spaces-extra_space_dec
-
-            self.addAColumnOfButtons(sp, ep)
-
-            new_sp = ep+1
-            new_ep = new_sp+total_number_of_rows-1
-
-            sp = new_sp
-            ep = new_ep
-
-        self.explanationButtonsArea.setLayout(self.explanationButtonsLayout)
-        self.mainLayout.addWidget(self.explanationButtonsArea)
-        self.setLayout(self.mainLayout)
+        #self.session.pmanager.create_add_and_start_plugin('explanation_explorer')

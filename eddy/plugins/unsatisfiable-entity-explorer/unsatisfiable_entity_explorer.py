@@ -33,39 +33,130 @@
 ##########################################################################
 
 
-import sys
-
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.output import getLogger
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.items.common import AbstractItem
-from eddy.core.jvm import getJavaVM
-from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
+from eddy.core.datatypes.graphol import Special
+
 from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
+
+
 
 
 LOGGER = getLogger()
 
 
-class ExplanationExplorerPlugin(AbstractPlugin):
+class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
     """
-    This plugin provides the Explanation Explorer widget.
+    This plugin provides the UnsatisfiableEntitiesExplorer widget.
     """
-    sgnFakeExplanationAdded = QtCore.pyqtSignal(str)
-    sgnFakeAxiomAdded = QtCore.pyqtSignal('QStandardItem', str)
-    sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem', 'QStandardItem')
+    sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnFakeExplanationAdded = QtCore.pyqtSignal('QGraphicsItem',list)
+
+    #brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
 
     #############################################
     #   SLOTS
     #################################
+
+    def checkmatchforOWLtermandnodename(self,OWL_term_1,OWL_term_2):
+
+        #it should not be a complement of a class; i.e. the raw term should start with <
+
+        if (OWL_term_1 is None) or (OWL_term_2 is None):
+            return False
+
+        if str(type(OWL_term_1)) == '<class \'list\'>':
+
+            for t1 in OWL_term_1:
+
+                if str(type(OWL_term_2)) == '<class \'list\'>':
+
+                    for t2 in OWL_term_2:
+                        if (t1[0] == '<') and (t2[0] == '<'):
+                            if t1 == t2:
+                                return True
+
+                else:
+
+                    if (t1[0] == '<') and (t2[0] == '<'):
+                        if t1 == t2:
+                            return True
+
+        if (OWL_term_1[0] == '<') and (OWL_term_2[0] == '<'):
+            if OWL_term_1 == OWL_term_2:
+                return True
+
+        top_and_bottom_entities = []
+        top_and_bottom_entities.extend(Special.return_group(Special.AllTopEntities))
+        top_and_bottom_entities.extend(Special.return_group(Special.AllBottomEntities))
+
+        if (OWL_term_1 in top_and_bottom_entities) and (OWL_term_1 == OWL_term_2):
+            return True
+
+        return False
+
+    def get_list_of_nodes_in_diagram_from_OWL_terms(self,input_list):
+
+        return_list = []
+
+        for ue in input_list:
+
+            #OWL_term_for_uc = uc
+            temp = []
+
+            for p in self.project.nodes():
+                OWL_term_for_p = self.project.getOWLtermfornode(p)
+
+                match = self.checkmatchforOWLtermandnodename(ue,OWL_term_for_p)
+                if match is True:
+                    #print('p-',p,' OWL_term_for_p',OWL_term_for_p)
+                    #print('ue',ue)
+                    temp.append(p)
+
+            if len(temp) == 0:
+                LOGGER.critical('no nodes found for WOL term-'+ue)
+
+            return_list.append(temp)
+
+        return return_list
+
+    def add_unsatisfiable_nodes_in_widget(self,input_list,inp_type):
+
+        count = 0
+
+        #print('input_list',input_list)
+
+        for entity in input_list:
+
+            for node in entity:
+
+                self.sgnFakeItemAdded.emit(node.diagram, node)
+
+            if inp_type == 'unsatisfiable_classes':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_classes[count]
+            elif inp_type == 'unsatisfiable_attributes':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_attributes[count]
+            elif inp_type == 'unsatisfiable_roles':
+                explanation_for_node = self.project.explanations_for_unsatisfiable_roles[count]
+            else:
+                LOGGER.error('invalid inp_type in module add_unsatisfiable_nodes_in_widget')
+
+            #print('entity', entity)
+            #print('explanation_for_node', explanation_for_node)
+            if len(entity)>0:
+                self.sgnFakeExplanationAdded.emit(entity[0],explanation_for_node)
+
+            count = count + 1
 
     @QtCore.pyqtSlot()
     def onSessionReady(self):
@@ -73,96 +164,52 @@ class ExplanationExplorerPlugin(AbstractPlugin):
         Executed whenever the main session completes the startup sequence.
         """
         # CONNECT TO PROJECT SPECIFIC SIGNALS
-        widget = self.widget('Explanation_explorer')
+        widget = self.widget('unsatisfiable_entity_explorer')
         self.debug('Connecting to project: %s', self.project.name)
-        # FILL IN Explanation EXPLORER WITH DATA
+        connect(self.project.sgnItemAdded, widget.doAddNode)
+        connect(self.project.sgnItemRemoved, widget.doRemoveNode)
+        # FILL IN UnsatisfiableEntitiesExplorer WITH DATA
+        connect(self.sgnFakeItemAdded, widget.doAddNode)
         connect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
-        connect(self.sgnFakeAxiomAdded, widget.doAddAxiom)
-        connect(self.sgnFakeItemAdded, widget.doAddNodeOREdge)
 
-        self.vm = getJavaVM()
-        if not self.vm.isRunning():
-            self.vm.initialize()
-        self.vm.attachThreadToJVM()
+        #print('self.project.unsatisfiable_classes',self.project.unsatisfiable_classes)
+        #print('self.project.unsatisfiable_attributes',self.project.unsatisfiable_attributes)
+        #print('self.project.unsatisfiable_roles',self.project.unsatisfiable_roles)
 
-        if len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:
-            LOGGER.error('Error, len(self.project.explanations_for_inconsistent_ontology) >0 and len(self.project.explanations_for_unsatisfiable_classes) >0:')
+        classes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_classes)
+        attributes_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_attributes)
+        roles_only_unsatisfiable_nodes_in_diagram = self.get_list_of_nodes_in_diagram_from_OWL_terms(self.project.unsatisfiable_roles)
 
-        #choose the explanation
-        if len(self.project.explanations_for_inconsistent_ontology) > 0:
-            explanations_for_widget = self.project.explanations_for_inconsistent_ontology
-        else:
-            if 'ConceptNode' in self.project.uc_as_input_for_explanation_explorer:
-                unsatisfiable_entities = self.project.unsatisfiable_classes
-                explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_classes
-            elif 'AttributeNode' in self.project.uc_as_input_for_explanation_explorer:
-                unsatisfiable_entities = self.project.unsatisfiable_attributes
-                explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_attributes
-            elif 'RoleNode' in self.project.uc_as_input_for_explanation_explorer:
-                unsatisfiable_entities = self.project.unsatisfiable_roles
-                explanations_unsatisfiable_entity = self.project.explanations_for_unsatisfiable_roles
+        #print('classes_only_unsatisfiable_nodes_in_diagram',classes_only_unsatisfiable_nodes_in_diagram)
+        #print('attributes_only_unsatisfiable_nodes_in_diagram',attributes_only_unsatisfiable_nodes_in_diagram)
+        #print('roles_only_unsatisfiable_nodes_in_diagram',roles_only_unsatisfiable_nodes_in_diagram)
 
-            inp_node = None
+        [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in classes_only_unsatisfiable_nodes_in_diagram]
+        [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in attributes_only_unsatisfiable_nodes_in_diagram]
+        [self.project.nodes_of_unsatisfiable_entities.extend(n) for n in roles_only_unsatisfiable_nodes_in_diagram]
 
-            for n in self.project.nodes():
-                if str(n) == self.project.uc_as_input_for_explanation_explorer:
-                    inp_node = n
+        temp = []
 
-            OWL_term_uc_as_input_for_explanation_explorer = self.project.getOWLtermfornode(inp_node)
-            index_uc = unsatisfiable_entities.index(OWL_term_uc_as_input_for_explanation_explorer)
-            explanations_for_widget = explanations_unsatisfiable_entity[index_uc]
+        for n in self.project.nodes_of_unsatisfiable_entities:
 
-        for explanation_count, e in enumerate(explanations_for_widget):
-            self.sgnFakeExplanationAdded.emit(str(explanation_count+1))
+            owl_term = self.project.getOWLtermfornode(n)
+            temp.append(owl_term)
+            """
+            sub_string = str(n).split(':')
 
-        for explanation_count, e in enumerate(explanations_for_widget):
+            str_to_append = str(n).replace(sub_string[0]+':', '')
+            str_to_append = str_to_append.replace(':'+sub_string[len(sub_string)-1], '')
 
-            axioms_for_iteration = []
+            temp.append(str_to_append)
+            """
+        self.project.nodes_of_unsatisfiable_entities.extend(temp)
 
-            if self.project.inconsistent_ontology is True:
-                axioms_temp = e.getAxioms()
-                axioms_temp_itr = axioms_temp.iterator()
-                while(axioms_temp_itr.hasNext()):
-                    axiom_temp = axioms_temp_itr.next()
-                    axioms_for_iteration.append(axiom_temp)
-            else:
-                e_itr = e.iterator()
-                while (e_itr.hasNext()):
-                    axiom_temp = e_itr.next()
-                    axioms_for_iteration.append(axiom_temp)
+        self.add_unsatisfiable_nodes_in_widget(classes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_classes')
+        self.add_unsatisfiable_nodes_in_widget(attributes_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_attributes')
+        self.add_unsatisfiable_nodes_in_widget(roles_only_unsatisfiable_nodes_in_diagram,'unsatisfiable_roles')
 
-            for axiom_count,axiom_e in enumerate(axioms_for_iteration):
-
-                q_exp_items = widget.model.findItems('Explanation - '+str(explanation_count+1), flags=QtCore.Qt.MatchExactly, column=0)
-
-                if len(q_exp_items) !=1:
-                    LOGGER.error('multiple or 0 QStandardItems found for q_exp_item')
-
-                self.sgnFakeAxiomAdded.emit(q_exp_items[0], axiom_e.toString())
-
-                q_axiom_item = q_exp_items[0].child(axiom_count,0)
-
-                nodes_and_edges = self.project.axioms_to_nodes_edges_mapping[q_axiom_item.text()]
-                nodes_to_add_in_widget = set()
-                edges_to_add_in_widget = set()
-
-                for ne in nodes_and_edges:
-                    if 'eddy.core.items.nodes' in str(type(ne)):
-                        nodes_to_add_in_widget.add(ne)
-                    elif 'eddy.core.items.edges' in str(type(ne)):
-                        edges_to_add_in_widget.add(ne)
-                    else:
-                        pass
-
-                for node in nodes_to_add_in_widget:
-                    self.sgnFakeItemAdded.emit(node.diagram, node, q_axiom_item)
-
-                for edge in edges_to_add_in_widget:
-                    self.sgnFakeItemAdded.emit(edge.diagram, edge, q_axiom_item)
-
+        disconnect(self.sgnFakeItemAdded, widget.doAddNode)
         disconnect(self.sgnFakeExplanationAdded, widget.doAddExplanation)
-        disconnect(self.sgnFakeAxiomAdded, widget.doAddAxiom)
-        disconnect(self.sgnFakeItemAdded, widget.doAddNodeOREdge)
 
     #############################################
     #   HOOKS
@@ -173,73 +220,76 @@ class ExplanationExplorerPlugin(AbstractPlugin):
         Executed whenever the plugin is going to be destroyed.
         """
         # DISCONNECT FROM CURRENT PROJECT
-        widget = self.widget('Explanation_explorer')
+        widget = self.widget('unsatisfiable_entity_explorer')
         self.debug('Disconnecting from project: %s', self.project.name)
         disconnect(self.project.sgnItemAdded, widget.doAddNode)
         disconnect(self.project.sgnItemRemoved, widget.doRemoveNode)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')
-        #disconnect(self.session.sgnReady, self.onSessionReady)
+        disconnect(self.session.sgnReady, self.onSessionReady)
 
         # REMOVE DOCKING AREA WIDGET MENU ENTRY
         self.debug('Removing docking area widget toggle from "view" menu')
         menu = self.session.menu('view')
-        menu.removeAction(self.widget('Explanation_explorer_dock').toggleViewAction())
+        menu.removeAction(self.widget('unsatisfiable_entity_explorer_dock').toggleViewAction())
 
         # UNINSTALL THE PALETTE DOCK WIDGET
         self.debug('Uninstalling docking area widget')
-        self.session.removeDockWidget(self.widget('Explanation_explorer_dock'))
+        self.session.removeDockWidget(self.widget('unsatisfiable_entity_explorer_dock'))
 
     def start(self):
         """
         Perform initialization tasks for the plugin.
         """
         # INITIALIZE THE WIDGET
-        self.debug('Creating Explanation explorer widget')
-        widget = ExplanationExplorerWidget(self)
-        widget.setObjectName('Explanation_explorer')
+        self.debug('Creating Unsatisfiable_Entity_Explorer widget')
+        widget = UnsatisfiableEntityExplorerWidget(self)
+        widget.setObjectName('unsatisfiable_entity_explorer')
         self.addWidget(widget)
 
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
-        widget = DockWidget('Explanation Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
-        #widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
-        widget.setObjectName('Explanation_explorer_dock')
-        widget.setWidget(self.widget('Explanation_explorer'))
+        widget = DockWidget('Unsatisfiable Entity Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
+        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea|QtCore.Qt.RightDockWidgetArea)
+        widget.setObjectName('unsatisfiable_entity_explorer_dock')
+        widget.setWidget(self.widget('unsatisfiable_entity_explorer'))
         self.addWidget(widget)
 
         # CREATE ENTRY IN VIEW MENU
         self.debug('Creating docking area widget toggle in "view" menu')
         menu = self.session.menu('view')
-        menu.addAction(self.widget('Explanation_explorer_dock').toggleViewAction())
+        menu.addAction(self.widget('unsatisfiable_entity_explorer_dock').toggleViewAction())
 
         # CONFIGURE SIGNALS
         self.debug('Configuring session specific signals')
-        #connect(self.session.sgnReady, self.onSessionReady)
 
         self.onSessionReady()
 
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
-        self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea ,self.widget('Explanation_explorer_dock'))
+        self.session.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.widget('unsatisfiable_entity_explorer_dock'))
 
 
-class ExplanationExplorerWidget(QtWidgets.QWidget):
+class UnsatisfiableEntityExplorerWidget(QtWidgets.QWidget):
     """
-    This class implements the Explanation explorer used to list Explanation predicates.
+    This class implements the UnsatisfiableEntitiesExplorer
     """
     sgnItemClicked = QtCore.pyqtSignal('QGraphicsItem')
     sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsItem')
     sgnItemRightClicked = QtCore.pyqtSignal('QGraphicsItem')
 
-    sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnStringClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnStringDoubleClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnStringRightClicked = QtCore.pyqtSignal('QStandardItem')
 
-    sgnColourItem = QtCore.pyqtSignal('QStandardItem')
+    sgnListClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnListDoubleClicked = QtCore.pyqtSignal('QStandardItem')
+    sgnListRightClicked = QtCore.pyqtSignal('QStandardItem')
 
     def __init__(self, plugin):
         """
-        Initialize the Explanation explorer widget.
+        Initialize the UnsatisfiableEntitiesExplorer widget.
         :type plugin: Session
         """
         super().__init__(plugin.session)
@@ -263,7 +313,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
         self.proxy.setSourceModel(self.model)
-        self.ontoview = ExplanationExplorerView(self)
+        self.ontoview = UnsatisfiableEntityExplorerView(self)
         self.ontoview.setModel(self.proxy)
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -297,8 +347,13 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         connect(self.sgnItemDoubleClicked, self.session.doFocusItem)
         connect(self.sgnItemRightClicked, self.session.doFocusItem)
 
-        connect(self.sgnColourItem, self.colour_objects)
+        connect(self.sgnStringClicked, self.start_explanation_explorer)
+        connect(self.sgnStringDoubleClicked, self.start_explanation_explorer)
 
+        connect(self.sgnListClicked, self.start_explanation_explorer)
+        connect(self.sgnListDoubleClicked, self.start_explanation_explorer)
+
+        self.brush_orange = QtGui.QBrush(QtGui.QColor(255, 165, 0, 160))
     #############################################
     #   PROPERTIES
     #################################
@@ -337,102 +392,32 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   SLOTS
     #################################
-    @QtCore.pyqtSlot('QStandardItem')
-    def colour_objects(self,item=None):
+    @QtCore.pyqtSlot('QGraphicsItem','QStandardItem')
+    def doAddExplanation_old(self, node, explanation):
 
-        self.session.BackgrounddeColourNodesAndEdges(call_updateNode=False,call_ClearInconsistentEntitiesAndDiagItemsData=False)
+        if explanation is not None:
+            exp_to_add = QtGui.QStandardItem(explanation)
+            exp_to_add.setData(explanation)
+            parent = self.parentFor(node)
+            parent.appendRow(exp_to_add)
 
-        self.project.nodes_or_edges_of_axioms_to_display_in_widget = []
-        self.project.nodes_or_edges_of_explanations_to_display_in_widget = []
+    @QtCore.pyqtSlot('QGraphicsItem',list)
+    def doAddExplanation(self, node, explanation):
 
-        row_count = item.rowCount()
+        if explanation is not None and len(explanation)>0:
+            exp_to_add = QtGui.QStandardItem()
+            exp_to_add.setText('<Explanation(s)> \n**(click to open Explanation Explorer)')
 
-        for r in range(0,row_count):
+            font = QtGui.QFont()
+            font.setBold(True)
+            font.setItalic(True)
+            font.setUnderline(True)
 
-            child = item.child(r,0)
+            exp_to_add.setFont(font)
 
-            node_or_edge_or_axiom = child.data()
-
-            if 'eddy.core.items' in str(type(node_or_edge_or_axiom)):
-
-                # item is an axiom
-                # child is a node or an edge
-
-                explanation_item = item.parent()
-                explanation_item_row_count = explanation_item.rowCount()
-
-                for r2 in range(0, explanation_item_row_count):
-
-                    child_of_explanation_item = explanation_item.child(r2,0)
-                    child_of_explanation_item_row_count = child_of_explanation_item.rowCount()
-
-                    for r3 in range(0,child_of_explanation_item_row_count):
-
-                        nephew_or_child =  child_of_explanation_item.child(r3,0)
-                        nephew_or_child_data = nephew_or_child.data()
-
-                        if 'eddy.core.items' in str(type(nephew_or_child_data)):
-
-                            if nephew_or_child_data.id == node_or_edge_or_axiom.id:
-                            #if (nephew_or_child_data.text() == nephew_or_child_data.text()):
-                                #print('nephew_or_child_data not coloured - ',nephew_or_child_data)
-                                pass
-                            else:
-                                self.project.nodes_or_edges_of_explanations_to_display_in_widget.append(nephew_or_child_data)
-
-                self.project.nodes_or_edges_of_axioms_to_display_in_widget.append(node_or_edge_or_axiom)
-
-            if (str(type(node_or_edge_or_axiom)) == '<class \'str\'>') or (str(type(node_or_edge_or_axiom)) == 'str'):
-
-                # item is an explanation
-                # child is an axiom
-                # colour all the nodes and edges involved in the axiom
-                row_count_2=child.rowCount()
-
-                for r2 in range(0,row_count_2):
-
-                    grand_child = child.child(r2,0)
-                    node_or_edge = grand_child.data()
-
-                    if 'eddy.core.items' in str(type(node_or_edge)):
-                        self.project.nodes_or_edges_of_explanations_to_display_in_widget.append(node_or_edge)
-
-        self.project.colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology()
-
-    @QtCore.pyqtSlot(str)
-    def doAddExplanation(self,explanation_number):
-
-        explanation_number_to_add = QtGui.QStandardItem('Explanation - '+explanation_number)
-        explanation_number_to_add.setData(explanation_number)
-        self.model.appendRow(explanation_number_to_add)
-        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-
-    @QtCore.pyqtSlot('QStandardItem', str)
-    def doAddAxiom(self, q_item, axiom):
-
-        axiom_to_add = QtGui.QStandardItem(axiom)
-        axiom_to_add.setData(axiom)
-        q_item.appendRow(axiom_to_add)
-        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem', 'QStandardItem')
-    def doAddNodeOREdge(self, diagram, node_or_edge , q_item):
-
-        icon = None
-
-        if 'eddy.core.items.nodes' in str(type(node_or_edge)):
-            button_name =str(node_or_edge.id)+':'+str(node_or_edge.text())
-            icon = self.iconFor(node_or_edge)
-        elif 'eddy.core.items.edges' in str(type(node_or_edge)):
-            button_name = str(node_or_edge.id)+':'+str(node_or_edge.type()).replace('Item.','')
-
-        node_or_edge_to_append = QtGui.QStandardItem(button_name)
-
-        if icon is not None:
-            node_or_edge_to_append.setIcon(icon)
-
-        node_or_edge_to_append.setData(node_or_edge)
-        q_item.appendRow(node_or_edge_to_append)
+            exp_to_add.setData(explanation)
+            parent = self.parentFor(node)
+            parent.appendRow(exp_to_add)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
@@ -441,18 +426,54 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
-        if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
-        #if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
-            parent = self.parentFor(node)
-            if not parent:
-                parent = QtGui.QStandardItem(self.parentKey(node))
-                parent.setIcon(self.iconFor(node))
-                self.model.appendRow(parent)
+        #print('doAddNode    >>>     node',node)
+
+        owl_term_for_node = self.project.getOWLtermfornode(node)
+
+        #print(owl_term_for_node,' - ',node.id_with_diag)
+        #print(self.project.nodes_of_unsatisfiable_entities)
+
+        if (node not in self.project.nodes_of_unsatisfiable_entities) and ((owl_term_for_node is not None) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities)):
+            self.project.nodes_of_unsatisfiable_entities.append(node)
+
+        if (node in self.project.nodes_of_unsatisfiable_entities) or ((owl_term_for_node is not None) and (owl_term_for_node in self.project.nodes_of_unsatisfiable_entities)):
+            #if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+
+                parent = self.parentFor(node)
+                if not parent:
+                    parent = QtGui.QStandardItem(self.parentKey(node))
+                    parent.setIcon(self.iconFor(node))
+                    parent.setData(node)
+                    self.model.appendRow(parent)
+                    self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+                child = QtGui.QStandardItem(self.childKey(diagram, node))
+                child.setData(node)
+                parent.appendRow(child)
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-            child = QtGui.QStandardItem(self.childKey(diagram, node))
-            child.setData(node)
-            parent.appendRow(child)
-            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+
+                node.selection.setBrush(self.brush_orange)
+                #node.updateNode(valid=False)
+                # FORCE CACHE REGENERATION
+                node.setCacheMode(node.NoCache)
+                node.setCacheMode(node.DeviceCoordinateCache)
+
+                # SCHEDULE REPAINT
+                node.update(node.boundingRect())
+
+                node.diagram.sgnUpdated.emit()
+        else:
+            #print('node not in self.project.nodes_of_unsatisfiable_entities:',node)
+            pass
+
+    def start_explanation_explorer(self, item=None):
+
+        parent = item.parent()
+
+        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
+        #self.project.uc_as_input_for_explanation_explorer = parent.text()
+        self.project.uc_as_input_for_explanation_explorer = str(parent.data())
+        #print('self.project.uc_as_input_for_explanation_explorer',self.project.uc_as_input_for_explanation_explorer)
+        self.session.pmanager.create_add_and_start_plugin('Explanation_explorer')
 
     @QtCore.pyqtSlot(str)
     def doFilterItem(self, key):
@@ -470,8 +491,12 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
+        #print('doRemoveNode >>>')
+        #print('node',node)
         if node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
         #if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+            if node in self.project.nodes_of_unsatisfiable_entities:
+                self.project.nodes_of_unsatisfiable_entities.remove(node)
             parent = self.parentFor(node)
             if parent:
                 child = self.childFor(parent, diagram, node)
@@ -489,10 +514,13 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
+
             if item and item.data():
-                if(str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
-                    # item is an explanation or an axiom
-                    self.sgnColourItem.emit(item)
+
+                if (str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
+                    self.sgnStringDoubleClicked.emit(item)
+                elif (str(type(item.data())) == '<class \'list\'>') or (str(type(item.data())) == 'list'):
+                    self.sgnListDoubleClicked.emit(item)
                 else:
                     self.sgnItemDoubleClicked.emit(item.data())
 
@@ -505,10 +533,13 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
+
             if item and item.data():
-                if(str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
-                    # item is an explanation or an axiom
-                    self.sgnColourItem.emit(item)
+
+                if (str(type(item.data())) == '<class \'str\'>') or (str(type(item.data())) == 'str'):
+                    self.sgnStringClicked.emit(item)
+                elif (str(type(item.data())) == '<class \'list\'>') or (str(type(item.data())) == 'list'):
+                    self.sgnListClicked.emit(item)
                 else:
                     self.sgnItemClicked.emit(item.data())
 
@@ -565,10 +596,16 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         :type node: AbstractNode
         :rtype: QtGui.QStandardItem
         """
+        #print('parentFor(self, node)')
+        #print('node',node)
         for i in self.model.findItems(self.parentKey(node), QtCore.Qt.MatchExactly):
-            n = i.child(0).data()
-            if node.type() is n.type():
+            #print('i',i)
+            #n = i.child(0).data()
+            if (i.text() == node.text()) or (i.text() == node.text().replace('\n', '')):
                 return i
+            #if str(type(n)) != '<class \'list\'>':
+            #if node.type() is n.type():
+                #return i
         return None
 
     @staticmethod
@@ -588,14 +625,14 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         return QtCore.QSize(216, 266)
 
 
-class ExplanationExplorerView(QtWidgets.QTreeView):
+class UnsatisfiableEntityExplorerView(QtWidgets.QTreeView):
     """
-    This class implements the Explanation explorer tree view.
+    This class implements the UnsatisfiableEntitiesExplorer tree view.
     """
     def __init__(self, widget):
         """
-        Initialize the Explanation explorer view.
-        :type widget: ExplanationExplorerWidget
+        Initialize the UnsatisfiableEntitiesExplorer view.
+        :type widget: UnsatisfiableEntityExplorerWidget
         """
         super().__init__(widget)
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -616,7 +653,7 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
     @property
     def session(self):
         """
-        Returns the reference to the Session holding the ExplanationExplorer widget.
+        Returns the reference to the Session holding the UnsatisfiableEntityExplorer widget.
         :rtype: Session
         """
         return self.widget.session
@@ -624,8 +661,8 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
     @property
     def widget(self):
         """
-        Returns the reference to the ExplanationExplorer widget.
-        :rtype: ExplanationExplorerWidget
+        Returns the reference to the UnsatisfiableEntityExplorer widget.
+        :rtype: UnsatisfiableEntityExplorerWidget
         """
         return self.parent()
 
@@ -652,11 +689,11 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
                 model = self.model().sourceModel()
                 index = self.model().mapToSource(index)
                 item = model.itemFromIndex(index)
-                node_edge_or_axiom = item.data()
+                node_or_axiom = item.data()
 
-                if 'eddy.core.items.nodes' in str(type(item.data())):
-                    self.widget.sgnItemRightClicked.emit(node_edge_or_axiom)
-                    menu = self.session.mf.create(node_edge_or_axiom.diagram, [node_edge_or_axiom])
+                if node_or_axiom and 'eddy.core.items.nodes' in str(type(node_or_axiom)):
+                    self.widget.sgnItemRightClicked.emit(node_or_axiom)
+                    menu = self.session.mf.create(node_or_axiom.diagram, [node_or_axiom])
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)

@@ -33,6 +33,6 @@
 [plugin]
 author: Daniele Pantaleone/Ashwin Ravishankar
 contact: pantaleone@dis.uniroma1.it/ashwingoldfish@yahoo.co.in
-id: Explanation_explorer
-name: Explanation_explorer
+id: explanation_explorer
+name: Explanation Explorer
 version: 0.1
