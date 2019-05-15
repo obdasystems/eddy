@@ -108,7 +108,7 @@ from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
 from eddy.core.update import UpdateCheckWorker
-from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramsSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
@@ -119,7 +119,7 @@ from eddy.ui.forms import ValueForm
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
-from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
+from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.prefix_explorer import OntologyExplorerDialog
