@@ -59,7 +59,6 @@ from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectStopLoadingError
 from eddy.core.project import ProjectVersionError
-from eddy.core.reasoner import ReasonerManager
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
@@ -218,12 +217,6 @@ class Eddy(QtWidgets.QApplication):
         #################################
 
         PluginManager.scan('@plugins/', '@home/plugins/')
-
-        #############################################
-        # LOOKUP REASONERS
-        #################################
-
-        ReasonerManager.scan('@reasoners/', '@home/reasoners/')
 
         #############################################
         # CLOSE THE SPLASH SCREEN
@@ -519,10 +512,11 @@ def main():
     # SET CLASSPATH AND OPTIONS
     if hasattr(sys, 'frozen'):
         resources = expandPath('@resources/lib/')
-        for name in os.listdir(resources):
-            path = os.path.join(resources, name)
-            if os.path.isfile(path):
-                addJVMClasspath(path)
+        if isdir(resources):
+            for name in os.listdir(resources):
+                path = os.path.join(resources, name)
+                if os.path.isfile(path):
+                    addJVMClasspath(path)
     for path in pkg_resources.resource_listdir(eddy.core.jvm.__name__, 'lib'):
         if File.forPath(path) is File.Jar:
             addJVMClasspath(pkg_resources.resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
