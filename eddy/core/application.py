@@ -45,9 +45,11 @@ from PyQt5 import QtGui
 from PyQt5 import QtNetwork
 from PyQt5 import QtWidgets
 
-from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
+import eddy
+from eddy import APPID, APPNAME, ORGANIZATION_DOMAIN, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
+from eddy.core.datatypes.system import File
 from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
@@ -131,6 +133,7 @@ class Eddy(QtWidgets.QApplication):
         #################################
 
         self.setOrganizationName(ORGANIZATION)
+        self.setOrganizationDomain(ORGANIZATION_DOMAIN)
         self.setApplicationName(APPNAME)
         self.setApplicationDisplayName(APPNAME)
         self.setApplicationVersion(VERSION)
@@ -478,7 +481,7 @@ def main():
             msgbox.setWindowTitle('Missing Java Runtime Environment')
             msgbox.setText('Unable to locate a valid Java installation on your system.')
             msgbox.setInformativeText('<p>Some features in {0} require access to a <br/>'
-                                      '<a href="{1}">Java Runtime Environment</a> version 8 '
+                                      '<a href="{1}">Java Runtime Environment</a> '
                                       'and will not be available if you continue.</p>'
                                       '<p>You can download a copy of the Java Runtime Environment '
                                       'from the <a href={2}>Java Downloads</a> page.</p>'
@@ -491,10 +494,16 @@ def main():
             buttonOk.setText('Continue without JRE')
             buttonQuit = msgbox.button(QtWidgets.QMessageBox.Abort)
             buttonQuit.setText('Quit {0}'.format(APPNAME))
+            # noinspection PyArgumentList
+            buttonQuit.clicked.connect(app.doQuit, QtCore.Qt.QueuedConnection)
             connect(chkbox.stateChanged, checkboxStateChanged)
             ret = msgbox.exec_()
             if ret == QtWidgets.QMessageBox.Abort:
                 return 1
+
+    #############################################
+    # BEGIN ENVIRONMENT SPECIFIC SETUP
+    #################################
 
     os.environ['JAVA_HOME'] = JAVA_HOME or ''
 
