@@ -5,5 +5,5 @@
 
 # From PyPi
 cx_Freeze==5.1.1
-pyyaml==3.13
+pyyaml==5.1; sys_platform == 'win32'
 Pillow==6.0.0

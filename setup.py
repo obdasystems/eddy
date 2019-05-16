@@ -469,7 +469,7 @@ if WIN32:
             import yaml
 
             with open(os.path.join('support', 'innosetup', 'build.yaml'), 'r') as f:
-                config = yaml.load(f)
+                config = yaml.safe_load(f)
             if 'scripts' not in config:
                 print("ERROR: invalid config file: could not find 'scripts' section")
                 sys.exit(1)
