@@ -259,7 +259,7 @@ else:
                 mkdir(os.path.join(self.build_exe, 'plugins'))
                 for file_or_directory in os.listdir(expandPath('@plugins/')):
                     plugin = os.path.join(expandPath('@plugins/'), file_or_directory)
-                    if isdir(plugin):
+                    if isdir(plugin) and not plugin.endswith('__pycache__'):
                         distutils.log.info('packaging plugin: %s', file_or_directory)
                         zippath = os.path.join(self.build_exe, 'plugins', '%s.zip' % file_or_directory)
                         with zipfile.ZipFile(zippath, 'w', zipfile.ZIP_STORED) as zipf:
@@ -270,11 +270,11 @@ else:
                                         if path.endswith('.py'):
                                             new_path = '%s.pyc' % rstrip(path, '.py')
                                             py_compile.compile(path, new_path)
-                                            arcname = os.path.join(file_or_directory, os.path.relpath(new_path, plugin))
+                                            arcname = os.path.relpath(new_path, plugin)
                                             zipf.write(new_path, arcname)
                                             fremove(new_path)
                                         else:
-                                            arcname = os.path.join(file_or_directory, os.path.relpath(path, plugin))
+                                            arcname = os.path.relpath(path, plugin)
                                             zipf.write(path, arcname)
 
         def make_win32(self):
