@@ -33,27 +33,29 @@
 ##########################################################################
 
 
+import importlib
 import inspect
+import keyword
 import os
 import re
+import sys
 
 from abc import ABCMeta
 from configparser import ConfigParser, NoOptionError
-from importlib.machinery import SourceFileLoader
-from zipfile import ZipFile
-from zipimport import zipimporter
+from importlib.machinery import PathFinder
+from zipfile import is_zipfile, ZipFile
+from pkg_resources import iter_entry_points, resource_string, resource_exists
 from verlib import NormalizedVersion
 
 from PyQt5 import QtCore
 
 from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem, HasShortcutSystem
 from eddy.core.datatypes.system import File
-from eddy.core.functions.misc import first, lstrip, rstrip
 from eddy.core.functions.fsystem import fcopy, fexists, fread, fremove
 from eddy.core.functions.fsystem import isdir, mkdir, rmdir
+from eddy.core.functions.misc import first, lstrip
 from eddy.core.functions.path import expandPath, isSubPath
 from eddy.core.output import getLogger
-
 
 LOGGER = getLogger()
 
@@ -266,7 +268,7 @@ class PluginManager(QtCore.QObject):
     """
     Plugin manager class which takes case of performing some specific operations on plugins.
     """
-    info = []
+    info = {}
 
     def __init__(self, session):
         """
@@ -331,74 +333,91 @@ class PluginManager(QtCore.QObject):
         :type name: str
         :rtype: class
         """
-        return getattr(mod, '%sPlugin' % ''.join(i.title() for i in list(filter(None, re.split(r'[_\-]+', name)))))
+        plugin_classes = []
+        for obj in mod.__dict__.values():
+            if obj in AbstractPlugin.subclasses():
+                plugin_classes.append(obj)
+        if len(plugin_classes) == 0:
+            raise PluginError('No plugin class found for plugin: %s' % name)
+        if len(plugin_classes) > 1:
+            plugin_classes.sort(key=lambda item: (getattr(item, '__module__', None) or '').count('.'))
+        return plugin_classes[0]
 
     @classmethod
-    def import_plugin_from_directory(cls, directory):
+    def find_spec(cls, file_or_directory):
         """
-        Import a plugin from the given directory:
-        * Lookup for the plugin .spec configuration file.
-        * Search for the module where the plugin is implemented.
-        * Search for the class implementing the plugin.
-        * Import the plugin module.
-        :type directory: str
-        :rtype: tuple
+        Searches the given file or directory for a 'plugin.spec' file and tries to load it,
+        or returns 'None' if no such file exists.
+
+        :type file_or_directory: str
+        :rtype: PluginSpec
         """
-        if isdir(directory):
-            plugin_spec_path = os.path.join(directory, 'plugin.spec')
-            if fexists(plugin_spec_path):
-                try:
-                    #LOGGER.debug('Found plugin .spec: %s', plugin_spec_path)
-                    plugin_spec = PluginManager.spec(fread(plugin_spec_path))
-                    plugin_name = plugin_spec.get('plugin', 'id')
-                    for extension in ('.pyc', '.pyo', '.py'):
-                        plugin_path = os.path.join(directory, '%s%s' % (plugin_name, extension))
-                        if fexists(plugin_path):
-                            #LOGGER.debug('Found plugin module: %s', plugin_path)
-                            plugin_module = SourceFileLoader(plugin_name, plugin_path).load_module()
-                            plugin_class = PluginManager.find_class(plugin_module, plugin_name)
-                            return plugin_spec, plugin_class
-                    else:
-                        raise PluginError('missing plugin module: %s.py(c|o)' % os.path.join(directory, plugin_name))
-                except Exception as e:
-                    LOGGER.exception('Failed to import plugin: %s', e)
+        file_or_directory = expandPath(file_or_directory)
+        try:
+            if os.path.exists(file_or_directory) and os.access(file_or_directory, os.R_OK):
+                # READ SPEC FILE FROM DIRECTORY
+                if isdir(file_or_directory):
+                    plugin_spec_path = os.path.join(file_or_directory, 'plugin.spec')
+                    if fexists(plugin_spec_path):
+                        return cls.spec(fread(plugin_spec_path))
+                # READ SPEC FILE FROM ZIP ARCHIVE
+                elif is_zipfile(file_or_directory):
+                    zf = ZipFile(file_or_directory)
+                    zf_name_list = zf.namelist()
+                    if 'plugin.spec' in zf_name_list:
+                        plugin_spec_content = zf.read('plugin.spec').decode('utf8')
+                        return cls.spec(plugin_spec_content)
+        except Exception as e:
+            LOGGER.exception('Failed to load plugin spec: %s', e)
 
     @classmethod
-    def import_plugin_from_zip(cls, archive):
+    def import_plugin_from_path(cls, path):
         """
-        Import a plugin from the given zip archive:
-        * Lookup for the plugin .spec configuration file.
-        * Search for the module where the plugin is implemented.
-        * Search for the class implementing the plugin.
-        * Import the plugin module.
-        :type archive: str
+        Import a plugin from the given path by lookup for the plugin .spec
+        configuration file in the given file or directory. Allowed values for 'path'
+        are path to directories or zip archives.
+
+        For a zip file or directory to be recognized as a plugin there must be a
+        file named 'plugin.spec' at the top level.
+
+        This method will not try to load the plugin module since we wait until the
+        initialization time to perform plugin imports. This allows the scan for plugins
+        to be completed before attempting any import.
+
+        :type path: str
         :rtype: tuple
         """
-        if fexists(archive) and File.forPath(archive) is File.Zip:
-            zf = ZipFile(archive)
-            zf_name_list = zf.namelist()
-            for file_or_directory in zf_name_list:
-                if file_or_directory.endswith('plugin.spec'):
-                    try:
-                        #LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, file_or_directory))
-                        plugin_spec_content = zf.read(file_or_directory).decode('utf8')
-                        plugin_spec = PluginManager.spec(plugin_spec_content)
-                        plugin_name = plugin_spec.get('plugin', 'id')
-                        plugin_zip_base_path = rstrip(file_or_directory, 'plugin.spec')
-                        plugin_abs_base_path = os.path.join(archive, plugin_zip_base_path)
-                        plugin_zip_module_base_path = os.path.join(plugin_zip_base_path, plugin_name)
-                        plugin_abs_module_base_path = os.path.join(archive, plugin_zip_module_base_path)
-                        for extension in ('.pyc', '.pyo', '.py'):
-                            plugin_zip_module_path = '%s%s' % (plugin_zip_module_base_path, extension)
-                            if plugin_zip_module_path in zf_name_list:
-                                #LOGGER.debug('Found plugin module: %s', os.path.join(archive, plugin_zip_module_path))
-                                plugin_module = zipimporter(plugin_abs_base_path).load_module(plugin_name)
-                                plugin_class = PluginManager.find_class(plugin_module, plugin_name)
-                                return plugin_spec, plugin_class
-                        else:
-                            raise PluginError('missing plugin module: %s.py(c|o)' % plugin_abs_module_base_path)
-                    except Exception as e:
-                        LOGGER.exception('Failed to import plugin: %s', e)
+        try:
+            plugin_path = expandPath(path)
+            plugin_spec = cls.find_spec(plugin_path)
+            if plugin_spec:
+                return plugin_spec, plugin_path, None
+        except Exception as e:
+            LOGGER.exception('Failed to import plugin: %s', e)
+
+    @classmethod
+    def import_plugin_from_entry_point(cls, entry_point):
+        """
+        Import a plugin from the given entry point:
+        * Lookup for the plugin .spec configuration file from the entry point distribution.
+        * Find the class implementing the plugin.
+
+        This method always returns 'None' for the plugin path since the plugin class
+        can be located by looking at entries in sys.path.
+
+        :type entry_point: EntryPoint
+        :rtype: tuple
+        """
+        try:
+            if resource_exists(entry_point.dist.key, 'plugin.spec'):
+                plugin_spec = PluginManager.spec(resource_string(entry_point.dist.key, 'plugin.spec').decode('utf8'))
+                plugin_class = entry_point.load()
+                if isinstance(plugin_class, AbstractPlugin):
+                    return plugin_spec, None, plugin_class
+                else:
+                    raise PluginError('illegal plugin class: %s' % plugin_class)
+        except Exception as e:
+            LOGGER.exception('Failed to import plugin: %s', e)
 
     def init(self):
         """
@@ -410,7 +429,7 @@ class PluginManager(QtCore.QObject):
             return []
 
         LOGGER.info('Loading %s plugin(s):', len(PluginManager.info))
-        for entry in PluginManager.info:
+        for entry in PluginManager.info.values():
             plugin_author = entry[0].get('plugin', 'author', fallback='<unknown>')
             plugin_contact = entry[0].get('plugin', 'contact', fallback='<unknown>')
             plugin_name = entry[0].get('plugin', 'name')
@@ -419,16 +438,19 @@ class PluginManager(QtCore.QObject):
 
         pluginsList = []
         pluginsLoadedSet = set()
-        for entry in PluginManager.info:
-            plugin_id = entry[0].get('plugin', 'id')
-            plugin_name = entry[0].get('plugin', 'name')
-            plugin_version = entry[0].get('plugin', 'version')
+        for spec, plugin_path, plugin_class in PluginManager.info.values():
+            plugin_id = spec.get('plugin', 'id')
+            plugin_name = spec.get('plugin', 'name')
+            plugin_version = spec.get('plugin', 'version')
             if plugin_id not in pluginsLoadedSet:
                 try:
                     LOGGER.info('Loading plugin: %s v%s', plugin_name, plugin_version)
-                    plugin = self.create(entry[1], entry[0])
-                except Exception:
-                    LOGGER.exception('Failed to load plugin: %s v%s', plugin_name, plugin_version)
+                    if not plugin_class:
+                        plugin_mod = importlib.import_module('eddy.plugins.%s' % plugin_id)
+                        plugin_class = PluginManager.find_class(plugin_mod, plugin_id)
+                    plugin = self.create(plugin_class, spec)
+                except Exception as e:
+                    LOGGER.exception('Failed to load plugin: %s v%s: %s', plugin_name, plugin_version, e)
                 else:
                     pluginsList.append(plugin)
                     pluginsLoadedSet.add(plugin.id())
@@ -447,41 +469,37 @@ class PluginManager(QtCore.QObject):
         Install the given plugin archive.
         During the installation process we'll check for a correct plugin structure,
         i.e. for the .spec file and the plugin module to be available. We won't check if
-        the plugin actually runs since this will be handle by the application statt sequence.
+        the plugin actually runs since this will be handle by the application start sequence.
+
         :type archive: str
         :rtype: PluginSpec
         """
         try:
-
-            ## CHECK FOR CORRECT PLUGIN ARCHIVE
+            # CHECK FOR CORRECT PLUGIN ARCHIVE
             if not fexists(archive):
                 raise PluginError('file not found: %s' % archive)
             if not File.forPath(archive) is File.Zip:
                 raise PluginError('%s is not a valid plugin' % archive)
 
-            ## LOOKUP THE SPEC FILE
+            # LOOKUP THE SPEC FILE
             zf = ZipFile(archive)
             zf_name_list = zf.namelist()
-            for file_or_directory in zf_name_list:
-                if file_or_directory.endswith('plugin.spec'):
-                    LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, file_or_directory))
-                    plugin_spec_content = zf.read(file_or_directory).decode('utf8')
-                    plugin_spec = self.spec(plugin_spec_content)
-                    break
+            if 'plugin.spec' in zf_name_list:
+                LOGGER.debug('Found plugin .spec: %s', os.path.join(archive, 'plugin.spec'))
+                plugin_spec_content = zf.read('plugin.spec').decode('utf8')
+                plugin_spec = self.spec(plugin_spec_content)
             else:
                 raise PluginError('missing plugin.spec in %s' % archive)
 
-            ## LOOKUP THE PLUGIN MODULE
+            # LOOKUP THE PLUGIN MODULE
             plugin_name = plugin_spec.get('plugin', 'id')
-            plugin_zip_base_path = rstrip(file_or_directory, 'plugin.spec')
-            plugin_zip_module_base_path = os.path.join(plugin_zip_base_path, plugin_name)
-            for extension in ('.pyc', '.pyo', '.py'):
-                plugin_zip_module_path = '%s%s' % (plugin_zip_module_base_path, extension)
+            for extension in importlib.machinery.all_suffixes() + ['/']:
+                plugin_zip_module_path = '%s%s' % (plugin_name, extension)
                 if plugin_zip_module_path in zf_name_list:
                     LOGGER.debug('Found plugin module: %s', os.path.join(archive, plugin_zip_module_path))
                     break
             else:
-                raise PluginError('missing plugin module: %s.py(c|o) in %s' % (plugin_zip_module_base_path, archive))
+                raise PluginError('missing plugin module in %s' % archive)
 
             # CHECK FOR THE PLUGIN TO BE ALREADY RUNNING
             plugin_id = plugin_spec.get('plugin', 'id')
@@ -490,11 +508,8 @@ class PluginManager(QtCore.QObject):
                 raise PluginError('plugin %s (id: %s) is already installed' % (plugin_name, plugin_id))
 
             # CHECK FOR THE PLUGIN NAMESPACE TO BE UNIQUE
-            plugin_module_base_path = rstrip(first(filter(None, plugin_zip_module_path.split(os.path.sep))), File.Zip.extension)
-            for path in (expandPath('@plugins/'), expandPath('@home/plugins/')):
-                for entry in os.listdir(path):
-                    if plugin_module_base_path == rstrip(entry, File.Zip.extension):
-                        raise PluginError('plugin %s (id: %s) is already installed' % (plugin_name, plugin_id))
+            if plugin_id in self.info:
+                raise PluginError('plugin %s (id: %s) is already installed' % (plugin_name, plugin_id))
 
             # COPY THE PLUGIN
             mkdir('@home/plugins/')
@@ -507,24 +522,48 @@ class PluginManager(QtCore.QObject):
             return plugin_spec
 
     @classmethod
-    def scan(cls, *args):
+    def scan(cls, *args, **kwargs):
         """
         Scan the given paths looking for plugins.
+        This method can also scan setuptools entry points when called with
+        the 'entry_point' keyword argument set to the entry point name to scan.
         """
         info = []
+        # SCAN THE GIVEN PATHS
         for base in map(expandPath, args):
             if isdir(base):
                 LOGGER.info('Looking for plugins in %s', base)
                 for file_or_directory in os.listdir(base):
                     file_or_directory_path = os.path.join(base, file_or_directory)
-                    info.append(PluginManager.import_plugin_from_directory(file_or_directory_path))
-                    info.append(PluginManager.import_plugin_from_zip(file_or_directory_path))
-        PluginManager.info = list(filter(None, info))
+                    info.append(cls.import_plugin_from_path(file_or_directory_path))
+        # SCAN THEN GIVEN ENTRY POINTS
+        entry_point_name = kwargs.get('entry_point', None)
+        if entry_point_name:
+            LOGGER.info('Looking for plugins in entry point %s', entry_point_name)
+            for entry_point in iter_entry_points(group=os.path.basename(entry_point_name)):
+                info.append(PluginManager.import_plugin_from_entry_point(entry_point))
+        # BUILD THE PLUGIN CACHE
+        for entry in filter(None, info):
+            plugin_id = entry[0].get('plugin', 'id')
+            if plugin_id not in cls.info:
+                cls.info[plugin_id] = entry
+            else:
+                raise PluginError('Duplicate plugin id found: %s' % plugin_id)
 
     @classmethod
     def spec(cls, content):
         """
         Parse and validate a plugin configuration file (.spec) content.
+        A valid configuration file must have a 'plugin' section, with
+        at least the 'id', 'name', and 'version' keys defined.
+        The value for 'id' key *must* be a valid Python identifier.
+
+        e.g.:
+        [plugin]
+        id = my_plugin
+        name = My Plugin Name
+        version = 0.1
+
         :type content: str
         :rtype: PluginSpec
         """
@@ -533,6 +572,9 @@ class PluginManager(QtCore.QObject):
         for key in ('id', 'name', 'version'):
             if not spec.has_option('plugin', key):
                 raise NoOptionError('plugin', key)
+            plugin_id = spec.get('plugin', 'id')
+            if not plugin_id.isidentifier() or keyword.iskeyword(plugin_id):
+                raise ValueError('plugin id is not a valid identifier: %s' % plugin_id)
         return spec
 
     def start(self, plugin):
@@ -564,6 +606,35 @@ class PluginManager(QtCore.QObject):
                 rmdir(path)
             elif fexists(path):
                 fremove(path)
+
+
+class PluginFinder(object):
+    """
+    Finder for plugin modules based on the import protocol originally defined in PEP 302
+    and now part of the language reference for imports described at:
+    https://docs.python.org/3/reference/import.html.
+    """
+    @classmethod
+    def find_spec(cls, fullname, path=None, target=None):
+        """
+        From the official documentation:
+         - path is the list of paths where to look for the module,
+                if set to 'None', then search for sys.path.
+         - target is set only in case this is a module reload request,
+                  otherwise it will always be 'None'.
+        """
+        splitname = fullname.split('.')
+
+        # CHECK IF NAME MATCHES THE PLUGIN PACKAGE PATH
+        if splitname[:2] == ['eddy', 'plugins'] and len(splitname) >= 3:
+            if splitname[2] in PluginManager.info:
+                plugin_spec, plugin_path, plugin_class = PluginManager.info.get(splitname[2])
+                plugin_path = expandPath(plugin_path)
+                return PathFinder.find_spec(fullname, [plugin_path])
+        return None
+
+
+sys.meta_path.insert(0, PluginFinder)
 
 
 class PluginError(RuntimeError):
