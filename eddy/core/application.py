@@ -37,7 +37,6 @@ import argparse
 import os
 import pkg_resources
 import platform
-import sip
 import sys
 
 from PyQt5 import QtCore
@@ -61,6 +60,7 @@ from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectStopLoadingError
 from eddy.core.project import ProjectVersionError
+from eddy.core.qt import sip
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
