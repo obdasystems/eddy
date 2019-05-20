@@ -22,9 +22,8 @@ Pillow==6.0.0
 pycparser==2.19
 pyjnius==1.2.0
 pyparsing==2.3.0
-PyQt5==5.12.1
+PyQt5==5.11.3
 PyQt5-sip==4.19.15
-PyQt5-stubs==5.12.1.0
 python-dateutil==2.7.5
 PyYAML==5.1; sys_platform == 'win32'
 requests==2.21.0

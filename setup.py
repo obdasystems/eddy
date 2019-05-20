@@ -947,6 +947,7 @@ setup(
         'github3.py',
         'natsort',
         'pyjnius',
+        'PyQt5',
         'requests',
         'rfc3987',
         'verlib'

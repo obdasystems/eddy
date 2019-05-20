@@ -3,5 +3,4 @@
 #
 
 # From PyPI
-PyQt5==5.12.1
-sip==4.19.8
+PyQt5==5.11.3
