@@ -42,7 +42,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.items.common import AbstractItem
 from eddy.core.output import getLogger
-from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramsSelectionDialog
 from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.graphol import Item

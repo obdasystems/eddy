@@ -48,7 +48,7 @@ from eddy.core.functions.path import openPath
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import K_DESCRIPTION
-from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramsSelectionDialog
 
 from PyQt5 import QtWidgets
 

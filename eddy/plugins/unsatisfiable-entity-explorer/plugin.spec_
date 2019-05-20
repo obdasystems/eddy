@@ -30,9 +30,9 @@
 #                                                                        #
 ##########################################################################
 
-[reasoner]
-author: XYZ
-contact: XYZ
-id: HermiT
-name: HermiT
+[plugin]
+author: Daniele Pantaleone/Ashwin Ravishankar
+contact: pantaleone@dis.uniroma1.it/ashwingoldfish@yahoo.co.in
+id: unsatisfiable_entity_explorer
+name: Unsatisfiable Entity Explorer
 version: 0.1

@@ -34,25 +34,25 @@
 
 
 __appname__ = 'Eddy'
-__author__ = 'Daniele Pantaleone' + 'Ashwin Ravishankar' + 'Giulio Ganino'
-__copyright__ = 'Copyright © 2018 OBDA Systems'
+__copyright__ = 'Copyright © 2019 OBDA Systems'
 __email__ = 'info@obdasystems.com'
 __license__ = 'GPL'
-__organization__ = 'Sapienza University'
+__organization__ = 'OBDA Systems'
 __status__ = 'Beta'
 __version__ = '1.1.2'
 
 
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
 APPNAME = __appname__
-AUTHOR = __author__
 BUG_TRACKER = 'https://github.com/obdasystems/eddy/issues'
 COPYRIGHT = __copyright__
 DIAG_HOME = 'http://www.diag.uniroma1.it/en'
 EMAIL = __email__
 GRAPHOL_HOME = 'http://www.diag.uniroma1.it/~graphol/'
 LICENSE = __license__
-ORGANIZATION = __organization__
+ORGANIZATION = __appname__
+ORGANIZATION_NAME = __organization__
+ORGANIZATION_DOMAIN = 'obdasystems.com'
 PROJECT_HOME = 'https://github.com/obdasystems/eddy'
 SAPIENZA_HOME = 'http://en.uniroma1.it/'
 STATUS = __status__

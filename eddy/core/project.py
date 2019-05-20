@@ -50,7 +50,7 @@ from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramsSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 
@@ -1358,9 +1358,8 @@ class Project(QtCore.QObject):
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
     def reset_changes_made_after_reasoning_task(self):
-
-        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
-        self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
+        #self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
+        #self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
         self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,
                                                      call_ClearInconsistentEntitiesAndDiagItemsData=True)
 

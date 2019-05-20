@@ -72,7 +72,6 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         connect(confirmation.accepted, self.run)
         connect(confirmation.rejected, self.reject)
         self.addWidget(confirmation)
-
         self.addWidget(QtWidgets.QPushButton('All', self,
                                              clicked=self.doCheckDiagramMarks,
                                              objectName='btn_check_all'))
@@ -82,7 +81,6 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
 
         self.diagrams_selected = []
         self.diagrams = self.project.diagrams()
-
         self.diagrams_list = self.sort(self.diagrams)
 
         for diagram in self.diagrams_list:
@@ -107,15 +105,12 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
 
         DiagramsGroupLayout = QtWidgets.QHBoxLayout()
         DiagramsGroupLayout.addWidget(DiagramsGroup)
-        #DiagramsGroupLayout.setGeometry(QtCore.QRect(0,0,690,(DiagramNamesLayout.rowCount()*25+5)))
 
         ButtonsLayout = QtWidgets.QHBoxLayout()
-        #ButtonsLayout.setContentsMargins(0, 6, 0, 0)
         ButtonsLayout.setAlignment(QtCore.Qt.AlignRight)
         ButtonsLayout.addWidget(self.widget('btn_clear_all'), 0, QtCore.Qt.AlignRight)
         ButtonsLayout.addWidget(self.widget('btn_check_all'), 0, QtCore.Qt.AlignRight)
         ButtonsLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
-        #ButtonsLayout.setGeometry(QtCore.QRect(0,0,690,50))
 
         Area_1 = QtWidgets.QWidget()
         Area_1.setLayout(DiagramsGroupLayout)
@@ -128,24 +123,10 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         MainLayout.setContentsMargins(10, 10, 10, 10)
         MainLayout.addWidget(Area_1)
         MainLayout.addWidget(Area_2)
-        #MainLayout.addLayout(DiagramsGroupLayout)
-        #MainLayout.addLayout(ButtonsLayout)
 
         self.setLayout(MainLayout)
-
-        #print('DiagramsGroup.height()',DiagramsGroup.height())
-        #print('Area_1.height()',Area_1.height())
-        #print('Area_2.height()', Area_2.height())
-        #print('DiagramsGroupLayout.geometry().height()',DiagramsGroupLayout.geometry().height())
-        #print('ButtonsLayout.geometry()', ButtonsLayout.geometry().height())
-
-
-        #self.setFixedSize(max(DiagramsGroup.width(),400),DiagramsGroup.height()+100)
-        #self.setMaximumHeight(400)
-        #self.setMinimumHeight(400)
         self.setFixedHeight(Area_1.height()+Area_2.height()+50)
         self.setFixedWidth(600)
-
         self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Diagram selection')
@@ -158,7 +139,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
         for diagram in inp_diagrams:
 
             i = 0
-            while (i < (len(diagrams_list))):
+            while i < len(diagrams_list):
                 element = diagrams_list[i]
                 if diagram.name < element.name:
                     break
@@ -205,8 +186,10 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
 
     @QtCore.pyqtSlot()
     def run(self):
-
-        LOGGER.info('Executing Diagrams selection dialog')
+        """
+        Execute the dialog.
+        """
+        LOGGER.info('Executing diagrams selection dialog')
 
         self.widget('confirmation').setEnabled(False)
         self.widget('btn_clear_all').setEnabled(False)
@@ -214,7 +197,6 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
 
         for diagram in self.diagrams_list:
             checkbox = self.widget(diagram.name)
-            #print('checkbox.isEnabled()',checkbox.isEnabled(), ' checkbox.isChecked()-', checkbox.isChecked(), ' checkbox.text()-', checkbox.text(), ' diagram.name-', diagram.name)
             checkbox.setEnabled(False)
             if checkbox.isChecked():
                 self.diagrams_selected.append(diagram)

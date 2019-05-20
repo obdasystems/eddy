@@ -1,0 +1,19 @@
+recursive-include eddy *.py
+recursive-include eddy/core/jvm *.jar
+recursive-include eddy/plugins *.spec
+recursive-include eddy/ui/style *.qss
+recursive-include requirements *.txt
+recursive-include resources/fonts *
+recursive-include resources/icons *
+recursive-include resources/images *
+recursive-include scripts *
+recursive-include support *
+recursive-include tests *
+
+include LICENSE CONTRIBUTING.md PACKAGING.md README.md
+include requirements.txt
+include run.py
+
+exclude .*
+
+global-exclude __pycache__ *.pyc *.pyo

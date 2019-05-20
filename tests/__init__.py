@@ -35,8 +35,11 @@
 import os
 import platform
 import sys
+import pkg_resources
 import threading
 
+import eddy
+from eddy.core.datatypes.system import File
 from eddy.core.functions.fsystem import cpdir, isdir, mkdir, rmdir, fexists
 from eddy.core.functions.path import expandPath
 from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
@@ -61,10 +64,14 @@ if WIN32:
         path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'server'))
     os.environ['PATH'] = os.pathsep.join(path)
 resources = expandPath('@resources/lib/')
-for name in os.listdir(resources):
-    path = os.path.join(resources, name)
-    if os.path.isfile(path):
-        addJVMClasspath(path)
+if isdir(resources):
+    for name in os.listdir(resources):
+        path = os.path.join(resources, name)
+        if os.path.isfile(path):
+            addJVMClasspath(path)
+for path in pkg_resources.resource_listdir(eddy.core.jvm.__name__, 'lib'):
+    if File.forPath(path) is File.Jar:
+        addJVMClasspath(pkg_resources.resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
 addJVMOptions('-ea', '-Xmx512m')
 
 #############################################

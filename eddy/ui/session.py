@@ -75,7 +75,6 @@ from eddy.core.common import HasPluginSystem
 from eddy.core.common import HasProfileSystem
 from eddy.core.common import HasProjectExportSystem
 from eddy.core.common import HasProjectLoadSystem
-from eddy.core.common import HasReasoningSystem
 from eddy.core.common import HasThreadingSystem
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
@@ -108,9 +107,8 @@ from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
-from eddy.core.reasoner import ReasonerManager
 from eddy.core.update import UpdateCheckWorker
-from eddy.ui.DiagramsSelectionDialog import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramsSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
@@ -121,7 +119,7 @@ from eddy.ui.forms import ValueForm
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
-from eddy.ui.ontology_consistency_check import OntologyConsistencyCheckDialog
+from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.prefix_explorer import OntologyExplorerDialog
@@ -136,7 +134,7 @@ _WIN32 = sys.platform.startswith('win32')
 LOGGER = getLogger()
 
 
-class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
+class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
               HasDiagramExportSystem, HasOntologyExportSystem, HasProjectExportSystem,
               HasDiagramLoadSystem, HasOntologyLoadSystem, HasProjectLoadSystem,
               HasProfileSystem, HasThreadingSystem, HasNotificationSystem, QtWidgets.QMainWindow):
@@ -167,9 +165,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
     sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
 
-    sgnReasonerDisposed = QtCore.pyqtSignal(str)
-    sgnReasonerStarted = QtCore.pyqtSignal(str)
-
     def __init__(self, application, path, **kwargs):
         """
         Initialize the application main working session.
@@ -191,16 +186,11 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         self.pf = PropertyFactory(self)
         self.df = DescriptionFactory(self)
         self.pmanager = PluginManager(self)
-
-        self.rmanager = ReasonerManager(self)  # written by ASHWIN RAVISHANKAR
-
         self.project = None
 
         #############################################
         # CONFIGURE SESSION
         #################################
-
-        self.initReasoners()  # written by ASHWIN RAVISHANKAR
 
         self.initPre()
         self.initActions()
@@ -841,8 +831,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         menu.addAction(self.widget('editor_toolbar').toggleViewAction())
         menu.addAction(self.widget('graphol_toolbar').toggleViewAction())
         menu.addAction(self.widget('view_toolbar').toggleViewAction())
-
-        menu.addAction(self.widget('reasoner_toolbar').toggleViewAction()) # ASHWIN RAVISHANKAR
+        menu.addAction(self.widget('reasoner_toolbar').toggleViewAction())
 
         self.addMenu(menu)
 
@@ -1023,8 +1012,7 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         """
         Load and initialize application plugins.
         """
-        skip_list = ['Explanation_explorer','Unsatisfiable_Entity_Explorer','developers_iri','prefix_explorer']
-        self.addPlugins(self.pmanager.init(skip_list=skip_list))
+        self.addPlugins(self.pmanager.init())
 
     def initProfiles(self):
         """
@@ -1142,23 +1130,17 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         connect(combobox.activated, self.doSetProfile)
         self.addWidget(combobox)
 
-        reasoner_names = []
-
-        for entry in ReasonerManager.info:
-
-            reasoner_name = entry[0].get('reasoner', 'name')
-            reasoner_names.append(reasoner_name)
-
-        combobox_2 = ComboBox(objectName='select_reasoner')
-        combobox_2.setEditable(False)
-        combobox_2.setFont(Font('Roboto', 12))
-        combobox_2.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox_2.setScrollEnabled(False)
-        combobox_2.setStatusTip('Select one of any available reasoners')
-        combobox_2.addItems(reasoner_names)
-        combobox_2.setEnabled(False)
-        connect(combobox_2.activated, self.doSelectReasoner)
-        self.addWidget(combobox_2)
+        # TODO: fix reasoner setup when a decent reasoner support is implemented
+        combobox = ComboBox(objectName='select_reasoner')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(False)
+        combobox.setStatusTip('Select one of any available reasoners')
+        combobox.addItems(['HermiT'])
+        combobox.setEnabled(False)
+        connect(combobox.activated, self.doSelectReasoner)
+        self.addWidget(combobox)
 
         progressBar = QtWidgets.QProgressBar(objectName='progress_bar')
         progressBar.setContentsMargins(0, 0, 0, 0)
@@ -1166,10 +1148,6 @@ class Session(HasReasoningSystem, HasActionSystem, HasMenuSystem, HasPluginSyste
         progressBar.setRange(0, 0)
         progressBar.setVisible(False)
         self.addWidget(progressBar)
-
-    def initReasoners(self):
-
-        self.addReasoners(self.rmanager.init())
 
     #############################################
     #   SLOTS

@@ -35,8 +35,8 @@
 
 import argparse
 import os
+import pkg_resources
 import platform
-import sip
 import sys
 
 from PyQt5 import QtCore
@@ -44,29 +44,29 @@ from PyQt5 import QtGui
 from PyQt5 import QtNetwork
 from PyQt5 import QtWidgets
 
-from eddy import APPID, APPNAME, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
+import eddy
+from eddy import APPID, APPNAME, ORGANIZATION_DOMAIN, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import isdir, fexists, fread
+from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
-from eddy.core.reasoner import ReasonerManager
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
-from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-
+from eddy.core.project import ProjectVersionError
+from eddy.core.qt import sip
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
-from eddy.ui.workspace import WorkspaceDialog
 from eddy.ui.welcome import Welcome
+from eddy.ui.workspace import WorkspaceDialog
 # noinspection PyUnresolvedReferences
 from eddy.ui import fonts_rc
 # noinspection PyUnresolvedReferences
@@ -133,6 +133,7 @@ class Eddy(QtWidgets.QApplication):
         #################################
 
         self.setOrganizationName(ORGANIZATION)
+        self.setOrganizationDomain(ORGANIZATION_DOMAIN)
         self.setApplicationName(APPNAME)
         self.setApplicationDisplayName(APPNAME)
         self.setApplicationVersion(VERSION)
@@ -209,27 +210,16 @@ class Eddy(QtWidgets.QApplication):
         # CONFIGURE LAYOUT
         #################################
 
-        buffer = ''
-        resources = expandPath('@resources/styles/')
-        for name in os.listdir(resources):
-            path = os.path.join(resources, name)
-            if fexists(path) and File.forPath(path) is File.Qss:
-                buffer += fread(path)
+        style = EddyProxyStyle('Fusion')
         self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-        self.setStyle(EddyProxyStyle('Fusion'))
-        self.setStyleSheet(buffer)
+        self.setStyle(style)
+        self.setStyleSheet(style.stylesheet)
 
         #############################################
         # LOOKUP PLUGINS
         #################################
 
         PluginManager.scan('@plugins/', '@home/plugins/')
-
-        #############################################
-        # LOOKUP REASONERS
-        #################################
-
-        ReasonerManager.scan('@reasoners/', '@home/reasoners/')
 
         #############################################
         # CLOSE THE SPLASH SCREEN
@@ -491,7 +481,7 @@ def main():
             msgbox.setWindowTitle('Missing Java Runtime Environment')
             msgbox.setText('Unable to locate a valid Java installation on your system.')
             msgbox.setInformativeText('<p>Some features in {0} require access to a <br/>'
-                                      '<a href="{1}">Java Runtime Environment</a> version 8 '
+                                      '<a href="{1}">Java Runtime Environment</a> '
                                       'and will not be available if you continue.</p>'
                                       '<p>You can download a copy of the Java Runtime Environment '
                                       'from the <a href={2}>Java Downloads</a> page.</p>'
@@ -504,10 +494,16 @@ def main():
             buttonOk.setText('Continue without JRE')
             buttonQuit = msgbox.button(QtWidgets.QMessageBox.Abort)
             buttonQuit.setText('Quit {0}'.format(APPNAME))
+            # noinspection PyArgumentList
+            buttonQuit.clicked.connect(app.doQuit, QtCore.Qt.QueuedConnection)
             connect(chkbox.stateChanged, checkboxStateChanged)
             ret = msgbox.exec_()
             if ret == QtWidgets.QMessageBox.Abort:
                 return 1
+
+    #############################################
+    # BEGIN ENVIRONMENT SPECIFIC SETUP
+    #################################
 
     os.environ['JAVA_HOME'] = JAVA_HOME or ''
 
@@ -523,16 +519,17 @@ def main():
         os.environ['PATH'] = os.pathsep.join(path)
 
     # SET CLASSPATH AND OPTIONS
-    resources = expandPath('@resources/lib/')
-    for name in os.listdir(resources):
-        path = os.path.join(resources, name)
-        if os.path.isfile(path):
-            addJVMClasspath(path)
+    if hasattr(sys, 'frozen'):
+        resources = expandPath('@resources/lib/')
+        if isdir(resources):
+            for name in os.listdir(resources):
+                path = os.path.join(resources, name)
+                if os.path.isfile(path):
+                    addJVMClasspath(path)
+    for path in pkg_resources.resource_listdir(eddy.core.jvm.__name__, 'lib'):
+        if File.forPath(path) is File.Jar:
+            addJVMClasspath(pkg_resources.resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
     addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC', '-XX:+UseConcMarkSweepGC', '-XX:-UseAdaptiveSizePolicy')
-
-    #############################################
-    # BEGIN ENVIRONMENT SPECIFIC SETUP
-    #################################
 
     if hasattr(sys, 'frozen'):
         os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')

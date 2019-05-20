@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ##########################################################################
 #                                                                        #
 #  Eddy: a graphical editor for the specification of Graphol ontologies  #
@@ -30,9 +32,10 @@
 #                                                                        #
 ##########################################################################
 
-[plugin]
-author: Daniele Pantaleone/Ashwin Ravishankar
-contact: pantaleone@dis.uniroma1.it/ashwingoldfish@yahoo.co.in
-id: Explanation_explorer
-name: Explanation_explorer
-version: 0.1
+
+# PyQt5 5.11 or later comes with sip bundled as PyQt5.sip,
+# while for older versions sip is a separate module.
+try:
+    from PyQt5 import sip
+except ImportError:
+    import sip

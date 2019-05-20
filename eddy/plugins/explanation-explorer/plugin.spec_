@@ -31,8 +31,8 @@
 ##########################################################################
 
 [plugin]
-author: Ashwin Ravishankar
-contact: ashwingoldfish@yahoo.co.in
-id: prefix_explorer
-name: prefix_explorer
+author: Daniele Pantaleone/Ashwin Ravishankar
+contact: pantaleone@dis.uniroma1.it/ashwingoldfish@yahoo.co.in
+id: explanation_explorer
+name: Explanation Explorer
 version: 0.1
