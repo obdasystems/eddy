@@ -32,11 +32,9 @@
 #                                                                        #
 ##########################################################################
 
-import pkg_resources
+import pkgutil
 
 from PyQt5 import QtWidgets
-
-from eddy.core.datatypes.system import File
 
 
 class EddyProxyStyle(QtWidgets.QProxyStyle):
@@ -55,11 +53,7 @@ class EddyProxyStyle(QtWidgets.QProxyStyle):
         :type base: str
         """
         super().__init__(base)
-        buffer = ''
-        for name in pkg_resources.resource_listdir(__name__, ''):
-            if File.forPath(name) is File.Qss:
-                buffer += pkg_resources.resource_string(__name__, name).decode('utf-8')
-        self._stylesheet = buffer
+        self._stylesheet = None
 
     def pixelMetric(self, metric, option=None, widget=None):
         """
@@ -80,4 +74,6 @@ class EddyProxyStyle(QtWidgets.QProxyStyle):
         Returns the stylesheet for this proxystyle.
         :rtype: str
         """
+        if not self._stylesheet:
+            self._stylesheet = pkgutil.get_data(__name__, 'default.qss').decode('utf-8')
         return self._stylesheet
