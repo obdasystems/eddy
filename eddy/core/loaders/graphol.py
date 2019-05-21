@@ -1730,10 +1730,10 @@ class GrapholLoaderMixin_v2(object):
         section = self.document.documentElement().firstChildElement('predicates')
         element = section.firstChildElement('predicate')
 
-        all_predicate_nodes_in_project_text = []
+        all_predicate_nodes_in_project_text = set()
 
         for n in self.nproject.predicates():
-            all_predicate_nodes_in_project_text.append(n.text().replace('\n',''))
+            all_predicate_nodes_in_project_text.add(n.text().replace('\n',''))
 
         while not element.isNull():
             QtWidgets.QApplication.processEvents()
@@ -1746,13 +1746,7 @@ class GrapholLoaderMixin_v2(object):
                     new_meta_2 = str(self.nproject.iri + '#' + meta[1])
                     new_meta_3 = str(self.nproject.iri + '/' + meta[1])
                     new_meta_4 = str(':' + meta[1])
-
-                    all_metas = []
-
-                    all_metas.append(new_meta)
-                    all_metas.append(new_meta_2)
-                    all_metas.append(new_meta_3)
-                    all_metas.append(new_meta_4)
+                    all_metas = [new_meta, new_meta_2, new_meta_3, new_meta_4]
 
                     flag = False
 
@@ -1768,9 +1762,6 @@ class GrapholLoaderMixin_v2(object):
             element = element.nextSiblingElement('predicate')
 
     def remove_invalid_nodes_from_the_dict(self):
-
-        invalid_nodes = []
-
         for iri in self.nproject.IRI_prefixes_nodes_dict.keys():
             nodes = self.nproject.IRI_prefixes_nodes_dict[iri][1]
             new_nodes = set()
@@ -1779,14 +1770,8 @@ class GrapholLoaderMixin_v2(object):
                 if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
                             'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
                     new_nodes.add(n)
-                else:
-                    invalid_nodes.append(n)
 
             self.nproject.IRI_prefixes_nodes_dict[iri][1] = new_nodes
-
-        if len(invalid_nodes) >0:
-            #print('invalid_nodes present in the dictionary were removed. They are -',invalid_nodes)
-            LOGGER.info('invalid_nodes present in the dictionary were removed')
 
     def get_iri_of_node_from_string_format_in_dict(self,node_inp):
 
@@ -1950,6 +1935,7 @@ class GrapholLoaderMixin_v2(object):
         Render all the elements in the Project ontology.
         """
         for item in self.nproject.items():
+            QtWidgets.QApplication.processEvents()
             item.updateEdgeOrNode()
 
 
