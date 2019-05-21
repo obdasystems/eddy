@@ -547,8 +547,6 @@ class PluginManager(QtCore.QObject):
             plugin_id = entry[0].get('plugin', 'id')
             if plugin_id not in cls.info:
                 cls.info[plugin_id] = entry
-            else:
-                raise PluginError('Duplicate plugin id found: %s' % plugin_id)
 
     @classmethod
     def spec(cls, content):
