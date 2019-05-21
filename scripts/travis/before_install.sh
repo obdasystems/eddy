@@ -39,15 +39,8 @@ PYTHON_VERSION=${PYTHON_VERSION:-"3.6.8"}
 VENV_DIR="${VENV_DIR:-$HOME/eddy-venv}"
 
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    # Update Homebrew first
-    brew update
-
-    # Recommended for installing Python from Homebrew
-    brew outdated openssl || brew upgrade openssl
-    brew outdated readline || brew upgrade readline
-
-    # See https://docs.travis-ci.com/user/reference/osx#a-note-on-upgrading-packages
-    brew outdated pyenv || brew upgrade pyenv
+    # Use Travis Homebrew Addons to perform a `brew update`
+    # See: https://docs.travis-ci.com/user/installing-dependencies/#installing-packages-on-macos
 
     # Install Python
     pyenv install --skip-existing $PYTHON_VERSION
@@ -59,13 +52,10 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     # Create virtual environment
     pyenv exec python -m venv --copies "$VENV_DIR"
 
-    # Install Oracle JDK 8 as latest Travis images seem to be switching to JDK 10
-    brew outdated caskroom/cask/brew-cask || brew upgrade caskroom/cask/brew-cask
-
-    # We must be able to get older Java versions than the latest.
-    brew tap caskroom/versions
-    sudo rm -rf /Library/Java/JavaVirtualMachines
-    brew cask install caskroom/versions/java8
+    # Homebrew's java8 cask no longer exists since Java 8 is no longer
+    # freely available from Oracle. The recommended solution is to use
+    # adoptopenjdk8 builds now.
+    # See: https://github.com/Homebrew/homebrew-cask-versions/issues/7253
 
     # Fail unless we installed JDK 8 correctly.
     /usr/libexec/java_home --failfast --version 1.8

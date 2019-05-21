@@ -9,6 +9,15 @@ addons:
   apt:
     packages:
       - libxkbcommon-x11-0
+  homebrew:
+    casks: adoptopenjdk8
+    packages:
+      - openssl
+      - pyenv
+      - readline
+      - xz
+      - zlib
+    update: true
 
 ## Set JVM version
 jdk:
