@@ -44,7 +44,6 @@ from abc import ABCMeta
 from configparser import ConfigParser, NoOptionError
 from importlib.machinery import PathFinder
 from zipfile import is_zipfile, ZipFile
-from pkg_resources import iter_entry_points, resource_string, resource_exists
 from verlib import NormalizedVersion
 
 from PyQt5 import QtCore
@@ -409,13 +408,17 @@ class PluginManager(QtCore.QObject):
         :rtype: tuple
         """
         try:
-            if resource_exists(entry_point.dist.key, 'plugin.spec'):
-                plugin_spec = PluginManager.spec(resource_string(entry_point.dist.key, 'plugin.spec').decode('utf8'))
-                plugin_class = entry_point.load()
-                if isinstance(plugin_class, AbstractPlugin):
-                    return plugin_spec, None, plugin_class
-                else:
-                    raise PluginError('illegal plugin class: %s' % plugin_class)
+            if not hasattr(sys, 'frozen'):
+                # We attempt to load pkg_resources only if the application is not frozen,
+                # since no its not supported by most of the freezing tools
+                from pkg_resources import resource_exists, resource_string
+                if resource_exists(entry_point.dist.key, 'plugin.spec'):
+                    plugin_spec = PluginManager.spec(resource_string(entry_point.dist.key, 'plugin.spec').decode('utf8'))
+                    plugin_class = entry_point.load()
+                    if isinstance(plugin_class, AbstractPlugin):
+                        return plugin_spec, None, plugin_class
+                    else:
+                        raise PluginError('Invalid plugin class: %s' % plugin_class)
         except Exception as e:
             LOGGER.exception('Failed to import plugin: %s', e)
 
@@ -537,11 +540,13 @@ class PluginManager(QtCore.QObject):
                     file_or_directory_path = os.path.join(base, file_or_directory)
                     info.append(cls.import_plugin_from_path(file_or_directory_path))
         # SCAN THEN GIVEN ENTRY POINTS
-        entry_point_name = kwargs.get('entry_point', None)
-        if entry_point_name:
-            LOGGER.info('Looking for plugins in entry point %s', entry_point_name)
-            for entry_point in iter_entry_points(group=os.path.basename(entry_point_name)):
-                info.append(PluginManager.import_plugin_from_entry_point(entry_point))
+        if not hasattr(sys, 'frozen'):
+            from pkg_resources import iter_entry_points
+            entry_point_name = kwargs.get('entry_point', None)
+            if entry_point_name:
+                LOGGER.info('Looking for plugins in entry point %s', entry_point_name)
+                for entry_point in iter_entry_points(group=os.path.basename(entry_point_name)):
+                    info.append(PluginManager.import_plugin_from_entry_point(entry_point))
         # BUILD THE PLUGIN CACHE
         for entry in filter(None, info):
             plugin_id = entry[0].get('plugin', 'id')

@@ -35,7 +35,6 @@
 
 import argparse
 import os
-import pkg_resources
 import platform
 import sys
 
@@ -526,9 +525,11 @@ def main():
                 path = os.path.join(resources, name)
                 if os.path.isfile(path):
                     addJVMClasspath(path)
-    for path in pkg_resources.resource_listdir(eddy.core.jvm.__name__, 'lib'):
-        if File.forPath(path) is File.Jar:
-            addJVMClasspath(pkg_resources.resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
+    else:
+        from pkg_resources import resource_filename, resource_listdir
+        for path in resource_listdir(eddy.core.jvm.__name__, 'lib'):
+            if File.forPath(path) is File.Jar:
+                addJVMClasspath(resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
     addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC', '-XX:+UseConcMarkSweepGC', '-XX:-UseAdaptiveSizePolicy')
 
     if hasattr(sys, 'frozen'):
