@@ -49,6 +49,16 @@ def cpdir(src, dst):
     shutil.copytree(expandPath(src), expandPath(dst), copy_function=shutil.copy)
 
 
+def faccess(path, mode=os.R_OK):
+    """
+    Returns whether the given path is accessible with the given mode.
+    :type path:  str
+    :type mode: int
+    :rtype: bool
+    """
+    return os.access(expandPath(path), mode)
+
+
 def fcopy(src, dst):
     """
     Copy the contents of the file named src to a file named dst.

@@ -142,13 +142,6 @@ class Eddy(QtWidgets.QApplication):
         #################################
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        examples = [
-            expandPath('@examples/Animals'),
-            expandPath('@examples/Diet'),
-            expandPath('@examples/Family'),
-            expandPath('@examples/LUBM'),
-            expandPath('@examples/Pizza'),
-        ]
 
         if not settings.contains('project/recent'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding
@@ -156,15 +149,22 @@ class Eddy(QtWidgets.QApplication):
             # contents of the container. So we can't use an empty list as default value because
             # PyQt5 needs to know the type of the contents added to the collection: we avoid
             # this problem by placing the list of example projects as recent project list.
+            examples = list(filter(lambda path: isdir(path), [
+                expandPath('@examples/Animals'),
+                expandPath('@examples/Diet'),
+                expandPath('@examples/Family'),
+                expandPath('@examples/LUBM'),
+                expandPath('@examples/Pizza'),
+            ]))
             settings.setValue('project/recent', examples)
         else:
             # If we have some projects in our recent list, check whether they exists on the
             # filesystem. If they do not exists we remove them from our recent list.
             projects = []
-            for path in map(expandPath, settings.value('project/recent')):
+            for path in map(expandPath, settings.value('project/recent', None, str) or []):
                 if isdir(path) and path not in projects:
                     projects.append(path)
-            settings.setValue('project/recent', projects or examples)
+            settings.setValue('project/recent', projects)
             settings.sync()
 
         #############################################

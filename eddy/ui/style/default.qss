@@ -805,6 +805,7 @@ Welcome ProjectBlock {
   background: #FFFFFF;
   border-right: 1px solid #BABABA;
 }
+Welcome ProjectBlock:focus,
 Welcome ProjectBlock:hover {
   background: #42A5F5;
   border-right: 1px solid #BABABA;
