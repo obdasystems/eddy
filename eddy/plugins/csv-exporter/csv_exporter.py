@@ -48,7 +48,7 @@ from eddy.core.functions.path import openPath
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import K_DESCRIPTION
-from eddy.ui.dialogs import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramSelectionDialog
 
 from PyQt5 import QtWidgets
 
@@ -114,9 +114,9 @@ class CsvExporter(AbstractProjectExporter):
         Perform CSV file generation.
         :type path: str
         """
-        diagrams_selection_dialog = DiagramsSelectionDialog(self.project, self.session)
+        diagrams_selection_dialog = DiagramSelectionDialog(self.session)
         diagrams_selection_dialog.exec_()
-        self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
+        self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
         LOGGER.info('Exporting selected diagrams in project %s in CSV format: %s', self.project.name, path)
         collection = {x: {} for x in self.Types}

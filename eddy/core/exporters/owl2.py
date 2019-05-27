@@ -34,7 +34,6 @@
 
 
 import os
-import sys
 import re
 
 from PyQt5 import QtCore
@@ -54,20 +53,19 @@ from eddy.core.functions.misc import first, clamp, isEmpty, rtfStripFontAttribut
 from eddy.core.functions.misc import rstrip, postfix, format_exception
 from eddy.core.functions.owl import OWLFunctionalSyntaxDocumentFilter
 from eddy.core.functions.owl import OWLManchesterSyntaxDocumentFilter
+from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.owl import RDFXMLDocumentFilter
 from eddy.core.functions.owl import TurtleDocumentFilter
-from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
 from eddy.core.project import K_DESCRIPTION
 from eddy.core.worker import AbstractWorker
-from eddy.ui.dialogs import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import ComboBox, CheckBox
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationWorker
-
 
 LOGGER = getLogger()
 
@@ -144,9 +142,9 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
 
             self.path = path
 
-            diagrams_selection_dialog = DiagramsSelectionDialog(self.project, self.session)
+            diagrams_selection_dialog = DiagramSelectionDialog(self.session)
             diagrams_selection_dialog.exec_()
-            self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
+            self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
             self.progress = BusyProgressDialog('Performing syntax check...')
             self.progress.show()

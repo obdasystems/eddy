@@ -33,23 +33,22 @@
 ##########################################################################
 
 
+import math
+
 from PyQt5 import QtCore
 from PyQt5 import QtGui
-from PyQt5 import QtWidgets
 from PyQt5 import QtPrintSupport
+from PyQt5 import QtWidgets
 
+from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.graphol import Special
+from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.items.common import AbstractItem
 from eddy.core.output import getLogger
-from eddy.ui.dialogs import DiagramsSelectionDialog
-from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
-from eddy.core.datatypes.qt import Font
-from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.graphol import Special
-
-import math
-
+from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
 
@@ -583,14 +582,16 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         :type path: str
         """
         #diagrams = self.diagram.project.diagrams()
-        diagrams_selection_dialog = DiagramsSelectionDialog(self.diagram.project, self.session)
+        # FIXME: Diagram selection should not be in the exporter
+        diagrams_selection_dialog = DiagramSelectionDialog(self.session)
         diagrams_selection_dialog.exec_()
-        selected_diagrams = diagrams_selection_dialog.diagrams_selected
+        selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
         if len(selected_diagrams) == 0:
             return
 
-        selected_diagrams_sorted = diagrams_selection_dialog.sort(selected_diagrams)
+        from natsort import natsorted
+        selected_diagrams_sorted = natsorted(selected_diagrams, key=lambda diagram: diagram.name)
 
         printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)
         printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)

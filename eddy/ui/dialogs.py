@@ -33,121 +33,84 @@
 ##########################################################################
 
 
+import math
+from natsort import natsorted
+
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
-from eddy.core.output import getLogger
-from eddy.core.functions.signals import connect
 from eddy.core.datatypes.qt import Font
+from eddy.core.functions.signals import connect
 from eddy.ui.fields import CheckBox
-import math
-
-LOGGER = getLogger()
 
 
-class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
+class DiagramSelectionDialog(HasThreadingSystem, HasWidgetSystem, QtWidgets.QDialog):
     """
     Extends QtWidgets.QDialog providing the form used to select the diagrams for a specific task like export/import
     """
-    def __init__(self, project, session):
+    def __init__(self, session, **kwargs):
         """
         Initialize the form dialog.
-        :type project: Project
         :type session: Session
         """
-        super().__init__(session)
+        super().__init__(parent=session, **kwargs)
+        self.project = kwargs.get('project', session.project)
+        diagrams = natsorted(self.project.diagrams(), key=lambda diagram: diagram.name)
+        for diagram in diagrams:
+            self.addWidget(CheckBox(diagram.name, self, objectName=diagram.name,
+                                    checked=True, clicked=self.onDiagramChecked))
 
-        self.project = project
+        diagramLayout = QtWidgets.QGridLayout(self)
+        diagramLayout.setContentsMargins(8, 8, 8, 8)
+        nrows = math.floor(math.sqrt(max(len(diagrams), 1)))
+        for i, d in enumerate(diagrams):
+            col = i % nrows
+            row = math.floor(i / nrows)
+            diagramLayout.addWidget(self.widget(d.name), row, col)
 
-        #############################################
-        # MAIN FORM AREA
-        #################################
+        diagramGroup = QtWidgets.QGroupBox('Diagrams', self)
+        diagramGroup.setLayout(diagramLayout)
+
+        diagramGroupLayout = QtWidgets.QHBoxLayout(self)
+        diagramGroupLayout.addWidget(diagramGroup)
+
+        diagramWidget = QtWidgets.QWidget(self)
+        diagramWidget.setLayout(diagramGroupLayout)
+
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setFont(Font('Roboto', 12))
         confirmation.setObjectName('confirmation')
-        connect(confirmation.accepted, self.run)
-        connect(confirmation.rejected, self.reject)
         self.addWidget(confirmation)
-        self.addWidget(QtWidgets.QPushButton('All', self,
-                                             clicked=self.doCheckDiagramMarks,
-                                             objectName='btn_check_all'))
-        self.addWidget(QtWidgets.QPushButton('Clear', self,
-                                             clicked=self.doCheckDiagramMarks,
-                                             objectName='btn_clear_all'))
+        # noinspection PyArgumentList
+        self.addWidget(QtWidgets.QPushButton('All', self, objectName='btn_check_all', clicked=self.doCheckDiagram))
+        # noinspection PyArgumentList
+        self.addWidget(QtWidgets.QPushButton('Clear', self, objectName='btn_clear_all', clicked=self.doCheckDiagram))
 
-        self.diagrams_selected = []
-        self.diagrams = self.project.diagrams()
-        self.diagrams_list = self.sort(self.diagrams)
+        buttonLayout = QtWidgets.QHBoxLayout(self)
+        buttonLayout.setAlignment(QtCore.Qt.AlignRight)
+        buttonLayout.addWidget(self.widget('btn_clear_all'), 0, QtCore.Qt.AlignRight)
+        buttonLayout.addWidget(self.widget('btn_check_all'), 0, QtCore.Qt.AlignRight)
+        buttonLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
 
-        for diagram in self.diagrams_list:
-            self.addWidget(CheckBox(diagram.name, self,
-                                    enabled=True, objectName=diagram.name,
-                                    checked=True, clicked=self.onDiagramCheckClicked))
+        buttonWidget = QtWidgets.QWidget(self)
+        buttonWidget.setLayout(buttonLayout)
 
-        DiagramNamesLayout = QtWidgets.QGridLayout()
-        DiagramNamesLayout.setColumnMinimumWidth(0, 230)
-        DiagramNamesLayout.setColumnMinimumWidth(1, 230)
-        DiagramNamesLayout.setColumnMinimumWidth(2, 230)
+        mainLayout = QtWidgets.QVBoxLayout()
+        mainLayout.setContentsMargins(10, 10, 10, 10)
+        mainLayout.addWidget(diagramWidget)
+        mainLayout.addWidget(buttonWidget)
 
-        for i, d in enumerate(self.diagrams_list):
-            r=i%3
-            q=math.floor(i/3)
-            DiagramNamesLayout.addWidget(self.widget(d.name), q, r)
-            DiagramNamesLayout.setRowMinimumHeight(q, 20)
-
-        DiagramsGroup = QtWidgets.QGroupBox('Diagrams', self)
-        DiagramsGroup.setLayout(DiagramNamesLayout)
-        DiagramsGroup.setFixedHeight((DiagramNamesLayout.rowCount()*25+50))
-
-        DiagramsGroupLayout = QtWidgets.QHBoxLayout()
-        DiagramsGroupLayout.addWidget(DiagramsGroup)
-
-        ButtonsLayout = QtWidgets.QHBoxLayout()
-        ButtonsLayout.setAlignment(QtCore.Qt.AlignRight)
-        ButtonsLayout.addWidget(self.widget('btn_clear_all'), 0, QtCore.Qt.AlignRight)
-        ButtonsLayout.addWidget(self.widget('btn_check_all'), 0, QtCore.Qt.AlignRight)
-        ButtonsLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
-
-        Area_1 = QtWidgets.QWidget()
-        Area_1.setLayout(DiagramsGroupLayout)
-        Area_1.setFixedHeight(DiagramsGroup.height())
-        Area_2 = QtWidgets.QWidget()
-        Area_2.setLayout(ButtonsLayout)
-        Area_2.setFixedHeight(50)
-
-        MainLayout = QtWidgets.QVBoxLayout()
-        MainLayout.setContentsMargins(10, 10, 10, 10)
-        MainLayout.addWidget(Area_1)
-        MainLayout.addWidget(Area_2)
-
-        self.setLayout(MainLayout)
-        self.setFixedHeight(Area_1.height()+Area_2.height()+50)
-        self.setFixedWidth(600)
         self.setFont(Font('Roboto', 12))
+        self.setLayout(mainLayout)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.setWindowTitle('Diagram selection')
+        self.setWindowTitle('Diagram Selection')
 
-    def sort(self, inp_diagrams):
-
-        diagrams_list = []
-
-        # sort the diagrams by name
-        for diagram in inp_diagrams:
-
-            i = 0
-            while i < len(diagrams_list):
-                element = diagrams_list[i]
-                if diagram.name < element.name:
-                    break
-                else:
-                    i = i + 1
-            diagrams_list.insert(i, diagram)
-
-        return diagrams_list
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
 
     #############################################
     #   PROPERTIES
@@ -156,7 +119,7 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
     @property
     def session(self):
         """
-        Returns the active session (alias for DiagramsSelectionDialog.parent()).
+        Returns the active session (alias for self.parent()).
         :rtype: Session
         """
         return self.parent()
@@ -166,39 +129,30 @@ class DiagramsSelectionDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSy
     #################################
 
     @QtCore.pyqtSlot()
-    def onDiagramCheckClicked(self):
+    def onDiagramChecked(self):
         """
         Executed when an diagram checkbox is clicked.
         """
         self.widget('confirmation').setEnabled(
-            any(x.isChecked() for x in (self.widget(d.name) for d in self.diagrams_list)))
+            any(x.isChecked() for x in (self.widget(d.name) for d in self.project.diagrams())))
 
     @QtCore.pyqtSlot()
-    def doCheckDiagramMarks(self):
+    def doCheckDiagram(self):
         """
         Check diagrams marks according to the action that triggered the slot.
         """
         checked = self.sender() is self.widget('btn_check_all')
-        for diagram in self.diagrams_list:
+        for diagram in self.project.diagrams():
             checkbox = self.widget(diagram.name)
             checkbox.setChecked(checked)
-        #self.widget('confirmation').setEnabled(checked)
 
-    @QtCore.pyqtSlot()
-    def run(self):
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def selectedDiagrams(self):
         """
-        Execute the dialog.
+        Returns the list of diagrams selected in the dialog.
+        :rtype: list
         """
-        LOGGER.info('Executing diagrams selection dialog')
-
-        self.widget('confirmation').setEnabled(False)
-        self.widget('btn_clear_all').setEnabled(False)
-        self.widget('btn_check_all').setEnabled(False)
-
-        for diagram in self.diagrams_list:
-            checkbox = self.widget(diagram.name)
-            checkbox.setEnabled(False)
-            if checkbox.isChecked():
-                self.diagrams_selected.append(diagram)
-
-        self.accept()
+        return [diagram for diagram in self.project.diagrams() if self.widget(diagram.name).isChecked()]

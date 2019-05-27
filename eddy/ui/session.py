@@ -108,7 +108,7 @@ from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
 from eddy.core.update import UpdateCheckWorker
-from eddy.ui.dialogs import DiagramsSelectionDialog
+from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
@@ -1515,9 +1515,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 if filetype in {File.Pdf, File.Xml}:
                     selected_diagrams = [list(self.project.diagrams())[0]]
                 else:
-                    diagrams_selection_dialog = DiagramsSelectionDialog(self.project, self)
+                    diagrams_selection_dialog = DiagramSelectionDialog(self)
                     diagrams_selection_dialog.exec_()
-                    selected_diagrams = diagrams_selection_dialog.diagrams_selected
+                    selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
                     if len(selected_diagrams) == 0:
                         return

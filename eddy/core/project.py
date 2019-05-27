@@ -32,30 +32,27 @@
 #                                                                        #
 ##########################################################################
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-
-from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
-from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.commands.diagram import CommandDiagramAdd
-from eddy.core.commands.nodes import CommandNodeSetMeta
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.functions.owl import OWLText
-from eddy.core.functions.path import expandPath
-from eddy.core.functions.signals import connect, disconnect
-from eddy.core.jvm import getJavaVM
-from eddy.core.output import getLogger
-from eddy.core.items.common import AbstractItem
-from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.ui.dialogs import DiagramsSelectionDialog
-from eddy.ui.resolvers import PredicateBooleanConflictResolver
-from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 
 from rfc3987 import parse
 
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+
+from eddy.core.commands.diagram import CommandDiagramAdd
+from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
+from eddy.core.commands.nodes import CommandNodeSetMeta
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
+from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.functions.path import expandPath
+from eddy.core.functions.signals import connect, disconnect
+from eddy.core.items.common import AbstractItem
+from eddy.core.items.nodes.common.base import AbstractNode
+from eddy.core.output import getLogger
+from eddy.ui.dialogs import DiagramSelectionDialog
+from eddy.ui.resolvers import PredicateBooleanConflictResolver
+from eddy.ui.resolvers import PredicateDocumentationConflictResolver
 
 LOGGER = getLogger()
 
@@ -2257,9 +2254,9 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
         """
-        diagrams_selection_dialog = DiagramsSelectionDialog(self.other, self.session)
+        diagrams_selection_dialog = DiagramSelectionDialog(self.session, project=self.other)
         diagrams_selection_dialog.exec_()
-        self.selected_diagrams = diagrams_selection_dialog.diagrams_selected
+        self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
         for d in self.selected_diagrams:
             #print('d.name', d.name)
