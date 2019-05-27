@@ -100,13 +100,13 @@ class PluginInstallDialog(QtWidgets.QDialog):
 
         self.pluginField = StringField(self)
         self.pluginField.setFont(Font('Roboto', 12))
-        self.pluginField.setFixedWidth(400)
+        self.pluginField.setMinimumWidth(400)
         self.pluginField.setReadOnly(True)
 
         self.btnBrowse = QtWidgets.QPushButton(self)
         self.btnBrowse.setFont(Font('Roboto', 12))
-        self.btnBrowse.setFixedWidth(30)
-        self.btnBrowse.setText('...')
+        self.btnBrowse.setMinimumWidth(30)
+        self.btnBrowse.setText('Browse')
 
         self.editLayout = QtWidgets.QHBoxLayout()
         self.editLayout.setContentsMargins(10, 10, 10, 10)
@@ -175,15 +175,21 @@ class PluginInstallDialog(QtWidgets.QDialog):
             plugin_name = spec.get('plugin', 'name')
             plugin_version = spec.get('plugin', 'version')
             plugin_author = spec.get('plugin', 'author', fallback='<unknown>')
-            message = dedent("""Successfully installed plugin <b>{0} v{1}</b> by <b>{2}</b>.
-            Please reboot {3} for the plugin to work.""".format(plugin_name, plugin_version, plugin_author, APPNAME))
+            message = dedent("""\
+                Successfully installed plugin <b>{0} v{1}</b> by <b>{2}</b>.<br/>
+                In order to load the plugin you have to restart {3}.<br/>
+                <p>Would you like to restart now?</p>
+                """.format(plugin_name, plugin_version, plugin_author, APPNAME))
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
-            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             msgbox.setText(message)
             msgbox.setTextFormat(QtCore.Qt.RichText)
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Plugin installed!')
+            buttonYes = msgbox.button(QtWidgets.QMessageBox.Yes)
+            # noinspection PyArgumentList
+            buttonYes.clicked.connect(QtWidgets.QApplication.instance().doRestart, QtCore.Qt.QueuedConnection)
             msgbox.exec_()
             super().accept()
 

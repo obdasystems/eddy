@@ -36,6 +36,7 @@
 import argparse
 import os
 import platform
+import subprocess
 import sys
 
 from PyQt5 import QtCore
@@ -84,6 +85,7 @@ class Eddy(QtWidgets.QApplication):
     """
     This class implements the main QtCore.Qt application.
     """
+    RestartCode = 8
     sgnCreateSession = QtCore.pyqtSignal(str)
     sgnSessionCreated = QtCore.pyqtSignal('QMainWindow')
     sgnSessionClosed = QtCore.pyqtSignal('QMainWindow')
@@ -340,6 +342,15 @@ class Eddy(QtWidgets.QApplication):
         self.quit()
 
     @QtCore.pyqtSlot()
+    def doRestart(self):
+        """
+        Restart Eddy.
+        """
+        for session in self.sessions:
+            session.save()
+        self.exit(Eddy.RestartCode)
+
+    @QtCore.pyqtSlot()
     def doFocusSession(self):
         """
         Make the session specified in the action data the application active window.
@@ -552,5 +563,19 @@ def main():
 
     app.configure(options)
     app.start(options)
-    sys.exit(app.exec_())
+    ret = app.exec_()
+    if ret == Eddy.RestartCode:
+        args = []
+        if os.path.basename(sys.argv[0]) == 'eddy':
+            # LAUNCHED VIA LAUNCHER SCRIPT
+            args.append(sys.argv[0])
+        elif hasattr(sys, 'frozen'):
+            # LAUNCHED FROM DISTRIBUTION EXECUTABLE
+            args.append(sys.executable)
+        else:
+            # LAUNCHED VIA THE INTERPRETER
+            args.extend([sys.executable, sys.argv[0]])
+        args.extend(sys.argv[1:])
+        subprocess.Popen(args)
+    sys.exit(ret)
 
