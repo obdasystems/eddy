@@ -33,17 +33,13 @@
 ##########################################################################
 
 
-import unittest
-from mock import patch
-
-from tests import EddyTestCase
-
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
+from tests import EddyTestCase
 
 
 class ExportTestCase(EddyTestCase):
@@ -74,13 +70,13 @@ class ExportTestCase(EddyTestCase):
     #   PDF EXPORT
     #################################
 
-    @unittest.skip('Restore after enabling non-interactive selection of diagrams to export')
-    @patch('eddy.core.exporters.pdf.openPath')
-    def test_export_diagram_to_pdf(self, _):
+    # @patch('eddy.core.exporters.pdf.openPath')
+    def test_export_diagram_to_pdf(self):
         # GIVEN
         self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
         # WHEN
-        worker = PdfDiagramExporter(self.session.mdi.activeDiagram(), self.session)
+        worker = PdfDiagramExporter(self.session.mdi.activeDiagram(), self.session,
+                                    diagrams=[self.session.mdi.activeDiagram()])
         worker.run(expandPath('@tests/.tests/diagram.pdf'))
         # THEN
         self.assertFileExists('@tests/.tests/diagram.pdf')
