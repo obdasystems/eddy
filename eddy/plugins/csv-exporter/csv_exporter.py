@@ -95,15 +95,14 @@ class CsvExporter(AbstractProjectExporter):
         Item.IndividualNode
     ]
 
-    def __init__(self, project, session=None):
+    def __init__(self, project, session=None, **kwargs):
         """
         Initialize the CSV exporter.
         :type project: Project
         :type session: Session
         """
         super().__init__(project, session)
-
-        self.selected_diagrams = None
+        self.selected_diagrams = kwargs.get('diagrams', None)
 
     #############################################
     #   INTERFACE
@@ -114,9 +113,11 @@ class CsvExporter(AbstractProjectExporter):
         Perform CSV file generation.
         :type path: str
         """
-        diagrams_selection_dialog = DiagramSelectionDialog(self.session)
-        diagrams_selection_dialog.exec_()
-        self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+        if self.selected_diagrams is None:
+            diagrams_selection_dialog = DiagramSelectionDialog(self.session)
+            if not diagrams_selection_dialog.exec_():
+                return
+            self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
         LOGGER.info('Exporting selected diagrams in project %s in CSV format: %s', self.project.name, path)
         collection = {x: {} for x in self.Types}

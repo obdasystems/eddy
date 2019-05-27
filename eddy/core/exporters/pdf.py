@@ -57,7 +57,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
     """
     Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams in PDF format.
     """
-    def __init__(self, diagram, session=None):
+    def __init__(self, diagram, session=None, **kwargs):
         """
         Initialize the Pdf Exporter.
         :type session: Session
@@ -66,6 +66,7 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         self.project = diagram.project
         self.success = False
+        self.selected_diagrams = kwargs.get('diagrams', None)
 
     def append_row_and_column_to_table_2(self,list_inp,entity=None):
 
@@ -583,9 +584,13 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         """
         #diagrams = self.diagram.project.diagrams()
         # FIXME: Diagram selection should not be in the exporter
-        diagrams_selection_dialog = DiagramSelectionDialog(self.session)
-        diagrams_selection_dialog.exec_()
-        selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+        if self.selected_diagrams is None:
+            diagrams_selection_dialog = DiagramSelectionDialog(self.session)
+            if not diagrams_selection_dialog.exec_():
+                return
+            selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+        else:
+            selected_diagrams = self.selected_diagrams
 
         if len(selected_diagrams) == 0:
             return

@@ -1516,7 +1516,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     selected_diagrams = [list(self.project.diagrams())[0]]
                 else:
                     diagrams_selection_dialog = DiagramSelectionDialog(self)
-                    diagrams_selection_dialog.exec_()
+                    if not diagrams_selection_dialog.exec_():
+                        return
                     selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
                     if len(selected_diagrams) == 0:

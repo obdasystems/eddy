@@ -143,7 +143,8 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
             self.path = path
 
             diagrams_selection_dialog = DiagramSelectionDialog(self.session)
-            diagrams_selection_dialog.exec_()
+            if not diagrams_selection_dialog.exec_():
+                return
             self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
             self.progress = BusyProgressDialog('Performing syntax check...')
@@ -488,7 +489,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         worker = OWLOntologyExporterWorker(self.project, self.path,
                                            axioms=self.axioms(), normalize=self.normalize(),
                                            syntax=self.syntax(), export=self.exportInRichText(),
-                                           selected_diagrams=self.selected_diagrams)
+                                           diagrams=self.selected_diagrams)
 
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
@@ -544,7 +545,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.export= kwargs.get('export', False)
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
 
-        self.selected_diagrams = kwargs.get('selected_diagrams', [])
+        self.selected_diagrams = kwargs.get('diagrams', self.project.diagrams())
 
         self._axioms = set()
         self._converted = dict()
@@ -552,7 +553,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.df = None
         self.man = None
         self.num = 0
-        self.max = len(self.project.nodes()) * 2 + len(self.project.edges())
+        #self.max = len(self.project.nodes()) * 2 + len(self.project.edges())
+        self.max = sum([len(diagram.nodes()) * 2 + len(diagram.edges()) for diagram in self.selected_diagrams])
         self.ontology = None
         self.pm = None
 
