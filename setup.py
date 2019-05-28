@@ -885,6 +885,11 @@ include_files = [
     ('README.md', 'README.md'),
 ]
 
+include_files.extend([
+    (os.path.join('eddy/ui/style', qss), os.path.join('resources/styles', qss))
+    for qss in os.listdir('eddy/ui/style') if qss.endswith('.qss')
+])
+
 # INCLUDE JNIUS > 1.1.0 JAVA HELPERS
 jnius_src = os.path.realpath(pkg_resources.resource_filename('jnius_config', 'jnius/src'))
 if os.path.isdir(jnius_src):
@@ -895,11 +900,6 @@ if LINUX:
         (os.path.join(QT_LIB_PATH, 'libQt5DBus.so.5'), 'lib/libQt5DBus.so.5'),
         (os.path.join(QT_LIB_PATH, 'libQt5XcbQpa.so.5'), 'lib/libQt5XcbQpa.so.5'),
     ])
-
-zip_includes = [
-    (os.path.join('eddy', 'ui', 'style', qss), os.path.join('eddy', 'ui', 'style', qss))
-    for qss in os.listdir(os.path.join('eddy', 'ui', 'style')) if qss.endswith('.qss')
-]
 
 #############################################
 # SETUP
@@ -978,7 +978,6 @@ setup(
             'include_files': include_files,
             'optimize': 1,
             'packages': packages,
-            'zip_includes': zip_includes,
             'zip_include_packages': '*',
             'zip_exclude_packages': '',
             'silent': 0,
