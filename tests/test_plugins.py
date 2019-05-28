@@ -51,7 +51,7 @@ class PluginManagerTestCase(unittest.TestCase):
 
     def test_import_single_module_plugin_from_directory(self):
         # GIVEN
-        plugin_path = expandPath('@tests/test_plugins/dir/testplugin1')
+        plugin_path = expandPath('@tests/test_resources/plugins/dir/testplugin1')
         # WHEN
         spec, plugin_path, plugin_class = PluginManager.import_plugin_from_path(plugin_path)
         # THEN
@@ -62,7 +62,7 @@ class PluginManagerTestCase(unittest.TestCase):
 
     def test_import_single_module_plugin_from_zip(self):
         # GIVEN
-        plugin_path = expandPath('@tests/test_plugins/zip/testplugin1.zip')
+        plugin_path = expandPath('@tests/test_resources/plugins/zip/testplugin1.zip')
         # WHEN
         spec, plugin_path, plugin_class = PluginManager.import_plugin_from_path(plugin_path)
         # THEN
@@ -73,7 +73,7 @@ class PluginManagerTestCase(unittest.TestCase):
 
     def test_import_multi_module_plugin_from_directory(self):
         # GIVEN
-        plugin_path = expandPath('@tests/test_plugins/dir/testplugin2')
+        plugin_path = expandPath('@tests/test_resources/plugins/dir/testplugin2')
         # WHEN
         spec, plugin_path, plugin_class = PluginManager.import_plugin_from_path(plugin_path)
         # THEN
@@ -84,7 +84,7 @@ class PluginManagerTestCase(unittest.TestCase):
 
     def test_import_multi_module_plugin_from_zip(self):
         # GIVEN
-        plugin_path = expandPath('@tests/test_plugins/zip/testplugin2.zip')
+        plugin_path = expandPath('@tests/test_resources/plugins/zip/testplugin2.zip')
         # WHEN
         spec, plugin_path, plugin_class = PluginManager.import_plugin_from_path(plugin_path)
         # THEN
@@ -96,7 +96,7 @@ class PluginManagerTestCase(unittest.TestCase):
     # noinspection PyUnresolvedReferences
     def test_scan_plugins_from_directory(self):
         # GIVEN
-        plugin_dir = expandPath('@tests/test_plugins/dir')
+        plugin_dir = expandPath('@tests/test_resources/plugins/dir')
         # WHEN
         PluginManager.scan(plugin_dir)
         # THEN
@@ -113,7 +113,7 @@ class PluginManagerTestCase(unittest.TestCase):
     # noinspection PyUnresolvedReferences
     def test_scan_plugins_from_zip(self):
         # GIVEN
-        plugin_dir = expandPath('@tests/test_plugins/zip')
+        plugin_dir = expandPath('@tests/test_resources/plugins/zip')
         # WHEN
         PluginManager.scan(plugin_dir)
         # THEN
