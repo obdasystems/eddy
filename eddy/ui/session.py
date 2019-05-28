@@ -102,12 +102,12 @@ from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
+from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
-from eddy.core.update import UpdateCheckWorker
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.fields import ComboBox
@@ -186,6 +186,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.pf = PropertyFactory(self)
         self.df = DescriptionFactory(self)
         self.pmanager = PluginManager(self)
+        self.nmanager = NetworkManager(self)
         self.project = None
 
         #############################################
@@ -1029,6 +1030,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.app.sgnSessionCreated, self.onSessionCreated)
         connect(self.app.sgnSessionClosed, self.onSessionClosed)
         connect(self.undostack.cleanChanged, self.doUpdateState)
+        connect(self.nmanager.sgnNoUpdateAvailable, self.onNoUpdateAvailable)
+        connect(self.nmanager.sgnNoUpdateDataAvailable, self.onNoUpdateDataAvailable)
+        connect(self.nmanager.sgnUpdateAvailable, self.onUpdateAvailable)
         connect(self.sgnCheckForUpdate, self.doCheckForUpdate)
         connect(self.sgnFocusDiagram, self.doFocusDiagram)
         connect(self.sgnFocusItem, self.doFocusItem)
@@ -1215,11 +1219,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         except TypeError:
             pass
         finally:
-            worker = UpdateCheckWorker(channel, VERSION)
-            connect(worker.sgnNoUpdateAvailable, self.onNoUpdateAvailable)
-            connect(worker.sgnNoUpdateDataAvailable, self.onNoUpdateDataAvailable)
-            connect(worker.sgnUpdateAvailable, self.onUpdateAvailable)
-            self.startThread('updateCheck', worker)
+            self.nmanager.checkForUpdate(channel)
 
     @QtCore.pyqtSlot()
     def doClose(self):
