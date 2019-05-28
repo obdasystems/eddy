@@ -1,7 +1,7 @@
 # Requirements for packaging the application
 
 # Recursive
--r base.txt
+-r base.in
 
 # From PyPi
 cx_Freeze==5.1.1

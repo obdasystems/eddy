@@ -41,11 +41,11 @@ install:
   - gem install dpl
   - "%PYTHON%\\python -m ensurepip"
   - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\cython.txt"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.txt"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\base.txt"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\tests.txt"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.txt"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\cython.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\base.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\tests.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.in"
   - md resources\java
   - robocopy /E "%JAVA_HOME%\jre" resources\java\jre /XF classes.jsa || exit 0
   - "%PYTHON%\\python setup.py bdist_innosetup"

@@ -1,5 +1,5 @@
 # Recursive
--r base.txt
+-r base.in
 
 # From PyPi
 mock==2.0.0

@@ -409,12 +409,12 @@ fi
 ############################################################
 heading "Installing Eddy dependencies..."
 cd "${SCRIPT_DIR}/.."
-pip install -r requirements/cython.txt
+pip install -r requirements/cython.in
 if [ "$BUILD_PYQT5" = "0" ]; then
-    pip install -r requirements/pyqt5.txt
+    pip install -r requirements/pyqt5.in
 fi
-pip install -r requirements/packaging.txt
-pip install -r requirements/tests.txt
+pip install -r requirements/packaging.in
+pip install -r requirements/tests.in
 
 ############################################################
 ## Bundle Java Runtime Environment

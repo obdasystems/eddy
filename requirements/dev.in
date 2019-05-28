@@ -1,9 +1,9 @@
 # Development requirements
 
 # Recursive
--r base.txt
--r packaging.txt
--r tests.txt
+-r base.in
+-r packaging.in
+-r tests.in
 
 # From PyPi
 PyQt5-stubs==5.11.3

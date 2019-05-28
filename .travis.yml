@@ -76,11 +76,11 @@ before_install:
 ## Install dependencies from PyPI
 install:
   - travis_retry pip install -U pip setuptools wheel
-  - travis_retry pip install -U -r requirements/cython.txt
-  - travis_retry pip install -U -r requirements/pyqt5.txt
-  - travis_retry pip install -U -r requirements/base.txt
-  - travis_retry pip install -U -r requirements/tests.txt
-  - travis_retry pip install -U -r requirements/packaging.txt
+  - travis_retry pip install -U -r requirements/cython.in
+  - travis_retry pip install -U -r requirements/pyqt5.in
+  - travis_retry pip install -U -r requirements/base.in
+  - travis_retry pip install -U -r requirements/tests.in
+  - travis_retry pip install -U -r requirements/packaging.in
 
 ## Run automated tests using nose
 script:

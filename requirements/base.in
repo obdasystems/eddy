@@ -1,5 +1,5 @@
 # Recursive
--r cython.txt
+-r cython.in
 
 # From PyPi
 appdirs==1.4.3
