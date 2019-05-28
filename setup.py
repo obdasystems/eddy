@@ -843,6 +843,7 @@ packages = [
 ]
 
 excludes = [
+    'Cython',
     'tcl',
     'ttk',
     'tkinter',
@@ -859,7 +860,6 @@ includes = [
     'PyQt5.QtCore',
     'PyQt5.QtGui',
     'PyQt5.QtXml',
-    'PyQt5.QtSvg',
     'PyQt5.QtWidgets',
     'PyQt5.QtNetwork',
     'PyQt5.QtPrintSupport',
