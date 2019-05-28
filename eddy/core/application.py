@@ -543,9 +543,6 @@ def main():
                 addJVMClasspath(resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
     addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC', '-XX:+UseConcMarkSweepGC', '-XX:-UseAdaptiveSizePolicy')
 
-    if hasattr(sys, 'frozen'):
-        os.environ['REQUESTS_CA_BUNDLE'] = expandPath('@root/cacert.pem')
-
     #############################################
     # START THE APPLICATION
     #################################

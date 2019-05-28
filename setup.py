@@ -38,7 +38,6 @@ import pkg_resources
 import platform
 import py_compile
 import re
-import requests.certs
 import setuptools
 import stat
 import subprocess
@@ -838,8 +837,6 @@ packages = [
     'eddy.plugins',
     'eddy.ui',
     'packaging',
-    'idna',
-    'cffi',
 ]
 
 excludes = [
@@ -867,11 +864,8 @@ includes = [
     'appdirs',
     'queue',
     'csv',
-    'github3',
     'jnius',
     'natsort',
-    'requests',
-    'uritemplate',
     'verlib',
 ]
 
@@ -882,7 +876,6 @@ if not WIN32:
     includes.append('PyQt5.QtDBus')
 
 include_files = [
-    (requests.certs.where(), 'cacert.pem'),
     (os.path.join(QT_PLUGINS_PATH, 'printsupport'), 'printsupport'),
     ('eddy/core/jvm/lib', 'resources/lib'),
     ('examples', 'examples'),
@@ -944,11 +937,9 @@ setup(
     ],
     python_requires='>=3.5',
     install_requires=[
-        'github3.py',
         'natsort',
         'pyjnius',
         'PyQt5',
-        'requests',
         'rfc3987',
         'verlib'
     ],
