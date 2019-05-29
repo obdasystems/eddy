@@ -48,8 +48,9 @@ install:
   - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.in"
   - md resources\java
   - robocopy /E "%JAVA_HOME%\jre" resources\java\jre /XF classes.jsa || exit 0
-  - "%PYTHON%\\python setup.py bdist_innosetup"
-  - "%PYTHON%\\python setup.py bdist_archive --format=zip"
+  - "%PYTHON%\\Scripts\\pyinstaller --clean --windowed --workpath build --distpath build --noconfirm eddy.spec"
+  - "%PYTHON%\\python setup.py innosetup --skip-build"
+  - "%PYTHON%\\python setup.py bdist_archive --skip-build --format=zip"
 
 # Appveyor's build step is specific to .NET projects
 build: off
