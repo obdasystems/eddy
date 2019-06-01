@@ -9,7 +9,9 @@ addons:
   apt:
     packages:
       - libxkbcommon-x11-0
+      - openjdk-8-jdk
   homebrew:
+    taps: homebrew/cask-versions
     casks: adoptopenjdk8
     packages:
       - openssl
@@ -70,7 +72,7 @@ matrix:
 
 ## Prepare build environment
 before_install:
-  - ./scripts/travis/before_install.sh
+  - source ./scripts/travis/before_install.sh
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source "$VENV_DIR/bin/activate"; fi
 
 ## Install dependencies from PyPI
@@ -82,6 +84,9 @@ install:
   - travis_retry pip install -U -r requirements/tests.in
   - travis_retry pip install -U -r requirements/packaging.in
 
+before_script:
+  - source ./scripts/travis/before_script.sh
+
 ## Run automated tests using nose
 script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TEST" != "packaging" ]]; then
@@ -91,15 +96,13 @@ script:
       mkdir -p resources/java;
       cp -R "$JAVA_HOME/jre" resources/java/jre;
       ./scripts/prepare_jre.sh;
-      python setup.py build_exe;
-      find build -iname 'libpython*' -exec cp -f {} build/Eddy-*/ \;;
-      travis_wait 30 python setup.py bdist_archive --skip-build --format=gztar;
+      python setup.py bdist_archive --format=gztar;
     fi;
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]] && [[ "$TEST" == "packaging" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       mkdir -p resources/java;
-      cp -R "`/usr/libexec/java_home -v 1.8`/jre" resources/java/jre;
+      cp -R "$JAVA_HOME/jre" resources/java/jre;
       ./scripts/prepare_jre.sh;
-      travis_wait 30 python setup.py bdist_dmg;
+      python setup.py createdmg;
     fi;
 
 # Report tests coverage
@@ -109,7 +112,7 @@ script:
 before_deploy:
   - PYTHONPATH=".:$PYTHONPATH" python ./scripts/travis/before_deploy.py
 
-## Package up and send
+## Deploy artifacts
 deploy:
   - provider: bintray
     file: "descriptor.json"

@@ -6,7 +6,7 @@ Eddy is distributed as different packages:
 * `Windows x86` installer (built with InnoSetup)
 * `Windows x64` standalone package (.zip archive)
 * `Windows x86` standalone package (.zip archive)
-* `macOS (Intel)` app bundle (distributed as `.dmg)
+* `macOS (Intel)` app bundle (distributed as .dmg)
 * `Linux x86_64` standalone package (.tar.gz archive)
 * `Linux i686` standalone package (.tar.gz archive)
 
@@ -59,11 +59,11 @@ Update `pip` and install required Python dependencies from PyPI:
     
     C:\> cd eddy
     C:\> pip install -U pip setuptools wheel
-    C:\> pip install -U -r requirements\cython.txt
-    C:\> pip install -U -r requirements\pyqt5.txt
-    C:\> pip install -U -r requirements\base.txt
-    C:\> pip install -U -r requirements\packaging.txt
-    
+    C:\> pip install -U -r requirements\cython.in
+    C:\> pip install -U -r requirements\pyqt5.in
+    C:\> pip install -U -r requirements\base.in
+    C:\> pip install -U -r requirements\packaging.in
+
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
 You can copy it directly from the JDK installation directory or download the JRE tarball
 from the [Oracle JRE 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) 
@@ -74,7 +74,7 @@ download page:
     
 To build a Windows binary installer, run the command:
 
-    $ python setup.py bdist_innosetup
+    $ python setup.py innosetup
 
 To build a Windows standalone (.zip) distribution, run the command:
 
@@ -95,9 +95,12 @@ Install [Python 3.6](https://www.python.org/downloads/release/python-368/) and [
 
     $ brew install pyenv
     $ pyenv init
-    $ pyenv install 3.6.8
+    $ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.6.8
+
+**NOTE**: Make sure to to add the `PYTHON_CONFIGURE_OPTS` to the `pyenv` command
+since it is required for PyInstaller to work on macOS.
     
-Install [Oracle JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  
+Install [Oracle JDK 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
 Set the `JAVA_HOME` environment variable to point to the location where the JDK is installed.
 
     $ export JAVA_HOME="`/usr/libexec/java_home -v 1.8`"
@@ -118,10 +121,10 @@ Update `pip` and install required Python dependencies from PyPI:
     
     $ cd eddy
     $ pip install -U pip setuptools
-    $ pip install -U -r requirements/cython.txt
-    $ pip install -U -r requirements/pyqt5.txt
-    $ pip install -U -r requirements/base.txt
-    $ pip install -U -r requirements/packaging.txt
+    $ pip install -U -r requirements/cython.in
+    $ pip install -U -r requirements/pyqt5.in
+    $ pip install -U -r requirements/base.in
+    $ pip install -U -r requirements/packaging.in
 
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
 You can copy it directly from the JDK installation directory or download the JRE tarball
@@ -168,7 +171,10 @@ Install Python 3.6:
     $ export PYENV_ROOT="$HOME/.pyenv"
     $ export PATH="$PYENV_ROOT/bin:$PATH"
     $ pyenv init
-    $ pyenv install 3.6.8
+    $ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.6.8
+
+**NOTE**: Make sure to add the `PYTHON_CONFIGURE_OPTS` environment variable to the `pyenv`
+command since it is required for PyInstaller to work.
     
 Create a new virtual environment:
 
@@ -186,10 +192,10 @@ Update `pip` and install required Python dependencies from PyPI:
     
     $ cd eddy
     $ pip install -U pip setuptools
-    $ pip install -U -r requirements/cython.txt
-    $ pip install -U -r requirements/pyqt5.txt
-    $ pip install -U -r requirements/base.txt
-    $ pip install -U -r requirements/packaging.txt
+    $ pip install -U -r requirements/cython.in
+    $ pip install -U -r requirements/pyqt5.in
+    $ pip install -U -r requirements/base.in
+    $ pip install -U -r requirements/packaging.in
 
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
 You can download the JRE tarball from the [Oracle JRE 1.8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) 

@@ -4,7 +4,6 @@
 -r base.in
 
 # From PyPi
-cx_Freeze==5.1.1
-sip==4.19.8
+PyInstaller==3.4
 pyyaml==5.1; sys_platform == 'win32'
 Pillow==6.0.0
