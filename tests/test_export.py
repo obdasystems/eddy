@@ -33,238 +33,275 @@
 ##########################################################################
 
 
+import os
+import pytest
+
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
-from tests import EddyTestCase
+from eddy.ui.session import Session
 
 
-class ExportTestCase(EddyTestCase):
+@pytest.fixture
+def session(qapp, qtbot, logging_disabled):
     """
-    Tests for eddy's export facilities.
+    Provide an initialized Session instance.
     """
-    def setUp(self):
-        """
-        Initialize test case environment.
-        """
-        super().setUp()
-        self.init('test_project_1')
+    with logging_disabled:
+        session = Session(qapp, expandPath('@tests/test_project_1'))
+        session.show()
+    qtbot.addWidget(session)
+    qtbot.waitExposed(session, timeout=3000)
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(session.project.diagram('diagram'))
+    yield session
 
-    #############################################
-    #   GRAPHML EXPORT
-    #################################
 
-    def test_export_diagram_to_graphml(self):
-        # GIVEN
-        self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
-        # WHEN
-        worker = GraphMLDiagramExporter(self.session.mdi.activeDiagram(), self.session)
-        worker.run('@tests/.tests/diagram.graphml')
-        # THEN
-        self.assertFileExists('@tests/.tests/diagram.graphml')
+#############################################
+#   GRAPHML EXPORT
+#################################
 
-    #############################################
-    #   PDF EXPORT
-    #################################
+def test_export_diagram_to_graphml(session, qtbot, tmpdir):
+    # GIVEN
+    graphml = tmpdir.join('diagram.graphml')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    worker = GraphMLDiagramExporter(session.mdi.activeDiagram(), session)
+    worker.run(str(graphml))
+    # THEN
+    assert os.path.isfile(str(graphml))
 
-    # @patch('eddy.core.exporters.pdf.openPath')
-    def test_export_diagram_to_pdf(self):
-        # GIVEN
-        self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
-        # WHEN
-        worker = PdfDiagramExporter(self.session.mdi.activeDiagram(), self.session,
-                                    diagrams=[self.session.mdi.activeDiagram()])
-        worker.run(expandPath('@tests/.tests/diagram.pdf'))
-        # THEN
-        self.assertFileExists('@tests/.tests/diagram.pdf')
 
-    #############################################
-    #   OWL EXPORT
-    #################################
+#############################################
+#   PDF EXPORT
+#################################
 
-    def test_export_project_to_owl_without_normalization(self):
-        # WHEN
-        worker = OWLOntologyExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-                                           axioms={x for x in OWLAxiom}, normalize=False, syntax=OWLSyntax.Functional,
-                                           selected_diagrams=self.project.diagrams())
-        worker.run()
-        # THEN
-        self.assertFileExists('@tests/.tests/test_project_1.owl')
-        # WHEN
-        content = list(filter(None, fread('@tests/.tests/test_project_1.owl').split('\n')))
-        # THEN
-        self.assertIn('Prefix(owl:=<http://www.w3.org/2002/07/owl#>)', content)
-        self.assertIn('Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)', content)
-        self.assertIn('Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)', content)
-        self.assertIn('Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)', content)
-        self.assertIn('Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)', content)
-        self.assertIn('Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)', content)
-        self.assertIn('Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>', content)
-        self.assertIn('Declaration(Class(test:Vegetable))', content)
-        self.assertIn('Declaration(Class(test:Person))', content)
-        self.assertIn('Declaration(Class(test:Male))', content)
-        self.assertIn('Declaration(Class(test:Female))', content)
-        self.assertIn('Declaration(Class(test:Mother))', content)
-        self.assertIn('Declaration(Class(test:Father))', content)
-        self.assertIn('Declaration(Class(test:Underage))', content)
-        self.assertIn('Declaration(Class(test:Adult))', content)
-        self.assertIn('Declaration(Class(test:Vehicle))', content)
-        self.assertIn('Declaration(Class(test:Less_than_50_cc))', content)
-        self.assertIn('Declaration(Class(test:Over_50_cc))', content)
-        self.assertIn('Declaration(NamedIndividual(test:Bob))', content)
-        self.assertIn('Declaration(NamedIndividual(test:Alice))', content)
-        self.assertIn('Declaration(NamedIndividual(test:Trudy))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasAncestor))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasParent))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasFather))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasMother))', content)
-        self.assertIn('Declaration(ObjectProperty(test:isAncestorOf))', content)
-        self.assertIn('Declaration(ObjectProperty(test:drives))', content)
-        self.assertIn('Declaration(DataProperty(test:name))', content)
-        self.assertIn('Declaration(Datatype(xsd:string))', content)
-        self.assertIn('AnnotationAssertion(rdfs:comment test:Person "A human being"^^xsd:string)', content)
-        self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
-        self.assertIn('SubClassOf(test:Father test:Male)', content)
-        self.assertIn('SubClassOf(test:Mother test:Female)', content)
-        self.assertIn('SubClassOf(test:Underage ObjectAllValuesFrom(test:drives test:Less_than_50_cc))', content)
-        self.assertIn('SubObjectPropertyOf(test:hasParent test:hasAncestor)', content)
-        self.assertIn('SubObjectPropertyOf(test:hasFather test:hasParent)', content)
-        self.assertIn('SubObjectPropertyOf(test:hasMother test:hasParent)', content)
-        self.assertIn('FunctionalObjectProperty(test:hasFather)', content)
-        self.assertIn('FunctionalObjectProperty(test:hasMother)', content)
-        self.assertIn('DataPropertyRange(test:name xsd:string)', content)
-        self.assertIn('DataPropertyDomain(test:name test:Person)', content)
-        self.assertIn('InverseObjectProperties(test:hasAncestor test:isAncestorOf)', content)
-        self.assertIn('ObjectPropertyAssertion(test:isAncestorOf test:Bob test:Alice)', content)
-        self.assertIn('ObjectPropertyRange(test:hasAncestor test:Person)', content)
-        self.assertIn('ObjectPropertyRange(test:hasFather test:Father)', content)
-        self.assertIn('ObjectPropertyRange(test:hasMother test:Mother)', content)
-        self.assertIn('ObjectPropertyRange(test:drives test:Vehicle)', content)
-        self.assertIn('NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)', content)
-        self.assertIn(')', content)
-        # AND
-        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)', content)
-        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)', content)
-        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)', content)
-        # AND
-        self.assertAnyIn(['EquivalentClasses(test:Person ObjectUnionOf(test:Underage test:Adult))',
-                          'EquivalentClasses(test:Person ObjectUnionOf(test:Adult test:Underage))',
-                          'EquivalentClasses(ObjectUnionOf(test:Underage test:Adult) test:Person)',
-                          'EquivalentClasses(ObjectUnionOf(test:Adult test:Person) test:Person)'], content)
-        self.assertAnyIn(['EquivalentClasses(test:Person DataSomeValuesFrom(test:name rdfs:Literal))',
-                          'EquivalentClasses(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)'], content)
-        self.assertAnyIn(['EquivalentClasses(test:Person ObjectUnionOf(test:Female test:Male))',
-                          'EquivalentClasses(test:Person ObjectUnionOf(test:Male test:Female))',
-                          'EquivalentClasses(ObjectUnionOf(test:Female test:Male) test:Person)',
-                          'EquivalentClasses(ObjectUnionOf(test:Male test:Female) test:Person)'], content)
-        self.assertAnyIn(['EquivalentClasses(test:Vehicle ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc))',
-                          'EquivalentClasses(test:Vehicle ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc))',
-                          'EquivalentClasses(ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc) test:Vehicle)',
-                          'EquivalentClasses(ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc) test:Vehicle)'], content)
-        self.assertAnyIn(['EquivalentClasses(test:Person ObjectAllValuesFrom(test:drives owl:Thing))',
-                          'EquivalentClasses(ObjectAllValuesFrom(test:drives owl:Thing) test:Person)',], content)
-        self.assertAnyIn(['DisjointClasses(test:Female test:Male)',
-                          'DisjointClasses(test:Male test:Female)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)',
-                          'DisjointClasses(test:Vegetable test:Person)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Underage test:Adult)',
-                          'DisjointClasses(test:Adult test:Underage)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
-                          'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
-        # AND
-        self.assertLen(59, content)
+def test_export_diagram_to_pdf(session, qtbot, tmpdir):
+    # GIVEN
+    pdffile = tmpdir.join('diagram.pdf')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    worker = PdfDiagramExporter(session.mdi.activeDiagram(), session,
+                                diagrams=[session.mdi.activeDiagram()])
+    worker.run(str(pdffile))
+    # THEN
+    assert os.path.isfile(str(pdffile))
 
-    def test_export_project_to_owl_with_normalization(self):
-        # WHEN
-        worker = OWLOntologyExporterWorker(self.project, '@tests/.tests/test_project_1.owl',
-                                           axioms={x for x in OWLAxiom}, normalize=True, syntax=OWLSyntax.Functional,
-                                           selected_diagrams=self.project.diagrams())
-        worker.run()
-        # THEN
-        self.assertFileExists('@tests/.tests/test_project_1.owl')
-        # WHEN
-        content = list(filter(None, fread('@tests/.tests/test_project_1.owl').split('\n')))
-        # THEN
-        self.assertIn('Prefix(owl:=<http://www.w3.org/2002/07/owl#>)', content)
-        self.assertIn('Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)', content)
-        self.assertIn('Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)', content)
-        self.assertIn('Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)', content)
-        self.assertIn('Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)', content)
-        self.assertIn('Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)', content)
-        self.assertIn('Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>', content)
-        self.assertIn('Declaration(Class(test:Vegetable))', content)
-        self.assertIn('Declaration(Class(test:Person))', content)
-        self.assertIn('Declaration(Class(test:Male))', content)
-        self.assertIn('Declaration(Class(test:Female))', content)
-        self.assertIn('Declaration(Class(test:Mother))', content)
-        self.assertIn('Declaration(Class(test:Father))', content)
-        self.assertIn('Declaration(Class(test:Underage))', content)
-        self.assertIn('Declaration(Class(test:Adult))', content)
-        self.assertIn('Declaration(Class(test:Vehicle))', content)
-        self.assertIn('Declaration(Class(test:Less_than_50_cc))', content)
-        self.assertIn('Declaration(Class(test:Over_50_cc))', content)
-        self.assertIn('Declaration(NamedIndividual(test:Bob))', content)
-        self.assertIn('Declaration(NamedIndividual(test:Alice))', content)
-        self.assertIn('Declaration(NamedIndividual(test:Trudy))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasAncestor))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasParent))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasFather))', content)
-        self.assertIn('Declaration(ObjectProperty(test:hasMother))', content)
-        self.assertIn('Declaration(ObjectProperty(test:isAncestorOf))', content)
-        self.assertIn('Declaration(ObjectProperty(test:drives))', content)
-        self.assertIn('Declaration(DataProperty(test:name))', content)
-        self.assertIn('Declaration(Datatype(xsd:string))', content)
-        self.assertIn('AnnotationAssertion(rdfs:comment test:Person "A human being"^^xsd:string)', content)
-        self.assertIn('SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))', content)
-        self.assertIn('SubClassOf(test:Father test:Male)', content)
-        self.assertIn('SubClassOf(test:Mother test:Female)', content)
-        self.assertIn('SubClassOf(test:Person DataSomeValuesFrom(test:name rdfs:Literal))', content)
-        self.assertIn('SubClassOf(test:Female test:Person)', content)
-        self.assertIn('SubClassOf(test:Male test:Person)', content)
-        self.assertIn('SubClassOf(test:Underage test:Person)', content)
-        self.assertIn('SubClassOf(test:Adult test:Person)', content)
-        self.assertIn('SubClassOf(test:Less_than_50_cc test:Vehicle)', content)
-        self.assertIn('SubClassOf(test:Over_50_cc test:Vehicle)', content)
-        self.assertIn('SubClassOf(test:Underage ObjectAllValuesFrom(test:drives test:Less_than_50_cc))', content)
-        self.assertIn('SubClassOf(test:Person ObjectAllValuesFrom(test:drives owl:Thing))', content)
-        self.assertIn('SubClassOf(ObjectAllValuesFrom(test:drives owl:Thing) test:Person)', content)
-        self.assertIn('SubObjectPropertyOf(test:hasParent test:hasAncestor)', content)
-        self.assertIn('SubObjectPropertyOf(test:hasFather test:hasParent)', content)
-        self.assertIn('SubObjectPropertyOf(test:hasMother test:hasParent)', content)
-        self.assertIn('FunctionalObjectProperty(test:hasFather)', content)
-        self.assertIn('FunctionalObjectProperty(test:hasMother)', content)
-        self.assertIn('DataPropertyRange(test:name xsd:string)', content)
-        self.assertIn('DataPropertyDomain(test:name test:Person)', content)
-        self.assertIn('InverseObjectProperties(test:hasAncestor test:isAncestorOf)', content)
-        self.assertIn('ObjectPropertyAssertion(test:isAncestorOf test:Bob test:Alice)', content)
-        self.assertIn('ObjectPropertyRange(test:hasAncestor test:Person)', content)
-        self.assertIn('ObjectPropertyRange(test:hasFather test:Father)', content)
-        self.assertIn('ObjectPropertyRange(test:hasMother test:Mother)', content)
-        self.assertIn('ObjectPropertyRange(test:drives test:Vehicle)', content)
-        self.assertIn('NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)', content)
-        self.assertIn(')', content)
-        # AND
-        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)', content)
-        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)', content)
-        self.assertNotIn('SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)', content)
-        self.assertNotIn('SubClassOf(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)', content)
-        # AND
-        self.assertAnyIn(['SubClassOf(test:Person ObjectUnionOf(test:Underage test:Adult))',
-                          'SubClassOf(test:Person ObjectUnionOf(test:Adult test:Underage))'], content)
-        self.assertAnyIn(['SubClassOf(test:Person ObjectUnionOf(test:Female test:Male))',
-                          'SubClassOf(ObjectUnionOf(test:Female test:Male) test:Person)'], content)
-        self.assertAnyIn(['SubClassOf(test:Vehicle ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc))',
-                          'SubClassOf(test:Vehicle ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc))'], content)
-        self.assertAnyIn(['DisjointClasses(test:Female test:Male)',
-                          'DisjointClasses(test:Male test:Female)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Person test:Vegetable)',
-                          'DisjointClasses(test:Vegetable test:Person)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Underage test:Adult)',
-                          'DisjointClasses(test:Adult test:Underage)'], content)
-        self.assertAnyIn(['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
-                          'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)'], content)
-        # AND
-        self.assertLen(66, content)
+
+#############################################
+#   OWL EXPORT
+#################################
+
+def test_export_project_to_owl_without_normalization(session, tmpdir):
+    # WHEN
+    owlfile = tmpdir.join('test_project_1.owl')
+    project = session.project
+    worker = OWLOntologyExporterWorker(project, str(owlfile),
+                                       axioms={x for x in OWLAxiom},
+                                       normalize=False,
+                                       syntax=OWLSyntax.Functional)
+    worker.run()
+    # THEN
+    assert os.path.isfile(str(owlfile))
+    # WHEN
+    content = list(filter(None, fread(str(owlfile)).split('\n')))
+    # THEN
+    assert 'Prefix(owl:=<http://www.w3.org/2002/07/owl#>)' in content
+    assert 'Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)' in content
+    assert 'Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)' in content
+    assert 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)' in content
+    assert 'Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)' in content
+    assert 'Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)' in content
+    assert 'Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>' in content
+    assert 'Declaration(Class(test:Vegetable))' in content
+    assert 'Declaration(Class(test:Person))' in content
+    assert 'Declaration(Class(test:Male))' in content
+    assert 'Declaration(Class(test:Female))' in content
+    assert 'Declaration(Class(test:Mother))' in content
+    assert 'Declaration(Class(test:Father))' in content
+    assert 'Declaration(Class(test:Underage))' in content
+    assert 'Declaration(Class(test:Adult))' in content
+    assert 'Declaration(Class(test:Vehicle))' in content
+    assert 'Declaration(Class(test:Less_than_50_cc))' in content
+    assert 'Declaration(Class(test:Over_50_cc))' in content
+    assert 'Declaration(NamedIndividual(test:Bob))' in content
+    assert 'Declaration(NamedIndividual(test:Alice))' in content
+    assert 'Declaration(NamedIndividual(test:Trudy))' in content
+    assert 'Declaration(ObjectProperty(test:hasAncestor))' in content
+    assert 'Declaration(ObjectProperty(test:hasParent))' in content
+    assert 'Declaration(ObjectProperty(test:hasFather))' in content
+    assert 'Declaration(ObjectProperty(test:hasMother))' in content
+    assert 'Declaration(ObjectProperty(test:isAncestorOf))' in content
+    assert 'Declaration(ObjectProperty(test:drives))' in content
+    assert 'Declaration(DataProperty(test:name))' in content
+    assert 'Declaration(Datatype(xsd:string))' in content
+    assert 'AnnotationAssertion(rdfs:comment test:Person "A human being"^^xsd:string)' in content
+    assert 'SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))' in content
+    assert 'SubClassOf(test:Father test:Male)' in content
+    assert 'SubClassOf(test:Mother test:Female)' in content
+    assert 'SubClassOf(test:Underage ObjectAllValuesFrom(test:drives test:Less_than_50_cc))' in content
+    assert 'SubObjectPropertyOf(test:hasParent test:hasAncestor)' in content
+    assert 'SubObjectPropertyOf(test:hasFather test:hasParent)' in content
+    assert 'SubObjectPropertyOf(test:hasMother test:hasParent)' in content
+    assert 'FunctionalObjectProperty(test:hasFather)' in content
+    assert 'FunctionalObjectProperty(test:hasMother)' in content
+    assert 'DataPropertyRange(test:name xsd:string)' in content
+    assert 'DataPropertyDomain(test:name test:Person)' in content
+    assert 'InverseObjectProperties(test:hasAncestor test:isAncestorOf)' in content
+    assert 'ObjectPropertyAssertion(test:isAncestorOf test:Bob test:Alice)' in content
+    assert 'ObjectPropertyRange(test:hasAncestor test:Person)' in content
+    assert 'ObjectPropertyRange(test:hasFather test:Father)' in content
+    assert 'ObjectPropertyRange(test:hasMother test:Mother)' in content
+    assert 'ObjectPropertyRange(test:drives test:Vehicle)' in content
+    assert 'NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)' in content
+    assert ')' in content
+    # AND
+    assert 'SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)' not in content
+    assert 'SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)' not in content
+    assert 'SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)' not in content
+    # AND
+    assert any([line in content for line in
+                ['EquivalentClasses(test:Person ObjectUnionOf(test:Underage test:Adult))',
+                 'EquivalentClasses(test:Person ObjectUnionOf(test:Adult test:Underage))',
+                 'EquivalentClasses(ObjectUnionOf(test:Underage test:Adult) test:Person)',
+                 'EquivalentClasses(ObjectUnionOf(test:Adult test:Person) test:Person)']])
+    assert any([line in content for line in
+                ['EquivalentClasses(test:Person DataSomeValuesFrom(test:name rdfs:Literal))',
+                 'EquivalentClasses(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)']])
+    assert any([line in content for line in
+                ['EquivalentClasses(test:Person ObjectUnionOf(test:Female test:Male))',
+                 'EquivalentClasses(test:Person ObjectUnionOf(test:Male test:Female))',
+                 'EquivalentClasses(ObjectUnionOf(test:Female test:Male) test:Person)',
+                 'EquivalentClasses(ObjectUnionOf(test:Male test:Female) test:Person)']])
+    assert any([line in content for line in
+                ['EquivalentClasses(test:Vehicle ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc))',
+                 'EquivalentClasses(test:Vehicle ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc))',
+                 'EquivalentClasses(ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc) test:Vehicle)',
+                 'EquivalentClasses(ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc) test:Vehicle)']])
+    assert any([line in content for line in
+                ['EquivalentClasses(test:Person ObjectAllValuesFrom(test:drives owl:Thing))',
+                 'EquivalentClasses(ObjectAllValuesFrom(test:drives owl:Thing) test:Person)',]])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Female test:Male)',
+                 'DisjointClasses(test:Male test:Female)']])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Person test:Vegetable)',
+                 'DisjointClasses(test:Vegetable test:Person)']])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Underage test:Adult)',
+                 'DisjointClasses(test:Adult test:Underage)']])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
+                 'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
+    # AND
+    assert len(content) == 59
+
+
+def test_export_project_to_owl_with_normalization(session, tmpdir):
+    # WHEN
+    owlfile = tmpdir.join('test_project_1.owl')
+    project = session.project
+    worker = OWLOntologyExporterWorker(project, str(owlfile),
+                                       axioms={x for x in OWLAxiom},
+                                       normalize=True,
+                                       syntax=OWLSyntax.Functional)
+    worker.run()
+    # THEN
+    assert os.path.isfile(str(owlfile))
+    # WHEN
+    content = list(filter(None, fread(str(owlfile)).split('\n')))
+    # THEN
+    assert 'Prefix(owl:=<http://www.w3.org/2002/07/owl#>)' in content
+    assert 'Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)' in content
+    assert 'Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)' in content
+    assert 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)' in content
+    assert 'Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)' in content
+    assert 'Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)' in content
+    assert 'Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>' in content
+    assert 'Declaration(Class(test:Vegetable))' in content
+    assert 'Declaration(Class(test:Person))' in content
+    assert 'Declaration(Class(test:Male))' in content
+    assert 'Declaration(Class(test:Female))' in content
+    assert 'Declaration(Class(test:Mother))' in content
+    assert 'Declaration(Class(test:Father))' in content
+    assert 'Declaration(Class(test:Underage))' in content
+    assert 'Declaration(Class(test:Adult))' in content
+    assert 'Declaration(Class(test:Vehicle))' in content
+    assert 'Declaration(Class(test:Less_than_50_cc))' in content
+    assert 'Declaration(Class(test:Over_50_cc))' in content
+    assert 'Declaration(NamedIndividual(test:Bob))' in content
+    assert 'Declaration(NamedIndividual(test:Alice))' in content
+    assert 'Declaration(NamedIndividual(test:Trudy))' in content
+    assert 'Declaration(ObjectProperty(test:hasAncestor))' in content
+    assert 'Declaration(ObjectProperty(test:hasParent))' in content
+    assert 'Declaration(ObjectProperty(test:hasFather))' in content
+    assert 'Declaration(ObjectProperty(test:hasMother))' in content
+    assert 'Declaration(ObjectProperty(test:isAncestorOf))' in content
+    assert 'Declaration(ObjectProperty(test:drives))' in content
+    assert 'Declaration(DataProperty(test:name))' in content
+    assert 'Declaration(Datatype(xsd:string))' in content
+    assert 'AnnotationAssertion(rdfs:comment test:Person "A human being"^^xsd:string)' in content
+    assert 'SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))' in content
+    assert 'SubClassOf(test:Father test:Male)' in content
+    assert 'SubClassOf(test:Mother test:Female)' in content
+    assert 'SubClassOf(test:Person DataSomeValuesFrom(test:name rdfs:Literal))' in content
+    assert 'SubClassOf(test:Female test:Person)' in content
+    assert 'SubClassOf(test:Male test:Person)' in content
+    assert 'SubClassOf(test:Underage test:Person)' in content
+    assert 'SubClassOf(test:Adult test:Person)' in content
+    assert 'SubClassOf(test:Less_than_50_cc test:Vehicle)' in content
+    assert 'SubClassOf(test:Over_50_cc test:Vehicle)' in content
+    assert 'SubClassOf(test:Underage ObjectAllValuesFrom(test:drives test:Less_than_50_cc))' in content
+    assert 'SubClassOf(test:Person ObjectAllValuesFrom(test:drives owl:Thing))' in content
+    assert 'SubClassOf(ObjectAllValuesFrom(test:drives owl:Thing) test:Person)' in content
+    assert 'SubObjectPropertyOf(test:hasParent test:hasAncestor)' in content
+    assert 'SubObjectPropertyOf(test:hasFather test:hasParent)' in content
+    assert 'SubObjectPropertyOf(test:hasMother test:hasParent)' in content
+    assert 'FunctionalObjectProperty(test:hasFather)' in content
+    assert 'FunctionalObjectProperty(test:hasMother)' in content
+    assert 'DataPropertyRange(test:name xsd:string)' in content
+    assert 'DataPropertyDomain(test:name test:Person)' in content
+    assert 'InverseObjectProperties(test:hasAncestor test:isAncestorOf)' in content
+    assert 'ObjectPropertyAssertion(test:isAncestorOf test:Bob test:Alice)' in content
+    assert 'ObjectPropertyRange(test:hasAncestor test:Person)' in content
+    assert 'ObjectPropertyRange(test:hasFather test:Father)' in content
+    assert 'ObjectPropertyRange(test:hasMother test:Mother)' in content
+    assert 'ObjectPropertyRange(test:drives test:Vehicle)' in content
+    assert 'NegativeObjectPropertyAssertion(test:isAncestorOf test:Bob test:Trudy)' in content
+    assert ')' in content
+    # AND
+    assert 'SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasAncestor) owl:Thing) test:Person)' not in content
+    assert 'SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasMother) owl:Thing) test:Mother)' not in content
+    assert 'SubClassOf(ObjectSomeValuesFrom(ObjectInverseOf(test:hasFather) owl:Thing) test:Father)' not in content
+    assert 'SubClassOf(DataSomeValuesFrom(test:name rdfs:Literal) test:Person)' not in content
+    # AND
+    assert any([line in content for line in
+                ['SubClassOf(test:Person ObjectUnionOf(test:Underage test:Adult))',
+                 'SubClassOf(test:Person ObjectUnionOf(test:Adult test:Underage))']])
+    assert any([line in content for line in
+                ['SubClassOf(test:Person ObjectUnionOf(test:Female test:Male))',
+                 'SubClassOf(ObjectUnionOf(test:Female test:Male) test:Person)']])
+    assert any([line in content for line in
+                ['SubClassOf(test:Vehicle ObjectUnionOf(test:Less_than_50_cc test:Over_50_cc))',
+                 'SubClassOf(test:Vehicle ObjectUnionOf(test:Over_50_cc test:Less_than_50_cc))']])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Female test:Male)',
+                 'DisjointClasses(test:Male test:Female)']])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Person test:Vegetable)',
+                 'DisjointClasses(test:Vegetable test:Person)']])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Underage test:Adult)',
+                 'DisjointClasses(test:Adult test:Underage)']])
+    assert any([line in content for line in
+                ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
+                 'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
+    # AND
+    assert len(content) == 66

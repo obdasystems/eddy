@@ -33,39 +33,45 @@
 ##########################################################################
 
 
-import unittest
+import pytest
 
 from eddy.core.generators import GUID
 
 
-class GUIDTestCase(unittest.TestCase):
+class TestGUID:
 
     def test_unique_id_generation(self):
         guid = GUID()
-        self.assertEqual('n0', guid.next('n'))
-        self.assertEqual('n1', guid.next('n'))
-        self.assertEqual('e0', guid.next('e'))
-        self.assertEqual('n2', guid.next('n'))
-        self.assertEqual('e1', guid.next('e'))
-        self.assertEqual({'n': 2, 'e': 1}, guid.ids)
+        assert 'n0' == guid.next('n')
+        assert 'n1' == guid.next('n')
+        assert 'e0' == guid.next('e')
+        assert 'n2' == guid.next('n')
+        assert 'e1' == guid.next('e')
+        assert {'n': 2, 'e': 1} == guid.ids
 
     def test_unique_id_generation_with_exception(self):
         guid = GUID()
-        self.assertRaises(ValueError, guid.next, '1')
-        self.assertRaises(ValueError, guid.next, 'n1')
-        self.assertRaises(ValueError, guid.next, 'n 1')
+        with pytest.raises(ValueError):
+            guid.next('1')
+        with pytest.raises(ValueError):
+            guid.next('n1')
+        with pytest.raises(ValueError):
+            guid.next('n 1')
 
     def test_unique_id_update(self):
         guid = GUID()
         guid.update('n19')
         guid.update('e7')
-        self.assertEqual({'n': 19, 'e': 7}, guid.ids)
+        assert {'n': 19, 'e': 7} == guid.ids
 
     def test_unique_id_parse(self):
-        self.assertEqual(('n', 8), GUID.parse('n8'))
-        self.assertEqual(('e', 122), GUID.parse('e122'))
+        assert ('n', 8) == GUID.parse('n8')
+        assert ('e', 122) == GUID.parse('e122')
 
     def test_unique_id_parse_with_exception(self):
-        self.assertRaises(ValueError, GUID.parse, '1')
-        self.assertRaises(ValueError, GUID.parse, 'n')
-        self.assertRaises(ValueError, GUID.parse, 'n 8')
+        with pytest.raises(ValueError):
+            GUID.parse('1')
+        with pytest.raises(ValueError):
+            GUID.parse('n')
+        with pytest.raises(ValueError):
+            GUID.parse('n 8')
