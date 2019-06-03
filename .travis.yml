@@ -1,16 +1,13 @@
-## Use xenial
 dist: xenial
-
-## Use container-based environment
 sudo: false
 
-## Additional packages to install
 addons:
   apt:
     packages:
       - libxkbcommon-x11-0
       - openjdk-8-jdk
   homebrew:
+    update: true
     taps: homebrew/cask-versions
     casks: adoptopenjdk8
     packages:
@@ -19,39 +16,14 @@ addons:
       - readline
       - xz
       - zlib
-    update: true
 
-## Set JVM version
-jdk:
-  - openjdk8
-
-## Cache PIP installs across jobs
 cache:
   pip: true
   directories:
     - $HOME/.pyenv
 
-## Select test language
 language: python
 
-## Select python version
-python:
-  - 3.6
-
-# Jobs environment variables
-env:
-  matrix:
-    - TEST=actions
-    - TEST=datatypes
-    - TEST=diagram
-    - TEST=export
-    - TEST=functions
-    - TEST=palette
-    - TEST=profiles
-    - TEST=tools
-    - TEST=packaging
-
-## Setup branches to test
 branches:
   only:
     - master
@@ -59,60 +31,70 @@ branches:
     - /^deploy-.*$/
     - /^v\d+\.\d+(\.\d+)?(\S*)?$/
 
-## Include an osx build job
 matrix:
+  fast_finish: true
   include:
-  - os: osx
-    language: generic
-    osx_image: xcode9
-    env:
-      - PYTHON_VERSION="3.6.8"
-      - VENV_DIR="$HOME/eddy-venv"
-      - TEST=packaging
+    - python: 3.5
+      env: TOXENV=py35-pyqt58
 
-## Prepare build environment
+    - python: 3.5
+      env: TOXENV=py35-pyqt59
+
+    - python: 3.5
+      env: TOXENV=py35-pyqt510
+
+    - python: 3.6
+      env: TOXENV=py36-pyqt59
+
+    - python: 3.6
+      env: TOXENV=py36-pyqt510
+
+    - python: 3.6
+      env: TOXENV=py36-pyqt511
+
+    - python: 3.6
+      env: TOXENV=py36-pyqt512
+
+    - python: 3.7
+      env: TOXENV=py37-pyqt511
+
+    - python: 3.7
+      env: TOXENV=py37-pyqt512
+
+    - python: 3.6
+      env: DEPLOY=yes
+
+    - os: osx
+      language: generic
+      osx_image: xcode9
+      env: OSX=sierra PYTHON_VERSION=3.6.8 DEPLOY=yes
+
+    - os: osx
+      language: generic
+      osx_image: xcode9.4
+      env: OSX=high-sierra PYTHON_VERSION=3.7.3
+
+    # https://github.com/pyenv/pyenv/issues/1219
+    #- os: osx
+    #  language: generic
+    #  osx_image: xcode10.2
+    #  env: OSX=mojave PYTHON_VERSION=3.7.3
+
 before_install:
   - source ./scripts/travis/before_install.sh
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source "$VENV_DIR/bin/activate"; fi
 
-## Install dependencies from PyPI
 install:
-  - travis_retry pip install -U pip setuptools wheel
-  - travis_retry pip install -U -r requirements/cython.in
-  - travis_retry pip install -U -r requirements/pyqt5.in
-  - travis_retry pip install -U -r requirements/base.in
-  - travis_retry pip install -U -r requirements/tests.in
-  - travis_retry pip install -U -r requirements/packaging.in
+  - source ./scripts/travis/install.sh
 
 before_script:
   - source ./scripts/travis/before_script.sh
 
-## Run automated tests using nose
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TEST" != "packaging" ]]; then
-      xvfb-run --server-args='-screen 0 1024x768x24' nosetests --tests=tests/test_${TEST}.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc;
-    fi;
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TEST" == "packaging" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-      mkdir -p resources/java;
-      cp -R "$JAVA_HOME/jre" resources/java/jre;
-      ./scripts/prepare_jre.sh;
-      python setup.py bdist_archive --format=gztar;
-    fi;
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]] && [[ "$TEST" == "packaging" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-      mkdir -p resources/java;
-      cp -R "$JAVA_HOME/jre" resources/java/jre;
-      ./scripts/prepare_jre.sh;
-      python setup.py createdmg;
-    fi;
-
-# Report tests coverage
-#after_success:
-#  - coveralls
+  - source ./scripts/travis/script.sh
 
 before_deploy:
   - PYTHONPATH=".:$PYTHONPATH" python ./scripts/travis/before_deploy.py
 
-## Deploy artifacts
 deploy:
   - provider: bintray
     file: "descriptor.json"
@@ -121,7 +103,7 @@ deploy:
     skip_cleanup: true
     on:
       all_branches: true
-      condition: $TEST = packaging
+      condition: $DEPLOY = yes
   - provider: releases
     api_key:
       secure: Uvp3flGfCc1uDaQshC1wopgZbkHTA0K7mw7CPiFwxRpxXHepgqBv1otoC4DD0nJvsu1c9p7255jF4pom40ONjmoC0Va4xhS3M1ZnUDt9p2n2Bu6LLoS0e6Zkg7H35uAlH+oWvFGDqdOD3y2ujf3KRD5iwgEEpsDvVUbjEIb7RTTF2HLlSTL1dIAgYEOC09NUWhhFz0kgrUMsGfdtt7VvNaxBcWJsQVMsSgWrrHBgN40DZyE08BQnEfhXPfTqvY94rIsxHTDnr6WBPAfKqRtFlcoAbqmj1RDtUMIAH4PthrgDlyHOb1Vw7izZVJv2PjX82xk0olPlq5PzvHuafCnRn38yhT8JkVn04RgNNOvwIFdL5HcpL4BVAiz+jtyHgkr9VqfzNnveFZM0+lvv7h3csdHDgqGFiAyNZPgj9tglwi1iwa3RT3n2d+yXWH7ugXGETYncX6CJk3OOHi28fzHva+vEcFJFKsfPH5kKn/Nrhqtwh8AyCF8mW8kS90WyWajsIZzvPtHcUgw4tXQtqHkTJoEBiU4BZYVq/wpKmkNfH6xYmDpSupHGjpNVdsWMsVlJXpBr5fpn45/8UfJDqT9XXUnEuoHY0vFw47XN3t2Rag9xqHaDTUC8P/fjiXD3vgPz2BnNqyTbGUHVEGm0Q6LjQk9TRy5bjZHId5A8mbkvrV4=
@@ -132,5 +114,4 @@ deploy:
     on:
       tags: true
       repo: obdasystems/eddy
-      condition: $TEST = packaging
-
+      condition: $DEPLOY = yes
