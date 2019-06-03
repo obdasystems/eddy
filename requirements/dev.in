@@ -4,6 +4,7 @@
 -r base.in
 -r packaging.in
 -r tests.in
+-r tox.in
 
 # From PyPi
 PyQt5-stubs==5.11.3.3

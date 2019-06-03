@@ -12,9 +12,11 @@ click==7.0                # via pip-tools
 coverage==4.5.3           # via pytest-cov
 cython==0.29.7
 easyprocess==0.2.7        # via pyvirtualdisplay
+filelock==3.0.12          # via tox
 future==0.17.1            # via pefile
 graphviz==0.10.1          # via objgraph
 importlib-metadata==0.17  # via pluggy, pytest
+jpype1==0.6.3
 macholib==1.11            # via pyinstaller
 more-itertools==7.0.0     # via pytest
 natsort==5.2.0
@@ -23,11 +25,10 @@ packaging==19.0
 pefile==2019.4.18         # via pyinstaller
 pillow==6.0.0
 pip-tools==3.7.0
-pluggy==0.12.0            # via pytest
+pluggy==0.12.0            # via pytest, tox
 py-cpuinfo==5.0.0         # via pytest-benchmark
-py==1.8.0                 # via pytest
+py==1.8.0                 # via pytest, tox
 pyinstaller==3.4
-pyjnius==1.2.0
 pyparsing==2.4.0          # via packaging
 pyqt5-sip==4.19.17        # via pyqt5
 pyqt5-stubs==5.11.3.3
@@ -43,7 +44,10 @@ pytest-xvfb==1.2.0
 pytest==4.6.1
 pyvirtualdisplay==0.2.3   # via pytest-xvfb
 rfc3987==1.3.8
-six==1.12.0               # via packaging, pip-tools, pyjnius, pytest
+six==1.12.0               # via packaging, pip-tools, pytest, tox
+toml==0.10.0              # via tox
+tox==3.12.1
 verlib==0.1
+virtualenv==16.6.0        # via tox
 wcwidth==0.1.7            # via pytest
 zipp==0.5.1               # via importlib-metadata
