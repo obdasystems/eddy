@@ -1,0 +1,6 @@
+#
+# tox requirements
+#
+
+# From PyPI
+tox==3.12.1

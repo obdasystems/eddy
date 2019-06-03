@@ -33,157 +33,174 @@
 ##########################################################################
 
 
+"""
+Tests for the palette plugin.
+"""
+
+import pytest
+
 from PyQt5 import QtCore
-from PyQt5 import QtTest
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.misc import first
+from eddy.core.functions.path import expandPath
+from eddy.ui.session import Session
 
-from tests import EddyTestCase
 
-
-class PaletteTestCase(EddyTestCase):
+@pytest.fixture
+def session(qapp, qtbot, logging_disabled):
     """
-    Tests for the palette plugin.
+    Provide an initialized Session instance.
     """
-    def setUp(self):
-        """
-        Initialize test case environment.
-        """
-        super().setUp()
-        self.init('test_project_1')
-        self.session.sgnFocusDiagram.emit(self.project.diagram('diagram'))
+    with logging_disabled:
+        session = Session(qapp, expandPath('@tests/test_project_1'))
+        session.show()
+    qtbot.addWidget(session)
+    qtbot.waitExposed(session, timeout=3000)
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(session.project.diagram('diagram'))
+    yield session
 
-    #############################################
-    #   TEST NODE INSERTION
-    #################################
 
-    def test_insert_single_node(self):
-        # GIVEN
-        diagram = self.session.mdi.activeDiagram()
-        view = self.session.mdi.activeView()
-        plugin = self.session.plugin('palette')
-        palette = plugin.widget('palette')
-        button = palette.button(Item.ConceptNode)
-        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
-        position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
-        # WHEN
-        QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.NodeAdd)
-        self.assertIs(diagram.modeParam, Item.ConceptNode)
-        # WHEN
-        QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, position)
-        # THEN
-        self.assertFalse(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.Idle)
-        self.assertIsNone(diagram.modeParam)
+#############################################
+#   TEST NODE INSERTION
+#################################
 
-    def test_insert_single_node_with_control_modifier(self):
-        # GIVEN
-        diagram = self.session.mdi.activeDiagram()
-        view = self.session.mdi.activeView()
-        plugin = self.session.plugin('palette')
-        palette = plugin.widget('palette')
-        button = palette.button(Item.ConceptNode)
-        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
-        position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
-        # WHEN
-        QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.NodeAdd)
-        self.assertIs(diagram.modeParam, Item.ConceptNode)
-        # WHEN
-        QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.NodeAdd)
-        self.assertIs(diagram.modeParam, Item.ConceptNode)
+def test_insert_single_node(session, qtbot):
+    # GIVEN
+    project = session.project
+    diagram = session.mdi.activeDiagram()
+    view = session.mdi.activeView()
+    plugin = session.plugin('palette')
+    palette = plugin.widget('palette')
+    button = palette.button(Item.ConceptNode)
+    node = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
+    # WHEN
+    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.NodeAdd
+    assert diagram.modeParam is Item.ConceptNode
+    # WHEN
+    qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, position)
+    # THEN
+    assert not button.isChecked()
+    assert diagram.mode is DiagramMode.Idle
+    assert diagram.modeParam is None
 
-    def test_insert_multiple_nodes_with_control_modifier(self):
-        # GIVEN
-        diagram = self.session.mdi.activeDiagram()
-        view = self.session.mdi.activeView()
-        plugin = self.session.plugin('palette')
-        palette = plugin.widget('palette')
-        button = palette.button(Item.RoleNode)
-        node = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
-        positions = (view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200))
-        # WHEN
-        QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.NodeAdd)
-        self.assertIs(diagram.modeParam, Item.RoleNode)
-        # WHEN
-        for position in positions:
-            QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.NodeAdd)
-        self.assertIs(diagram.modeParam, Item.RoleNode)
 
-    #############################################
-    #   TEST EDGE INSERTION
-    #################################
+def test_insert_single_node_with_control_modifier(session, qtbot):
+    # GIVEN
+    project = session.project
+    diagram = session.mdi.activeDiagram()
+    view = session.mdi.activeView()
+    plugin = session.plugin('palette')
+    palette = plugin.widget('palette')
+    button = palette.button(Item.ConceptNode)
+    node = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
+    # WHEN
+    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.NodeAdd
+    assert diagram.modeParam is Item.ConceptNode
+    # WHEN
+    qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.NodeAdd
+    assert diagram.modeParam is Item.ConceptNode
 
-    def test_insert_edge(self):
-        # GIVEN
-        diagram = self.session.mdi.activeDiagram()
-        view = self.session.mdi.activeView()
-        plugin = self.session.plugin('palette')
-        palette = plugin.widget('palette')
-        button = palette.button(Item.InclusionEdge)
-        node1 = first(self.project.predicates(Item.ConceptNode, 'test:Male', diagram))
-        node2 = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
-        pos1 = view.mapFromScene(node1.pos())
-        pos2 = view.mapFromScene(node2.pos())
-        # WHEN
-        QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.EdgeAdd)
-        self.assertIs(diagram.modeParam, Item.InclusionEdge)
-        # WHEN
-        QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
-        QtTest.QTest.mouseMove(view.viewport(), pos2)
-        # THEN
-        self.assertTrue(button.isChecked())
-        # WHEN
-        QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
-        # THEN
-        self.assertFalse(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.Idle)
-        self.assertIsNone(diagram.modeParam)
 
-    def test_insert_edge_with_control_modifier(self):
-        # GIVEN
-        diagram = self.session.mdi.activeDiagram()
-        view = self.session.mdi.activeView()
-        plugin = self.session.plugin('palette')
-        palette = plugin.widget('palette')
-        button = palette.button(Item.InclusionEdge)
-        node1 = first(self.project.predicates(Item.ConceptNode, 'test:Male', diagram))
-        node2 = first(self.project.predicates(Item.ConceptNode, 'test:Person', diagram))
-        pos1 = view.mapFromScene(node1.pos())
-        pos2 = view.mapFromScene(node2.pos())
-        # WHEN
-        QtTest.QTest.mouseClick(button, QtCore.Qt.LeftButton)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.EdgeAdd)
-        self.assertIs(diagram.modeParam, Item.InclusionEdge)
-        # WHEN
-        QtTest.QTest.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, pos1)
-        QtTest.QTest.mouseMove(view.viewport(), pos2)
-        # THEN
-        self.assertTrue(button.isChecked())
-        # WHEN
-        QtTest.QTest.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, pos2)
-        # THEN
-        self.assertTrue(button.isChecked())
-        self.assertIs(diagram.mode, DiagramMode.EdgeAdd)
-        self.assertIs(diagram.modeParam, Item.InclusionEdge)
+def test_insert_multiple_nodes_with_control_modifier(session, qtbot):
+    # GIVEN
+    project = session.project
+    diagram = session.mdi.activeDiagram()
+    view = session.mdi.activeView()
+    plugin = session.plugin('palette')
+    palette = plugin.widget('palette')
+    button = palette.button(Item.RoleNode)
+    node = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    positions = (view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200))
+    # WHEN
+    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.NodeAdd
+    assert diagram.modeParam is Item.RoleNode
+    # WHEN
+    for position in positions:
+        qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.NodeAdd
+    assert diagram.modeParam is Item.RoleNode
+
+
+#############################################
+#   TEST EDGE INSERTION
+#################################
+
+def test_insert_edge(session, qtbot):
+    # GIVEN
+    project = session.project
+    diagram = session.mdi.activeDiagram()
+    view = session.mdi.activeView()
+    plugin = session.plugin('palette')
+    palette = plugin.widget('palette')
+    button = palette.button(Item.InclusionEdge)
+    node1 = first(project.predicates(Item.ConceptNode, 'test:Male', diagram))
+    node2 = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    pos1 = view.mapFromScene(node1.pos())
+    pos2 = view.mapFromScene(node2.pos())
+    # WHEN
+    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.EdgeAdd
+    assert diagram.modeParam is Item.InclusionEdge
+    # WHEN
+    qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos1)
+    qtbot.mouseMove(view.viewport(), pos2)
+    # THEN
+    assert button.isChecked()
+    # WHEN
+    qtbot.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, pos2)
+    # THEN
+    assert not button.isChecked()
+    assert diagram.mode is DiagramMode.Idle
+    assert diagram.modeParam is None
+
+
+def test_insert_edge_with_control_modifier(session, qtbot):
+    # GIVEN
+    project = session.project
+    diagram = session.mdi.activeDiagram()
+    view = session.mdi.activeView()
+    plugin = session.plugin('palette')
+    palette = plugin.widget('palette')
+    button = palette.button(Item.InclusionEdge)
+    node1 = first(project.predicates(Item.ConceptNode, 'test:Male', diagram))
+    node2 = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    pos1 = view.mapFromScene(node1.pos())
+    pos2 = view.mapFromScene(node2.pos())
+    # WHEN
+    qtbot.mouseClick(button, QtCore.Qt.LeftButton)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.EdgeAdd
+    assert diagram.modeParam is Item.InclusionEdge
+    # WHEN
+    qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, pos1)
+    qtbot.mouseMove(view.viewport(), pos2)
+    # THEN
+    assert button.isChecked()
+    # WHEN
+    qtbot.mouseRelease(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, pos2)
+    # THEN
+    assert button.isChecked()
+    assert diagram.mode is DiagramMode.EdgeAdd
+    assert diagram.modeParam is Item.InclusionEdge

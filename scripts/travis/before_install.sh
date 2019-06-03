@@ -31,8 +31,6 @@
 #                                                                        #
 ##########################################################################
 
-# Terminate in case of errors
-#set -e
 
 # Set Python version to use as an environment variable
 PYTHON_VERSION=${PYTHON_VERSION:-"3.6.8"}
@@ -71,4 +69,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     export JAVA_HOME="`/usr/libexec/java_home --failfast --version 1.8`"
     # set JDK_HOME for pyjnius
     export JDK_HOME="$JAVA_HOME"
+
+    # Activate virtualenv
+    source "$VENV_DIR/bin/activate"
 fi

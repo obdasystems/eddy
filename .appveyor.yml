@@ -41,22 +41,23 @@ install:
   - gem install dpl
   - "%PYTHON%\\python -m ensurepip"
   - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\cython.in"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\base.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\tests.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.in"
   - md resources\java
   - robocopy /E "%JAVA_HOME%\jre" resources\java\jre /XF classes.jsa || exit 0
-  - "%PYTHON%\\Scripts\\pyinstaller --clean --windowed --workpath build --distpath build --noconfirm eddy.spec"
-  - "%PYTHON%\\python setup.py innosetup --skip-build"
-  - "%PYTHON%\\python setup.py bdist_archive --skip-build --format=zip"
 
 # Appveyor's build step is specific to .NET projects
 build: off
 
-#test_script:
-#  - "%PYTHON%\\Scripts\\nosetests --tests=tests\\test_actions.py --verbosity=3 --with-cov --cov eddy --cov-report term-missing --cov-config .coveragerc"
+test_script:
+  - "%PYTHON%\\python -m pytest"
+
+after_test:
+  - "%PYTHON%\\Scripts\\pyinstaller --clean --windowed --workpath build --distpath build --noconfirm eddy.spec"
+  - "%PYTHON%\\python setup.py innosetup --skip-build"
+  - "%PYTHON%\\python setup.py standalone --skip-build --format=zip"
 
 artifacts:
   - path: 'dist\*'

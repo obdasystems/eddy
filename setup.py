@@ -175,11 +175,11 @@ cmdclass['pyinstaller'] = PyInstallerCommand
 
 
 # noinspection PyAttributeOutsideInit
-class ArchiveCommand(setuptools.Command):
+class StandaloneCommand(setuptools.Command):
     """
-    Create a distribution archive using the given format.
+    Create a standalone distribution archive using the given format.
     """
-    description = 'create a distribution archive (tarball, zip file, etc.)'
+    description = 'create a standalone distribution archive (tarball, zip file, etc.)'
     user_options = PyInstallerCommand.user_options
     user_options.extend([
         ('dist-dir=', 'd',
@@ -237,7 +237,7 @@ class ArchiveCommand(setuptools.Command):
                           owner=self.owner, group=self.group)
 
 
-cmdclass['bdist_archive'] = ArchiveCommand
+cmdclass['standalone'] = StandaloneCommand
 
 if WIN32:
     # noinspection PyAttributeOutsideInit
@@ -503,8 +503,7 @@ setuptools.setup(
     python_requires='>=3.5',
     install_requires=[
         'natsort',
-        'pyjnius',
-        'PyQt5',
+        'jpype1',
         'rfc3987',
         'verlib'
     ],

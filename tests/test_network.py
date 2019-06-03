@@ -32,56 +32,47 @@
 #                                                                        #
 ##########################################################################
 
+
 from PyQt5 import QtCore, QtNetwork, QtTest
 
 from eddy.core.datatypes.system import Channel
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
 from eddy.core.network import NetworkManager
-from tests import EddyTestCase
 
 
-class NetworkManagerTest(EddyTestCase):
-    """
-    Test case for the NetworkManager.
-    """
-    def setUp(self):
-        super().setUp()
-        self.init('test_project_1')
+#############################################
+# NETWORK MANAGER TESTS
+#################################
 
-    def test_check_for_update_update_available(self):
-        # GIVEN
-        response_content = fread(expandPath('@tests/test_resources/network/update_available.json')).encode('utf-8')
-        response_data = b'application/json'
-        update_provider = UpdateContentProvider(response_content, response_data)
-        nmanager = NetworkManagerMock(self.session, content_provider=update_provider)
-        available_spy = QtTest.QSignalSpy(nmanager.sgnUpdateAvailable)
-        unavailable_spy = QtTest.QSignalSpy(nmanager.sgnNoUpdateAvailable)
-        # WHEN
+def test_check_for_update_update_available(qtbot):
+    # GIVEN
+    response_content = fread(expandPath('@tests/test_resources/network/update_available.json')).encode('utf-8')
+    response_data = b'application/json'
+    update_provider = UpdateContentProvider(response_content, response_data)
+    nmanager = NetworkManagerMock(None, content_provider=update_provider)
+    # WHEN
+    with qtbot.waitSignals([nmanager.sgnUpdateAvailable]) as blocker, \
+            qtbot.assertNotEmitted(nmanager.sgnNoUpdateDataAvailable), \
+            qtbot.assertNotEmitted(nmanager.sgnNoUpdateAvailable):
         nmanager.checkForUpdate(Channel.Stable, '1.0.0')
-        QtTest.QTest.qWait(1000)
-        available_spy.wait(250)
-        unavailable_spy.wait(250)
-        # THEN
-        self.assertEqual(1, len(available_spy))
-        self.assertEqual(0, len(unavailable_spy))
+    # THEN
+    assert 1 == len(blocker.all_signals_and_args)
 
-    def test_check_for_update_no_update_available(self):
-        # GIVEN
-        response_content = fread(expandPath('@tests/test_resources/network/no_update_available.json')).encode('utf-8')
-        response_data = b'application/json'
-        update_provider = UpdateContentProvider(response_content, response_data)
-        nmanager = NetworkManagerMock(self.session, content_provider=update_provider)
-        available_spy = QtTest.QSignalSpy(nmanager.sgnUpdateAvailable)
-        unavailable_spy = QtTest.QSignalSpy(nmanager.sgnNoUpdateAvailable)
-        # WHEN
+
+def test_check_for_update_no_update_available(qtbot):
+    # GIVEN
+    response_content = fread(expandPath('@tests/test_resources/network/no_update_available.json')).encode('utf-8')
+    response_data = b'application/json'
+    update_provider = UpdateContentProvider(response_content, response_data)
+    nmanager = NetworkManagerMock(None, content_provider=update_provider)
+    # WHEN
+    with qtbot.waitSignals([nmanager.sgnNoUpdateAvailable]) as blocker, \
+            qtbot.assertNotEmitted(nmanager.sgnNoUpdateDataAvailable), \
+            qtbot.assertNotEmitted(nmanager.sgnUpdateAvailable):
         nmanager.checkForUpdate(Channel.Stable, '1.0.0')
-        QtTest.QTest.qWait(1000)
-        available_spy.wait(250)
-        unavailable_spy.wait(250)
-        # THEN
-        self.assertEqual(0, len(available_spy))
-        self.assertEqual(1, len(unavailable_spy))
+    # THEN
+    assert 1 == len(blocker.all_signals_and_args)
 
 
 class NetworkManagerMock(NetworkManager):
