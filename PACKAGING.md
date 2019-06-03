@@ -2,13 +2,12 @@
 
 Eddy is distributed as different packages:
 
-* `Windows x64` installer (built with InnoSetup)
+* `Windows amd64` installer (built with InnoSetup)
 * `Windows x86` installer (built with InnoSetup)
-* `Windows x64` standalone package (.zip archive)
+* `Windows amd64` standalone package (.zip archive)
 * `Windows x86` standalone package (.zip archive)
-* `macOS (Intel)` app bundle (distributed as .dmg)
+* `macOS x86_64` app bundle (distributed as .dmg)
 * `Linux x86_64` standalone package (.tar.gz archive)
-* `Linux i686` standalone package (.tar.gz archive)
 
 To create distribution packages you need to have installed [Python 3.6](https://www.python.org) on your system. 
 You also need to have installed [Git](http://git-scm.com/) on your system and make sure that the `git` command
@@ -45,7 +44,7 @@ Switch to the user home directory:
     
 Create a new virtual environment using the command:
 
-    C:\> python -m venv --copies eddy-venv-py36
+    C:\> python -m venv eddy-venv-py36
     
 Activate the virtual environment with:
 
@@ -58,10 +57,9 @@ Clone Eddy repository by running the command:
 Update `pip` and install required Python dependencies from PyPI:
     
     C:\> cd eddy
-    C:\> pip install -U pip setuptools wheel
-    C:\> pip install -U -r requirements\cython.in
-    C:\> pip install -U -r requirements\pyqt5.in
+    C:\> pip install -U pip setuptools
     C:\> pip install -U -r requirements\base.in
+    C:\> pip install -U -r requirements\pyqt5.in
     C:\> pip install -U -r requirements\packaging.in
 
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
@@ -78,7 +76,7 @@ To build a Windows binary installer, run the command:
 
 To build a Windows standalone (.zip) distribution, run the command:
 
-    $ python setup.py bdist_archive --format=zip
+    $ python setup.py standalone
     
 Once the building process is completed you will find the built 
 package(s) inside the *dist* directory. 
@@ -107,7 +105,7 @@ Set the `JAVA_HOME` environment variable to point to the location where the JDK 
 
 Create a new virtual environment with:
 
-    $ PYENV_VERSION=3.6.8 pyenv exec python -m venv --copies eddy-venv-py36
+    $ PYENV_VERSION=3.6.8 pyenv exec python -m venv eddy-venv-py36
     
 Activate the virtual environment with:
 
@@ -121,9 +119,8 @@ Update `pip` and install required Python dependencies from PyPI:
     
     $ cd eddy
     $ pip install -U pip setuptools
-    $ pip install -U -r requirements/cython.in
-    $ pip install -U -r requirements/pyqt5.in
     $ pip install -U -r requirements/base.in
+    $ pip install -U -r requirements/pyqt5.in
     $ pip install -U -r requirements/packaging.in
 
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
@@ -140,17 +137,14 @@ Invoke the script with the `--help` argument to get a list of the available opti
 
 To build a macOS disk image (.dmg) containing the app bundle, run the command:
 
-    $ python setup.py bdist_dmg
+    $ python setup.py createdmg
 
 Once the building process is completed you will find the built 
 package(s) inside the *dist* directory. 
 
 ## On GNU/Linux 
 
-**NOTE**: In order to build distribution packages for 32 bit Linux distros it is required 
-to build Qt5 and PyQt5 from source, as binary wheels from PyPI are not available. 
-
-### Installing dependencies
+### Installing Python using pyenv
 
 In order to setup the virtual environment you will have to install Python 3.6, Git, and a JDK 1.8:
 
@@ -178,7 +172,7 @@ command since it is required for PyInstaller to work.
     
 Create a new virtual environment:
 
-    $ PYENV_VERSION=3.6.8 pyenv exec python -m venv --copies eddy-venv-py36
+    $ PYENV_VERSION=3.6.8 pyenv exec python -m venv eddy-venv-py36
     
 Activate the virtual environment:
 
@@ -192,9 +186,8 @@ Update `pip` and install required Python dependencies from PyPI:
     
     $ cd eddy
     $ pip install -U pip setuptools
-    $ pip install -U -r requirements/cython.in
-    $ pip install -U -r requirements/pyqt5.in
     $ pip install -U -r requirements/base.in
+    $ pip install -U -r requirements/pyqt5.in
     $ pip install -U -r requirements/packaging.in
 
 Make sure to copy the Oracle JRE 1.8 `jre` directory in `eddy/resources/java`.  
@@ -211,7 +204,7 @@ Invoke the script with the `--help` argument to get a list of the available opti
 
 To build Linux distribution packages, run the command:
 
-    $ python setup.py bdist_archive --format=gztar
+    $ python setup.py standalone
 
 Once the building process is completed you will find the built 
 package(s) inside the *dist* directory. 
