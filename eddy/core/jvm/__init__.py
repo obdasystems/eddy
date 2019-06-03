@@ -36,6 +36,8 @@
 
 import os
 import sys
+
+from abc import ABCMeta
 from enum import unique
 
 from eddy.core.datatypes.common import Enum_
@@ -51,7 +53,10 @@ _jvmOptions = []
 
 
 @unique
-class JVMJNILib(Enum_):
+class JniLib(Enum_):
+    """
+    Enumeration of the supported JNI libraries.
+    """
     JNIUS = 'jnius'
     JPYPE = 'jpype'
 
@@ -107,20 +112,32 @@ def addJVMOptions(*opts):
     _jvmOptions.extend(opts)
 
 
-def getJavaVM(jnilib=JVMJNILib.JNIUS):
+def getJavaVM(jnilib=None):
     """
-    Returns a reference to a JavaVM instance based on the specified library.
+    Returns a reference to a JavaVM instance based on the specified JNI library.
+    If not JNI library is specified, this method will try to load any of the supported
+    one. The lookup order is guaranteed to be consistent across calls but
+    cannot be assumed to be consistent across API versions.
 
-    :type jnilib: JVMJNILib
+    If no supported library can be found, this method raises a JVMError exception.
+
+    :type jnilib: JniLib
     :rtype: JavaVM
     """
     try:
-        if jnilib == JVMJNILib.JNIUS:
+        if not jnilib:
+            for lib in JniLib:
+                if lib in _jvmLibraries:
+                    jnilib = lib
+                    break
+            else:
+                raise JVMError('No supported JNI library found')
+        if jnilib == JniLib.JNIUS:
             vm = JniusJavaVM()
-        elif jnilib == JVMJNILib.JPYPE:
+        elif jnilib == JniLib.JPYPE:
             vm = JPypeJavaVM()
         else:
-            vm = JavaVM()
+            raise NameError
 
         if not vm.isRunning():
             vm.addClasspath(*getJVMClasspath())
@@ -141,14 +158,35 @@ def findJavaHome():
     # LOOK FOR BUNDLED JRE FIRST
     if os.path.isdir(expandPath('@resources/java/')):
         return expandPath('@resources/java/')
-    # TODO: BETTER ATTEMPT TO LOCATE JRE HOME
-    return os.getenv('JAVA_HOME')
+    # PREFER USER-SPECIFIED JAVA_HOME IF AVAILABLE
+    if os.getenv('JAVA_HOME'):
+        return os.getenv('JAVA_HOME')
+    # JPype offers a nice utility to find Java from known locations
+    if JniLib.JPYPE in _jvmLibraries:
+        from jpype import get_default_jvm_path
+        try:
+            jni_lib = get_default_jvm_path()
+            # Try to locate the root of the Java installation walking
+            # the path backwards and checking for the existence
+            # of the `java` executable.
+            dirname, filename = os.path.split(jni_lib)
+            java_exe = os.path.join('bin', 'java' if not _WIN32 else 'java.exe')
+            while dirname != os.path.dirname(dirname):
+                parent, subdir = os.path.split(dirname)
+                if os.path.isfile(os.path.join(dirname, java_exe)):
+                    return parent if subdir == 'jre' else dirname
+                dirname, filename = parent, subdir
+        except RuntimeError:
+            pass
+    # FALLBACK TO OTHER COMMON VARIABLES
+    return os.getenv('JRE_HOME', os.getenv('JDK_HOME'))
 
 
 class JavaVM(object):
     """
     Abstract class representing the interface with the Java Virtual Machine.
     """
+    __metaclass__ = ABCMeta
     _instance = None
 
     def __init__(self):
@@ -476,7 +514,7 @@ try:
             return self.jnius
 
     # ADD JNIUS TO THE AVAILABLE WRAPPERS
-    _jvmLibraries.append(JVMJNILib.JNIUS)
+    _jvmLibraries.append(JniLib.JNIUS)
 
 except ImportError:
     pass
@@ -593,7 +631,7 @@ try:
             return self.jpype
 
     # ADD JPYPE TO THE AVAILABLE WRAPPERS
-    _jvmLibraries.append(JVMJNILib.JPYPE)
+    _jvmLibraries.append(JniLib.JPYPE)
 
 except ImportError:
     pass
