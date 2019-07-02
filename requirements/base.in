@@ -1,9 +1,4 @@
-# Recursive
--r cython.in
-
 # From PyPi
-appdirs==1.4.3
-packaging==19.0
 rfc3987==1.3.8
 verlib==0.1
 natsort==5.2.0
