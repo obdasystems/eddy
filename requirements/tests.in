@@ -2,10 +2,9 @@
 -r base.in
 
 # From PyPi
-pytest==4.6.1
+pytest==5.0.1
 pytest-benchmark==3.2.2
 pytest-cov==2.7.1
-pytest-faulthandler==1.6.0
 pytest-instafail==0.4.1
 pytest-mock==1.10.4
 pytest-qt==3.2.2

@@ -4,6 +4,6 @@
 -r base.in
 
 # From PyPi
-PyInstaller==3.4
+PyInstaller==3.5
 pyyaml==5.1; sys_platform == 'win32'
-Pillow==6.0.0
+Pillow==6.1.0
