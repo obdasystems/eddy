@@ -552,7 +552,7 @@ try:
             try:
                 sep = ';' if _WIN32 else ':'
                 classpath = sep.join([p for p in self.classpath])
-                jpype.startJVM(jpype.getDefaultJVMPath(), '-Djava.class.path={0}'.format(classpath), *self.options)
+                jpype.startJVM(jpype.getDefaultJVMPath(), '-Djava.class.path={0}'.format(classpath), *self.options, convertStrings=True)
                 self.jpype = jpype
                 self.initialized = True
             except RuntimeError as e:
