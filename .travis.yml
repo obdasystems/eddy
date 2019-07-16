@@ -55,11 +55,17 @@ matrix:
     - python: 3.6
       env: TOXENV=py36-pyqt512
 
+    - python: 3.6
+      env: TOXENV=py36-pyqt513
+
     - python: 3.7
       env: TOXENV=py37-pyqt511
 
     - python: 3.7
       env: TOXENV=py37-pyqt512
+
+    - python: 3.7
+      env: TOXENV=py37-pyqt513
 
     - python: 3.6
       env: DEPLOY=yes
