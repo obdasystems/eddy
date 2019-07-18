@@ -15,7 +15,6 @@ graphviz==0.10.1          # via objgraph
 importlib-metadata==0.17  # via pluggy, pytest, tox
 jpype1==0.7.0
 more-itertools==7.0.0     # via pytest
-natsort==5.2.0
 objgraph==3.4.1
 packaging==19.0           # via pytest, tox
 pillow==6.1.0

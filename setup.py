@@ -502,7 +502,6 @@ setuptools.setup(
     ],
     python_requires='>=3.5',
     install_requires=[
-        'natsort',
         'jpype1',
         'rfc3987',
         'verlib'
