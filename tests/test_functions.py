@@ -41,7 +41,7 @@ from PyQt5 import QtCore
 
 from eddy.core.functions.geometry import angle, distance, projection
 from eddy.core.functions.geometry import intersection, midpoint
-from eddy.core.functions.misc import clamp, first, last, lstrip, rstrip
+from eddy.core.functions.misc import clamp, first, last, lstrip, natsorted, rstrip
 from eddy.core.functions.misc import isEmpty, rangeF, snapF
 from eddy.core.functions.owl import OWLText, OWLShortIRI
 from eddy.core.functions.path import compressPath
@@ -181,3 +181,9 @@ def test_owl_text():
     assert 'this_is_a_long_string' == OWLText('this_is_a_long_string')
     assert 'this_is_a_long_string' == OWLText('this_is_a\nlong _string')
     assert 'this_is_another_long_string' == OWLText('this is another\n\nlong string')
+
+
+def test_natsorted():
+    assert [] == natsorted([])
+    assert ['diagram1', 'diagram9', 'diagram10'] == natsorted(['diagram1', 'diagram10', 'diagram9'])
+    assert [1, 10, 'diagram9', 'diagram10'] == natsorted([1, 'diagram10', 'diagram9', 10])
