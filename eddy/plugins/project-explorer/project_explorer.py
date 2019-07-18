@@ -33,17 +33,14 @@
 ##########################################################################
 
 
-import natsort
-
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.qt import Font
-from eddy.core.functions.misc import first
+from eddy.core.functions.misc import first, natsorted
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
-
 from eddy.ui.dock import DockWidget
 
 
@@ -453,7 +450,7 @@ class ProjectExplorerSortedProxyModel(QtCore.QSortFilterProxyModel):
         """
         data1 = self.sourceModel().data(index1)
         data2 = self.sourceModel().data(index2)
-        items = natsort.natsorted([data1, data2])
+        items = natsorted([data1, data2])
         try:
             return items.index(data1) < items.index(data2)
         except IndexError:

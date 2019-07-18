@@ -34,7 +34,6 @@
 
 
 import math
-from natsort import natsorted
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -43,6 +42,7 @@ from PyQt5 import QtWidgets
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
+from eddy.core.functions.misc import natsorted
 from eddy.ui.fields import CheckBox
 
 

@@ -76,6 +76,29 @@ class Font(QtGui.QFont):
         return True
 
 
+class Collator(QtCore.QCollator):
+    """
+    Subclass of QtCore.QCollator that allows comparison of non-string elements.
+    """
+    def __init__(self, locale=QtCore.QLocale(), **kwargs):
+        """
+        Initialize a new Collator instance.
+        :type locale: QLocale
+        :type kwargs: dict
+        """
+        # noinspection PyArgumentList
+        super().__init__(locale, **kwargs)
+
+    def sortKey(self, item):
+        """
+        Returns the sort key for the given item. If the given item
+        is not of type `str`, then it will be converted automatically.
+        :type item: Any
+        :rtype: str
+        """
+        return super().sortKey(item if isinstance(item, str) else str(item))
+
+
 class BrushIcon(QtGui.QIcon):
     """
     This class extends QtGui.QIcon and automatically creates an icon filled with the given color.

@@ -46,6 +46,7 @@ from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
+from eddy.core.functions.misc import natsorted
 from eddy.core.items.common import AbstractItem
 from eddy.core.output import getLogger
 from eddy.ui.dialogs import DiagramSelectionDialog
@@ -595,7 +596,6 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         if len(selected_diagrams) == 0:
             return
 
-        from natsort import natsorted
         selected_diagrams_sorted = natsorted(selected_diagrams, key=lambda diagram: diagram.name)
 
         printer = QtPrintSupport.QPrinter(QtPrintSupport.QPrinter.HighResolution)

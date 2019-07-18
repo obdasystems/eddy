@@ -33,12 +33,13 @@
 ##########################################################################
 
 
-import re
 import itertools
-
-from PyQt5 import QtCore
+import re
 from traceback import format_exception as f_exc
 
+from PyQt5 import QtCore
+
+from eddy.core.datatypes.qt import Collator
 from eddy.core.regex import RE_QUOTED
 
 
@@ -126,6 +127,26 @@ def lstrip(text, *args):
         if token and text.startswith(token):
             text = text[len(token):]
     return text
+
+
+def natsorted(seq, key=None, reverse=False, locale=QtCore.QLocale(), **kwargs):
+    """
+    Returns a copy of the given iterable, sorted according to numeric order
+    (i.e. alphabetically and numerically, not lexicographically).
+    :type seq: iterable
+    :type key: callable
+    :type reverse: bool
+    :type locale: QLocale
+    :type kwargs: dict
+    :return: iterable
+    """
+    collator = Collator(locale, **kwargs)
+    collator.setNumericMode(kwargs.get('numeric', True))
+    collator.setCaseSensitivity(kwargs.get('case_sensitive', QtCore.Qt.CaseSensitive))
+    collator.setIgnorePunctuation(kwargs.get('ignore_punctuation', False))
+    if callable(key):
+        return sorted(seq, key=lambda x: collator.sortKey(key(x)), reverse=reverse)
+    return sorted(seq, key=collator.sortKey, reverse=reverse)
 
 
 def partition(predicate, iterable):
