@@ -8,5 +8,5 @@
 
 # From PyPi
 PyQt5-stubs==5.11.3.3
-pip-tools==3.8.0
+pip-tools==4.0.0
 objgraph==3.4.1
