@@ -41,7 +41,7 @@ install:
   - gem install dpl
   - "%PYTHON%\\python -m ensurepip"
   - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\base.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\base.in --no-binary jpype1"
   - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\tests.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.in"
