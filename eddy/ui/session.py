@@ -165,6 +165,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
 
+    # Signals related to consistency check.
+    # May be removed when a new reasoner API is implemented
+    sgnConsistencyCheckStarted = QtCore.pyqtSignal()
+    sgnPerfectOntology = QtCore.pyqtSignal()
+    sgnInconsistentOntology = QtCore.pyqtSignal()
+    sgnUnsatisfiableEntities = QtCore.pyqtSignal()
+    sgnConsistencyCheckReset = QtCore.pyqtSignal()
+
     def __init__(self, application, path, **kwargs):
         """
         Initialize the application main working session.
@@ -451,8 +459,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_refresh_black'), 'Reset consistency check',
-            self, objectName='decolour_nodes', triggered=self.BackgrounddeColourNodesAndEdges,
-            statusTip='(decolour the nodes)', enabled=False))
+            self, objectName='decolour_nodes', triggered=self.doResetConsistencyCheck,
+            statusTip='Reset Reasoner', enabled=False))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'),
@@ -2537,7 +2545,34 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Perform Ontology Consistency checking on the active ontology/diagram.
         """
         dialog = OntologyConsistencyCheckDialog(self.project, self)
+        connect(dialog.sgnPerfectOntology, self.onPerfectOntology)
+        connect(dialog.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
+        connect(dialog.sgnInconsistentOntology, self.onInconsistentOntology)
+        self.sgnConsistencyCheckStarted.emit()
         dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def onPerfectOntology(self):
+        """
+        Executed when the consistency check reports that the ontology is consistent and all classes
+        are satisfiable.
+        """
+        self.sgnPerfectOntology.emit()
+
+    @QtCore.pyqtSlot()
+    def onInconsistentOntology(self):
+        """
+        Executed when the consistency check reports that the ontology is inconsistent.
+        """
+        self.sgnInconsistentOntology.emit()
+
+    @QtCore.pyqtSlot()
+    def onUnsatisfiableEntities(self):
+        """
+        Executed when the consistency check reports that the ontology is consistent
+        but some of the classes are unsatisfiable.
+        """
+        self.sgnUnsatisfiableEntities.emit()
 
     @QtCore.pyqtSlot()
     def doOpenOntologyExplorer(self):
@@ -2548,62 +2583,62 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def BackgrounddeColourNodesAndEdges(self,**kwargs):
+    def doResetConsistencyCheck(self, updateNodes=True, clearReasonerCache=True):
+        """
+        Resets the background highlighting of nodes used for the consistency check.
 
-        call_update_node = kwargs.get('call_updateNode',True)
-        call_ClearInconsistentEntitiesAndDiagItemsData = kwargs.get('call_ClearInconsistentEntitiesAndDiagItemsData',True)
-
+        :type updateNodes: bool
+        :type clearReasonerCache: bool
+        """
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
 
-        all_nodes = list(self.project.nodes())
-        all_edges = list(self.project.edges())
-
-        for node in all_nodes:
-
+        # RESET NODE HIGHLIGHT
+        for node in self.project.nodes():
             node.selection.setBrush(brush)
             node.setCacheMode(AbstractItem.NoCache)
             node.setCacheMode(AbstractItem.DeviceCoordinateCache)
             node.update(node.boundingRect())
 
-            if call_update_node is True:
+            if updateNodes:
                 node.updateNode()
 
-        for edge in all_edges:
-
+        # RESET NODE HIGHLIGHT
+        for edge in self.project.edges():
             edge.selection.setBrush(brush)
             edge.setCacheMode(AbstractItem.NoCache)
             edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
             edge.update(edge.boundingRect())
 
-        if call_ClearInconsistentEntitiesAndDiagItemsData:
-            self.ClearInconsistentEntitiesAndDiagItemsData()
+        # RESET REASONER CACHE
+        if clearReasonerCache:
+            self.doClearReasonerCache()
 
-        diags = self.project.diagrams()
-
-        for d in diags:
+        # UPDATE DIAGRAMS
+        for d in self.project.diagrams():
             d.sgnUpdated.emit()
 
-    @QtCore.pyqtSlot()
-    def ClearInconsistentEntitiesAndDiagItemsData(self):
+        if updateNodes and clearReasonerCache:
+            self.sgnConsistencyCheckReset.emit()
 
+    @QtCore.pyqtSlot()
+    def doClearReasonerCache(self):
+        """
+        Clears the reasoner cache from the project.
+        """
         self.project.ontology_OWL = None
         self.project.axioms_to_nodes_edges_mapping = None
-
         self.project.unsatisfiable_classes = []
         self.project.explanations_for_unsatisfiable_classes = []
         self.project.unsatisfiable_attributes = []
         self.project.explanations_for_unsatisfiable_attributes = []
         self.project.unsatisfiable_roles = []
         self.project.explanations_for_unsatisfiable_roles = []
-
         self.project.inconsistent_ontology = None
         self.project.explanations_for_inconsistent_ontology = []
-
         self.project.uc_as_input_for_explanation_explorer = None
         self.project.nodes_of_unsatisfiable_entities = []
         self.project.nodes_or_edges_of_axioms_to_display_in_widget = []
         self.project.nodes_or_edges_of_explanations_to_display_in_widget = []
-
         self.project.converted_nodes = dict()
 
     @QtCore.pyqtSlot()

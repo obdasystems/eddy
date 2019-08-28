@@ -1355,10 +1355,7 @@ class Project(QtCore.QObject):
         #connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
     def reset_changes_made_after_reasoning_task(self):
-        #self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Unsatisfiable_Entity_Explorer')
-        #self.session.pmanager.dispose_and_remove_plugin_from_session(plugin_id='Explanation_explorer')
-        self.session.BackgrounddeColourNodesAndEdges(call_updateNode=True,
-                                                     call_ClearInconsistentEntitiesAndDiagItemsData=True)
+        self.session.doResetConsistencyCheck(updateNodes=True, clearReasonerCache=True)
 
         disconnect(self.sgnItemAdded, self.reset_changes_made_after_reasoning_task)
         disconnect(self.sgnItemRemoved, self.reset_changes_made_after_reasoning_task)
