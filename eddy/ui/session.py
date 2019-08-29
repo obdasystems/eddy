@@ -58,7 +58,7 @@ from eddy.core.commands.edges import CommandSwitchSameDifferentEdge
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.labels import CommandLabelMove
-from eddy.core.commands.nodes import CommandNodeSetBrush
+from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeSetMeta
 from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
@@ -108,6 +108,9 @@ from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
+from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_ASYMMETRIC
+from eddy.core.project import K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE
+from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.fields import ComboBox
@@ -664,6 +667,48 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action.setData((Item.DomainRestrictionNode, Item.RangeRestrictionNode))
         self.addAction(action)
 
+        action = QtWidgets.QAction(
+            'Functional', self, objectName='property_functional',
+            checkable=True, checked=False, triggered=self.doSetNodeMeta)
+        action.setData(K_FUNCTIONAL)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Inverse Functional', self, objectName='property_inverse_functional',
+            checkable=True, checked=False, triggered=self.doSetNodeMeta)
+        action.setData(K_INVERSE_FUNCTIONAL)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Asymmetric', self, objectName='property_asymmetric',
+            checkable=True, checked=False, triggered=self.doSetNodeMeta)
+        action.setData(K_ASYMMETRIC)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Irreflexive', self, objectName='property_irreflexive',
+            checkable=True, checked=False, triggered=self.doSetNodeMeta)
+        action.setData(K_IRREFLEXIVE)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Reflexive', self, objectName='property_reflexive',
+            checkable=True, checked=False, triggered=self.doSetNodeMeta)
+        action.setData(K_REFLEXIVE)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Symmetric', self, objectName='property_symmetric',
+            checkable=True, checked=False, triggered=self.doSetNodeMeta)
+        action.setData(K_SYMMETRIC)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            'Transitive', self, objectName='property_transitive',
+            checkable=True, checked=False, triggered=self.doSetNodeMeta)
+        action.setData(K_TRANSITIVE)
+        self.addAction(action)
+
         #############################################
         # PROPERTY DOMAIN / RANGE SPECIFIC
         #################################
@@ -807,9 +852,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('Compose', objectName='compose')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
         menu.addAction(self.action('property_domain'))
         menu.addAction(self.action('property_range'))
         menu.addAction(self.action('property_domain_range'))
+        menu.addSeparator()
+        menu.addAction(self.action('property_functional'))
+        menu.addAction(self.action('property_inverse_functional'))
+        menu.addAction(self.action('property_symmetric'))
+        menu.addAction(self.action('property_asymmetric'))
+        menu.addAction(self.action('property_reflexive'))
+        menu.addAction(self.action('property_irreflexive'))
+        menu.addAction(self.action('property_transitive'))
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('\u200C&Edit', objectName='edit')
@@ -935,12 +989,30 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # ROLE / ATTRIBUTE SPECIFIC
         #################################
 
-        menu = QtWidgets.QMenu('Compose', objectName='compose_domain_range')
+        menu = QtWidgets.QMenu('Compose', objectName='compose_attribute')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        menu.addSection('Domain / Range')
         menu.addAction(self.action('property_domain'))
         menu.addAction(self.action('property_range'))
-        menu.addSeparator()
         menu.addAction(self.action('property_domain_range'))
+        menu.addSection('Axioms')
+        menu.addAction(self.action('property_functional'))
+        self.addMenu(menu)
+
+        menu = QtWidgets.QMenu('Compose', objectName='compose_role')
+        menu.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        menu.addSection('Domain / Range')
+        menu.addAction(self.action('property_domain'))
+        menu.addAction(self.action('property_range'))
+        menu.addAction(self.action('property_domain_range'))
+        menu.addSection('Axioms')
+        menu.addAction(self.action('property_functional'))
+        menu.addAction(self.action('property_inverse_functional'))
+        menu.addAction(self.action('property_symmetric'))
+        menu.addAction(self.action('property_asymmetric'))
+        menu.addAction(self.action('property_reflexive'))
+        menu.addAction(self.action('property_irreflexive'))
+        menu.addAction(self.action('property_transitive'))
         self.addMenu(menu)
 
         #############################################
@@ -1304,15 +1376,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(first(commands))
 
     def common_commands_for_cut_delete_purge(self,diagram,items):
-
-        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
-                                                                             dict())
-        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
-                                                                             dict())
-
-        Dup_1B = self.project.copy_list(self.project.iri_of_cut_nodes, [])
-        Dup_2B = self.project.copy_list(self.project.iri_of_cut_nodes, [])
-
+        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+            self.project.IRI_prefixes_nodes_dict, dict())
+        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+            self.project.IRI_prefixes_nodes_dict, dict())
+        Dup_1B = self.project.iri_of_cut_nodes[:]
+        Dup_2B = self.project.iri_of_cut_nodes[:]
         iris_to_update = []
         nodes_to_update = []
 
@@ -1320,22 +1389,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
                         'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))):
                 iri_of_node = self.project.get_iri_of_node(item)
-
                 iris_to_update.append(iri_of_node)
                 nodes_to_update.append(item)
-
                 Dup_1B.append(item)
                 Dup_1B.append(iri_of_node)
-
                 Duplicate_dict_1[iri_of_node][1].remove(item)
 
-        commands = []
-
-        commands.append(CommandItemsRemove(diagram, items))
-        commands.append(
-            CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_update,
-                                                 nodes_to_update))
-        commands.append(CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
+        commands = [CommandItemsRemove(diagram, items),
+                    CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                         iris_to_update,
+                                                         nodes_to_update),
+                    CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project)]
 
         self.undostack.beginMacro('>>')
         for command in commands:
@@ -2240,6 +2304,30 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandNodeSetBrush(diagram, selected, brush))
 
     @QtCore.pyqtSlot()
+    def doSetNodeMeta(self):
+        """
+        Set meta values of selected nodes
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            action = self.sender()
+            key = action.data()
+            checked = action.isChecked()
+            supported = {Item.RoleNode, Item.AttributeNode}
+            fn = lambda x: x.type() in supported
+            selected = diagram.selectedNodes(filter_on_nodes=fn)
+            if selected and len(selected) == 1:
+                node = first(selected)
+                undo = self.project.meta(node.type(), node.text())
+                redo = undo.copy()
+                redo[key] = checked
+                if redo != undo:
+                    prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
+                    name = "{0}set '{1}' {2} property".format('' if checked else 'un', node.text(), prop)
+                    self.undostack.push(CommandNodeSetMeta(self.project, node.type(), node.text(), undo, redo, name))
+
+    @QtCore.pyqtSlot()
     def doSetPropertyRestriction(self):
         """
         Set a property domain / range restriction.
@@ -2666,7 +2754,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         isEdgeSwapEnabled = False
         isNodeSelected = False
         isPredicateSelected = False
-        isSwitchToSameEnabled = self.project.profile.type() is not OWLProfile.OWL2QL
+        isProfileOWL2QL = self.project.profile.type() is OWLProfile.OWL2QL
+        isProfileOWL2RL = self.project.profile.type() is OWLProfile.OWL2RL
+        isPropertyFunctionalEnabled = False
+        isPropertyInvFunctionalEnabled = False
+        isPropertySymmetricEnabled = False
+        isPropertyAsymmetricEnabled = False
+        isPropertyReflexiveEnabled = False
+        isPropertyIrreflexiveEnabled = False
+        isPropertyTransitiveEnabled = False
+        isPropertyFunctionalChecked = False
+        isPropertyInvFunctionalChecked = False
+        isPropertySymmetricChecked = False
+        isPropertyAsymmetricChecked = False
+        isPropertyReflexiveChecked = False
+        isPropertyIrreflexiveChecked = False
+        isPropertyTransitiveChecked = False
+        isSwitchToSameEnabled = not isProfileOWL2QL
         isSwitchToDifferentEnabled = True
         isProjectEmpty = self.project.isEmpty()
         isUndoStackClean = self.undostack.isClean()
@@ -2687,6 +2791,25 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 isNodeSelected = first(nodes) is not None
                 isDomainRangeUsable = any([x.type() in restrictables for x in nodes])
                 isPredicateSelected = any([x.type() in predicates for x in nodes])
+                isRestrictable = len(nodes) == 1 and first(nodes).type() in restrictables
+                isRoleSelected = isRestrictable and first(nodes).type() is Item.RoleNode
+                if isRestrictable:
+                    meta = self.project.meta(first(nodes).type(), first(nodes).text())
+                    isPropertyFunctionalChecked = meta.get(K_FUNCTIONAL, False)
+                    isPropertyInvFunctionalChecked = meta.get(K_INVERSE_FUNCTIONAL, False)
+                    isPropertySymmetricChecked = meta.get(K_SYMMETRIC, False)
+                    isPropertyAsymmetricChecked = meta.get(K_ASYMMETRIC, False)
+                    isPropertyReflexiveChecked = meta.get(K_REFLEXIVE, False)
+                    isPropertyIrreflexiveChecked = meta.get(K_IRREFLEXIVE, False)
+                    isPropertyTransitiveChecked = meta.get(K_TRANSITIVE, False)
+                    isPropertyFunctionalEnabled = isPropertyFunctionalChecked or not isProfileOWL2QL
+                    if isRoleSelected:
+                        isPropertyInvFunctionalEnabled = isPropertyInvFunctionalChecked or not isProfileOWL2QL
+                        isPropertySymmetricEnabled = True
+                        isPropertyAsymmetricEnabled = True
+                        isPropertyReflexiveEnabled = isPropertyReflexiveChecked or not isProfileOWL2RL
+                        isPropertyIrreflexiveEnabled = True
+                        isPropertyTransitiveEnabled = isPropertyTransitiveChecked or not isProfileOWL2QL
                 if isEdgeSelected:
                     for edge in edges:
                         isEdgeSwapEnabled = edge.isSwapAllowed()
@@ -2705,6 +2828,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('property_domain').setEnabled(isDomainRangeUsable)
         self.action('property_domain_range').setEnabled(isDomainRangeUsable)
         self.action('property_range').setEnabled(isDomainRangeUsable)
+        self.action('property_functional').setChecked(isPropertyFunctionalChecked)
+        self.action('property_functional').setEnabled(isPropertyFunctionalEnabled)
+        self.action('property_inverse_functional').setChecked(isPropertyInvFunctionalChecked)
+        self.action('property_inverse_functional').setEnabled(isPropertyInvFunctionalEnabled)
+        self.action('property_symmetric').setChecked(isPropertySymmetricChecked)
+        self.action('property_symmetric').setEnabled(isPropertySymmetricEnabled)
+        self.action('property_asymmetric').setChecked(isPropertyAsymmetricChecked)
+        self.action('property_asymmetric').setEnabled(isPropertyAsymmetricEnabled)
+        self.action('property_reflexive').setChecked(isPropertyReflexiveChecked)
+        self.action('property_reflexive').setEnabled(isPropertyReflexiveEnabled)
+        self.action('property_irreflexive').setChecked(isPropertyIrreflexiveChecked)
+        self.action('property_irreflexive').setEnabled(isPropertyIrreflexiveEnabled)
+        self.action('property_transitive').setChecked(isPropertyTransitiveChecked)
+        self.action('property_transitive').setEnabled(isPropertyTransitiveEnabled)
         self.action('save').setEnabled(not isUndoStackClean)
         self.action('save_as').setEnabled(isDiagramActive)
         self.action('select_all').setEnabled(isDiagramActive)
@@ -2725,11 +2862,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('close_all_tabs').setEnabled(isDiagramSwitchEnabled)
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
-
-        if self.mdi.activeDiagram():
-            self.widget('select_reasoner').setEnabled(not isProjectEmpty)
-            self.action('decolour_nodes').setEnabled(not isProjectEmpty)
-            self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
+        self.widget('select_reasoner').setEnabled(not isProjectEmpty)
+        self.action('decolour_nodes').setEnabled(not isProjectEmpty)
+        self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):
@@ -2764,6 +2899,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.onSessionCreated(session)
         ## CONNECT PROJECT SPECIFIC SIGNALS
         connect(self.project.sgnDiagramRemoved, self.mdi.onDiagramRemoved)
+        connect(self.project.sgnUpdated, self.doUpdateState)
         ## CHECK FOR UPDATES ON STARTUP
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         if settings.value('update/check_on_startup', True, bool):
