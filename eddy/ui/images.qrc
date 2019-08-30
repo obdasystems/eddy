@@ -91,6 +91,8 @@
   <file alias="ic_extension_black@2x">../../resources/icons/24/ic_extension_black_24dp_2x.png</file>
   <file alias="ic_format_color_fill_black">../../resources/icons/24/ic_format_color_fill_black_24dp_1x.png</file>
   <file alias="ic_format_color_fill_black@2x">../../resources/icons/24/ic_format_color_fill_black_24dp_2x.png</file>
+  <file alias="ic_format_paint_black">../../resources/icons/24/ic_format_paint_black_24dp_1x.png</file>
+  <file alias="ic_format_paint_black@2x">../../resources/icons/24/ic_format_paint_black_24dp_2x.png</file>
   <file alias="ic_format_shapes_black">../../resources/icons/24/ic_format_shapes_black_24dp_1x.png</file>
   <file alias="ic_format_shapes_black@2x">../../resources/icons/24/ic_format_shapes_black_24dp_2x.png</file>
   <file alias="ic_grid_off_black">../../resources/icons/24/ic_grid_off_black_24dp_1x.png</file>
@@ -131,8 +133,8 @@
   <file alias="ic_node_description@2x">../../resources/icons/24/ic_node_description_24dp_2x.png</file>
   <file alias="ic_not_interested_black">../../resources/icons/24/ic_not_interested_black_24dp_1x.png</file>
   <file alias="ic_not_interested_black@2x">../../resources/icons/24/ic_not_interested_black_24dp_2x.png</file>
-  <file alias="ic_settings_ethernet">../../resources/icons/24/ic_settings_ethernet_black_24dp_1x.png</file>
-  <file alias="ic_settings_ethernet@2x">../../resources/icons/24/ic_settings_ethernet_black_24dp_2x.png</file>
+  <file alias="ic_settings_ethernet_black">../../resources/icons/24/ic_settings_ethernet_black_24dp_1x.png</file>
+  <file alias="ic_settings_ethernet_black@2x">../../resources/icons/24/ic_settings_ethernet_black_24dp_2x.png</file>
   <file alias="ic_square_black">../../resources/icons/24/ic_square_black_24dp_1x.png</file>
   <file alias="ic_square_black@2x">../../resources/icons/24/ic_square_black_24dp_2x.png</file>
   <file alias="ic_square_half_black">../../resources/icons/24/ic_square_half_black_24dp_1x.png</file>
