@@ -40,7 +40,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
-from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, Namespace
 from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 from eddy.ui.description import NodeDescriptionDialog
@@ -264,8 +264,6 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
         # ADD DESCRIPTION LINK TO THE MENU OF PREDICATE NODE
         menu.addAction(self.session.action('node_description'))
-
-        OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values()
 
         if node.special() is None:
             self.customAction['change_prefix'] = []
@@ -512,12 +510,9 @@ class MenuFactory(QtCore.QObject):
             self.customMenu['occurrences'].addAction(action)
         menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
 
-
         ############################
-        #change prefix
+        # CHANGE PREFIX
         ############################
-
-        OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values()
 
         if node.value is None:
             self.customAction['change_prefix'] = []
@@ -525,15 +520,13 @@ class MenuFactory(QtCore.QObject):
 
             for iri in self.project.IRI_prefixes_nodes_dict.keys():
                 prefixes_raw = self.project.IRI_prefixes_nodes_dict[iri][0]
-
-                prefixes = []
-                prefixes.extend(prefixes_raw)
+                prefixes = prefixes_raw[:]
 
                 if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
                     prefixes.append(':')
 
                 for p in prefixes:
-                    if p in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.values():
+                    if Namespace.forPrefix(p):
                         continue
 
                     pr_node = self.project.get_prefix_of_node(node)

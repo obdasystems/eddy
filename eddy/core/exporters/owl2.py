@@ -43,7 +43,7 @@ from PyQt5 import QtWidgets
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
-from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax
+from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax, Namespace
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
@@ -1741,27 +1741,29 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.df = self.man.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
             self.pm = self.DefaultPrefixManager()
-
             #self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
 
             for iri_key in self.project.IRI_prefixes_nodes_dict.keys():
-
                 prefixes_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][0]
                 properties_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][2]
 
-                if iri_key[len(iri_key) - 1] == '#' or iri_key[len(iri_key) - 1] == '/':
+                if Namespace.forValue(iri_key):
+                    iri_key_to_append = iri_key
+                    postfix_special_character = ''
+                elif iri_key[-1] == '#' or iri_key[-1] == '/':
                     iri_key_to_append = iri_key[0:len(iri_key) - 1]
-                    postfix_special_character = iri_key[len(iri_key) - 1]
+                    postfix_special_character = iri_key[-1]
                 else:
                     iri_key_to_append = iri_key
                     postfix_special_character = '#'
 
-                if (len(prefixes_of_iri_key) == 0):
-                    if 'display_in_widget' in properties_of_iri_key:
-                        self.pm.setPrefix('', postfix(iri_key_to_append, postfix_special_character))
-                else:
-                    for p in prefixes_of_iri_key:
-                        self.pm.setPrefix(p, postfix(iri_key_to_append, postfix_special_character))
+                if postfix_special_character:
+                    if len(prefixes_of_iri_key) == 0:
+                        if 'display_in_widget' in properties_of_iri_key:
+                            self.pm.setPrefix('', postfix(iri_key_to_append, postfix_special_character))
+                    else:
+                        for p in prefixes_of_iri_key:
+                            self.pm.setPrefix(p, postfix(iri_key_to_append, postfix_special_character))
 
             if self.export:
                 self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))

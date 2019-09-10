@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.graphol import Special
-from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.owl import Namespace
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
@@ -70,7 +70,6 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         self.selected_diagrams = kwargs.get('diagrams', None)
 
     def append_row_and_column_to_table_2(self,list_inp,entity=None):
-
         item_predicate_name = QtWidgets.QTableWidgetItem()
         item_predicate_name.setText(list_inp[0])
         self.table_2.setItem(self.table_2.rowCount() - 1, 0, item_predicate_name)
@@ -146,7 +145,6 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         self.table_2.setRowCount(self.table_2.rowCount() + 1)
 
     def append_row_and_column_to_table(self,iri,prefix,brush,bold=None):
-
         item_iri = QtWidgets.QTableWidgetItem()
         item_iri.setText(iri)
 
@@ -174,7 +172,6 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         self.table.setRowCount(self.table.rowCount() + 1)
 
     def FillTableWithMetaDataInfoForRolesAndAttributes(self):
-
         self.table_2.setRowCount(1)
         self.table_2.setColumnCount(8)
 
@@ -262,13 +259,8 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             else:
                 attribute_predicates_filtered.add(attribute_predicate.text())
 
-        #print('len(attribute_predicates_filtered)',len(attribute_predicates_filtered))
-
         for attribute_predicate_txt in sorted(attribute_predicates_filtered):
             meta_data = self.project.meta(Item.AttributeNode, attribute_predicate_txt)
-
-            #print('meta_data',meta_data)
-
             attributes = []
 
             if len(meta_data) > 0:
@@ -287,28 +279,23 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 attributes.append(False)
                 attributes.append(False)
 
-            #print(attribute_predicate_txt, '-', attributes)
-
             attribute_predicate_plus_attributes = []
-
             attribute_predicate_plus_attributes.append(attribute_predicate_txt)
             attribute_predicate_plus_attributes.extend(attributes)
 
             self.append_row_and_column_to_table_2(attribute_predicate_plus_attributes,entity='attribute')
         
-        
         role_predicates_filtered = set()
+
         for role_predicate in self.project.predicates(item=Item.RoleNode):
-            if (role_predicate.text() in Special.return_group(Special.AllTopEntities)) or (role_predicate.text() in Special.return_group(Special.AllBottomEntities)):
+            if role_predicate.text() in Special.return_group(Special.AllTopEntities) or \
+                    role_predicate.text() in Special.return_group(Special.AllBottomEntities):
                 continue
             else:
                 role_predicates_filtered.add(role_predicate.text())
 
-        #print('len(role_predicates_filtered)', len(role_predicates_filtered))
-
         for role_predicate_txt in sorted(role_predicates_filtered):
             meta_data = self.project.meta(Item.RoleNode, role_predicate_txt)
-
             attributes = []
 
             if len(meta_data) >0:
@@ -324,19 +311,14 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 attributes.append(False)
                 attributes.append(False)
 
-            #print(role_predicate_txt,'-',attributes)
-
             role_predicate_plus_attributes = []
-
             role_predicate_plus_attributes.append(role_predicate_txt)
             role_predicate_plus_attributes.extend(attributes)
 
             self.append_row_and_column_to_table_2(role_predicate_plus_attributes)
-
         self.table_2.setRowCount(self.table_2.rowCount() - 1)
 
     def FillTableWithIRIPrefixNodesDictionaryKeysAndValues(self):
-
         self.table.setRowCount(1)
         self.table.setColumnCount(2)
 
@@ -356,22 +338,18 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         header_prefix.setForeground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         header_prefix.setFlags(QtCore.Qt.NoItemFlags)
 
-
         self.table.setItem(self.table.rowCount() - 1, 0, header_iri)
         self.table.setItem(self.table.rowCount() - 1, 1, header_prefix)
-
         self.table.setRowCount(self.table.rowCount() + 1)
 
         for iri in self.project.IRI_prefixes_nodes_dict.keys():
-            if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+            if Namespace.forValue(iri):
                 standard_prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
                 standard_prefix = standard_prefixes[0]
                 self.append_row_and_column_to_table(iri, standard_prefix, None)
-                                                    #QtGui.QBrush(QtGui.QColor(50, 50, 205, 50)))
 
         for iri in sorted(self.project.IRI_prefixes_nodes_dict.keys()):
-
-            if iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
+            if Namespace.forValue(iri):
                 continue
 
             prefixes = self.project.IRI_prefixes_nodes_dict[iri][0]
@@ -389,19 +367,15 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                     else:
                         self.append_row_and_column_to_table(iri, '', None)
 
-        #self.append_row_and_column_to_table('', '', None)
-
         self.table.setRowCount(self.table.rowCount() - 1)
 
     def set_properties_of_table(self,table):
-
         table.horizontalHeader().setVisible(False)
         table.verticalHeader().setVisible(False)
         table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
     def split_table(self,table,n):
-
         if n == 1:
             return [table]
 
@@ -411,16 +385,12 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             cell_widget = table.item(0,c)
             headers.append(cell_widget)
 
-        #print('table.rowCount()',table.rowCount())
-
-        #table.rowCount()-1 as 1st row contains headers
         base_row_count = math.floor((table.rowCount()-1)/n)
         remainder = (table.rowCount()-1) % n
-
         row_nos_of_tables = []
         max = 1
-        for i in range(0,n):
 
+        for i in range(0,n):
             rows = []
             for j in range(max,max+base_row_count):
                 rows.append(j)
@@ -432,12 +402,9 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 r=1
 
             max = max + base_row_count + r
-
             row_nos_of_tables.append(rows)
 
-
         tables = []
-
         all_predicates_in_table_list = []
         all_predicates_in_table_set = set()
 
@@ -460,14 +427,11 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                 t.setItem(0,c,h.clone())
                 t.setRowHeight(0, table.rowHeight(0))
             t.setRowCount(t.rowCount()+1)
-
             row_nos = row_nos_of_tables[i]
-
             count = 0
 
             for i,row_no in enumerate(row_nos):
                 for col_no in range(0,table.columnCount()):
-
                     original_item = table.item(row_no,col_no)
                     original_cell_widget = table.cellWidget(row_no,col_no)
 
@@ -475,7 +439,6 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                         if original_item is None:
                             LOGGER.critical('Programming error, please contact programmer')
                         else:
-                            #t.setItem(t.rowCount() - 1, col_no, original_item.clone())
                             if col_no == 0:
                                 all_predicates_in_split_tables_list.append(original_item.text())
                                 all_predicates_in_split_tables_set.add(original_item.text())
@@ -486,11 +449,9 @@ class PdfDiagramExporter(AbstractDiagramExporter):
                         checkbox = QtWidgets.QCheckBox()
                         checkbox.setEnabled(True)
                         checkbox.setChecked(True)
-                        #t.setCellWidget(t.rowCount() - 1, col_no, checkbox)
                         t.setCellWidget(i + 1, col_no, checkbox)
                         count = count + 1
 
-                #t.setRowHeight(t.rowCount()-1,table.rowHeight(row_no))
                 t.setRowHeight(i + 1, table.rowHeight(row_no))
                 t.setRowCount(t.rowCount() + 1)
 
@@ -506,21 +467,11 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             t.setFixedHeight(sum_height_rows+1)
             t.setFixedWidth(table.width())
 
-            #print('t.rowCount()',t.rowCount())
-            #print('count',count)
-
             tables.append(t)
-
-        #print('A',len(all_predicates_in_table_list))
-        #print('B',len(all_predicates_in_table_set))
-
-        #print('C',len(all_predicates_in_split_tables_list))
-        #print('D',len(all_predicates_in_split_tables_set))
 
         return tables
 
     def split_table_if_necessary_and_render_it(self,table,printer,painter,meta_tada_table=False):
-
         #size of A4 sheet = 210 × 297 mm
         #if height of the table > 297/210*width of the table, split the table into 2 or more tables
         # if height of the table > 297/210*width && < 2*297/210*width of the table, split the table into 2 tables
@@ -529,20 +480,15 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
         n=0
         if meta_tada_table is False:
-            while(table.height() > (n*297/210)*table.width()):
+            while table.height() > (n * 297 / 210)*table.width():
                 n=n+1
         else:
-            while (table.height() > (n * 210 / 297) * table.width()):
+            while table.height() > (n * 210 / 297) * table.width():
                 n = n + 1
-        #n=1
-
-        #print('n',n)
-
-        #n is the number of pages or number of tables that will result after the split
+        # n is the number of pages or number of tables that will result after the split
         tables = self.split_table(table,n)
 
         for t in tables:
-
             shape = t.rect()
             # shape_2 = self.table.visibleRegion().boundingRect()
 
@@ -561,11 +507,11 @@ class PdfDiagramExporter(AbstractDiagramExporter):
             # 100 points = 167 QSize() units  i.e. margin with 100 points was not set correctly
 
             printer.setPageMargins(1,1,1,1, QtPrintSupport.QPrinter.Point)
-
             printer.newPage()
 
             if painter.isActive() or painter.begin(printer):
                 t.render(painter, sourceRegion=QtGui.QRegion(shape))
+
     #############################################
     #   INTERFACE
     #################################
@@ -620,14 +566,11 @@ class PdfDiagramExporter(AbstractDiagramExporter):
         painter = QtGui.QPainter()
 
         for c, diag in enumerate(selected_diagrams_sorted):
-
             LOGGER.info('Exporting diagram %s to %s', diag.name, path)
 
             shape = diag.visibleRect(margin=200)
-
             width_to_set = size_of_pages[c][0]
             height_to_set = size_of_pages[c][1]
-
             valid = printer.setPageSize(
                QtGui.QPageSize(QtCore.QSizeF(width_to_set, height_to_set), QtGui.QPageSize.Point))
 

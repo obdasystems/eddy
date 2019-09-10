@@ -32,34 +32,30 @@
 #                                                                        #
 ##########################################################################
 
-import sys
 from abc import ABCMeta
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
 from eddy.core.commands.diagram import CommandDiagramResize
-from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive
+from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.nodes import CommandNodeMove
+from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.collections import DistinctList
-from eddy.core.datatypes.graphol import Item, Identity, Special
-from eddy.core.datatypes.owl import Facet, Datatype
+from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.datatypes.owl import Facet, Datatype, Namespace
 from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
-from eddy.core.output import getLogger
 from eddy.core.items.nodes.common.base import AbstractNode
-
-from eddy.ui.fields import IntegerField, StringField, TextField
+from eddy.core.output import getLogger
 from eddy.ui.fields import CheckBox, ComboBox, SpinBox
-
+from eddy.ui.fields import IntegerField, StringField
 
 LOGGER = getLogger()
 
@@ -102,6 +98,7 @@ class DiagramProperty(PropertyDialog):
     """
     This class implements the diagram properties dialog.
     """
+
     def __init__(self, diagram, session):
         """
         Initialize the diagram properties dialog.
@@ -119,7 +116,7 @@ class DiagramProperty(PropertyDialog):
         self.nodesLabel = QtWidgets.QLabel(self)
         self.nodesLabel.setFont(Font('Roboto', 12))
         self.nodesLabel.setText('N° nodes')
-        self.nodesField = IntegerField (self)
+        self.nodesField = IntegerField(self)
         self.nodesField.setFixedWidth(300)
         self.nodesField.setFont(Font('Roboto', 12))
         self.nodesField.setReadOnly(True)
@@ -173,7 +170,7 @@ class DiagramProperty(PropertyDialog):
         #################################
 
         self.mainWidget = QtWidgets.QTabWidget(self)
-        self.mainWidget.addTab(self.generalWidget,'General')
+        self.mainWidget.addTab(self.generalWidget, 'General')
         self.mainWidget.addTab(self.geometryWidget, 'Geometry')
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -235,6 +232,7 @@ class NodeProperty(PropertyDialog):
     """
     This class implements the 'Node property' dialog.
     """
+
     def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
@@ -360,7 +358,6 @@ class NodeProperty(PropertyDialog):
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setFont(Font('Roboto', 12))
 
-
         #############################################
         # MAIN WIDGET
         #################################
@@ -423,6 +420,7 @@ class PredicateNodeProperty(NodeProperty):
     This class implements the property dialog for predicate nodes.
     Note that this dialog window is not used for value-domain nodes even though they are predicate nodes.
     """
+
     def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
@@ -463,16 +461,16 @@ class PredicateNodeProperty(NodeProperty):
         self.textField = StringField(self)
         self.textField.setFixedWidth(300)
         self.textField.setFont(Font('Roboto', 12))
-        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
+        # if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
-                    'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+                'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
             self.textField.setValue(self.node.remaining_characters)
         else:
-            self.textField.setValue(self.node.text().replace('\n',''))
+            self.textField.setValue(self.node.text().replace('\n', ''))
 
-        #if ((node.type() is Item.IndividualNode) and (node.identity() is Identity.Value)) or \
-        if(('IndividualNode' in str(type(node))) and (node.identity() is Identity.Value)) or \
-            (('IndividualNode' not in str(type(node))) and (node.special() is not None)):
+        # if ((node.type() is Item.IndividualNode) and (node.identity() is Identity.Value)) or \
+        if (('IndividualNode' in str(type(node))) and (node.identity() is Identity.Value)) or \
+                (('IndividualNode' not in str(type(node))) and (node.special() is not None)):
             self.textField.setReadOnly(True)
             self.iriField.setReadOnly(True)
 
@@ -483,8 +481,9 @@ class PredicateNodeProperty(NodeProperty):
         self.refactorField.setFont(Font('Roboto', 12))
         self.refactorField.setChecked(False)
 
-        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+        # if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
+                'RoleNode' in str(type(node)))):
             if node.special() is not None:
                 self.refactorField.setEnabled(False)
 
@@ -511,6 +510,7 @@ class PredicateNodeProperty(NodeProperty):
         self.metaDataChanged_ADD_OK_var = None
         self.metaDataChanged_REMOVE_OK_var = None
         self.metaDataChanged_IGNORE_var = None
+
     #############################################
     #   SLOTS
     #################################
@@ -536,7 +536,6 @@ class PredicateNodeProperty(NodeProperty):
         if text_changed_result is not None:
             commands.extend(text_changed_result)
 
-
         if any(commands):
             self.session.undostack.beginMacro('edit {0} properties'.format(self.node.name))
             for command in commands:
@@ -553,12 +552,12 @@ class PredicateNodeProperty(NodeProperty):
         unprocessed_new_text = self.textField.value().strip()
         unprocessed_new_text = unprocessed_new_text if not isEmpty(unprocessed_new_text) else self.node.label.template
 
-        exception_list = ['-','_','.','~','\n']
+        exception_list = ['-', '_', '.', '~', '\n']
         new_rc = ''
 
         flag = False
 
-        for i,c in enumerate(unprocessed_new_text):
+        for i, c in enumerate(unprocessed_new_text):
             if c == '':
                 pass
             elif i < (len(unprocessed_new_text) - 1) and (c == '\\' and unprocessed_new_text[i + 1] == 'n'):
@@ -571,18 +570,20 @@ class PredicateNodeProperty(NodeProperty):
             else:
                 new_rc = new_rc + c
 
-        #new_rc = new_rc.replace('\n','')
+        # new_rc = new_rc.replace('\n','')
 
         if flag is True:
-            self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',15000)
+            self.session.statusBar().showMessage(
+                'Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',
+                15000)
 
         return_list = []
 
         if (unprocessed_new_text != self.node.remaining_characters):
 
-            #print('unprocessed_new_text',unprocessed_new_text)
-            #print('self.node.remaining_characters',self.node.remaining_characters)
-            #print(NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result())
+            # print('unprocessed_new_text',unprocessed_new_text)
+            # print('self.node.remaining_characters',self.node.remaining_characters)
+            # print(NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result())
 
             return_list.append(CommandProjectDisconnectSpecificSignals(self.project))
 
@@ -593,12 +594,12 @@ class PredicateNodeProperty(NodeProperty):
                             CommandNodeSetRemainingCharacters(n.remaining_characters, new_rc, n, self.project,
                                                               refactor=True))
             else:
-                #refactor_var = NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result()
+                # refactor_var = NewlineFeedInsensitive(new_rc, self.node.remaining_characters).result()
 
-                #return_list.append(
+                # return_list.append(
                 #        CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project, refactor=refactor_var))
                 return_list.append(
-                            CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project))
+                    CommandNodeSetRemainingCharacters(self.node.remaining_characters, new_rc, self.node, self.project))
 
             return_list.append(CommandProjectConnectSpecificSignals(self.project))
 
@@ -606,9 +607,8 @@ class PredicateNodeProperty(NodeProperty):
 
         return None
 
-
     def IRIChanged(self):
-        #Change the iri of the node.
+        # Change the iri of the node.
         #:rtype: Command
 
         IRI_valid = self.project.check_validity_of_IRI(self.iriField.value())
@@ -621,7 +621,7 @@ class PredicateNodeProperty(NodeProperty):
             old_iri = self.project.get_iri_of_node(self.node)
             new_iri = self.iriField.value()
 
-            #if (self.iriField.value() != self.project.get_iri_of_node(node)) or (self.iriversionField.value() != self.node.IRI_version(self.project)):
+            # if (self.iriField.value() != self.project.get_iri_of_node(node)) or (self.iriversionField.value() != self.node.IRI_version(self.project)):
             if new_iri != old_iri:
                 connect(self.project.sgnIRINodeEntryAdded, self.metaDataChanged_ADD_OK)
                 connect(self.project.sgnIRINodeEntryRemoved, self.metaDataChanged_REMOVE_OK)
@@ -633,18 +633,20 @@ class PredicateNodeProperty(NodeProperty):
                 # if successful, original_dict = duplicate_dict
                 # else duplicate_dict = original_dict
 
-
-                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                    self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                    self.project.IRI_prefixes_nodes_dict, dict())
 
                 list_of_nodes_to_process = []
 
                 if self.refactorField.isChecked():
                     for n in self.project.nodes():
                         if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
-                                    'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
+                                'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
 
-                            if (self.project.get_iri_of_node(n) == old_iri) and (n.remaining_characters == self.node.remaining_characters):
+                            if (self.project.get_iri_of_node(n) == old_iri) and (
+                                    n.remaining_characters == self.node.remaining_characters):
                                 list_of_nodes_to_process.append(n)
                 else:
                     list_of_nodes_to_process.append(self.node)
@@ -665,16 +667,17 @@ class PredicateNodeProperty(NodeProperty):
                         self.metaDataChanged_REMOVE_OK_var = False
                         self.metaDataChanged_ADD_OK_var = False
                         self.metaDataChanged_IGNORE_var = False
-                        return str('Error in '+str(nd))
+                        return str('Error in ' + str(nd))
 
                 if len(Duplicate_dict_1[new_iri][0]) == 0:
                     ###
                     if 'display_in_widget' in Duplicate_dict_1[new_iri][2]:
-                        new_label = ':'+self.node.remaining_characters
+                        new_label = ':' + self.node.remaining_characters
                     else:
                         new_label = self.project.get_full_IRI(new_iri, None, self.node.remaining_characters)
                 else:
-                    new_label = str(Duplicate_dict_1[new_iri][0][len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + self.node.remaining_characters)
+                    new_label = str(Duplicate_dict_1[new_iri][0][
+                                        len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + self.node.remaining_characters)
 
                 commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 
@@ -700,22 +703,22 @@ class PredicateNodeProperty(NodeProperty):
     @QtCore.pyqtSlot(str, str, str)
     def metaDataChanged_REMOVE_OK(self, iri, node, message):
 
-        #print('metaDataChanged_REMOVE_OK -', iri, ',', node, ',', message)
+        # print('metaDataChanged_REMOVE_OK -', iri, ',', node, ',', message)
         self.metaDataChanged_REMOVE_OK_var = True
 
     @QtCore.pyqtSlot(str, str, str)
     def metaDataChanged_ADD_OK(self, iri, node, message):
 
-        #print('metaDataChanged_ADD_OK -', iri, ',', node, ',', message)
+        # print('metaDataChanged_ADD_OK -', iri, ',', node, ',', message)
         self.metaDataChanged_ADD_OK_var = True
 
     @QtCore.pyqtSlot(str, str, str)
     def metaDataChanged_IGNORE(self, iri, node, message):
 
-        #if node.id is None:
-            #print('metaDataChanged_IGNORE >', iri, '-', 'None', '-', message)
-        #else:
-        #print('metaDataChanged_IGNORE >', iri, '-', node, '-', message)
+        # if node.id is None:
+        # print('metaDataChanged_IGNORE >', iri, '-', 'None', '-', message)
+        # else:
+        # print('metaDataChanged_IGNORE >', iri, '-', node, '-', message)
         self.metaDataChanged_IGNORE_var = True
 
 
@@ -724,6 +727,7 @@ class OrderedInputNodeProperty(NodeProperty):
     This class implements the property dialog for constructor nodes having incoming input edges
     numbered according to source nodes partecipations to the axiom (Role chain and Property assertion).
     """
+
     def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
@@ -838,6 +842,7 @@ class FacetNodeProperty(NodeProperty):
     """
     This class implements the property dialog for facet nodes.
     """
+
     def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
@@ -930,6 +935,7 @@ class ValueDomainNodeProperty(NodeProperty):
     """
     This class implements the property dialog for value-domain nodes.
     """
+
     def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
@@ -1005,6 +1011,7 @@ class ValueNodeProperty(NodeProperty):
     """
     This class implements the property dialog for value nodes.
     """
+
     def __init__(self, diagram, node, session):
         """
         Initialize the node properties dialog.
@@ -1089,32 +1096,30 @@ class ValueNodeProperty(NodeProperty):
         value = self.valueField.value()
         data = self.node.compose(value, datatype)
         if self.node.text() != data:
-
             new_prefix = datatype.value[0:datatype.value.index(':')]
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
-
             new_iri = None
 
-            for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
-                if std_prefix == new_prefix:
-                    new_iri = std_iri
+            for namespace in Namespace:
+                if namespace.name.lower() == new_prefix:
+                    new_iri = namespace.value
 
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
+            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                                 dict())
+            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                                 dict())
 
             old_iri = self.project.get_iri_of_node(self.node)
 
             Duplicate_dict_1[old_iri][1].remove(self.node)
             Duplicate_dict_1[new_iri][1].add(self.node)
 
-            commands = []
-
-            commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [self.node]))
-            commands.append(CommandNodeSetRemainingCharacters(self.node.remaining_characters,\
-                                                              new_remaining_characters,self.node,self.project))
-            commands.append(CommandLabelChange(self.diagram, self.node, self.node.text(), data))
+            commands = [CommandLabelChange(self.diagram, self.node, self.node.text(), data),
+                        CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                             [old_iri, new_iri], [self.node]),
+                        CommandNodeSetRemainingCharacters(self.node.remaining_characters,
+                                                          new_remaining_characters, self.node, self.project),
+                        CommandLabelChange(self.diagram, self.node, self.node.text(), data)]
 
             return commands
 

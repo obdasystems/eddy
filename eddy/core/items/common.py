@@ -50,7 +50,7 @@ from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.regex import RE_VALUE
-from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.owl import Namespace
 
 
 LOGGER = getLogger()
@@ -341,14 +341,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             self.setText(focusInData)
 
             if focusInData and focusInData != currentData:
-
-                """
-                reasoner_active = self.project.check_if_reasoner_was_active()
-                if (reasoner_active == 'was_unsatisfiable') or (reasoner_active == 'was_inconsistent'):
-                    reasoner_variables = FetchReasonerVariables(self.project)
-                else:
-                    reasoner_variables = 'empty'
-                """
                 node = self.parentItem()
                 match = RE_VALUE.match(currentData)
 
@@ -360,10 +352,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     new_iri = None
 
-                    for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                        std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
-                        if std_prefix == new_prefix:
-                            new_iri = std_iri
+                    for namespace in Namespace:
+                        if namespace.name.lower() == new_prefix:
+                            new_iri = namespace.value
 
                     Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
                         self.project.IRI_prefixes_nodes_dict, dict())

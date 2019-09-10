@@ -63,7 +63,8 @@ from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
-from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
+from eddy.core.commands.project import CommandProjectSetProfile
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.common import HasActionSystem
 from eddy.core.common import HasDiagramExportSystem
 from eddy.core.common import HasDiagramLoadSystem
@@ -80,7 +81,7 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile
+from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, Namespace
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
@@ -2357,8 +2358,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Set an invididual node either to Individual or Value.
         Will bring up the Value Form if needed.
         """
-        #print('>>>      Session (doSetIndividualAs)')
-
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -2382,23 +2381,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
                         if self.project.prefix is None:
                             new_label = self.project.get_full_IRI(new_iri,None,data)
-                            #new_label = str(new_iri+'#'+data)
                         else:
                             new_label = str(self.project.prefix+':'+data)
-
-                        #data = data.replace('\n','')
 
                         Duplicate_dict_1[old_iri][1].remove(node)
                         Duplicate_dict_1[new_iri][1].add(node)
 
-                        commands = []
-
-                        commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-                        commands.append(CommandLabelChange(diagram, node, node.text(), new_label))
-                        commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,Duplicate_dict_2,Duplicate_dict_1, [old_iri, new_iri], [node]))
-                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, data, node, self.project))
-                        commands.append(CommandLabelChange(diagram, node, node.text(), new_label))
-                        commands.append(CommandProjectConnectSpecificSignals(self.project))
+                        commands = [CommandProjectDisconnectSpecificSignals(self.project),
+                                    CommandLabelChange(diagram, node, node.text(), new_label),
+                                    CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
+                                                                         Duplicate_dict_1, [old_iri, new_iri], [node]),
+                                    CommandNodeSetRemainingCharacters(node.remaining_characters, data, node,
+                                                                      self.project),
+                                    CommandLabelChange(diagram, node, node.text(), new_label),
+                                    CommandProjectConnectSpecificSignals(self.project)]
 
                         if any(commands):
                             self.undostack.beginMacro('edit Forms >> accept() {0}'.format(node))
@@ -2410,8 +2406,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 elif action.data() is Identity.Value:
                     form = ValueForm(node, self)
                     form.exec_()
-
-        #print('>>>      Session (doSetIndividualAs) END')
 
     @QtCore.pyqtSlot()
     def doSetNodeSpecial(self):
@@ -2431,7 +2425,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     name = 'change {0} to {1}'.format(node.shortName, data)
 
                     old_iri = self.project.get_iri_of_node(node)
-                    new_iri = 'http://www.w3.org/2002/07/owl'
+                    new_iri = Namespace.OWL.value
 
                     if node.type() is Item.ConceptNode:
                         new_rc_lst = ['Nothing','Thing']
@@ -2445,8 +2439,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     elif data == 'BOTTOM':
                         new_rc = new_rc_lst[0]
 
-                    #new_rc = new_rc.replace('\n','')
-
                     Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries \
                         (self.project.IRI_prefixes_nodes_dict, dict())
                     Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries \
@@ -2455,12 +2447,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)
 
-                    commands = []
-
-                    commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_rc, node, diagram.project))
-                    commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
+                    commands = [
+                        CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False),
+                        CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                             [old_iri, new_iri], [node]),
+                        CommandNodeSetRemainingCharacters(node.remaining_characters, new_rc, node, diagram.project),
+                        CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False)]
 
                     if any(commands):
                         self.undostack.beginMacro('edit {0} doSetNodeSpecial'.format(node))

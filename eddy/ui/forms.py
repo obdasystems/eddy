@@ -40,22 +40,20 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.graphol import Identity
-from eddy.core.datatypes.owl import Datatype, OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.owl import Datatype, Namespace
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.regex import RE_VALUE
-
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import IntegerField
 from eddy.ui.fields import StringField
-
 
 LOGGER = getLogger()
 
@@ -64,6 +62,7 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
     """
     This class implements the form used to input domain/range restriction cardinalities.
     """
+
     def __init__(self, parent=None):
         """
         Initialize the form dialog.
@@ -136,7 +135,8 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
             if v1 is not None and v1 < 0 or v2 is not None and v2 < 0:
                 raise ValueError('Please enter only <b>positive</b> integers!')
             if v1 is not None and v2 is not None and v1 > v2:
-                raise ValueError('Min. cardinality <b>{0}</b> must be <= than Max. cardinality <b>{1}</b>'.format(v1, v2))
+                raise ValueError(
+                    'Min. cardinality <b>{0}</b> must be <= than Max. cardinality <b>{1}</b>'.format(v1, v2))
         except ValueError as e:
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -178,6 +178,7 @@ class RefactorNameForm(QtWidgets.QDialog):
     """
     This class implements the form used to rename nodes during refactor operations.
     """
+
     def __init__(self, node, session):
         """
         Initialize the form dialog.
@@ -206,7 +207,6 @@ class RefactorNameForm(QtWidgets.QDialog):
 
         else:
             self.renameField.setValue(self.node.remaining_characters)
-            #self.old_text = self.node.remaining_characters
 
         self.old_text = self.node.text()
 
@@ -288,19 +288,19 @@ class RefactorNameForm(QtWidgets.QDialog):
             commands = []
 
             if match:
-
                 new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
-                new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
-
+                new_remaining_characters = match.group('datatype')[
+                                           match.group('datatype').index(':') + 1:len(match.group('datatype'))]
                 new_iri = None
 
-                for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                    std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
-                    if std_prefix == new_prefix:
-                        new_iri = std_iri
+                for namespace in Namespace:
+                    if namespace.name.lower() == new_prefix:
+                        new_iri = namespace.value
 
-                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                    self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
+                    self.project.IRI_prefixes_nodes_dict, dict())
 
                 old_iri = self.project.get_iri_of_node(self.node)
 
@@ -311,18 +311,22 @@ class RefactorNameForm(QtWidgets.QDialog):
                 commands_rc_change = []
 
                 for node in self.project.predicates(self.node.type(), self.node.text()):
-
                     list_of_nodes_to_process.append(node)
 
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)
 
-                    commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
-                    commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, refactor=True))
-                    commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
+                    commands_label_change_list_1.append(
+                        CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
+                    commands_rc_change.append(
+                        CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node,
+                                                          self.project, refactor=True))
+                    commands_label_change_list_2.append(
+                        CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
 
-                command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], list_of_nodes_to_process)
-
+                command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
+                                                                           Duplicate_dict_1, [old_iri, new_iri],
+                                                                           list_of_nodes_to_process)
                 commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 
                 commands.extend(commands_label_change_list_1)
@@ -333,20 +337,14 @@ class RefactorNameForm(QtWidgets.QDialog):
                 commands.append(CommandProjectConnectSpecificSignals(self.project))
 
             else:
-                #self.setText(self.old_text)
-
                 exception_list = ['-', '_', '.', '~', '\n']
-
                 currentData_processed = ''
-
                 flag = False
 
-                for i,c in enumerate(currentData):
-                    # i ranges from 0->len(currentDate)-1 inc.
-
+                for i, c in enumerate(currentData):
                     if c == '':
                         pass
-                    elif i < (len(currentData)-1) and (c == '\\' and currentData[i + 1] == 'n'):
+                    elif i < (len(currentData) - 1) and (c == '\\' and currentData[i + 1] == 'n'):
                         currentData_processed = currentData_processed + '\n'
                     elif i > 0 and (c == 'n' and currentData[i - 1] == '\\'):
                         pass
@@ -358,11 +356,11 @@ class RefactorNameForm(QtWidgets.QDialog):
 
                 if flag is True:
                     self.session.statusBar().showMessage(
-                        'Spaces in between alphanumeric characters and special characters were replaced by an underscore character.',
+                        'Spaces in between alphanumeric characters and special characters were replaced by an '
+                        'underscore character.',
                         15000)
 
                 if match_old:
-
                     new_remaining_characters = currentData_processed
                     new_iri = self.project.iri
 
@@ -388,11 +386,16 @@ class RefactorNameForm(QtWidgets.QDialog):
                         if len(Duplicate_dict_1[new_iri][0]) == 0:
                             new_label = self.project.get_full_IRI(new_iri, None, new_remaining_characters)
                         else:
-                            new_label = str(Duplicate_dict_1[new_iri][0][len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + new_remaining_characters)
+                            new_label = str(Duplicate_dict_1[new_iri][0][
+                                                len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + new_remaining_characters)
 
-                        commands_label_change_list_1.append(CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
-                        commands_rc_change.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, refactor=True))
-                        commands_label_change_list_2.append(CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
+                        commands_label_change_list_1.append(
+                            CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
+                        commands_rc_change.append(
+                            CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node,
+                                                              self.project, refactor=True))
+                        commands_label_change_list_2.append(
+                            CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
 
                     command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
                                                                                Duplicate_dict_1, [old_iri, new_iri],
@@ -412,12 +415,15 @@ class RefactorNameForm(QtWidgets.QDialog):
                     commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 
                     for node in self.project.predicates(self.node.type(), self.node.text()):
-                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project, refactor=True))
+                        commands.append(
+                            CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node,
+                                                              self.project, refactor=True))
 
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
 
             if any(commands):
-                self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(self.node.text(), currentData))
+                self.session.undostack.beginMacro(
+                    'change predicate "{0}" to "{1}"'.format(self.node.text(), currentData))
                 for command in commands:
                     if command:
                         self.session.undostack.push(command)
@@ -428,7 +434,7 @@ class RefactorNameForm(QtWidgets.QDialog):
 
         super().accept()
 
-    #not used
+    # not used
     @QtCore.pyqtSlot()
     def accept_2(self):
         """
@@ -464,6 +470,7 @@ class ValueForm(QtWidgets.QDialog):
     """
     This class implements the form used to select the Value of an Individual node.
     """
+
     def __init__(self, node, session):
         """
         Initialize the form dialog.
@@ -564,13 +571,13 @@ class ValueForm(QtWidgets.QDialog):
         """
         Accepts the form and set the new value.
         """
-        #print('>>>          ValueForm (accept)')
+        # print('>>>          ValueForm (accept)')
         node = self.node
         diagram = node.diagram
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
         data = node.compose(value, datatype)
-        #print('data',data)
+
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
 
@@ -578,22 +585,18 @@ class ValueForm(QtWidgets.QDialog):
             new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
             new_iri = None
 
-            for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-                std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
-                if std_prefix == new_prefix:
-                    new_iri = std_iri
+            for namespace in Namespace:
+                if namespace.name.lower() == new_prefix:
+                    new_iri = namespace.value
 
             if new_iri is None:
                 LOGGER.error('*****************   failed to assign iri to node   *******************')
                 return
 
-            #print('self.project.get_prefix_of_node(node) - new_prefix',self.project.get_prefix_of_node(node),'-',new_prefix)
-            #print('self.project.get_iri_of_node(node) - new_iri',self.project.get_iri_of_node(node),'-',new_iri)
-            #print('node.remaining_characters - new_remaining_characters',node.remaining_characters,'-',new_remaining_characters)
-            #print('data=',data)
-
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,dict())
+            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                                 dict())
+            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
+                                                                                 dict())
 
             old_iri = self.project.get_iri_of_node(node)
 
@@ -604,8 +607,10 @@ class ValueForm(QtWidgets.QDialog):
 
             commands.append(CommandProjectDisconnectSpecificSignals(self.project))
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-            commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project))
+            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
+                                                                 [old_iri, new_iri], [node]))
+            commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node,
+                                                              self.project))
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
             commands.append(CommandProjectConnectSpecificSignals(self.project))
 
@@ -617,8 +622,6 @@ class ValueForm(QtWidgets.QDialog):
                 self.session.undostack.endMacro()
 
         super().accept()
-
-        #print('>>>          ValueForm (accept) END')
 
 
 class AbstractDiagramForm(QtWidgets.QDialog):

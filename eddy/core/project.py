@@ -44,7 +44,7 @@ from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.owl import OWLStandardIRIPrefixPairsDict
+from eddy.core.datatypes.owl import Namespace
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
@@ -387,61 +387,43 @@ class Project(QtCore.QObject):
         return to_dict
 
     def init_IRI_prefixes_nodes_dict_with_std_data(self):
-        for std_iri in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys():
-            if std_iri in self.IRI_prefixes_nodes_dict.keys():
-                continue
-
-            std_prefix = OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict[std_iri]
-            prefixes = []
-
-            if std_prefix not in prefixes:
-                prefixes.append(std_prefix)
-
-            nodes = set()
-            properties = set()
-            properties.add('Standard_IRI')
-            values = [prefixes, nodes, properties]
-
-            self.IRI_prefixes_nodes_dict[std_iri] = values
+        for namespace in Namespace:
+            if not namespace.value in self.IRI_prefixes_nodes_dict.keys():
+                prefixes = [namespace.name.lower()]
+                nodes = set()
+                properties = set()
+                properties.add('Standard_IRI')
+                values = [prefixes, nodes, properties]
+                self.IRI_prefixes_nodes_dict[namespace.value] = values
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def add_item_to_IRI_prefixes_nodes_dict(self, diagram, item):
-        if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
-                    'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))):
+        if (('AttributeNode' in str(type(item))) or
+                ('ConceptNode' in str(type(item))) or
+                ('IndividualNode' in str(type(item))) or
+                ('RoleNode' in str(type(item)))):
             node = item
             corr_iri = None
             flag = False
 
-            """
-            if item.remaining_characters is not None:
-                if item.remaining_characters in self.iri_of_imported_nodes:
-                    ind = self.iri_of_imported_nodes.index(item.remaining_characters)
-                    corr_iri = self.iri_of_imported_nodes[ind-1]
-                    flag = True
-            """
-            for c,ele in enumerate(self.iri_of_cut_nodes):
-                if (node is ele) or str(node) == str(ele):
+            for c, ele in enumerate(self.iri_of_cut_nodes):
+                if node is ele or str(node) == str(ele):
                     corr_iri = self.iri_of_cut_nodes[c+1]
                     flag = True
                     break
 
             if flag is False:
-                if (node.type() is Item.IndividualNode) and (node.identity() is Identity.Value):
+                if node.type() is Item.IndividualNode and node.identity() is Identity.Value:
                     if self.get_iri_of_node(node) is None:
                         prefix = str(node.datatype.value)[0:str(node.datatype.value).index(':')]
-                        std_iri_prefix = ['http://www.w3.org/1999/02/22-rdf-syntax-ns', 'rdf',
-                                          'http://www.w3.org/2000/01/rdf-schema', 'rdfs',
-                                          'http://www.w3.org/2001/XMLSchema', 'xsd',
-                                          'http://www.w3.org/2002/07/owl', 'owl']
-                        ind_prefix = std_iri_prefix.index(prefix)
-                        ind_iri = ind_prefix - 1
-                        corr_iri = std_iri_prefix[ind_iri]
-                    else:
-                        pass
+                        # FIXME: is it always the case that prefix is in this list?
+                        namespace = Namespace.forPrefix(prefix)
+                        corr_iri = namespace.value if namespace else None
                 else:
-                    if (self.get_iri_of_node(node) is None):
-                        if (node.type() is not (Item.IndividualNode)) and (node.special() is not None):
-                            corr_iri = 'http://www.w3.org/2002/07/owl'
+                    if self.get_iri_of_node(node) is None:
+                        if node.type() is not Item.IndividualNode and node.special() is not None:
+                            # FIXME: ???
+                            corr_iri = Namespace.OWL.value
                         else:
                             # Check if the node contains the prefix separator character and use the associated IRI
                             nodeLabel = node.text().replace('\n', '')
@@ -463,14 +445,16 @@ class Project(QtCore.QObject):
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def remove_item_from_IRI_prefixes_nodes_dict(self, diagram, node):
         # Remove the node in all the indices of the dictionary
-        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
-                    'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+        if (('AttributeNode' in str(type(node))) or
+                ('ConceptNode' in str(type(node))) or
+                ('IndividualNode' in str(type(node))) or
+                ('RoleNode' in str(type(node)))):
             corr_iris = []
 
             for IRI_in_dict in self.IRI_prefixes_nodes_dict.keys():
-                if (node in self.IRI_prefixes_nodes_dict[IRI_in_dict][1]) or\
-                   (self.check_if_node_is_present_in_set(node, self.IRI_prefixes_nodes_dict[IRI_in_dict][1])):
-                        corr_iris.append(IRI_in_dict)
+                if (node in self.IRI_prefixes_nodes_dict[IRI_in_dict][1] or
+                        self.check_if_node_is_present_in_set(node, self.IRI_prefixes_nodes_dict[IRI_in_dict][1])):
+                    corr_iris.append(IRI_in_dict)
 
             if len(corr_iris) == 1:
                 self.IRI_prefixes_nodes_dict[corr_iris[0]][1].remove(node)
@@ -508,69 +492,6 @@ class Project(QtCore.QObject):
             if d['authority'] == '':
                 return False
             return True
-
-    """
-    #not used as of now
-    def AddORremoveORmodifyVersionforIRI(self, iri_inp, version_to, dictionary, **kwargs):
-
-        task = kwargs.get('task', None)
-
-        if iri_inp in dictionary.keys():
-            version_from = dictionary[iri_inp][3]
-            if task == 'add':
-                if version_to is None:
-                    self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_to,'Nothing to add')
-                    return None
-                else:
-                    if version_from is None:
-                        dictionary[iri_inp][3] = version_to
-                        self.sgnIRIVersionEntryAdded.emit(iri_inp, version_to, 'Version added')
-                        return dictionary
-                    else:
-                        if version_from == version_to:
-                            self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_to, 'Current and new value for the versions are the same. Nothing to change')
-                            return None
-                        else:
-                            self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_to, 'Another value present. (Remove_old_val + Add_new_val) or Modify_old_val.')
-                            return None
-            elif task == 'remove':
-                if version_from is None:
-                    self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_from, 'Nothing to remove')
-                    return None
-                else:
-                    dictionary[iri_inp][3] = None
-                    self.sgnIRIVersionEntryRemoved.emit(iri_inp, version_from, 'Version added')
-                    return dictionary
-            elif task == 'modify':
-                if version_from is None:
-                    if version_to is None:
-                        self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_from, 'Nothing to change')
-                        return None
-                    else:
-                        dictionary[iri_inp][3] = version_to
-                        self.sgnIRIVersionEntryRemoved.emit(iri_inp, version_from, 'Version modified')
-                        return dictionary
-                else:
-                    if version_to is None:
-                        dictionary[iri_inp][3] = version_to
-                        self.sgnIRIVersionEntryRemoved.emit(iri_inp, version_from, 'Version modified')
-                        return dictionary
-                    else:
-                        if version_to == version_from:
-                            self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_from, 'Nothing to change')
-                            return None
-                        else:
-                            dictionary[iri_inp][3] = version_to
-                            self.sgnIRIVersionEntryRemoved.emit(iri_inp, version_from, 'Version modified')
-                            return dictionary
-            else:
-                self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_from, 'Programming error/ contact developer')
-                LOGGER.critical('Programming error/ contact developer   >>>  AddORremoveORmodifyVersionforIRI')
-                return None
-        else:
-            self.sgnIRIVersionEntryIgnored.emit(iri_inp, version_to, 'IRI not present in dictionary')
-            return None
-    """
 
     def modifyIRIPrefixesEntry(self,iri_from_val,prefixes_from_val,iri_to_val,prefixes_to_val, dictionary):
         None_1 = (iri_from_val is None)
@@ -764,11 +685,11 @@ class Project(QtCore.QObject):
         display_in_widget = kwargs.get('display_in_widget',False)
 
         ### cannot add standart prefixes ###
-        if (Prefix_inp is not None) and (Prefix_inp in {'rdf', 'rdfs', 'xsd', 'owl'}):
+        if Prefix_inp and Namespace.forPrefix(Prefix_inp):
             self.sgnIRIPrefixesEntryIgnored.emit(IRI_inp, Prefix_inp, 'Cannot add/remove standard prefix(es)')
             return None
         ### cannot add standart IRI ###
-        if (IRI_inp is not None) and (IRI_inp in OWLStandardIRIPrefixPairsDict.std_IRI_prefix_dict.keys()):
+        if IRI_inp and IRI_inp in [ns.value for ns in Namespace]:
             self.sgnIRIPrefixesEntryIgnored.emit(IRI_inp, Prefix_inp, 'Cannot add/remove standard IRI(s)')
             return None
 
