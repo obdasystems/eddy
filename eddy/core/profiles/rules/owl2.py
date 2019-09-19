@@ -514,6 +514,12 @@ class InputToPropertyAssertionNodeRule(ProfileEdgeRule):
                     # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
 
+                if source.identity() is Identity.Value:
+                    # Individuals representing values can only be connected as
+                    # the second component of any PropertyAssertionNode.
+                    if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) != 1:
+                        raise ProfileError('Value cannot be used as the first component of a property assertion')
+
                 if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) >= 2:
                     # At most 2 Individual nodes can be connected to a PropertyAssertion node. As an example
                     # we can construct ObjectPropertyAssertion(presiede M.Draghi BCE) where the individuals
