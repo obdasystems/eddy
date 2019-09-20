@@ -916,6 +916,19 @@ def test_input_between_value_node_and_property_assertion_node_set_as_role_instan
     assert not session.project.profile.pvr().isValid()
 
 
+def test_input_between_value_node_and_property_assertion_node_with_no_subject(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram51', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, '"12"^^xsd:integer'), target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Value cannot be used as the first component of a property assertion'
+    assert not session.project.profile.pvr().isValid()
+
+
 def test_input_between_individual_node_and_property_assertion_node_set_as_attribute_instance(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram31', qtbot)
