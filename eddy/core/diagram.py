@@ -190,11 +190,7 @@ class Diagram(QtWidgets.QGraphicsScene):
             iri = None
 
             if data is not None:
-                data_str = ''
-
-                for i in range(0, data.size()):
-                    data_str = data_str + data.at(i)
-
+                data_str = str(data)
                 if data_str is not '':
                     data_comma_seperated = data_str.split(',')
                     iri = data_comma_seperated[0]
