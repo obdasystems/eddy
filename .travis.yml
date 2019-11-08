@@ -72,19 +72,18 @@ matrix:
 
     - os: osx
       language: generic
-      osx_image: xcode9
-      env: OSX=sierra PYTHON_VERSION=3.6.8 DEPLOY=yes
+      osx_image: xcode9.4
+      env: OSX=high-sierra PYTHON_VERSION=3.6.8 DEPLOY=yes
 
     - os: osx
       language: generic
       osx_image: xcode9.4
-      env: OSX=high-sierra PYTHON_VERSION=3.7.3
+      env: OSX=high-sierra PYTHON_VERSION=3.7.5
 
-    # https://github.com/pyenv/pyenv/issues/1219
-    #- os: osx
-    #  language: generic
-    #  osx_image: xcode10.2
-    #  env: OSX=mojave PYTHON_VERSION=3.7.3
+    - os: osx
+      language: generic
+      osx_image: xcode11.2
+      env: OSX=mojave PYTHON_VERSION=3.7.5
 
 before_install:
   - source ./scripts/travis/before_install.sh
