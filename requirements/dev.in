@@ -2,11 +2,12 @@
 
 # Recursive
 -r base.in
+-r cython.in
 -r packaging.in
 -r tests.in
 -r tox.in
 
 # From PyPi
-PyQt5-stubs==5.11.3.3
-pip-tools==4.1.0
+PyQt5-stubs==5.13.1.3
+pip-tools==4.2.0
 objgraph==3.4.1
