@@ -48,6 +48,7 @@ from eddy.core.functions.misc import snap, partition, first
 from eddy.core.functions.signals import connect
 from eddy.core.generators import GUID
 from eddy.core.items.factory import ItemFactory
+from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
@@ -185,46 +186,56 @@ class Diagram(QtWidgets.QGraphicsScene):
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain') and Item.valueOf(dropEvent.mimeData().text()):
             snapToGrid = self.session.action('toggle_grid').isChecked()
-            node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
-            data = dropEvent.mimeData().data(dropEvent.mimeData().text())
-            iri = None
+            #TODO
+            nodeType = dropEvent.mimeData().text()
+            if Item.ConceptIRINode <= int(dropEvent.mimeData().text()) <= Item.IndividualIRINode:
+                #New node associated with IRI object
+                node = ConceptNode(diagram=self)
+                self.session.doOpenIRIBuilder(node)
 
-            if data is not None:
-                data_str = str(data, encoding='utf-8')
-                if data_str is not '':
-                    data_comma_seperated = data_str.split(',')
-                    iri = data_comma_seperated[0]
-                    rc = data_comma_seperated[1]
-                    txt = data_comma_seperated[2]
-                    node.setText(txt)
-                    node.remaining_characters = rc
+                print()
+            else:
+                #Old node type
+                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
+                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
+                iri = None
 
-            node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-            commands = []
-            node.emptyMethod()
+                if data is not None:
+                    data_str = str(data, encoding='utf-8')
+                    if data_str is not '':
+                        data_comma_seperated = data_str.split(',')
+                        iri = data_comma_seperated[0]
+                        rc = data_comma_seperated[1]
+                        txt = data_comma_seperated[2]
+                        node.setText(txt)
+                        node.remaining_characters = rc
 
-            if iri is not None:
-                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                Duplicate_dict_1 = self.project.addIRINodeEntry(Duplicate_dict_1, iri, node)
+                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
+                commands = []
+                node.emptyMethod()
 
-                if Duplicate_dict_1 is not None:
-                    pass
+                if iri is not None:
+                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                    Duplicate_dict_1 = self.project.addIRINodeEntry(Duplicate_dict_1, iri, node)
 
-                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
-            commands.append(CommandNodeAdd(self, node))
+                    if Duplicate_dict_1 is not None:
+                        pass
 
-            if iri is not None:
-                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
-                commands.append(CommandProjectConnectSpecificSignals(self.project))
+                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
+                commands.append(CommandNodeAdd(self, node))
 
-            if any(commands):
-                self.session.undostack.beginMacro('node Add - {0}'.format(node.name))
-                for command in commands:
-                    if command:
-                        self.session.undostack.push(command)
-                self.session.undostack.endMacro()
+                if iri is not None:
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
+                    commands.append(CommandProjectConnectSpecificSignals(self.project))
+
+                if any(commands):
+                    self.session.undostack.beginMacro('node Add - {0}'.format(node.name))
+                    for command in commands:
+                        if command:
+                            self.session.undostack.push(command)
+                    self.session.undostack.endMacro()
 
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(QtCore.Qt.CopyAction)

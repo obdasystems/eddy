@@ -100,6 +100,7 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.path import shortPath
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
+from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
@@ -121,6 +122,7 @@ from eddy.ui.forms import NewDiagramForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import RenameDiagramForm
 from eddy.ui.forms import ValueForm
+from eddy.ui.iri import IriBuilderDialog
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
@@ -2095,6 +2097,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 properties.show()
                 properties.raise_()
                 properties.activateWindow()
+
+    @QtCore.pyqtSlot(ConceptNode)
+    def doOpenIRIBuilder(self,node):
+        """
+        Executed when IRI builder needs to be displayed.
+        """
+        #TODO
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            #node = first(diagram.selectedNodes())
+            if node:
+                builder = IriBuilderDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
 
     @QtCore.pyqtSlot()
     def doOpenNodeDescription(self):

@@ -427,7 +427,8 @@ class IRIManager(QtCore.QObject):
         iri = IRI(iriString)
         self.iris.add(iri)
         self.stringToIRI[iriString] = iri
-        self.sgnIRIAdded(iri)
+        self.sgnIRIAdded.emit(iri)
+        return iri
 
     #############################################
     #   INTERFACE
@@ -579,7 +580,7 @@ class IRIManager(QtCore.QObject):
         """
         return self.prefix2namespaceMap.items()
 
-    def prefixes(self):
+    def getManagedPrefixes(self):
         """
         Returns a list of prefix names managed by this `PrefixManager`.
         :rtype: list
@@ -693,7 +694,7 @@ class IRIManager(QtCore.QObject):
         return self.prefix2namespaceMap.__hash__()
 
     def __iter__(self):
-        for prefix in self.prefixes():
+        for prefix in self.getManagedPrefixes():
             yield prefix
 
     def __len__(self):
