@@ -50,6 +50,7 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.output import getLogger
+from eddy.core.owl import IRIManager
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
@@ -90,7 +91,8 @@ K_TRANSITIVE = 'transitive'
 
 
 # noinspection PyTypeChecker
-class Project(QtCore.QObject):
+#class Project(QtCore.QObject):
+class Project(IRIManager):
     """
     Extension of QtCore.QObject which implements a Graphol project.
     Additionally to built-in signals, this class emits:

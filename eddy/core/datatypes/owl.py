@@ -35,8 +35,51 @@
 
 from enum import unique
 
+
 from eddy.core.datatypes.common import Enum_
 
+#TODO file dovrà essere cancellato e dovrannno essere utilizzate corrispondenti classi in eddy/core/owl.py
+
+@unique
+class Namespace(Enum_):
+    """
+    Extends Enum providing a set of commonly used namespaces
+    """
+    OWL = "http://www.w3.org/2002/07/owl#"
+    RDFS = "http://www.w3.org/2000/01/rdf-schema#"
+    RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    XSD = "http://www.w3.org/2001/XMLSchema#"
+    XML = "http://www.w3.org/XML/1998/namespace"
+    SWRL = "http://www.w3.org/2003/11/swrl#"
+    SWRLB = "http://www.w3.org/2003/11/swrlb#"
+    SKOS = "http://www.w3.org/2004/02/skos/core#"
+    TIME = "http://www.w3.org/2006/time#"
+
+    @classmethod
+    def forPrefix(cls, prefix):
+        """
+        Returns the namespace corresponding to the given prefix, or None if no
+        such namespace exists.
+        :type prefix: str
+        :return: Namespace
+        """
+        for ns in cls:
+            if prefix == ns.name.lower():
+                return ns
+        return None
+
+    @classmethod
+    def forValue(cls, value):
+        """
+        Returns the prefix corresponding to the given namespace value (IRI),
+        or None if no such prefix exists.
+        :type value: str
+        :return: Namespace
+        """
+        for ns in cls:
+            if value == ns.value:
+                return ns
+        return None
 
 @unique
 class Datatype(Enum_):
@@ -249,43 +292,4 @@ class OWLSyntax(Enum_):
     Turtle = 'Turtle syntax'
 
 
-@unique
-class Namespace(Enum_):
-    """
-    Extends Enum providing a set of commonly used namespaces
-    """
-    OWL = "http://www.w3.org/2002/07/owl#"
-    RDFS = "http://www.w3.org/2000/01/rdf-schema#"
-    RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    XSD = "http://www.w3.org/2001/XMLSchema#"
-    XML = "http://www.w3.org/XML/1998/namespace"
-    SWRL = "http://www.w3.org/2003/11/swrl#"
-    SWRLB = "http://www.w3.org/2003/11/swrlb#"
-    SKOS = "http://www.w3.org/2004/02/skos/core#"
-    TIME = "http://www.w3.org/2006/time#"
 
-    @classmethod
-    def forPrefix(cls, prefix):
-        """
-        Returns the namespace corresponding to the given prefix, or None if no
-        such namespace exists.
-        :type prefix: str
-        :return: Namespace
-        """
-        for ns in cls:
-            if prefix == ns.name.lower():
-                return ns
-        return None
-
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the prefix corresponding to the given namespace value (IRI),
-        or None if no such prefix exists.
-        :type value: str
-        :return: Namespace
-        """
-        for ns in cls:
-            if value == ns.value:
-                return ns
-        return None

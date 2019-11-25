@@ -303,6 +303,8 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.MembershipEdge,
             Item.SameEdge,
             Item.DifferentEdge,
+
+            Item.ConceptIRINode
         ]
         self.shortcutPrefix = 'Shift+Alt'
         self.itemShortcuts = {
@@ -329,6 +331,8 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.MembershipEdge: '{}+e,m'.format(self.shortcutPrefix),
             Item.SameEdge: '{}+e,s'.format(self.shortcutPrefix),
             Item.DifferentEdge: '{}+e,d'.format(self.shortcutPrefix),
+
+            Item.ConceptIRINode: '{}+e,i'.format(self.shortcutPrefix)
         }
 
         # CREATE BUTTONS
@@ -410,6 +414,9 @@ class PaletteWidget(QtWidgets.QWidget):
                 diagram.setMode(DiagramMode.Idle)
             else:
                 if Item.ConceptNode <= button.item < Item.InclusionEdge:
+                    diagram.setMode(DiagramMode.NodeAdd, button.item)
+                #TODO elif added
+                elif Item.ConceptIRINode <= button.item <=Item.IndividualIRINode:
                     diagram.setMode(DiagramMode.NodeAdd, button.item)
                 elif Item.InclusionEdge <= button.item <= Item.DifferentEdge:
                     diagram.setMode(DiagramMode.EdgeAdd, button.item)
@@ -560,6 +567,18 @@ class PaletteButton(QtWidgets.QToolButton):
                     drag.setPixmap(self.icon().pixmap(60, 40))
                     drag.setHotSpot(self.startPos - self.rect().topLeft())
                     drag.exec_(QtCore.Qt.CopyAction)
+            #TODO added
+            elif Item.ConceptIRINode <= self.item <= Item.IndividualIRINode:
+                distance = (mouseEvent.pos() - self.startPos).manhattanLength()
+                if distance >= QtWidgets.QApplication.startDragDistance():
+                    mimeData = QtCore.QMimeData()
+                    mimeData.setText(str(self.item.value))
+                    drag = QtGui.QDrag(self)
+                    drag.setMimeData(mimeData)
+                    drag.setPixmap(self.icon().pixmap(60, 40))
+                    drag.setHotSpot(self.startPos - self.rect().topLeft())
+                    drag.exec_(QtCore.Qt.CopyAction)
+
 
         super().mouseMoveEvent(mouseEvent)
 
@@ -618,6 +637,17 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.drawRect(QtCore.QRectF(-27, -17, 54, 34))
                 painter.setFont(Font('Roboto', 11, Font.Light))
                 painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'concept')
+                painter.end()
+
+            #TODO added
+            elif item is Item.ConceptIRINode:
+                painter = QtGui.QPainter(pixmap)
+                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
+                painter.translate(30, 22)
+                painter.drawRect(QtCore.QRectF(-27, -17, 54, 34))
+                painter.setFont(Font('Roboto', 11, Font.Light))
+                painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'IRI concept')
                 painter.end()
 
             #############################################

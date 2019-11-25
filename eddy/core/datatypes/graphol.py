@@ -63,6 +63,13 @@ class Item(IntEnum_):
     """
     This class defines all the available elements for graphol diagrams.
     """
+    # PREDICATES IRI BASED
+    ConceptIRINode = 95531
+    AttributeIRINode = 95532
+    RoleIRINode = 95533
+    ValueDomainIRINode = 95534
+    IndividualIRINode = 95535
+
     # PREDICATES
     ConceptNode = 65537
     AttributeNode = 65538

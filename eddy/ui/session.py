@@ -105,6 +105,7 @@ from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
+from eddy.core.owl import IRIRender
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
@@ -168,6 +169,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnReady = QtCore.pyqtSignal()
     sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
+
+    #Signals related to rendering options
+    sgnRenderingModified = QtCore.pyqtSignal(str)
 
     # Signals related to consistency check.
     # May be removed when a new reasoner API is implemented
@@ -819,6 +823,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             group.addAction(action)
         self.addAction(group)
 
+        #TODO
+        action = QtWidgets.QAction('Render by full IRI', self, objectName='render_full_iri', triggered=self.doRenderByFullIRI)
+        self.addAction(action)
+        action = QtWidgets.QAction('Render by prefixed IRI', self, objectName='render_prefixed_iri', triggered=self.doRenderByPrefixedIRI)
+        self.addAction(action)
+        action = QtWidgets.QAction('Render by label', self, objectName='render_label', triggered=self.doRenderByLabel)
+        self.addAction(action)
+
+
     def initExporters(self):
         """
         Initialize diagram and project exporters.
@@ -921,6 +934,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('\u200C&View', objectName='view')
+        # RENDER BY IRI,PREFIX,LABEL .... Menu
+        # TODO
+        renderInnerMenu = menu.addMenu('Render by...')
+        renderInnerMenu.addAction(self.action('render_full_iri'))
+        renderInnerMenu.addAction(self.action('render_prefixed_iri'))
+        renderInnerMenu.addAction(self.action('render_label'))
+
+        menu.addSeparator()
         menu.addAction(self.action('toggle_grid'))
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
@@ -2881,6 +2902,36 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.widget('select_reasoner').setEnabled(not isProjectEmpty)
         self.action('decolour_nodes').setEnabled(not isProjectEmpty)
         self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
+
+    #TODO
+    @QtCore.pyqtSlot()
+    def doRenderByFullIRI(self):
+        """
+        Render ontology elements by full IRIs
+        """
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('ontology/iri/render', IRIRender.FULL.value)
+        self.sgnRenderingModified.emit(IRIRender.FULL.value)
+
+    #TODO
+    @QtCore.pyqtSlot()
+    def doRenderByPrefixedIRI(self):
+        """
+        Render ontology elements by prefixed IRIs
+        """
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
+        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
+
+    #TODO
+    @QtCore.pyqtSlot()
+    def doRenderByLabel(self):
+        """
+        Render ontology elements by prefixed IRIs
+        """
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
+        self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):

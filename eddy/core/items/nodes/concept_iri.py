@@ -1,37 +1,3 @@
-# -*- coding: utf-8 -*-
-
-##########################################################################
-#                                                                        #
-#  Eddy: a graphical editor for the specification of Graphol ontologies  #
-#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
-#                                                                        #
-#  This program is free software: you can redistribute it and/or modify  #
-#  it under the terms of the GNU General Public License as published by  #
-#  the Free Software Foundation, either version 3 of the License, or     #
-#  (at your option) any later version.                                   #
-#                                                                        #
-#  This program is distributed in the hope that it will be useful,       #
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
-#  GNU General Public License for more details.                          #
-#                                                                        #
-#  You should have received a copy of the GNU General Public License     #
-#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
-#                                                                        #
-#  #####################                          #####################  #
-#                                                                        #
-#  Graphol is developed by members of the DASI-lab group of the          #
-#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
-#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
-#                                                                        #
-#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
-#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
-#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
-#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
-#     - Marco Console <console@dis.uniroma1.it>                          #
-#                                                                        #
-##########################################################################
-
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 
@@ -41,6 +7,11 @@ from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
+from eddy.core.functions.signals import connect, disconnect
+
+from eddy import ORGANIZATION, APPNAME
+from eddy.core.owl import IRIRender, AnnotationAssertion, IRI, AnnotationAssertionProperty, PrefixedIRI
+
 
 class ConceptNode(AbstractResizableNode):
     """
@@ -49,11 +20,14 @@ class ConceptNode(AbstractResizableNode):
     DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.Concept}
-    Type = Item.ConceptNode
+    Type = Item.ConceptIRINode
 
-    def __init__(self, width=110, height=50, brush=None, remaining_characters='concept', **kwargs):
+    sgnIri
+
+    def __init__(self, iri = None, width=110, height=50, brush=None, **kwargs):
         """
         Initialize the node.
+        :type iri: IRI
         :type width: int
         :type height: int
         :type brush: QBrush
@@ -67,17 +41,148 @@ class ConceptNode(AbstractResizableNode):
         self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
-        self.remaining_characters = remaining_characters
+        self._iri = iri
 
-        self.label = NodeLabel(template='concept', pos=self.center, parent=self, editable=True)
+        #store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
+        self.nodeLabelObject = None
+
+        #self.remaining_characters = remaining_characters
+
+        self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=False)
+        #TODO to obtain node parent of label ---> self.label.parentItem()
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
 
+    def connectSignals(self):
+        connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
+        connect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
+        connect(self.project.sgnPrefixModified, self.onPrefixModified)
+        connect(self.session.sgnRenderingModified, self.onRenderingModified)
+        self.connectIRISignals()
 
-    def emptyMethod(self):
-        projectName = ''#self.project.name
-        print('eccolo {}'.format(projectName))
+    def connectIRISignals(self):
+        connect(self.iri.sgnIRIModified, self.onIRIModified)
+        connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
+        connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
+        connect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
+
+
+    def disconnectIRISignals(self):
+        disconnect(self.iri.sgnIRIModified, self.onIRIModified)
+        disconnect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
+        disconnect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
+        disconnect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
+
+    @property
+    def iri(self):
+        '''
+        :rtype: IRI
+        '''
+        return self._iri
+
+    @iri.setter
+    def iri(self,iriObj):
+        '''
+        :type iriObj:IRI
+        '''
+        if self.iri:
+            self.disconnectIRISignals()
+        self._iri = iriObj
+        self.connectIRISignals()
+
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def doUpdateNodeLabel(self):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.FULL.value:
+            self.setText(str(self.iri))
+            self.nodeLabelObject = self.iri
+        elif rendering == IRIRender.PREFIX.value:
+            prefixed = self.project.getShortestPrefixedForm(self.iri)
+            if prefixed:
+                self.setText(str(prefixed))
+                self.nodeLabelObject = prefixed
+            else:
+                self.setText(str(self.iri))
+                self.nodeLabelObject = self.iri
+        elif rendering == IRIRender.LABEL.value:
+            labelAssertion = self.iri.getLabelAnnotationAssertion()
+            if labelAssertion:
+                self.setText(str(labelAssertion.value))
+                self.nodeLabelObject = labelAssertion
+
+
+    @QtCore.pyqtSlot(str)
+    def onRenderingModified(self,rendering):
+        self.doUpdateNodeLabel()
+
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onAnnotationAdded(self, annotation):
+        '''
+        :type annotation: AnnotationAssertion
+        '''
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.LABEL:
+            if isinstance(self.nodeLabelObject, IRI) or isinstance(self.nodeLabelObject, PrefixedIRI):
+                if annotation.assertionProperty==AnnotationAssertionProperty.Label:
+                    self.doUpdateNodeLabel()
+
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onAnnotationRemoved(self, annotation):
+        '''
+        :type annotation: AnnotationAssertion
+        '''
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.LABEL:
+            if self.nodeLabelObject==annotation:
+                self.doUpdateNodeLabel()
+
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onAnnotationModified(self, annotation):
+        '''
+        :type annotation: AnnotationAssertion
+        '''
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.LABEL:
+            if self.nodeLabelObject == annotation:
+                self.doUpdateNodeLabel()
+
+    @QtCore.pyqtSlot()
+    def onIRIModified(self):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.FULL.value:
+            self.doUpdateNodeLabel()
+
+    @QtCore.pyqtSlot()
+    def onPrefixAdded(self):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering==IRIRender.PREFIX.value:
+            self.doUpdateNodeLabel()
+
+    @QtCore.pyqtSlot()
+    def onPrefixRemoved(self):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering==IRIRender.PREFIX.value:
+            self.doUpdateNodeLabel()
+
+    @QtCore.pyqtSlot()
+    def onPrefixModified(self):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.FULL.value:
+            self.doUpdateNodeLabel()
 
     #############################################
     #   INTERFACE

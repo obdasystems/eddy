@@ -118,8 +118,17 @@ class DiagramItemMixin:
         Returns True if this element is a node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type() < Item.InclusionEdge
+        return Item.ConceptNode <= self.type() < Item.InclusionEdge or Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
 
+    def isIRINode(self):
+        """
+        Returns True if this element is a node that is associated to an IRI, False otherwise.
+        :rtype: bool
+        """
+        return Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
+
+    def connectSignals(self):
+        pass
 
 class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
     """

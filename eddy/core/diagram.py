@@ -201,6 +201,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             commands = []
+            node.emptyMethod()
 
             if iri is not None:
                 Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
@@ -624,7 +625,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         Add an item to the Diagram (will redraw the item to reflect its status).
         :type item: AbstractItem
         """
-        super().addItem(item)
+        super().addItem(item)#TODO a partire da questo momento item.diagram restituisce risultato diverso da None
+        if item.isIRINode():
+            item.connectSignals()
         if item.isNode():
             item.updateNode()
 
