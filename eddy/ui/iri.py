@@ -1,7 +1,11 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
+
+from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.ui.notification import Notification
+
 from eddy.core.common import HasWidgetSystem
 
-from eddy.core.owl import IRI
+from eddy.core.owl import IRI, IllegalNamespaceError
 
 from eddy.core.functions.signals import connect
 from eddy.ui.fields import ComboBox, StringField
@@ -11,17 +15,24 @@ from eddy.core.datatypes.qt import Font
 
 class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
+    sgnIRIAccepted = QtCore.pyqtSignal(OntologyEntityNode)
+    sgnIRIRejected = QtCore.pyqtSignal(OntologyEntityNode)
+
+
     noPrefixString = ''
 
     def __init__(self,node,diagram,session):
         """
         Initialize the IRI builder dialog.
-        :type session: Session
         :type diagram: Diagram
         :type node: ConceptNode|AttributeNode|RoleNode|IndividualNode
+        :type session: Session
         """
         super().__init__(session)
         self.diagram = diagram
+
+        connect(self.sgnIRIAccepted,self.diagram.doAddOntologyEntityNode)
+
         self.node = node
         self.project = diagram.project
 
@@ -126,12 +137,22 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def accept(self):
-        iri = self.project.getIRI(self.widget('full_iri_field').value())
-        self.node.iri = iri
-        super().accept()
+        try:
+            iri = self.project.getIRI(self.widget('full_iri_field').value())
+            self.node.iri = iri
+            self.sgnIRIAccepted.emit(self.node)
+            super().accept()
+        except IllegalNamespaceError:
+            errorDialog = QtWidgets.QErrorMessage(parent=self)
+            errorDialog.showMessage('The input string is not a valid IRI')
+            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
+            errorDialog.show()
+            errorDialog.raise_()
+            errorDialog.activateWindow()
 
-
-
+    @QtCore.pyqtSlot()
+    def reject(self):
+        self.sgnIRIRejected.emit(self.node)
 
     #############################################
     #   INTERFACE

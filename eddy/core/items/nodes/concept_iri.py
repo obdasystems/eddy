@@ -4,7 +4,7 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode
+from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
 from eddy.core.functions.signals import connect, disconnect
@@ -13,7 +13,7 @@ from eddy import ORGANIZATION, APPNAME
 from eddy.core.owl import IRIRender, AnnotationAssertion, IRI, AnnotationAssertionProperty, PrefixedIRI
 
 
-class ConceptNode(AbstractResizableNode):
+class ConceptNode(OntologyEntityNode, AbstractResizableNode):
     """
     This class implements the 'Concept' node.
     """
@@ -32,7 +32,8 @@ class ConceptNode(AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        super().__init__(**kwargs)
+        OntologyEntityNode.__init__(self,iri=iri)
+        AbstractResizableNode.__init__(self,**kwargs)
         w = max(width, 110)
         h = max(height, 50)
         brush = brush or ConceptNode.DefaultBrush
@@ -41,18 +42,19 @@ class ConceptNode(AbstractResizableNode):
         self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
+        '''
         self._iri = iri
 
         #store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
         self.nodeLabelObject = None
-
+        '''
         #self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=False)
         #TODO to obtain node parent of label ---> self.label.parentItem()
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        self.updateTextPos()
+        self.updateTextPos(moved=False)
 
     def connectSignals(self):
         connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
@@ -61,12 +63,18 @@ class ConceptNode(AbstractResizableNode):
         connect(self.session.sgnRenderingModified, self.onRenderingModified)
         self.connectIRISignals()
 
+    def disconnectSignals(self):
+        disconnect(self.project.sgnPrefixAdded, self.onPrefixAdded)
+        disconnect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
+        disconnect(self.project.sgnPrefixModified, self.onPrefixModified)
+        disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
+        self.disconnectIRISignals()
+
     def connectIRISignals(self):
         connect(self.iri.sgnIRIModified, self.onIRIModified)
         connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
         connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
         connect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
-
 
     def disconnectIRISignals(self):
         disconnect(self.iri.sgnIRIModified, self.onIRIModified)
@@ -74,14 +82,16 @@ class ConceptNode(AbstractResizableNode):
         disconnect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
         disconnect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
 
-    @property
+
+    """
+    @OntologyEntityNode.iri
     def iri(self):
         '''
         :rtype: IRI
         '''
         return self._iri
 
-    @iri.setter
+    @OntologyEntityNode.iri.setter
     def iri(self,iriObj):
         '''
         :type iriObj:IRI
@@ -90,7 +100,7 @@ class ConceptNode(AbstractResizableNode):
             self.disconnectIRISignals()
         self._iri = iriObj
         self.connectIRISignals()
-
+    """
 
     #############################################
     #   SLOTS
@@ -99,11 +109,11 @@ class ConceptNode(AbstractResizableNode):
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.FULL.value:
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
             self.setText(str(self.iri))
             self.nodeLabelObject = self.iri
-        elif rendering == IRIRender.PREFIX.value:
+        elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
             prefixed = self.project.getShortestPrefixedForm(self.iri)
             if prefixed:
                 self.setText(str(prefixed))
@@ -111,11 +121,12 @@ class ConceptNode(AbstractResizableNode):
             else:
                 self.setText(str(self.iri))
                 self.nodeLabelObject = self.iri
-        elif rendering == IRIRender.LABEL.value:
+        elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
             labelAssertion = self.iri.getLabelAnnotationAssertion()
             if labelAssertion:
                 self.setText(str(labelAssertion.value))
                 self.nodeLabelObject = labelAssertion
+        self.updateTextPos()
 
 
     #@QtCore.pyqtSlot(str)
@@ -202,6 +213,7 @@ class ConceptNode(AbstractResizableNode):
         """
         #print('copy >> self',self)
         #print('copy >> type(self)', type(self))
+        #TODO MODIFICA
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
             'brush': self.brush(),

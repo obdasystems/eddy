@@ -48,6 +48,7 @@ from eddy.core.functions.misc import snap, partition, first
 from eddy.core.functions.signals import connect
 from eddy.core.generators import GUID
 from eddy.core.items.factory import ItemFactory
+from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
@@ -191,9 +192,15 @@ class Diagram(QtWidgets.QGraphicsScene):
             if Item.ConceptIRINode <= int(dropEvent.mimeData().text()) <= Item.IndividualIRINode:
                 #New node associated with IRI object
                 node = ConceptNode(diagram=self)
-                self.session.doOpenIRIBuilder(node)
+                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
 
-                print()
+                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
+                if not data:
+                    #new element
+                    self.session.doOpenIRIBuilder(node)
+                else:
+                    #copy of existing element (e.g. drag and drop from ontology explorer)
+                    print()
             else:
                 #Old node type
                 node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
@@ -237,9 +244,9 @@ class Diagram(QtWidgets.QGraphicsScene):
                             self.session.undostack.push(command)
                     self.session.undostack.endMacro()
 
-            self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
-            dropEvent.setDropAction(QtCore.Qt.CopyAction)
-            dropEvent.accept()
+                self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
+                dropEvent.setDropAction(QtCore.Qt.CopyAction)
+                dropEvent.accept()
         else:
             dropEvent.ignore()
 
@@ -566,6 +573,10 @@ class Diagram(QtWidgets.QGraphicsScene):
     #############################################
     #   SLOTS
     #################################
+
+    @QtCore.pyqtSlot(OntologyEntityNode)
+    def doAddOntologyEntityNode(self,node):
+        self.addItem(node)
 
     @QtCore.pyqtSlot('QGraphicsItem')
     def doNodeIdentification(self, node):

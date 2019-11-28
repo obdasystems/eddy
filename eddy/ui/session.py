@@ -2102,6 +2102,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     def doOpenIRIBuilder(self,node):
         """
         Executed when IRI builder needs to be displayed.
+        :type node: ConceptNode|AttributeNode|RoleNode|IndividualNode
         """
         #TODO
         diagram = self.mdi.activeDiagram()

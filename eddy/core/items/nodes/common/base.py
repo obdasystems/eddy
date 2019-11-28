@@ -31,9 +31,7 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -42,6 +40,9 @@ from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.items.common import AbstractItem, Polygon
+
+
+
 
 
 class AbstractNode(AbstractItem):
@@ -132,7 +133,7 @@ class AbstractNode(AbstractItem):
         """
         return self.boundingRect().center()
 
-    @abstractmethod
+    
     def copy(self, diagram):
         """
         Create a copy of the current item.
@@ -154,7 +155,7 @@ class AbstractNode(AbstractItem):
         """
         return self.polygon.geometry()
 
-    @abstractmethod
+    
     def height(self):
         """
         Returns the height of the shape.
@@ -286,7 +287,7 @@ class AbstractNode(AbstractItem):
                     if (e.source is self or e.type() is Item.EquivalenceEdge) \
                         and filter_on_edges(e)] if filter_on_nodes(x)}
 
-    @abstractmethod
+    
     def painterPath(self):
         """
         Returns the current shape as QPainterPath (used for collision detection).
@@ -403,14 +404,14 @@ class AbstractNode(AbstractItem):
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
-    @abstractmethod
+    
     def updateTextPos(self, *args, **kwargs):
         """
         Update the label position.
         """
         pass
 
-    @abstractmethod
+    
     def width(self):
         """
         Returns the width of the shape.
@@ -525,7 +526,7 @@ class AbstractResizableNode(AbstractNode):
                 return i
         return None
 
-    @abstractmethod
+    
     def resize(self, mousePos):
         """
         Perform interactive resize of the node.
@@ -714,3 +715,74 @@ class AbstractResizableNode(AbstractNode):
 
         self.updateEdges()
         self.update()
+
+
+class OntologyEntityNode(AbstractNode):
+    """
+    Base abstract class for all the nodes representing ontology elements (i.e. Nodes having an associated IRI).
+    """
+    def __init__(self, iri):
+        self._iri = iri
+        # store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
+        self.nodeLabelObject = None
+
+    @property
+    def iri(self):
+        '''
+        :rtype: IRI
+        '''
+        return self._iri
+
+    @iri.setter
+    def iri(self, iriObj):
+        '''
+        :type iriObj:IRI
+        '''
+        if self.iri:
+            self.disconnectIRISignals()
+        self._iri = iriObj
+        self.connectIRISignals()
+        self.doUpdateNodeLabel()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def connectSignals(self):
+        pass
+
+    def disconnectSignals(self):
+        pass
+
+    def connectIRISignals(self):
+        pass
+
+    def disconnectIRISignals(self):
+        pass
+
+    def doUpdateNodeLabel(self):
+        pass
+
+    def onRenderingModified(self, rendering):
+        pass
+
+    def onAnnotationAdded(self, annotation):
+        pass
+
+    def onAnnotationRemoved(self, annotation):
+        pass
+
+    def onAnnotationModified(self, annotation):
+        pass
+
+    def onIRIModified(self):
+        pass
+
+    def onPrefixAdded(self):
+        pass
+
+    def onPrefixRemoved(self):
+        pass
+
+    def onPrefixModified(self):
+        pass

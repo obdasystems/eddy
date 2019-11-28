@@ -306,7 +306,7 @@ class IRI(QtCore.QObject):
         :rtype: bool
         """
         try:
-            return parse(namespace, rule='IRI_reference') is not None
+            return namespace and (parse(namespace, rule='IRI_reference') is not None)
         except ValueError:
             return False
 
