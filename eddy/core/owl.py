@@ -39,7 +39,7 @@ from rfc3987 import compose
 from rfc3987 import parse
 from rfc3987 import resolve
 
-from eddy.core.datatypes.owl import Namespaces
+from eddy.core.datatypes.owl import Namespace
 
 
 class IRI(QtCore.QObject):
@@ -319,11 +319,11 @@ class PrefixManager(QtCore.QObject):
         """
         Initialises this `PrefixManager` with a set of commonly used prefix names
         """
-        self.setPrefix(Namespaces.XML.name.lower(), Namespaces.XML.value)
-        self.setPrefix(Namespaces.XSD.name.lower(), Namespaces.XSD.value)
-        self.setPrefix(Namespaces.RDF.name.lower(), Namespaces.RDF.value)
-        self.setPrefix(Namespaces.RDFS.name.lower(), Namespaces.RDFS.value)
-        self.setPrefix(Namespaces.OWL.name.lower(), Namespaces.OWL.value)
+        self.setPrefix(Namespace.XML.name.lower(), Namespace.XML.value)
+        self.setPrefix(Namespace.XSD.name.lower(), Namespace.XSD.value)
+        self.setPrefix(Namespace.RDF.name.lower(), Namespace.RDF.value)
+        self.setPrefix(Namespace.RDFS.name.lower(), Namespace.RDFS.value)
+        self.setPrefix(Namespace.OWL.name.lower(), Namespace.OWL.value)
 
     def setPrefix(self, prefix, namespace):
         """
