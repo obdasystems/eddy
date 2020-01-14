@@ -41,7 +41,7 @@ import sys
 import setuptools
 
 from eddy import APPNAME, APPID, BUG_TRACKER, COPYRIGHT
-from eddy import DIAG_HOME, GRAPHOL_HOME, LICENSE
+from eddy import GRAPHOL_HOME, LICENSE, ORGANIZATION_URL
 from eddy import ORGANIZATION, PROJECT_HOME, VERSION
 from eddy.core.functions.fsystem import fexists, isdir
 from eddy.core.functions.fsystem import rmdir
@@ -336,7 +336,7 @@ if WIN32:
                         '/dEDDY_GRAPHOL_URL={0}'.format(GRAPHOL_HOME),
                         '/dEDDY_LICENSE={0}'.format(LICENSE.lower()),
                         '/dEDDY_ORGANIZATION={0}'.format(ORGANIZATION),
-                        '/dEDDY_ORGANIZATION_URL={0}'.format(DIAG_HOME),
+                        '/dEDDY_ORGANIZATION_URL={0}'.format(ORGANIZATION_URL),
                         '/dEDDY_PROJECT_HOME={0}'.format(PROJECT_HOME),
                         '/dEDDY_VERSION={0}'.format(VERSION),
                     ]
