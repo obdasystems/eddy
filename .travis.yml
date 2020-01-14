@@ -78,12 +78,12 @@ matrix:
     - os: osx
       language: generic
       osx_image: xcode9.4
-      env: OSX=high-sierra PYTHON_VERSION=3.7.5
+      env: OSX=high-sierra PYTHON_VERSION=3.7.6
 
     - os: osx
       language: generic
       osx_image: xcode11.2
-      env: OSX=mojave PYTHON_VERSION=3.7.5
+      env: OSX=mojave PYTHON_VERSION=3.7.6
 
 before_install:
   - source ./scripts/travis/before_install.sh
