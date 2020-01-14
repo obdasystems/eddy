@@ -8,6 +8,6 @@
 -r tox.in
 
 # From PyPi
-PyQt5-stubs==5.13.1.3
-pip-tools==4.2.0
+PyQt5-stubs==5.13.1.4
+pip-tools==4.3.0
 objgraph==3.4.1

@@ -2,11 +2,11 @@
 -r base.in
 
 # From PyPi
-pytest==5.2.2
-pytest-benchmark==3.2.2
+pytest==5.3.2
+pytest-benchmark==3.2.3
 pytest-cov==2.8.1
-pytest-instafail==0.4.1
-pytest-mock==1.11.2
-pytest-qt==3.2.2
+pytest-instafail==0.4.1.post0
+pytest-mock==2.0.0
+pytest-qt==3.3.0
 pytest-repeat==0.8.0
 pytest-xvfb==1.2.0; sys_platform != "win32"
