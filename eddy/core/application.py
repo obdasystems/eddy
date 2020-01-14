@@ -541,7 +541,7 @@ def main():
         for path in resource_listdir(eddy.core.jvm.__name__, 'lib'):
             if File.forPath(path) is File.Jar:
                 addJVMClasspath(resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
-    addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC', '-XX:+UseConcMarkSweepGC', '-XX:-UseAdaptiveSizePolicy')
+    addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC')
 
     #############################################
     # START THE APPLICATION
