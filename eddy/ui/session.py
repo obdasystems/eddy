@@ -42,8 +42,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import APPNAME, DIAG_HOME, GRAPHOL_HOME
-from eddy import ORGANIZATION, VERSION, WORKSPACE
+from eddy import APPNAME, APP_HOME, BUG_TRACKER, GRAPHOL_HOME, PROJECT_HOME
+from eddy import ORGANIZATION, ORGANIZATION_NAME, ORGANIZATION_URL, VERSION, WORKSPACE
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
@@ -276,10 +276,31 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(action)
 
         action = QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_link_black'), 'Visit DIAG website', self,
-            objectName='diag_web', statusTip='Visit DIAG website',
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Report a bug',
+            self, objectName='report_bug_web', statusTip='Report a bug',
             triggered=self.doOpenURL)
-        action.setData(DIAG_HOME)
+        action.setData(BUG_TRACKER)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Visit {0} repository on GitHub'.format(APPNAME),
+            self, objectName='github_web', statusTip='Visit {0} repository on GitHub'.format(APPNAME),
+            triggered=self.doOpenURL)
+        action.setData(PROJECT_HOME)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Visit {0} website'.format(ORGANIZATION_NAME),
+            self, objectName='organization_web', statusTip='Visit {0} website'.format(ORGANIZATION_NAME),
+            triggered=self.doOpenURL)
+        action.setData(ORGANIZATION_URL)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Visit {0} website'.format(APPNAME),
+            self, objectName='app_web', statusTip='Visit {0} website'.format(APPNAME),
+            triggered=self.doOpenURL)
+        action.setData(APP_HOME)
         self.addAction(action)
 
         action = QtWidgets.QAction(
@@ -944,7 +965,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             menu.addSeparator()
         menu.addAction(self.action('check_for_updates'))
         menu.addSeparator()
-        menu.addAction(self.action('diag_web'))
+        menu.addAction(self.action('report_bug_web'))
+        menu.addAction(self.action('github_web'))
+        menu.addAction(self.action('organization_web'))
+        menu.addAction(self.action('app_web'))
         menu.addAction(self.action('graphol_web'))
         self.addMenu(menu)
 
