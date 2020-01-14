@@ -42,6 +42,7 @@ from enum import unique
 
 from eddy.core.datatypes.common import Enum_
 from eddy.core.functions.path import expandPath
+from eddy.core.output import getLogger
 
 _LINUX = sys.platform.startswith('linux')
 _MACOS = sys.platform.startswith('darwin')
@@ -51,6 +52,7 @@ _jvmLibraries = []
 _jvmClasspath = []
 _jvmOptions = []
 
+LOGGER = getLogger()
 
 @unique
 class JniLib(Enum_):
@@ -398,8 +400,10 @@ try:
                 import jnius
                 self.jnius = jnius
                 self.initialized = True
+                LOGGER.debug('jnius: Initialized JVM: {0}'.format(
+                    jnius.autoclass('java.lang.System').getProperty('java.version')))
             except BaseException as e:
-                raise JVMError('Error initializing JVM instance: {0}'.format(e))
+                raise JVMError('jnius: Error initializing JVM instance: {0}'.format(e))
 
         def getJavaClass(self, cname: str) -> object:
             """
@@ -552,11 +556,15 @@ try:
             try:
                 sep = ';' if _WIN32 else ':'
                 classpath = sep.join([p for p in self.classpath])
-                jpype.startJVM(jpype.getDefaultJVMPath(), '-Djava.class.path={0}'.format(classpath), *self.options, convertStrings=True)
+                jpype.startJVM(jpype.getDefaultJVMPath(),
+                               '-Djava.class.path={0}'.format(classpath),
+                               *self.options,
+                               convertStrings=True)
                 self.jpype = jpype
                 self.initialized = True
+                LOGGER.debug('jpype: Initialized JVM: {0}'.format('.'.join((map(str, jpype.getJVMVersion())))))
             except RuntimeError as e:
-                raise JVMError('Error initializing JVM: {0}'.format(e))
+                raise JVMError('jpype: Error initializing JVM: {0}'.format(e))
 
         def isRunning(self):
             """
