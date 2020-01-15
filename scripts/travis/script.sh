@@ -31,6 +31,7 @@
 #                                                                        #
 ##########################################################################
 
+set -e # Stop on any error
 
 if [[ ! -z "$TOXENV" ]]; then
     # Additional test arguments
@@ -54,8 +55,14 @@ else
     # Remove unneeded files from the jre
     ./scripts/prepare_jre.sh
 
+    # Additional test arguments
+    args=()
+
+    # No Xvfb on macOS
+    [[ $TRAVIS_OS_NAME == osx ]] && args+=('--no-xvfb')
+
     # Run tests with coverage
-    python -bb -m pytest --cov=eddy --cov-report=term-missing --cov-config=.coveragerc
+    python -bb -m pytest --cov=eddy --cov-report=term-missing --cov-config=.coveragerc "${args[@]}"
 
     # Try to build a distribution package
     args=()
