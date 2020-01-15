@@ -569,6 +569,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_individual'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
+        menu.insertSeparator(self.session.action('node_description'))
 
         #############################################
         # BEGIN CONSTRAIN IDENTITY SWITCH
@@ -592,6 +593,7 @@ class MenuFactory(QtCore.QObject):
 
         assertion = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4))
         if assertion:
+            value = value and node is not first(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
             operand = first(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6))
             if operand:
                 if operand.identity() is Identity.Role:
@@ -604,9 +606,6 @@ class MenuFactory(QtCore.QObject):
         for a in self.session.action('switch_individual').actions():
             a.setChecked(a.data() is node.identity())
             a.setVisible(a.data() is Identity.Individual and instance or a.data() is Identity.Value and value)
-
-        #ADD DESCRIPTION LINK TO THE MENU OF INDIVIDUAL NODE
-        menu.addAction(self.session.action('node_description'))
 
         #############################################
         # END CONSTRAIN IDENTITY SWITCH

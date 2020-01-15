@@ -1115,5 +1115,22 @@
         <point x="-80" y="-60"/>
       </edge>
     </diagram>
+    <diagram width="5000" name="diagram51" height="5000">
+      <node type="property-assertion" color="#fcfcfc" inputs="e1" id="n1">
+        <geometry width="52" x="0" y="0" height="30"/>
+      </node>
+      <node type="attribute" color="#fcfcfc" id="n2">
+        <geometry width="20" x="0" y="-100" height="20"/>
+        <label width="22" x="0" y="-122" height="23">A4</label>
+      </node>
+      <node type="individual" color="#fcfcfc" id="n3">
+        <geometry width="60" x="0" y="90" height="-60"/>
+        <label width="97" x="0" y="90" height="23">"12"^^xsd:integer</label>
+      </node>
+      <edge type="membership" target="n2" id="e0" source="n1">
+        <point x="0" y="0"/>
+        <point x="0" y="-100"/>
+      </edge>
+    </diagram>
   </diagrams>
 </graphol>

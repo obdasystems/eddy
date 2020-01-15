@@ -126,7 +126,7 @@ class PropertyAssertionNode(AbstractNode):
         * If the node has 2 individuals as inputs => Identity == RoleInstance
         * If the node has 1 individual and 1 value as inputs => Identity == AttributeInstance
 
-        In both the cases, whether we establish or not an idendity for this node,
+        In both the cases, whether we establish or not an identity for this node,
         we mark it for EXCLUSION from the STRONG and WEAK sets. This is due to the
         PropertyAssertion node being used to perform assertions at ABox level
         while every other node in the graph is used at TBox level. Additionally we
