@@ -158,6 +158,19 @@ class PropertyAssertionNode(AbstractNode):
         self.setIdentity(computed)
         return set(), incoming, {self}
 
+    def inputNodes(self, filter_on_nodes=lambda x: True):
+        """
+        Returns the list of nodes connected via an input edge
+        ordered according to the input edge label.
+
+        :type filter_on_nodes: callable
+        :rtype: list
+        """
+        f1 = lambda e: e.id in self.inputs
+        f2 = lambda e: self.inputs.index(e.id)
+        return [x for x in [e.other(self) for e in sorted(filter(f1, self.edges), key=f2) \
+                            if e.target is self] if filter_on_nodes(x)]
+
     def paint(self, painter, option, widget=None):
         """
         Paint the node in the diagram.

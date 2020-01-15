@@ -593,7 +593,7 @@ class MenuFactory(QtCore.QObject):
 
         assertion = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f4))
         if assertion:
-            value = value and node is not first(assertion.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
+            value = value and node is not first(assertion.inputNodes())
             operand = first(assertion.outgoingNodes(filter_on_edges=f5, filter_on_nodes=f6))
             if operand:
                 if operand.identity() is Identity.Role:
