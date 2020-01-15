@@ -68,7 +68,16 @@ else
     args=()
     [[ "$TRAVIS_OS_NAME" == "linux" ]] && args+=('standalone' '--format=gztar')
     [[ "$TRAVIS_OS_NAME" == "osx" ]] && args+=('createdmg')
-    python setup.py "${args[@]}"
+
+    # We disable building the dmg on macOS 10.14+ as create-dmg times out
+    # when calling osascript due to the new security restrictions in Mojave
+    # requiring input from the user interface to grant permissions.
+    # See: https://github.com/andreyvit/create-dmg/issues/72
+    if [[ "$OSX" != "mojave" ]]; then
+      python setup.py "${args[@]}"
+    else
+      echo "Building the distribution disk image is disabled on macOS 10.14+"
+    fi
 fi
 
 
