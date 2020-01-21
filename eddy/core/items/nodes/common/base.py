@@ -742,7 +742,8 @@ class OntologyEntityNode(AbstractNode):
             self.disconnectIRISignals()
         self._iri = iriObj
         self.connectIRISignals()
-        self.doUpdateNodeLabel()
+        if self.diagram:
+            self.doUpdateNodeLabel()
 
     #############################################
     #   INTERFACE

@@ -36,6 +36,7 @@
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.common import HasWidgetSystem
@@ -57,6 +58,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type session: Session
         """
         super().__init__(session)
+
+        self.basePrefixString = 'PREFIX_'
+        self.basePrefixCounter = 0
+
+
+        self.project = session.project
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
@@ -185,24 +192,65 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         table.setFont(Font('Roboto', 13))
+        table.setItem
+
         self.addWidget(table)
 
-        addBtn = QtWidgets.QPushButton('Add', objectName='prefixes_add_button')
+
         delBtn = QtWidgets.QPushButton('Remove', objectName='prefixes_delete_button')
-        connect(addBtn.clicked, self.addPrefix)
+        #connect(addBtn.clicked, self.addPrefix)
         connect(delBtn.clicked, self.removePrefix)
-        self.addWidget(addBtn)
+        #self.addWidget(addBtn)
         self.addWidget(delBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
-        boxlayout.addWidget(self.widget('prefixes_add_button'))
+        #boxlayout.addWidget(self.widget('prefixes_add_button'))
         boxlayout.addWidget(self.widget('prefixes_delete_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('prefixes_table_widget'))
         formlayout.addRow(boxlayout)
-        groupbox = QtWidgets.QGroupBox('Ontology Prefixes', self, objectName='prefixes_group_widget')
+
+        definedPrefixesGroupbox = QtWidgets.QGroupBox('Defined Prefixes', self, objectName='defined_prefixes_group_widget')
+        definedPrefixesGroupbox.setLayout(formlayout)
+        self.addWidget(definedPrefixesGroupbox)
+
+
+        prefixLabel = QtWidgets.QLabel(self, objectName='prefix_input_label')
+        prefixLabel.setFont(Font('Roboto', 13))
+        prefixLabel.setText('Prefix')
+        self.addWidget(prefixLabel)
+
+        prefixField = StringField(self, objectName='prefix_input_field')
+        prefixField.setFont(Font('Roboto', 13))
+        #prefixField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/')
+        self.addWidget(prefixField)
+
+        nsLabel = QtWidgets.QLabel(self, objectName='ns_input_label')
+        nsLabel.setFont(Font('Roboto', 13))
+        nsLabel.setText('Namespace')
+        self.addWidget(nsLabel)
+
+        nsField = StringField(self, objectName='ns_input_field')
+        nsField.setFont(Font('Roboto', 13))
+        #nsField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/1.0')
+        self.addWidget(nsField)
+        inputPrefixLayout = QtWidgets.QFormLayout()
+        inputPrefixLayout.addRow(self.widget('prefix_input_label'), self.widget('prefix_input_field'))
+        inputPrefixLayout.addRow(self.widget('ns_input_label'), self.widget('ns_input_field'))
+
+        addBtn = QtWidgets.QPushButton('Add', objectName='prefixes_add_button')
+        connect(addBtn.clicked, self.addPrefix)
+        self.addWidget(addBtn)
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('prefixes_add_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(inputPrefixLayout)
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('Define new prefix', self, objectName='add_prefix_group_widget')
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
 
@@ -210,7 +258,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('prefixes_group_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('defined_prefixes_group_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('add_prefix_group_widget'), 1, QtCore.Qt.AlignTop)
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
         widget.setObjectName('prefixes_widget')
@@ -268,11 +317,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        #confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        #confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
+        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
         confirmation.setContentsMargins(10, 0, 10, 10)
         confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
+
+
 
         #############################################
         # MAIN WIDGET
@@ -297,6 +350,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
 
+        table = self.widget('prefixes_table_widget')
+        connect(table.cellChanged, self.managePrefixTableEntryModification)
+
     #############################################
     #   PROPERTIES
     #################################
@@ -313,25 +369,69 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #   SLOTS
     #################################
 
+    @QtCore.pyqtSlot(int,int)
+    def managePrefixTableEntryModification(self, row, column):
+        table = self.widget('prefixes_table_widget')
+        if column==0:
+            self.managePrefixModification(row,column)
+        else:
+            self.manageNamespaceModification(row,column)
+
+    def managePrefixModification(self, row, column):
+        currentPrefixes = self.project.getManagedPrefixes()
+        table = self.widget('prefixes_table_widget')
+        modifiedItem = table.item(row, column)
+        itemText = modifiedItem.text()
+        text = str(itemText)
+        if text in currentPrefixes:
+            print('prefisso già definito')
+            #signal error
+        else:
+            corrNSItem = table.item(row, 1)
+            if corrNSItem:
+                nsItemText = corrNSItem.text()
+                nsText = str(nsItemText)
+                if not nsText:
+                    table.editItem(table.item(row, 1))
+                    table.scrollToItem(table.item(row, 0))
+                else:
+                    self.project.setPrefix(text,nsText)
+            else:
+                table.setItem(row, 1, QtWidgets.QTableWidgetItem(''))
+
+
+    def manageNamespaceModification(self, row, column):
+        table = self.widget('prefixes_table_widget')
+        modifiedItem = table.item(row, column)
+        itemText = modifiedItem.text()
+        text = str(itemText)
+        if text:
+            corrPrefixItem = table.item(row, 0)
+            prefixItemText = corrPrefixItem.text()
+            prefixText = str(prefixItemText)
+            self.project.setPrefix(prefixText, text)
+        else:
+            table.editItem(table.item(row, 1))
+            table.scrollToItem(table.item(row, 1))
+
+
     @QtCore.pyqtSlot()
     def redraw(self):
         """
         Redraw the dialog components, reloading their contents.
         """
-        session = self.session
-        project = session.project
-        manager = project.prefixManager
+
 
         #############################################
         # GENERAL TAB
         #################################
         iriField = self.widget('ontology_iri_field')
-        if project.iri and project.iri != 'NULL':
-            iriField.setText(project.iri)
+        if self.project.ontologyIRI and self.project.ontologyIRI != 'NULL':
+            iriField.setText(self.project.ontologyIRI)
 
         versionField = self.widget('ontology_version_field')
-        if project.version and project.version != 'NULL':
-            versionField.setText(project.version)
+        if self.project.version and self.project.version != 'NULL':
+            versionField.setText(self.project.version)
 
         # TODO: reload imports when they are implemented
 
@@ -340,15 +440,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         # Reload prefixes table contents
+        prefixDictItems = self.project.prefixDictItems()
+
         table = self.widget('prefixes_table_widget')
         table.clear()
-        table.setRowCount(len(manager))
-        table.setHorizontalHeaderLabels(['Prefix', 'Namespace'])
+        table.setRowCount(len(prefixDictItems))
+        table.setHorizontalHeaderLabels(['Prefix', ''])
 
         rowcount = 0
-        for prefix in manager:
+        for prefix, namespace in prefixDictItems:
             table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(prefix))
-            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(manager.getPrefix(prefix))))
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(namespace))
             rowcount += 1
         table.resizeColumnsToContents()
 
@@ -404,13 +506,40 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Add a new prefix entry to the list of ontology prefixes.
         :type _: bool
         """
-        table = self.widget('prefixes_table_widget')
-        rowcount = table.rowCount()
-        table.setRowCount(rowcount + 1)
-        table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem('p0'))
-        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(self.session.project.iri or ''))
-        table.scrollToItem(table.item(rowcount, 0))
-        table.editItem(table.item(rowcount, 0))
+        #table = self.widget('prefixes_table_widget')
+        #rowcount = table.rowCount()
+        #table.setRowCount(rowcount + 1)
+        #defEntry = self.getPrefixDefEntry()
+        #table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(defEntry))
+        #table.setItem(rowcount, 1, None)
+        #table.scrollToItem(table.item(rowcount, 0))
+        #table.editItem(table.item(rowcount, 0))
+        try:
+            prefixValue = self.widget('prefix_input_field')
+            currentPrefixes = self.project.getManagedPrefixes()
+            if prefixValue in currentPrefixes:
+                print('prefisso già definito, modificalo dalla tabella')
+            nsValue = self.widget('ns_input_field')
+            self.project.setPrefix(prefixValue,nsValue)
+            table = self.widget('prefixes_table_widget')
+            rowcount = table.rowCount()
+            table.setRowCount(rowcount + 1)
+            table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(prefixValue))
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(nsValue))
+            table.scrollToItem(table.item(rowcount, 0))
+        except IllegalPrefixError as e:
+            print(str(e))
+
+            print('Prefisso non valido')
+        except IllegalNamespaceError:
+            print('Namespace non valido')
+
+    def getPrefixDefEntry(self):
+        currDefEntry = self.basePrefixString + str(self.basePrefixCounter)
+        while currDefEntry in self.project.getManagedPrefixes():
+            self.basePrefixCounter += 1
+            currDefEntry = self.basePrefixString + str(self.basePrefixCounter)
+        return currDefEntry
 
     @QtCore.pyqtSlot(bool)
     def removePrefix(self, _):
@@ -469,3 +598,35 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         super().accept()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        ##
+        ## TODO: complete validation and settings save
+        ##
+        #############################################
+        # GENERAL TAB
+        #################################
+
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().reject()
+
+
+
+class PrefixEntryDialog(QtWidgets.QDialog, HasWidgetSystem):
+    def __init__(self, parentDialog):
+        super().__init__(parentDialog)

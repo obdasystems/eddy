@@ -71,6 +71,7 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         self.disconnectIRISignals()
 
     def connectIRISignals(self):
+        print()
         connect(self.iri.sgnIRIModified, self.onIRIModified)
         connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
         connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
@@ -111,22 +112,32 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
-            self.setText(str(self.iri))
-            self.nodeLabelObject = self.iri
+            self.renderByFullIRI()
         elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
-            prefixed = self.project.getShortestPrefixedForm(self.iri)
-            if prefixed:
-                self.setText(str(prefixed))
-                self.nodeLabelObject = prefixed
-            else:
-                self.setText(str(self.iri))
-                self.nodeLabelObject = self.iri
+            self.renderByPrefixedIRI()
         elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
-            labelAssertion = self.iri.getLabelAnnotationAssertion()
-            if labelAssertion:
-                self.setText(str(labelAssertion.value))
-                self.nodeLabelObject = labelAssertion
+            self.renderByLabel()
         self.updateTextPos()
+
+    def renderByFullIRI(self):
+        self.setText(str(self.iri))
+        self.nodeLabelObject = self.iri
+
+    def renderByPrefixedIRI(self):
+        prefixed = self.project.getShortestPrefixedForm(self.iri)
+        if prefixed:
+            self.setText(str(prefixed))
+            self.nodeLabelObject = prefixed
+        else:
+            self.renderByFullIRI()
+
+    def renderByLabel(self):
+        labelAssertion = self.iri.getLabelAnnotationAssertion()
+        if labelAssertion:
+            self.setText(str(labelAssertion.value))
+            self.nodeLabelObject = labelAssertion
+        else:
+            self.renderByPrefixedIRI()
 
 
     #@QtCore.pyqtSlot(str)

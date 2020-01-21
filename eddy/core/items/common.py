@@ -71,6 +71,10 @@ class DiagramItemMixin:
         :rtype: Diagram
         """
         return self.scene()
+        if self.scene():
+            return self.scene()
+        else:
+            return self._diagram_
 
     @property
     def project(self):
@@ -146,6 +150,7 @@ class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
         :type id: str
         """
         super().__init__(**kwargs)
+        self._diagram_ = diagram
         self.id = id or diagram.guid.next(self.Prefix)
     #############################################
     #   PROPERTIES

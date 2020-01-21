@@ -580,6 +580,9 @@ class IRIManager(QtCore.QObject):
         """
         return self.prefix2namespaceMap.items()
 
+    def getNamespace(self, prefix):
+        return self.prefix2namespaceMap[prefix]
+
     def getManagedPrefixes(self):
         """
         Returns a list of prefix names managed by this `PrefixManager`.
@@ -611,8 +614,10 @@ class IRIManager(QtCore.QObject):
         """
         if not isinstance(namespace, str):
             namespace = str(namespace)
-        if prefix and not QtXmlPatterns.QXmlName.isNCName(prefix):
-            raise IllegalPrefixError('{0} for namespace: {1}'.format(prefix, namespace))
+        if not isinstance(prefix, str):
+            prefix = str(prefix)
+        #if prefix:# and not QtXmlPatterns.QXmlName.isNCName(prefix):
+            #raise IllegalPrefixError('{0} for namespace: {1}'.format(prefix, namespace))
         if not IRI.isValidNamespace(namespace):
             raise IllegalNamespaceError(namespace)
         if prefix in self.prefix2namespaceMap:

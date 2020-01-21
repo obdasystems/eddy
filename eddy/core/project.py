@@ -184,8 +184,22 @@ class Project(IRIManager):
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
 
+        self.setEmptyPrefix(self.ontologyIRI)
+
+    ##########################
+    #     Metodi aggiunti    #
+    #       per IRI          #
+    ##########################
+    def setEmptyPrefixNamespace(self):
+        self.setPrefix("",self.ontologyIRI)
+
+    ##########################
+    #  FINE Metodi aggiunti  #
+    #       per IRI          #
+    ##########################
+
     @property
-    def iri(self):
+    def ontologyIRI(self):
         return_list = []
 
         for iri in self.IRI_prefixes_nodes_dict:
@@ -206,7 +220,7 @@ class Project(IRIManager):
         project_prefixes = self.prefixes
 
         if len(project_prefixes) == 0:
-            if 'display_in_widget' in self.IRI_prefixes_nodes_dict[self.iri][2]:
+            if 'display_in_widget' in self.IRI_prefixes_nodes_dict[self.ontologyIRI][2]:
                 return ''
             else:
                 return None
@@ -215,7 +229,7 @@ class Project(IRIManager):
 
     @property
     def prefixes(self):
-        project_iri = self.iri
+        project_iri = self.ontologyIRI
 
         if project_iri is None:
             return None
@@ -433,7 +447,7 @@ class Project(IRIManager):
                                 prefix = nodeLabel[0:nodeLabel.find(':')]
                                 corr_iri = self.get_iri_for_prefix(prefix)
                             else:
-                                corr_iri = self.iri
+                                corr_iri = self.ontologyIRI
                     else:
                         corr_iri = None
 

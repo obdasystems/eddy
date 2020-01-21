@@ -863,6 +863,11 @@ class MenuFactory(QtCore.QObject):
         if item.type() is Item.ValueDomainNode:
             return self.buildValueDomainNodeMenu(diagram, item)
 
+        ##IRI NODES
+        #if item.type() is Item.ConceptIRINode:
+            #return self.buildConceptNodeMenu(diagram, item)
+
+
         ## EDGES
         if item.type() is Item.InclusionEdge:
             return self.buildGenericEdgeMenu(diagram, item, pos)

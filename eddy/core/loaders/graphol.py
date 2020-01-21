@@ -1562,8 +1562,8 @@ class GrapholLoaderMixin_v2(object):
 
                     if iri_to_set is None:
                         LOGGER.critical('IRI of node not found in Dictionary - ' + str(node))
-                        if self.nproject.iri is not None:
-                            self.nproject.IRI_prefixes_nodes_dict[self.nproject.iri][1].add(node)
+                        if self.nproject.ontologyIRI is not None:
+                            self.nproject.IRI_prefixes_nodes_dict[self.nproject.ontologyIRI][1].add(node)
                             new_text = GenerateNewLabel(self.nproject, node).return_label()
                             node.setText(new_text)
                     else:
@@ -1686,8 +1686,8 @@ class GrapholLoaderMixin_v2(object):
                     self.nproject.setMeta(meta[0], meta[1], meta[2])
                 else:
                     new_meta = str(self.nproject.prefix + ':' + meta[1])
-                    new_meta_2 = str(self.nproject.iri + '#' + meta[1])
-                    new_meta_3 = str(self.nproject.iri + '/' + meta[1])
+                    new_meta_2 = str(self.nproject.ontologyIRI + '#' + meta[1])
+                    new_meta_3 = str(self.nproject.ontologyIRI + '/' + meta[1])
                     new_meta_4 = str(':' + meta[1])
                     all_metas = [new_meta, new_meta_2, new_meta_3, new_meta_4]
 

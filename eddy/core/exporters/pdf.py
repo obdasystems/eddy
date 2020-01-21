@@ -356,13 +356,13 @@ class PdfDiagramExporter(AbstractDiagramExporter):
 
             if len(prefixes) > 0:
                 for p in prefixes:
-                    if iri == self.project.iri:
+                    if iri == self.project.ontologyIRI:
                         self.append_row_and_column_to_table(iri, p, None, bold=True)
                     else:
                         self.append_row_and_column_to_table(iri, p, None)
             else:
                 if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
-                    if iri == self.project.iri:
+                    if iri == self.project.ontologyIRI:
                         self.append_row_and_column_to_table(iri, '', None, bold=True)
                     else:
                         self.append_row_and_column_to_table(iri, '', None)

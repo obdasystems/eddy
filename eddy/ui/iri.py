@@ -141,6 +141,8 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             iri = self.project.getIRI(self.widget('full_iri_field').value())
             self.node.iri = iri
             self.sgnIRIAccepted.emit(self.node)
+            if self.node.diagram:
+                self.node.doUpdateNodeLabel()
             super().accept()
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
@@ -153,6 +155,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     @QtCore.pyqtSlot()
     def reject(self):
         self.sgnIRIRejected.emit(self.node)
+        super().reject()
 
     #############################################
     #   INTERFACE
