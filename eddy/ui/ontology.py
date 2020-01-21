@@ -59,10 +59,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         super().__init__(session)
 
-        self.basePrefixString = 'PREFIX_'
-        self.basePrefixCounter = 0
-
-
+        self.addingNewPrefix = False
+        self.prefixIndexMap = {}
         self.project = session.project
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
@@ -325,8 +323,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
-
-
         #############################################
         # MAIN WIDGET
         #################################
@@ -371,57 +367,61 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(int,int)
     def managePrefixTableEntryModification(self, row, column):
-        table = self.widget('prefixes_table_widget')
-        if column==0:
-            self.managePrefixModification(row,column)
+        if not self.addingNewPrefix:
+            if column==0:
+                self.managePrefixModification(row,column)
+            else:
+                self.manageNamespaceModification(row,column)
         else:
-            self.manageNamespaceModification(row,column)
+            self.addingNewPrefix = False
 
     def managePrefixModification(self, row, column):
-        currentPrefixes = self.project.getManagedPrefixes()
         table = self.widget('prefixes_table_widget')
+        rowcount = table.rowCount()
         modifiedItem = table.item(row, column)
         itemText = modifiedItem.text()
         text = str(itemText)
-        if text in currentPrefixes:
-            print('prefisso già definito')
-            #signal error
-        else:
-            corrNSItem = table.item(row, 1)
-            if corrNSItem:
-                nsItemText = corrNSItem.text()
-                nsText = str(nsItemText)
-                if not nsText:
-                    table.editItem(table.item(row, 1))
-                    table.scrollToItem(table.item(row, 0))
-                else:
-                    self.project.setPrefix(text,nsText)
-            else:
-                table.setItem(row, 1, QtWidgets.QTableWidgetItem(''))
-
+        for index,prefix in self.prefixIndexMap.items():
+            if not index==row:
+                if prefix==text:
+                    print('prefisso già definito')
+                    table.setItem(row, 0, QtWidgets.QTableWidgetItem(self.prefixIndexMap[row]))
+                    return
+        #elimino vecchio da manager
+        self.project.removePrefix(self.prefixIndexMap[row])
+        #aggiungo nuovo a manager
+        corrNSItem = table.item(row, 1)
+        nsItemText = corrNSItem.text()
+        nsText = str(nsItemText)
+        self.project.setPrefix(text,nsText)
+        #aggiorno mappa
+        self.prefixIndexMap[row]=text
 
     def manageNamespaceModification(self, row, column):
         table = self.widget('prefixes_table_widget')
         modifiedItem = table.item(row, column)
         itemText = modifiedItem.text()
         text = str(itemText)
-        if text:
-            corrPrefixItem = table.item(row, 0)
-            prefixItemText = corrPrefixItem.text()
-            prefixText = str(prefixItemText)
-            self.project.setPrefix(prefixText, text)
-        else:
-            table.editItem(table.item(row, 1))
-            table.scrollToItem(table.item(row, 1))
+        corrPrefixItem = table.item(row, 0)
+        prefixItemText = corrPrefixItem.text()
+        prefixText = str(prefixItemText)
+        self.project.setPrefix(prefixText, text)
 
+    def buildPrefixIndexMap(self):
+        self.prefixIndexMap = {}
+        table = self.widget('prefixes_table_widget')
+        rowcount = table.rowCount()
+        for row in range(0,rowcount):
+            item = table.item(row, 0)
+            itemText = item.text()
+            text = str(itemText)
+            self.prefixIndexMap[row]=text
 
     @QtCore.pyqtSlot()
     def redraw(self):
         """
         Redraw the dialog components, reloading their contents.
         """
-
-
         #############################################
         # GENERAL TAB
         #################################
@@ -452,6 +452,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(prefix))
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(namespace))
             rowcount += 1
+        self.buildPrefixIndexMap()
         table.resizeColumnsToContents()
 
         #############################################
@@ -506,40 +507,30 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Add a new prefix entry to the list of ontology prefixes.
         :type _: bool
         """
-        #table = self.widget('prefixes_table_widget')
-        #rowcount = table.rowCount()
-        #table.setRowCount(rowcount + 1)
-        #defEntry = self.getPrefixDefEntry()
-        #table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(defEntry))
-        #table.setItem(rowcount, 1, None)
-        #table.scrollToItem(table.item(rowcount, 0))
-        #table.editItem(table.item(rowcount, 0))
         try:
-            prefixValue = self.widget('prefix_input_field')
+            prefixField = self.widget('prefix_input_field')
+            prefixValue = prefixField.value()
             currentPrefixes = self.project.getManagedPrefixes()
             if prefixValue in currentPrefixes:
                 print('prefisso già definito, modificalo dalla tabella')
-            nsValue = self.widget('ns_input_field')
+                return
+            nsField = self.widget('ns_input_field')
+            nsValue = nsField.value()
             self.project.setPrefix(prefixValue,nsValue)
+            self.addingNewPrefix = True
             table = self.widget('prefixes_table_widget')
             rowcount = table.rowCount()
             table.setRowCount(rowcount + 1)
             table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(prefixValue))
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(nsValue))
+            self.buildPrefixIndexMap()
             table.scrollToItem(table.item(rowcount, 0))
+            prefixField.setValue('')
+            nsField.setValue('')
         except IllegalPrefixError as e:
-            print(str(e))
-
             print('Prefisso non valido')
         except IllegalNamespaceError:
             print('Namespace non valido')
-
-    def getPrefixDefEntry(self):
-        currDefEntry = self.basePrefixString + str(self.basePrefixCounter)
-        while currDefEntry in self.project.getManagedPrefixes():
-            self.basePrefixCounter += 1
-            currDefEntry = self.basePrefixString + str(self.basePrefixCounter)
-        return currDefEntry
 
     @QtCore.pyqtSlot(bool)
     def removePrefix(self, _):
@@ -552,8 +543,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                removedItem = table.item(row, 0)
+                itemText = removedItem.text()
+                text = str(itemText)
+                self.project.removePrefix(text)
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 table.removeRow(row)
         table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
+        self.buildPrefixIndexMap()
 
     @QtCore.pyqtSlot(bool)
     def addAnnotationProperty(self, _):

@@ -35,6 +35,8 @@ from enum import unique
 
 from PyQt5 import QtCore
 from PyQt5 import QtXmlPatterns
+from eddy.core.datatypes.owl import Namespace
+
 from eddy.core.datatypes.common import Enum_
 
 from rfc3987 import compose
@@ -103,7 +105,6 @@ class AnnotationAssertion(QtCore.QObject):
         if not isinstance(other,AnnotationAssertion):
             return False
         return self.assertionProperty==other.assertionProperty and self.subject==other.subject and self.value==other.value and self.datatype==other.datatype and self.language==other.value
-from eddy.core.datatypes.owl import Namespace
 
 
 class IRI(QtCore.QObject):
@@ -613,11 +614,11 @@ class IRIManager(QtCore.QObject):
         :type namespace: str|IRI
         """
         if not isinstance(namespace, str):
-            namespace = str(namespace)
+            namespace = str(namespace, encoding='UTF-8')
         if not isinstance(prefix, str):
-            prefix = str(prefix)
-        #if prefix:# and not QtXmlPatterns.QXmlName.isNCName(prefix):
-            #raise IllegalPrefixError('{0} for namespace: {1}'.format(prefix, namespace))
+            prefix = str(prefix, encoding='UTF-8')
+        if prefix and not QtXmlPatterns.QXmlName.isNCName(prefix):
+            raise IllegalPrefixError('{0} for namespace: {1}'.format(prefix, namespace))
         if not IRI.isValidNamespace(namespace):
             raise IllegalNamespaceError(namespace)
         if prefix in self.prefix2namespaceMap:
@@ -636,7 +637,7 @@ class IRIManager(QtCore.QObject):
         """
         ns = self.prefix2namespaceMap.pop(prefix, None)
         if ns:
-            self.sgnPrefixRemoved(prefix)
+            self.sgnPrefixRemoved.emit(prefix)
         return ns
 
 
@@ -730,45 +731,51 @@ class IllegalNamespaceError(RuntimeError):
 
 
 @unique
-class Namespace(Enum_):
+class IRIRender(Enum_):
     """
-    Extends Enum providing a set of commonly used namespaces
+    Extends Enum providing all the available rendering options for IRIs.
     """
-    OWL = "http://www.w3.org/2002/07/owl#"
-    RDFS = "http://www.w3.org/2000/01/rdf-schema#"
-    RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    XSD = "http://www.w3.org/2001/XMLSchema#"
-    XML = "http://www.w3.org/XML/1998/namespace"
-    SWRL = "http://www.w3.org/2003/11/swrl#"
-    SWRLB = "http://www.w3.org/2003/11/swrlb#"
-    SKOS = "http://www.w3.org/2004/02/skos/core#"
-    TIME = "http://www.w3.org/2006/time#"
+    FULL = 'full_iri'
+    PREFIX = 'prefix_iri'
+    LABEL = 'label'
 
-    @classmethod
-    def forPrefix(cls, prefix):
-        """
-        Returns the namespace corresponding to the given prefix, or None if no
-        such namespace exists.
-        :type prefix: str
-        :return: Namespace
-        """
-        for ns in cls:
-            if prefix == ns.name.lower():
-                return ns
-        return None
 
-    @classmethod
-    def forValue(cls, value):
-        """
-        Returns the prefix corresponding to the given namespace value (IRI),
-        or None if no such prefix exists.
-        :type value: str
-        :return: Namespace
-        """
-        for ns in cls:
-            if value == ns.value:
-                return ns
-        return None
+@unique
+class AnnotationAssertionProperty(Enum_):
+    """
+    Extends Enum providing all the available standard IRIs that can be used as properties in Annotation Assertions
+    """
+    BackwardCompatibleWith = IRI(Namespace.OWL.value, 'backwardCompatibleWith')
+    Deprecated = IRI(Namespace.OWL.value, 'deprecated')
+    IncompatibleWith = IRI(Namespace.OWL.value, 'incompatibleWith')
+    PriorVersion = IRI(Namespace.OWL.value, 'priorVersion')
+    VersionInfo = IRI(Namespace.OWL.value, 'versionInfo')
+    Comment = IRI(Namespace.RDFS.value, 'comment')
+    IsDefinedBy = IRI(Namespace.RDFS.value, 'isDefinedBy')
+    Label = IRI(Namespace.RDFS.value, 'label')
+    seeAlso = IRI(Namespace.RDFS.value, 'backwardCompatibleWith')
+
+@unique
+class OWL2Profile(Enum_):
+    """
+    Extends Enum providing all the available OWL 2 profiles.
+    """
+    OWL2 = 'OWL 2'
+    OWL2EL = 'OWL 2 EL'
+    OWL2QL = 'OWL 2 QL'
+    OWL2RL = 'OWL 2 RL'
+
+
+@unique
+class OWL2Syntax(Enum_):
+    """
+    Extends Enum providing all the available OWL 2 syntax for ontology serialization.
+    """
+    Functional = 'Functional-style syntax'
+    Manchester = 'Manchester OWL syntax'
+    RDF = 'RDF/XML syntax for OWL'
+    Turtle = 'Turtle syntax'
+
 
 @unique
 class OWL2Datatype(Enum_):
@@ -906,49 +913,3 @@ class OWL2Facet(Enum_):
             OWL2Datatype.unsignedShort: numbers,
             OWL2Datatype.XMLLiteral: []
         }[value]
-
-@unique
-class AnnotationAssertionProperty(Enum_):
-    """
-    Extends Enum providing all the available standard IRIs that can be used as properties in Annotation Assertions
-    """
-    BackwardCompatibleWith = IRI(Namespace.OWL.value, 'backwardCompatibleWith')
-    Deprecated = IRI(Namespace.OWL.value, 'deprecated')
-    IncompatibleWith = IRI(Namespace.OWL.value, 'incompatibleWith')
-    PriorVersion = IRI(Namespace.OWL.value, 'priorVersion')
-    VersionInfo = IRI(Namespace.OWL.value, 'versionInfo')
-    Comment = IRI(Namespace.RDFS.value, 'comment')
-    IsDefinedBy = IRI(Namespace.RDFS.value, 'isDefinedBy')
-    Label = IRI(Namespace.RDFS.value, 'label')
-    seeAlso = IRI(Namespace.RDFS.value, 'backwardCompatibleWith')
-
-@unique
-class OWL2Profile(Enum_):
-    """
-    Extends Enum providing all the available OWL 2 profiles.
-    """
-    OWL2 = 'OWL 2'
-    OWL2EL = 'OWL 2 EL'
-    OWL2QL = 'OWL 2 QL'
-    OWL2RL = 'OWL 2 RL'
-
-
-@unique
-class OWL2Syntax(Enum_):
-    """
-    Extends Enum providing all the available OWL 2 syntax for ontology serialization.
-    """
-    Functional = 'Functional-style syntax'
-    Manchester = 'Manchester OWL syntax'
-    RDF = 'RDF/XML syntax for OWL'
-    Turtle = 'Turtle syntax'
-
-@unique
-class IRIRender(Enum_):
-    """
-    Extends Enum providing all the available rendering options for IRIs.
-    """
-    FULL = 'full_iri'
-    PREFIX = 'prefix_iri'
-    LABEL = 'label'
-
