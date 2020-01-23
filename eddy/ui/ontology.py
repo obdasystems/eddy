@@ -36,6 +36,8 @@
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
+
 from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError
 
 from eddy import ORGANIZATION, APPNAME
@@ -44,6 +46,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.ui.fields import StringField
+from eddy.ui.message_box import MessageBoxFactory, MsgBoxType
 
 LOGGER = getLogger()
 
@@ -386,6 +389,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if prefix==text:
                     print('prefisso già definito')
                     table.setItem(row, 0, QtWidgets.QTableWidgetItem(self.prefixIndexMap[row]))
+                    msgBox = MessageBoxFactory.getMessageBox(self,'Already defined prefix',
+                                                             'Prefix definition issue',MsgBoxType.WARNING.value,
+                                                             informativeText='The prefix "{}" is already used'.format(text))
+                    msgBox.exec_()
                     return
         #elimino vecchio da manager
         self.project.removePrefix(self.prefixIndexMap[row])
@@ -393,9 +400,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         corrNSItem = table.item(row, 1)
         nsItemText = corrNSItem.text()
         nsText = str(nsItemText)
-        self.project.setPrefix(text,nsText)
-        #aggiorno mappa
-        self.prefixIndexMap[row]=text
+        try:
+            self.project.setPrefix(text,nsText)
+            #aggiorno mappa
+            self.prefixIndexMap[row]=text
+        except IllegalPrefixError as e:
+            table.setItem(row, 0, QtWidgets.QTableWidgetItem(self.prefixIndexMap[row]))
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal prefix',
+                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
+                                                     informativeText='The string "{}" is not a legal prefix'.format(text),
+                                                     detailedText=str(e))
+            msgBox.exec_()
 
     def manageNamespaceModification(self, row, column):
         table = self.widget('prefixes_table_widget')
@@ -405,7 +420,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         corrPrefixItem = table.item(row, 0)
         prefixItemText = corrPrefixItem.text()
         prefixText = str(prefixItemText)
-        self.project.setPrefix(prefixText, text)
+        try:
+            self.project.setPrefix(prefixText, text)
+        except IllegalNamespaceError as e:
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal namespace',
+                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
+                                                     informativeText='The string "{}" is not a legal namespace'.format(text),
+                                                     detailedText=str(e))
+            msgBox.exec_()
 
     def buildPrefixIndexMap(self):
         self.prefixIndexMap = {}
@@ -513,6 +535,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             currentPrefixes = self.project.getManagedPrefixes()
             if prefixValue in currentPrefixes:
                 print('prefisso già definito, modificalo dalla tabella')
+                msgBox = MessageBoxFactory.getMessageBox(self, 'Already defined prefix',
+                                                         'Prefix definition issue', MsgBoxType.WARNING.value,
+                                                         informativeText='The prefix "{}" is already used'.format(prefixValue))
+                msgBox.setWindowModality(Qt.ApplicationModal)
+                msgBox.exec_()
                 return
             nsField = self.widget('ns_input_field')
             nsValue = nsField.value()
@@ -528,9 +555,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixField.setValue('')
             nsField.setValue('')
         except IllegalPrefixError as e:
-            print('Prefisso non valido')
-        except IllegalNamespaceError:
-            print('Namespace non valido')
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal prefix',
+                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
+                                                     informativeText='The string "{}" is not a legal prefix'.format(prefixValue),
+                                                     detailedText=str(e))
+            msgBox.exec_()
+        except IllegalNamespaceError as e:
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal namespace',
+                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
+                                                     informativeText='The string "{}" is not a legal namespace'.format(nsValue),
+                                                     detailedText=str(e))
+            msgBox.exec_()
 
     @QtCore.pyqtSlot(bool)
     def removePrefix(self, _):
@@ -623,8 +658,3 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         super().reject()
 
-
-
-class PrefixEntryDialog(QtWidgets.QDialog, HasWidgetSystem):
-    def __init__(self, parentDialog):
-        super().__init__(parentDialog)
