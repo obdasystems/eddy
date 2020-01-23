@@ -50,7 +50,8 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         combobox.addItem(self.noPrefixString)
-        combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        #combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        combobox.addItems([x+':'+'  <'+y+'>' for x,y in self.project.prefixDictItems()])
         combobox.setCurrentText(self.noPrefixString)
         self.addWidget(combobox)
 
@@ -132,7 +133,8 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     def onInputChanged(self, val):
         prefix = self.widget('iri_prefix_switch').currentText()
         input = self.widget('iri_input_field').value()
-        fullIri = '{}{}'.format(self.resolvePrefix(prefix),input)
+        resolvedPrefix = self.resolvePrefix(prefix)
+        fullIri = '{}{}'.format(resolvedPrefix,input)
         self.widget('full_iri_field').setValue(fullIri)
 
     @QtCore.pyqtSlot()
@@ -161,8 +163,11 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     #   INTERFACE
     #################################
 
-    def resolvePrefix(self,prefixStr):
-        if prefixStr==self.noPrefixString:
+    def resolvePrefix(self, prefixStr):
+        prefixLimit = prefixStr.find(':')
+        prefixStr = prefixStr[0:prefixLimit]
+        if prefixStr == self.noPrefixString:
             return ''
         else:
-            return self.project.getPrefixResolution(prefixStr[:-1])
+            return self.project.getPrefixResolution(prefixStr)
+            # return self.project.getPrefixResolution(prefixStr[:-1])

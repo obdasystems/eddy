@@ -388,9 +388,11 @@ class IRIManager(QtCore.QObject):
 
     sgnIRIManagerReset = QtCore.pyqtSignal()
 
-
     sgnIRIAdded = QtCore.pyqtSignal(IRI)
     sgnIRIRemoved = QtCore.pyqtSignal(IRI)
+
+    sgnAnnotationPropertyAdded = QtCore.pyqtSignal(IRI)
+    sgnAnnotationPropertyRemoved = QtCore.pyqtSignal(IRI)
 
 
     def __init__(self, parent=None):
@@ -402,7 +404,10 @@ class IRIManager(QtCore.QObject):
         self.iris = set()
         self.stringToIRI = {}
         self.prefix2namespaceMap = {}
-        self.setDefaultPrefixes()
+        self.annotationProperties = set()
+        self.addDefaultAnnotationProperties()
+        self.setDefaults()
+
 
     #############################################
     #   SLOTS
@@ -413,9 +418,21 @@ class IRIManager(QtCore.QObject):
         Remove the IRI iri from the index
         :type iri: IRI
         """
+        #Questo metodo dovrà essere chiamato SOLO quando tutti i riferimenti a iri sono stati eliminati
         self.iris.remove(iri)
         self.stringToIRI.pop(iri,None)
         self.sgnIRIRemoved.emit(iri)
+
+    @QtCore.pyqtSlot(IRI)
+    def addIRI(self, iri):
+        """
+        Add the IRI iri to the index
+        :type iri: IRI
+        """
+        if not iri in self.iris:
+            self.iris.add(iri)
+            self.stringToIRI[str(iri)] = iri
+            self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
     def getIRI(self, iriString):
@@ -424,7 +441,7 @@ class IRIManager(QtCore.QObject):
         :type iriString: str
         """
         if iriString in self.stringToIRI:
-            return self.stringToIRI
+            return self.stringToIRI[iriString]
         iri = IRI(iriString)
         self.iris.add(iri)
         self.stringToIRI[iriString] = iri
@@ -435,6 +452,79 @@ class IRIManager(QtCore.QObject):
     #   INTERFACE
     #################################
 
+    ##GENERAL
+
+    def reset(self):
+        """
+        Resets the associations between prefix names and namespaces for this `IRIManager`
+        """
+        self.iris = set()
+        self.stringToIRI = {}
+        self.prefix2namespaceMap = {}
+        self.sgnIRIManagerReset.emit()
+        self.setDefaults()
+
+    def setDefaults(self):
+        self.setDefaultPrefixes()
+        self.addDefaultAnnotationProperties()
+
+    ##ANNOTATION PROPERTIES
+    def getAnnotationPropertyIRIs(self):
+        return self.annotationProperties
+
+    def removeAnnotationPropertyIRI(self, iri):
+        """
+        Remove the IRI iri from the set of IRIs that can be used as Property into annotation assertions
+         :type iri: IRI
+         """
+        if iri in self.annotationProperties:
+            self.deleteIRI(iri)
+            self.annotationProperties.remove(iri)
+            self.sgnAnnotationPropertyRemoved.emit(iri)
+
+    def removeAnnotationProperty(self, iriString):
+        """
+        Remove the IRI identified by iriString from the set of IRIs that can be used as Property into annotation assertions
+        :type iriString: str
+        """
+        iri = self.getIRI(iriString)
+        self.removeAnnotationPropertyIRI(iri)
+
+    def addAnnotationPropertyIRI(self, iri):
+        """
+        Add the IRI iri to the set of IRIs that can be used as Property into annotation assertions
+         :type iri: IRI
+         """
+        if not iri in self.annotationProperties:
+            self.addIRI(iri)
+            self.annotationProperties.add(iri)
+            self.sgnAnnotationPropertyAdded.emit(iri)
+            return True
+        return False
+
+    def addAnnotationProperty(self, iriString):
+        """
+        Add the IRI identified by iriString to the set of IRIs that can be used as Property into annotation assertions
+        :type iriString: str
+        """
+        iri = self.getIRI(iriString)
+        return self.addAnnotationPropertyIRI(iri)
+
+    def addDefaultAnnotationProperties(self):
+        """
+        Initialises this `PrefixManager` with a set of commonly used prefix names (a regime da usare solo per progetto vuoto)
+        """
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.Label.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.BackwardCompatibleWith.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.Deprecated.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.IncompatibleWith.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.PriorVersion.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.VersionInfo.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.Comment.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.IsDefinedBy.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.seeAlso.value)
+
+    ##IRIs
     def getExpandedIRI(self, prefixedIRI):
         """
         Returns the IRI corresponding to the given short form in `prefixIRI`, or None if no such
@@ -451,12 +541,24 @@ class IRIManager(QtCore.QObject):
                 return IRI(namespace, suffix, parent=self)
         return None
 
-    def clearPrefixes(self):
+    def areSameIRI(self,prefixedIRI, otherPrefixedIRI):
         """
-        Removes all prefix name to namespace associations in this `IRIManager`
+        Check if two prefixed IRIs represent the same element
+        :type prefixedIRI: PrefixedIRI
+        :type otherPrefixedIRI: PrefixedIRI
+        :rtype bool
         """
-        self.prefix2namespaceMap = {}
-        self.sgnPrefixMapCleared.emit()
+        if not (isinstance(prefixedIRI, PrefixedIRI) and isinstance(otherPrefixedIRI, PrefixedIRI)):
+            return False
+        if not prefixedIRI.prefix in self.prefix2namespaceMap:
+            raise KeyError('Cannot find prefix {}'.format(prefixedIRI.prefix))
+        if not otherPrefixedIRI.prefix in self.prefix2namespaceMap:
+            raise KeyError('Cannot find prefix {}'.format(otherPrefixedIRI.prefix))
+        ns_1 = self.prefix2namespaceMap[prefixedIRI.prefix]
+        iri_1 = IRI(ns_1, suffix=prefixedIRI.suffix, parent=self)
+        ns_2 = self.prefix2namespaceMap[otherPrefixedIRI.prefix]
+        iri_2 = IRI(ns_2, suffix=otherPrefixedIRI.suffix, parent=self)
+        return iri_1==iri_2
 
     def getEmptyPrefixResolution(self):
         """
@@ -597,16 +699,6 @@ class IRIManager(QtCore.QObject):
         """
         self.setPrefix('', namespace)
 
-    def setDefaultPrefixes(self):
-        """
-        Initialises this `PrefixManager` with a set of commonly used prefix names
-        """
-        self.setPrefix(Namespace.XML.name.lower(), Namespace.XML.value)
-        self.setPrefix(Namespace.XSD.name.lower(), Namespace.XSD.value)
-        self.setPrefix(Namespace.RDF.name.lower(), Namespace.RDF.value)
-        self.setPrefix(Namespace.RDFS.name.lower(), Namespace.RDFS.value)
-        self.setPrefix(Namespace.OWL.name.lower(), Namespace.OWL.value)
-
     def setPrefix(self, prefix, namespace):
         """
         Associate `prefix` to `namespace` mapping in this `PrefixManager`
@@ -628,6 +720,16 @@ class IRIManager(QtCore.QObject):
             self.prefix2namespaceMap[prefix] = namespace
             self.sgnPrefixAdded.emit(prefix,namespace)
 
+    def setDefaultPrefixes(self):
+        """
+        Initialises this `PrefixManager` with a set of commonly used prefix names (a regime da usare solo per progetto vuoto)
+        """
+        self.setPrefix(Namespace.XML.name.lower(), Namespace.XML.value)
+        self.setPrefix(Namespace.XSD.name.lower(), Namespace.XSD.value)
+        self.setPrefix(Namespace.RDF.name.lower(), Namespace.RDF.value)
+        self.setPrefix(Namespace.RDFS.name.lower(), Namespace.RDFS.value)
+        self.setPrefix(Namespace.OWL.name.lower(), Namespace.OWL.value)
+
     def removePrefix(self, prefix):
         """
         Removes and returns the association for `prefix`.
@@ -640,16 +742,12 @@ class IRIManager(QtCore.QObject):
             self.sgnPrefixRemoved.emit(prefix)
         return ns
 
-
-    def reset(self):
+    def clearPrefixes(self):
         """
-        Resets the associations between prefix names and namespaces for this `IRIManager`
+        Removes all prefix name to namespace associations in this `IRIManager`
         """
-        self.iris = set()
-        self.stringToIRI = {}
         self.prefix2namespaceMap = {}
-        self.sgnIRIManagerReset.emit()
-        self.setDefaultPrefixes()
+        self.sgnPrefixMapCleared.emit()
 
     def unregisterNamespace(self, namespace):
         """
@@ -663,24 +761,10 @@ class IRIManager(QtCore.QObject):
                 del self.prefix2namespaceMap[prefix]
                 self.sgnPrefixRemoved.emit(prefix)
 
-    def areSameIRI(self,prefixedIRI, otherPrefixedIRI):
-        """
-        Check if two prefixed IRIs represent the same element
-        :type prefixedIRI: PrefixedIRI
-        :type otherPrefixedIRI: PrefixedIRI
-        :rtype bool
-        """
-        if not (isinstance(prefixedIRI, PrefixedIRI) and isinstance(otherPrefixedIRI, PrefixedIRI)):
-            return False
-        if not prefixedIRI.prefix in self.prefix2namespaceMap:
-            raise KeyError('Cannot find prefix {}'.format(prefixedIRI.prefix))
-        if not otherPrefixedIRI.prefix in self.prefix2namespaceMap:
-            raise KeyError('Cannot find prefix {}'.format(otherPrefixedIRI.prefix))
-        ns_1 = self.prefix2namespaceMap[prefixedIRI.prefix]
-        iri_1 = IRI(ns_1, suffix=prefixedIRI.suffix, parent=self)
-        ns_2 = self.prefix2namespaceMap[otherPrefixedIRI.prefix]
-        iri_2 = IRI(ns_2, suffix=otherPrefixedIRI.suffix, parent=self)
-        return iri_1==iri_2
+
+
+
+
 
     def __contains__(self, item):
         return item in self.prefix2namespaceMap

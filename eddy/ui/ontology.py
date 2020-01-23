@@ -45,7 +45,7 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
-from eddy.ui.fields import StringField
+from eddy.ui.fields import StringField,ComboBox
 from eddy.ui.message_box import MessageBoxFactory, MsgBoxType
 
 LOGGER = getLogger()
@@ -55,6 +55,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     """
     This class implements the 'Ontology Manager' dialog.
     """
+
+    noPrefixString = ''
+
     def __init__(self, session):
         """
         Initialize the Ontology Manager dialog.
@@ -284,11 +287,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setFont(Font('Roboto', 13))
         self.addWidget(table)
 
-        addBtn = QtWidgets.QPushButton('Add', objectName='annotation_properties_add_button')
+        #addBtn = QtWidgets.QPushButton('Add', objectName='annotation_properties_add_button')
         delBtn = QtWidgets.QPushButton('Remove', objectName='annotation_properties_delete_button')
-        connect(addBtn.clicked, self.addAnnotationProperty)
+        #connect(addBtn.clicked, self.addAnnotationProperty)
         connect(delBtn.clicked, self.removeAnnotationProperty)
-        self.addWidget(addBtn)
+        #self.addWidget(addBtn)
         self.addWidget(delBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
@@ -303,11 +306,71 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
 
+        ########ADDED
+
+        comboBoxLabel = QtWidgets.QLabel(self, objectName='iri_prefix_combobox_label')
+        comboBoxLabel.setFont(Font('Roboto', 12))
+        comboBoxLabel.setText('Prefix')
+        self.addWidget(comboBoxLabel)
+
+        combobox = ComboBox(objectName='iri_prefix_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(False)
+        combobox.addItem(self.noPrefixString)
+        # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
+        combobox.setCurrentText(self.noPrefixString)
+        self.addWidget(combobox)
+
+        inputLabel = QtWidgets.QLabel(self, objectName='input_field_label')
+        inputLabel.setFont(Font('Roboto', 12))
+        inputLabel.setText('Input')
+        self.addWidget(inputLabel)
+
+        inputField = StringField(self, objectName='iri_input_field')
+        # inputField.setFixedWidth(300)
+        inputField.setFont(Font('Roboto', 12))
+        inputField.setValue('')
+        self.addWidget(inputField)
+
+        fullIriLabel = QtWidgets.QLabel(self, objectName='full_iri_label')
+        fullIriLabel.setFont(Font('Roboto', 12))
+        fullIriLabel.setText('Full IRI')
+        self.addWidget(fullIriLabel)
+        fullIriField = StringField(self, objectName='full_iri_field')
+        # fullIriField.setFixedWidth(300)
+        fullIriField.setFont(Font('Roboto', 12))
+        fullIriField.setReadOnly(True)
+        self.addWidget(fullIriField)
+
+        addBtn = QtWidgets.QPushButton('Add', objectName='annotation_add_button')
+        connect(addBtn.clicked, self.addAnnotationProperty)
+        self.addWidget(addBtn)
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('annotation_add_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('iri_prefix_combobox_label'), self.widget('iri_prefix_switch'))
+        formlayout.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
+        formlayout.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
+        formlayout.addRow(boxlayout)
+
+        groupbox = QtWidgets.QGroupBox('Define new annotation property', self, objectName='add_annotation_group_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onAnnotationPrefixChanged)
+        connect(self.widget('iri_input_field').textChanged, self.onAnnotationInputChanged)
+
         ## ANNOTATIONS TAB LAYOUT CONFIGURATION
 
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('annotation_properties_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('add_annotation_group_widget'), 1, QtCore.Qt.AlignTop)
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
         widget.setObjectName('annotations_widget')
@@ -367,7 +430,157 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        ##
+        ## TODO: complete validation and settings save
+        ##
+        #############################################
+        # GENERAL TAB
+        #################################
 
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().accept()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        ##
+        ## TODO: complete validation and settings save
+        ##
+        #############################################
+        # GENERAL TAB
+        #################################
+
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().reject()
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+        """
+        Redraw the dialog components, reloading their contents.
+        """
+        #############################################
+        # GENERAL TAB
+        #################################
+        iriField = self.widget('ontology_iri_field')
+        if self.project.ontologyIRI and self.project.ontologyIRI != 'NULL':
+            iriField.setText(self.project.ontologyIRI)
+
+        versionField = self.widget('ontology_version_field')
+        if self.project.version and self.project.version != 'NULL':
+            versionField.setText(self.project.version)
+
+        # TODO: reload imports when they are implemented
+
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        # Reload prefixes table contents
+        prefixDictItems = self.project.prefixDictItems()
+        table = self.widget('prefixes_table_widget')
+        table.clear()
+        table.setRowCount(len(prefixDictItems))
+        table.setHorizontalHeaderLabels(['Prefix', 'Namespace'])
+
+        rowcount = 0
+        for prefix, namespace in prefixDictItems:
+            table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(prefix))
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(namespace))
+            rowcount += 1
+        self.buildPrefixIndexMap()
+        table.resizeColumnsToContents()
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+        annotationProperties = self.project.getAnnotationPropertyIRIs()
+        table = self.widget('annotation_properties_table_widget')
+        table.clear()
+        table.setHorizontalHeaderLabels(['IRI', 'Comment'])
+        table.setRowCount(len(annotationProperties))
+        rowcount = 0
+        for annIRI in annotationProperties:
+            table.setItem(rowcount,0,QtWidgets.QTableWidgetItem(str(annIRI)))
+            rowcount += 1
+        table.resizeColumnsToContents()
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+
+
+    #############################################
+    # GENERAL TAB
+    #################################
+    @QtCore.pyqtSlot(bool)
+    def addOntologyImport(self, _):
+        """
+        Adds an ontology import to the current project.
+        :type _: bool
+        """
+        # TODO: not implemented yet
+        LOGGER.debug("addOntologyImport called")
+
+    @QtCore.pyqtSlot(bool)
+    def removeOntologyImport(self, _):
+        """
+        Removes an ontology import from the current project.
+        :type _: bool
+        """
+        # TODO: not implemented yet
+        LOGGER.debug("removeOntologyImport called")
+
+    @QtCore.pyqtSlot(bool)
+    def addOntologyAnnotation(self, _):
+        """
+        Adds an annotation to the current ontology.
+        :type _: bool
+        """
+        # TODO: not implemented yet
+        LOGGER.debug("addOntologyAnnotation called")
+
+    @QtCore.pyqtSlot(bool)
+    def removeOntologyAnnotation(self, _):
+        """
+        Removes an annotation from the current ontology.
+        :type _: bool
+        """
+        # TODO: not implemented yet
+        LOGGER.debug("removeOntologyAnnotation called")
+
+    #############################################
+    # PREFIXES TAB
+    #################################
     @QtCore.pyqtSlot(int,int)
     def managePrefixTableEntryModification(self, row, column):
         if not self.addingNewPrefix:
@@ -380,7 +593,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def managePrefixModification(self, row, column):
         table = self.widget('prefixes_table_widget')
-        rowcount = table.rowCount()
         modifiedItem = table.item(row, column)
         itemText = modifiedItem.text()
         text = str(itemText)
@@ -438,90 +650,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             itemText = item.text()
             text = str(itemText)
             self.prefixIndexMap[row]=text
-
-    @QtCore.pyqtSlot()
-    def redraw(self):
-        """
-        Redraw the dialog components, reloading their contents.
-        """
-        #############################################
-        # GENERAL TAB
-        #################################
-        iriField = self.widget('ontology_iri_field')
-        if self.project.ontologyIRI and self.project.ontologyIRI != 'NULL':
-            iriField.setText(self.project.ontologyIRI)
-
-        versionField = self.widget('ontology_version_field')
-        if self.project.version and self.project.version != 'NULL':
-            versionField.setText(self.project.version)
-
-        # TODO: reload imports when they are implemented
-
-        #############################################
-        # PREFIXES TAB
-        #################################
-
-        # Reload prefixes table contents
-        prefixDictItems = self.project.prefixDictItems()
-
-        table = self.widget('prefixes_table_widget')
-        table.clear()
-        table.setRowCount(len(prefixDictItems))
-        table.setHorizontalHeaderLabels(['Prefix', ''])
-
-        rowcount = 0
-        for prefix, namespace in prefixDictItems:
-            table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(prefix))
-            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(namespace))
-            rowcount += 1
-        self.buildPrefixIndexMap()
-        table.resizeColumnsToContents()
-
-        #############################################
-        # ANNOTATIONS TAB
-        #################################
-
-        # TODO: complete annotations support when it is implemented
-
-        #############################################
-        # SAVE & EXIT
-        #################################
-
-    @QtCore.pyqtSlot(bool)
-    def addOntologyImport(self, _):
-        """
-        Adds an ontology import to the current project.
-        :type _: bool
-        """
-        # TODO: not implemented yet
-        LOGGER.debug("addOntologyImport called")
-
-    @QtCore.pyqtSlot(bool)
-    def removeOntologyImport(self, _):
-        """
-        Removes an ontology import from the current project.
-        :type _: bool
-        """
-        # TODO: not implemented yet
-        LOGGER.debug("removeOntologyImport called")
-
-    @QtCore.pyqtSlot(bool)
-    def addOntologyAnnotation(self, _):
-        """
-        Adds an annotation to the current ontology.
-        :type _: bool
-        """
-        # TODO: not implemented yet
-        LOGGER.debug("addOntologyAnnotation called")
-
-    @QtCore.pyqtSlot(bool)
-    def removeOntologyAnnotation(self, _):
-        """
-        Removes an annotation from the current ontology.
-        :type _: bool
-        """
-        # TODO: not implemented yet
-        LOGGER.debug("removeOntologyAnnotation called")
 
     @QtCore.pyqtSlot(bool)
     def addPrefix(self, _):
@@ -588,14 +716,32 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
         self.buildPrefixIndexMap()
 
+    #############################################
+    # ANNOTATIONS TAB
+    #################################
     @QtCore.pyqtSlot(bool)
     def addAnnotationProperty(self, _):
         """
         Adds an annotation property to the ontology alphabet.
         :type _: bool
         """
-        # TODO: not implemented yet
-        LOGGER.debug("addAnnotationProperty called")
+        try:
+            annIRI = self.widget('full_iri_field').value()
+            if self.project.addAnnotationProperty(annIRI):
+                table = self.widget('annotation_properties_table_widget')
+                rowcount = table.rowCount()
+                table.setRowCount(rowcount + 1)
+                table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(annIRI))
+                table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(''))
+                table.scrollToItem(table.item(rowcount, 0))
+            self.widget('iri_prefix_switch').setCurrentText(self.noPrefixString)
+            self.widget('iri_input_field').setText('')
+        except IllegalNamespaceError as e:
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal namespace',
+                                                     'Entity definition', MsgBoxType.WARNING.value,
+                                                     informativeText='The string "{}" is not a legal IRI'.format(annIRI),
+                                                     detailedText=str(e))
+            msgBox.exec_()
 
     @QtCore.pyqtSlot(bool)
     def removeAnnotationProperty(self, _):
@@ -603,58 +749,40 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Removes an annotation property from the ontology alphabet.
         :type _: bool
         """
-        # TODO: not implemented yet
-        LOGGER.debug("removeAnnotationProperty called")
+        table = self.widget('annotation_properties_table_widget')
+        rowcount = table.rowCount()
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                removedItem = table.item(row, 0)
+                itemText = removedItem.text()
+                text = str(itemText)
+                self.project.removeAnnotationProperty(text)
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                table.removeRow(row)
+        table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
 
-    @QtCore.pyqtSlot()
-    def accept(self):
-        """
-        Executed when the dialog is accepted.
-        """
-        ##
-        ## TODO: complete validation and settings save
-        ##
-        #############################################
-        # GENERAL TAB
-        #################################
+    @QtCore.pyqtSlot(int)
+    def onAnnotationPrefixChanged(self, val):
+        self.onAnnotationInputChanged('')
 
-        #############################################
-        # PREFIXES TAB
-        #################################
+    @QtCore.pyqtSlot('QString')
+    def onAnnotationInputChanged(self, val):
+        prefix = self.widget('iri_prefix_switch').currentText()
+        input = self.widget('iri_input_field').value()
+        resolvedPrefix = self.resolvePrefix(prefix)
+        fullIri = '{}{}'.format(resolvedPrefix, input)
+        self.widget('full_iri_field').setValue(fullIri)
 
-        #############################################
-        # ANNOTATIONS TAB
-        #################################
+    def resolvePrefix(self, prefixStr):
+        prefixLimit = prefixStr.find(':')
+        prefixStr = prefixStr[0:prefixLimit]
+        if prefixStr == self.noPrefixString:
+            return ''
+        else:
+            return self.project.getPrefixResolution(prefixStr)
+            # return self.project.getPrefixResolution(prefixStr[:-1])
 
-        #############################################
-        # SAVE & EXIT
-        #################################
 
-        super().accept()
-
-    @QtCore.pyqtSlot()
-    def reject(self):
-        """
-        Executed when the dialog is accepted.
-        """
-        ##
-        ## TODO: complete validation and settings save
-        ##
-        #############################################
-        # GENERAL TAB
-        #################################
-
-        #############################################
-        # PREFIXES TAB
-        #################################
-
-        #############################################
-        # ANNOTATIONS TAB
-        #################################
-
-        #############################################
-        # SAVE & EXIT
-        #################################
-
-        super().reject()
 
