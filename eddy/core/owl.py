@@ -43,6 +43,9 @@ from rfc3987 import compose
 from rfc3987 import parse
 from rfc3987 import resolve
 
+from eddy.core.functions.signals import connect
+
+
 class AnnotationAssertion(QtCore.QObject):
     """
     Represents Annotation Assertions
@@ -147,9 +150,14 @@ class IRI(QtCore.QObject):
     #################################
 
     @QtCore.pyqtSlot()
-    def onAnnotationModified(self):
+    def onAnnotationAssertionModified(self):
         annotation = self.sender()
         self.sgnAnnotationModified.emit(annotation)
+
+    #@QtCore.pyqtSlot('IRI')
+    def onAnnotationPropertyRemoved(self, iri):
+        print("Called onAnnotationPropertyRemoved")
+        #TODO se ho annotation assertion che coinvolge iri come PROPERTY RESOURCE (iri!=self), allora elimina assertion dalla lista
 
     #############################################
     #   PROPERTIES
@@ -388,11 +396,16 @@ class IRIManager(QtCore.QObject):
 
     sgnIRIManagerReset = QtCore.pyqtSignal()
 
+    sgnOntologyIRIModified = QtCore.pyqtSignal(IRI)
+
     sgnIRIAdded = QtCore.pyqtSignal(IRI)
     sgnIRIRemoved = QtCore.pyqtSignal(IRI)
 
     sgnAnnotationPropertyAdded = QtCore.pyqtSignal(IRI)
     sgnAnnotationPropertyRemoved = QtCore.pyqtSignal(IRI)
+
+    sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
+    sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
 
     def __init__(self, parent=None):
@@ -405,13 +418,20 @@ class IRIManager(QtCore.QObject):
         self.stringToIRI = {}
         self.prefix2namespaceMap = {}
         self.annotationProperties = set()
-        self.addDefaultAnnotationProperties()
+        self.datatypes = set()
         self.setDefaults()
 
 
     #############################################
     #   SLOTS
     #################################
+
+    @QtCore.pyqtSlot(str)
+    def setOntologyIRI(self, iriString):
+        self.ontologyIRI = self.getIRI(iriString)
+        self.sgnOntologyIRIModified.emit(self.ontologyIRI)
+
+
     @QtCore.pyqtSlot(IRI)
     def deleteIRI(self,iri):
         """
@@ -442,18 +462,17 @@ class IRIManager(QtCore.QObject):
         """
         if iriString in self.stringToIRI:
             return self.stringToIRI[iriString]
-        iri = IRI(iriString)
-        self.iris.add(iri)
-        self.stringToIRI[iriString] = iri
-        self.sgnIRIAdded.emit(iri)
-        return iri
+        else:
+            iri = IRI(iriString)
+            self.addIRI
+            connect(self.sgnAnnotationPropertyRemoved,iri.onAnnotationPropertyRemoved)
+            return iri
 
     #############################################
     #   INTERFACE
     #################################
 
     ##GENERAL
-
     def reset(self):
         """
         Resets the associations between prefix names and namespaces for this `IRIManager`
@@ -523,6 +542,48 @@ class IRIManager(QtCore.QObject):
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.Comment.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.IsDefinedBy.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.seeAlso.value)
+
+    ##DATATYPES
+    def getDatatypeIRIs(self):
+        return self.datatypes
+
+    def removeDatatypeIRI(self, iri):
+        """
+        Remove the IRI iri from the set of IRIs that can be used as datatype
+         :type iri: IRI
+         """
+        if iri in self.datatypes:
+            self.deleteIRI(iri)
+            self.datatypes.remove(iri)
+            self.sgnDatatypeRemoved.emit(iri)
+
+    def removeDatatypeProperty(self, iriString):
+        """
+        Remove the IRI identified by iriString from the set of IRIs that can be used as datatype
+        :type iriString: str
+        """
+        iri = self.getIRI(iriString)
+        self.removeDatatypeIRI(iri)
+
+    def addDatatypeIRI(self, iri):
+        """
+        Add the IRI iri to the set of IRIs that can be used as datatypes
+         :type iri: IRI
+         """
+        if not iri in self.datatypes:
+            self.addIRI(iri)
+            self.datatypes.add(iri)
+            self.sgnDatatypeAdded.emit(iri)
+            return True
+        return False
+
+    def addDatatype(self, iriString):
+        """
+        Add the IRI identified by iriString to the set of IRIs that can be used as datatypes
+        :type iriString: str
+        """
+        iri = self.getIRI(iriString)
+        return self.addDatatypeIRI(iri)
 
     ##IRIs
     def getExpandedIRI(self, prefixedIRI):

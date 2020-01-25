@@ -71,7 +71,6 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         self.disconnectIRISignals()
 
     def connectIRISignals(self):
-        print()
         connect(self.iri.sgnIRIModified, self.onIRIModified)
         connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
         connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)

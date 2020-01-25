@@ -772,7 +772,7 @@ class ProjectInfo(AbstractInfo):
             self.updateData(self.project)
             return
 
-        if (self.project.ontologyIRI != new_iri) and (new_iri != ''):
+        if (self.project.ontologyIRIString != new_iri) and (new_iri != ''):
             #self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
 
             self.ENTRY_MODIFIED_OK_var = set()
@@ -784,12 +784,12 @@ class ProjectInfo(AbstractInfo):
             Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
             Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
 
-            self.project.modifyIRIPrefixesEntry(self.project.ontologyIRI, None, new_iri, None, Duplicate_dict_1)
+            self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, None, new_iri, None, Duplicate_dict_1)
             if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
                 self.ENTRY_MODIFIED_OK_var = set()
                 self.ENTRY_IGNORE_var = set()
 
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.ontologyIRI, new_iri], None)
+                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.ontologyIRIString, new_iri], None)
                 self.session.undostack.push(command)
 
             self.ENTRY_MODIFIED_OK_var = set()
@@ -849,11 +849,11 @@ class ProjectInfo(AbstractInfo):
                     new_order.remove(prefix_in_field)
                     new_order.append(prefix_in_field)
 
-                    Duplicate_dict_1[self.project.ontologyIRI][0] = new_order
+                    Duplicate_dict_1[self.project.ontologyIRIString][0] = new_order
 
                     command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
                                                                      Duplicate_dict_1,
-                                                                     [self.project.ontologyIRI], None)
+                                                                     [self.project.ontologyIRIString], None)
 
                     commands.append(command_1)
 
@@ -871,7 +871,7 @@ class ProjectInfo(AbstractInfo):
                     prefixes_new.extend(prefixes_of_project)
                     prefixes_new.append(prefix_in_field)
 
-                    self.project.modifyIRIPrefixesEntry(self.project.ontologyIRI, prefixes_of_project, self.project.ontologyIRI,
+                    self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, prefixes_of_project, self.project.ontologyIRIString,
                                                         prefixes_new, Duplicate_dict_1)
 
                     # self.project.print_dictionary(Duplicate_dict_1)
@@ -882,7 +882,7 @@ class ProjectInfo(AbstractInfo):
 
                         command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
                                                                          Duplicate_dict_1,
-                                                                         [self.project.ontologyIRI], None)
+                                                                         [self.project.ontologyIRIString], None)
 
                         commands.append(command_1)
 
@@ -939,15 +939,15 @@ class ProjectInfo(AbstractInfo):
                     Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
                         self.project.prefered_prefix_dict, dict())
 
-                    Duplicate_dict_1B[self.project.ontologyIRI] = prefix_in_field
+                    Duplicate_dict_1B[self.project.ontologyIRIString] = prefix_in_field
 
-                    nodes_corr_project_iri = self.project.IRI_prefixes_nodes_dict[self.project.ontologyIRI][1]
+                    nodes_corr_project_iri = self.project.IRI_prefixes_nodes_dict[self.project.ontologyIRIString][1]
 
                     for node in nodes_corr_project_iri:
                         Duplicate_dict_1B[str(node)] = prefix_in_field
 
                     command = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B, \
-                                                                    self.project.ontologyIRI, None)
+                                                                    self.project.ontologyIRIString, None)
 
                     commands.append(command)
 
@@ -968,7 +968,7 @@ class ProjectInfo(AbstractInfo):
                     prefixes_new = prefixes_new.union(prefixes_of_project)
                     prefixes_new.add(prefix_in_field)
 
-                    self.project.modifyIRIPrefixesEntry(self.project.ontologyIRI, prefixes_of_project, self.project.ontologyIRI,
+                    self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, prefixes_of_project, self.project.ontologyIRIString,
                                                         prefixes_new, Duplicate_dict_1)
 
                     # self.project.print_dictionary(Duplicate_dict_1)
@@ -978,21 +978,21 @@ class ProjectInfo(AbstractInfo):
                         self.ENTRY_IGNORE_var = set()
 
                         command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                                         [self.project.ontologyIRI], None)
+                                                                         [self.project.ontologyIRIString], None)
 
                         Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries(\
                             self.project.prefered_prefix_dict, dict())
                         Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
                             self.project.prefered_prefix_dict, dict())
 
-                        nodes_corr_project_iri = Duplicate_dict_1[self.project.ontologyIRI][1]
+                        nodes_corr_project_iri = Duplicate_dict_1[self.project.ontologyIRIString][1]
 
-                        Duplicate_dict_1B[self.project.ontologyIRI] = prefix_in_field
+                        Duplicate_dict_1B[self.project.ontologyIRIString] = prefix_in_field
                         for node in nodes_corr_project_iri:
                             Duplicate_dict_1B[str(node)] = prefix_in_field
 
                         command_2 = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B, \
-                                                                          self.project.ontologyIRI, None)
+                                                                          self.project.ontologyIRIString, None)
 
                         commands.append(command_1)
                         commands.append(command_2)
@@ -1041,7 +1041,7 @@ class ProjectInfo(AbstractInfo):
             Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
             Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
 
-            self.project.modifyIRIPrefixesEntry(self.project.ontologyIRI, self.project.prefixes, self.project.ontologyIRI, prefixes_new, Duplicate_dict_1)
+            self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, self.project.prefixes, self.project.ontologyIRIString, prefixes_new, Duplicate_dict_1)
 
             #self.project.print_dictionary(Duplicate_dict_1)
 
@@ -1049,7 +1049,7 @@ class ProjectInfo(AbstractInfo):
                 self.ENTRY_MODIFIED_OK_var = set()
                 self.ENTRY_IGNORE_var = set()
 
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.ontologyIRI], None)
+                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.ontologyIRIString], None)
                 self.session.undostack.push(command)
 
             self.ENTRY_MODIFIED_OK_var = set()
@@ -1106,7 +1106,7 @@ class ProjectInfo(AbstractInfo):
         self.prefixesField.clearFocus()
         self.prefixesField.deselect()
         """
-        self.iriField.setValue(project.ontologyIRI)
+        self.iriField.setValue(project.ontologyIRIString)
         self.iriField.home(True)
         self.iriField.clearFocus()
         self.iriField.deselect()

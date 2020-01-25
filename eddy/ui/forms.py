@@ -362,7 +362,7 @@ class RefactorNameForm(QtWidgets.QDialog):
 
                 if match_old:
                     new_remaining_characters = currentData_processed
-                    new_iri = self.project.ontologyIRI
+                    new_iri = self.project.ontologyIRIString
 
                     Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
                         self.project.IRI_prefixes_nodes_dict, dict())

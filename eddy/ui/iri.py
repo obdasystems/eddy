@@ -165,9 +165,9 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def resolvePrefix(self, prefixStr):
         prefixLimit = prefixStr.find(':')
-        prefixStr = prefixStr[0:prefixLimit]
-        if prefixStr == self.noPrefixString:
+        if prefixLimit<0:
             return ''
         else:
+            prefixStr = prefixStr[0:prefixLimit]
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])

@@ -2465,7 +2465,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                             (self.project.IRI_prefixes_nodes_dict,dict())
 
                         old_iri = self.project.get_iri_of_node(node)
-                        new_iri = self.project.ontologyIRI
+                        new_iri = self.project.ontologyIRIString
 
                         if self.project.prefix is None:
                             new_label = self.project.get_full_IRI(new_iri,None,data)

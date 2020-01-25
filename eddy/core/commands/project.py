@@ -59,13 +59,13 @@ class CommandProjectSetIRI(QtWidgets.QUndoCommand):
     def redo(self):
         """redo the command"""
         #print('CommandProjectSetIRI >>> redo')
-        self._project.ontologyIRI = self._redo
+        self._project.ontologyIRIString = self._redo
         self._project.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
         #print('CommandProjectSetIRI >>> undo')
-        self._project.ontologyIRI = self._undo
+        self._project.ontologyIRIString = self._undo
         self._project.sgnUpdated.emit()
 
 

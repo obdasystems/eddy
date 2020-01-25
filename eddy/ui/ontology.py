@@ -45,6 +45,7 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
+from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
 from eddy.ui.fields import StringField,ComboBox
 from eddy.ui.message_box import MessageBoxFactory, MsgBoxType
 
@@ -139,8 +140,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         ## ONTOLOGY ANNOTATIONS GROUP
 
-        table = QtWidgets.QTableWidget(0, 3, self, objectName='ontology_annotations_table_widget')
-        table.setHorizontalHeaderLabels(['Annotation', 'Datatype', 'Value'])
+        table = QtWidgets.QTableWidget(0, 2, self, objectName='ontology_annotations_table_widget')
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
         table.horizontalHeader().setStretchLastSection(True)
         table.horizontalHeader().setSectionsClickable(False)
         table.horizontalHeader().setMinimumSectionSize(100)
@@ -491,8 +492,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # GENERAL TAB
         #################################
         iriField = self.widget('ontology_iri_field')
-        if self.project.ontologyIRI and self.project.ontologyIRI != 'NULL':
-            iriField.setText(self.project.ontologyIRI)
+        if self.project.ontologyIRIString and self.project.ontologyIRIString != 'NULL':
+            iriField.setText(self.project.ontologyIRIString)
 
         versionField = self.widget('ontology_version_field')
         if self.project.version and self.project.version != 'NULL':
@@ -568,6 +569,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         # TODO: not implemented yet
         LOGGER.debug("addOntologyAnnotation called")
+        assertionBuilder = AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
+        assertionBuilder.exec_()
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):
@@ -777,10 +780,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def resolvePrefix(self, prefixStr):
         prefixLimit = prefixStr.find(':')
-        prefixStr = prefixStr[0:prefixLimit]
-        if prefixStr == self.noPrefixString:
+        if prefixLimit < 0:
             return ''
         else:
+            prefixStr = prefixStr[0:prefixLimit]
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
 
