@@ -38,7 +38,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError
+from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.common import HasWidgetSystem
@@ -499,6 +499,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.project.version and self.project.version != 'NULL':
             versionField.setText(self.project.version)
 
+        table = self.widget('ontology_annotations_table_widget')
+        ontAnnAss = self.project.getIRI(self.project.ontologyIRIString).annotationAssertions
+        table.clear()
+        table.setRowCount(len(ontAnnAss))
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+        rowcount = 0
+        for assertion in ontAnnAss:
+            table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(assertion.assertionProperty)))
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(assertion.value)))
+            rowcount += 1
+        table.resizeColumnsToContents()
+
         # TODO: reload imports when they are implemented
 
         #############################################
@@ -570,7 +582,20 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # TODO: not implemented yet
         LOGGER.debug("addOntologyAnnotation called")
         assertionBuilder = AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
+        connect(assertionBuilder.accepted, self.onOntologyAnnotationAssertionAccepted)
         assertionBuilder.exec_()
+
+    @QtCore.pyqtSlot()
+    def onOntologyAnnotationAssertionAccepted(self):
+       self.redraw()
+       '''
+        table = self.widget('ontology_annotations_table_widget')
+        rowcount = table.rowCount()
+        table.setRowCount(rowcount + 1)
+        table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(annotation.assertionProperty)))
+        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(annotation.value)))
+        table.scrollToItem(table.item(rowcount, 0))
+        '''
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):

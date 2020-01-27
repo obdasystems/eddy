@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.qt import Font
+from eddy.core.functions.signals import connect
 from eddy.core.owl import AnnotationAssertion
 from eddy.ui.fields import ComboBox
 
@@ -21,6 +22,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         super().__init__(session)
         self.project = session.project
+        self.iri = iri
         '''
         widget = AnnotationPropertyExplorerWidget(session)
         widget.setObjectName('annotation_property_explorer')
@@ -45,9 +47,12 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setEditable(False)
         combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(False)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
         combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
+        combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
+        connect(combobox.currentIndexChanged, self.onPropertySwitched)
 
         '''
         formlayout = QtWidgets.QFormLayout(self, objectName='property_layout')
@@ -68,16 +73,19 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setEditable(False)
         combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(False)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
         combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
         combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
+        connect(combobox.currentIndexChanged,self.onTypeSwitched)
         '''
         boxlayout = QtWidgets.QHBoxLayout(self, objectName='type_layout')
         boxlayout.setAlignment(QtCore.Qt.AlignLeft)
         boxlayout.addWidget(self.widget('type_combobox_label'))
         boxlayout.addWidget(self.widget('type_switch'))
         self.addWidget(boxlayout)
+        '''
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
         comboBoxLabel.setFont(Font('Roboto', 12))
@@ -87,10 +95,13 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setEditable(False)
         combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(False)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
         combobox.addItems(['it','eng'])
         combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
+
+        '''
         boxlayout = QtWidgets.QHBoxLayout(self, objectName='lang_layout')
         boxlayout.setAlignment(QtCore.Qt.AlignLeft)
         boxlayout.addWidget(self.widget('lang_combobox_label'))
@@ -121,26 +132,69 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # CONFIRMATION BOX
         #################################
-        '''
+
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
         confirmation.setFont(Font('Roboto', 12))
+        confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
         self.addWidget(confirmation)
-        '''
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
         formlayout.addRow(self.widget('valueTextArea'))
-
         formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
+        formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
+        formlayout.addRow(self.widget('confirmation_widget'))
 
         self.setLayout(formlayout)
 
-        self.setMinimumSize(740, 420)
+        self.setMinimumSize(740, 380)
         self.setWindowTitle('Annotation assertion builder <{}>'.format(str(iri)))
 
+    #############################################
+    #   SLOTS
+    #################################
+    @QtCore.pyqtSlot(int)
+    def onPropertySwitched(self, index):
+        propIRI = str(self.widget('property_switch').itemText(index))
+        if propIRI and not propIRI==self.emptyString:
+            self.widget('confirmation_widget').button(QtWidgets.QDialogButtonBox.Save).setEnabled(True)
+        else:
+            self.widget('confirmation_widget').button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
+
+    @QtCore.pyqtSlot(int)
+    def onTypeSwitched(self, index):
+        typeIRI = str(self.widget('type_switch').itemText(index))
+        if not self.project.canAddLanguageTag(typeIRI):
+            self.widget('lang_switch').setEnabled(False)
+        else:
+            self.widget('lang_switch').setEnabled(True)
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        propertyStr = str(self.widget('property_switch').currentText())
+        propertyIRI = self.project.getIRI(propertyStr)
+        value = str(self.widget('valueTextArea').toPlainText())
+        typeStr = str(self.widget('type_switch').currentText())
+        typeIRI = None
+        if typeStr and not typeStr==self.emptyString:
+            typeIRI = self.project.getIRI(typeStr)
+        language = None
+        if self.widget('lang_switch').isEnabled():
+            language = str(self.widget('type_switch').currentText())
+        annAss = AnnotationAssertion(propertyIRI,value,typeIRI,language)
+        self.iri.addAnnotationAssertion(annAss)
+        self.accepted.emit()
+        super().accept()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        self.rejected.emit()
+        super().reject()
 
 class AnnotationPropertyExplorerWidget(QtWidgets.QWidget):
     """

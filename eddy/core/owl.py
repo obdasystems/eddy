@@ -127,7 +127,9 @@ class IRI(QtCore.QObject):
         self._namespace = str(namespace)
         self._suffix = suffix
         self.components = parse(IRI.concat(self._namespace, self._suffix))
-        self._annotationAssertions = {}
+        self._annotationAssertionsMap = {}
+        self._annotationAssertions = []
+
 
     @staticmethod
     def concat(namespace, suffix):
@@ -174,8 +176,12 @@ class IRI(QtCore.QObject):
         self.sgnIRIModified.emit()
 
     @property
-    def annotationAssertionItems(self):
-        return self._annotationAssertions.items()
+    def annotationAssertions(self):
+        return self._annotationAssertions
+
+    @property
+    def annotationAssertionMapItems(self):
+        return self._annotationAssertionsMap.items()
 
     @property
     def authority(self):
@@ -229,8 +235,8 @@ class IRI(QtCore.QObject):
         return self.getAnnotationAssertion(AnnotationAssertionProperty.Label.value, lang=lang)
 
     def getAnnotationAssertion(self, annotationProperty, lang=None):
-        if annotationProperty in self._annotationAssertions:
-            currList = self._annotationAssertions[annotationProperty]
+        if annotationProperty in self._annotationAssertionsMap:
+            currList = self._annotationAssertionsMap[annotationProperty]
             if lang:
                 for annotation in currList:
                     if annotation.language==lang:
@@ -243,27 +249,31 @@ class IRI(QtCore.QObject):
         Add an annotation assertion regarding self
         :type: annotation: AnnotationAssertion
         """
-        if annotation.property in self._annotationAssertions:
-            if not annotation in self._annotationAssertions[annotation.property]:
-                self._annotationAssertions[annotation.assertionProperty].append(annotation)
+        if annotation.assertionProperty in self._annotationAssertionsMap:
+            if not annotation in self._annotationAssertionsMap[annotation.assertionProperty]:
+                self._annotationAssertionsMap[annotation.assertionProperty].append(annotation)
+                self._annotationAssertions.append(annotation)
         else:
             currList = list()
-            currList.add(annotation)
-            self._annotationAssertions[annotation.assertionProperty] = currList
-        self.sgnAnnotationAdded.emit(annotation)
+            currList.append(annotation)
+            self._annotationAssertionsMap[annotation.assertionProperty] = currList
+        self.sgnAnnotationAdded.emit(annotation.assertionProperty)
+        #self.sgnAnnotationAdded.emit(annotation)#TODO PERCHE MANDA ECCEZIONE CON ASSERTION E NON CON IRI???????
 
     def removeAnnotationAssertion(self, annotation):
         """
         Remove an annotation assertion regarding self
         :type: annotation: AnnotationAssertion
         """
-        if annotation.property in self._annotationAssertions:
-            currList = self._annotationAssertions[annotation.assertionProperty]
+        if annotation.property in self._annotationAssertionsMap:
+            currList = self._annotationAssertionsMap[annotation.assertionProperty]
             if annotation in currList:
                 currList.remove(annotation)
                 if len(currList)<1:
-                    self._annotationAssertions.pop(annotation.assertionProperty, None)
+                    self._annotationAssertionsMap.pop(annotation.assertionProperty, None)
                 self.sgnAnnotationRemoved.emit(annotation)
+            if annotation in self._annotationAssertions:
+                self.annotationAssertions.remove(annotation)
         else:
             raise KeyError('Cannot find the annotation assertion')
 
@@ -486,6 +496,7 @@ class IRIManager(QtCore.QObject):
     def setDefaults(self):
         self.setDefaultPrefixes()
         self.addDefaultAnnotationProperties()
+        self.addDefaultDatatypes()
 
     ##ANNOTATION PROPERTIES
     def getAnnotationPropertyIRIs(self):
@@ -531,7 +542,7 @@ class IRIManager(QtCore.QObject):
 
     def addDefaultAnnotationProperties(self):
         """
-        Initialises this `PrefixManager` with a set of commonly used prefix names (a regime da usare solo per progetto vuoto)
+        Initialises this `IRIManager` with a set of property commonly used for annotation assertions(a regime da usare solo per progetto vuoto??)
         """
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.Label.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.BackwardCompatibleWith.value)
@@ -584,6 +595,59 @@ class IRIManager(QtCore.QObject):
         """
         iri = self.getIRI(iriString)
         return self.addDatatypeIRI(iri)
+
+    def addDefaultDatatypes(self):
+        """
+        Initialises this `IRIManager` with a set of commonly used datatypes (a regime da usare solo per progetto vuoto??)
+        """
+        self.addDatatypeIRI(OWL2Datatype.rational.value)
+        self.addDatatypeIRI(OWL2Datatype.real.value)
+        self.addDatatypeIRI(OWL2Datatype.PlainLiteral.value)
+        self.addDatatypeIRI(OWL2Datatype.XMLLiteral.value)
+        self.addDatatypeIRI(OWL2Datatype.Literal.value)
+        self.addDatatypeIRI(OWL2Datatype.anyURI.value)
+        self.addDatatypeIRI(OWL2Datatype.base64Binary.value)
+        self.addDatatypeIRI(OWL2Datatype.boolean.value)
+        self.addDatatypeIRI(OWL2Datatype.byte.value)
+        self.addDatatypeIRI(OWL2Datatype.dateTime.value)
+        self.addDatatypeIRI(OWL2Datatype.dateTimeStamp.value)
+        self.addDatatypeIRI(OWL2Datatype.decimal.value)
+        self.addDatatypeIRI(OWL2Datatype.double.value)
+        self.addDatatypeIRI(OWL2Datatype.float.value)
+        self.addDatatypeIRI(OWL2Datatype.hexBinary.value)
+        self.addDatatypeIRI(OWL2Datatype.int.value)
+        self.addDatatypeIRI(OWL2Datatype.integer.value)
+        self.addDatatypeIRI(OWL2Datatype.language.value)
+        self.addDatatypeIRI(OWL2Datatype.long.value)
+        self.addDatatypeIRI(OWL2Datatype.Name.value)
+        self.addDatatypeIRI(OWL2Datatype.NCName.value)
+        self.addDatatypeIRI(OWL2Datatype.negativeInteger.value)
+        self.addDatatypeIRI(OWL2Datatype.NMTOKEN.value)
+        self.addDatatypeIRI(OWL2Datatype.nonNegativeInteger.value)
+        self.addDatatypeIRI(OWL2Datatype.nonPositiveInteger.value)
+        self.addDatatypeIRI(OWL2Datatype.normalizedString.value)
+        self.addDatatypeIRI(OWL2Datatype.positiveInteger.value)
+        self.addDatatypeIRI(OWL2Datatype.short.value)
+        self.addDatatypeIRI(OWL2Datatype.string.value)
+        self.addDatatypeIRI(OWL2Datatype.token.value)
+        self.addDatatypeIRI(OWL2Datatype.unsignedByte.value)
+        self.addDatatypeIRI(OWL2Datatype.unsignedInt.value)
+        self.addDatatypeIRI(OWL2Datatype.unsignedLong.value)
+        self.addDatatypeIRI(OWL2Datatype.unsignedShort.value)
+
+    def canAddLanguageTagToIRI(self,iri):
+        """
+        Return true if it's possible to add a language tag to data values having type iri
+        :type iri: IRI
+        """
+        return iri==OWL2Datatype.PlainLiteral.value
+
+    def canAddLanguageTag(self,iriString):
+        """
+        Return true if it's possible to add a language tag to data values having type IRI(iristring)
+        :type iri: str
+        """
+        return not iriString or self.canAddLanguageTagToIRI(IRI(iriString))
 
     ##IRIs
     def getExpandedIRI(self, prefixedIRI):
