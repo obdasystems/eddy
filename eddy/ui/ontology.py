@@ -587,15 +587,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def onOntologyAnnotationAssertionAccepted(self):
-       self.redraw()
-       '''
         table = self.widget('ontology_annotations_table_widget')
-        rowcount = table.rowCount()
-        table.setRowCount(rowcount + 1)
-        table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(annotation.assertionProperty)))
-        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(annotation.value)))
-        table.scrollToItem(table.item(rowcount, 0))
-        '''
+        ontAnnAss = self.project.getIRI(self.project.ontologyIRIString).annotationAssertions
+        table.clear()
+        table.setRowCount(len(ontAnnAss))
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+        rowcount = 0
+        for assertion in ontAnnAss:
+            table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(assertion.assertionProperty)))
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(assertion.value)))
+            rowcount += 1
+        table.resizeColumnsToContents()
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):

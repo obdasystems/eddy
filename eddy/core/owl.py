@@ -252,11 +252,11 @@ class IRI(QtCore.QObject):
         if annotation.assertionProperty in self._annotationAssertionsMap:
             if not annotation in self._annotationAssertionsMap[annotation.assertionProperty]:
                 self._annotationAssertionsMap[annotation.assertionProperty].append(annotation)
-                self._annotationAssertions.append(annotation)
         else:
             currList = list()
             currList.append(annotation)
             self._annotationAssertionsMap[annotation.assertionProperty] = currList
+        self._annotationAssertions.append(annotation)
         self.sgnAnnotationAdded.emit(annotation.assertionProperty)
         #self.sgnAnnotationAdded.emit(annotation)#TODO PERCHE MANDA ECCEZIONE CON ASSERTION E NON CON IRI???????
 
@@ -474,7 +474,7 @@ class IRIManager(QtCore.QObject):
             return self.stringToIRI[iriString]
         else:
             iri = IRI(iriString)
-            self.addIRI
+            self.addIRI(iri)
             connect(self.sgnAnnotationPropertyRemoved,iri.onAnnotationPropertyRemoved)
             return iri
 
