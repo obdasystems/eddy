@@ -507,7 +507,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         rowcount = 0
         for assertion in ontAnnAss:
             table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(assertion.assertionProperty)))
-            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(assertion.value)))
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(assertion.getObjectResourceString(self.project,True)))
             rowcount += 1
         table.resizeColumnsToContents()
 
@@ -582,12 +582,22 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # TODO: not implemented yet
         LOGGER.debug("addOntologyAnnotation called")
         assertionBuilder = AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
-        connect(assertionBuilder.accepted, self.onOntologyAnnotationAssertionAccepted)
+        connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onOntologyAnnotationAssertionAccepted)
         assertionBuilder.exec_()
 
-    @QtCore.pyqtSlot()
-    def onOntologyAnnotationAssertionAccepted(self):
+    #@QtCore.pyqtSlot(AnnotationAssertion)
+    def onOntologyAnnotationAssertionAccepted(self,assertion):
+        '''
+        :type assertion:AnnotationAssertion
+        '''
         table = self.widget('ontology_annotations_table_widget')
+        rowcount = table.rowCount()
+        table.setRowCount(rowcount + 1)
+        table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(assertion.assertionProperty)))
+        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(assertion.getObjectResourceString(self.project,True)))
+        table.scrollToItem(table.item(rowcount, 0))
+        table.resizeColumnsToContents()
+        '''
         ontAnnAss = self.project.getIRI(self.project.ontologyIRIString).annotationAssertions
         table.clear()
         table.setRowCount(len(ontAnnAss))
@@ -598,6 +608,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(assertion.value)))
             rowcount += 1
         table.resizeColumnsToContents()
+        '''
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):

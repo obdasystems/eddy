@@ -52,10 +52,14 @@ class AnnotationAssertion(QtCore.QObject):
     """
     sgnAnnotationModified = QtCore.pyqtSignal()
 
-    def __init__(self, property, value, type=None ,language=None):
+    def __init__(self, property, value, type=None ,language=None, parent=None):
         """
-        :type
+        :type property:IRI
+        :type value:IRI|str
+        :type type:IRI
+        :type language:str
         """
+        super().__init__(parent)
         self._property = property
         if not(isinstance(value, IRI) or isinstance(value,str)):
             raise ValueError('The value of an annotation assertion must be either an IRI or a string')
@@ -104,6 +108,33 @@ class AnnotationAssertion(QtCore.QObject):
         self._language = lang
         self.sgnAnnotationModified.emit()
 
+    def getObjectResourceString(self, manager, prefixedForm):
+        """
+        Returns a string representing the object resource of the assertion.
+        :type manager:IRIManager
+        :type prefixedForm:bool
+        :rtype: str
+        """
+        if self._value:
+            if isinstance(self._value,IRI):
+                prefixedIRI = manager.getShortestPrefixedForm(self._value)
+                if prefixedForm and prefixedIRI:
+                    return str(prefixedIRI)
+                else:
+                    return '<{}>'.format(str(self._value))
+            elif isinstance(self._value,str):
+                result = '"{}"'.format(self._value)
+                if self._datatype:
+                    prefixedType = manager.getShortestPrefixedForm(self._datatype)
+                    if prefixedForm and prefixedType:
+                        result += str(prefixedType)
+                    else:
+                        result += '<{}>'.format(self._datatype)
+                if self._language:
+                    result += '@{}'.format(self._language)
+                return result
+
+
     def __eq__(self, other):
         if not isinstance(other,AnnotationAssertion):
             return False
@@ -121,6 +152,9 @@ class IRI(QtCore.QObject):
     sgnAnnotationModified = QtCore.pyqtSignal(AnnotationAssertion)
 
     def __init__(self, namespace, suffix=None, parent=None):
+        """
+        Create a new IRI
+        """
         super().__init__(parent)
         if not IRI.isValidNamespace(namespace):
             raise IllegalNamespaceError(namespace)
@@ -258,7 +292,7 @@ class IRI(QtCore.QObject):
             self._annotationAssertionsMap[annotation.assertionProperty] = currList
         self._annotationAssertions.append(annotation)
         self.sgnAnnotationAdded.emit(annotation.assertionProperty)
-        #self.sgnAnnotationAdded.emit(annotation)#TODO PERCHE MANDA ECCEZIONE CON ASSERTION E NON CON IRI???????
+        self.sgnAnnotationAdded.emit(annotation)#TODO PERCHE MANDA ECCEZIONE CON ASSERTION E NON CON IRI???????
 
     def removeAnnotationAssertion(self, annotation):
         """

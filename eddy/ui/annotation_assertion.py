@@ -188,7 +188,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             language = str(self.widget('type_switch').currentText())
         annAss = AnnotationAssertion(propertyIRI,value,typeIRI,language)
         self.iri.addAnnotationAssertion(annAss)
-        self.accepted.emit()
+        self.sgnAnnotationAssertionAccepted.emit(annAss)
         super().accept()
 
     @QtCore.pyqtSlot()
