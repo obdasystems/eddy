@@ -581,7 +581,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         # TODO: not implemented yet
         LOGGER.debug("addOntologyAnnotation called")
-        assertionBuilder = AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
+        assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI) #AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
         connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onOntologyAnnotationAssertionAccepted)
         assertionBuilder.exec_()
 

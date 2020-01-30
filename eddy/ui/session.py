@@ -100,13 +100,14 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.path import shortPath
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
+from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
-from eddy.core.owl import IRIRender
+from eddy.core.owl import IRIRender, IRI
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
@@ -114,6 +115,7 @@ from eddy.core.profiles.owl2rl import OWL2RLProfile
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_ASYMMETRIC
 from eddy.core.project import K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE
 from eddy.core.regex import RE_CAMEL_SPACE
+from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.fields import ComboBox
@@ -2121,11 +2123,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 properties.raise_()
                 properties.activateWindow()
 
-    @QtCore.pyqtSlot(ConceptNode)
+    @QtCore.pyqtSlot(OntologyEntityNode)
     def doOpenIRIBuilder(self,node):
         """
         Executed when IRI builder needs to be displayed.
-        :type node: ConceptNode|AttributeNode|RoleNode|IndividualNode
+        :type node: OntologyEntityNode
         """
         #TODO
         diagram = self.mdi.activeDiagram()
@@ -2138,6 +2140,22 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.show()
                 builder.raise_()
                 builder.activateWindow()
+
+    @QtCore.pyqtSlot(IRI)
+    def doOpenAnnotationAssertionBuilder(self,iri):
+        """
+        Executed when annotation assertion builder needs to be displayed.
+        :type node: IRI
+        """
+        # TODO
+        if IRI:
+            builder = AnnotationAssertionBuilderDialog(iri,self)
+            builder.setWindowModality(QtCore.Qt.ApplicationModal)
+            builder.show()
+            builder.raise_()
+            builder.activateWindow()
+            return builder
+
 
     @QtCore.pyqtSlot()
     def doOpenNodeDescription(self):

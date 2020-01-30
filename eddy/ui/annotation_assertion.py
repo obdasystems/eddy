@@ -70,6 +70,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         comboBoxLabel.setText('Type')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='type_switch')
+        #combobox.palette().setColor(QtGui.QPalette.Button, QtGui.QColor(169, 169, 169))
         combobox.setEditable(False)
         combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -170,8 +171,22 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     def onTypeSwitched(self, index):
         typeIRI = str(self.widget('type_switch').itemText(index))
         if not self.project.canAddLanguageTag(typeIRI):
+            '''
+            model = self.widget('lang_switch').model()
+            allItems = [model.item(i) for i in range(model.rowCount())]
+            for item in allItems:
+                #item.setBackground(QtGui.QColor('grey'))
+
+            palette = self.widget('lang_switch').palette()
+            palette.setColor(QtGui.QPalette.Active,QtGui.QPalette.Button,QtGui.QColor('red'))
+            palette.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Button, QtGui.QColor('pink'))
+            self.widget('lang_switch').setPalette(palette)
+            '''
+
+            self.widget('lang_switch').setStyleSheet("background:#808080");
             self.widget('lang_switch').setEnabled(False)
         else:
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
             self.widget('lang_switch').setEnabled(True)
 
     @QtCore.pyqtSlot()
