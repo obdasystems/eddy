@@ -48,7 +48,7 @@ from eddy.core.datatypes.owl import Namespace
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
-from eddy.core.items.nodes.common.base import AbstractNode
+from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIManager
 from eddy.ui.dialogs import DiagramSelectionDialog
@@ -66,6 +66,7 @@ K_META = 'meta'
 K_NODE = 'nodes'
 K_PREDICATE = 'predicates'
 K_TYPE = 'types'
+K_OCCURRENCES = 'occurrences'
 
 # PROJECT MERGE
 K_CURRENT = 'current'
@@ -134,7 +135,8 @@ class Project(IRIManager):
         Initialize the graphol project.
         """
         super().__init__(kwargs.get('session'))
-        self.index = ProjectIndex()
+        #self.index = ProjectIndex()
+        self.index = ProjectIRIIndex()
         #self.iri = kwargs.get('iri', 'NULL')
         self.name = kwargs.get('name')
         self.path = expandPath(kwargs.get('path'))
@@ -408,7 +410,7 @@ class Project(IRIManager):
         if (('AttributeNode' in str(type(item))) or
                 ('ConceptNode' in str(type(item))) or
                 ('IndividualNode' in str(type(item))) or
-                ('RoleNode' in str(type(item)))):
+                ('RoleNode' in str(type(item)))) and not isinstance(item,OntologyEntityNode):
             node = item
             corr_iri = None
             flag = False
@@ -1328,6 +1330,10 @@ class Project(IRIManager):
         :type item: AbstractItem
         """
         if self.index.addItem(diagram, item):
+            #TODO added
+            if isinstance(item, OntologyEntityNode):
+                self.index.addIRIOccurenceToDiagram(diagram, item)
+            #TODO end
             self.sgnItemAdded.emit(diagram, item)
             self.sgnUpdated.emit()
 
@@ -1340,10 +1346,15 @@ class Project(IRIManager):
         :type item: AbstractItem
         """
         if self.index.removeItem(diagram, item):
+            # TODO added
+            if isinstance(item, OntologyEntityNode):
+                self.index.removeIRIOccurenceFromDiagram(diagram, item)
+            # TODO end
             self.sgnItemRemoved.emit(diagram, item)
             self.sgnUpdated.emit()
 
 
+#TODO ProjectIndex esteso da ProjectIRIIndex. Alcuni suoi metodi saranno da sostituire con opportuni metodi di ProjectIRIIndex
 class ProjectIndex(dict):
     """
     Extends built-in dict and implements the Project index.
@@ -1394,7 +1405,7 @@ class ProjectIndex(dict):
                 self[K_NODE][diagram.name][item.id] = item
                 if item.isPredicate():
                     #k = OWLText(item.text())
-                    k = item.text().replace('\n','')
+                    k = item.text().replace('\n','') #PER LE IRI NON VA BENE. a QUESTO PUNTO IL LABEL ANCORA NON è SETTATO, ALLORA item.text()=empty
                     if i not in self[K_PREDICATE]:
                         self[K_PREDICATE][i] = dict()
                     if k not in self[K_PREDICATE][i]:
@@ -1736,6 +1747,54 @@ class ProjectIndex(dict):
                     del self[K_PREDICATE][item][name][K_META]
                     return True
         return False
+
+
+class ProjectIRIIndex(ProjectIndex):
+    """
+    Extends ProjectIndex to manage Project IRI index.
+    """
+
+    def __init__(self):
+        """
+        Initialize the Project Index.
+        """
+        super().__init__()
+        self[K_OCCURRENCES] = dict()
+
+    def addIRIOccurenceToDiagram(self, diagram, node):
+        """
+        Set node as occurrence of node.iri in diagram
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        """
+        iri = node.iri
+        if iri in self[K_OCCURRENCES]:
+            if diagram in self[K_OCCURRENCES][iri]:
+                self[K_OCCURRENCES][iri][diagram].add(node)
+            else:
+                currSet = set()
+                currSet.add(node)
+                self[K_OCCURRENCES][iri][diagram] = currSet
+        else:
+            currDict = {}
+            currSet = set()
+            currSet.add(node)
+            currDict[diagram] = currSet
+            self[K_OCCURRENCES][iri] = currDict
+
+    def removeIRIOccurenceFromDiagram(self, diagram, node):
+        """
+        Remove node as occurrence of node.iri in diagram
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        """
+        iri = node.iri
+        if iri in self[K_OCCURRENCES]:
+            if diagram in self[K_OCCURRENCES][iri]:
+                self[K_OCCURRENCES][iri][diagram].remove(node)
+                if not self[K_OCCURRENCES][iri][diagram]:
+                    self[K_OCCURRENCES][iri].pop(diagram)
+
 
 
 class ProjectMergeWorker(QtCore.QObject):

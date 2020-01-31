@@ -264,7 +264,7 @@ class AbstractNode(AbstractItem):
         Returns True if this node is a predicate node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type() <= Item.IndividualNode
+        return Item.ConceptNode <= self.type() <= Item.IndividualNode or Item.ConceptIRINode <= self.type() <= Item.IndividualIRINode
 
     def moveBy(self, x, y):
         """

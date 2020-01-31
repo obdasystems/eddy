@@ -1460,13 +1460,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         for item in items:
             if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
-                        'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))):
+                        'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))) and not isinstance(item,OntologyEntityNode):
                 iri_of_node = self.project.get_iri_of_node(item)
                 iris_to_update.append(iri_of_node)
                 nodes_to_update.append(item)
                 Dup_1B.append(item)
                 Dup_1B.append(iri_of_node)
                 Duplicate_dict_1[iri_of_node][1].remove(item)
+            elif  isinstance(item,OntologyEntityNode):
+                print('Removing OntologyPredicateNode {}'.format(item))
+                #TODO aggiungi comandi per rimozione IRI da indice
 
         commands = [CommandItemsRemove(diagram, items),
                     CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,

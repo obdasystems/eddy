@@ -576,7 +576,18 @@ class Diagram(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot(OntologyEntityNode)
     def doAddOntologyEntityNode(self,node):
-        self.addItem(node)
+        """
+        Add to this diagram a node identified by an IRI
+        :type node: OntologyEntityNode
+        """
+        if node:
+            command = CommandNodeAdd(self,node)
+            self.session.undostack.beginMacro('node Add - {0}'.format(node.iri))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
+        #self.addItem(node)
 
     @QtCore.pyqtSlot('QGraphicsItem')
     def doNodeIdentification(self, node):

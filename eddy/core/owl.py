@@ -78,8 +78,9 @@ class AnnotationAssertion(QtCore.QObject):
 
     @assertionProperty.setter
     def assertionProperty(self,prop):
-        self._property = prop
-        self.sgnAnnotationModified.emit()
+        if isinstance(prop,IRI):
+            self._property = prop
+            self.sgnAnnotationModified.emit()
 
     @property
     def datatype(self):
@@ -87,8 +88,9 @@ class AnnotationAssertion(QtCore.QObject):
 
     @datatype.setter
     def datatype(self, type):
-        self._datatype = type
-        self.sgnAnnotationModified.emit()
+        if isinstance(type, IRI):
+            self._datatype = type
+            self.sgnAnnotationModified.emit()
 
     @property
     def value(self):
@@ -476,6 +478,7 @@ class IRIManager(QtCore.QObject):
         self.sgnOntologyIRIModified.emit(self.ontologyIRI)
 
 
+    #TODO dovrai poi capire quando un'IRI dovrà essere rimossa (come capire quando non viene più utilizzata in alcun punto???)
     @QtCore.pyqtSlot(IRI)
     def deleteIRI(self,iri):
         """
@@ -512,6 +515,43 @@ class IRIManager(QtCore.QObject):
             connect(self.sgnAnnotationPropertyRemoved,iri.onAnnotationPropertyRemoved)
             return iri
 
+    '''
+    @QtCore.pyqtSlot(Diagram, OntologyEntityNode)
+    def addIRIOccurenceInDiagram(self,diagram,node):
+        """
+        Set node as occurrence of node.iri in diagram
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        """
+        iri = node.iri
+        if iri in self.iriOccurrences:
+            if diagram in self.iriOccurreces[iri]:
+                self.iriOccurreces[iri][diagram].add(node)
+            else:
+                currSet = set()
+                currSet.add(node)
+                self.iriOccurreces[iri][diagram] = currSet
+        else:
+            currDict = {}
+            currSet = set()
+            currSet.add(node)
+            currDict[diagram] = currSet
+            self.iriOccurreces[iri] = currDict
+
+    @QtCore.pyqtSlot(Diagram, OntologyEntityNode)
+    def removeIRIOccurenceInDiagram(self,diagram,node):
+        """
+        Remove node as occurrence of node.iri in diagram
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        """
+        iri = node.iri
+        if iri in self.iriOccurrences:
+            if diagram in self.iriOccurreces[iri]:
+                self.iriOccurreces[iri][diagram].remove(node)
+                if not self.iriOccurreces[iri][diagram]:
+                    self.iriOccurreces[iri].pop(diagram)
+    '''
     #############################################
     #   INTERFACE
     #################################

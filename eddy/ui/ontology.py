@@ -506,7 +506,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
         rowcount = 0
         for assertion in ontAnnAss:
-            table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(assertion.assertionProperty)))
+            propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            table.setItem(rowcount, 0, propertyItem)
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(assertion.getObjectResourceString(self.project,True)))
             rowcount += 1
         table.resizeColumnsToContents()
@@ -542,7 +544,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setRowCount(len(annotationProperties))
         rowcount = 0
         for annIRI in annotationProperties:
-            table.setItem(rowcount,0,QtWidgets.QTableWidgetItem(str(annIRI)))
+            propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
+            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            table.setItem(rowcount,0,propertyItem)
             rowcount += 1
         table.resizeColumnsToContents()
 
@@ -593,7 +597,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table = self.widget('ontology_annotations_table_widget')
         rowcount = table.rowCount()
         table.setRowCount(rowcount + 1)
-        table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(assertion.assertionProperty)))
+        propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+        table.setItem(rowcount, 0, propertyItem)
         table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(assertion.getObjectResourceString(self.project,True)))
         table.scrollToItem(table.item(rowcount, 0))
         table.resizeColumnsToContents()
@@ -772,7 +778,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 table = self.widget('annotation_properties_table_widget')
                 rowcount = table.rowCount()
                 table.setRowCount(rowcount + 1)
-                table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(annIRI))
+                propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
+                propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+                table.setItem(rowcount, 0, propertyItem)
                 table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(''))
                 table.scrollToItem(table.item(rowcount, 0))
             self.widget('iri_prefix_switch').setCurrentText(self.noPrefixString)
