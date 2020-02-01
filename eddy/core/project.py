@@ -1286,6 +1286,17 @@ class Project(IRIManager):
         """
         return self.index.predicates(item, name, diagram)
 
+    def iriOccurrences(self, iri=None, diagram=None):
+        """
+        Returns a collection of nodes identified by the given IRI belonging to the given diagram.
+        If no diagram is supplied the lookup is performed across the whole Project Index.
+        :type iri: IRI
+        :type diagram: Diagram
+        :rtype: set
+        """
+        return self.index.iriOccurrences(iri,diagram)
+
+
     def removeDiagram(self, diagram):
         """
         Remove the given diagram from the project index, together with all its items.
@@ -1769,17 +1780,17 @@ class ProjectIRIIndex(ProjectIndex):
         """
         iri = node.iri
         if iri in self[K_OCCURRENCES]:
-            if diagram in self[K_OCCURRENCES][iri]:
-                self[K_OCCURRENCES][iri][diagram].add(node)
+            if diagram.name in self[K_OCCURRENCES][iri]:
+                self[K_OCCURRENCES][iri][diagram.name].add(node)
             else:
                 currSet = set()
                 currSet.add(node)
-                self[K_OCCURRENCES][iri][diagram] = currSet
+                self[K_OCCURRENCES][iri][diagram.name] = currSet
         else:
             currDict = {}
             currSet = set()
             currSet.add(node)
-            currDict[diagram] = currSet
+            currDict[diagram.name] = currSet
             self[K_OCCURRENCES][iri] = currDict
 
     def removeIRIOccurenceFromDiagram(self, diagram, node):
@@ -1790,11 +1801,44 @@ class ProjectIRIIndex(ProjectIndex):
         """
         iri = node.iri
         if iri in self[K_OCCURRENCES]:
-            if diagram in self[K_OCCURRENCES][iri]:
-                self[K_OCCURRENCES][iri][diagram].remove(node)
-                if not self[K_OCCURRENCES][iri][diagram]:
-                    self[K_OCCURRENCES][iri].pop(diagram)
+            if diagram.name in self[K_OCCURRENCES][iri]:
+                self[K_OCCURRENCES][iri][diagram.name].remove(node)
+                if not self[K_OCCURRENCES][iri][diagram.name]:
+                    self[K_OCCURRENCES][iri].pop(diagram.name)
+                    if not self[K_OCCURRENCES][iri]:
+                        self[K_OCCURRENCES].pop(iri)
 
+    def iriOccurrences(self,iri=None,diagram=None):
+        """
+        Returns a collection of nodes identified by the given IRI belonging to the given diagram.
+        If no diagram is supplied the lookup is performed across the whole Project Index.
+        :type iri: IRI
+        :type diagram: Diagram
+        :rtype: set
+        """
+        try:
+            result = set()
+            if not iri:
+                if not diagram:
+                    for occIRI in self[K_OCCURRENCES]:
+                        for diag in self[K_OCCURRENCES][occIRI]:
+                            result.update(*self[K_OCCURRENCES][occIRI][diag.name].values())
+                else:
+                    for occIRI in self[K_OCCURRENCES]:
+                        if diagram.name in self[K_OCCURRENCES][occIRI]:
+                            result.update(*self[K_OCCURRENCES][occIRI][diagram.name].values())
+            else:
+                if not diagram:
+                    if iri in self[K_OCCURRENCES]:
+                        for diag in self[K_OCCURRENCES][iri]:
+                            result.update(*self[K_OCCURRENCES][iri][diag.name].values())
+                else:
+                    if iri in self[K_OCCURRENCES]:
+                        if diagram.name in self[K_OCCURRENCES][iri]:
+                            result.update(*self[K_OCCURRENCES][iri][diagram.name].values())
+            return result
+        except KeyError:
+            return set()
 
 
 class ProjectMergeWorker(QtCore.QObject):

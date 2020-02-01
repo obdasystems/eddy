@@ -793,6 +793,108 @@ class MenuFactory(QtCore.QObject):
         return menu
 
     #############################################
+    #   IRI
+    #################################
+
+    # TODO
+    def buildIRIPredicateNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for a predicate node having an associated IRI object (CONCEPT, ROLE, ATTRIBUTE).
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        :rtype: QMenu
+        """
+        menu = self.buildGenericNodeMenu(diagram, node)
+
+        # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
+        self.customAction['occurrences'] = []
+
+        for pnode in self.project.iriOccurrences(node.iri):
+
+            action = QtWidgets.QAction(self.session)
+            action.setCheckable(True)
+            action.setChecked(pnode is node)
+            action.setData(pnode)
+            action.setText('{} ({})'.format(pnode.diagram.name, pnode.id))
+            connect(action.triggered, self.session.doLookupOccurrence)
+            self.customAction['occurrences'].append(action)
+
+        # BUILD CUSTOM MENU FOR PREDICATE OCCURRENCES
+        self.customMenu['occurrences'] = QtWidgets.QMenu('Occurrences')
+        self.customMenu['occurrences'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
+        for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
+            self.customMenu['occurrences'].addAction(action)
+        menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
+        # ADD DESCRIPTION LINK TO THE MENU OF PREDICATE NODE
+        menu.addAction(self.session.action('node_description'))
+
+        #TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
+        #TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate
+        if node.special() is None:
+            self.customAction['change_prefix'] = []
+            self.customAction['refactor_change_prefix'] = []
+
+            for iri in self.project.IRI_prefixes_nodes_dict.keys():
+                prefixes_raw = self.project.IRI_prefixes_nodes_dict[iri][0]
+                prefixes = prefixes_raw[:]
+
+                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
+                    prefixes.append(':')
+                for p in prefixes:
+                    pr_node = self.project.get_prefix_of_node(node)
+
+                    action = QtWidgets.QAction(self.session)
+                    action.setCheckable(True)
+                    action.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
+                    action.setData(node)
+                    action.setText('{}'.format(p))
+                    connect(action.triggered, self.session.setprefix)
+                    self.customAction['change_prefix'].append(action)
+
+                    refactorAction = QtWidgets.QAction(self.session)
+                    refactorAction.setCheckable(True)
+                    refactorAction.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
+                    refactorAction.setData(node)
+                    refactorAction.setText('{}'.format(p))
+                    connect(refactorAction.triggered, self.session.refactorsetprefix)
+                    self.customAction['refactor_change_prefix'].append(refactorAction)
+
+            self.customMenu['change_prefix'] = QtWidgets.QMenu('Change prefix')
+            self.customMenu['change_prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
+
+            for action in self.customAction['change_prefix']:
+                self.customMenu['change_prefix'].addAction(action)
+
+            menu.insertMenu(self.session.action('node_properties'),
+                            self.customMenu['change_prefix'])
+            self.customMenu['refactor_change_prefix'] = QtWidgets.QMenu('Change prefix')
+            self.customMenu['refactor_change_prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
+
+            for action in self.customAction['refactor_change_prefix']:
+                self.customMenu['refactor_change_prefix'].addAction(action)
+
+            self.session.menu('refactor').insertMenu(self.session.action('node_properties'),
+                                                     self.customMenu['refactor_change_prefix'])
+        return menu
+
+    #TODO
+    def buildIRIConceptNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for concept IRI nodes.
+        :type diagram: Diagram
+        :type node: ConceptNode
+        :rtype: QMenu
+        """
+        menu = self.buildIRIPredicateNodeMenu(diagram, node)
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        self.insertLabelActions(menu, node)
+        menu.insertSeparator(self.session.action('node_properties'))
+        self.session.action('refactor_name').setEnabled(node.special() is None)
+        return menu
+
+    #############################################
     #   LABEL
     #################################
 
@@ -864,8 +966,8 @@ class MenuFactory(QtCore.QObject):
             return self.buildValueDomainNodeMenu(diagram, item)
 
         ##IRI NODES
-        #if item.type() is Item.ConceptIRINode:
-            #return self.buildConceptNodeMenu(diagram, item)
+        if item.type() is Item.ConceptIRINode:
+            return self.buildIRIConceptNodeMenu(diagram, item)
 
 
         ## EDGES
