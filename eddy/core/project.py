@@ -1822,20 +1822,20 @@ class ProjectIRIIndex(ProjectIndex):
                 if not diagram:
                     for occIRI in self[K_OCCURRENCES]:
                         for diag in self[K_OCCURRENCES][occIRI]:
-                            result.update(*self[K_OCCURRENCES][occIRI][diag.name].values())
+                            result.update(self[K_OCCURRENCES][occIRI][diag])
                 else:
                     for occIRI in self[K_OCCURRENCES]:
                         if diagram.name in self[K_OCCURRENCES][occIRI]:
-                            result.update(*self[K_OCCURRENCES][occIRI][diagram.name].values())
+                            result.update(self[K_OCCURRENCES][occIRI][diagram.name])
             else:
                 if not diagram:
                     if iri in self[K_OCCURRENCES]:
                         for diag in self[K_OCCURRENCES][iri]:
-                            result.update(*self[K_OCCURRENCES][iri][diag.name].values())
+                            result.update(self[K_OCCURRENCES][iri][diag])
                 else:
                     if iri in self[K_OCCURRENCES]:
                         if diagram.name in self[K_OCCURRENCES][iri]:
-                            result.update(*self[K_OCCURRENCES][iri][diagram.name].values())
+                            result.update(self[K_OCCURRENCES][iri][diagram.name])
             return result
         except KeyError:
             return set()

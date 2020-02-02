@@ -65,6 +65,10 @@ class MenuFactory(QtCore.QObject):
         super().__init__(session)
         self.customAction = {}
         self.customMenu = {}
+        self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
+        self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
+        self.iconInstance = QtGui.QIcon(':/icons/18/ic_treeview_instance')
+        self.iconRole = QtGui.QIcon(':/icons/18/ic_treeview_role')
 
     #############################################
     #   PROPERTIES
@@ -809,6 +813,7 @@ class MenuFactory(QtCore.QObject):
         # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
         self.customAction['occurrences'] = []
 
+
         for pnode in self.project.iriOccurrences(node.iri):
 
             action = QtWidgets.QAction(self.session)
@@ -816,6 +821,14 @@ class MenuFactory(QtCore.QObject):
             action.setChecked(pnode is node)
             action.setData(pnode)
             action.setText('{} ({})'.format(pnode.diagram.name, pnode.id))
+            if pnode.type() is Item.ConceptIRINode:
+                action.setIcon(self.iconConcept)
+            elif pnode.type() is Item.RoleIRINode:
+                action.setIcon(self.iconRole)
+            elif pnode.type() is Item.AttributeIRINode:
+                action.setIcon(self.iconAttribute)
+            elif pnode.type() is Item.IndividualIRINode:
+                action.setIcon(self.iconInstance)
             connect(action.triggered, self.session.doLookupOccurrence)
             self.customAction['occurrences'].append(action)
 
@@ -831,6 +844,7 @@ class MenuFactory(QtCore.QObject):
         #TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
         #TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate
         if node.special() is None:
+            '''
             self.customAction['change_prefix'] = []
             self.customAction['refactor_change_prefix'] = []
 
@@ -872,9 +886,10 @@ class MenuFactory(QtCore.QObject):
 
             for action in self.customAction['refactor_change_prefix']:
                 self.customMenu['refactor_change_prefix'].addAction(action)
-
+            
             self.session.menu('refactor').insertMenu(self.session.action('node_properties'),
                                                      self.customMenu['refactor_change_prefix'])
+                                                     '''
         return menu
 
     #TODO
