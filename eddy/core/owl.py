@@ -52,7 +52,7 @@ class AnnotationAssertion(QtCore.QObject):
     """
     sgnAnnotationModified = QtCore.pyqtSignal()
 
-    def __init__(self, property, value, type=None ,language=None, parent=None):
+    def __init__(self, property, value, type=None, language=None, parent=None):
         """
         :type property:IRI
         :type value:IRI|str
@@ -61,7 +61,7 @@ class AnnotationAssertion(QtCore.QObject):
         """
         super().__init__(parent)
         self._property = property
-        if not(isinstance(value, IRI) or isinstance(value,str)):
+        if not (isinstance(value, IRI) or isinstance(value, str)):
             raise ValueError('The value of an annotation assertion must be either an IRI or a string')
         self._value = value
         self._datatype = type
@@ -77,8 +77,8 @@ class AnnotationAssertion(QtCore.QObject):
         return self._property
 
     @assertionProperty.setter
-    def assertionProperty(self,prop):
-        if isinstance(prop,IRI):
+    def assertionProperty(self, prop):
+        if isinstance(prop, IRI):
             self._property = prop
             self.sgnAnnotationModified.emit()
 
@@ -118,13 +118,13 @@ class AnnotationAssertion(QtCore.QObject):
         :rtype: str
         """
         if self._value:
-            if isinstance(self._value,IRI):
+            if isinstance(self._value, IRI):
                 prefixedIRI = manager.getShortestPrefixedForm(self._value)
                 if prefixedForm and prefixedIRI:
                     return str(prefixedIRI)
                 else:
                     return '<{}>'.format(str(self._value))
-            elif isinstance(self._value,str):
+            elif isinstance(self._value, str):
                 result = '"{}"'.format(self._value)
                 if self._datatype:
                     prefixedType = manager.getShortestPrefixedForm(self._datatype)
@@ -136,11 +136,10 @@ class AnnotationAssertion(QtCore.QObject):
                     result += '@{}'.format(self._language)
                 return result
 
-
     def __eq__(self, other):
-        if not isinstance(other,AnnotationAssertion):
+        if not isinstance(other, AnnotationAssertion):
             return False
-        return self.assertionProperty==other.assertionProperty and self.subject==other.subject and self.value==other.value and self.datatype==other.datatype and self.language==other.value
+        return self.assertionProperty == other.assertionProperty and self.subject == other.subject and self.value == other.value and self.datatype == other.datatype and self.language == other.value
 
 
 class IRI(QtCore.QObject):
@@ -166,22 +165,21 @@ class IRI(QtCore.QObject):
         self._annotationAssertionsMap = {}
         self._annotationAssertions = []
 
-
     @staticmethod
     def concat(namespace, suffix):
         if suffix:
             return namespace + suffix
         return namespace
 
-    #@staticmethod
-    #def concat(namespace, suffix):
-        #if suffix:
-            #return namespace + IRI.separator(namespace) + suffix
-        #return namespace
+    # @staticmethod
+    # def concat(namespace, suffix):
+    # if suffix:
+    # return namespace + IRI.separator(namespace) + suffix
+    # return namespace
 
-    #@staticmethod
-    #def separator(iri):
-        #return '' if iri[-1] in {'/', '#', ':'} else '#'
+    # @staticmethod
+    # def separator(iri):
+    # return '' if iri[-1] in {'/', '#', ':'} else '#'
 
     #############################################
     #   SLOTS
@@ -192,10 +190,10 @@ class IRI(QtCore.QObject):
         annotation = self.sender()
         self.sgnAnnotationModified.emit(annotation)
 
-    #@QtCore.pyqtSlot('IRI')
+    # @QtCore.pyqtSlot('IRI')
     def onAnnotationPropertyRemoved(self, iri):
         print("Called onAnnotationPropertyRemoved")
-        #TODO se ho annotation assertion che coinvolge iri come PROPERTY RESOURCE (iri!=self), allora elimina assertion dalla lista
+        # TODO se ho annotation assertion che coinvolge iri come PROPERTY RESOURCE (iri!=self), allora elimina assertion dalla lista
 
     #############################################
     #   PROPERTIES
@@ -263,6 +261,13 @@ class IRI(QtCore.QObject):
     #   INTERFACE
     #################################
 
+    def isTopBottomEntity(self):
+        """
+        Returns True if this iri represents a top/bottom entity, False otherwise
+        :rtype: bool
+        """
+        return TopBottomProperty.isTopBottomEntity(self)
+
     def getLabelAnnotationAssertion(self, lang=None):
         '''
         :type lang:str
@@ -275,7 +280,7 @@ class IRI(QtCore.QObject):
             currList = self._annotationAssertionsMap[annotationProperty]
             if lang:
                 for annotation in currList:
-                    if annotation.language==lang:
+                    if annotation.language == lang:
                         return annotation
             return currList[0]
         return None
@@ -293,8 +298,7 @@ class IRI(QtCore.QObject):
             currList.append(annotation)
             self._annotationAssertionsMap[annotation.assertionProperty] = currList
         self._annotationAssertions.append(annotation)
-        self.sgnAnnotationAdded.emit(annotation.assertionProperty)
-        self.sgnAnnotationAdded.emit(annotation)#TODO PERCHE MANDA ECCEZIONE CON ASSERTION E NON CON IRI???????
+        self.sgnAnnotationAdded.emit(annotation)
 
     def removeAnnotationAssertion(self, annotation):
         """
@@ -305,7 +309,7 @@ class IRI(QtCore.QObject):
             currList = self._annotationAssertionsMap[annotation.assertionProperty]
             if annotation in currList:
                 currList.remove(annotation)
-                if len(currList)<1:
+                if len(currList) < 1:
                     self._annotationAssertionsMap.pop(annotation.assertionProperty, None)
                 self.sgnAnnotationRemoved.emit(annotation)
             if annotation in self._annotationAssertions:
@@ -405,10 +409,12 @@ class IRI(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+
 class PrefixedIRI(QtCore.QObject):
     """
     Represents prefixed forms of International Resource Identifiers (https://www.ietf.org/rfc/rfc3987.txt)
     """
+
     def __init__(self, prefix, suffix, parent=None):
         super().__init__(parent)
         self._prefix = prefix
@@ -426,18 +432,19 @@ class PrefixedIRI(QtCore.QObject):
         return str(self).__hash__()
 
     def __str__(self):
-        return '{}:{}'.format(self.prefix,self.suffix)
+        return '{}:{}'.format(self.prefix, self.suffix)
 
     def __repr__(self):
         return str(self)
+
 
 class IRIManager(QtCore.QObject):
     """
     A `IRIManager` manages: (i)associations between extended IRIs and their prefixed forms, (ii)the set of IRIs identifying active ontology elements
     """
-    sgnPrefixAdded = QtCore.pyqtSignal(str,str)
+    sgnPrefixAdded = QtCore.pyqtSignal(str, str)
     sgnPrefixRemoved = QtCore.pyqtSignal(str)
-    sgnPrefixModified = QtCore.pyqtSignal(str,str)
+    sgnPrefixModified = QtCore.pyqtSignal(str, str)
     sgnPrefixMapCleared = QtCore.pyqtSignal()
 
     sgnIRIManagerReset = QtCore.pyqtSignal()
@@ -453,7 +460,6 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-
     def __init__(self, parent=None):
         """
         Create a new `IRIManager` with a default set of prefixes defined
@@ -467,7 +473,6 @@ class IRIManager(QtCore.QObject):
         self.datatypes = set()
         self.setDefaults()
 
-
     #############################################
     #   SLOTS
     #################################
@@ -477,17 +482,16 @@ class IRIManager(QtCore.QObject):
         self.ontologyIRI = self.getIRI(iriString)
         self.sgnOntologyIRIModified.emit(self.ontologyIRI)
 
-
-    #TODO dovrai poi capire quando un'IRI dovrà essere rimossa (come capire quando non viene più utilizzata in alcun punto???)
+    # TODO dovrai poi capire quando un'IRI dovrà essere rimossa (come capire quando non viene più utilizzata in alcun punto???)
     @QtCore.pyqtSlot(IRI)
-    def deleteIRI(self,iri):
+    def deleteIRI(self, iri):
         """
         Remove the IRI iri from the index
         :type iri: IRI
         """
-        #Questo metodo dovrà essere chiamato SOLO quando tutti i riferimenti a iri sono stati eliminati
+        # Questo metodo dovrà essere chiamato SOLO quando tutti i riferimenti a iri sono stati eliminati
         self.iris.remove(iri)
-        self.stringToIRI.pop(iri,None)
+        self.stringToIRI.pop(iri, None)
         self.sgnIRIRemoved.emit(iri)
 
     @QtCore.pyqtSlot(IRI)
@@ -512,7 +516,7 @@ class IRIManager(QtCore.QObject):
         else:
             iri = IRI(iriString)
             self.addIRI(iri)
-            connect(self.sgnAnnotationPropertyRemoved,iri.onAnnotationPropertyRemoved)
+            connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
             return iri
 
     '''
@@ -552,6 +556,7 @@ class IRIManager(QtCore.QObject):
                 if not self.iriOccurreces[iri][diagram]:
                     self.iriOccurreces[iri].pop(diagram)
     '''
+
     #############################################
     #   INTERFACE
     #################################
@@ -569,6 +574,7 @@ class IRIManager(QtCore.QObject):
 
     def setDefaults(self):
         self.setDefaultPrefixes()
+        self.addTopBottomPredicateIRIs()
         self.addDefaultAnnotationProperties()
         self.addDefaultDatatypes()
 
@@ -709,14 +715,14 @@ class IRIManager(QtCore.QObject):
         self.addDatatypeIRI(OWL2Datatype.unsignedLong.value)
         self.addDatatypeIRI(OWL2Datatype.unsignedShort.value)
 
-    def canAddLanguageTagToIRI(self,iri):
+    def canAddLanguageTagToIRI(self, iri):
         """
         Return true if it's possible to add a language tag to data values having type iri
         :type iri: IRI
         """
-        return iri==OWL2Datatype.PlainLiteral.value
+        return iri == OWL2Datatype.PlainLiteral.value
 
-    def canAddLanguageTag(self,iriString):
+    def canAddLanguageTag(self, iriString):
         """
         Return true if it's possible to add a language tag to data values having type IRI(iristring)
         :type iri: str
@@ -724,6 +730,14 @@ class IRIManager(QtCore.QObject):
         return not iriString or self.canAddLanguageTagToIRI(IRI(iriString))
 
     ##IRIs
+    def addTopBottomPredicateIRIs(self):
+        self.addIRI(TopBottomProperty.Thing.value)
+        self.addIRI(TopBottomProperty.Nothing.value)
+        self.addIRI(TopBottomProperty.TopObjectProperty.value)
+        self.addIRI(TopBottomProperty.BottomObjectProperty.value)
+        self.addIRI(TopBottomProperty.TopDataProperty.value)
+        self.addIRI(TopBottomProperty.BottomDataProperty.value)
+
     def getExpandedIRI(self, prefixedIRI):
         """
         Returns the IRI corresponding to the given short form in `prefixIRI`, or None if no such
@@ -740,7 +754,7 @@ class IRIManager(QtCore.QObject):
                 return IRI(namespace, suffix, parent=self)
         return None
 
-    def areSameIRI(self,prefixedIRI, otherPrefixedIRI):
+    def areSameIRI(self, prefixedIRI, otherPrefixedIRI):
         """
         Check if two prefixed IRIs represent the same element
         :type prefixedIRI: PrefixedIRI
@@ -757,7 +771,7 @@ class IRIManager(QtCore.QObject):
         iri_1 = IRI(ns_1, suffix=prefixedIRI.suffix, parent=self)
         ns_2 = self.prefix2namespaceMap[otherPrefixedIRI.prefix]
         iri_2 = IRI(ns_2, suffix=otherPrefixedIRI.suffix, parent=self)
-        return iri_1==iri_2
+        return iri_1 == iri_2
 
     def getEmptyPrefixResolution(self):
         """
@@ -784,9 +798,9 @@ class IRIManager(QtCore.QObject):
         result = {}
         if not isinstance(iri, IRI):
             namespace = IRI(str(iri), parent=self)
-        for prefix,value in self.prefix2namespaceMap.items():
+        for prefix, value in self.prefix2namespaceMap.items():
             if str(namespace).startswith(value):
-               result[prefix] = value
+                result[prefix] = value
         return result
 
     def getPrefixedForms(self, iri):
@@ -801,14 +815,14 @@ class IRIManager(QtCore.QObject):
             iri = IRI(str(iri), parent=self)
         matchingPrefixes = self.getMatchingPrefixes(iri._namespace)
         if matchingPrefixes:
-            for prefix,ns in matchingPrefixes.items():
+            for prefix, ns in matchingPrefixes.items():
                 nsLength = len(ns)
                 suffix = str(iri)[nsLength:]
-                prefixed = PrefixedIRI(prefix,suffix,self)
+                prefixed = PrefixedIRI(prefix, suffix, self)
                 result.append(prefixed)
         return result
 
-    def getShortestPrefixedForm(self,iri):
+    def getShortestPrefixedForm(self, iri):
         """
         Returns the prefixed form with shortest prefix+suffix for `iri`, or None if `iri` doesn't match any of the namespaces
         managed by this `IRIManager`.
@@ -820,11 +834,11 @@ class IRIManager(QtCore.QObject):
         minLength = -1
         for prefixed in matchingList:
             length = len(prefixed.prefix) + len(prefixed.suffix)
-            if minLength<0 or length<minLength:
+            if minLength < 0 or length < minLength:
                 result = prefixed
-        return  result
+        return result
 
-    def getShortestPrefixPrefixedForm(self,iri):
+    def getShortestPrefixPrefixedForm(self, iri):
         """
         Returns the prefixed form with shortest prefix for `iri`, or None if `iri` doesn't match any of the namespaces
         managed by this `IRIManager`.
@@ -841,7 +855,7 @@ class IRIManager(QtCore.QObject):
                 result = prefixed
         return result
 
-    def getShortestSuffixPrefixedForm(self,iri):
+    def getShortestSuffixPrefixedForm(self, iri):
         """
         Returns the prefixed form with shortest suffix for `iri`, or None if `iri` doesn't match any of the namespaces
         managed by this `IRIManager`.
@@ -853,12 +867,12 @@ class IRIManager(QtCore.QObject):
         minSuffixLength = -1
         for prefixed in matchingList:
             sufLength = len(prefixed.suffix)
-            if minSuffixLength<0 or sufLength<minSuffixLength:
-                minSuffixLength=sufLength
+            if minSuffixLength < 0 or sufLength < minSuffixLength:
+                minSuffixLength = sufLength
                 result = prefixed
         return result
 
-    def getLongestSuffixPrefixedForm(self,iri):
+    def getLongestSuffixPrefixedForm(self, iri):
         """
         Returns the prefixed form with longest suffix for `iri`, or None if `iri` doesn't match any of the namespaces
         managed by this `IRIManager`.
@@ -870,8 +884,8 @@ class IRIManager(QtCore.QObject):
         maxSuffixLength = 0
         for prefixed in matchingList:
             sufLength = len(prefixed.suffix)
-            if sufLength>maxSuffixLength:
-                maxSuffixLength=sufLength
+            if sufLength > maxSuffixLength:
+                maxSuffixLength = sufLength
                 result = prefixed
         return result
 
@@ -914,10 +928,10 @@ class IRIManager(QtCore.QObject):
             raise IllegalNamespaceError(namespace)
         if prefix in self.prefix2namespaceMap:
             self.prefix2namespaceMap[prefix] = namespace
-            self.sgnPrefixModified.emit(prefix,namespace)
+            self.sgnPrefixModified.emit(prefix, namespace)
         else:
             self.prefix2namespaceMap[prefix] = namespace
-            self.sgnPrefixAdded.emit(prefix,namespace)
+            self.sgnPrefixAdded.emit(prefix, namespace)
 
     def setDefaultPrefixes(self):
         """
@@ -959,11 +973,6 @@ class IRIManager(QtCore.QObject):
             if ns == namespace:
                 del self.prefix2namespaceMap[prefix]
                 self.sgnPrefixRemoved.emit(prefix)
-
-
-
-
-
 
     def __contains__(self, item):
         return item in self.prefix2namespaceMap
@@ -1010,9 +1019,6 @@ class IllegalNamespaceError(RuntimeError):
     pass
 
 
-
-
-
 @unique
 class IRIRender(Enum_):
     """
@@ -1021,22 +1027,6 @@ class IRIRender(Enum_):
     FULL = 'full_iri'
     PREFIX = 'prefix_iri'
     LABEL = 'label'
-
-
-@unique
-class AnnotationAssertionProperty(Enum_):
-    """
-    Extends Enum providing all the available standard IRIs that can be used as properties in Annotation Assertions
-    """
-    BackwardCompatibleWith = IRI(Namespace.OWL.value, 'backwardCompatibleWith')
-    Deprecated = IRI(Namespace.OWL.value, 'deprecated')
-    IncompatibleWith = IRI(Namespace.OWL.value, 'incompatibleWith')
-    PriorVersion = IRI(Namespace.OWL.value, 'priorVersion')
-    VersionInfo = IRI(Namespace.OWL.value, 'versionInfo')
-    Comment = IRI(Namespace.RDFS.value, 'comment')
-    IsDefinedBy = IRI(Namespace.RDFS.value, 'isDefinedBy')
-    Label = IRI(Namespace.RDFS.value, 'label')
-    seeAlso = IRI(Namespace.RDFS.value, 'backwardCompatibleWith')
 
 @unique
 class OWL2Profile(Enum_):
@@ -1061,48 +1051,82 @@ class OWL2Syntax(Enum_):
 
 
 @unique
+class TopBottomProperty(Enum_):
+    """
+    Extends Enum providing all the IRIs identifying the top/bottom predicates
+    """
+    Thing = IRI(Namespace.OWL.value, 'Thing')
+    Nothing = IRI(Namespace.OWL.value, 'Nothing')
+    TopObjectProperty = IRI(Namespace.OWL.value, 'topObjectProperty')
+    BottomObjectProperty = IRI(Namespace.OWL.value, 'bottomObjectProperty')
+    TopDataProperty = IRI(Namespace.OWL.value, 'topDataProperty')
+    BottomDataProperty = IRI(Namespace.OWL.value, 'bottomDataProperty')
+
+    def isTopBottomEntity(input):
+        return input == TopBottomProperty.Thing.value or input is TopBottomProperty.Nothing.value or input is TopBottomProperty.TopObjectProperty or input is TopBottomProperty.BottomObjectProperty or input is TopBottomProperty.TopDataProperty or input is TopBottomProperty.BottomDataProperty
+
+
+
+
+
+@unique
+class AnnotationAssertionProperty(Enum_):
+    """
+    Extends Enum providing all the available standard IRIs that can be used as properties in Annotation Assertions
+    """
+    BackwardCompatibleWith = IRI(Namespace.OWL.value, 'backwardCompatibleWith')
+    Deprecated = IRI(Namespace.OWL.value, 'deprecated')
+    IncompatibleWith = IRI(Namespace.OWL.value, 'incompatibleWith')
+    PriorVersion = IRI(Namespace.OWL.value, 'priorVersion')
+    VersionInfo = IRI(Namespace.OWL.value, 'versionInfo')
+    Comment = IRI(Namespace.RDFS.value, 'comment')
+    IsDefinedBy = IRI(Namespace.RDFS.value, 'isDefinedBy')
+    Label = IRI(Namespace.RDFS.value, 'label')
+    seeAlso = IRI(Namespace.RDFS.value, 'backwardCompatibleWith')
+
+@unique
 class OWL2Datatype(Enum_):
     """
     Extends Enum providing all the IRIs identifying standard available datatypes.
     """
-    rational = IRI(Namespace.OWL.value,suffix='rational')
-    real = IRI(Namespace.OWL.value,suffix='real')
-    PlainLiteral = IRI(Namespace.RDF.value,suffix='PlainLiteral')
-    XMLLiteral = IRI(Namespace.RDF.value,suffix='XMLLiteral')
-    Literal = IRI(Namespace.RDFS.value,suffix='Literal')
-    anyURI = IRI(Namespace.XSD.value,suffix='anyURI')
-    base64Binary = IRI(Namespace.XSD.value,suffix='base64Binary')
-    boolean = IRI(Namespace.XSD.value,suffix='boolean')
-    byte = IRI(Namespace.XSD.value,suffix='byte')
-    dateTime = IRI(Namespace.XSD.value,suffix='dateTime')
-    dateTimeStamp = IRI(Namespace.XSD.value,suffix='dateTimeStamp')
-    decimal = IRI(Namespace.XSD.value,suffix='decimal')
-    double = IRI(Namespace.XSD.value,suffix='double')
-    float = IRI(Namespace.XSD.value,suffix='float')
-    hexBinary = IRI(Namespace.XSD.value,suffix='hexBinary')
-    int = IRI(Namespace.XSD.value,suffix='int')
-    integer = IRI(Namespace.XSD.value,suffix='integer')
-    language = IRI(Namespace.XSD.value,suffix='language')
-    long = IRI(Namespace.XSD.value,suffix='long')
-    Name = IRI(Namespace.XSD.value,suffix='Name')
-    NCName = IRI(Namespace.XSD.value,suffix='NCName')
-    negativeInteger = IRI(Namespace.XSD.value,suffix='negativeInteger')
-    NMTOKEN = IRI(Namespace.XSD.value,suffix='NMTOKEN')
-    nonNegativeInteger = IRI(Namespace.XSD.value,suffix='nonNegativeInteger')
-    nonPositiveInteger = IRI(Namespace.XSD.value,suffix='nonPositiveInteger')
-    normalizedString = IRI(Namespace.XSD.value,suffix='normalizedString')
-    positiveInteger = IRI(Namespace.XSD.value,suffix='positiveInteger')
-    short = IRI(Namespace.XSD.value,suffix='short')
-    string = IRI(Namespace.XSD.value,suffix='string')
-    token = IRI(Namespace.XSD.value,suffix='token')
-    unsignedByte = IRI(Namespace.XSD.value,suffix='unsignedByte')
-    unsignedInt = IRI(Namespace.XSD.value,suffix='unsignedInt')
-    unsignedLong = IRI(Namespace.XSD.value,suffix='unsignedLong')
-    unsignedShort = IRI(Namespace.XSD.value,suffix='unsignedShort')
+    rational = IRI(Namespace.OWL.value, suffix='rational')
+    real = IRI(Namespace.OWL.value, suffix='real')
+    PlainLiteral = IRI(Namespace.RDF.value, suffix='PlainLiteral')
+    XMLLiteral = IRI(Namespace.RDF.value, suffix='XMLLiteral')
+    Literal = IRI(Namespace.RDFS.value, suffix='Literal')
+    anyURI = IRI(Namespace.XSD.value, suffix='anyURI')
+    base64Binary = IRI(Namespace.XSD.value, suffix='base64Binary')
+    boolean = IRI(Namespace.XSD.value, suffix='boolean')
+    byte = IRI(Namespace.XSD.value, suffix='byte')
+    dateTime = IRI(Namespace.XSD.value, suffix='dateTime')
+    dateTimeStamp = IRI(Namespace.XSD.value, suffix='dateTimeStamp')
+    decimal = IRI(Namespace.XSD.value, suffix='decimal')
+    double = IRI(Namespace.XSD.value, suffix='double')
+    float = IRI(Namespace.XSD.value, suffix='float')
+    hexBinary = IRI(Namespace.XSD.value, suffix='hexBinary')
+    int = IRI(Namespace.XSD.value, suffix='int')
+    integer = IRI(Namespace.XSD.value, suffix='integer')
+    language = IRI(Namespace.XSD.value, suffix='language')
+    long = IRI(Namespace.XSD.value, suffix='long')
+    Name = IRI(Namespace.XSD.value, suffix='Name')
+    NCName = IRI(Namespace.XSD.value, suffix='NCName')
+    negativeInteger = IRI(Namespace.XSD.value, suffix='negativeInteger')
+    NMTOKEN = IRI(Namespace.XSD.value, suffix='NMTOKEN')
+    nonNegativeInteger = IRI(Namespace.XSD.value, suffix='nonNegativeInteger')
+    nonPositiveInteger = IRI(Namespace.XSD.value, suffix='nonPositiveInteger')
+    normalizedString = IRI(Namespace.XSD.value, suffix='normalizedString')
+    positiveInteger = IRI(Namespace.XSD.value, suffix='positiveInteger')
+    short = IRI(Namespace.XSD.value, suffix='short')
+    string = IRI(Namespace.XSD.value, suffix='string')
+    token = IRI(Namespace.XSD.value, suffix='token')
+    unsignedByte = IRI(Namespace.XSD.value, suffix='unsignedByte')
+    unsignedInt = IRI(Namespace.XSD.value, suffix='unsignedInt')
+    unsignedLong = IRI(Namespace.XSD.value, suffix='unsignedLong')
+    unsignedShort = IRI(Namespace.XSD.value, suffix='unsignedShort')
 
     @classmethod
     def canAddLanguageTag(cls, type):
-        if type==OWL2Datatype.PlainLiteral:
+        if type == OWL2Datatype.PlainLiteral:
             return True
         return False
 
@@ -1132,20 +1156,21 @@ class OWL2Datatype(Enum_):
                     OWL2Datatype.unsignedLong, OWL2Datatype.unsignedShort}
         raise ValueError('unsupported profile: %s' % profile)
 
+
 @unique
 class OWL2Facet(Enum_):
     """
     Extends Enum providing all the available OWL2Facet restrictions.
     """
-    maxExclusive = IRI(Namespace.XSD.value,suffix='maxExclusive')
-    maxInclusive = IRI(Namespace.XSD.value,suffix='maxInclusive')
-    minExclusive = IRI(Namespace.XSD.value,suffix='minExclusive')
-    minInclusive = IRI(Namespace.XSD.value,suffix='minInclusive')
-    langRange = IRI(Namespace.XSD.value,suffix='langRange')
-    length = IRI(Namespace.XSD.value,suffix='length')
-    maxLength = IRI(Namespace.XSD.value,suffix='maxLength')
-    minLength = IRI(Namespace.XSD.value,suffix='minLength')
-    pattern = IRI(Namespace.XSD.value,suffix='pattern')
+    maxExclusive = IRI(Namespace.XSD.value, suffix='maxExclusive')
+    maxInclusive = IRI(Namespace.XSD.value, suffix='maxInclusive')
+    minExclusive = IRI(Namespace.XSD.value, suffix='minExclusive')
+    minInclusive = IRI(Namespace.XSD.value, suffix='minInclusive')
+    langRange = IRI(Namespace.XSD.value, suffix='langRange')
+    length = IRI(Namespace.XSD.value, suffix='length')
+    maxLength = IRI(Namespace.XSD.value, suffix='maxLength')
+    minLength = IRI(Namespace.XSD.value, suffix='minLength')
+    pattern = IRI(Namespace.XSD.value, suffix='pattern')
 
     @classmethod
     def forDatatype(cls, value):

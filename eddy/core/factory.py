@@ -38,6 +38,7 @@ from operator import attrgetter
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMenu
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, Namespace
@@ -57,6 +58,7 @@ class MenuFactory(QtCore.QObject):
     """
     This class can be used to produce diagram items contextual menus.
     """
+
     def __init__(self, session):
         """
         Initialize the factory.
@@ -251,7 +253,6 @@ class MenuFactory(QtCore.QObject):
         self.customAction['occurrences'] = []
 
         for pnode in self.project.predicates(node.type(), node.text()):
-
             action = QtWidgets.QAction(self.session)
             action.setCheckable(True)
             action.setChecked(pnode is node)
@@ -498,7 +499,6 @@ class MenuFactory(QtCore.QObject):
         self.customAction['occurrences'] = []
 
         for pnode in self.project.predicates(node.type(), node.text()):
-
             action = QtWidgets.QAction(self.session)
             action.setCheckable(True)
             action.setChecked(pnode is node)
@@ -649,8 +649,9 @@ class MenuFactory(QtCore.QObject):
         if self.project.profile.type() is OWLProfile.OWL2QL:
             for action in self.session.action('switch_operator').actions():
                 action.setVisible(action.data() not in {Item.DatatypeRestrictionNode,
-                    Item.DisjointUnionNode, Item.EnumerationNode, Item.RoleChainNode,
-                    Item.UnionNode})
+                                                        Item.DisjointUnionNode, Item.EnumerationNode,
+                                                        Item.RoleChainNode,
+                                                        Item.UnionNode})
         # Add OWL 2 RL switch constraints.
         if self.project.profile.type() is OWLProfile.OWL2RL:
             for action in self.session.action('switch_operator').actions():
@@ -813,14 +814,15 @@ class MenuFactory(QtCore.QObject):
         # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
         self.customAction['occurrences'] = []
 
-
         for pnode in self.project.iriOccurrences(node.iri):
 
             action = QtWidgets.QAction(self.session)
             action.setCheckable(True)
+
             action.setChecked(pnode is node)
             action.setData(pnode)
             action.setText('{} ({})'.format(pnode.diagram.name, pnode.id))
+
             if pnode.type() is Item.ConceptIRINode:
                 action.setIcon(self.iconConcept)
             elif pnode.type() is Item.RoleIRINode:
@@ -841,8 +843,13 @@ class MenuFactory(QtCore.QObject):
         # ADD DESCRIPTION LINK TO THE MENU OF PREDICATE NODE
         menu.addAction(self.session.action('node_description'))
 
-        #TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
-        #TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate
+        # TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
+        # TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate
+        if not node.iri.isTopBottomEntity():
+            print('The selected node is neither top nor bottom')
+        else:
+            print('The selected node is either top or bottom')
+
         if node.special() is None:
             '''
             self.customAction['change_prefix'] = []
@@ -892,7 +899,7 @@ class MenuFactory(QtCore.QObject):
                                                      '''
         return menu
 
-    #TODO
+    # TODO
     def buildIRIConceptNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for concept IRI nodes.
@@ -984,7 +991,6 @@ class MenuFactory(QtCore.QObject):
         if item.type() is Item.ConceptIRINode:
             return self.buildIRIConceptNodeMenu(diagram, item)
 
-
         ## EDGES
         if item.type() is Item.InclusionEdge:
             return self.buildGenericEdgeMenu(diagram, item, pos)
@@ -1012,6 +1018,7 @@ class PropertyFactory(QtCore.QObject):
     """
     This class can be used to produce properties dialog windows.
     """
+
     def __init__(self, session):
         """
         Initialize the factory.
@@ -1082,6 +1089,7 @@ class DescriptionFactory(QtCore.QObject):
     """
     This class can be used to produce description dialog windows.
     """
+
     def __init__(self, session):
         """
         Initialize the factory.
