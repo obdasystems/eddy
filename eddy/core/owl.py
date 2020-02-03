@@ -52,14 +52,16 @@ class AnnotationAssertion(QtCore.QObject):
     """
     sgnAnnotationModified = QtCore.pyqtSignal()
 
-    def __init__(self, property, value, type=None, language=None, parent=None):
+    def __init__(self, subject, property, value, type=None, language=None, parent=None):
         """
+        :type subject:IRI
         :type property:IRI
         :type value:IRI|str
         :type type:IRI
         :type language:str
         """
         super().__init__(parent)
+        self._subject = subject
         self._property = property
         if not (isinstance(value, IRI) or isinstance(value, str)):
             raise ValueError('The value of an annotation assertion must be either an IRI or a string')
@@ -81,6 +83,10 @@ class AnnotationAssertion(QtCore.QObject):
         if isinstance(prop, IRI):
             self._property = prop
             self.sgnAnnotationModified.emit()
+
+    @property
+    def subject(self):
+        return self._subject
 
     @property
     def datatype(self):
@@ -110,6 +116,13 @@ class AnnotationAssertion(QtCore.QObject):
         self._language = lang
         self.sgnAnnotationModified.emit()
 
+    def refactor(self,prop,value,type,lang):
+        self._property=prop
+        self._value=value
+        self._datatype=type
+        self._language=lang
+        self.sgnAnnotationModified.emit()
+
     def getObjectResourceString(self, manager, prefixedForm):
         """
         Returns a string representing the object resource of the assertion.
@@ -129,12 +142,25 @@ class AnnotationAssertion(QtCore.QObject):
                 if self._datatype:
                     prefixedType = manager.getShortestPrefixedForm(self._datatype)
                     if prefixedForm and prefixedType:
-                        result += str(prefixedType)
+                        result += '^^{}'.format(str(prefixedType))
                     else:
-                        result += '<{}>'.format(self._datatype)
+                        result += '^^<{}>'.format(self._datatype)
                 if self._language:
-                    result += '@{}'.format(self._language)
+                    result += ' @{}'.format(self._language)
                 return result
+
+    def __hash__(self):
+        result = self._property.__hash__()
+        if self._value:
+            if isinstance(self._value, IRI):
+                result+=self._value.__hash__()
+            elif isinstance(self._value, str):
+                result+=self._value.__hash__()
+                if self._datatype:
+                    result+=self._datatype.__hash__()
+                if self._language:
+                    result+=self._language.__hash__()
+        return result
 
     def __eq__(self, other):
         if not isinstance(other, AnnotationAssertion):
@@ -305,7 +331,7 @@ class IRI(QtCore.QObject):
         Remove an annotation assertion regarding self
         :type: annotation: AnnotationAssertion
         """
-        if annotation.property in self._annotationAssertionsMap:
+        if annotation.assertionProperty in self._annotationAssertionsMap:
             currList = self._annotationAssertionsMap[annotation.assertionProperty]
             if annotation in currList:
                 currList.remove(annotation)

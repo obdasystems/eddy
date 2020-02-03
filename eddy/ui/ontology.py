@@ -37,6 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAbstractItemView
 
 from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion
 
@@ -144,7 +145,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
         table.horizontalHeader().setStretchLastSection(True)
         table.horizontalHeader().setSectionsClickable(False)
-        table.horizontalHeader().setMinimumSectionSize(100)
+        table.horizontalHeader().setMinimumSectionSize(170)
         table.horizontalHeader().setSectionsClickable(False)
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
@@ -154,15 +155,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         addBtn = QtWidgets.QPushButton('Add', objectName='ontology_annotations_add_button')
         delBtn = QtWidgets.QPushButton('Remove', objectName='ontology_annotations_delete_button')
+        editBtn = QtWidgets.QPushButton('Edit', objectName='ontology_annotations_edit_button')
         connect(addBtn.clicked, self.addOntologyAnnotation)
         connect(delBtn.clicked, self.removeOntologyAnnotation)
+        connect(editBtn.clicked, self.editOntologyAnnotation)
         self.addWidget(addBtn)
         self.addWidget(delBtn)
+        self.addWidget(editBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(self.widget('ontology_annotations_add_button'))
         boxlayout.addWidget(self.widget('ontology_annotations_delete_button'))
+        boxlayout.addWidget(self.widget('ontology_annotations_edit_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('ontology_annotations_table_widget'))
@@ -197,7 +202,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         table.setFont(Font('Roboto', 13))
-        table.setItem
 
         self.addWidget(table)
 
@@ -507,11 +511,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         rowcount = 0
         for assertion in ontAnnAss:
             propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
+            propertyItem.setData(Qt.UserRole, assertion)
             table.setItem(rowcount, 0, propertyItem)
-            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(assertion.getObjectResourceString(self.project,True)))
+            valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project,True)))
+            valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
             rowcount += 1
-        table.resizeColumnsToContents()
+        table.resizeColumnToContents(0)
 
         # TODO: reload imports when they are implemented
 
@@ -545,7 +552,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         rowcount = 0
         for annIRI in annotationProperties:
             propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
-            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
             table.setItem(rowcount,0,propertyItem)
             rowcount += 1
         table.resizeColumnsToContents()
@@ -598,23 +605,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         rowcount = table.rowCount()
         table.setRowCount(rowcount + 1)
         propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        propertyItem.setData(Qt.UserRole,assertion)
         table.setItem(rowcount, 0, propertyItem)
-        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(assertion.getObjectResourceString(self.project,True)))
+        valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project, True)))
+        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
         table.scrollToItem(table.item(rowcount, 0))
-        table.resizeColumnsToContents()
-        '''
-        ontAnnAss = self.project.getIRI(self.project.ontologyIRIString).annotationAssertions
-        table.clear()
-        table.setRowCount(len(ontAnnAss))
-        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
-        rowcount = 0
-        for assertion in ontAnnAss:
-            table.setItem(rowcount, 0, QtWidgets.QTableWidgetItem(str(assertion.assertionProperty)))
-            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(str(assertion.value)))
-            rowcount += 1
-        table.resizeColumnsToContents()
-        '''
+        table.resizeColumnToContents(0)
+
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):
@@ -622,8 +621,51 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Removes an annotation from the current ontology.
         :type _: bool
         """
-        # TODO: not implemented yet
-        LOGGER.debug("removeOntologyAnnotation called")
+        table = self.widget('ontology_annotations_table_widget')
+        rowcount = table.rowCount()
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                removedItem = table.item(row, 0)
+                assertion = removedItem.data(Qt.UserRole)
+                self.project.ontologyIRI.removeAnnotationAssertion(assertion)
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                table.removeRow(row)
+        table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
+
+    @QtCore.pyqtSlot(bool)
+    def editOntologyAnnotation(self, _):
+        table = self.widget('ontology_annotations_table_widget')
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                editItem = table.item(row, 0)
+                assertion = editItem.data(Qt.UserRole)
+                #editItem.setData(None)
+                assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI,assertion)
+                connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,self.onOntologyAnnotationAssertionModified)
+                assertionBuilder.exec_()
+
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onOntologyAnnotationAssertionModified(self,assertion):
+        '''
+        :type assertion:AnnotationAssertion
+        '''
+        table = self.widget('ontology_annotations_table_widget')
+        rowcount = table.rowCount()
+        for row in range(0,rowcount):
+            propItem = table.item(row, 0)
+            itemAssertion = propItem.data(Qt.UserRole)
+            if itemAssertion is assertion:
+                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                newPropertyItem.setData(Qt.UserRole, assertion)
+                table.setItem(row, 0, newPropertyItem)
+                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project, True)))
+                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
+                break
 
     #############################################
     # PREFIXES TAB

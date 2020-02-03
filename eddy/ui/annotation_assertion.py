@@ -10,19 +10,22 @@ from eddy.ui.fields import ComboBox
 class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     sgnAnnotationAssertionAccepted = QtCore.pyqtSignal(AnnotationAssertion)
+    sgnAnnotationAssertionCorrectlyModified = QtCore.pyqtSignal(AnnotationAssertion)
     sgnAnnotationAssertionRejected = QtCore.pyqtSignal()
 
     emptyString = ''
 
-    def __init__(self,iri,session):
+    def __init__(self,iri,session,assertion=None):
         """
         Initialize the annotation assertion builder dialog (subject IRI = iri).
         :type iri: IRI
         :type session: Session
+        :type assertion: AnnotationAssertion
         """
         super().__init__(session)
         self.project = session.project
         self.iri = iri
+        self.assertion = assertion
         '''
         widget = AnnotationPropertyExplorerWidget(session)
         widget.setObjectName('annotation_property_explorer')
@@ -50,7 +53,10 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
         combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
-        combobox.setCurrentText(self.emptyString)
+        if not self.assertion:
+            combobox.setCurrentText(self.emptyString)
+        else:
+            combobox.setCurrentText(str(self.assertion.assertionProperty))
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged, self.onPropertySwitched)
 
@@ -62,6 +68,9 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         textArea = QtWidgets.QTextEdit(self, objectName='valueTextArea')
         textArea.setFont(Font('Roboto', 12))
+        if self.assertion:
+            if self.assertion.value:
+                textArea.setText(str(self.assertion.value))
         self.addWidget(textArea)
 
 
@@ -77,7 +86,13 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
         combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
-        combobox.setCurrentText(self.emptyString)
+        if not self.assertion:
+            combobox.setCurrentText(self.emptyString)
+        else:
+            if self.assertion.datatype:
+                combobox.setCurrentText(str(self.assertion.datatype))
+            else:
+                combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged,self.onTypeSwitched)
         '''
@@ -99,7 +114,13 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
         combobox.addItems(['it','eng'])
-        combobox.setCurrentText(self.emptyString)
+        if not self.assertion:
+            combobox.setCurrentText(self.emptyString)
+        else:
+            if self.assertion.language:
+                combobox.setCurrentText(str(self.assertion.language))
+            else:
+                combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
         '''
@@ -139,7 +160,8 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
         confirmation.setFont(Font('Roboto', 12))
-        confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
+        if not assertion:
+            confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
         self.addWidget(confirmation)
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
@@ -196,14 +218,21 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         value = str(self.widget('valueTextArea').toPlainText())
         typeStr = str(self.widget('type_switch').currentText())
         typeIRI = None
-        if typeStr and not typeStr==self.emptyString:
+        if typeStr and not typeStr == self.emptyString:
             typeIRI = self.project.getIRI(typeStr)
         language = None
         if self.widget('lang_switch').isEnabled():
-            language = str(self.widget('type_switch').currentText())
-        annAss = AnnotationAssertion(propertyIRI,value,typeIRI,language)
-        self.iri.addAnnotationAssertion(annAss)
-        self.sgnAnnotationAssertionAccepted.emit(annAss)
+            language = str(self.widget('lang_switch').currentText())
+        if not self.assertion:
+            annAss = AnnotationAssertion(self.iri,propertyIRI,value,typeIRI,language)
+            self.iri.addAnnotationAssertion(annAss)
+            self.sgnAnnotationAssertionAccepted.emit(annAss)
+        else:
+            self.assertion.assertionProperty=propertyIRI
+            self.assertion.value=value
+            self.assertion.datatype=typeIRI
+            self.assertion.language=language
+            self.sgnAnnotationAssertionCorrectlyModified.emit(self.assertion)
         super().accept()
 
     @QtCore.pyqtSlot()

@@ -610,6 +610,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # NODE RELATED
         #################################
 
+        #TODO doOpenAnnotationAssertionBuilder
+        '''self.addAction(QtWidgets.QAction(
+            'Add annotation',
+            self, objectName='add_annotation',
+            triggered=self.doOpenAnnotationAssertionBuilder))'''
+
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_settings_black'), 'Properties...',
             self, objectName='node_properties',
@@ -2136,7 +2142,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            #node = first(diagram.selectedNodes())
+            if not node:
+                node = first(diagram.selectedNodes())
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2145,19 +2152,49 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot(IRI)
-    def doOpenAnnotationAssertionBuilder(self,iri):
+    def doOpenIRIPropsBuilder(self,node):
+        """
+        Executed when IRI props builder needs to be displayed.
+        :type node: OntologyEntityNode
+        """
+        #TODO
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            if not node:
+                node = first(diagram.selectedNodes())
+            if node:
+                builder = IriBuilderDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot(IRI)
+    def doOpenAnnotationAssertionBuilder(self,iri,assertion=None):
         """
         Executed when annotation assertion builder needs to be displayed.
         :type node: IRI
         """
         # TODO
-        if IRI:
-            builder = AnnotationAssertionBuilderDialog(iri,self)
+        if iri:
+            builder = AnnotationAssertionBuilderDialog(iri,self,assertion)
             builder.setWindowModality(QtCore.Qt.ApplicationModal)
             builder.show()
             builder.raise_()
             builder.activateWindow()
             return builder
+        else:
+            diagram = self.mdi.activeDiagram()
+            if diagram:
+                diagram.setMode(DiagramMode.Idle)
+                node = first(diagram.selectedNodes())
+                builder = AnnotationAssertionBuilderDialog(node.iri, self,assertion)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
 
 
     @QtCore.pyqtSlot()
