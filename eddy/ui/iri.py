@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtGui import Qt
+from PyQt5.QtCore import QObject, Qt
 
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.output import getLogger
@@ -15,6 +15,67 @@ from eddy.ui.fields import ComboBox, StringField
 from eddy.core.datatypes.qt import Font
 
 LOGGER = getLogger()
+
+class IRIDialogsWidgetFactory(QObject):
+
+    @staticmethod
+    def getIRIPrefixComboBoxLabel(parent):
+        comboBoxLabel = QtWidgets.QLabel(parent, objectName='iri_prefix_combobox_label')
+        comboBoxLabel.setFont(Font('Roboto', 12))
+        comboBoxLabel.setText('Prefix')
+        return  comboBoxLabel
+
+    @staticmethod
+    def getIRIPrefixComboBox(parent):
+        combobox = ComboBox(parent,objectName='iri_prefix_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(False)
+        return combobox
+
+    @staticmethod
+    def getInputLabel(parent):
+        inputLabel = QtWidgets.QLabel(parent, objectName='input_field_label')
+        inputLabel.setFont(Font('Roboto', 12))
+        inputLabel.setText('Input')
+        return inputLabel
+
+    @staticmethod
+    def getInputField(parent):
+        inputField = StringField(parent, objectName='iri_input_field')
+        # inputField.setFixedWidth(300)
+        inputField.setFont(Font('Roboto', 12))
+        return inputField
+
+    @staticmethod
+    def getFullIRILabel(parent):
+        fullIriLabel = QtWidgets.QLabel(parent, objectName='full_iri_label')
+        fullIriLabel.setFont(Font('Roboto', 12))
+        fullIriLabel.setText('Full IRI')
+        return  fullIriLabel
+
+    @staticmethod
+    def getFullIRIField(parent):
+        fullIriField = StringField(parent, objectName='full_iri_field')
+        # fullIriField.setFixedWidth(300)
+        fullIriField.setFont(Font('Roboto', 12))
+        fullIriField.setReadOnly(True)
+        return fullIriField
+
+    @staticmethod
+    def getAnnotationAssertionsTable(parent):
+        table = QtWidgets.QTableWidget(0, 2, parent, objectName='annotations_table_widget')
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.horizontalHeader().setMinimumSectionSize(170)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.verticalHeader().setVisible(False)
+        table.verticalHeader().setSectionsClickable(False)
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        table.setFont(Font('Roboto', 13))
+        return table
 
 class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
@@ -42,42 +103,32 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # IRI TAB
         #################################
-        comboBoxLabel = QtWidgets.QLabel(self, objectName='iri_prefix_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
-        comboBoxLabel.setText('Prefix')
+        comboBoxLabel = IRIDialogsWidgetFactory.getIRIPrefixComboBoxLabel(self)
         self.addWidget(comboBoxLabel)
 
-        combobox = ComboBox(objectName='iri_prefix_switch')
-        combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
-        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(False)
+        combobox = IRIDialogsWidgetFactory.getIRIPrefixComboBox(self)
+        combobox.clear()
         combobox.addItem(self.noPrefixString)
-        #combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
-        combobox.addItems([x+':'+'  <'+y+'>' for x,y in self.project.prefixDictItems()])
+        # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
         combobox.setCurrentText(self.noPrefixString)
         self.addWidget(combobox)
 
-        inputLabel = QtWidgets.QLabel(self, objectName='input_field_label')
-        inputLabel.setFont(Font('Roboto', 12))
-        inputLabel.setText('Input')
+        inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
         self.addWidget(inputLabel)
 
-        inputField = StringField(self, objectName='iri_input_field')
-        #inputField.setFixedWidth(300)
-        inputField.setFont(Font('Roboto', 12))
+        inputField = IRIDialogsWidgetFactory.getInputField(self)
         inputField.setValue('')
         self.addWidget(inputField)
 
-        fullIriLabel = QtWidgets.QLabel(self, objectName='full_iri_label')
-        fullIriLabel.setFont(Font('Roboto', 12))
-        fullIriLabel.setText('Full IRI')
+        fullIriLabel = IRIDialogsWidgetFactory.getFullIRILabel(self)
         self.addWidget(fullIriLabel)
-        fullIriField = StringField(self, objectName='full_iri_field')
-        #fullIriField.setFixedWidth(300)
-        fullIriField.setFont(Font('Roboto', 12))
-        fullIriField.setReadOnly(True)
+
+        fullIriField = IRIDialogsWidgetFactory.getFullIRIField(self)
+        fullIriField.setText('')
         self.addWidget(fullIriField)
+
+        ###########################
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('iri_prefix_combobox_label'), self.widget('iri_prefix_switch'))
@@ -99,7 +150,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.setContentsMargins(10, 0, 10, 10)
         confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
-
 
         #############################################
         # MAIN WIDGET
@@ -128,6 +178,28 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   SLOTS
     #################################
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+        shortest = self.project.getShortestPrefixedForm(self.iri)
+
+        #############################################
+        # IRI TAB
+        #################################
+        combobox = self.widget('iri_prefix_switch')
+        combobox.clear()
+        combobox.addItem(self.noPrefixString)
+        # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
+        combobox.setCurrentText(self.noPrefixString)
+        self.addWidget(combobox)
+
+        inputField = self.widget('iri_input_field')
+        inputField.setValue('')
+
+        fullIriField = self.widget('full_iri_field')
+        fullIriField.setText('')
+
 
     @QtCore.pyqtSlot(int)
     def onPrefixChanged(self, val):
@@ -188,63 +260,48 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type session: Session
         """
         super().__init__(session)
-
+        self.session = session
+        self.project = session.project
         self.iri = iri
 
-        shortest = self.session.project.getShortestPrefixedForm(self.iri)
+        shortest = self.project.getShortestPrefixedForm(self.iri)
 
         #############################################
         # IRI TAB
         #################################
-        comboBoxLabel = QtWidgets.QLabel(self, objectName='iri_prefix_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
-        comboBoxLabel.setText('Prefix')
+        comboBoxLabel = IRIDialogsWidgetFactory.getIRIPrefixComboBoxLabel(self)
         self.addWidget(comboBoxLabel)
 
-        combobox = ComboBox(objectName='iri_prefix_switch')
-        combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
-        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(False)
+        combobox = IRIDialogsWidgetFactory.getIRIPrefixComboBox(self)
+        combobox.clear()
         combobox.addItem(self.noPrefixString)
-        #combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
-        combobox.addItems([x+':'+'  <'+y+'>' for x,y in self.project.prefixDictItems()])
+        # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
         if shortest:
-            combobox.setCurrentText(shortest.prefix+':'+' <'+self.project.getNamespace(shortest.prefix)+'>')
+            combobox.setCurrentText(shortest.prefix+':'+'  <'+self.project.getNamespace(shortest.prefix)+'>')
         else:
             combobox.setCurrentText(self.noPrefixString)
         self.addWidget(combobox)
 
-        inputLabel = QtWidgets.QLabel(self, objectName='input_field_label')
-        inputLabel.setFont(Font('Roboto', 12))
-        inputLabel.setText('Input')
+        inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
         self.addWidget(inputLabel)
 
-        inputField = StringField(self, objectName='iri_input_field')
-        #inputField.setFixedWidth(300)
-        inputField.setFont(Font('Roboto', 12))
+        inputField = IRIDialogsWidgetFactory.getInputField(self)
         if shortest:
             inputField.setText(shortest.suffix)
         else:
             inputField.setText(str(iri))
         self.addWidget(inputField)
 
-        fullIriLabel = QtWidgets.QLabel(self, objectName='full_iri_label')
-        fullIriLabel.setFont(Font('Roboto', 12))
-        fullIriLabel.setText('Full IRI')
+        fullIriLabel = IRIDialogsWidgetFactory.getFullIRILabel(self)
         self.addWidget(fullIriLabel)
-        fullIriField = StringField(self, objectName='full_iri_field')
-        #fullIriField.setFixedWidth(300)
-        fullIriField.setFont(Font('Roboto', 12))
-        fullIriField.setReadOnly(True)
+
+        fullIriField = IRIDialogsWidgetFactory.getFullIRIField(self)
         fullIriField.setText(str(iri))
         self.addWidget(fullIriField)
 
-        # addBtn = QtWidgets.QPushButton('Add', objectName='annotation_properties_add_button')
-        saveBtn = QtWidgets.QPushButton('Remove', objectName='save_iri_button')
-        # connect(addBtn.clicked, self.addAnnotationProperty)
+        saveBtn = QtWidgets.QPushButton('Save', objectName='save_iri_button')
         connect(saveBtn.clicked, self.saveIRI)
-        # self.addWidget(addBtn)
         self.addWidget(saveBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
@@ -265,17 +322,8 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # ANNOTATIONS TAB
         #################################
-
-        table = QtWidgets.QTableWidget(0, 2, self, objectName='annotations_table_widget')
-        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
-        table.horizontalHeader().setStretchLastSection(True)
-        table.horizontalHeader().setSectionsClickable(False)
-        table.horizontalHeader().setMinimumSectionSize(170)
-        table.horizontalHeader().setSectionsClickable(False)
-        table.verticalHeader().setVisible(False)
-        table.verticalHeader().setSectionsClickable(False)
-        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setFont(Font('Roboto', 13))
+        table = IRIDialogsWidgetFactory.getAnnotationAssertionsTable(self)
+        table.clear()
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='annotations_add_button')
@@ -307,12 +355,11 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
+        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
         confirmation.setContentsMargins(10, 0, 10, 10)
         confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
-
 
         #############################################
         # MAIN WIDGET
@@ -321,7 +368,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('iri_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
                       'IRI')
         widget.addTab(self.widget('annotation_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
-                      'Annotation')
+                      'Annotations')
 
         self.addWidget(widget)
         layout = QtWidgets.QVBoxLayout()
@@ -335,8 +382,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(self.widget('iri_prefix_switch').currentIndexChanged,self.onPrefixChanged)
         connect(self.widget('iri_input_field').textChanged, self.onInputChanged)
         #connect(inputField.textEdited, self.onInputChanged)
-        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
-        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
+
 
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
@@ -349,7 +395,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def redraw(self):
-        shortest = self.session.project.getShortestPrefixedForm(self.iri)
+        shortest = self.project.getShortestPrefixedForm(self.iri)
 
         #############################################
         # IRI TAB
@@ -360,7 +406,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
         combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
         if shortest:
-            combobox.setCurrentText(shortest.prefix + ':' + ' <' + self.project.getNamespace(shortest.prefix) + '>')
+            combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
             combobox.setCurrentText(self.noPrefixString)
 
@@ -445,7 +491,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(bool)
     def editAnnotation(self, _):
-        table = self.widget('ontology_annotations_table_widget')
+        table = self.widget('annotations_table_widget')
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
@@ -460,7 +506,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
         :type assertion:AnnotationAssertion
         '''
-        table = self.widget('ontology_annotations_table_widget')
+        table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         for row in range(0,rowcount):
             propItem = table.item(row, 0)

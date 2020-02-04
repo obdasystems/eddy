@@ -52,7 +52,9 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
-        combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
+        sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        # combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
         if not self.assertion:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -85,7 +87,10 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
-        combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
+
+        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        #combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
         if not self.assertion:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -113,7 +118,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
-        combobox.addItems(['it','eng'])
+        combobox.addItems([x for x in self.project.getLanguages()])
         if not self.assertion:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -177,10 +182,55 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Annotation assertion builder <{}>'.format(str(iri)))
+        self.redraw()
 
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot()
+    def redraw(self):
+        combobox = self.widget('property_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        #combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
+        if not self.assertion:
+            combobox.setCurrentText(self.emptyString)
+        else:
+            combobox.setCurrentText(str(self.assertion.assertionProperty))
+
+        textArea = self.widget('valueTextArea')
+        if self.assertion:
+            if self.assertion.value:
+                textArea.setText(str(self.assertion.value))
+
+        combobox = self.widget('type_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        # combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
+        if not self.assertion:
+            combobox.setCurrentText(self.emptyString)
+        else:
+            if self.assertion.datatype:
+                combobox.setCurrentText(str(self.assertion.datatype))
+            else:
+                combobox.setCurrentText(self.emptyString)
+
+        combobox = self.widget('lang_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if not self.assertion:
+            combobox.setCurrentText(self.emptyString)
+        else:
+            if self.assertion.language:
+                combobox.setCurrentText(str(self.assertion.language))
+            else:
+                combobox.setCurrentText(self.emptyString)
+
     @QtCore.pyqtSlot(int)
     def onPropertySwitched(self, index):
         propIRI = str(self.widget('property_switch').itemText(index))
@@ -216,6 +266,8 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         propertyStr = str(self.widget('property_switch').currentText())
         propertyIRI = self.project.getIRI(propertyStr)
         value = str(self.widget('valueTextArea').toPlainText())
+        if not value:
+            value = ' '
         typeStr = str(self.widget('type_switch').currentText())
         typeIRI = None
         if typeStr and not typeStr == self.emptyString:

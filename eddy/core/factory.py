@@ -843,7 +843,7 @@ class MenuFactory(QtCore.QObject):
         # ADD DESCRIPTION LINK TO THE MENU OF PREDICATE NODE
         menu.addAction(self.session.action('node_description'))
 
-        menu.insertMenu(self.session.action('node_description'), self.session.action('add_annotation'))
+        menu.addAction(self.session.action('iri_refactor'))
 
         # TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
         # TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate

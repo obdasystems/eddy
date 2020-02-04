@@ -131,7 +131,9 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
             self.renderByFullIRI()
 
     def renderByLabel(self):
-        labelAssertion = self.iri.getLabelAnnotationAssertion()
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        lang = settings.value('ontology/iri/render/language', 'it')
+        labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
         if labelAssertion:
             self.setText(str(labelAssertion.value))
             self.nodeLabelObject = labelAssertion
@@ -149,11 +151,9 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         :type annotation: AnnotationAssertion
         '''
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.LABEL:
-            if isinstance(self.nodeLabelObject, IRI) or isinstance(self.nodeLabelObject, PrefixedIRI):
-                if annotation.assertionProperty==AnnotationAssertionProperty.Label:
-                    self.doUpdateNodeLabel()
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationRemoved(self, annotation):
@@ -161,10 +161,9 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         :type annotation: AnnotationAssertion
         '''
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.LABEL:
-            if self.nodeLabelObject==annotation:
-                self.doUpdateNodeLabel()
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
+        if rendering == IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationModified(self, annotation):
@@ -173,9 +172,8 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         '''
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.LABEL:
-            if self.nodeLabelObject == annotation:
-                self.doUpdateNodeLabel()
+        if rendering == IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot()
     def onIRIModified(self):

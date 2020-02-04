@@ -141,7 +141,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         ## ONTOLOGY ANNOTATIONS GROUP
 
-        table = QtWidgets.QTableWidget(0, 2, self, objectName='ontology_annotations_table_widget')
+        table = QtWidgets.QTableWidget(0, 2, self, objectName='annotations_table_widget')
+        table.clear()
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
         table.horizontalHeader().setStretchLastSection(True)
         table.horizontalHeader().setSectionsClickable(False)
@@ -170,7 +171,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         boxlayout.addWidget(self.widget('ontology_annotations_edit_button'))
 
         formlayout = QtWidgets.QFormLayout()
-        formlayout.addRow(self.widget('ontology_annotations_table_widget'))
+        formlayout.addRow(self.widget('annotations_table_widget'))
         formlayout.addRow(boxlayout)
         groupbox = QtWidgets.QGroupBox('Ontology Annotations', self, objectName='ontology_annotations_widget')
         groupbox.setLayout(formlayout)
@@ -503,7 +504,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.project.version and self.project.version != 'NULL':
             versionField.setText(self.project.version)
 
-        table = self.widget('ontology_annotations_table_widget')
+        table = self.widget('annotations_table_widget')
         ontAnnAss = self.project.getIRI(self.project.ontologyIRIString).annotationAssertions
         table.clear()
         table.setRowCount(len(ontAnnAss))
@@ -601,7 +602,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
         :type assertion:AnnotationAssertion
         '''
-        table = self.widget('ontology_annotations_table_widget')
+        table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         table.setRowCount(rowcount + 1)
         propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
@@ -621,7 +622,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Removes an annotation from the current ontology.
         :type _: bool
         """
-        table = self.widget('ontology_annotations_table_widget')
+        table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
@@ -636,7 +637,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(bool)
     def editOntologyAnnotation(self, _):
-        table = self.widget('ontology_annotations_table_widget')
+        table = self.widget('annotations_table_widget')
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
@@ -652,7 +653,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
         :type assertion:AnnotationAssertion
         '''
-        table = self.widget('ontology_annotations_table_widget')
+        table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         for row in range(0,rowcount):
             propItem = table.item(row, 0)

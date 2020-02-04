@@ -325,6 +325,7 @@ class IRI(QtCore.QObject):
             self._annotationAssertionsMap[annotation.assertionProperty] = currList
         self._annotationAssertions.append(annotation)
         self.sgnAnnotationAdded.emit(annotation)
+        connect(annotation.sgnAnnotationModified, self.onAnnotationAssertionModified)
 
     def removeAnnotationAssertion(self, annotation):
         """
@@ -497,7 +498,26 @@ class IRIManager(QtCore.QObject):
         self.prefix2namespaceMap = {}
         self.annotationProperties = set()
         self.datatypes = set()
+        self.languages = set()
         self.setDefaults()
+
+    #############################################
+    #   LANGUAGES
+    #################################
+    def addLanguageTag(self,lang):
+        """
+        Add the language tag identified by lang
+        :type lang:str
+        """
+        self.languages.add(lang)
+
+    def addDefaultLanguages(self):
+        self.addLanguageTag('it')
+        self.addLanguageTag('en')
+
+    def getLanguages(self):
+        return self.languages
+
 
     #############################################
     #   SLOTS
@@ -603,6 +623,7 @@ class IRIManager(QtCore.QObject):
         self.addTopBottomPredicateIRIs()
         self.addDefaultAnnotationProperties()
         self.addDefaultDatatypes()
+        self.addDefaultLanguages()
 
     ##ANNOTATION PROPERTIES
     def getAnnotationPropertyIRIs(self):

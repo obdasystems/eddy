@@ -124,7 +124,7 @@ from eddy.ui.forms import NewDiagramForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import RenameDiagramForm
 from eddy.ui.forms import ValueForm
-from eddy.ui.iri import IriBuilderDialog
+from eddy.ui.iri import IriBuilderDialog, IriPropsDialog
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
@@ -610,12 +610,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # NODE RELATED
         #################################
 
-        #TODO doOpenAnnotationAssertionBuilder
-        '''self.addAction(QtWidgets.QAction(
-            'Add annotation',
-            self, objectName='add_annotation',
-            triggered=self.doOpenAnnotationAssertionBuilder))'''
-
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_settings_black'), 'Properties...',
             self, objectName='node_properties',
@@ -833,6 +827,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             group.addAction(action)
         self.addAction(group)
 
+        #############################################
+        # IRI SPECIFIC
+        #################################
+
+        # TODO doOpenIRIPropsBuilder
+        self.addAction(QtWidgets.QAction(
+            'IRI refactor',
+            self, objectName='iri_refactor',
+            triggered=self.doOpenIRIPropsBuilder))
+
         #TODO
         action = QtWidgets.QAction('Render by full IRI', self, objectName='render_full_iri', triggered=self.doRenderByFullIRI)
         action.setCheckable(True)
@@ -840,9 +844,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action = QtWidgets.QAction('Render by prefixed IRI', self, objectName='render_prefixed_iri', triggered=self.doRenderByPrefixedIRI)
         action.setCheckable(True)
         self.addAction(action)
-        action = QtWidgets.QAction('Render by label', self, objectName='render_label', triggered=self.doRenderByLabel)
+        '''action = QtWidgets.QAction('Render by label', self, objectName='render_label', triggered=self.doRenderByLabel)
         self.addAction(action)
-        action.setCheckable(True)
+        action.setCheckable(True)'''
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
@@ -850,8 +854,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_full_iri').setChecked(True)
         elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
             self.action(objectName='render_prefixed_iri').setChecked(True)
-        elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
-            self.action(objectName='render_label').setChecked(True)
+        '''elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+            self.action(objectName='render_label').setChecked(True)'''
+
 
     def initExporters(self):
         """
@@ -960,18 +965,33 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         renderInnerMenu = menu.addMenu('Render by...')
         renderInnerMenu.addAction(self.action('render_full_iri'))
         renderInnerMenu.addAction(self.action('render_prefixed_iri'))
-        renderInnerMenu.addAction(self.action('render_label'))
+        # renderInnerMenu.addAction(self.action('render_label'))
 
-        # renderModeMenu = QtWidgets.QMenu('\u200C&Render by...', objectName='render_mode')
-        # renderTypeGroup = QtWidgets.QActionGroup(renderModeMenu)
-        # renderModeMenu.addAction(self.action('render_full_iri'))
-        # renderModeMenu.addAction(self.action('render_prefixed_iri'))
-        # renderModeMenu.addAction(self.action('render_label'))
-        # renderTypeGroup.addAction(self.action('render_full_iri'))
-        # renderTypeGroup.addAction(self.action('render_prefixed_iri'))
-        # renderTypeGroup.addAction(self.action('render_label'))
-        # renderTypeGroup.setExclusive(True)
-        # menu.addMenu(renderModeMenu)
+        labelMenu = QtWidgets.QMenu('Render by label',objectName='render_label')
+        self.addWidget(labelMenu)
+        action = QtWidgets.QAction('it', self, objectName='render_label_it', triggered=self.doRenderByLabel)
+        action.setData('it')
+        action.setCheckable(True)
+        self.addAction(action)
+        labelMenu.addAction(action)
+        action = QtWidgets.QAction('en', self, objectName='render_label_en', triggered=self.doRenderByLabel)
+        action.setData('en')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+            lang = settings.value('ontology/iri/render/language', 'it')
+            if lang=='it':
+                self.action(objectName='render_label_it').setChecked(True)
+                self.action(objectName='render_label_en').setChecked(False)
+            elif lang=='en':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(True)
+
+        renderInnerMenu.addMenu(labelMenu)
 
 
         menu.addSeparator()
@@ -2138,7 +2158,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when IRI builder needs to be displayed.
         :type node: OntologyEntityNode
         """
-        #TODO
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -2151,20 +2170,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.raise_()
                 builder.activateWindow()
 
-    @QtCore.pyqtSlot(IRI)
-    def doOpenIRIPropsBuilder(self,node):
+    @QtCore.pyqtSlot()
+    def doOpenIRIPropsBuilder(self):
         """
         Executed when IRI props builder needs to be displayed.
-        :type node: OntologyEntityNode
         """
-        #TODO
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            if not node:
-                node = first(diagram.selectedNodes())
-            if node:
-                builder = IriBuilderDialog(node, diagram, self)
+            node = first(diagram.selectedNodes())
+            if isinstance(node,OntologyEntityNode):
+                iri = node.iri
+            if iri:
+                builder = IriPropsDialog(iri, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()
@@ -3016,7 +3034,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         settings.setValue('ontology/iri/render', IRIRender.FULL.value)
         self.action(objectName='render_full_iri').setChecked(True)
         self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_label').setChecked(False)
+        #self.action(objectName='render_label').setChecked(False)
+        self.action(objectName='render_label_it').setChecked(False)
+        self.action(objectName='render_label_en').setChecked(False)
         self.sgnRenderingModified.emit(IRIRender.FULL.value)
 
 
@@ -3030,7 +3050,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
         self.action(objectName='render_full_iri').setChecked(False)
         self.action(objectName='render_prefixed_iri').setChecked(True)
-        self.action(objectName='render_label').setChecked(False)
+        # self.action(objectName='render_label').setChecked(False)
+        self.action(objectName='render_label_it').setChecked(False)
+        self.action(objectName='render_label_en').setChecked(False)
         self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
 
     #TODO
@@ -3039,11 +3061,21 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Render ontology elements by prefixed IRIs
         """
+        action = self.sender()
+        lang = action.data()
+
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
+        settings.setValue('ontology/iri/render/language', 'it')
         self.action(objectName='render_full_iri').setChecked(False)
         self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_label').setChecked(True)
+        # self.action(objectName='render_label').setChecked(True)
+        if lang == 'it':
+            self.action(objectName='render_label_it').setChecked(True)
+            self.action(objectName='render_label_en').setChecked(False)
+        elif lang == 'en':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(True)
         self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 
     @QtCore.pyqtSlot()
