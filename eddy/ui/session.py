@@ -160,6 +160,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     * sgnReady: after the session startup sequence completes.
     * sgnSaveProject: whenever the current project is to be saved.
     * sgnUpdateState: to notify that something in the session state changed.
+    * sgnPrefixAdded: when a prefix entry is added to the IRIManager of the session.
+    * sgnPrefixRemoved: when a prefix entry is adremoved from the IRIManager of the session.
+    * sgnPrefixModified: when a prefix entry managed by the IRIManager of the session is modified.
     """
     sgnClosed = QtCore.pyqtSignal()
     sgnCheckForUpdate = QtCore.pyqtSignal()
@@ -173,6 +176,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnReady = QtCore.pyqtSignal()
     sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
+
+    sgnPrefixAdded = QtCore.pyqtSignal(str, str)
+    sgnPrefixRemoved = QtCore.pyqtSignal(str)
+    sgnPrefixModified = QtCore.pyqtSignal(str, str)
+
 
     #Signals related to rendering options
     sgnRenderingModified = QtCore.pyqtSignal(str)
@@ -232,6 +240,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         worker = self.createProjectLoader(File.Graphol, path, self)
         worker.run()
+        connect(self.project.sgnPrefixAdded,self.onPrefixAddedToProject)
+        connect(self.project.sgnPrefixRemoved, self.onPrefixRemovedFromProject)
+        connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
 
         #############################################
         # COMPLETE SESSION SETUP
@@ -1335,6 +1346,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot(str, str)
+    def onPrefixAddedToProject(self, pref, ns):
+        self.sgnPrefixAdded.emit(pref,ns)
+
+    @QtCore.pyqtSlot(str)
+    def onPrefixRemovedFromProject(self, pref):
+        self.sgnPrefixRemoved.emit(pref)
+
+    @QtCore.pyqtSlot(str,str)
+    def onPrefixModifiedInProject(self, pref,ns):
+        self.sgnPrefixModified.emit(pref,ns)
 
     @QtCore.pyqtSlot()
     def doBringToFront(self):
@@ -3066,7 +3088,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
-        settings.setValue('ontology/iri/render/language', 'it')
+        settings.setValue('ontology/iri/render/language', lang)
         self.action(objectName='render_full_iri').setChecked(False)
         self.action(objectName='render_prefixed_iri').setChecked(False)
         # self.action(objectName='render_label').setChecked(True)

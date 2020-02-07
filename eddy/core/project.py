@@ -50,7 +50,7 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
 from eddy.core.output import getLogger
-from eddy.core.owl import IRIManager
+from eddy.core.owl import IRIManager, IRI
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
@@ -182,6 +182,8 @@ class Project(IRIManager):
 
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
+
+        connect(self.index.sgnIRIRemoved,self.onIRIRemovedFromAllDiagrams)
 
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
@@ -1764,6 +1766,8 @@ class ProjectIRIIndex(ProjectIndex):
     """
     Extends ProjectIndex to manage Project IRI index.
     """
+    sgnIRIRemoved = QtCore.pyqtSignal(IRI)
+
 
     def __init__(self):
         """
@@ -1807,6 +1811,8 @@ class ProjectIRIIndex(ProjectIndex):
                     self[K_OCCURRENCES][iri].pop(diagram.name)
                     if not self[K_OCCURRENCES][iri]:
                         self[K_OCCURRENCES].pop(iri)
+                        self.sgnIRIRemoved.emit(iri)
+
 
     def iriOccurrences(self,iri=None,diagram=None):
         """

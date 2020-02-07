@@ -45,7 +45,7 @@ from eddy.core.datatypes.annotation import Status
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.common.base import OntologyEntityNode
-from eddy.core.owl import IRIRender, AnnotationAssertion
+from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
 from eddy.core.project import K_DESCRIPTION_STATUS
 from eddy.core.plugin import AbstractPlugin
 
@@ -204,6 +204,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsItem')
     sgnItemRightClicked = QtCore.pyqtSignal('QGraphicsItem')
 
+    sgnIRIItemActivated = QtCore.pyqtSignal(IRI)
+    sgnIRIItemClicked = QtCore.pyqtSignal(IRI)
+    sgnIRIItemDoubleClicked = QtCore.pyqtSignal(IRI)
+    sgnIRIItemRightClicked = QtCore.pyqtSignal(IRI)
+
     def __init__(self, plugin):
         """
         Initialize the ontology explorer widget.
@@ -282,6 +287,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         connect(self.sgnItemDoubleClicked, self.session.doFocusItem)
         connect(self.sgnItemRightClicked, self.session.doFocusItem)
 
+        connect(self.session.sgnPrefixAdded, self.onPrefixAdded)
+        connect(self.session.sgnPrefixRemoved, self.onPrefixRemoved)
+        connect(self.session.sgnPrefixModified, self.onPrefixModified)
+        connect(self.session.sgnRenderingModified, self.onRenderingModified)
+
     #############################################
     #   PROPERTIES
     #################################
@@ -320,17 +330,50 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   SLOTS
     #################################
-    @QtCore.pyqtSlot(AnnotationAssertion)
-    def onIRIModified(self, ann):
+    @QtCore.pyqtSlot(str)
+    def onRenderingModified(self,rendering):
+        self.redrawIRIItem()
+
+    @QtCore.pyqtSlot(str, str)
+    def onPrefixAdded(self, pref, ns):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
+            self.redrawIRIItem()
+
+    @QtCore.pyqtSlot(str)
+    def onPrefixRemoved(self, pref):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
+            self.redrawIRIItem()
+
+    @QtCore.pyqtSlot(str)
+    def onPrefixModified(self, pref):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
+            self.redrawIRIItem()
+
+    @QtCore.pyqtSlot()
+    def onIRIModified(self):
         iri = self.sender()
-        self.model.rowCount()
-        for row in range(0,self.model.rowCount()):
-            currItem = self.model.item(row)
-            currIRI = currItem.data()
-            if currIRI is iri:
-                currItem.setText(self.parentKeyForIRI(iri,self.project))
+        self.redrawIRIItem(iri)
 
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onIRIAnnotationAssertionAdded(self, ann):
+        iri = self.sender()
+        self.redrawIRIItem(iri)
 
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onIRIAnnotationAssertionRemoved(self, ann):
+        iri = self.sender()
+        self.redrawIRIItem(iri)
+
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onIRIAnnotationAssertionModified(self, ann):
+        iri = self.sender()
+        self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
@@ -348,7 +391,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 else:
                     parent = QtGui.QStandardItem(self.parentKeyForIRI(node.iri,self.project))
                     parent.setData(node.iri)
-                    connect(node.iri.sgnAnnotationAdded, self.onIRIModified)
+                    self.connectIRISignals(node.iri)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKey(diagram, node))
             if isinstance(node,OntologyEntityNode):
@@ -362,6 +405,24 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if self.sender() != self.plugin:
                 self.proxy.invalidateFilter()
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+
+    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    def doRemoveNode(self, diagram, node):
+        """
+        Remove a node from the tree view.
+        :type diagram: QGraphicsScene
+        :type node: AbstractItem
+        """
+        if node.type() in self.items:
+            parent = self.parentFor(node)
+            if parent:
+                child = self.childFor(parent, diagram, node)
+                if child:
+                    parent.removeRow(child.index().row())
+                if not parent.rowCount():
+                    if isinstance(node,OntologyEntityNode):
+                        self.disconnectIRISignals(parent.data())
+                    self.model.removeRow(parent.index().row())
 
     @QtCore.pyqtSlot(str)
     def doFilterItem(self, key):
@@ -387,22 +448,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.search.setFocus()
         self.search.selectAll()
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
-    def doRemoveNode(self, diagram, node):
-        """
-        Remove a node from the tree view.
-        :type diagram: QGraphicsScene
-        :type node: AbstractItem
-        """
-        if node.type() in self.items:
-            parent = self.parentFor(node)
-            if parent:
-                child = self.childFor(parent, diagram, node)
-                if child:
-                    parent.removeRow(child.index().row())
-                if not parent.rowCount():
-                    self.model.removeRow(parent.index().row())
-
     @QtCore.pyqtSlot('QModelIndex')
     def onItemActivated(self, index):
         """
@@ -413,7 +458,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                self.sgnItemActivated.emit(item.data())
+                if isinstance(item.data(),IRI):
+                    self.sgnIRIItemActivated.emit(item.data())
+                else:
+                    self.sgnItemActivated.emit(item.data())
                 # KEEP FOCUS ON THE TREE VIEW UNLESS SHIFT IS PRESSED
                 if QtWidgets.QApplication.queryKeyboardModifiers() & QtCore.Qt.SHIFT:
                     return
@@ -435,7 +483,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                self.sgnItemDoubleClicked.emit(item.data())
+                if isinstance(item.data(),IRI):
+                    self.sgnIRIItemDoubleClicked.emit(item.data())
+                else:
+                    self.sgnItemDoubleClicked.emit(item.data())
 
     @QtCore.pyqtSlot('QModelIndex')
     def onItemPressed(self, index):
@@ -447,7 +498,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
             if item and item.data():
-                self.sgnItemClicked.emit(item.data())
+                if isinstance(item.data(),IRI):
+                    self.sgnIRIItemClicked.emit(item.data())
+                else:
+                    self.sgnItemClicked.emit(item.data())
 
     @QtCore.pyqtSlot(bool)
     def onMenuButtonClicked(self, checked=False):
@@ -484,6 +538,36 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   INTERFACE
     #################################
+    def connectIRISignals(self, iri):
+        '''
+        :type iri: IRI
+        '''
+        connect(iri.sgnAnnotationAdded, self.onIRIAnnotationAssertionAdded)
+        connect(iri.sgnAnnotationRemoved, self.onIRIAnnotationAssertionRemoved)
+        connect(iri.sgnAnnotationModified, self.onIRIAnnotationAssertionModified)
+        connect(iri.sgnIRIModified, self.onIRIModified)
+
+    def disconnectIRISignals(self, iri):
+        '''
+        :type iri: IRI
+        '''
+        disconnect(iri.sgnAnnotationAdded, self.onIRIAnnotationAssertionAdded)
+        disconnect(iri.sgnAnnotationRemoved, self.onIRIAnnotationAssertionRemoved)
+        disconnect(iri.sgnAnnotationModified, self.onIRIAnnotationAssertionModified)
+        disconnect(iri.sgnIRIModified, self.onIRIModified)
+
+    def redrawIRIItem(self, iri=None):
+        self.model.rowCount()
+        for row in range(0, self.model.rowCount()):
+            currItem = self.model.item(row)
+            if iri:
+                currIRI = currItem.data()
+                if currIRI is iri:
+                    currItem.setText(self.parentKeyForIRI(iri, self.project))
+                    break
+            else:
+                if isinstance(currItem.data(),IRI):
+                    currItem.setText(self.parentKeyForIRI(currItem.data(), self.project))
 
     def childFor(self, parent, diagram, node):
         """
@@ -707,11 +791,21 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                 model = self.model().sourceModel()
                 index = self.model().mapToSource(index)
                 item = model.itemFromIndex(index)
-                node = item.data()
-                if node:
-                    self.widget.sgnItemRightClicked.emit(node)
-                    menu = self.session.mf.create(node.diagram, [node])
-                    menu.exec_(mouseEvent.screenPos().toPoint())
+                if item.data():
+                    if isinstance(item.data(),IRI):
+                        iri = item.data()
+                        self.widget.sgnIRIItemRightClicked.emit(iri)
+                        #TODO gestisci creazione menu per IRI
+                        '''
+                        menu = self.session.mf.create(node.diagram, [node])
+                        menu.exec_(mouseEvent.screenPos().toPoint())
+                        '''
+
+                    else:
+                        node = item.data()
+                        self.widget.sgnItemRightClicked.emit(node)
+                        menu = self.session.mf.create(node.diagram, [node])
+                        menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)
 

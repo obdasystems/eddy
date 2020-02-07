@@ -233,6 +233,7 @@ class IRI(QtCore.QObject):
         if not IRI.isValidNamespace(value):
             raise IllegalNamespaceError(value)
         self._namespace = value
+        self.components = parse(IRI.concat(self._namespace, self._suffix))
         self.sgnIRIModified.emit()
 
     @property
@@ -469,9 +470,9 @@ class IRIManager(QtCore.QObject):
     """
     A `IRIManager` manages: (i)associations between extended IRIs and their prefixed forms, (ii)the set of IRIs identifying active ontology elements
     """
-    sgnPrefixAdded = QtCore.pyqtSignal(str, str)
-    sgnPrefixRemoved = QtCore.pyqtSignal(str)
-    sgnPrefixModified = QtCore.pyqtSignal(str, str)
+    sgnPrefixAdded = QtCore.pyqtSignal('QString', 'QString')
+    sgnPrefixRemoved = QtCore.pyqtSignal('QString')
+    sgnPrefixModified = QtCore.pyqtSignal('QString', 'QString')
     sgnPrefixMapCleared = QtCore.pyqtSignal()
 
     sgnIRIManagerReset = QtCore.pyqtSignal()
@@ -495,6 +496,9 @@ class IRIManager(QtCore.QObject):
         super().__init__(parent)
         self.iris = set()
         self.stringToIRI = {}
+
+        self.IRIToString = {}
+
         self.prefix2namespaceMap = {}
         self.annotationProperties = set()
         self.datatypes = set()
@@ -538,7 +542,13 @@ class IRIManager(QtCore.QObject):
         # Questo metodo dovrà essere chiamato SOLO quando tutti i riferimenti a iri sono stati eliminati
         self.iris.remove(iri)
         self.stringToIRI.pop(iri, None)
+        self.IRIToString.pop(str(iri),None)
         self.sgnIRIRemoved.emit(iri)
+
+    @QtCore.pyqtSlot(IRI)
+    def onIRIRemovedFromAllDiagrams(self,iri):
+        if not (iri is self.ontologyIRI or iri in self.annotationProperties or iri in self.datatypes):
+            self.deleteIRI(iri)
 
     @QtCore.pyqtSlot(IRI)
     def addIRI(self, iri):
@@ -549,6 +559,7 @@ class IRIManager(QtCore.QObject):
         if not iri in self.iris:
             self.iris.add(iri)
             self.stringToIRI[str(iri)] = iri
+            self.IRIToString[iri] = str(iri)
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
@@ -562,50 +573,31 @@ class IRIManager(QtCore.QObject):
         else:
             iri = IRI(iriString)
             self.addIRI(iri)
+            connect(iri.sgnIRIModified,self.onIRIModified)
             connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
             return iri
 
-    '''
-    @QtCore.pyqtSlot(Diagram, OntologyEntityNode)
-    def addIRIOccurenceInDiagram(self,diagram,node):
-        """
-        Set node as occurrence of node.iri in diagram
-        :type diagram: Diagram
-        :type node: OntologyEntityNode
-        """
-        iri = node.iri
-        if iri in self.iriOccurrences:
-            if diagram in self.iriOccurreces[iri]:
-                self.iriOccurreces[iri][diagram].add(node)
-            else:
-                currSet = set()
-                currSet.add(node)
-                self.iriOccurreces[iri][diagram] = currSet
-        else:
-            currDict = {}
-            currSet = set()
-            currSet.add(node)
-            currDict[diagram] = currSet
-            self.iriOccurreces[iri] = currDict
-
-    @QtCore.pyqtSlot(Diagram, OntologyEntityNode)
-    def removeIRIOccurenceInDiagram(self,diagram,node):
-        """
-        Remove node as occurrence of node.iri in diagram
-        :type diagram: Diagram
-        :type node: OntologyEntityNode
-        """
-        iri = node.iri
-        if iri in self.iriOccurrences:
-            if diagram in self.iriOccurreces[iri]:
-                self.iriOccurreces[iri][diagram].remove(node)
-                if not self.iriOccurreces[iri][diagram]:
-                    self.iriOccurreces[iri].pop(diagram)
-    '''
+    @QtCore.pyqtSlot()
+    def onIRIModified(self):
+        #TODO va testato
+        iri = self.sender()
+        oldStr = self.IRIToString[iri]
+        self.stringToIRI.pop(oldStr,None)
+        self.stringToIRI[str(iri)] = iri
+        self.IRIToString[iri] = str(iri)
 
     #############################################
     #   INTERFACE
     #################################
+    def existIRI(self,iriString):
+        """
+        Returns True if there exists an IRI object identified by iriString. Return False otherwise
+        :type iriString: str
+        :rtype:bool
+        """
+        if iriString in self.stringToIRI:
+            return True
+        return False
 
     ##GENERAL
     def reset(self):

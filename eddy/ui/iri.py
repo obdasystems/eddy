@@ -550,15 +550,21 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             quindi il project deve segnalare a tutti i nodi che, qualora fossero associati ad IRI2,
             devono ora essere associati a IRI1 e modificarsi di conseguenza
             '''
-            newIRI = self.project.getIRI(self.widget('full_iri_field').value())
-            if not newIRI is self.iri:
-                print()
-                #gestisci cambiamento oggetto iri
-
+            fullIRIString = self.widget('full_iri_field').value()
+            existIRI = self.project.existIRI(fullIRIString)
+            if existIRI:
+                print('IRI corresponding to string {} already exists'.format(fullIRIString))
+                newIRI = self.project.getIRI(fullIRIString)
+                if not newIRI is self.iri:
+                    print('newIRI is NOT oldIRI')
+                    #TODO gestisci cambiamento oggetto iri (cosa devo fare? Distruggere oldIRI e sostituirla con newIRI ovunque????
+            else:
+                print('IRI corresponding to string {} does not exist'.format(fullIRIString))
+                self.iri.namespace = fullIRIString
 
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage('The input string is not a valid IRI')
+            errorDialog.showMessage('The input string cannot be used to build a valid IRI')
             errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
             errorDialog.show()
             errorDialog.raise_()
