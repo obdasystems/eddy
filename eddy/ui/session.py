@@ -1519,6 +1519,96 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
+    def doExportDiagram(self):
+        """
+        Export the current project diagrams.
+        """
+        if not self.project.isEmpty():
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+            dialog.setDirectory(expandPath('~/'))
+            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+            dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol}) + self.diagramExporterNameFilters())
+            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+            dialog.selectFile(self.project.name)
+            dialog.selectNameFilter(File.Pdf.value)
+            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
+                # When this is set on macOS, for some reason the native file dialog requires to set
+                # the file filter twice before changing the default suffix, but it already
+                # does this without setting this action. Tested on Qt 5.10.1
+                connect(dialog.filterSelected, lambda value: \
+                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
+            if dialog.exec_():
+                filetype = File.valueOf(dialog.selectedNameFilter())
+                try:
+                    try:
+                        with BusyProgressDialog('Exporting {0}...'.format(self.project.name), parent=self):
+                            worker = self.createProjectExporter(filetype, self.project, self)
+                            worker.run(expandPath(first(dialog.selectedFiles())))
+                        self.addNotification("""
+                        Project export completed: <br><br>
+                        <b><a href={0}>{1}</a></b>
+                        """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+                    except ValueError:
+                        # DIAGRAM SELECTION
+                        filterDialog = DiagramSelectionDialog(self)
+                        if not filterDialog.exec_():
+                            return
+                        # EXPORT DIAGRAMS
+                        worker = self.createDiagramExporter(filetype, self.project, self)
+                        with BusyProgressDialog(parent=self) as progress:
+                            for diagram in filterDialog.selectedDiagrams():
+                                progress.setWindowTitle('Exporting {0}...'.format(diagram.name))
+                                path = first(dialog.selectedFiles())
+                                name = path[0:path.rfind('.')]
+                                ext = path[path.rfind('.'):len(path)]
+                                path = expandPath('{}_{}{}'.format(name, diagram.name, ext))
+                                worker = self.createDiagramExporter(filetype, diagram, self)
+                                worker.run(path)
+                        self.addNotification("""
+                        Project export completed: <br><br>
+                        <b><a href={0}>{1}</a></b>
+                        """.format(os.path.dirname(first(dialog.selectedFiles())), 'Open Folder'))
+                except Exception as e:
+                    LOGGER.error('error during export: {}', e)
+                    self.addNotification("""
+                    <b><font color="#7E0B17">ERROR</font></b>:
+                    Could not complete the export, see the System Log for details.
+                    """)
+
+    @QtCore.pyqtSlot()
+    def doExportOntology(self):
+        """
+        Export the current project.
+        """
+        if not self.project.isEmpty():
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+            dialog.setDirectory(expandPath('~/'))
+            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+            dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
+            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+            dialog.selectFile(self.project.name)
+            dialog.selectNameFilter(File.Owl.value)
+            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
+                # When this is set on macOS, for some reason the native file dialog requires to set
+                # the file filter twice before changing the default suffix, but it already
+                # does this without setting this action. Tested on Qt 5.10.1
+                connect(dialog.filterSelected, lambda value: \
+                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
+            if dialog.exec_():
+                try:
+                    filetype = File.valueOf(dialog.selectedNameFilter())
+                    worker = self.createOntologyExporter(filetype, self.project, self)
+                    worker.run(expandPath(first(dialog.selectedFiles())))
+                except Exception as e:
+                    LOGGER.error('error during export: {}', e)
+                    self.addNotification("""
+                    <b><font color="#7E0B17">ERROR</font></b>:
+                    Could not complete the export, see the System Log for details.
+                    """)
+
+    @QtCore.pyqtSlot()
     def doFocusMdiArea(self):
         """
         Focus the active MDI area subwindow, if any.
@@ -1583,128 +1673,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                     msgbox.setWindowTitle('Import failed!')
                     msgbox.exec_()
-
-    @QtCore.pyqtSlot()
-    def doExportDiagram(self):
-
-        #diagram = self.mdi.activeDiagram()
-        #if diagram:
-        if len(self.project.diagrams()) > 0:
-
-            dialog = QtWidgets.QFileDialog(self)
-            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
-            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(self.diagramExporterNameFilters())
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            dialog.selectFile(self.project.name)
-            dialog.selectNameFilter(File.Pdf.value)
-            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
-                # When this is set on macOS, for some reason the native file dialog requires to set
-                # the file filter twice before changing the default suffix, but it already
-                # does this without setting this action. Tested on Qt 5.10.1
-                connect(dialog.filterSelected, lambda value: \
-                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
-
-            if dialog.exec_():
-                filetype = File.valueOf(dialog.selectedNameFilter())
-
-                flag = False
-
-                if filetype in {File.Pdf, File.Xml}:
-                    selected_diagrams = [list(self.project.diagrams())[0]]
-                else:
-                    diagrams_selection_dialog = DiagramSelectionDialog(self)
-                    if not diagrams_selection_dialog.exec_():
-                        return
-                    selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
-
-                    if len(selected_diagrams) == 0:
-                        return
-
-                    flag = True
-
-                file_names = []
-                success_set = set()
-
-                for diag in selected_diagrams:
-
-                    if flag is False:
-                        path = expandPath(first(dialog.selectedFiles()))
-                    else:
-                        short_path = first(dialog.selectedFiles())
-                        last_dot_index = short_path.rfind('.')
-                        new_path = short_path[0:last_dot_index]+'_'+diag.name+short_path[last_dot_index:len(short_path)]
-
-                        path = expandPath(new_path)
-
-                    worker = self.createDiagramExporter(filetype, diag, self)
-                    worker.run(path)
-
-                    if worker.success is not None:
-                        success_set.add(worker.success)
-
-                    file_names.append(path)
-
-                if (len(file_names) > 0) and (False not in success_set):
-
-                    dialog_export_completed = QtWidgets.QMessageBox()
-                    dialog_export_completed.setWindowTitle('Export Completed')
-                    dialog_export_completed.setStandardButtons(QtWidgets.QMessageBox.Ok)
-
-                    if flag:
-
-                        text_to_display = str(len(
-                            file_names)) + ' files were created with filenames having the following pattern - [diagram_name]_[filename given in the file dialog].\n\n The files are \n'
-
-                        for f in file_names:
-                            text_to_display = text_to_display + '     ' + f + '\n'
-
-                    else:
-                        text_to_display = 'The exported file is - ' + file_names[0]
-
-                    dialog_export_completed.setText(text_to_display)
-                    dialog_export_completed.exec_()
-
-    @QtCore.pyqtSlot()
-    def doExportOntology(self):
-        """
-        Export the current project.
-        """
-        if not self.project.isEmpty():
-            dialog = QtWidgets.QFileDialog(self)
-            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
-            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(
-                # self.ontologyExporterNameFilters()                -> .owl
-                # self.projectExporterNameFilters(except{File.Graphol})   -> .csv
-                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters({File.Graphol}))
-            )
-
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            dialog.selectFile(self.project.name)
-            dialog.selectNameFilter(File.Owl.value)
-            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
-                # When this is set on macOS, for some reason the native file dialog requires to set
-                # the file filter twice before changing the default suffix, but it already
-                # does this without setting this action. Tested on Qt 5.10.1
-                connect(dialog.filterSelected, lambda value: \
-                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
-            if dialog.exec_():
-                filetype = File.valueOf(dialog.selectedNameFilter())
-                try:
-                    worker = self.createOntologyExporter(filetype, self.project, self)
-                except ValueError:
-                    try:
-                        worker = self.createProjectExporter(filetype, self.project, self)
-                    except ValueError:
-                        arbitrary_diagram = list(self.project.diagrams())[0]
-                        if arbitrary_diagram:
-                            worker = self.createDiagramExporter(filetype, arbitrary_diagram, self)
-                        else:
-                            LOGGER.critical('no diagram present in the project')
-                worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
     def doInvertRole(self):
