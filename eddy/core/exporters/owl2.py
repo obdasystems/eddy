@@ -74,7 +74,7 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into a valid OWL 2 ontology.
     """
-    def __init__(self, project, session=None):
+    def __init__(self, project, session=None, **kwargs):
         """
         Initialize the OWL Project exporter
         :type project: Project
@@ -84,8 +84,7 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         self.items = list(project.edges()) + list(filter(lambda n: not n.adjacentNodes(), project.nodes()))
         self.path = None
         self.progress = None
-
-        self.selected_diagrams = None
+        self.diagrams = kwargs.get('diagrams', None)
 
     #############################################
     #   SLOTS
@@ -98,7 +97,7 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         """
         self.progress.sleep()
         self.progress.close()
-        dialog = OWLOntologyExporterDialog(self.project, self.path, self.session, self.selected_diagrams)
+        dialog = OWLOntologyExporterDialog(self.project, self.path, self.session, self.diagrams)
         dialog.exec_()
 
     @QtCore.pyqtSlot(str)
@@ -136,17 +135,13 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         :type path: str
         """
         if not self.project.isEmpty():
-            #############################################
-            # Diagram selection dialog
-            #################################
-
+            # DIAGRAM SELECTION
+            if not self.diagrams:
+                dialog = DiagramSelectionDialog(self.session)
+                if not dialog.exec_():
+                    return
+                self.diagrams = dialog.selectedDiagrams()
             self.path = path
-
-            diagrams_selection_dialog = DiagramSelectionDialog(self.session)
-            if not diagrams_selection_dialog.exec_():
-                return
-            self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
-
             self.progress = BusyProgressDialog('Performing syntax check...')
             self.progress.show()
             worker = SyntaxValidationWorker(0, self.items, self.project)
