@@ -33,7 +33,9 @@
 ##########################################################################
 
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from abc import ABCMeta, abstractmethod
+
+from PyQt5 import QtGui, QtCore
 
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractDiagramExporter
@@ -42,18 +44,107 @@ from eddy.core.output import getLogger
 LOGGER = getLogger()
 
 
-class ImageExporter(AbstractDiagramExporter):
+class ImageDiagramExporter(AbstractDiagramExporter):
     """
-    Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams in JPEG format.
+    Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams to an image file.
     """
-    def __init__(self, diagram, session=None):
+    __metaclass__ = ABCMeta
+
+    BmpFormat = 'BMP'
+    JpegFormat = 'JPEG'
+    PngFormat = 'PNG'
+    PpmFormat = 'PPM'
+
+    def __init__(self, diagram, format, session=None):
         """
-        Initialize the JPEG Exporter.
+        Initialize the ImageDiagramExporter.
+        :type diagram: Diagram
+        :type format: str
         :type session: Session
         """
         super().__init__(diagram, session)
+        self._format = format
 
-        self.success = False
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def format(self):
+        """
+        Returns the image format for this exporter.
+        :rtype: str
+        """
+        return self._format
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    @abstractmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :rtype: File
+        """
+        pass
+
+    def run(self, path):
+        """
+        Perform JPEG document generation.
+        :type path: str
+        """
+        shape = self.diagram.visibleRect(margin=20)
+        pixmap = QtGui.QPixmap(shape.width(), shape.height())
+        painter = QtGui.QPainter()
+
+        if painter.begin(pixmap):
+            painter.setBackgroundMode(QtCore.Qt.OpaqueMode)
+            # RENDER THE DIAGRAM IN THE PAINTER
+            self.diagram.render(painter, source=shape)
+            # COMPLETE THE EXPORT
+            painter.end()
+            image = pixmap.toImage()
+            image.save(path, self.format)
+
+
+class BmpDiagramExporter(ImageDiagramExporter):
+    """
+    Subclass of ImageDiagramExporter that exports a diagram to a BMP image file.
+    """
+    def __init__(self, diagram, session=None):
+        """
+        Initialize the BmpDiagramExporter.
+        :type diagram: Diagram
+        :type session: Session
+        """
+        super().__init__(diagram, ImageDiagramExporter.BmpFormat, session)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.Bmp
+
+
+class JpegDiagramExporter(ImageDiagramExporter):
+    """
+    Subclass of ImageDiagramExporter that exports a diagram to a JPEG image file.
+    """
+    def __init__(self, diagram, session=None):
+        """
+        Initialize the JpegDiagramExporter.
+        :type diagram: Diagram
+        :type session: Session
+        """
+        super().__init__(diagram, ImageDiagramExporter.JpegFormat, session)
 
     #############################################
     #   INTERFACE
@@ -67,31 +158,27 @@ class ImageExporter(AbstractDiagramExporter):
         """
         return File.Jpeg
 
-    def run(self, path):
+
+class PngDiagramExporter(ImageDiagramExporter):
+    """
+    Subclass of ImageDiagramExporter that exports a diagram to a PNG image file.
+    """
+    def __init__(self, diagram, session=None):
         """
-        Perform JPEG document generation.
-        :type path: str
+        Initialize the PngDiagramExporter.
+        :type diagram: Diagram
+        :type session: Session
         """
+        super().__init__(diagram, ImageDiagramExporter.PngFormat, session)
 
-        shape = self.diagram.visibleRect(margin=220)
+    #############################################
+    #   INTERFACE
+    #################################
 
-        empty_image = QtGui.QImage(int(shape.width()), int(shape.height()),QtGui.QImage.Format_RGB32)
-        empty_image.invertPixels()
-
-        pixmap = QtGui.QPixmap(empty_image)
-
-        painter = QtGui.QPainter()
-
-        started = painter.begin(pixmap)
-
-        if started:
-            self.diagram.render(painter,source=shape)
-
-            image = pixmap.toImage()
-
-            #pixmap.save(path)
-            image.save(path)
-
-            painter.end()
-
-            self.success = True
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.Png
