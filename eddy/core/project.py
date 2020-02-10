@@ -31,8 +31,7 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
-
+from PyQt5.QtCore import QObject
 from rfc3987 import parse
 
 from PyQt5 import QtCore
@@ -49,6 +48,7 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
+from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIManager, IRI
 from eddy.ui.dialogs import DiagramSelectionDialog
@@ -66,7 +66,15 @@ K_META = 'meta'
 K_NODE = 'nodes'
 K_PREDICATE = 'predicates'
 K_TYPE = 'types'
+
+#TODO ADDED
 K_OCCURRENCES = 'occurrences'
+K_CLASS_OCCURRENCES = 'class_occurrences'
+K_DATATYPE_OCCURRENCES = 'datatype_occurrences'
+K_OBJ_PROP_OCCURRENCES = 'obj_prop_occurrences'
+K_DATA_PROP_OCCURRENCES = 'data_prop_occurrences'
+K_INDIVIDUAL_OCCURRENCES = 'individual_occurrences'
+#TODO END ADDED
 
 # PROJECT MERGE
 K_CURRENT = 'current'
@@ -105,6 +113,7 @@ class Project(IRIManager):
     * sgnMetaAdded: whenever predicate metadata are added to the Project.
     * sgnMetaRemoved: whenever predicate metadata are removed from the Project.
     * sgnUpdated: whenever the Project is updated in any of its parts.
+    * sgnIRIRemovedFromAllDiagrams: whenever an IRI is removed from all the diagrams managed by the project
     """
     sgnDiagramAdded = QtCore.pyqtSignal('QGraphicsScene')
     sgnDiagramRemoved = QtCore.pyqtSignal('QGraphicsScene')
@@ -130,13 +139,15 @@ class Project(IRIManager):
     sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str,str)
     #sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
 
+    sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
+
     def __init__(self, **kwargs):
         """
         Initialize the graphol project.
         """
         super().__init__(kwargs.get('session'))
         #self.index = ProjectIndex()
-        self.index = ProjectIRIIndex()
+        self.index = ProjectIRIIndex(self)
         #self.iri = kwargs.get('iri', 'NULL')
         self.name = kwargs.get('name')
         self.path = expandPath(kwargs.get('path'))
@@ -183,7 +194,7 @@ class Project(IRIManager):
         connect(self.sgnItemAdded, self.add_item_to_IRI_prefixes_nodes_dict)
         connect(self.sgnItemRemoved, self.remove_item_from_IRI_prefixes_nodes_dict)
 
-        connect(self.index.sgnIRIRemoved,self.onIRIRemovedFromAllDiagrams)
+        connect(self.sgnIRIRemovedFromAllDiagrams,self.onIRIRemovedFromAllDiagrams)
 
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
@@ -1361,7 +1372,8 @@ class Project(IRIManager):
         if self.index.removeItem(diagram, item):
             # TODO added
             if isinstance(item, OntologyEntityNode):
-                self.index.removeIRIOccurenceFromDiagram(diagram, item)
+                if self.index.removeIRIOccurenceFromDiagram(diagram, item):
+                    self.sgnIRIRemovedFromAllDiagrams.emit(item.iri)
             # TODO end
             self.sgnItemRemoved.emit(diagram, item)
             self.sgnUpdated.emit()
@@ -1372,9 +1384,10 @@ class ProjectIndex(dict):
     """
     Extends built-in dict and implements the Project index.
     """
-    def __init__(self):
+    def __init__(self, project):
         """
         Initialize the Project Index.
+        :type project: Project
         """
         super().__init__(self)
         self[K_DIAGRAM] = dict()
@@ -1383,6 +1396,7 @@ class ProjectIndex(dict):
         self[K_NODE] = dict()
         self[K_PREDICATE] = dict()
         self[K_TYPE] = dict()
+        self.project = project
 
     def addDiagram(self, diagram):
         """
@@ -1766,15 +1780,17 @@ class ProjectIRIIndex(ProjectIndex):
     """
     Extends ProjectIndex to manage Project IRI index.
     """
-    sgnIRIRemoved = QtCore.pyqtSignal(IRI)
-
-
-    def __init__(self):
+    def __init__(self, project):
         """
         Initialize the Project Index.
         """
-        super().__init__()
+        super().__init__(project)
         self[K_OCCURRENCES] = dict()
+        self[K_CLASS_OCCURRENCES] = dict()
+        self[K_DATATYPE_OCCURRENCES] = dict()
+        self[K_OBJ_PROP_OCCURRENCES] = dict()
+        self[K_DATA_PROP_OCCURRENCES] = dict()
+        self[K_INDIVIDUAL_OCCURRENCES] = dict()
 
     def addIRIOccurenceToDiagram(self, diagram, node):
         """
@@ -1797,6 +1813,34 @@ class ProjectIRIIndex(ProjectIndex):
             currDict[diagram.name] = currSet
             self[K_OCCURRENCES][iri] = currDict
 
+        k_metatype = ''
+        if isinstance(node, ConceptNode):
+            k_metatype = K_CLASS_OCCURRENCES
+        #TODO AGGIUNGI TUTTI ALTRI CASI (Properties, values, individuals)
+        self.addTypedIRIOccurrenceToDiagram(diagram,node,k_metatype)
+
+    def addTypedIRIOccurrenceToDiagram(self, diagram, node, k_metatype):
+        """
+        Set node as typed occurrence of node.iri in diagram
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        :type k_metatype: str
+        """
+        iri = node.iri
+        if iri in self[k_metatype]:
+            if diagram.name in self[k_metatype][iri]:
+                self[k_metatype][iri][diagram.name].add(node)
+            else:
+                currSet = set()
+                currSet.add(node)
+                self[k_metatype][iri][diagram.name] = currSet
+        else:
+            currDict = {}
+            currSet = set()
+            currSet.add(node)
+            currDict[diagram.name] = currSet
+            self[k_metatype][iri] = currDict
+
     def removeIRIOccurenceFromDiagram(self, diagram, node):
         """
         Remove node as occurrence of node.iri in diagram
@@ -1811,37 +1855,62 @@ class ProjectIRIIndex(ProjectIndex):
                     self[K_OCCURRENCES][iri].pop(diagram.name)
                     if not self[K_OCCURRENCES][iri]:
                         self[K_OCCURRENCES].pop(iri)
-                        self.sgnIRIRemoved.emit(iri)
+                        return True
+                    else:
+                        return False
 
-
-    def iriOccurrences(self,iri=None,diagram=None):
+    def removeTypedIRIOccurenceFromDiagram(self, diagram, node, k_metatype):
         """
-        Returns a collection of nodes identified by the given IRI belonging to the given diagram.
+        Remove node as typed occurrence of node.iri in diagram
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        :type k_metatype: str
+        """
+        iri = node.iri
+        if iri in self[k_metatype]:
+            if diagram.name in self[k_metatype][iri]:
+                self[k_metatype][iri][diagram.name].remove(node)
+                if not self[k_metatype][iri][diagram.name]:
+                    self[k_metatype][iri].pop(diagram.name)
+                    if not self[k_metatype][iri]:
+                        self[k_metatype].pop(iri)
+                        return True
+                    else:
+                        return False
+
+
+    def iriOccurrences(self,iri=None,diagram=None,k_metatype=None):
+        """
+        Returns a collection of nodes of type k_metatype identified by the given IRI belonging to the given diagram.
         If no diagram is supplied the lookup is performed across the whole Project Index.
+        If no type is supplied the lookup is performed across all the nodes.
         :type iri: IRI
         :type diagram: Diagram
+        :k_metatype: str
         :rtype: set
         """
         try:
+            if not k_metatype:
+                k_metatype = K_OCCURRENCES
             result = set()
             if not iri:
                 if not diagram:
-                    for occIRI in self[K_OCCURRENCES]:
-                        for diag in self[K_OCCURRENCES][occIRI]:
-                            result.update(self[K_OCCURRENCES][occIRI][diag])
+                    for occIRI in self[k_metatype]:
+                        for diag in self[k_metatype][occIRI]:
+                            result.update(self[k_metatype][occIRI][diag])
                 else:
                     for occIRI in self[K_OCCURRENCES]:
-                        if diagram.name in self[K_OCCURRENCES][occIRI]:
-                            result.update(self[K_OCCURRENCES][occIRI][diagram.name])
+                        if diagram.name in self[k_metatype][occIRI]:
+                            result.update(self[k_metatype][occIRI][diagram.name])
             else:
                 if not diagram:
-                    if iri in self[K_OCCURRENCES]:
-                        for diag in self[K_OCCURRENCES][iri]:
-                            result.update(self[K_OCCURRENCES][iri][diag])
+                    if iri in self[k_metatype]:
+                        for diag in self[k_metatype][iri]:
+                            result.update(self[k_metatype][iri][diag])
                 else:
-                    if iri in self[K_OCCURRENCES]:
-                        if diagram.name in self[K_OCCURRENCES][iri]:
-                            result.update(self[K_OCCURRENCES][iri][diagram.name])
+                    if iri in self[k_metatype]:
+                        if diagram.name in self[k_metatype][iri]:
+                            result.update(self[k_metatype][iri][diagram.name])
             return result
         except KeyError:
             return set()
