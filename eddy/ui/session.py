@@ -88,9 +88,10 @@ from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.graphreferences import GraphReferences
-from eddy.core.exporters.image import ImageExporter
+from eddy.core.exporters.image import BmpDiagramExporter
+from eddy.core.exporters.image import JpegDiagramExporter
+from eddy.core.exporters.image import PngDiagramExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporter
-from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory, DescriptionFactory
@@ -824,13 +825,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Initialize diagram and project exporters.
         """
-        self.addDiagramExporter(GraphMLDiagramExporter)
-        self.addDiagramExporter(PdfDiagramExporter)
-        self.addDiagramExporter(ImageExporter)
-        self.addDiagramExporter(GraphReferences)
         self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholProjectExporter)
         self.addProjectExporter(PdfProjectExporter)
+        self.addDiagramExporter(GraphMLDiagramExporter)
+        self.addDiagramExporter(BmpDiagramExporter)
+        self.addDiagramExporter(JpegDiagramExporter)
+        self.addDiagramExporter(PngDiagramExporter)
+        self.addDiagramExporter(GraphReferences)
 
     def initLoaders(self):
         """
