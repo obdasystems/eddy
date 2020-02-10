@@ -37,20 +37,18 @@ import csv
 import io
 from operator import itemgetter
 
+from PyQt5 import QtGui
+
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.fsystem import fwrite
-from eddy.core.functions.misc import lstrip
-from eddy.core.functions.owl import OWLShortIRI
 from eddy.core.functions.path import openPath
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import K_DESCRIPTION
 from eddy.ui.dialogs import DiagramSelectionDialog
-
-from PyQt5 import QtWidgets
 
 LOGGER = getLogger()
 
@@ -102,43 +100,60 @@ class CsvExporter(AbstractProjectExporter):
         :type session: Session
         """
         super().__init__(project, session)
-        self.selected_diagrams = kwargs.get('diagrams', None)
+        self.diagrams = kwargs.get('diagrams', None)
+        self.open = kwargs.get('open', False)
 
     #############################################
     #   INTERFACE
     #################################
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the export.
+        :return: File
+        """
+        return File.Csv
+
+    def plainText(self, html):
+        """
+        Returns a plain text version of the given HTML fragment.
+        :type html: str
+        :rtype: str
+        """
+        document = QtGui.QTextDocument(self)
+        document.setHtml(html)
+        return document.toPlainText()
 
     def run(self, path):
         """
         Perform CSV file generation.
         :type path: str
         """
-        if self.selected_diagrams is None:
-            diagrams_selection_dialog = DiagramSelectionDialog(self.session)
-            if not diagrams_selection_dialog.exec_():
+        if self.diagrams is None:
+            dialog = DiagramSelectionDialog(self.session)
+            if not dialog.exec_():
                 return
-            self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+            self.diagrams = dialog.selectedDiagrams()
 
         LOGGER.info('Exporting selected diagrams in project %s in CSV format: %s', self.project.name, path)
         collection = {x: {} for x in self.Types}
 
-        for diag in self.selected_diagrams:
-            nodes = self.project.predicates(diagram=diag)
+        for diagram in self.diagrams:
+            nodes = self.project.predicates(diagram=diagram)
             for node in nodes:
                 if node.type() in collection:
                     if not node.text() in collection[node.type()]:
                         meta = self.project.meta(node.type(), node.text())
                         collection[node.type()][node.text()] = {
-                            #CsvExporter.KeyName: lstrip(OWLShortIRI('', node.text()), ':'),
                             CsvExporter.KeyName: node.text().replace('\n',''),
                             CsvExporter.KeyType: node.shortName,
-                            #CsvExporter.KeyDescription: meta.get(K_DESCRIPTION, ''),
-                            CsvExporter.KeyDescription: QtWidgets.QTextEdit(meta.get(K_DESCRIPTION, '')).toPlainText(),
+                            CsvExporter.KeyDescription: self.plainText(meta.get(K_DESCRIPTION, '')),
                             CsvExporter.KeyDiagrams: DistinctList()}
                     collection[node.type()][node.text()][self.KeyDiagrams] += [node.diagram.name]
 
         buffer = io.StringIO()
-        writer = csv.writer(buffer)
+        writer = csv.writer(buffer, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writerow((self.KeyName, self.KeyType, self.KeyDescription, self.KeyDiagrams))
         for i, j in sorted(((v, k) for k in collection for v in collection[k]), key=itemgetter(0)):
             writer.writerow((
@@ -150,12 +165,5 @@ class CsvExporter(AbstractProjectExporter):
 
         fwrite(buffer.getvalue(), path)
 
-        openPath(path)
-
-    @classmethod
-    def filetype(cls):
-        """
-        Returns the type of the file that will be used for the export.
-        :return: File
-        """
-        return File.Csv
+        if self.open:
+            openPath(path)
