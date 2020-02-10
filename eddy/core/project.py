@@ -1378,6 +1378,15 @@ class Project(IRIManager):
             self.sgnItemRemoved.emit(diagram, item)
             self.sgnUpdated.emit()
 
+    @QtCore.pyqtSlot(IRI, IRI)
+    def doSwitchIRI(self, sub, master):
+        """
+        Executed whenever the IRI sub must be replaced by the IRI master
+        :type sub: IRI
+        :type master: IRI
+        """
+
+
 
 #TODO ProjectIndex esteso da ProjectIRIIndex. Alcuni suoi metodi saranno da sostituire con opportuni metodi di ProjectIRIIndex
 class ProjectIndex(dict):
@@ -1791,6 +1800,12 @@ class ProjectIRIIndex(ProjectIndex):
         self[K_OBJ_PROP_OCCURRENCES] = dict()
         self[K_DATA_PROP_OCCURRENCES] = dict()
         self[K_INDIVIDUAL_OCCURRENCES] = dict()
+
+    def switchIRI(self,sub,master):
+        if sub in self[K_OCCURRENCES]:
+            for diagName in self[K_OCCURRENCES][sub]:
+                for node in  self[K_OCCURRENCES][sub][diagName]:
+                    node.iri = master
 
     def addIRIOccurenceToDiagram(self, diagram, node):
         """

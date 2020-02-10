@@ -173,7 +173,7 @@ class IRI(QtCore.QObject):
     Represents International Resource Identifiers (https://www.ietf.org/rfc/rfc3987.txt)
     """
 
-    sgnIRIModified = QtCore.pyqtSignal()
+    sgnIRIModified = QtCore.pyqtSignal(str)
     sgnAnnotationAdded = QtCore.pyqtSignal(AnnotationAssertion)
     sgnAnnotationRemoved = QtCore.pyqtSignal(AnnotationAssertion)
     sgnAnnotationModified = QtCore.pyqtSignal(AnnotationAssertion)
@@ -232,9 +232,10 @@ class IRI(QtCore.QObject):
     def namespace(self, value):
         if not IRI.isValidNamespace(value):
             raise IllegalNamespaceError(value)
+        oldIRIStr = compose(**self.components)
         self._namespace = value
         self.components = parse(IRI.concat(self._namespace, self._suffix))
-        self.sgnIRIModified.emit()
+        self.sgnIRIModified.emit(oldIRIStr)
 
     @property
     def annotationAssertions(self):
@@ -496,9 +497,6 @@ class IRIManager(QtCore.QObject):
         super().__init__(parent)
         self.iris = set()
         self.stringToIRI = {}
-
-        self.IRIToString = {}
-
         self.prefix2namespaceMap = {}
         self.annotationProperties = set()
         self.datatypes = set()
@@ -542,7 +540,6 @@ class IRIManager(QtCore.QObject):
         # Questo metodo dovrà essere chiamato SOLO quando tutti i riferimenti a iri sono stati eliminati
         self.iris.remove(iri)
         self.stringToIRI.pop(iri, None)
-        self.IRIToString.pop(str(iri),None)
         self.sgnIRIRemoved.emit(iri)
 
     @QtCore.pyqtSlot(IRI)
@@ -559,7 +556,6 @@ class IRIManager(QtCore.QObject):
         if not iri in self.iris:
             self.iris.add(iri)
             self.stringToIRI[str(iri)] = iri
-            self.IRIToString[iri] = str(iri)
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
@@ -577,15 +573,12 @@ class IRIManager(QtCore.QObject):
             connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
             return iri
 
-    @QtCore.pyqtSlot()
-    def onIRIModified(self):
+    @QtCore.pyqtSlot(str)
+    def onIRIModified(self,oldIRIStr):
         #TODO va testato
         iri = self.sender()
-        oldStr = self.IRIToString[iri]
-        self.stringToIRI.pop(oldStr,None)
+        self.stringToIRI.pop(oldIRIStr,None)
         self.stringToIRI[str(iri)] = iri
-        self.IRIToString[iri] = str(iri)
-
     #############################################
     #   INTERFACE
     #################################

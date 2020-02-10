@@ -2205,6 +2205,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self)
+                connect(builder.sgnIRISwitch)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()

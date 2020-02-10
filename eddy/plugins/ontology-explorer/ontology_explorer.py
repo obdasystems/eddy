@@ -355,8 +355,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
             self.redrawIRIItem()
 
-    @QtCore.pyqtSlot()
-    def onIRIModified(self):
+    @QtCore.pyqtSlot(str)
+    def onIRIModified(self,str):
         iri = self.sender()
         self.redrawIRIItem(iri)
 
@@ -374,6 +374,12 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onIRIAnnotationAssertionModified(self, ann):
         iri = self.sender()
         self.redrawIRIItem(iri)
+
+    @QtCore.pyqtSlot()
+    def onNodeIRISwitched(self):
+        node = self.sender()
+        self.doAddNode(node.diagram(),node)
+
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
@@ -538,6 +544,12 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   INTERFACE
     #################################
+    def connectNodeSignals(self, node):
+        '''
+        :type iri: OntologyEntityNode
+        '''
+        connect(node.sgnIRISwitched, self.onNodeIRISwitched)
+
     def connectIRISignals(self, iri):
         '''
         :type iri: IRI

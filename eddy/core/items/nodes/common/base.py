@@ -721,6 +721,9 @@ class OntologyEntityNode(AbstractNode):
     """
     Base abstract class for all the nodes representing ontology elements (i.e. Nodes having an associated IRI).
     """
+    sgnIRISwitched = QtCore.pyqtSignal()
+
+
     def __init__(self, iri):
         self._iri = iri
         # store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
@@ -742,6 +745,7 @@ class OntologyEntityNode(AbstractNode):
             self.disconnectIRISignals()
         self._iri = iriObj
         self.connectIRISignals()
+        self.sgnIRISwitched.emit()
         if self.diagram:
             self.doUpdateNodeLabel()
 

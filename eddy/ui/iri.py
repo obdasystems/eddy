@@ -252,6 +252,8 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     noPrefixString = ''
 
+    sgnIRISwitch = QtCore.pyqtSignal(IRI,IRI)
+
     def __init__(self,iri,session):
         """
         Initialize the IRI properties dialog.
@@ -535,20 +537,6 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
     @QtCore.pyqtSlot(bool)
     def saveIRI(self,_):
         try:
-            #QUANDO MODIFICHI UN'IRI potresti dover cambiare l'associazione dei nodi con le IRI
-            '''
-            NODO1--->IRI1
-            NODO2--->IRI2
-            NODO3--->IRI2
-            
-            se modifico IRI2 in modo che sia uguale a IRI1, allora 
-            NODO1--->IRI1
-            NODO2--->IRI1
-            NODO3--->IRI1
-            
-            quindi il project deve segnalare a tutti i nodi che, qualora fossero associati ad IRI2,
-            devono ora essere associati a IRI1 e modificarsi di conseguenza
-            '''
             fullIRIString = self.widget('full_iri_field').value()
             existIRI = self.project.existIRI(fullIRIString)
             if existIRI:
@@ -557,6 +545,9 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if not newIRI is self.iri:
                     print('newIRI is NOT oldIRI')
                     #TODO gestisci cambiamento oggetto iri (cosa devo fare? Distruggere oldIRI e sostituirla con newIRI ovunque????
+                    self.iri = newIRI
+                    self.redraw()
+                    self.sgnIRISwitch.emit(self.iri, newIRI)
             else:
                 print('IRI corresponding to string {} does not exist'.format(fullIRIString))
                 self.iri.namespace = fullIRIString
