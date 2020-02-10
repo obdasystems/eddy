@@ -57,6 +57,7 @@ class File(Enum_):
     Csv = 'Comma-separated values (*.csv)'
     GraphML = 'GraphML (*.graphml)'
     Graphol = 'Graphol (*.graphol)'
+    GraphReferences = 'Graph References (*.xml)'
     Html = 'Hyper-Text Markup Language (*.html)'
     Jar = 'Java Archive (*.jar)'
     Jpeg = 'JPEG (*.jpg)'
