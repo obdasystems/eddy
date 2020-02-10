@@ -32,23 +32,33 @@
 #                                                                        #
 ##########################################################################
 
-from PyQt5 import QtXml
+
+from PyQt5 import QtCore, QtXml
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
-from eddy.core.exporters.common import AbstractDiagramExporter
+from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.fsystem import fwrite
 
 
-class GraphReferences(AbstractDiagramExporter):
-
-    def __init__(self, diagram, session):
-
-        super().__init__(diagram, session)
+class GraphReferencesProjectExporter(AbstractProjectExporter):
+    """
+    Extends AbstractProjectExporter with facilities to export the list of references (diagram, coordinates, size)
+    for class, object property, and data property nodes in the project into an XML file.
+    """
+    def __init__(self, project, session):
+        """
+        Initialize the GraphReferencesProjectExporter
+        :type project: Project
+        :type session: Session
+        """
+        super().__init__(project, session)
         self.document = None
         self.missing = {Item.FacetNode, Item.PropertyAssertionNode}
 
-        self.success = False
+    #############################################
+    #   INTERFACE
+    #################################
 
     @classmethod
     def filetype(cls):
@@ -56,83 +66,49 @@ class GraphReferences(AbstractDiagramExporter):
         Returns the type of the file that will be used for the export.
         :return: File
         """
-        return File.Xml
+        return File.GraphReferences
 
-    def run(self,path):
-
-        project = self.diagram.project
-
-        # 1) CREATE THE DOCUMENT
+    def run(self, path):
+        """
+        Perform graph references document generation.
+        :type path: str
+        """
+        # CREATE THE DOCUMENT
         self.document = QtXml.QDomDocument()
         instruction = self.document.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8" standalone="no"')
         self.document.appendChild(instruction)
 
-        # 2) CREATE ROOT ELEMENT
+        # CREATE ROOT ELEMENT
         root = self.document.createElement('graphReferences')
 
-        node_diagrams_dict = dict()
-
-        for diagram in project.diagrams():
+        # GENERATE NODES
+        for diagram in self.project.diagrams():
             for node in diagram.nodes():
-                if node.isMeta():#if node.type() not in self.missing:
+                QtCore.QCoreApplication.processEvents()
+                if node.isMeta():
+                    iri = self.project.get_full_IRI(
+                        self.project.get_iri_of_node(node), None, node.remaining_characters)
+                    diagramElement = self.document.createElement('diagramName')
+                    diagramElement.appendChild(self.document.createTextNode(diagram.name))
+                    xElement = self.document.createElement('x')
+                    xElement.appendChild(self.document.createTextNode(str(int(node.x()))))
+                    yElement = self.document.createElement('y')
+                    yElement.appendChild(self.document.createTextNode(str(int(node.y()))))
+                    wElement = self.document.createElement('w')
+                    wElement.appendChild(self.document.createTextNode(str(int(node.width()))))
+                    hElement = self.document.createElement('h')
+                    hElement.appendChild(self.document.createTextNode(str(int(node.height()))))
+                    nodeElement = self.document.createElement(node.type().realName.replace(' node', ''))
+                    nodeElement.setAttribute('name', iri)
+                    nodeElement.appendChild(diagramElement)
+                    nodeElement.appendChild(xElement)
+                    nodeElement.appendChild(yElement)
+                    nodeElement.appendChild(wElement)
+                    nodeElement.appendChild(hElement)
+                    root.appendChild(nodeElement)
 
-                    full_IRI = project.get_full_IRI(project.get_iri_of_node(node), None, node.remaining_characters)
-
-                    if full_IRI not in node_diagrams_dict.keys():
-                        node_diagrams_dict[full_IRI] = []
-
-                        node_diagrams_dict[full_IRI].append(node.type().realName.replace(' node',''))
-
-                    node_diagrams_dict[full_IRI].append(diagram.name)
-                    node_diagrams_dict[full_IRI].append(str(int(node.pos().x())))
-                    node_diagrams_dict[full_IRI].append(str(int(node.pos().y())))
-                    node_diagrams_dict[full_IRI].append(str(int(node.width())))
-                    node_diagrams_dict[full_IRI].append(str(int(node.height())))
-
-        # 3) GENERATE NODES
-        for node_full_text in node_diagrams_dict.keys():
-
-            value = node_diagrams_dict[node_full_text]
-
-            for i in range(1,len(value)-4,5):
-
-                diag = value[i]
-                x = value[i+1]
-                y = value[i+2]
-                w = value[i+3]
-                h = value[i+4]
-
-                diag_to_append = self.document.createElement('diagramName')
-                diag_to_append.appendChild(self.document.createTextNode(diag))
-
-                x_to_append = self.document.createElement('x')
-                x_to_append.appendChild(self.document.createTextNode(x))
-
-                y_to_append = self.document.createElement('y')
-                y_to_append.appendChild(self.document.createTextNode(y))
-
-                w_to_append = self.document.createElement('w')
-                w_to_append.appendChild(self.document.createTextNode(w))
-
-                h_to_append = self.document.createElement('h')
-                h_to_append.appendChild(self.document.createTextNode(h))
-
-                node_to_append = self.document.createElement(value[0])
-                node_to_append.setAttribute('name', node_full_text)
-
-                node_to_append.appendChild(diag_to_append)
-                node_to_append.appendChild(x_to_append)
-                node_to_append.appendChild(y_to_append)
-                node_to_append.appendChild(w_to_append)
-                node_to_append.appendChild(h_to_append)
-
-                root.appendChild(node_to_append)
-
-        # 4) APPEND THE GRAPH TO THE DOCUMENT
+        # APPEND THE GRAPH TO THE DOCUMENT
         self.document.appendChild(root)
 
-        # 5) GENERATE THE FILE
+        # GENERATE THE FILE
         fwrite(self.document.toString(2), path)
-
-        self.success = True
-
