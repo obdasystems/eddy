@@ -36,10 +36,18 @@
 import os
 import pytest
 
+from PyQt5 import QtPrintSupport
+
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
+from eddy.core.datatypes.system import File
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
+from eddy.core.exporters.graphreferences import GraphReferencesProjectExporter
+from eddy.core.exporters.image import BmpDiagramExporter
+from eddy.core.exporters.image import JpegDiagramExporter
+from eddy.core.exporters.image import PngDiagramExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
 from eddy.core.exporters.pdf import PdfDiagramExporter
+from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
 from eddy.ui.session import Session
@@ -61,6 +69,67 @@ def session(qapp, qtbot, logging_disabled):
 
 
 #############################################
+#   CSV EXPORT
+#################################
+
+def test_export_project_to_csv(session, qtbot, tmpdir):
+    # GIVEN
+    csv = tmpdir.join('project.csv')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    exporter = session.projectExporter(File.Csv)
+    worker = exporter(project, session, diagrams=project.diagrams())
+    worker.run(str(csv))
+    # THEN
+    assert os.path.isfile(str(csv))
+
+
+#############################################
+#   IMAGE EXPORT
+#################################
+
+def test_export_diagram_to_bmp(session, qtbot, tmpdir):
+    # GIVEN
+    image = tmpdir.join('diagram.bmp')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    worker = BmpDiagramExporter(session.mdi.activeDiagram(), session)
+    worker.run(str(image))
+    # THEN
+    assert os.path.isfile(str(image))
+
+
+def test_export_diagram_to_jpeg(session, qtbot, tmpdir):
+    # GIVEN
+    image = tmpdir.join('diagram.jpg')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    worker = JpegDiagramExporter(session.mdi.activeDiagram(), session)
+    worker.run(str(image))
+    # THEN
+    assert os.path.isfile(str(image))
+
+
+def test_export_diagram_to_png(session, qtbot, tmpdir):
+    # GIVEN
+    image = tmpdir.join('diagram.png')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    worker = PngDiagramExporter(session.mdi.activeDiagram(), session)
+    worker.run(str(image))
+    # THEN
+    assert os.path.isfile(str(image))
+
+
+#############################################
 #   GRAPHML EXPORT
 #################################
 
@@ -78,6 +147,23 @@ def test_export_diagram_to_graphml(session, qtbot, tmpdir):
 
 
 #############################################
+#   GRAPH REFERENCES EXPORT
+#################################
+
+def test_export_project_to_graphreferences(session, qtbot, tmpdir):
+    # GIVEN
+    xml = tmpdir.join('project.xml')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    worker = GraphReferencesProjectExporter(project, session)
+    worker.run(str(xml))
+    # THEN
+    assert os.path.isfile(str(xml))
+
+
+#############################################
 #   PDF EXPORT
 #################################
 
@@ -88,8 +174,22 @@ def test_export_diagram_to_pdf(session, qtbot, tmpdir):
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    worker = PdfDiagramExporter(session.mdi.activeDiagram(), session,
-                                diagrams=[session.mdi.activeDiagram()])
+    worker = PdfDiagramExporter(session.mdi.activeDiagram(), session)
+    worker.run(str(pdffile))
+    # THEN
+    assert os.path.isfile(str(pdffile))
+
+
+def test_export_project_to_pdf(session, qtbot, tmpdir):
+    # GIVEN
+    pdffile = tmpdir.join('project.pdf')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    worker = PdfProjectExporter(project, session,
+                                pageSize=QtPrintSupport.QPrinter.A3,
+                                diagrams=project.diagrams())
     worker.run(str(pdffile))
     # THEN
     assert os.path.isfile(str(pdffile))
