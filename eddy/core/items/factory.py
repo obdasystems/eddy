@@ -35,6 +35,7 @@
 
 from PyQt5 import QtCore
 
+import eddy
 from eddy.core.datatypes.graphol import Item
 
 from eddy.core.items.edges.equivalence import EquivalenceEdge
@@ -143,6 +144,10 @@ class ItemFactory(QtCore.QObject):
             return SameEdge
         if item is Item.DifferentEdge:
             return DifferentEdge
+        #TODO ADDED
+        if item is Item.ConceptIRINode:
+            return eddy.core.items.nodes.concept_iri.ConceptNode
+
         raise RuntimeError('unknown item type ({0})'.format(item))
 
     def create(self, item, **kwargs):

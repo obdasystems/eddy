@@ -248,7 +248,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
 
-
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     noPrefixString = ''

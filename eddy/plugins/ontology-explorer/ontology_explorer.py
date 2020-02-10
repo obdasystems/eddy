@@ -44,7 +44,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.datatypes.annotation import Status
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode
 from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
 from eddy.core.project import K_DESCRIPTION_STATUS
 from eddy.core.plugin import AbstractPlugin
@@ -749,34 +749,53 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                         index = self.model().mapToSource(index)
 
                         item = model.itemFromIndex(index)
-                        node = item.data()
+                        itemData = item.data()
 
-                        if node:
+                        if itemData and isinstance(itemData,AbstractNode):
                             pass
                         else:
                             if item.hasChildren():
-                                node = item.child(0).data()
+                                itemData = item.child(0).data()
 
-                        if node:
-                            mimeData = QtCore.QMimeData()
+                        if itemData:
+                            if isinstance(itemData,OntologyEntityNode):
+                                print()
+                                mimeData = QtCore.QMimeData()
 
-                            mimeData.setText(str(node.Type.value))
+                                mimeData.setText(str(itemData.Type.value))
 
-                            node_iri = self.session.project.get_iri_of_node(node)
-                            node_remaining_characters = node.remaining_characters
+                                node_iri = itemData.iri
 
-                            comma_seperated_text = str(node_iri + ',' + node_remaining_characters + ',' + node.text())
+                                byte_array = QtCore.QByteArray()
+                                byte_array.append(str(node_iri))
 
-                            byte_array = QtCore.QByteArray()
-                            byte_array.append(comma_seperated_text)
+                                mimeData.setData(str(itemData.Type.value), byte_array)
 
-                            mimeData.setData(str(node.Type.value), byte_array)
+                                drag = QtGui.QDrag(self)
+                                drag.setMimeData(mimeData)
+                                # drag.setPixmap(self.icon().pixmap(60, 40))
+                                # drag.setHotSpot(self.startPos - self.rect().topLeft())
+                                drag.exec_(QtCore.Qt.CopyAction)
+                            else:
+                                mimeData = QtCore.QMimeData()
 
-                            drag = QtGui.QDrag(self)
-                            drag.setMimeData(mimeData)
-                            # drag.setPixmap(self.icon().pixmap(60, 40))
-                            # drag.setHotSpot(self.startPos - self.rect().topLeft())
-                            drag.exec_(QtCore.Qt.CopyAction)
+                                mimeData.setText(str(itemData.Type.value))
+
+                                node_iri = self.session.project.get_iri_of_node(itemData)
+                                node_remaining_characters = itemData.remaining_characters
+
+                                comma_seperated_text = str(node_iri + ',' + node_remaining_characters + ',' + itemData.text())
+
+                                byte_array = QtCore.QByteArray()
+                                byte_array.append(comma_seperated_text)
+
+                                mimeData.setData(str(itemData.Type.value), byte_array)
+
+                                drag = QtGui.QDrag(self)
+                                drag.setMimeData(mimeData)
+                                # drag.setPixmap(self.icon().pixmap(60, 40))
+                                # drag.setHotSpot(self.startPos - self.rect().topLeft())
+                                drag.exec_(QtCore.Qt.CopyAction)
 
         super().mouseMoveEvent(mouseEvent)
 

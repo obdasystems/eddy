@@ -191,16 +191,20 @@ class Diagram(QtWidgets.QGraphicsScene):
             nodeType = dropEvent.mimeData().text()
             if Item.ConceptIRINode <= int(dropEvent.mimeData().text()) <= Item.IndividualIRINode:
                 #New node associated with IRI object
-                node = ConceptNode(diagram=self)
+                #node = ConceptNode(diagram=self)
+                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
                 node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-
                 data = dropEvent.mimeData().data(dropEvent.mimeData().text())
                 if not data:
                     #new element
                     self.session.doOpenIRIBuilder(node)
                 else:
                     #copy of existing element (e.g. drag and drop from ontology explorer)
-                    print()
+                    data_str = str(data, encoding='utf-8')
+                    iri = self.project.getIRI(data_str)
+                    node.iri = iri
+                    self.doAddOntologyEntityNode(node)
+                    node.doUpdateNodeLabel()
             else:
                 #Old node type
                 node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
