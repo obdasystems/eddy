@@ -124,6 +124,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :rtype: Diagram
         """
         diagram = Diagram(name, project)
+        diagram.setBackgroundBrush(QtCore.Qt.white)
         diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
         diagram.setItemIndexMethod(Diagram.BspTreeIndex)
         return diagram
