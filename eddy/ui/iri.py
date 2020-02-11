@@ -82,6 +82,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     sgnIRIAccepted = QtCore.pyqtSignal(OntologyEntityNode)
     sgnIRIRejected = QtCore.pyqtSignal(OntologyEntityNode)
 
+    sgnIRIChanged = QtCore.pyqtSignal(OntologyEntityNode,IRI)
 
     noPrefixString = ''
 
@@ -94,10 +95,15 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         super().__init__(session)
         self.diagram = diagram
-
+        self.session = session
         connect(self.sgnIRIAccepted,self.diagram.doAddOntologyEntityNode)
 
         self.node = node
+        self.iri = None
+        shortest = None
+        if self.node.iri:
+            self.iri = self.node.iri
+            shortest = self.session.project.getShortestPrefixedForm(self.iri)
         self.project = diagram.project
 
         #############################################
@@ -111,21 +117,32 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.noPrefixString)
         # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
         combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
-        combobox.setCurrentText(self.noPrefixString)
+        if shortest:
+            combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
+        else:
+            combobox.setCurrentText(self.noPrefixString)
         self.addWidget(combobox)
 
         inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
         self.addWidget(inputLabel)
 
         inputField = IRIDialogsWidgetFactory.getInputField(self)
-        inputField.setValue('')
+        if shortest:
+            inputField.setText(shortest.suffix)
+        elif self.iri:
+            inputField.setText(str(self.iri))
+        else:
+            inputField.setText('')
         self.addWidget(inputField)
 
         fullIriLabel = IRIDialogsWidgetFactory.getFullIRILabel(self)
         self.addWidget(fullIriLabel)
 
         fullIriField = IRIDialogsWidgetFactory.getFullIRIField(self)
-        fullIriField.setText('')
+        if self.iri:
+            fullIriField.setText(str(self.iri))
+        else:
+            fullIriField.setText('')
         self.addWidget(fullIriField)
 
         ###########################
@@ -181,7 +198,9 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def redraw(self):
-        shortest = self.project.getShortestPrefixedForm(self.iri)
+        shortest = None
+        if self.iri:
+            shortest = self.project.getShortestPrefixedForm(self.iri)
 
         #############################################
         # IRI TAB
@@ -191,15 +210,25 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.noPrefixString)
         # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
         combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
-        combobox.setCurrentText(self.noPrefixString)
+        if shortest:
+            combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
+        else:
+            combobox.setCurrentText(self.noPrefixString)
         self.addWidget(combobox)
 
         inputField = self.widget('iri_input_field')
-        inputField.setValue('')
+        if shortest:
+            inputField.setText(shortest.suffix)
+        elif self.iri:
+            inputField.setText(str(self.iri))
+        else:
+            inputField.setText('')
 
         fullIriField = self.widget('full_iri_field')
-        fullIriField.setText('')
-
+        if self.iri:
+            fullIriField.setText(str(self.iri))
+        else:
+            fullIriField.setText('')
 
     @QtCore.pyqtSlot(int)
     def onPrefixChanged(self, val):
@@ -216,9 +245,15 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     @QtCore.pyqtSlot()
     def accept(self):
         try:
-            iri = self.project.getIRI(self.widget('full_iri_field').value())
-            self.node.iri = iri
-            self.sgnIRIAccepted.emit(self.node)
+            inputIri = self.project.getIRI(self.widget('full_iri_field').value())
+            if self.iri:
+                print()
+                if not self.iri is inputIri:
+                    self.node.iri = inputIri
+                    self.sgnIRIChanged.emit(self.node,self.iri)
+            else:
+                self.node.iri = inputIri
+                self.sgnIRIAccepted.emit(self.node)
             if self.node.diagram:
                 self.node.doUpdateNodeLabel()
             super().accept()
@@ -247,6 +282,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixStr = prefixStr[0:prefixLimit]
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
+
 
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 

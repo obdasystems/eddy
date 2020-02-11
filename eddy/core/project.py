@@ -140,6 +140,7 @@ class Project(IRIManager):
     #sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
 
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
+    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(OntologyEntityNode,IRI)
 
     def __init__(self, **kwargs):
         """
@@ -1299,16 +1300,16 @@ class Project(IRIManager):
         """
         return self.index.predicates(item, name, diagram)
 
-    def iriOccurrences(self, iri=None, diagram=None):
+    def iriOccurrences(self, item=None, iri=None, diagram=None):
         """
         Returns a collection of nodes identified by the given IRI belonging to the given diagram.
         If no diagram is supplied the lookup is performed across the whole Project Index.
+        :type item: Item
         :type iri: IRI
         :type diagram: Diagram
         :rtype: set
         """
-        return self.index.iriOccurrences(iri,diagram)
-
+        return self.index.iriOccurrences(item,iri,diagram)
 
     def removeDiagram(self, diagram):
         """
@@ -1387,6 +1388,19 @@ class Project(IRIManager):
         """
         self.index.switchIRI(sub,master)
         self.sgnIRIRemovedFromAllDiagrams.emit(sub)
+
+    @QtCore.pyqtSlot(OntologyEntityNode, IRI)
+    def doSingleSwitchIRI(self, node, oldIri):
+        """
+        Executed whenever the iri associated to node change
+        :type sub: IRI
+        :type master: IRI
+        """
+        if self.index.switchIRIForNode(node,oldIri):
+            self.sgnIRIRemovedFromAllDiagrams.emit(oldIri)
+        else:
+            self.sgnSingleNodeSwitchIRI.emit(node,oldIri)
+
 
 
 
@@ -1803,11 +1817,36 @@ class ProjectIRIIndex(ProjectIndex):
         self[K_DATA_PROP_OCCURRENCES] = dict()
         self[K_INDIVIDUAL_OCCURRENCES] = dict()
 
+    def switchIRIForNode(self,node,oldIRI):
+        """
+        Make all occurrences of sub become occurrences of master
+        :type oldIRI: IRI
+        :type node: OntologyEntityNode
+        """
+
+        if isinstance(node, ConceptNode):
+            if node in self[K_CLASS_OCCURRENCES][oldIRI][node.diagram.name]:
+                self[K_CLASS_OCCURRENCES][oldIRI][node.diagram.name].remove(node)
+                if not self[K_CLASS_OCCURRENCES][oldIRI][node.diagram.name]:
+                    self[K_CLASS_OCCURRENCES][oldIRI].pop(node.diagram.name)
+                    if not self[K_CLASS_OCCURRENCES][oldIRI]:
+                        self[K_CLASS_OCCURRENCES].pop(oldIRI)
+
+        self.addIRIOccurenceToDiagram(node.diagram, node)
+        if node in self[K_OCCURRENCES][oldIRI][node.diagram.name]:
+            self[K_OCCURRENCES][oldIRI][node.diagram.name].remove(node)
+            if not self[K_OCCURRENCES][oldIRI][node.diagram.name]:
+                self[K_OCCURRENCES][oldIRI].pop(node.diagram.name)
+                if not self[K_OCCURRENCES][oldIRI]:
+                    self[K_OCCURRENCES].pop(oldIRI)
+                    return True
+        return False
+
     def switchIRI(self,sub,master):
         """
         Make all occurrences of sub become occurrences of master
-        :type diagram: Diagram
-        :type node: OntologyEntityNode
+        :type sub: IRI
+        :type master: IRI
         """
         if sub in self[K_OCCURRENCES]:
             diagramKeyList = [key for key in self[K_OCCURRENCES][sub]]
@@ -1897,8 +1936,7 @@ class ProjectIRIIndex(ProjectIndex):
                     if not self[K_OCCURRENCES][iri]:
                         self[K_OCCURRENCES].pop(iri)
                         return True
-                    else:
-                        return False
+        return False
 
     def removeTypedIRIOccurenceFromDiagram(self, diagram, node, k_metatype):
         """
@@ -1916,21 +1954,24 @@ class ProjectIRIIndex(ProjectIndex):
                     if not self[k_metatype][iri]:
                         self[k_metatype].pop(iri)
                         return True
-                    else:
-                        return False
+        return False
 
 
-    def iriOccurrences(self,iri=None,diagram=None,k_metatype=None):
+    def iriOccurrences(self,item=None, iri=None,diagram=None):
         """
         Returns a collection of nodes of type k_metatype identified by the given IRI belonging to the given diagram.
         If no diagram is supplied the lookup is performed across the whole Project Index.
         If no type is supplied the lookup is performed across all the nodes.
         :type iri: IRI
         :type diagram: Diagram
-        :k_metatype: str
+        :item: Item
         :rtype: set
         """
         try:
+            k_metatype = None
+            if item:
+                if item is Item.ConceptIRINode:
+                    k_metatype = K_CLASS_OCCURRENCES
             if not k_metatype:
                 k_metatype = K_OCCURRENCES
             result = set()

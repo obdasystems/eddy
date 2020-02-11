@@ -305,8 +305,7 @@ class MenuFactory(QtCore.QObject):
             for action in self.customAction['change_prefix']:
                 self.customMenu['change_prefix'].addAction(action)
 
-            menu.insertMenu(self.session.action('node_properties'),
-                            self.customMenu['change_prefix'])
+            #menu.insertMenu(self.session.action('node_properties'),self.customMenu['change_prefix'])
             self.customMenu['refactor_change_prefix'] = QtWidgets.QMenu('Change prefix')
             self.customMenu['refactor_change_prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
 
@@ -840,10 +839,7 @@ class MenuFactory(QtCore.QObject):
         for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
             self.customMenu['occurrences'].addAction(action)
         menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
-        # ADD DESCRIPTION LINK TO THE MENU OF PREDICATE NODE
-        menu.addAction(self.session.action('node_description'))
-
-        menu.addAction(self.session.action('iri_refactor'))
+        menu.addAction(self.session.action('node_iri_refactor'))
 
         # TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
         # TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate
@@ -851,54 +847,6 @@ class MenuFactory(QtCore.QObject):
             print('The selected node is neither top nor bottom')
         else:
             print('The selected node is either top or bottom')
-
-        if node.special() is None:
-            '''
-            self.customAction['change_prefix'] = []
-            self.customAction['refactor_change_prefix'] = []
-
-            for iri in self.project.IRI_prefixes_nodes_dict.keys():
-                prefixes_raw = self.project.IRI_prefixes_nodes_dict[iri][0]
-                prefixes = prefixes_raw[:]
-
-                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri][2]:
-                    prefixes.append(':')
-                for p in prefixes:
-                    pr_node = self.project.get_prefix_of_node(node)
-
-                    action = QtWidgets.QAction(self.session)
-                    action.setCheckable(True)
-                    action.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
-                    action.setData(node)
-                    action.setText('{}'.format(p))
-                    connect(action.triggered, self.session.setprefix)
-                    self.customAction['change_prefix'].append(action)
-
-                    refactorAction = QtWidgets.QAction(self.session)
-                    refactorAction.setCheckable(True)
-                    refactorAction.setChecked((pr_node is p) or ((pr_node is '') and (p is ':')))
-                    refactorAction.setData(node)
-                    refactorAction.setText('{}'.format(p))
-                    connect(refactorAction.triggered, self.session.refactorsetprefix)
-                    self.customAction['refactor_change_prefix'].append(refactorAction)
-
-            self.customMenu['change_prefix'] = QtWidgets.QMenu('Change prefix')
-            self.customMenu['change_prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
-
-            for action in self.customAction['change_prefix']:
-                self.customMenu['change_prefix'].addAction(action)
-
-            menu.insertMenu(self.session.action('node_properties'),
-                            self.customMenu['change_prefix'])
-            self.customMenu['refactor_change_prefix'] = QtWidgets.QMenu('Change prefix')
-            self.customMenu['refactor_change_prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
-
-            for action in self.customAction['refactor_change_prefix']:
-                self.customMenu['refactor_change_prefix'].addAction(action)
-            
-            self.session.menu('refactor').insertMenu(self.session.action('node_properties'),
-                                                     self.customMenu['refactor_change_prefix'])
-                                                     '''
         return menu
 
     # TODO
@@ -912,7 +860,9 @@ class MenuFactory(QtCore.QObject):
         menu = self.buildIRIPredicateNodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
-        menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        #TODO VALUTA REINSERIMENTO OPPORTUNO PER TOP E BOTTOM (SPECIAL MENU)
+        #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
         self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
         self.session.action('refactor_name').setEnabled(node.special() is None)

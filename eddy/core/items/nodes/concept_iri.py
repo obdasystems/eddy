@@ -22,8 +22,6 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
     Identities = {Identity.Concept}
     Type = Item.ConceptIRINode
 
-    #sgnIri
-
     def __init__(self, iri = None, width=110, height=50, brush=None, **kwargs):
         """
         Initialize the node.
@@ -217,15 +215,12 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        #print('copy >> self',self)
-        #print('copy >> type(self)', type(self))
-        #TODO MODIFICA
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'remaining_characters': self.remaining_characters,
+            'iri': self.iri,
         })
         node.setPos(self.pos())
         node.setText(self.text())

@@ -181,6 +181,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnPrefixRemoved = QtCore.pyqtSignal(str)
     sgnPrefixModified = QtCore.pyqtSignal(str, str)
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
+    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(OntologyEntityNode, IRI)
 
 
     #Signals related to rendering options
@@ -245,6 +246,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.project.sgnPrefixRemoved, self.onPrefixRemovedFromProject)
         connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
         connect(self.project.sgnIRIRemovedFromAllDiagrams, self.onIRIRemovedFromAllDiagrams)
+        connect(self.project.sgnSingleNodeSwitchIRI, self.onSingleNodeSwitchIRI)
 
 
         #############################################
@@ -847,9 +849,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         # TODO doOpenIRIPropsBuilder
         self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
             'IRI refactor',
             self, objectName='iri_refactor',
             triggered=self.doOpenIRIPropsBuilder))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Node IRI',
+            self, objectName='node_iri_refactor',
+            triggered=self.doOpenIRIDialog))
 
         #TODO
         action = QtWidgets.QAction('Render by full IRI', self, objectName='render_full_iri', triggered=self.doRenderByFullIRI)
@@ -1093,7 +1102,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('Refactor', objectName='refactor')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_shapes_black'))
-        menu.addAction(self.action('refactor_name'))
+        menu.addAction(self.action('iri_refactor'))
+        #menu.addAction(self.action('refactor_name'))
         #menu.addMenu(self.menu('refactor_change_prefix'))
         menu.addMenu(self.menu('refactor_brush'))
         self.addMenu(menu)
@@ -1364,6 +1374,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @QtCore.pyqtSlot(IRI)
     def onIRIRemovedFromAllDiagrams(self, iri):
         self.sgnIRIRemovedFromAllDiagrams.emit(iri)
+
+    @QtCore.pyqtSlot(OntologyEntityNode,IRI)
+    def onSingleNodeSwitchIRI(self, node, iri):
+        self.sgnSingleNodeSwitchIRI.emit(node,iri)
+
 
     @QtCore.pyqtSlot()
     def doBringToFront(self):
@@ -2182,9 +2197,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 properties.activateWindow()
 
     @QtCore.pyqtSlot(OntologyEntityNode)
-    def doOpenIRIBuilder(self,node):
+    def doOpenIRIBuilder(self, node):
         """
-        Executed when IRI builder needs to be displayed.
+        Executed when an IRI must be associated to an empty node.
         :type node: OntologyEntityNode
         """
         diagram = self.mdi.activeDiagram()
@@ -2194,6 +2209,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 node = first(diagram.selectedNodes())
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenIRIDialog(self):
+        """
+        Executed when the IRI associated to a node might be modified by the user.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            node = first(diagram.selectedNodes())
+            if node:
+                builder = IriBuilderDialog(node, diagram, self)
+                connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()
@@ -2330,12 +2362,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode, Item.ConceptIRINode}
             node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
                 color = action.data()
-                nodes = self.project.predicates(node.type(), node.text())
+                nodes = []
+                if isinstance(node, OntologyEntityNode):
+                    nodes = self.project.iriOccurrences(node.type(),node.iri)
+                else:
+                    nodes = self.project.predicates(node.type(), node.text())
                 self.undostack.push(CommandNodeSetBrush(diagram, nodes, QtGui.QBrush(QtGui.QColor(color.value))))
 
     @QtCore.pyqtSlot()
@@ -2492,7 +2528,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             action = self.sender()
             color = action.data()
             brush = QtGui.QBrush(QtGui.QColor(color.value))
-            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode,Item.ConceptIRINode}
             fn = lambda x: x.type() in supported and x.brush() != brush
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected:

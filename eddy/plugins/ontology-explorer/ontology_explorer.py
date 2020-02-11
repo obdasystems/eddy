@@ -293,6 +293,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         connect(self.session.sgnRenderingModified, self.onRenderingModified)
 
         connect(self.session.sgnIRIRemovedFromAllDiagrams,self.onIRIRemovedFromAllDiagrams)
+        connect(self.session.sgnSingleNodeSwitchIRI, self.onSingleNodeIRISwitched)
 
     #############################################
     #   PROPERTIES
@@ -382,6 +383,20 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         node = self.sender()
         self.doAddNode(node.diagram,node)
 
+    @QtCore.pyqtSlot(OntologyEntityNode,IRI)
+    def onSingleNodeIRISwitched(self,node,oldIRI):
+        oldParentK = self.parentKeyForIRI(oldIRI, self.project)
+        for parent in self.model.findItems(oldParentK, QtCore.Qt.MatchExactly):
+            for i in range(parent.rowCount()):
+                child = parent.child(i)
+                if child.data() is node:
+                    parent.removeRow(i)
+                    break
+            if not parent.rowCount():
+                if isinstance(node, OntologyEntityNode):
+                    self.disconnectIRISignals(parent.data())
+                self.model.removeRow(parent.index().row())
+
     @QtCore.pyqtSlot(IRI)
     def onIRIRemovedFromAllDiagrams(self,iri):
         parentK = self.parentKeyForIRI(iri, self.project)
@@ -389,6 +404,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             for i in range(parent.rowCount()):
                 parent.removeRow(i)
             self.model.removeRow(parent.index().row())
+
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
