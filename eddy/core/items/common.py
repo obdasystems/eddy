@@ -134,7 +134,7 @@ class DiagramItemMixin:
     def connectSignals(self):
         pass
 
-class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
+class AbstractItem(QtWidgets.QGraphicsObject, DiagramItemMixin):
     """
     Base class for all the diagram items.
     """

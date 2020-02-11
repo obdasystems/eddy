@@ -292,6 +292,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         connect(self.session.sgnPrefixModified, self.onPrefixModified)
         connect(self.session.sgnRenderingModified, self.onRenderingModified)
 
+        connect(self.session.sgnIRIRemovedFromAllDiagrams,self.onIRIRemovedFromAllDiagrams)
+
     #############################################
     #   PROPERTIES
     #################################
@@ -378,8 +380,15 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()
     def onNodeIRISwitched(self):
         node = self.sender()
-        self.doAddNode(node.diagram(),node)
+        self.doAddNode(node.diagram,node)
 
+    @QtCore.pyqtSlot(IRI)
+    def onIRIRemovedFromAllDiagrams(self,iri):
+        parentK = self.parentKeyForIRI(iri, self.project)
+        for parent in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
+            for i in range(parent.rowCount()):
+                parent.removeRow(i)
+            self.model.removeRow(parent.index().row())
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
@@ -402,7 +411,9 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             child = QtGui.QStandardItem(self.childKey(diagram, node))
             if isinstance(node,OntologyEntityNode):
                 child.setIcon(self.iconFor(node))
+                connect(node.sgnIRISwitched,self.onNodeIRISwitched)
             child.setData(node)
+
             # CHECK FOR DUPLICATE NODES
             children = [parent.child(i) for i in range(parent.rowCount())]
             if not any([child.text() == c.text() for c in children]):

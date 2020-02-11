@@ -741,11 +741,14 @@ class OntologyEntityNode(AbstractNode):
         '''
         :type iriObj:IRI
         '''
+        switch = False
         if self.iri:
+            switch = True
             self.disconnectIRISignals()
         self._iri = iriObj
         self.connectIRISignals()
-        self.sgnIRISwitched.emit()
+        if switch:
+            self.sgnIRISwitched.emit()
         if self.diagram:
             self.doUpdateNodeLabel()
 

@@ -1385,6 +1385,8 @@ class Project(IRIManager):
         :type sub: IRI
         :type master: IRI
         """
+        self.index.switchIRI(sub,master)
+        self.sgnIRIRemovedFromAllDiagrams.emit(sub)
 
 
 
@@ -1802,10 +1804,34 @@ class ProjectIRIIndex(ProjectIndex):
         self[K_INDIVIDUAL_OCCURRENCES] = dict()
 
     def switchIRI(self,sub,master):
+        """
+        Make all occurrences of sub become occurrences of master
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        """
         if sub in self[K_OCCURRENCES]:
-            for diagName in self[K_OCCURRENCES][sub]:
-                for node in  self[K_OCCURRENCES][sub][diagName]:
+            diagramKeyList = [key for key in self[K_OCCURRENCES][sub]]
+            for diagName in diagramKeyList:
+                for node in self[K_OCCURRENCES][sub][diagName]:
                     node.iri = master
+                    self.addIRIOccurenceToDiagram(node.diagram,node)
+                self[K_OCCURRENCES][sub][diagName] = None
+                del self[K_OCCURRENCES][sub][diagName]
+            del self[K_OCCURRENCES][sub]
+        self.removeAllOccurrencesOfType(sub, K_CLASS_OCCURRENCES)
+        self.removeAllOccurrencesOfType(sub, K_DATATYPE_OCCURRENCES)
+        self.removeAllOccurrencesOfType(sub, K_OBJ_PROP_OCCURRENCES)
+        self.removeAllOccurrencesOfType(sub, K_DATA_PROP_OCCURRENCES)
+        self.removeAllOccurrencesOfType(sub, K_INDIVIDUAL_OCCURRENCES)
+
+    def removeAllOccurrencesOfType(self,iri,k_metatype):
+        if iri in self[k_metatype]:
+            diagramKeyList = [key for key in self[k_metatype][iri]]
+            for diagName in diagramKeyList:
+                self[k_metatype][iri][diagName] = None
+                del self[k_metatype][iri][diagName]
+            del self[k_metatype][iri]
+
 
     def addIRIOccurenceToDiagram(self, diagram, node):
         """

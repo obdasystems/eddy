@@ -539,7 +539,7 @@ class IRIManager(QtCore.QObject):
         """
         # Questo metodo dovrà essere chiamato SOLO quando tutti i riferimenti a iri sono stati eliminati
         self.iris.remove(iri)
-        self.stringToIRI.pop(iri, None)
+        self.stringToIRI.pop(str(iri), None)
         self.sgnIRIRemoved.emit(iri)
 
     @QtCore.pyqtSlot(IRI)

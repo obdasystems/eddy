@@ -180,6 +180,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnPrefixAdded = QtCore.pyqtSignal(str, str)
     sgnPrefixRemoved = QtCore.pyqtSignal(str)
     sgnPrefixModified = QtCore.pyqtSignal(str, str)
+    sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
 
 
     #Signals related to rendering options
@@ -243,6 +244,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.project.sgnPrefixAdded,self.onPrefixAddedToProject)
         connect(self.project.sgnPrefixRemoved, self.onPrefixRemovedFromProject)
         connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
+        connect(self.project.sgnIRIRemovedFromAllDiagrams, self.onIRIRemovedFromAllDiagrams)
+
 
         #############################################
         # COMPLETE SESSION SETUP
@@ -1358,6 +1361,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     def onPrefixModifiedInProject(self, pref,ns):
         self.sgnPrefixModified.emit(pref,ns)
 
+    @QtCore.pyqtSlot(IRI)
+    def onIRIRemovedFromAllDiagrams(self, iri):
+        self.sgnIRIRemovedFromAllDiagrams.emit(iri)
+
     @QtCore.pyqtSlot()
     def doBringToFront(self):
         """
@@ -2205,7 +2212,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self)
-                connect(builder.sgnIRISwitch)
+                connect(builder.sgnIRISwitch, self.project.doSwitchIRI)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()

@@ -545,9 +545,10 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if not newIRI is self.iri:
                     print('newIRI is NOT oldIRI')
                     #TODO gestisci cambiamento oggetto iri (cosa devo fare? Distruggere oldIRI e sostituirla con newIRI ovunque????
+                    oldIRI = self.iri
                     self.iri = newIRI
                     self.redraw()
-                    self.sgnIRISwitch.emit(self.iri, newIRI)
+                    self.sgnIRISwitch.emit(oldIRI, newIRI)
             else:
                 print('IRI corresponding to string {} does not exist'.format(fullIRIString))
                 self.iri.namespace = fullIRIString
