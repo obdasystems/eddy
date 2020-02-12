@@ -68,44 +68,21 @@ class Compute_RC_with_spaces():
         self.old_label = old_label
 
     def return_result(self):
-
         if self.old_label is None:
             return self.rc_without_space
+        elif len(self.rc_without_space) == 0:
+            colon = self.old_label.rfind(':')
+            return self.old_label[colon+1:] if colon > -1 else self.old_label
         else:
             old_label_no_space = self.old_label.replace('\n','')
             if self.rc_without_space in old_label_no_space:
-
-                #print(rc_without_space,' in ',old_label_no_space)
-
                 b_start = -1
                 b_end = len(self.old_label)-1
                 a_end = -1
-
                 q_start = 0
                 q_end = len(self.rc_without_space)-1
 
-
-                """
-                print('****************')
-                print('old_label', old_label)
-
-                for c, ch in enumerate(old_label):
-                    print('c,ch', c, ch)
-
-                print('rc_without_space', rc_without_space)
-
-                for c, ch in enumerate(rc_without_space):
-                    print('c,ch', c, ch)
-
-                print('a_end', a_end, ' old_label[a_end]', old_label[a_end])
-                print('b_start', b_start, ' old_label[b_start]', old_label[b_start])
-                print('b_end', b_end, ' old_label[b_end]', old_label[b_end])
-                print('q_start', q_start, ' rc_without_space[q_start]', rc_without_space[q_start])
-                print('q_end', q_end, ' rc_without_space[q_end]', rc_without_space[q_end])
-                print('****************')
-                """
-
-                while(self.old_label[b_end] != self.rc_without_space[q_end]):
+                while self.old_label[b_end] != self.rc_without_space[q_end]:
                     b_end=b_end-1
 
                 j = q_end
@@ -113,7 +90,7 @@ class Compute_RC_with_spaces():
 
                 error = []
 
-                while ((j >= 0) and (i >= 0)):
+                while j >= 0 and i >= 0:
                     if self.rc_without_space[j] == self.old_label[i]:
                         i = i - 1
                         j = j - 1
@@ -126,42 +103,10 @@ class Compute_RC_with_spaces():
                 i=i+1
                 j=j+1
 
-                """
-                print('*****')
-                print(' at this point j should be equal to 0 \n index i should point to the same content as index j')
-                print('i',i)
-                print('j',j)
-                print('rc_without_space[j]',rc_without_space[j])
-                print('old_label[i]', old_label[i])
-                print('*****')
-                """
-
                 # at this point j should be equal to -1
                 # index i should point to the same content as index j
 
-
                 b_start=i
-
-                """
-                print('****************')
-                print('old_label',old_label)
-
-                for c,ch in enumerate(old_label):
-                    print('c,ch',c,ch)
-
-                print('rc_without_space',rc_without_space)
-
-                for c,ch in enumerate(rc_without_space):
-                    print('c,ch',c,ch)
-
-                print('a_end',a_end,' old_label[a_end]',old_label[a_end])
-                print('b_start', b_start,' old_label[b_start]',old_label[b_start])
-                print('b_end', b_end,' old_label[b_end]',old_label[b_end])
-                print('q_start', q_start,' rc_without_space[q_start]',rc_without_space[q_start])
-                print('q_end', q_end,' rc_without_space[q_end]',rc_without_space[q_end])
-                print('****************')
-                """
-
 
                 if j>0 or len(error)>0:
                     print('error',error)
@@ -175,35 +120,8 @@ class Compute_RC_with_spaces():
                         a_end=a_end-1
 
                     a_end = a_end - 1
-
-                    """
-                    print('****************')
-                    print('old_label', old_label)
-
-                    for c, ch in enumerate(old_label):
-                        print('c,ch', c, ch)
-
-                    print('rc_without_space',rc_without_space)
-
-                    for c, ch in enumerate(rc_without_space):
-                        print('c,ch', c, ch)
-
-                    print('a_end', a_end, ' old_label[a_end]', old_label[a_end])
-                    print('b_start', b_start, ' old_label[b_start]', old_label[b_start])
-                    print('b_end', b_end, ' old_label[b_end]', old_label[b_end])
-                    print('q_start', q_start, ' rc_without_space[q_start]', rc_without_space[q_start])
-                    print('q_end', q_end, ' rc_without_space[q_end]', rc_without_space[q_end])
-                    print('****************')
-
-                    print('old_label[len(old_label)-1]',old_label[len(old_label)-1])
-                    """
-
                     rc_to_return = self.old_label[a_end+1:len(self.old_label)]
-
-                    #print('rc_to_return',rc_to_return)
-
                     return rc_to_return
-
             else:
                 return self.rc_without_space
 
