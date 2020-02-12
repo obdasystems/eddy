@@ -1011,9 +1011,11 @@ class Project(QtCore.QObject):
                     nodes_to_update_copy.append(node)
 
                 for node in nodes_to_update_copy:
+                    QtCore.QCoreApplication.processEvents()
                     self.node_label_update_core_code(node)
         else:
             for n in self.nodes():
+                QtCore.QCoreApplication.processEvents()
                 if diag_name is not None:
                     if (str(n) == node_inp) and (str(n.diagram.name) == diag_name):
                         self.node_label_update_core_code(n)
@@ -1735,7 +1737,7 @@ class ProjectMergeWorker(QtCore.QObject):
     """
     Extends QObject with facilities to merge the content of 2 distinct projects.
     """
-    def __init__(self, project, other, session):
+    def __init__(self, project, other, session, **kwargs):
         """
         Initialize the project merge worker.
         :type project: Project
@@ -1750,7 +1752,7 @@ class ProjectMergeWorker(QtCore.QObject):
         self.old_dictionary = None
         self.new_dictionary = None
 
-        self.selected_diagrams = None
+        self.diagrams = kwargs.get('diagrams', None)
         self.all_names_in_selected_diagrams = []
 
     #############################################
@@ -1770,80 +1772,47 @@ class ProjectMergeWorker(QtCore.QObject):
     #################################
 
     def merge_prefixes(self, home_dictionary, foreign_prefixes, iri_key):
-
         old_display_in_widget = ('display_in_widget' in home_dictionary[iri_key][2])
 
         if old_display_in_widget is False:
-
             all_home_prefixes = []
 
             for iri in home_dictionary.keys():
-
+                QtCore.QCoreApplication.processEvents()
                 prefixes = home_dictionary[iri][0]
-
                 if prefixes is not None:
                     all_home_prefixes.extend(prefixes)
 
             old_prefixes = home_dictionary[iri_key][0]
-
             new_prefixes = []
-
             new_prefixes.extend(old_prefixes)
-
-            #print('all_home_prefixes',all_home_prefixes)
-
             foreign_prefixes_reversed = []
 
             for pr_foreign in foreign_prefixes:
+                QtCore.QCoreApplication.processEvents()
                 foreign_prefixes_reversed.insert(0,pr_foreign)
 
             for pr_foreign in foreign_prefixes_reversed:
-
+                QtCore.QCoreApplication.processEvents()
                 if pr_foreign not in all_home_prefixes:
-                    #print('pr_foreign not in all_home_prefixes-',pr_foreign)
                     new_prefixes.insert(0,pr_foreign)
 
             home_dictionary[iri_key][0] = new_prefixes
 
-            #print('old_prefixes',old_prefixes)
-            #print('new_prefixes',new_prefixes)
-
-    #not used
-    def append_foreign_nodes_2(self, home_dictionary, foreign_nodes, iri_key):
-
-        #home_nodes = home_dictionary[iri_key][1]
-        #new_home_nodes = set()
-
-        for n in foreign_nodes:
-            self.project.iri_of_imported_nodes.append(iri_key)
-            self.project.iri_of_imported_nodes.append(n.remaining_characters)
-
-        #home_dictionary[iri_key][1] = new_home_nodes
-
     def append_foreign_nodes(self, home_dictionary, foreign_nodes, iri_key):
-
         home_nodes = home_dictionary[iri_key][1]
-
-        #print('home_nodes',home_nodes)
-
         new_home_nodes = set()
-
         new_home_nodes = new_home_nodes.union(home_nodes)
         new_home_nodes = new_home_nodes.union(foreign_nodes)
-
-        #print('new_home_nodes', new_home_nodes)
-
         home_dictionary[iri_key][1] = new_home_nodes
 
     def merge_properties(self, home_dictionary, foreign_properties, iri_key, home_contains_display_in_widget):
-
         home_properties = home_dictionary[iri_key][2]
-
         new_home_properties = set()
-
         new_home_properties = new_home_properties.union(home_properties)
 
         for p in foreign_properties:
+            QtCore.QCoreApplication.processEvents()
             if home_contains_display_in_widget is True:
                 if (p != 'Project_IRI') and (p != 'display_in_widget'):
                     new_home_properties.add(p)
@@ -1853,15 +1822,10 @@ class ProjectMergeWorker(QtCore.QObject):
 
         home_dictionary[iri_key][2] = new_home_properties
 
-        #print('home_properties',home_properties)
-        #print('new_home_properties',new_home_properties)
-
     def merge_IRI_prefixes_nodes_dictionary(self):
-
         other_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.other.IRI_prefixes_nodes_dict, dict())
         home_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
         home_dictionary_old = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-        #self.old_dictionary = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
 
         home_contains_display_in_widget = False
 
@@ -1871,48 +1835,26 @@ class ProjectMergeWorker(QtCore.QObject):
                 home_contains_display_in_widget = True
                 break
 
-
         iris_to_update = []
 
         for foreign_iri in other_dictionary.keys():
-
+            QtCore.QCoreApplication.processEvents()
             iris_to_update.append(foreign_iri)
-
             foreign_iri_entry = other_dictionary[foreign_iri]
-
             foreign_prefixes = foreign_iri_entry[0]
             foreign_nodes = foreign_iri_entry[1]
             foreign_properties = foreign_iri_entry[2]
 
-            #print('')
-            #print('foreign_iri',foreign_iri)
-            #print('foreign_prefixes',foreign_prefixes)
-            #print('foreign_nodes', foreign_nodes)
-            #print('foreign_properties', foreign_properties)
-
             if foreign_iri not in home_dictionary.keys():
-
-                #print('foreign_iri not in home_dictionary.keys()')
-
                 empty_prefixes = []
                 empty_nodes = set()
                 empty_properties = set()
-
-                value = []
-
-                value.append(empty_prefixes)
-                value.append(empty_nodes)
-                value.append(empty_properties)
-
+                value = [empty_prefixes, empty_nodes, empty_properties]
                 home_dictionary[foreign_iri] = value
 
             self.merge_prefixes(home_dictionary, foreign_prefixes, foreign_iri)
             self.append_foreign_nodes(home_dictionary, foreign_nodes, foreign_iri)
             self.merge_properties(home_dictionary, foreign_properties, foreign_iri, home_contains_display_in_widget)
-
-            #print('home_dictionary[foreign_iri][0]',home_dictionary[foreign_iri][0])
-            #print('home_dictionary[foreign_iri][1]', home_dictionary[foreign_iri][1])
-            #print('home_dictionary[foreign_iri][2]', home_dictionary[foreign_iri][2])
 
         self.commands.append(CommandProjectDisconnectSpecificSignals(self.project))
         self.commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,home_dictionary_old,home_dictionary,iris_to_update,None))
@@ -1922,20 +1864,18 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
         """
-        diagrams_selection_dialog = DiagramSelectionDialog(self.session, project=self.other)
-        diagrams_selection_dialog.exec_()
-        self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+        if not self.diagrams:
+            dialog = DiagramSelectionDialog(self.session, project=self.other)
+            dialog.exec_()
+            self.diagrams = dialog.selectedDiagrams()
 
-        for d in self.selected_diagrams:
-            #print('d.name', d.name)
-            #print('len(d.nodes())', len(d.nodes()))
+        for d in self.diagrams:
             for n in d.nodes():
-                #print('     n', n)
+                QtCore.QCoreApplication.processEvents()
                 if n.text() is not None:
                     self.all_names_in_selected_diagrams.append(n.text().replace('\n', ''))
 
-        #for diagram in self.other.diagrams():
-        for diagram in self.selected_diagrams:
+        for diagram in self.diagrams:
             # We may be in the situation in which we are importing a diagram with name 'X'
             # even though we already have a diagram 'X' in our project. Because we do not
             # want to overwrite diagrams, we perform a rename of the diagram being imported,
@@ -1950,10 +1890,9 @@ class ProjectMergeWorker(QtCore.QObject):
             disconnect(diagram.sgnItemRemoved, self.other.doRemoveItem)
             connect(diagram.sgnItemAdded, self.project.doAddItem)
             connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
+            QtCore.QCoreApplication.processEvents()
             ## MERGE THE DIAGRAM IN THE CURRENT PROJECT
             self.commands.append(CommandDiagramAdd(diagram, self.project))
-
-        #self.project.iri_of_imported_nodes = []
 
     def mergeMeta(self):
         """
@@ -1962,60 +1901,9 @@ class ProjectMergeWorker(QtCore.QObject):
         conflicts = dict()
         resolutions = dict()
 
-        """
-        project_diags = self.project.diagrams()
-        other_diags = self.other.diagrams()
-
-        other_meats_filtered = []
-        print('****     project predicates     ***')
-        for i in self.project.predicates():
-            print('     ',i)
-
-        for d in project_diags:
-            print('diagram_name',d.name)
-            for i in self.project.predicates(diagram=d):
-                print('     ',i)
-
-        print('\n****     project metas     ***')
-        #print('metas', self.project.metas())
-        for item, name in self.project.metas():
-            print('     ',item)
-            print('     ',name)
-            print('     -')
-
-        print('\n****     other predicates     ***')
-        for i in self.other.predicates():
-            print('     ',i)
-
-        for d in other_diags:
-            print('diagram_name',d.name)
-            for i in self.other.predicates(diagram=d):
-                print('     ',i)
-
-        print('\n****     other metas     ***')
-        #print('metas',self.other.metas())
         for item, name in self.other.metas():
-            print('     ',item)
-            print('     ',name)
-            print('     -')
-        
-
-        all_names_in_selected_diagrams = []
-
-        for d in self.selected_diagrams:
-            print('d.name',d.name)
-            print('len(d.nodes())',len(d.nodes()))
-            for n in d.nodes():
-                print('     n',n)
-                all_names_in_selected_diagrams.append(n.text().replace('\n',''))
-
-        print('all_names_in_selected_diagrams',all_names_in_selected_diagrams)
-        """
-
-        for item, name in self.other.metas():
-
+            QtCore.QCoreApplication.processEvents()
             if name not in self.all_names_in_selected_diagrams:
-                #print(name,'skipped')
                 continue
 
             if not self.project.predicates(item, name):
@@ -2112,15 +2000,8 @@ class ProjectMergeWorker(QtCore.QObject):
         """
         try:
             LOGGER.info('Performing project import: %s <- %s...', self.project.name, self.other.name)
-
             self.merge_IRI_prefixes_nodes_dictionary()
-
-            #print('self.project.iri_of_imported_nodes',self.project.iri_of_imported_nodes)
-
             self.mergeDiagrams()
-
-            #print('self.project.iri_of_imported_nodes', self.project.iri_of_imported_nodes)
-
             self.mergeMeta()
         except ProjectStopImportingError:
             pass
