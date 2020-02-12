@@ -735,8 +735,9 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
 
         nodes = [n for n in self.nodes.values() if Identity.Neutral in n.identities()]
         if nodes:
-            LOGGER.debug('Loaders >> Graphml >> Running identification algorithm for %s nodes', len(nodes))
+            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
             for node in nodes:
+                QtWidgets.QApplication.processEvents()
                 self.diagram.sgnNodeIdentification.emit(node)
 
         LOGGER.debug('Diagram created: %s', self.diagram.name)
@@ -831,7 +832,7 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
-        worker = ProjectMergeWorker(self.project, self.nproject, self.session)
+        worker = ProjectMergeWorker(self.project, self.nproject, self.session, diagrams=self.nproject.diagrams())
         worker.run()
 
     def projectRender(self):
@@ -840,6 +841,7 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         """
         LOGGER.debug('Refreshing project "%s" elements state', self.nproject.name)
         for item in self.nproject.items():
+            QtWidgets.QApplication.processEvents()
             item.updateEdgeOrNode()
 
     #############################################
