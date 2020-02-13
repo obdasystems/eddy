@@ -50,13 +50,14 @@ class DiagramSelectionDialog(HasThreadingSystem, HasWidgetSystem, QtWidgets.QDia
     """
     Extends QtWidgets.QDialog providing the form used to select the diagrams for a specific task like export/import
     """
-    def __init__(self, session, **kwargs):
+    def __init__(self, session, project=None, **kwargs):
         """
         Initialize the form dialog.
         :type session: Session
+        :type project: Project
         """
         super().__init__(parent=session, **kwargs)
-        self.project = kwargs.get('project', session.project)
+        self._project = project
         diagrams = natsorted(self.project.diagrams(), key=lambda diagram: diagram.name)
         for diagram in diagrams:
             self.addWidget(CheckBox(diagram.name, self, objectName=diagram.name,
@@ -123,6 +124,14 @@ class DiagramSelectionDialog(HasThreadingSystem, HasWidgetSystem, QtWidgets.QDia
         :rtype: Session
         """
         return self.parent()
+
+    @property
+    def project(self):
+        """
+        Returns the active project.
+        :rtype: Project
+        """
+        return self._project or self.session.project
 
     #############################################
     #   SLOTS
