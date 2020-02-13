@@ -489,6 +489,10 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         if self.isEditable():
+            if self._parent:
+                self._parent.mouseDoubleClickEvent(mouseEvent)
+                return
+
             super().mouseDoubleClickEvent(mouseEvent)
 
             self.old_text = self.text()

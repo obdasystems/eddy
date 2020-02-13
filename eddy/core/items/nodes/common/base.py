@@ -755,6 +755,14 @@ class OntologyEntityNode(AbstractNode):
     #############################################
     #   INTERFACE
     #################################
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        print()
+        self.session.doOpenIRIDialog()
+
 
     def connectSignals(self):
         pass

@@ -48,7 +48,7 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         '''
         #self.remaining_characters = remaining_characters
 
-        self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=False)
+        self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
         #TODO to obtain node parent of label ---> self.label.parentItem()
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
