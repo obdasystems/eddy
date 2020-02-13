@@ -49,6 +49,7 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
+from eddy.core.items.nodes.individual_iri import IndividualNode
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIManager, IRI
 from eddy.ui.dialogs import DiagramSelectionDialog
@@ -1389,6 +1390,7 @@ class Project(IRIManager):
         self.index.switchIRI(sub,master)
         self.sgnIRIRemovedFromAllDiagrams.emit(sub)
 
+
     @QtCore.pyqtSlot(OntologyEntityNode, IRI)
     def doSingleSwitchIRI(self, node, oldIri):
         """
@@ -1400,8 +1402,6 @@ class Project(IRIManager):
             self.sgnIRIRemovedFromAllDiagrams.emit(oldIri)
         else:
             self.sgnSingleNodeSwitchIRI.emit(node,oldIri)
-
-
 
 
 #TODO ProjectIndex esteso da ProjectIRIIndex. Alcuni suoi metodi saranno da sostituire con opportuni metodi di ProjectIRIIndex
@@ -1832,6 +1832,16 @@ class ProjectIRIIndex(ProjectIndex):
                     if not self[K_CLASS_OCCURRENCES][oldIRI]:
                         self[K_CLASS_OCCURRENCES].pop(oldIRI)
 
+        if isinstance(node, IndividualNode):
+            if node in self[K_INDIVIDUAL_OCCURRENCES][oldIRI][node.diagram.name]:
+                self[K_INDIVIDUAL_OCCURRENCES][oldIRI][node.diagram.name].remove(node)
+                if not self[K_INDIVIDUAL_OCCURRENCES][oldIRI][node.diagram.name]:
+                    self[K_INDIVIDUAL_OCCURRENCES][oldIRI].pop(node.diagram.name)
+                    if not self[K_INDIVIDUAL_OCCURRENCES][oldIRI]:
+                        self[K_INDIVIDUAL_OCCURRENCES].pop(oldIRI)
+
+        # TODO AGGIUNGI TUTTI ALTRI CASI (Properties, datatypes)
+
         self.addIRIOccurenceToDiagram(node.diagram, node)
         if node in self[K_OCCURRENCES][oldIRI][node.diagram.name]:
             self[K_OCCURRENCES][oldIRI][node.diagram.name].remove(node)
@@ -1896,6 +1906,8 @@ class ProjectIRIIndex(ProjectIndex):
         k_metatype = ''
         if isinstance(node, ConceptNode):
             k_metatype = K_CLASS_OCCURRENCES
+        elif isinstance(node, IndividualNode):
+            k_metatype = K_INDIVIDUAL_OCCURRENCES
         #TODO AGGIUNGI TUTTI ALTRI CASI (Properties, values, individuals)
         self.addTypedIRIOccurrenceToDiagram(diagram,node,k_metatype)
 
@@ -1928,6 +1940,14 @@ class ProjectIRIIndex(ProjectIndex):
         :type node: OntologyEntityNode
         """
         iri = node.iri
+        k_metatype = ''
+        if isinstance(node, ConceptNode):
+            k_metatype = K_CLASS_OCCURRENCES
+        elif isinstance(node, IndividualNode):
+            k_metatype = K_INDIVIDUAL_OCCURRENCES
+        # TODO AGGIUNGI TUTTI ALTRI CASI (Properties, datatypes)
+        self.removeTypedIRIOccurenceFromDiagram(diagram, node, k_metatype)
+
         if iri in self[K_OCCURRENCES]:
             if diagram.name in self[K_OCCURRENCES][iri]:
                 self[K_OCCURRENCES][iri][diagram.name].remove(node)
@@ -1972,6 +1992,12 @@ class ProjectIRIIndex(ProjectIndex):
             if item:
                 if item is Item.ConceptIRINode:
                     k_metatype = K_CLASS_OCCURRENCES
+                elif item is Item.RoleIRINode:
+                    k_metatype = K_OBJ_PROP_OCCURRENCES
+                elif item is Item.AttributeIRINode:
+                    k_metatype = K_DATA_PROP_OCCURRENCES
+                elif item is Item.IndividualIRINode:
+                    k_metatype = K_INDIVIDUAL_OCCURRENCES
             if not k_metatype:
                 k_metatype = K_OCCURRENCES
             result = set()

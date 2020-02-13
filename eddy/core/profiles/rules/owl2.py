@@ -509,7 +509,7 @@ class InputToPropertyAssertionNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.PropertyAssertionNode:
 
-                if source.type() is not Item.IndividualNode:
+                if not (source.type() is Item.IndividualNode or source.type() is Item.IndividualIRINode):
                     # Property Assertion operators accepts only Individual nodes as input: they are
                     # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))

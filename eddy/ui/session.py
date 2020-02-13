@@ -2245,6 +2245,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if iri:
                 builder = IriPropsDialog(iri, self)
                 connect(builder.sgnIRISwitch, self.project.doSwitchIRI)
+                #connect(builder.sgnReHashIRI, self.project.doReHashIRI)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()
@@ -2362,7 +2363,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode, Item.ConceptIRINode}
+            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode,
+                                        Item.ConceptIRINode, Item.IndividualIRINode, Item.RoleIRINode, Item.AttributeIRINode}
             node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()

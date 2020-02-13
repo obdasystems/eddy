@@ -247,7 +247,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         try:
             inputIri = self.project.getIRI(self.widget('full_iri_field').value())
             if self.iri:
-                print()
                 if not self.iri is inputIri:
                     self.node.iri = inputIri
                     self.sgnIRIChanged.emit(self.node,self.iri)
@@ -289,6 +288,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
     noPrefixString = ''
 
     sgnIRISwitch = QtCore.pyqtSignal(IRI,IRI)
+    sgnReHashIRI = QtCore.pyqtSignal(IRI, str)
 
     def __init__(self,iri,session):
         """
@@ -587,8 +587,10 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                     self.sgnIRISwitch.emit(oldIRI, newIRI)
             else:
                 print('IRI corresponding to string {} does not exist'.format(fullIRIString))
-                self.iri.namespace = fullIRIString
-
+                if not self.iri.namespace == fullIRIString:
+                    oldStr = self.iri.namespace
+                    self.iri.namespace = fullIRIString
+                    #self.sgnReHashIRI.emit(self.iri,oldStr)
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage('The input string cannot be used to build a valid IRI')

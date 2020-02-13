@@ -10,7 +10,7 @@ from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.functions.signals import connect, disconnect
 
 from eddy import ORGANIZATION, APPNAME
-from eddy.core.owl import IRIRender, AnnotationAssertion, IRI, AnnotationAssertionProperty, PrefixedIRI
+from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
 
 
 class ConceptNode(OntologyEntityNode, AbstractResizableNode):
@@ -39,14 +39,6 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         self.background = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
-
-        '''
-        self._iri = iri
-
-        #store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
-        self.nodeLabelObject = None
-        '''
-        #self.remaining_characters = remaining_characters
 
         self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
         #TODO to obtain node parent of label ---> self.label.parentItem()
@@ -80,25 +72,6 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         disconnect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
         disconnect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
 
-
-    """
-    @OntologyEntityNode.iri
-    def iri(self):
-        '''
-        :rtype: IRI
-        '''
-        return self._iri
-
-    @OntologyEntityNode.iri.setter
-    def iri(self,iriObj):
-        '''
-        :type iriObj:IRI
-        '''
-        if self.iri:
-            self.disconnectIRISignals()
-        self._iri = iriObj
-        self.connectIRISignals()
-    """
 
     #############################################
     #   SLOTS

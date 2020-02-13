@@ -222,7 +222,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             Item.RoleNode,
             Item.AttributeNode,
             Item.IndividualNode,
-            Item.ConceptIRINode
+            Item.ConceptIRINode,
+            Item.IndividualIRINode
         ]
         self.status = [
             Status.DEFAULT,
@@ -646,6 +647,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             return self.iconAttribute
         if node.type() is Item.ConceptNode or node.type() is Item.ConceptIRINode:
             return self.iconConcept
+        if node.type() is Item.IndividualIRINode:
+            return self.iconInstance
         if node.type() is Item.IndividualNode:
             if node.identity() is Identity.Individual:
                 return self.iconInstance
@@ -663,12 +666,16 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         parentK = None
         if isinstance(node,OntologyEntityNode):
             parentK = self.parentKeyForIRI(node.iri,self.project)
+            for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
+                parentIRI = i.data()
+                if node.iri is parentIRI:
+                    return i
         else:
             parentK = self.parentKey(node)
-        for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
-            n = i.child(0).data()
-            if node.type() is n.type():
-                return i
+            for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
+                n = i.child(0).data()
+                if node.type() is n.type():
+                    return i
         return None
 
     @staticmethod
@@ -887,7 +894,8 @@ class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.items = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode, Item.ConceptIRINode}
+        self.items = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode,
+                      Item.ConceptIRINode, Item.IndividualIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.ValueNode}
         self.status = {Status.DEFAULT, Status.DRAFT, Status.FINAL}
 
     #############################################

@@ -281,10 +281,12 @@ class PaletteWidget(QtWidgets.QWidget):
         self.plugin = plugin
         self.items = [
             Item.ConceptNode,
+            Item.ConceptIRINode,
             Item.RoleNode,
             Item.AttributeNode,
             Item.ValueDomainNode,
             Item.IndividualNode,
+            Item.IndividualIRINode,
             Item.FacetNode,
             Item.DomainRestrictionNode,
             Item.RangeRestrictionNode,
@@ -302,17 +304,15 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.InputEdge,
             Item.MembershipEdge,
             Item.SameEdge,
-            Item.DifferentEdge,
-
-            Item.ConceptIRINode
+            Item.DifferentEdge
         ]
         self.shortcutPrefix = 'Shift+Alt'
         self.itemShortcuts = {
-            Item.ConceptNode: '{}+c'.format(self.shortcutPrefix),
+            Item.ConceptNode: '{}+c,o'.format(self.shortcutPrefix),
             Item.RoleNode: '{}+r'.format(self.shortcutPrefix),
             Item.AttributeNode: '{}+a'.format(self.shortcutPrefix),
             Item.ValueDomainNode: '{}+v'.format(self.shortcutPrefix),
-            Item.IndividualNode: '{}+i'.format(self.shortcutPrefix),
+            Item.IndividualNode: '{}+i,o'.format(self.shortcutPrefix),
             Item.FacetNode: '{}+n,f'.format(self.shortcutPrefix),
             Item.DomainRestrictionNode: '{}+n,e'.format(self.shortcutPrefix),
             Item.RangeRestrictionNode: '{}+n,g'.format(self.shortcutPrefix),
@@ -332,7 +332,8 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.SameEdge: '{}+e,s'.format(self.shortcutPrefix),
             Item.DifferentEdge: '{}+e,d'.format(self.shortcutPrefix),
 
-            Item.ConceptIRINode: '{}+e,i'.format(self.shortcutPrefix)
+            Item.ConceptIRINode: '{}+c'.format(self.shortcutPrefix),
+            Item.IndividualIRINode: '{}+i'.format(self.shortcutPrefix)
         }
 
         # CREATE BUTTONS
@@ -557,6 +558,7 @@ class PaletteButton(QtWidgets.QToolButton):
         :type mouseEvent: QMouseEvent
         """
         if mouseEvent.buttons() & QtCore.Qt.LeftButton:
+
             if Item.ConceptNode <= self.item < Item.InclusionEdge:
                 distance = (mouseEvent.pos() - self.startPos).manhattanLength()
                 if distance >= QtWidgets.QApplication.startDragDistance():
@@ -729,6 +731,30 @@ class PaletteButton(QtWidgets.QToolButton):
                 ]))
                 painter.setFont(Font('Roboto', 8 if self.isHDPI() else 9, Font.Light))
                 painter.drawText(-16 if self.isHDPI() else -18, 4, 'individual')
+                painter.end()
+
+            # TODO added
+            elif item is Item.IndividualIRINode:
+                painter = QtGui.QPainter(pixmap)
+                painter.setRenderHint(QtGui.QPainter.Antialiasing)
+                painter.setPen(
+                    QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap,
+                               QtCore.Qt.RoundJoin))
+                painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
+                painter.translate(30, 22)
+                painter.drawPolygon(QtGui.QPolygonF([
+                    QtCore.QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
+                    QtCore.QPointF(-20, +((40 / (1 + sqrt(2))) / 2)),
+                    QtCore.QPointF(-((40 / (1 + sqrt(2))) / 2), +20),
+                    QtCore.QPointF(+((40 / (1 + sqrt(2))) / 2), +20),
+                    QtCore.QPointF(+20, +((40 / (1 + sqrt(2))) / 2)),
+                    QtCore.QPointF(+20, -((40 / (1 + sqrt(2))) / 2)),
+                    QtCore.QPointF(+((40 / (1 + sqrt(2))) / 2), -20),
+                    QtCore.QPointF(-((40 / (1 + sqrt(2))) / 2), -20),
+                    QtCore.QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
+                ]))
+                painter.setFont(Font('Roboto', 8 if self.isHDPI() else 9, Font.Light))
+                painter.drawText(-16 if self.isHDPI() else -18, 4, 'individual IRI')
                 painter.end()
 
             #############################################

@@ -417,14 +417,14 @@ class IRI(QtCore.QObject):
         :rtype: bool
         """
         if isinstance(other, IRI):
-            return str(self) == str(other)
+            return self is other
         return False
 
     def __getitem__(self, item):
         return str(self)[item]
 
     def __hash__(self):
-        return str(self).__hash__()
+        return super().__hash__()
 
     def __iter__(self):
         return str(self).__iter__()

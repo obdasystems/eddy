@@ -223,7 +223,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
                 node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
                 commands = []
-                node.emptyMethod()
+                #node.emptyMethod()
 
                 if iri is not None:
                     Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
@@ -248,9 +248,9 @@ class Diagram(QtWidgets.QGraphicsScene):
                             self.session.undostack.push(command)
                     self.session.undostack.endMacro()
 
-                self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
-                dropEvent.setDropAction(QtCore.Qt.CopyAction)
-                dropEvent.accept()
+            self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
+            dropEvent.setDropAction(QtCore.Qt.CopyAction)
+            dropEvent.accept()
         else:
             dropEvent.ignore()
 
@@ -277,7 +277,10 @@ class Diagram(QtWidgets.QGraphicsScene):
                 snapToGrid = self.session.action('toggle_grid').isChecked()
                 node = self.factory.create(Item.valueOf(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
-                self.session.undostack.push(CommandNodeAdd(self, node))
+                if isinstance(node, OntologyEntityNode):
+                    self.session.doOpenIRIBuilder(node)
+                else:
+                    self.session.undostack.push(CommandNodeAdd(self, node))
                 self.sgnItemInsertionCompleted.emit(node, mouseEvent.modifiers())
 
             elif self.mode is DiagramMode.EdgeAdd:

@@ -46,13 +46,13 @@ from eddy.core.items.edges.same import SameEdge
 from eddy.core.items.edges.different import DifferentEdge
 from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.complement import ComplementNode
-from eddy.core.items.nodes.concept import ConceptNode
+from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.datatype_restriction import DatatypeRestrictionNode
 from eddy.core.items.nodes.disjoint_union import DisjointUnionNode
 from eddy.core.items.nodes.domain_restriction import DomainRestrictionNode
 from eddy.core.items.nodes.enumeration import EnumerationNode
 from eddy.core.items.nodes.facet import FacetNode
-from eddy.core.items.nodes.individual import IndividualNode
+from eddy.core.items.nodes.individual_iri import IndividualNode
 from eddy.core.items.nodes.intersection import IntersectionNode
 from eddy.core.items.nodes.property_assertion import PropertyAssertionNode
 from eddy.core.items.nodes.range_restriction import RangeRestrictionNode
@@ -103,7 +103,7 @@ class ItemFactory(QtCore.QObject):
         if item is Item.ComplementNode:
             return ComplementNode
         if item is Item.ConceptNode:
-            return ConceptNode
+            return eddy.core.items.nodes.concept.ConceptNode
         if item is Item.DatatypeRestrictionNode:
             return DatatypeRestrictionNode
         if item is Item.DisjointUnionNode:
@@ -115,7 +115,7 @@ class ItemFactory(QtCore.QObject):
         if item is Item.FacetNode:
             return FacetNode
         if item is Item.IndividualNode:
-            return IndividualNode
+            return eddy.core.items.nodes.individual.IndividualNode
         if item is Item.IntersectionNode:
             return IntersectionNode
         if item is Item.PropertyAssertionNode:
@@ -146,8 +146,9 @@ class ItemFactory(QtCore.QObject):
             return DifferentEdge
         #TODO ADDED
         if item is Item.ConceptIRINode:
-            return eddy.core.items.nodes.concept_iri.ConceptNode
-
+            return ConceptNode
+        if item is Item.IndividualIRINode:
+            return IndividualNode
         raise RuntimeError('unknown item type ({0})'.format(item))
 
     def create(self, item, **kwargs):
