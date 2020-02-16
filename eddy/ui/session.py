@@ -271,6 +271,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             statusTip='Quit {0}'.format(APPNAME), triggered=self.doQuit))
 
         action = QtWidgets.QAction(
+            QtGui.QIcon.fromTheme('system-reboot'), 'Restart', self,
+            objectName='restart', statusTip='Restart {0}'.format(APPNAME),
+            triggered=self.app.doRestart)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_help_outline_black'), 'About Qt',
+            self, objectName='about_qt', statusTip='About Qt', triggered=QtWidgets.QApplication.aboutQt)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_help_outline_black'), 'About {0}'.format(APPNAME),
             self, objectName='about', shortcut=QtGui.QKeySequence.HelpContents,
             statusTip='About {0}'.format(APPNAME), triggered=self.doOpenDialog)
@@ -874,6 +885,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addSeparator()
         menu.addAction(self.action('print'))
         menu.addSeparator()
+        menu.addAction(self.action('restart'))
+        menu.addSeparator()
         menu.addAction(self.action('quit'))
         self.addMenu(menu)
 
@@ -965,6 +978,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('&Help', objectName='help')
         menu.addAction(self.action('about'))
+        menu.addAction(self.action('about_qt'))
         if not _MACOS:
             menu.addSeparator()
         menu.addAction(self.action('check_for_updates'))
