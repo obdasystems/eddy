@@ -360,7 +360,8 @@ class Eddy(QtWidgets.QApplication):
         Quit Eddy.
         """
         for session in self.sessions:
-            session.save()
+            if not session.close():
+                return
         self.quit()
 
     @QtCore.pyqtSlot()
@@ -369,7 +370,8 @@ class Eddy(QtWidgets.QApplication):
         Restart Eddy.
         """
         for session in self.sessions:
-            session.save()
+            if not session.close():
+                return
         self.exit(Eddy.RestartCode)
 
     @QtCore.pyqtSlot()
@@ -411,6 +413,7 @@ class Eddy(QtWidgets.QApplication):
         ## SAVE SESSION STATE
         session = self.sender()
         if session:
+            # noinspection PyUnresolvedReferences
             session.save()
             self.sessions.remove(session)
             self.sgnSessionClosed.emit(session)
