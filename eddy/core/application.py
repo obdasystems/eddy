@@ -33,7 +33,6 @@
 ##########################################################################
 
 
-import argparse
 import os
 import platform
 import subprocess
@@ -46,10 +45,11 @@ from PyQt5 import QtWidgets
 
 import eddy
 from eddy import APPID, APPNAME, ORGANIZATION_DOMAIN, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
+from eddy.core.commandline import CommandLineParser
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import isdir
+from eddy.core.functions.fsystem import isdir, fexists
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
@@ -90,14 +90,15 @@ class Eddy(QtWidgets.QApplication):
     sgnSessionCreated = QtCore.pyqtSignal('QMainWindow')
     sgnSessionClosed = QtCore.pyqtSignal('QMainWindow')
 
-    def __init__(self, options, argv):
+    def __init__(self, argv):
         """
         Initialize Eddy.
-        :type options: Namespace
         :type argv: list
         """
         super().__init__(argv)
 
+        self.options = CommandLineParser()
+        self.options.process(argv)
         self.server = None
         self.socket = QtNetwork.QLocalSocket()
         self.socket.connectToServer(APPID)
@@ -105,7 +106,7 @@ class Eddy(QtWidgets.QApplication):
         self.sessions = DistinctList()
         self.welcome = None
 
-        if not self.isRunning() or options.tests:
+        if not self.isRunning():
             self.server = QtNetwork.QLocalServer()
             self.server.listen(APPID)
             self.socket = None
@@ -115,17 +116,16 @@ class Eddy(QtWidgets.QApplication):
     #   INTERFACE
     #################################
 
-    def configure(self, options):
+    def configure(self):
         """
         Perform initial configuration tasks for Eddy to work properly.
-        :type options: Namespace
         """
         #############################################
         # DRAW THE SPLASH SCREEN
         #################################
 
         splash = None
-        if not options.nosplash:
+        if not self.options.isSet(CommandLineParser.NO_SPLASH):
             splash = Splash(mtime=4)
             splash.show()
 
@@ -226,7 +226,7 @@ class Eddy(QtWidgets.QApplication):
         # CLOSE THE SPLASH SCREEN
         #################################
 
-        if splash and not options.nosplash:
+        if splash and not self.options.isSet(CommandLineParser.NO_SPLASH):
             splash.sleep()
             splash.close()
 
@@ -247,15 +247,37 @@ class Eddy(QtWidgets.QApplication):
         """
         return self.running
 
-    def start(self, options):
+    def start(self):
         """
         Run the application by showing the welcome dialog.
-        :type options: Namespace
         """
+        args = self.options.positionalArguments()
+        # SHOW WELCOME DIALOG
         self.welcome = Welcome(self)
         self.welcome.show()
-        if options.open and isdir(options.open):
-            self.sgnCreateSession.emit(expandPath(options.open))
+        # PROCESS ADDITIONAL COMMAND LINE OPTIONS
+        if self.options.isSet(CommandLineParser.OPEN):
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
+            if not isdir(workspace):
+                window = WorkspaceDialog()
+                if window.exec_() == WorkspaceDialog.Rejected:
+                    raise SystemExit
+            value = self.options.value(CommandLineParser.OPEN)
+            if value:
+                project = os.path.join(workspace, value)
+                if project and isdir(os.path.join(workspace, project)):
+                    self.sgnCreateSession.emit(project)
+                else:
+                    LOGGER.warning('Unable to open project: %s', project)
+        # POSITIONAL ARGUMENTS
+        elif args:
+            fname = expandPath(args[0])
+            if fexists(fname):
+                project = os.path.dirname(fname)
+                self.sgnCreateSession.emit(project)
+            else:
+                LOGGER.warning('Unable to open file: %s', fname)
 
     #############################################
     #   SLOTS
@@ -403,19 +425,6 @@ class Eddy(QtWidgets.QApplication):
             self.welcome.show()
 
 
-def getArgumentParser():
-    """
-    Get an ArgumentParser that parses options accepted by this application.
-
-    :rtype: ArgumentParser
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--nosplash', dest='nosplash', action='store_true')
-    parser.add_argument('--tests', dest='tests', action='store_true')
-    parser.add_argument('--open', dest='open', default=None)
-    return parser
-
-
 # noinspection PyArgumentList,PyUnusedLocal
 def base_except_hook(exc_type, exc_value, exc_traceback):
     """
@@ -454,20 +463,22 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
-def main():
+def main(args):
     """
     Application entry point.
+    :type args: list
     """
+    #############################################
+    # SETUP EXCEPTION HOOK
+    #################################
+    sys.excepthook = base_except_hook
+
     #############################################
     # PARSE ARGUMENTS AND CREATE THE APPLICATION
     #################################
-    parser = getArgumentParser()
-    sys.excepthook = base_except_hook
-    options, _ = parser.parse_known_args(args=sys.argv)
-    settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
     global app
-    app = Eddy(options, sys.argv)
+    app = Eddy(args)
     if app.isRunning():
         sys.exit(0)
 
@@ -478,11 +489,12 @@ def main():
     JAVA_HOME = findJavaHome()
 
     if not JAVA_HOME or not os.path.isdir(JAVA_HOME):
-        shouldDisplayDialog = settings.value('dialogs/skipMissingJREWarning')
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        shouldDisplayDialog = settings.value('dialogs/noJVM')
         if not shouldDisplayDialog:
             # CHECKBOX CALLBACK
             def checkboxStateChanged(state):
-                settings.setValue('dialogs/missingJRE', state == QtCore.Qt.Checked)
+                settings.setValue('dialogs/noJVM', state == QtCore.Qt.Checked)
                 settings.sync()
             chkbox = QtWidgets.QCheckBox("Don't show this warning again.")
             msgbox = QtWidgets.QMessageBox()
@@ -558,21 +570,21 @@ def main():
     LOGGER.frame('SIP version: %s', sip.SIP_VERSION_STR, separator='|')
     LOGGER.separator(separator='-')
 
-    app.configure(options)
-    app.start(options)
+    app.configure()
+    app.start()
     ret = app.exec_()
     if ret == Eddy.RestartCode:
-        args = []
-        if os.path.basename(sys.argv[0]) == 'eddy':
+        nargs = []
+        if os.path.basename(args[0]) == 'eddy':
             # LAUNCHED VIA LAUNCHER SCRIPT
-            args.append(sys.argv[0])
+            nargs.append(args[0])
         elif hasattr(sys, 'frozen'):
             # LAUNCHED FROM DISTRIBUTION EXECUTABLE
-            args.append(sys.executable)
+            nargs.append(sys.executable)
         else:
             # LAUNCHED VIA THE INTERPRETER
-            args.extend([sys.executable, sys.argv[0]])
-        args.extend(sys.argv[1:])
-        subprocess.Popen(args)
+            nargs.extend([sys.executable, args[0]])
+        nargs.extend(args[1:])
+        subprocess.Popen(nargs)
     sys.exit(ret)
 

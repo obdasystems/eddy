@@ -32,11 +32,40 @@
 #                                                                        #
 ##########################################################################
 
-"""Entry point for Eddy."""
 
-import sys
+import textwrap
 
-from .core.application import main
+from PyQt5 import QtCore
 
-if __name__ == '__main__':
-   sys.exit(main(sys.argv))
+from eddy import APPNAME
+
+
+class CommandLineParser(QtCore.QCommandLineParser):
+    """
+    Extension of QtCore.QCommandLineParser that can parse command line options for the application.
+    """
+    NO_SPLASH = 'no-splash'
+    OPEN = 'open'
+
+    def __init__(self):
+        """
+        Initialize the CommandLineParser.
+        """
+        super().__init__()
+        self.addHelpOption()
+        self.addVersionOption()
+        self.addOptions([
+            QtCore.QCommandLineOption(
+                [CommandLineParser.NO_SPLASH],
+                'Do not show the application splash screen.'
+            ),
+            QtCore.QCommandLineOption(
+                [CommandLineParser.OPEN],
+                'Look for a project in the workspace with the given name and open it.',
+                valueName=CommandLineParser.OPEN
+            ),
+        ])
+        self.addPositionalArgument('project', 'Path to a project file to open.', '[project]')
+        self.setApplicationDescription(textwrap.dedent("""
+        {0}, a graphical editor for the specification and visualization of Graphol ontologies.
+        """).format(APPNAME))

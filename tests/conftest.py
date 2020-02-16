@@ -43,7 +43,7 @@ from PyQt5 import QtCore, QtWidgets
 
 import eddy
 from eddy import APPNAME, ORGANIZATION
-from eddy.core.application import Eddy, getArgumentParser
+from eddy.core.application import Eddy
 from eddy.core.datatypes.system import File
 from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
 from eddy.core.output import getLogger
@@ -59,7 +59,7 @@ def qapp_args():
     Overrides pytest-qt default qapp_args fixture to
     provide custom arguments for Eddy.
     """
-    return [APPNAME, '--nosplash', '--tests']
+    return [APPNAME, '--no-splash']
 
 
 @pytest.yield_fixture(scope="session")
@@ -100,10 +100,8 @@ def qapp(qapp_args, tmpdir_factory):
         settings.setValue('workspace/home', str(workspace_tmpdir))
         settings.setValue('update/check_on_startup', False)
 
-        argparser = getArgumentParser()
-        options, args = argparser.parse_known_args(qapp_args)
-        _qapp_instance = Eddy(options, args)
-        _qapp_instance.configure(options)
+        _qapp_instance = Eddy(qapp_args)
+        _qapp_instance.configure()
         yield _qapp_instance
     else:
         yield app
