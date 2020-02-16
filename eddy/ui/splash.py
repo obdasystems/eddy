@@ -46,7 +46,7 @@ from eddy.core.functions.misc import rangeF
 
 
 COPYRIGHT = '  Copyright © 2015-2017 Sapienza Università di Roma\n' \
-            '  Copyright © 2017-2018 OBDA Systems'
+            '  Copyright © 2017-2020 OBDA Systems'
 LICENSE =   '   Licensed under the GNU General Public License v3'
 CREDITS =   '      Developed by OBDA Systems'
 
