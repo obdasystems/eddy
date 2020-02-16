@@ -35,14 +35,15 @@ from abc import ABCMeta
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+from eddy.core.functions.signals import connect, disconnect
+
+from eddy import ORGANIZATION, APPNAME
 
 from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.items.common import AbstractItem, Polygon
-
-
-
+from eddy.core.owl import IRIRender
 
 
 class AbstractNode(AbstractItem):
@@ -762,43 +763,127 @@ class OntologyEntityNode(AbstractNode):
         """
         print()
         self.session.doOpenIRIDialog()
-
+        mouseEvent.accept()
 
     def connectSignals(self):
-        pass
+        connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
+        connect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
+        connect(self.project.sgnPrefixModified, self.onPrefixModified)
+        connect(self.session.sgnRenderingModified, self.onRenderingModified)
+        self.connectIRISignals()
 
     def disconnectSignals(self):
-        pass
+        disconnect(self.project.sgnPrefixAdded, self.onPrefixAdded)
+        disconnect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
+        disconnect(self.project.sgnPrefixModified, self.onPrefixModified)
+        disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
+        self.disconnectIRISignals()
 
     def connectIRISignals(self):
-        pass
+        connect(self.iri.sgnIRIModified, self.onIRIModified)
+        connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
+        connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
+        connect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
 
     def disconnectIRISignals(self):
-        pass
+        disconnect(self.iri.sgnIRIModified, self.onIRIModified)
+        disconnect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
+        disconnect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
+        disconnect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
 
+    #############################################
+    #   SLOTS
+    #################################
+    @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        pass
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
+            self.renderByFullIRI()
+        elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
+            self.renderByPrefixedIRI()
+        elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+            self.renderByLabel()
+        self.updateTextPos()
 
-    def onRenderingModified(self, rendering):
-        pass
+    def renderByFullIRI(self):
+        self.setText(str(self.iri))
+        self.nodeLabelObject = self.iri
 
+    def renderByPrefixedIRI(self):
+        prefixed = self.project.getShortestPrefixedForm(self.iri)
+        if prefixed:
+            self.setText(str(prefixed))
+            self.nodeLabelObject = prefixed
+        else:
+            self.renderByFullIRI()
+
+    def renderByLabel(self):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        lang = settings.value('ontology/iri/render/language', 'it')
+        labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
+        if labelAssertion:
+            self.setText(str(labelAssertion.value))
+            self.nodeLabelObject = labelAssertion
+        else:
+            self.renderByPrefixedIRI()
+
+    #@QtCore.pyqtSlot(str)
+    def onRenderingModified(self,rendering):
+        self.doUpdateNodeLabel()
+
+    #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationAdded(self, annotation):
-        pass
+        '''
+        :type annotation: AnnotationAssertion
+        '''
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
+    #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationRemoved(self, annotation):
-        pass
+        '''
+        :type annotation: AnnotationAssertion
+        '''
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
+        if rendering == IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
+    #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationModified(self, annotation):
-        pass
+        '''
+        :type annotation: AnnotationAssertion
+        '''
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
+    #@QtCore.pyqtSlot()
     def onIRIModified(self):
-        pass
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        self.doUpdateNodeLabel()
 
-    def onPrefixAdded(self):
-        pass
+    #@QtCore.pyqtSlot('QString','QString')
+    def onPrefixAdded(self,pref,ns):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
-    def onPrefixRemoved(self):
-        pass
+    #@QtCore.pyqtSlot(str)
+    def onPrefixRemoved(self,pref):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()
 
-    def onPrefixModified(self):
-        pass
+    #@QtCore.pyqtSlot(str)
+    def onPrefixModified(self,pref):
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
+            self.doUpdateNodeLabel()

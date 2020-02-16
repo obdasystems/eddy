@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
 from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
 from eddy.core.output import getLogger
 from eddy.ui.notification import Notification
 
@@ -17,6 +18,24 @@ from eddy.core.datatypes.qt import Font
 LOGGER = getLogger()
 
 class IRIDialogsWidgetFactory(QObject):
+
+    @staticmethod
+    def getPredefinedDatatypeComboBoxLabel(parent):
+        comboBoxLabel = QtWidgets.QLabel(parent, objectName='datatype_combobox_label')
+        comboBoxLabel.setFont(Font('Roboto', 12))
+        comboBoxLabel.setText('Datatype')
+        return comboBoxLabel
+
+    @staticmethod
+    def getPredefinedDatatypeComboBox(parent):
+        combobox = ComboBox(parent, objectName='datatype_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(False)
+        return combobox
+
+
 
     @staticmethod
     def getIRIPrefixComboBoxLabel(parent):
@@ -77,6 +96,9 @@ class IRIDialogsWidgetFactory(QObject):
         table.setFont(Font('Roboto', 13))
         return table
 
+#TODO DOVRAI POI PENSARE A MECCANISMO PER IMPEDIRE MODIFICA IRI DI DEFAULT (owl:Thing, rdfs:label, xsd:string ....)
+#TODO in caso nodo sia associato a IRI di default, allora modifica dovrà essere solo locale (a parte forse aggiunta e rimozione annotation assertions)
+
 class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     sgnIRIAccepted = QtCore.pyqtSignal(OntologyEntityNode)
@@ -84,7 +106,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     sgnIRIChanged = QtCore.pyqtSignal(OntologyEntityNode,IRI)
 
-    noPrefixString = ''
+    emptyString = ''
 
     def __init__(self,node,diagram,session):
         """
@@ -114,13 +136,13 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         combobox = IRIDialogsWidgetFactory.getIRIPrefixComboBox(self)
         combobox.clear()
-        combobox.addItem(self.noPrefixString)
+        combobox.addItem(self.emptyString)
         # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
         combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            combobox.setCurrentText(self.noPrefixString)
+            combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
         inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
@@ -171,13 +193,39 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # MAIN WIDGET
         #################################
-        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
-        widget.addTab(self.widget('iri_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
+        mainWidget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        mainWidget.addTab(self.widget('iri_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
                       'IRI')
-        widget.addTab(self.widget('annotation_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
-                      'Annotation')
 
-        self.addWidget(widget)
+        #############################################
+        # PREDEFINED DATATYPE TAB
+        #################################
+        if isinstance(self.node,ValueDomainNode):
+            comboBoxLabel = IRIDialogsWidgetFactory.getPredefinedDatatypeComboBoxLabel(self)
+            self.addWidget(comboBoxLabel)
+
+            combobox = IRIDialogsWidgetFactory.getPredefinedDatatypeComboBox(self)
+            combobox.clear()
+            combobox.addItem(self.emptyString)
+            sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+            combobox.addItems([str(x) for x in sortedItems])
+            if self.iri and self.iri in self.project.getDatatypeIRIs():
+                combobox.setCurrentText(str(self.iri))
+            else:
+                combobox.setCurrentText(self.emptyString)
+            self.addWidget(combobox)
+
+            formlayout = QtWidgets.QFormLayout()
+            formlayout.addRow(self.widget('datatype_combobox_label'), self.widget('datatype_switch'))
+            widget = QtWidgets.QWidget()
+            widget.setLayout(formlayout)
+            widget.setObjectName('predefined_datatype_widget')
+            self.addWidget(widget)
+            mainWidget.addTab(self.widget('predefined_datatype_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
+                              'Predefined Datatypes')
+
+
+        self.addWidget(mainWidget)
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.widget('main_widget'))
@@ -207,14 +255,13 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
         combobox = self.widget('iri_prefix_switch')
         combobox.clear()
-        combobox.addItem(self.noPrefixString)
+        combobox.addItem(self.emptyString)
         # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
         combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            combobox.setCurrentText(self.noPrefixString)
-        self.addWidget(combobox)
+            combobox.setCurrentText(self.emptyString)
 
         inputField = self.widget('iri_input_field')
         if shortest:
@@ -229,6 +276,20 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             fullIriField.setText(str(self.iri))
         else:
             fullIriField.setText('')
+
+        #############################################
+        # PREDEFINED DATATYPE TAB
+        #################################
+        if isinstance(self.node, ValueDomainNode):
+            combobox = self.widget('datatype_switch')
+            combobox.clear()
+            combobox.addItem(self.emptyString)
+            sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+            combobox.addItems([str(x) for x in sortedItems])
+            if self.iri and self.iri in self.project.getDatatypeIRIs():
+                combobox.setCurrentText(str(self.iri))
+            else:
+                combobox.setCurrentText(self.emptyString)
 
     @QtCore.pyqtSlot(int)
     def onPrefixChanged(self, val):
@@ -245,17 +306,35 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     @QtCore.pyqtSlot()
     def accept(self):
         try:
-            inputIri = self.project.getIRI(self.widget('full_iri_field').value())
-            if self.iri:
-                if not self.iri is inputIri:
+            activeTab = self.widget('main_widget').currentWidget()
+            if activeTab is self.widget('iri_widget'):
+                inputIri = self.project.getIRI(self.widget('full_iri_field').value())
+                if self.iri:
+                    if not self.iri is inputIri:
+                        self.node.iri = inputIri
+                        self.sgnIRIChanged.emit(self.node,self.iri)
+                else:
                     self.node.iri = inputIri
-                    self.sgnIRIChanged.emit(self.node,self.iri)
-            else:
-                self.node.iri = inputIri
-                self.sgnIRIAccepted.emit(self.node)
-            if self.node.diagram:
-                self.node.doUpdateNodeLabel()
-            super().accept()
+                    self.sgnIRIAccepted.emit(self.node)
+                if self.node.diagram:
+                    self.node.doUpdateNodeLabel()
+                super().accept()
+            elif activeTab is self.widget('predefined_datatype_widget'):
+                currText = str(self.widget('datatype_switch').currentText())
+                if not currText==self.emptyString:
+                    inputIri = self.project.getIRI(currText)
+                    self.node.iri = inputIri
+                    self.sgnIRIAccepted.emit(self.node)
+                    if self.node.diagram:
+                        self.node.doUpdateNodeLabel()
+                    super().accept()
+                else:
+                    errorDialog = QtWidgets.QErrorMessage(parent=self)
+                    errorDialog.showMessage('Please select a non-empty element from the combobox')
+                    errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
+                    errorDialog.show()
+                    errorDialog.raise_()
+                    errorDialog.activateWindow()
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage('The input string is not a valid IRI')

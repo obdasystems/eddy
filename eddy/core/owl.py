@@ -187,6 +187,13 @@ class IRI(QtCore.QObject):
             raise IllegalNamespaceError(namespace)
         self._namespace = str(namespace)
         self._suffix = suffix
+        self._isFunctional = None
+        self._isInverseFunctional = None
+        self._isSymmetric = None
+        self._isAsymmetric = None
+        self._isReflexive = None
+        self._isIrreflexive = None
+        self._isTransitive = None
         self.components = parse(IRI.concat(self._namespace, self._suffix))
         self._annotationAssertionsMap = {}
         self._annotationAssertions = []
@@ -236,6 +243,104 @@ class IRI(QtCore.QObject):
         self._namespace = value
         self.components = parse(IRI.concat(self._namespace, self._suffix))
         self.sgnIRIModified.emit(oldIRIStr)
+
+    @property
+    def functional(self):
+        """
+        Returns True if the IRI represents a functional (object, data) property,
+        False if the IRI represents a non functional (object, data) property,
+        None if the IRI does not represent a (object, data) property
+        :rtype: bool
+        """
+        return self._isFunctional
+
+    @functional.setter
+    def functional(self, funct):
+        self._isFunctional = funct
+
+    @property
+    def inverseFunctional(self):
+        """
+        Returns True if the IRI represents an inverse functional object property,
+        False if the IRI represents a non inverse functional object property,
+        None if the IRI does not represent an object property
+        :rtype: bool
+        """
+        return self._isInverseFunctional
+
+    @inverseFunctional.setter
+    def inverseFunctional(self, invFunct):
+        self._isInverseFunctional = invFunct
+
+    @property
+    def symmetric(self):
+        """
+        Returns True if the IRI represents a symmentric object property,
+        False if the IRI represents a non symmentric object property,
+        None if the IRI does not represent an object property
+        :rtype: bool
+        """
+        return self._isSymmetric
+
+    @symmetric.setter
+    def symmetric(self, symm):
+        self._isSymmetric = symm
+
+    @property
+    def asymmetric(self):
+        """
+        Returns True if the IRI represents an asymmentric object property,
+        False if the IRI represents a non asymmentric object property,
+        None if the IRI does not represent an object property
+        :rtype: bool
+        """
+        return self._isAsymmetric
+
+    @asymmetric.setter
+    def asymmetric(self, asymm):
+        self._isAsymmetric = asymm
+
+    @property
+    def reflexive(self):
+        """
+        Returns True if the IRI represents a reflexive object property,
+        False if the IRI represents a non reflexive object property,
+        None if the IRI does not represent an object property
+        :rtype: bool
+        """
+        return self._isReflexive
+
+    @reflexive.setter
+    def reflexive(self, ref):
+        self._isReflexive = ref
+
+    @property
+    def irreflexive(self):
+        """
+        Returns True if the IRI represents a irreflexive object property,
+        False if the IRI represents a non irreflexive object property,
+        None if the IRI does not represent an object property
+        :rtype: bool
+        """
+        return self._isIrreflexive
+
+    @irreflexive.setter
+    def irreflexive(self, irref):
+        self._isIrreflexive = irref
+
+    @property
+    def transitive(self):
+        """
+        Returns True if the IRI represents a transitive object property,
+        False if the IRI represents a non transitive object property,
+        None if the IRI does not represent an object property
+        :rtype: bool
+        """
+        return self._isTransitive
+
+    @transitive.setter
+    def transitive(self, tran):
+        self._isTransitive = tran
 
     @property
     def annotationAssertions(self):
@@ -579,6 +684,7 @@ class IRIManager(QtCore.QObject):
         iri = self.sender()
         self.stringToIRI.pop(oldIRIStr,None)
         self.stringToIRI[str(iri)] = iri
+
     #############################################
     #   INTERFACE
     #################################
@@ -609,6 +715,7 @@ class IRIManager(QtCore.QObject):
         self.addDefaultAnnotationProperties()
         self.addDefaultDatatypes()
         self.addDefaultLanguages()
+        #TODO Aggiungi default IRI per constraining facets (minInclusive, length etc etc ...)
 
     ##ANNOTATION PROPERTIES
     def getAnnotationPropertyIRIs(self):

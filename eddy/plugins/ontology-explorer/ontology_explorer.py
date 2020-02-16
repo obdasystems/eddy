@@ -218,12 +218,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
 
         self.plugin = plugin
         self.items = [
-            Item.ConceptNode,
-            Item.RoleNode,
-            Item.AttributeNode,
-            Item.IndividualNode,
             Item.ConceptIRINode,
-            Item.IndividualIRINode
+            Item.RoleIRINode,
+            Item.AttributeIRINode,
+            Item.IndividualIRINode,
+            Item.ValueDomainIRINode
         ]
         self.status = [
             Status.DEFAULT,
@@ -632,6 +631,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :rtype: str
         """
         diagram = rstrip(diagram.name, File.Graphol.extension)
+
         if isinstance(node, OntologyEntityNode):
             return '{0} - {1}'.format(diagram, node.id)
         else:
@@ -643,19 +643,16 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         Returns the icon for the given node.
         :type node:
         """
-        if node.type() is Item.AttributeNode:
+        if node.type() is Item.AttributeIRINode:
             return self.iconAttribute
-        if node.type() is Item.ConceptNode or node.type() is Item.ConceptIRINode:
+        if node.type() is Item.ConceptIRINode:
             return self.iconConcept
         if node.type() is Item.IndividualIRINode:
             return self.iconInstance
-        if node.type() is Item.IndividualNode:
-            if node.identity() is Identity.Individual:
-                return self.iconInstance
-            if node.identity() is Identity.Value:
-                return self.iconValue
-        if node.type() is Item.RoleNode:
+        if node.type() is Item.RoleIRINode:
             return self.iconRole
+        if node.type() is Item.ValueDomainIRINode:
+            return self.iconValue
 
     def parentFor(self, node):
         """
@@ -894,8 +891,7 @@ class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.items = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode,
-                      Item.ConceptIRINode, Item.IndividualIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.ValueNode}
+        self.items = {Item.ConceptIRINode, Item.IndividualIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.ValueDomainIRINode}
         self.status = {Status.DEFAULT, Status.DRAFT, Status.FINAL}
 
     #############################################

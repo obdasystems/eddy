@@ -47,9 +47,12 @@ from eddy.core.datatypes.owl import Namespace
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
+from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.individual_iri import IndividualNode
+from eddy.core.items.nodes.role_iri import RoleNode
+from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIManager, IRI
 from eddy.ui.dialogs import DiagramSelectionDialog
@@ -1906,9 +1909,14 @@ class ProjectIRIIndex(ProjectIndex):
         k_metatype = ''
         if isinstance(node, ConceptNode):
             k_metatype = K_CLASS_OCCURRENCES
+        elif isinstance(node, RoleNode):
+            k_metatype = K_OBJ_PROP_OCCURRENCES
+        elif isinstance(node, AttributeNode):
+            k_metatype = K_DATA_PROP_OCCURRENCES
+        elif isinstance(node, ValueDomainNode):
+            k_metatype = K_DATATYPE_OCCURRENCES
         elif isinstance(node, IndividualNode):
             k_metatype = K_INDIVIDUAL_OCCURRENCES
-        #TODO AGGIUNGI TUTTI ALTRI CASI (Properties, values, individuals)
         self.addTypedIRIOccurrenceToDiagram(diagram,node,k_metatype)
 
     def addTypedIRIOccurrenceToDiagram(self, diagram, node, k_metatype):

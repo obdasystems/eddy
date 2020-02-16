@@ -68,8 +68,9 @@ class Item(IntEnum_):
     AttributeIRINode = 95532
     RoleIRINode = 95533
     ValueDomainIRINode = 95534
-    ValueNode = 955335
-    IndividualIRINode = 95536
+    ValueNode = 95535
+    FacetIRINode = 65536
+    IndividualIRINode = 95537
 
     # PREDICATES
     ConceptNode = 65537
