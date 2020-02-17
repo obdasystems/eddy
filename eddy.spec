@@ -83,6 +83,8 @@ WORK_PATH = CONF['workpath']
 DIST_PATH = CONF['distpath']
 DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), EXEC_ARCH)
 JRE_DIR = os.path.join('resources', 'java')
+ICON_FMT = 'ico' if WIN32 else 'icns' if MACOS else 'png'
+GRAPHOL_ICON = '{}.{}'.format(os.path.join('resources', 'images', 'graphol'), ICON_FMT)
 
 excludes = [
     # PYTHON BUILTINS
@@ -97,9 +99,7 @@ datas = [
     ('eddy/ui/style/*.qss', 'resources/styles'),
     ('examples', 'examples'),
     ('LICENSE', '.'),
-    ('CONTRIBUTING.md', '.'),
-    ('PACKAGING.md', '.'),
-    ('README.md', '.'),
+    (GRAPHOL_ICON, '.'),
 ]
 
 if LINUX:
@@ -249,6 +249,24 @@ info_plist = {
     'CFBundleExecutable': APPNAME,
     'NSPrincipalClass': 'NSApplication',
     'NSHighResolutionCapable': 'True',
+    'CFBundleDocumentTypes': [{
+        'CFBundleTypeName': 'Graphol File',
+        'CFBundleTypeRole': 'Editor',
+        'CFBundleTypeIconFile': 'graphol',
+        'CFBundleTypeExtensions': ['graphol'],
+        'LSHandlerRank': 'Owner',
+        'LSIsAppleDefaultForFile': True,
+        'LSItemContentTypes': ['it.uniroma1.graphol'],
+    }],
+    'UTExportedTypeDeclarations': [{
+        'UTTypeConformsTo': ['public.data'],
+        'UTTypeDescription': 'Graphol File',
+        'UTTypeIdentifier': 'it.uniroma1.graphol',
+        'UTTypeTagSpecification': {
+            'public.filename-extension': 'graphol',
+            'public.mime-type': 'application/octet-stream',
+        }
+    }]
 }
 
 app = BUNDLE(coll,
