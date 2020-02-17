@@ -102,6 +102,7 @@ from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
+from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
@@ -124,7 +125,7 @@ from eddy.ui.forms import NewDiagramForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import RenameDiagramForm
 from eddy.ui.forms import ValueForm
-from eddy.ui.iri import IriBuilderDialog, IriPropsDialog
+from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
@@ -867,6 +868,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         action = QtWidgets.QAction('Render by prefixed IRI', self, objectName='render_prefixed_iri', triggered=self.doRenderByPrefixedIRI)
         action.setCheckable(True)
         self.addAction(action)
+        action = QtWidgets.QAction('Render by simple name', self, objectName='render_simple_name',
+                                   triggered=self.doRenderBySimpleName)
+        action.setCheckable(True)
+        self.addAction(action)
+
+
         '''action = QtWidgets.QAction('Render by label', self, objectName='render_label', triggered=self.doRenderByLabel)
         self.addAction(action)
         action.setCheckable(True)'''
@@ -877,6 +884,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_full_iri').setChecked(True)
         elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
             self.action(objectName='render_prefixed_iri').setChecked(True)
+        elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
+            self.action(objectName='render_simple_name').setChecked(True)
         '''elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
             self.action(objectName='render_label').setChecked(True)'''
 
@@ -988,6 +997,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         renderInnerMenu = menu.addMenu('Render by...')
         renderInnerMenu.addAction(self.action('render_full_iri'))
         renderInnerMenu.addAction(self.action('render_prefixed_iri'))
+        renderInnerMenu.addAction(self.action('render_simple_name'))
         # renderInnerMenu.addAction(self.action('render_label'))
 
         labelMenu = QtWidgets.QMenu('Render by label',objectName='render_label')
@@ -1002,6 +1012,21 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(action)
         action.setCheckable(True)
         labelMenu.addAction(action)
+        action = QtWidgets.QAction('es', self, objectName='render_label_es', triggered=self.doRenderByLabel)
+        action.setData('es')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+        action = QtWidgets.QAction('fr', self, objectName='render_label_fr', triggered=self.doRenderByLabel)
+        action.setData('fr')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+        action = QtWidgets.QAction('de', self, objectName='render_label_de', triggered=self.doRenderByLabel)
+        action.setData('de')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
 
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
@@ -1010,9 +1035,33 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if lang=='it':
                 self.action(objectName='render_label_it').setChecked(True)
                 self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
             elif lang=='en':
                 self.action(objectName='render_label_it').setChecked(False)
                 self.action(objectName='render_label_en').setChecked(True)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang=='es':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(True)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang=='fr':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(True)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang=='de':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(True)
 
         renderInnerMenu.addMenu(labelMenu)
 
@@ -2214,6 +2263,24 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.raise_()
                 builder.activateWindow()
 
+    @QtCore.pyqtSlot(FacetNode)
+    def doOpenConstrainingFacetBuilder(self, node):
+        """
+        Executed when a facet must be associated to a node.
+        :type node: FacetNode
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            if not node:
+                node = first(diagram.selectedNodes())
+            if node:
+                builder = ConstrainingFacetDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
     @QtCore.pyqtSlot()
     def doOpenIRIDialog(self):
         """
@@ -3102,9 +3169,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         settings.setValue('ontology/iri/render', IRIRender.FULL.value)
         self.action(objectName='render_full_iri').setChecked(True)
         self.action(objectName='render_prefixed_iri').setChecked(False)
+        self.action(objectName='render_simple_name').setChecked(False)
         #self.action(objectName='render_label').setChecked(False)
         self.action(objectName='render_label_it').setChecked(False)
         self.action(objectName='render_label_en').setChecked(False)
+        self.action(objectName='render_label_es').setChecked(False)
+        self.action(objectName='render_label_fr').setChecked(False)
+        self.action(objectName='render_label_de').setChecked(False)
         self.sgnRenderingModified.emit(IRIRender.FULL.value)
 
 
@@ -3118,9 +3189,33 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
         self.action(objectName='render_full_iri').setChecked(False)
         self.action(objectName='render_prefixed_iri').setChecked(True)
+        self.action(objectName='render_simple_name').setChecked(False)
         # self.action(objectName='render_label').setChecked(False)
         self.action(objectName='render_label_it').setChecked(False)
         self.action(objectName='render_label_en').setChecked(False)
+        self.action(objectName='render_label_es').setChecked(False)
+        self.action(objectName='render_label_fr').setChecked(False)
+        self.action(objectName='render_label_de').setChecked(False)
+        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
+
+
+
+    @QtCore.pyqtSlot()
+    def doRenderBySimpleName(self):
+        """
+        Render ontology elements by prefixed IRIs
+        """
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings.setValue('ontology/iri/render', IRIRender.SIMPLE_NAME.value)
+        self.action(objectName='render_full_iri').setChecked(False)
+        self.action(objectName='render_prefixed_iri').setChecked(False)
+        self.action(objectName='render_simple_name').setChecked(True)
+        # self.action(objectName='render_label').setChecked(False)
+        self.action(objectName='render_label_it').setChecked(False)
+        self.action(objectName='render_label_en').setChecked(False)
+        self.action(objectName='render_label_es').setChecked(False)
+        self.action(objectName='render_label_fr').setChecked(False)
+        self.action(objectName='render_label_de').setChecked(False)
         self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
 
     #TODO
@@ -3137,13 +3232,38 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         settings.setValue('ontology/iri/render/language', lang)
         self.action(objectName='render_full_iri').setChecked(False)
         self.action(objectName='render_prefixed_iri').setChecked(False)
+        self.action(objectName='render_simple_name').setChecked(False)
         # self.action(objectName='render_label').setChecked(True)
         if lang == 'it':
             self.action(objectName='render_label_it').setChecked(True)
             self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
         elif lang == 'en':
             self.action(objectName='render_label_it').setChecked(False)
             self.action(objectName='render_label_en').setChecked(True)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+        elif lang == 'es':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(True)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+        elif lang == 'fr':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(True)
+            self.action(objectName='render_label_de').setChecked(False)
+        elif lang == 'de':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(True)
         self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 
     @QtCore.pyqtSlot()

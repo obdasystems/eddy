@@ -7,10 +7,7 @@ from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
-from eddy.core.functions.signals import connect, disconnect
-
-from eddy import ORGANIZATION, APPNAME
-from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
+from eddy.core.owl import IRI
 
 
 class ConceptNode(OntologyEntityNode, AbstractResizableNode):

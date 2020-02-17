@@ -687,6 +687,16 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 return str(prefixed)
             else:
                 return str(iri)
+        elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
+            simpleName = iri.getSimpleName()
+            if simpleName:
+                return simpleName
+            else:
+                prefixed = project.getShortestPrefixedForm(iri)
+                if prefixed:
+                    return str(prefixed)
+                else:
+                    return str(iri)
         elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
             lang = settings.value('ontology/iri/render/language', 'it')
             labelAssertion = iri.getLabelAnnotationAssertion(lang)
@@ -698,6 +708,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                     return str(prefixed)
                 else:
                     return str(iri)
+
 
     @staticmethod
     def parentKey(node):

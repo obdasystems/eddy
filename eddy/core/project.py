@@ -1951,9 +1951,14 @@ class ProjectIRIIndex(ProjectIndex):
         k_metatype = ''
         if isinstance(node, ConceptNode):
             k_metatype = K_CLASS_OCCURRENCES
+        elif isinstance(node, RoleNode):
+            k_metatype = K_OBJ_PROP_OCCURRENCES
+        elif isinstance(node, AttributeNode):
+            k_metatype = K_DATA_PROP_OCCURRENCES
+        elif isinstance(node, ValueDomainNode):
+            k_metatype = K_DATATYPE_OCCURRENCES
         elif isinstance(node, IndividualNode):
             k_metatype = K_INDIVIDUAL_OCCURRENCES
-        # TODO AGGIUNGI TUTTI ALTRI CASI (Properties, datatypes)
         self.removeTypedIRIOccurenceFromDiagram(diagram, node, k_metatype)
 
         if iri in self[K_OCCURRENCES]:

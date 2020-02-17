@@ -515,7 +515,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             propertyItem.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
             propertyItem.setData(Qt.UserRole, assertion)
             table.setItem(rowcount, 0, propertyItem)
-            valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project,True)))
+            valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
             valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
             rowcount += 1
@@ -609,7 +609,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         propertyItem.setData(Qt.UserRole,assertion)
         table.setItem(rowcount, 0, propertyItem)
-        valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project, True)))
+        valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
         valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
         table.scrollToItem(table.item(rowcount, 0))
@@ -663,7 +663,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 newPropertyItem.setData(Qt.UserRole, assertion)
                 table.setItem(row, 0, newPropertyItem)
-                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project, True)))
+                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
                 valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
                 break

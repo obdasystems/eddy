@@ -804,7 +804,10 @@ class OntologyEntityNode(AbstractNode):
             self.renderByPrefixedIRI()
         elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
             self.renderByLabel()
+        elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
+            self.renderBySimpleName()
         self.updateTextPos()
+        self.updateNode()
 
     def renderByFullIRI(self):
         self.setText(str(self.iri))
@@ -817,6 +820,13 @@ class OntologyEntityNode(AbstractNode):
             self.nodeLabelObject = prefixed
         else:
             self.renderByFullIRI()
+
+    def renderBySimpleName(self):
+        if self.iri.getSimpleName():
+            self.setText(self.iri.getSimpleName())
+            self.nodeLabelObject = self.iri.getSimpleName()
+        else:
+            self.renderByPrefixedIRI()
 
     def renderByLabel(self):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)

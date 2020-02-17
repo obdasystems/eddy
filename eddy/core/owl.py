@@ -45,6 +45,129 @@ from rfc3987 import resolve
 
 from eddy.core.functions.signals import connect
 
+class Literal(QtCore.QObject):
+    """
+    Represents Literals
+    """
+    sgnLiteralModified = QtCore.pyqtSignal()
+    def __init__(self, lexicalForm, datatype=None, language=None, parent=None):
+        """
+        :type lexicalForm:str
+        :type datatype:IRI
+        :type language:str
+        """
+        super().__init__(parent)
+        self._lexicalForm = lexicalForm
+        self._datatype = datatype
+        self._language = language
+
+    @property
+    def lexicalForm(self):
+        return self._lexicalForm
+
+    @lexicalForm.setter
+    def lexicalForm(self, lexicalForm):
+        if isinstance(lexicalForm, str):
+            self._lexicalForm = lexicalForm
+            self.sgnLiteralModified.emit()
+
+    @property
+    def datatype(self):
+        return self._datatype
+
+    @datatype.setter
+    def datatype(self, datatype):
+        if isinstance(datatype, IRI):
+            self._datatype = datatype
+            self.sgnLiteralModified.emit()
+
+    @property
+    def language(self):
+        return self._language
+
+    @language.setter
+    def language(self, language):
+        if isinstance(language, str):
+            self._datatype = language
+            self.sgnLiteralModified.emit()
+
+    def __hash__(self):
+        return super().__hash__()
+
+    def __eq__(self, other):
+        if not isinstance(other, Literal):
+            return False
+        return self.lexicalForm == other.lexicalForm and self.datatype == other.datatype and self.language == other.language
+
+    def __iter__(self):
+        return str(self).__iter__()
+
+    def __len__(self):
+        return len(str(self))
+
+    def __str__(self):
+        result = ''
+        if self.language:
+            result += '"{}@{}"'.format(self.lexicalForm,self.language)
+        else:
+            result += '"{}"'.format(self.lexicalForm)
+        if self.datatype:
+            prefixedType = self.datatype.manager.getShortestPrefixedForm(self.datatype)
+            if prefixedType:
+                result += '^^{}'.format(str(prefixedType))
+            else:
+                result += '^^<{}>'.format(self.datatype)
+        return result
+
+    def __repr__(self):
+        return str(self)
+
+class Facet(QtCore.QObject):
+    """
+    Represents Annotation Assertions
+    """
+    sgnFacetModified = QtCore.pyqtSignal()
+
+    def __init__(self, constrainingFacet, literal, parent=None):
+        """
+        :type constrainingFacet:IRI
+        :type literal:Literal
+        """
+        super().__init__(parent)
+        self._constrainingFacet = constrainingFacet
+        self._literal = literal
+
+    @property
+    def constrainingFacet(self):
+        return self._constrainingFacet
+
+    @constrainingFacet.setter
+    def constrainingFacet(self, constrainingFacet):
+        self._constrainingFacet = constrainingFacet
+        self.sgnFacetModified.emit()
+
+    @property
+    def literal(self):
+        return self._literal
+
+    @literal.setter
+    def literal(self, literal):
+        self._literal = literal
+        self.sgnFacetModified.emit()
+
+    def __hash__(self):
+        return super().__hash__()
+
+    def __eq__(self, other):
+        if not isinstance(other, Facet):
+            return False
+        return self.constrainingFacet == other.constrainingFacet and self.literal == other.literal
+
+    def __str__(self):
+        return 'Facet(<{}> {})'.format(self.constrainingFacet,self.literal)
+
+    def __repr__(self):
+        return str(self)
 
 class AnnotationAssertion(QtCore.QObject):
     """
@@ -123,30 +246,31 @@ class AnnotationAssertion(QtCore.QObject):
         self._language=lang
         self.sgnAnnotationModified.emit()
 
-    def getObjectResourceString(self, manager, prefixedForm):
+    def getObjectResourceString(self, prefixedForm):
         """
         Returns a string representing the object resource of the assertion.
-        :type manager:IRIManager
         :type prefixedForm:bool
         :rtype: str
         """
         if self._value:
             if isinstance(self._value, IRI):
-                prefixedIRI = manager.getShortestPrefixedForm(self._value)
+                prefixedIRI = self._value.manager.getShortestPrefixedForm(self._value)
                 if prefixedForm and prefixedIRI:
                     return str(prefixedIRI)
                 else:
                     return '<{}>'.format(str(self._value))
             elif isinstance(self._value, str):
-                result = '"{}"'.format(self._value)
+                result = ''
+                if self._language:
+                    result += '"{}@{}"'.format(self._value,self._language)
+                else:
+                    result = '"{}"'.format(self._value)
                 if self._datatype:
-                    prefixedType = manager.getShortestPrefixedForm(self._datatype)
+                    prefixedType = self._datatype.manager.getShortestPrefixedForm(self._datatype)
                     if prefixedForm and prefixedType:
                         result += '^^{}'.format(str(prefixedType))
                     else:
                         result += '^^<{}>'.format(self._datatype)
-                if self._language:
-                    result += ' @{}'.format(self._language)
                 return result
 
     def __hash__(self):
@@ -167,6 +291,11 @@ class AnnotationAssertion(QtCore.QObject):
             return False
         return self.assertionProperty == other.assertionProperty and self.subject == other.subject and self.value == other.value and self.datatype == other.datatype and self.language == other.value
 
+    def __str__(self):
+        return 'AnnotationAssertion(<{}> <{}> {})'.format(self.assertionProperty,self.subject,self.getObjectResourceString(True))
+
+    def __repr__(self):
+        return str(self)
 
 class IRI(QtCore.QObject):
     """
@@ -194,6 +323,7 @@ class IRI(QtCore.QObject):
         self._isReflexive = None
         self._isIrreflexive = None
         self._isTransitive = None
+        self._manager = None
         self.components = parse(IRI.concat(self._namespace, self._suffix))
         self._annotationAssertionsMap = {}
         self._annotationAssertions = []
@@ -231,6 +361,15 @@ class IRI(QtCore.QObject):
     #############################################
     #   PROPERTIES
     #################################
+    @property
+    def manager(self):
+        return self._manager
+
+    @manager.setter
+    def manager(self, manager):
+        if isinstance(manager,IRIManager):
+            self._manager = manager
+
     @property
     def namespace(self):
         return self._namespace
@@ -393,6 +532,14 @@ class IRI(QtCore.QObject):
     #############################################
     #   INTERFACE
     #################################
+    def getSimpleName(self):
+        index = self.namespace.rfind('#')
+        if not index > -1:
+            index = self.namespace.rfind('/')
+        if index > -1 and self.namespace[index+1:]:
+            return self.namespace[index+1:]
+        return None
+
 
     def isTopBottomEntity(self):
         """
@@ -543,7 +690,6 @@ class IRI(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
-
 class PrefixedIRI(QtCore.QObject):
     """
     Represents prefixed forms of International Resource Identifiers (https://www.ietf.org/rfc/rfc3987.txt)
@@ -570,7 +716,6 @@ class PrefixedIRI(QtCore.QObject):
 
     def __repr__(self):
         return str(self)
-
 
 class IRIManager(QtCore.QObject):
     """
@@ -606,6 +751,7 @@ class IRIManager(QtCore.QObject):
         self.annotationProperties = set()
         self.datatypes = set()
         self.languages = set()
+        self.constrainingFacets = set()
         self.setDefaults()
 
     #############################################
@@ -621,6 +767,9 @@ class IRIManager(QtCore.QObject):
     def addDefaultLanguages(self):
         self.addLanguageTag('it')
         self.addLanguageTag('en')
+        self.addLanguageTag('fr')
+        self.addLanguageTag('es')
+        self.addLanguageTag('de')
 
     def getLanguages(self):
         return self.languages
@@ -659,6 +808,8 @@ class IRIManager(QtCore.QObject):
         :type iri: IRI
         """
         if not iri in self.iris:
+            if not iri.manager:
+                iri.manager = self
             self.iris.add(iri)
             self.stringToIRI[str(iri)] = iri
             self.sgnIRIAdded.emit(iri)
@@ -673,6 +824,7 @@ class IRIManager(QtCore.QObject):
             return self.stringToIRI[iriString]
         else:
             iri = IRI(iriString)
+            iri.manager = self
             self.addIRI(iri)
             connect(iri.sgnIRIModified,self.onIRIModified)
             connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
@@ -715,6 +867,7 @@ class IRIManager(QtCore.QObject):
         self.addDefaultAnnotationProperties()
         self.addDefaultDatatypes()
         self.addDefaultLanguages()
+        self.addDefaultConstrainingFacets()
         #TODO Aggiungi default IRI per constraining facets (minInclusive, length etc etc ...)
 
     ##ANNOTATION PROPERTIES
@@ -772,6 +925,24 @@ class IRIManager(QtCore.QObject):
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.Comment.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.IsDefinedBy.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.seeAlso.value)
+
+    def addConstrainingFacet(self, iri):
+        if not iri in self.constrainingFacets:
+            self.addIRI(iri)
+            self.constrainingFacets.add(iri)
+            return True
+        return False
+
+    def addDefaultConstrainingFacets(self):
+        self.addConstrainingFacet(OWL2Facet.langRange.value)
+        self.addConstrainingFacet(OWL2Facet.length.value)
+        self.addConstrainingFacet(OWL2Facet.maxExclusive.value)
+        self.addConstrainingFacet(OWL2Facet.maxInclusive.value)
+        self.addConstrainingFacet(OWL2Facet.maxLength.value)
+        self.addConstrainingFacet(OWL2Facet.minExclusive.value)
+        self.addConstrainingFacet(OWL2Facet.minInclusive.value)
+        self.addConstrainingFacet(OWL2Facet.minLength.value)
+        self.addConstrainingFacet(OWL2Facet.pattern.value)
 
     ##DATATYPES
     def getDatatypeIRIs(self):
@@ -1166,6 +1337,7 @@ class IRIRender(Enum_):
     FULL = 'full_iri'
     PREFIX = 'prefix_iri'
     LABEL = 'label'
+    SIMPLE_NAME ='simple_name'
 
 @unique
 class OWL2Profile(Enum_):

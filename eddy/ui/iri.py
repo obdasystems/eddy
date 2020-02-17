@@ -2,13 +2,14 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
 from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
 from eddy.core.output import getLogger
 from eddy.ui.notification import Notification
 
 from eddy.core.common import HasWidgetSystem
 
-from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion
+from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal
 
 from eddy.core.functions.signals import connect
 from eddy.ui.fields import ComboBox, StringField
@@ -35,7 +36,34 @@ class IRIDialogsWidgetFactory(QObject):
         combobox.setScrollEnabled(False)
         return combobox
 
+    @staticmethod
+    def getPredefinedConstrainingFacetComboBoxLabel(parent):
+        comboBoxLabel = QtWidgets.QLabel(parent, objectName='constraining_facet_combobox_label')
+        comboBoxLabel.setFont(Font('Roboto', 12))
+        comboBoxLabel.setText('Constraining facet')
+        return comboBoxLabel
 
+    @staticmethod
+    def getPredefinedConstrainingFacetComboBox(parent):
+        combobox = ComboBox(parent, objectName='constraining_facet_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(False)
+        return combobox
+
+    @staticmethod
+    def getLexicalFormLabel(parent):
+        inputLabel = QtWidgets.QLabel(parent, objectName='lexical_form_label')
+        inputLabel.setFont(Font('Roboto', 12))
+        inputLabel.setText('Lexical form')
+        return inputLabel
+
+    @staticmethod
+    def getLexicalFormTextArea(parent):
+        textArea = QtWidgets.QTextEdit(parent, objectName='lexical_form_area')
+        textArea.setFont(Font('Roboto', 12))
+        return textArea
 
     @staticmethod
     def getIRIPrefixComboBoxLabel(parent):
@@ -361,7 +389,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
 
-
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     noPrefixString = ''
@@ -549,7 +576,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             propertyItem.setData(QtCore.Qt.UserRole, assertion)
             table.setItem(rowcount, 0, propertyItem)
-            valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project, True)))
+            valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
             valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
             rowcount += 1
@@ -579,7 +606,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         propertyItem.setData(Qt.UserRole,assertion)
         table.setItem(rowcount, 0, propertyItem)
-        valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project, True)))
+        valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
         valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
         table.scrollToItem(table.item(rowcount, 0))
@@ -632,7 +659,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                 newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 newPropertyItem.setData(Qt.UserRole, assertion)
                 table.setItem(row, 0, newPropertyItem)
-                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(self.project, True)))
+                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
                 valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
                 table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
                 break
@@ -698,3 +725,180 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixStr = prefixStr[0:prefixLimit]
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
+
+class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
+
+    sgnFacetAccepted = QtCore.pyqtSignal(FacetNode)
+    sgnFacetRejected = QtCore.pyqtSignal(FacetNode)
+
+    sgnFacetChanged = QtCore.pyqtSignal(FacetNode,Facet)
+
+    emptyString = ''
+
+    def __init__(self,node,diagram,session):
+        """
+        Initialize the IRI builder dialog.
+        :type diagram: Diagram
+        :type node: FacetNode
+        :type session: Session
+        """
+        super().__init__(session)
+        self.diagram = diagram
+        self.session = session
+        connect(self.sgnFacetAccepted,self.diagram.doAddOntologyFacetNode)
+
+        self.node = node
+        self.facet = None
+        shortest = None
+        if self.node.facet:
+            self.facet = self.node.facet
+        self.project = diagram.project
+
+        #############################################
+        # FACET TAB
+        #################################
+        comboBoxLabel = IRIDialogsWidgetFactory.getPredefinedConstrainingFacetComboBoxLabel(self)
+        self.addWidget(comboBoxLabel)
+
+        combobox = IRIDialogsWidgetFactory.getPredefinedConstrainingFacetComboBox(self)
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        sortedItems = sorted(self.project.constrainingFacets, key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        if self.facet:
+            combobox.setCurrentText(str(self.facet.constrainingFacet))
+        else:
+            combobox.setCurrentText(self.emptyString)
+        self.addWidget(combobox)
+
+        lfLabel = IRIDialogsWidgetFactory.getLexicalFormLabel(self)
+        self.addWidget(lfLabel)
+
+        lfTextArea= IRIDialogsWidgetFactory.getLexicalFormTextArea(self)
+        if self.facet:
+            lfTextArea.setText(str(self.facet.literal.lexicalForm))
+        else:
+            lfTextArea.setText(self.emptyString)
+        self.addWidget(lfTextArea)
+
+        comboBoxLabel = IRIDialogsWidgetFactory.getPredefinedDatatypeComboBoxLabel(self)
+        self.addWidget(comboBoxLabel)
+
+        combobox = IRIDialogsWidgetFactory.getPredefinedDatatypeComboBox(self)
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        if self.facet and self.facet.literal.datatype and self.facet.literal.datatype in self.project.getDatatypeIRIs():
+            combobox.setCurrentText(str(self.facet.literal.datatype))
+        else:
+            combobox.setCurrentText(self.emptyString)
+        self.addWidget(combobox)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('constraining_facet_combobox_label'), self.widget('constraining_facet_switch'))
+        formlayout.addRow(self.widget('lexical_form_label'), self.widget('lexical_form_area'))
+        formlayout.addRow(self.widget('datatype_combobox_label'), self.widget('datatype_switch'))
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('facet_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        confirmation.setFont(Font('Roboto', 12))
+        self.addWidget(confirmation)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+        mainWidget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        mainWidget.addTab(self.widget('facet_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
+                      'Facet')
+        self.addWidget(mainWidget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(740, 420)
+        self.setWindowTitle('Facet Builder')
+
+        #connect(inputField.textEdited, self.onInputChanged)
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+
+        combobox = self.widget('constraining_facet_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        sortedItems = sorted(self.project.constrainingFacets, key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        if self.facet:
+            combobox.setCurrentText(str(self.facet.constrainingFacet))
+        else:
+            combobox.setCurrentText(self.emptyString)
+        self.addWidget(combobox)
+
+        lfTextArea = self.widget('lexical_form_area')
+        if self.facet:
+            lfTextArea.setText(str(self.facet.literal.lexicalForm))
+        else:
+            lfTextArea.setText(self.emptyString)
+
+        combobox = self.widget('datatype_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        if self.facet and self.facet.literal.datatype and self.facet.literal.datatype in self.project.getDatatypeIRIs():
+            combobox.setCurrentText(str(self.facet.literal.datatype))
+        else:
+            combobox.setCurrentText(self.emptyString)
+        self.addWidget(combobox)
+
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        try:
+            currConstrFacet = str(self.widget('constraining_facet_switch').currentText())
+            if not currConstrFacet:
+                raise RuntimeError('Please select a constraining facet')
+            lexForm = str(self.widget('lexical_form_area').toPlainText())
+            if not lexForm:
+                raise RuntimeError('Please insert a constarining value')
+            currDataType = str(self.widget('datatype_switch').currentText())
+            literal = Literal(lexForm,self.project.getIRI(currDataType))
+            facet = Facet(self.project.getIRI(currConstrFacet),literal)
+            self.node.facet = facet
+            self.sgnFacetAccepted.emit(self.node)
+            if self.node.diagram:
+                self.node.doUpdateNodeLabel()
+            super().accept()
+        except RuntimeError as e:
+            errorDialog = QtWidgets.QErrorMessage(parent=self)
+            errorDialog.showMessage(e.message)
+            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
+            errorDialog.show()
+            errorDialog.raise_()
+            errorDialog.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        self.sgnFacetRejected.emit(self.node)
+        super().reject()

@@ -37,7 +37,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item
-from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.misc import first
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode
@@ -60,14 +59,15 @@ class FacetNode(AbstractNode):
     DefaultPenA = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     DefaultPenB = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
     Identities = {Identity.Facet}
-    Type = Item.FacetNode
+    Type = Item.FacetIRINode
 
-    def __init__(self, width=80, height=40, brush=None, remaining_characters='facet', **kwargs):
+    def __init__(self, facet= None,width=80, height=40, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
         :type height: int
         :type brush: QBrush
+        :type facet: Facet
         """
         super().__init__(**kwargs)
         self.background = Polygon(self.createPolygon(88, 48))
@@ -75,18 +75,17 @@ class FacetNode(AbstractNode):
         self.polygon = Polygon(self.createPolygon(80, 40))
         self.polygonA = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushA, FacetNode.DefaultPenA)
         self.polygonB = Polygon(self.createPolygonA(80, 40), FacetNode.DefaultBrushB, FacetNode.DefaultPenB)
+        self._facet = facet
 
-        self.remaining_characters = remaining_characters
 
-        self.labelA = NodeLabel(Facet.length.value, pos=self.centerA, editable=False, movable=False, parent=self)
-        self.labelB = FacetQuotedLabel(template='"32"', movable=False, pos=self.centerB, parent=self)
+        self.labelA = NodeLabel('Empty', pos=self.centerA, editable=False, movable=False, parent=self)
+        self.labelB = FacetQuotedLabel(template='"Empty"', movable=False, pos=self.centerB, parent=self)
         self.updateNode()
         self.updateTextPos()
 
     #############################################
     #   PROPERTIES
     #################################
-
     @property
     def datatype(self):
         """
@@ -105,23 +104,60 @@ class FacetNode(AbstractNode):
 
     @property
     def facet(self):
-        """
-        Returns the facet associated with this node.
+        '''
         :rtype: Facet
-        """
-        return Facet.valueOf(self.labelA.text())
+        '''
+        return self._facet
 
-    @property
-    def value(self):
-        """
-        Returns the value of this facet node.
-        :rtype: str
-        """
-        return self.labelB.text().strip('"')
+    @facet.setter
+    def facet(self, facet):
+        '''
+        :type facet:Facet
+        '''
+        self._facet = facet
+
+        '''
+        switch = False
+        if self.iri:
+            switch = True
+            self.disconnectIRISignals()
+        self._iri = iriObj
+        self.connectIRISignals()
+        if switch:
+            self.sgnIRISwitched.emit()
+        '''
+        if self.diagram:
+            self.doUpdateNodeLabel()
+
+    #############################################
+    #   SLOTS
+    #################################
+    @QtCore.pyqtSlot()
+    def doUpdateNodeLabel(self):
+        iri = self.facet.constrainingFacet
+        prefixed = iri.manager.getShortestPrefixedForm(iri)
+        if prefixed:
+            self.labelA.setText(str(prefixed))
+        else:
+            self.labelA.setText('<str(iri)>')
+
+        literal = self.facet.literal
+        self.labelB.setText(str(literal))
+        self.updateNode()
+
 
     #############################################
     #   INTERFACE
     #################################
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        print()
+        self.session.doOpenConstrainingFacetBuilder(self)
+        mouseEvent.accept()
+
 
     def boundingRect(self):
         """
@@ -178,7 +214,8 @@ class FacetNode(AbstractNode):
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
             'height': self.height(),
-            'width': self.width()
+            'width': self.width(),
+            'facet':self.facet
         })
         node.setPos(self.pos())
         node.setText(self.text())
@@ -332,18 +369,7 @@ class FacetNode(AbstractNode):
         Set the label text.
         :type text: str
         """
-        match = RE_FACET.match(text)
-        if match:
-            self.labelA.setText((Facet.valueOf(match.group('facet')) or Facet.length).value)
-            self.labelB.setText('"{0}"'.format(match.group('value')))
-            self.updateNode()
-        else:
-            # USE THE OLD VALUE-RESTRICTION PATTERN
-            match = RE_VALUE_RESTRICTION.match(text)
-            if match:
-                self.labelA.setText((Facet.valueOf(match.group('facet')) or Facet.length).value)
-                self.labelB.setText('"{0}"'.format(match.group('value')))
-                self.updateNode()
+        pass
 
     def setTextPos(self, pos):
         """
@@ -366,7 +392,9 @@ class FacetNode(AbstractNode):
         Returns the label text.
         :rtype: str
         """
-        return self.compose(self.facet, self.value)
+        if self.facet:
+            return str(self.facet)
+        return 'Facet'
 
     def textPos(self):
         """
