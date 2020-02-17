@@ -109,10 +109,13 @@ class Eddy(QtWidgets.QApplication):
         self.welcome = None
 
         if not self.isRunning():
+            QtNetwork.QLocalServer.removeServer(APPID)
             self.server = QtNetwork.QLocalServer()
             self.server.listen(APPID)
             self.socket = None
             connect(self.sgnCreateSession, self.doCreateSession)
+
+        connect(self.aboutToQuit, self.onAboutToQuit)
 
     #############################################
     #   EVENTS
@@ -433,6 +436,14 @@ class Eddy(QtWidgets.QApplication):
         if session and session in self.sessions:
             prevSession = self.sessions[(self.sessions.index(session) - 1) % len(self.sessions)]
             self.setActiveWindow(prevSession)
+
+    @QtCore.pyqtSlot()
+    def onAboutToQuit(self):
+        """
+        Executed when the application is about to quit.
+        """
+        if self.server:
+            self.server.close()
 
     @QtCore.pyqtSlot()
     def onSessionClosed(self):
