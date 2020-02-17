@@ -99,11 +99,13 @@ class Eddy(QtWidgets.QApplication):
 
         self.options = CommandLineParser()
         self.options.process(argv)
+        self.openFilePath = None
         self.server = None
         self.socket = QtNetwork.QLocalSocket()
         self.socket.connectToServer(APPID)
         self.running = self.socket.waitForConnected()
         self.sessions = DistinctList()
+        self.started = False
         self.welcome = None
 
         if not self.isRunning():
@@ -111,6 +113,28 @@ class Eddy(QtWidgets.QApplication):
             self.server.listen(APPID)
             self.socket = None
             connect(self.sgnCreateSession, self.doCreateSession)
+
+    #############################################
+    #   EVENTS
+    #################################
+
+    def event(self, event):
+        """
+        Executed when an event is received.
+        :type event: T <= QEvent | QFileOpenEvent
+        :rtype: bool
+        """
+        # HANDLE FILEOPEN EVENT (TRIGGERED BY MACOS WHEN DOUBLE CLICKING A FILE)
+        if event.type() == QtCore.QEvent.FileOpen:
+            path = expandPath(event.file())
+            if fexists(path):
+                if self.started:
+                    self.sgnCreateSession.emit(os.path.dirname(path))
+                else:
+                    # CACHE PATH UNTIL APPLICATION STARTUP HAS COMPLETED
+                    self.openFilePath = path
+
+        return super().event(event)
 
     #############################################
     #   INTERFACE
@@ -252,6 +276,9 @@ class Eddy(QtWidgets.QApplication):
         Run the application by showing the welcome dialog.
         """
         args = self.options.positionalArguments()
+        if self.openFilePath:
+            args.append(self.openFilePath)
+            self.openFilePath = None
         # SHOW WELCOME DIALOG
         self.welcome = Welcome(self)
         self.welcome.show()
@@ -278,6 +305,8 @@ class Eddy(QtWidgets.QApplication):
                 self.sgnCreateSession.emit(project)
             else:
                 LOGGER.warning('Unable to open file: %s', fname)
+        # COMPLETE STARTUP
+        self.started = True
 
     #############################################
     #   SLOTS
@@ -298,7 +327,7 @@ class Eddy(QtWidgets.QApplication):
         else:
             # If we do not have a session for the given project we'll create one.
             with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
-    
+
                 try:
                     session = Session(self, path)
                 except ProjectStopLoadingError:
@@ -317,14 +346,14 @@ class Eddy(QtWidgets.QApplication):
                 except Exception as e:
                     raise e
                 else:
-                    
+
                     #############################################
                     # UPDATE RECENT PROJECTS
                     #################################
-    
+
                     settings = QtCore.QSettings(ORGANIZATION, APPNAME)
                     projects = settings.value('project/recent', None, str) or []
-    
+
                     try:
                         projects.remove(path)
                     except ValueError:
@@ -334,20 +363,20 @@ class Eddy(QtWidgets.QApplication):
                         projects = projects[:8]
                         settings.setValue('project/recent', projects)
                         settings.sync()
-    
+
                     #############################################
                     # CLOSE THE WELCOME SCREEN IF NECESSARY
                     #################################
-    
+
                     try:
                         self.welcome.close()
                     except (AttributeError, RuntimeError):
                         pass
-    
+
                     #############################################
                     # STARTUP THE SESSION
                     #################################
-                    
+
                     connect(session.sgnQuit, self.doQuit)
                     connect(session.sgnClosed, self.onSessionClosed)
                     self.sessions.append(session)
@@ -499,6 +528,7 @@ def main(args):
             def checkboxStateChanged(state):
                 settings.setValue('dialogs/noJVM', state == QtCore.Qt.Checked)
                 settings.sync()
+
             chkbox = QtWidgets.QCheckBox("Don't show this warning again.")
             msgbox = QtWidgets.QMessageBox()
             msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
@@ -590,4 +620,3 @@ def main(args):
         nargs.extend(args[1:])
         subprocess.Popen(nargs)
     sys.exit(ret)
-
