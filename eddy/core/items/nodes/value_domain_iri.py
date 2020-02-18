@@ -67,6 +67,7 @@ class ValueDomainNode(OntologyEntityNode, AbstractNode):
         self.selection = Polygon(QtCore.QRectF(-49, -24, 98, 48))
         self.polygon = Polygon(QtCore.QRectF(-45, -20, 90, 40), brush, pen)
 
+
         self.label = NodeLabel("Empty", pos=self.center, editable=True, movable=False, parent=self)
         self.updateNode()
         self.updateTextPos()
@@ -79,9 +80,9 @@ class ValueDomainNode(OntologyEntityNode, AbstractNode):
     def datatype(self):
         """
         Returns the datatype associated with this node.
-        :rtype: Datatype
+        :rtype: IRI
         """
-        return Datatype.valueOf(self.text())
+        return self.iri
 
     #############################################
     #   INTERFACE

@@ -91,9 +91,11 @@ class EnumerationNode(OperatorNode):
         :rtype: tuple
         """
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.IndividualNode
+        f2 = lambda x: x.type() is Item.IndividualIRINode
         f3 = lambda x: Identity.Concept if x.identity() is Identity.Individual else Identity.ValueDomain
-        inputs = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        #TODO MODIFIED TO MANAGE SEPARATION OF INDIVIDUALS AND VALUES
+        f4 = lambda x: x.type() is Item.LiteralNode
+        inputs = self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2).union(self.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4))
         identities = set(map(f3, inputs))
         computed = Identity.Neutral
         if identities:

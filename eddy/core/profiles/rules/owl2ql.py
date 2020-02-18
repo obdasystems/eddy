@@ -42,6 +42,7 @@ from eddy.core.profiles.rules.common import ProfileEdgeRule
 
 
 #Ashwin
+#TODO MODIFICA TUTTO
 class FunctionalityUnsupported(ProfileNodeRule):
     """
     Prevents from using functionality in attributes or roles which is outside of the OWL 2 QL profile.

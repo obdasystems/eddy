@@ -34,9 +34,9 @@
 
 
 from eddy.core.datatypes.graphol import Identity, Item, Restriction
-from eddy.core.datatypes.owl import Facet
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import first
+from eddy.core.owl import OWL2Facet
 from eddy.core.profiles.common import ProfileError
 from eddy.core.profiles.rules.common import ProfileEdgeRule
 from eddy.core.profiles.rules.common import ProfileNodeRule
@@ -249,7 +249,7 @@ class InclusionBetweenRoleExpressionAndRoleChainNodeRule(ProfileEdgeRule):
         
             if source.type() is Item.RoleChainNode:
         
-                if target.type() not in {Item.RoleNode, Item.RoleInverseNode}:
+                if target.type() not in {Item.RoleIRINode, Item.RoleInverseNode}:
                     # Role expressions constructed with chain nodes can be included only
                     # in basic role expressions, that are either Role nodes or RoleInverse
                     # nodes with one input Role node (this check is done elsewhere).
@@ -292,7 +292,7 @@ class InputToComplementNodeRule(ProfileEdgeRule):
                     # The Complement operator may have at most one node connected to it.
                     raise ProfileError('Too many inputs to {}'.format(target.name))
                 
-                if source.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}:
+                if source.type() in {Item.RoleIRINode, Item.RoleInverseNode, Item.AttributeIRINode}:
                     # If the source of the node matches an ObjectPropertyExpression or a
                     # DataPropertyExpression, we check for the node not to have any outgoing
                     # Input edge: the only supported expression are NegativeObjectPropertyAssertion
@@ -379,7 +379,7 @@ class InputToEnumerationNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.EnumerationNode:
 
-                if source.type() is not Item.IndividualNode:
+                if not (source.type() is Item.IndividualIRINode or source.type() is Item.LiteralNode):
                     # Enumeration operator (oneOf) takes as inputs Individuals or Values, both
                     # represented by the Individual node, and has the job of composing a set
                     # if individuals (either Concept or ValueDomain, but not both together).
@@ -414,7 +414,7 @@ class InputToRoleInverseNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.RoleInverseNode:
 
-                if source.type() is not Item.RoleNode:
+                if source.type() is not Item.RoleIRINode:
                     # The Role Inverse operator takes as input a Role (ObjectProperty) and constructs its inverse
                     # by switching domain and range of the role. Assume to have a Role labelled 'is_owner_of' whose
                     # instances are {(o1,o2), (o1,o3), (o4,o5)}: connecting this Role in input to a Role Inverse
@@ -437,7 +437,7 @@ class InputToRoleChainNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.RoleChainNode:
 
-                if source.type() not in {Item.RoleNode, Item.RoleInverseNode}:
+                if source.type() not in {Item.RoleIRINode, Item.RoleInverseNode}:
                     # The Role Chain operator constructs a concatenation of roles. Assume to have 2 Role nodes
                     # defined as 'lives_in_region' and 'region_in_country': if {(o1, o2), (o3, o4)} is the
                     # instance of 'lives_in_region' and {(o2, o6)} is the instance of 'region_in_country', then
@@ -458,16 +458,16 @@ class InputToDatatypeRestrictionNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.DatatypeRestrictionNode:
 
-                if source.type() not in {Item.ValueDomainNode, Item.FacetNode}:
+                if source.type() not in {Item.ValueDomainIRINode, Item.FacetIRINode}:
                     # The DatatypeRestriction node is used to compose complex datatypes and
                     # accepts as inputs one value-domain node and n >= 1 facet
                     # nodes to compose the OWL 2 equivalent DatatypeRestriction.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
 
-                if source.type() is Item.ValueDomainNode:
+                if source.type() is Item.ValueDomainIRINode:
 
                     f1 = lambda x: x.type() is Item.InputEdge and x is not edge
-                    f2 = lambda x: x.type() is Item.ValueDomainNode
+                    f2 = lambda x: x.type() is Item.ValueDomainIRINode
                     if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) > 0:
                         # The value-domain has already been attached to the DatatypeRestriction.
                         raise ProfileError('Too many value-domain nodes in input to datatype restriction node')
@@ -476,26 +476,26 @@ class InputToDatatypeRestrictionNodeRule(ProfileEdgeRule):
                     # so we need to check whether the datatype in input and the
                     # already connected Facet are compatible.
                     f1 = lambda x: x.type() is Item.InputEdge
-                    f2 = lambda x: x.type() is Item.FacetNode
+                    f2 = lambda x: x.type() is Item.FacetIRINode
                     node = first(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
                     if node:
-                        if node.facet not in Facet.forDatatype(source.datatype):
-                            nA = source.datatype.value
-                            nB = node.facet.value
+                        if node.facet.constrainingFacet not in OWL2Facet.forDatatype(source.datatype):
+                            nA = source.datatype
+                            nB = node.facet.constrainingFacet
                             raise ProfileError('Type mismatch: datatype {} is not compatible by facet {}'.format(nA, nB))
 
-                if source.type() is Item.FacetNode:
+                if source.type() is Item.FacetIRINode:
 
                     # We need to check if the DatatypeRestriction node has already datatype
                     # connected: if that's the case we need to check whether the Facet we
                     # want to attach to the datatype restriction node supports it.
                     f1 = lambda x: x.type() is Item.InputEdge
-                    f2 = lambda x: x.type() is Item.ValueDomainNode
+                    f2 = lambda x: x.type() is Item.ValueDomainIRINode
                     node = first(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
                     if node:
-                        if source.facet not in Facet.forDatatype(node.datatype):
-                            nA = source.facet.value
-                            nB = node.datatype.value
+                        if source.facet.constrainingFacet not in OWL2Facet.forDatatype(node.datatype):
+                            nA = source.facet.constrainingFacet
+                            nB = node.datatype
                             raise ProfileError('Type mismatch: facet {} is not compatible by datatype {}'.format(nA, nB))
                         
 
@@ -509,8 +509,8 @@ class InputToPropertyAssertionNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.PropertyAssertionNode:
 
-                if not (source.type() is Item.IndividualNode or source.type() is Item.IndividualIRINode):
-                    # Property Assertion operators accepts only Individual nodes as input: they are
+                if not (source.type() is Item.LiteralNode or source.type() is Item.IndividualIRINode):
+                    # Property Assertion operators accepts only Individual and Literal nodes as input: they are
                     # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
 
@@ -694,7 +694,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                     raise ProfileError('Too many inputs to {}'.format(target.name))
 
                 f1 = lambda x: x.type() is Item.InputEdge and x is not edge
-                f2 = lambda x: x.type() is Item.AttributeNode
+                f2 = lambda x: x.type() is Item.AttributeIRINodeNode
                 if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 1:
                     # Range restriction node having an attribute as input can receive no other input.
                     raise ProfileError('Too many inputs to attribute {}'.format(target.shortName))
@@ -801,7 +801,7 @@ class InputToFacetNodeRule(ProfileEdgeRule):
     """
     def __call__(self, source, edge, target):
         if edge.type() is Item.InputEdge:
-            if target.type() is Item.FacetNode:
+            if target.type() is Item.FacetIRINode:
                 raise ProfileError('Facet node cannot be target of any input')
 
 
@@ -949,7 +949,7 @@ class SameFromCompatibleNodeRule(ProfileEdgeRule):
     """
     def __call__(self, source, edge, target):
         if edge.type() == Item.SameEdge:
-            if source.type() not in {Item.IndividualNode, Item.ConceptNode, Item.RoleNode, Item.AttributeNode}:
+            if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode}:
                 raise ProfileError('Invalid source for same assertion: {0}'.format(source.name))
             if source.type() != target.type():
                 raise ProfileError('Invalid target for same assertion: {0}'.format(target.name))
@@ -961,7 +961,7 @@ class DifferentFromCompatibleNodeRule(ProfileEdgeRule):
     """
     def __call__(self, source, edge, target):
         if edge.type() == Item.DifferentEdge:
-            if source.type() not in {Item.IndividualNode, Item.ConceptNode, Item.RoleNode, Item.AttributeNode}:
+            if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode}:
                 raise ProfileError('Invalid source for different assertion: {0}'.format(source.name))
             if source.type() != target.type():
                 raise ProfileError('Invalid target for different assertion: {0}'.format(target.name))

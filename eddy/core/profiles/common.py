@@ -117,6 +117,7 @@ class AbstractProfile(QtCore.QObject):
                 for r in self.edgeRules():
                     r(source, edge, target)
             except ProfileError as e:
+                print(e.msg)
                 self.setPvr(ProfileValidationResult((source, edge, target), False, e.msg))
             else:
                 self.setPvr(ProfileValidationResult((source, edge, target), True))

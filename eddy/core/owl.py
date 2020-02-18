@@ -1497,48 +1497,48 @@ class OWL2Facet(Enum_):
     def forDatatype(cls, value):
         """
         Returns a collection of Facets for the given datatype
-        :type value: OWL2Datatype
+        :type value: IRI
         :rtype: list
         """
         allvalues = [x for x in cls]
-        numbers = [OWL2Facet.maxExclusive, OWL2Facet.maxInclusive, OWL2Facet.minExclusive, OWL2Facet.minInclusive]
-        strings = [OWL2Facet.langRange, OWL2Facet.length, OWL2Facet.maxLength, OWL2Facet.minLength, OWL2Facet.pattern]
-        binary = [OWL2Facet.length, OWL2Facet.maxLength, OWL2Facet.minLength]
-        anyuri = [OWL2Facet.length, OWL2Facet.maxLength, OWL2Facet.minLength, OWL2Facet.pattern]
+        numbers = [OWL2Facet.maxExclusive.value, OWL2Facet.maxInclusive.value, OWL2Facet.minExclusive.value, OWL2Facet.minInclusive.value]
+        strings = [OWL2Facet.langRange.value, OWL2Facet.length.value, OWL2Facet.maxLength.value, OWL2Facet.minLength.value, OWL2Facet.pattern.value]
+        binary = [OWL2Facet.length.value, OWL2Facet.maxLength.value, OWL2Facet.minLength.value]
+        anyuri = [OWL2Facet.length.value, OWL2Facet.maxLength.value, OWL2Facet.minLength.value, OWL2Facet.pattern.value]
 
         return {
-            OWL2Datatype.anyURI: anyuri,
-            OWL2Datatype.base64Binary: binary,
-            OWL2Datatype.boolean: [],
-            OWL2Datatype.byte: numbers,
-            OWL2Datatype.dateTime: numbers,
-            OWL2Datatype.dateTimeStamp: numbers,
-            OWL2Datatype.decimal: numbers,
-            OWL2Datatype.double: numbers,
-            OWL2Datatype.float: numbers,
-            OWL2Datatype.hexBinary: binary,
-            OWL2Datatype.int: numbers,
-            OWL2Datatype.integer: numbers,
-            OWL2Datatype.language: strings,
-            OWL2Datatype.Literal: allvalues,
-            OWL2Datatype.long: numbers,
-            OWL2Datatype.Name: strings,
-            OWL2Datatype.NCName: strings,
-            OWL2Datatype.negativeInteger: numbers,
-            OWL2Datatype.NMTOKEN: strings,
-            OWL2Datatype.nonNegativeInteger: numbers,
-            OWL2Datatype.nonPositiveInteger: numbers,
-            OWL2Datatype.normalizedString: strings,
-            OWL2Datatype.PlainLiteral: strings,
-            OWL2Datatype.positiveInteger: numbers,
-            OWL2Datatype.rational: numbers,
-            OWL2Datatype.real: numbers,
-            OWL2Datatype.short: numbers,
-            OWL2Datatype.string: strings,
-            OWL2Datatype.token: strings,
-            OWL2Datatype.unsignedByte: numbers,
-            OWL2Datatype.unsignedInt: numbers,
-            OWL2Datatype.unsignedLong: numbers,
-            OWL2Datatype.unsignedShort: numbers,
-            OWL2Datatype.XMLLiteral: []
+            OWL2Datatype.anyURI.value: anyuri,
+            OWL2Datatype.base64Binary.value: binary,
+            OWL2Datatype.boolean.value: [],
+            OWL2Datatype.byte.value: numbers.value,
+            OWL2Datatype.dateTime.value: numbers,
+            OWL2Datatype.dateTimeStamp.value: numbers,
+            OWL2Datatype.decimal.value: numbers,
+            OWL2Datatype.double.value: numbers,
+            OWL2Datatype.float.value: numbers,
+            OWL2Datatype.hexBinary.value: binary,
+            OWL2Datatype.int.value: numbers,
+            OWL2Datatype.integer.value: numbers,
+            OWL2Datatype.language.value: strings,
+            OWL2Datatype.Literal.value: allvalues,
+            OWL2Datatype.long.value: numbers,
+            OWL2Datatype.Name.value: strings,
+            OWL2Datatype.NCName.value: strings,
+            OWL2Datatype.negativeInteger.value: numbers,
+            OWL2Datatype.NMTOKEN.value: strings,
+            OWL2Datatype.nonNegativeInteger.value: numbers,
+            OWL2Datatype.nonPositiveInteger.value: numbers,
+            OWL2Datatype.normalizedString.value: strings,
+            OWL2Datatype.PlainLiteral.value: strings,
+            OWL2Datatype.positiveInteger.value: numbers,
+            OWL2Datatype.rational.value: numbers,
+            OWL2Datatype.real.value: numbers,
+            OWL2Datatype.short.value: numbers,
+            OWL2Datatype.string.value: strings,
+            OWL2Datatype.token.value: strings,
+            OWL2Datatype.unsignedByte.value: numbers,
+            OWL2Datatype.unsignedInt.value: numbers,
+            OWL2Datatype.unsignedLong.value: numbers,
+            OWL2Datatype.unsignedShort.value: numbers,
+            OWL2Datatype.XMLLiteral.value: []
         }[value]

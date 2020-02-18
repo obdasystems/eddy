@@ -507,6 +507,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                             edge.target = currentNode
                             insertEdge = True
 
+
                     # We temporarily remove the item from the diagram and we perform the
                     # insertion using the undo command that will also emit the sgnItemAdded
                     # signal hence all the widgets will be notified of the edge insertion.

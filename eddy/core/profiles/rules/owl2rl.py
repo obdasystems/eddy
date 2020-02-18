@@ -41,6 +41,7 @@ from eddy.core.profiles.rules.common import ProfileEdgeRule
 
 
 #Ashwin
+#TODO MODIFICA TUTTO
 class ReflexivityUnsupported(ProfileNodeRule):
     """
     Prevents from using reflexivity in roles which is outside of the OWL 2 QL profile.
