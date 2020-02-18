@@ -44,7 +44,7 @@ from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.role_iri import RoleNode
 from eddy.core.items.nodes.facet_iri import FacetNode
-from eddy.core.items.nodes.value import ValueNode
+from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
 
 from eddy.core.items.edges.equivalence import EquivalenceEdge
@@ -114,8 +114,8 @@ class ItemFactory(QtCore.QObject):
             return ValueDomainNode
         if item is Item.IndividualIRINode:
             return IndividualNode
-        if item is Item.ValueNode:
-            return ValueNode
+        if item is Item.LiteralNode:
+            return LiteralNode
 
         if item is Item.InclusionEdge:
             return InclusionEdge

@@ -51,6 +51,7 @@ from eddy.core.items.factory import ItemFactory
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
 from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
@@ -202,6 +203,8 @@ class Diagram(QtWidgets.QGraphicsScene):
                         self.session.doOpenConstrainingFacetBuilder(node)
                     elif isinstance(node, OntologyEntityNode):
                         self.session.doOpenIRIBuilder(node)
+                    elif isinstance(node, LiteralNode):
+                        self.session.doOpenLiteralBuilder(node)
                 else:
                     #copy of existing element (e.g. drag and drop from ontology explorer)
                     data_str = str(data, encoding='utf-8')
@@ -285,6 +288,8 @@ class Diagram(QtWidgets.QGraphicsScene):
                     self.session.doOpenIRIBuilder(node)
                 elif isinstance(node, FacetNode):
                     self.session.doOpenConstrainingFacetBuilder(node)
+                elif isinstance(node, LiteralNode):
+                    self.session.doOpenLiteralBuilder(node)
                 else:
                     self.session.undostack.push(CommandNodeAdd(self, node))
                 self.sgnItemInsertionCompleted.emit(node, mouseEvent.modifiers())
@@ -610,6 +615,19 @@ class Diagram(QtWidgets.QGraphicsScene):
         if node:
             command = CommandNodeAdd(self, node)
             self.session.undostack.beginMacro('node Add - {0}'.format(node.facet))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
+    @QtCore.pyqtSlot(LiteralNode)
+    def doAddOntologyLiteralNode(self, node):
+        """
+        Add to this diagram a node representing a Literal
+        :type node: FacetNode
+        """
+        if node:
+            command = CommandNodeAdd(self, node)
+            self.session.undostack.beginMacro('node Add - {0}'.format(node.literal))
             if command:
                 self.session.undostack.push(command)
             self.session.undostack.endMacro()

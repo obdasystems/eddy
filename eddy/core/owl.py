@@ -88,7 +88,7 @@ class Literal(QtCore.QObject):
     @language.setter
     def language(self, language):
         if isinstance(language, str):
-            self._datatype = language
+            self._language = language
             self.sgnLiteralModified.emit()
 
     def __hash__(self):
@@ -107,16 +107,21 @@ class Literal(QtCore.QObject):
 
     def __str__(self):
         result = ''
-        if self.language:
-            result += '"{}@{}"'.format(self.lexicalForm,self.language)
+        if not self.datatype or (self.datatype and self.datatype is OWL2Datatype.PlainLiteral.value):
+            result = '"{}"'.format(self.lexicalForm)
+            if self.language:
+                result += '@{}'.format(self.language)
         else:
-            result += '"{}"'.format(self.lexicalForm)
-        if self.datatype:
-            prefixedType = self.datatype.manager.getShortestPrefixedForm(self.datatype)
-            if prefixedType:
-                result += '^^{}'.format(str(prefixedType))
+            if self.language:
+                result += '"{}@{}"'.format(self.lexicalForm,self.language)
             else:
-                result += '^^<{}>'.format(self.datatype)
+                result += '"{}"'.format(self.lexicalForm)
+            if self.datatype and not self.datatype is OWL2Datatype.PlainLiteral.value:
+                prefixedType = self.datatype.manager.getShortestPrefixedForm(self.datatype)
+                if prefixedType:
+                    result += '^^{}'.format(str(prefixedType))
+                else:
+                    result += '^^<{}>'.format(self.datatype)
         return result
 
     def __repr__(self):
@@ -1328,6 +1333,11 @@ class IllegalNamespaceError(RuntimeError):
     """
     pass
 
+class IllegalLiteralError(RuntimeError):
+    """
+    Used to signal that a literal does not respect the structural specifications
+    """
+    pass
 
 @unique
 class IRIRender(Enum_):

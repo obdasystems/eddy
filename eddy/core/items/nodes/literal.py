@@ -44,10 +44,11 @@ from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.owl import OWL2Datatype
 from eddy.core.regex import RE_VALUE
 
 
-class ValueNode(AbstractResizableNode):
+class LiteralNode(AbstractResizableNode):
     """
     This class implements the 'Individual' node.
     """
@@ -65,9 +66,9 @@ class ValueNode(AbstractResizableNode):
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap,
                             QtCore.Qt.RoundJoin)
     Identities = {Identity.Value}
-    Type = Item.ValueNode
+    Type = Item.LiteralNode
 
-    def __init__(self, width=60, height=60, brush=None, remaining_characters='individual', **kwargs):
+    def __init__(self, literal=None, width=60, height=60, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -78,8 +79,8 @@ class ValueNode(AbstractResizableNode):
 
         w = max(width, 60)
         h = max(height, 60)
-        brush = brush or IndividualNode.DefaultBrush
-        pen = IndividualNode.DefaultPen
+        brush = brush or LiteralNode.DefaultBrush
+        pen = LiteralNode.DefaultPen
 
         createPolygon = lambda x, y: QtGui.QPolygonF([
             QtCore.QPointF(-(x / 2), -((y / (1 + math.sqrt(2))) / 2)),
@@ -97,9 +98,9 @@ class ValueNode(AbstractResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-        self.remaining_characters = remaining_characters
+        self._literal = None
 
-        self.label = NodeLabel(template='individual', pos=self.center, parent=self, editable=True)
+        self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
@@ -108,23 +109,62 @@ class ValueNode(AbstractResizableNode):
     def datatype(self):
         """
         Returns the datatype associated with this node.
-        :rtype: Datatype
+        :rtype: IRI
         """
-        match = RE_VALUE.match(self.text())
-        if match:
-            return Datatype.valueOf(match.group('datatype'))
+        if self._literal and self._literal.datatype:
+            return self._literal.datatype
+        else:
+            return OWL2Datatype.PlainLiteral.value
+
+    @property
+    def lexicalForm(self):
+        """
+        Returns the lexical form of the literal associated with this node.
+        :rtype: str
+        """
+        if self._literal:
+            return self._literal.lexicalForm
         return None
 
     @property
-    def value(self):
-        """
-        Returns the value value associated with this node.
-        :rtype: str
-        """
-        match = RE_VALUE.match(self.text())
-        if match:
-            return match.group('value')
+    def language(self):
+        if self._literal:
+            return self._literal.language
         return None
+
+    @property
+    def literal(self):
+        '''
+        :rtype: Literal
+        '''
+        return self._literal
+
+    @literal.setter
+    def literal(self, literal):
+        '''
+        :type literal:Literal
+        '''
+        self._literal = literal
+        '''
+        switch = False
+        if self.iri:
+            switch = True
+            self.disconnectIRISignals()
+        self._iri = iriObj
+        self.connectIRISignals()
+        if switch:
+            self.sgnIRISwitched.emit()
+        '''
+        if self.diagram:
+            self.doUpdateNodeLabel()
+
+    #############################################
+    #   SLOTS
+    #################################
+    @QtCore.pyqtSlot()
+    def doUpdateNodeLabel(self):
+        self.setText(str(self.literal))
+        self.updateNode()
 
     #############################################
     #   INTERFACE
@@ -159,7 +199,7 @@ class ValueNode(AbstractResizableNode):
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'remaining_characters': self.remaining_characters,
+            'literal': self._literal,
         })
         node.setPos(self.pos())
         node.setText(self.text())
@@ -181,10 +221,8 @@ class ValueNode(AbstractResizableNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        match = RE_VALUE.match(self.text())
-        if match:
-            return Identity.Value
-        return Identity.Individual
+        return Identity.Value
+
 
     def paint(self, painter, option, widget=None):
         """
@@ -657,10 +695,6 @@ class ValueNode(AbstractResizableNode):
         Set the label text: will additionally block label editing if a literal is being.
         :type text: str
         """
-        # print('Individial >> def setText >> ')
-        # print('text',text)
-        # print('RE_VALUE.match(text)',RE_VALUE.match(text))
-        self.label.setEditable(RE_VALUE.match(text) is None)
         self.label.setText(text)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
 

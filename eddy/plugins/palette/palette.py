@@ -285,7 +285,7 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.AttributeIRINode,
             Item.ValueDomainIRINode,
             Item.IndividualIRINode,
-            Item.ValueNode,
+            Item.LiteralNode,
             Item.FacetIRINode,
             Item.DomainRestrictionNode,
             Item.RangeRestrictionNode,
@@ -309,7 +309,7 @@ class PaletteWidget(QtWidgets.QWidget):
         self.itemShortcuts = {
             Item.ConceptIRINode: '{}+c'.format(self.shortcutPrefix),
             Item.IndividualIRINode: '{}+i'.format(self.shortcutPrefix),
-            Item.ValueNode: '{}+i,v'.format(self.shortcutPrefix),
+            Item.LiteralNode: '{}+i,v'.format(self.shortcutPrefix),
             Item.RoleIRINode: '{}+r'.format(self.shortcutPrefix),
             Item.AttributeIRINode: '{}+a'.format(self.shortcutPrefix),
             Item.ValueDomainIRINode: '{}+v'.format(self.shortcutPrefix),
@@ -724,7 +724,7 @@ class PaletteButton(QtWidgets.QToolButton):
             # VALUE NODE
             #################################
 
-            elif item is Item.ValueNode:
+            elif item is Item.LiteralNode:
                 painter = QtGui.QPainter(pixmap)
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
                 painter.setPen(

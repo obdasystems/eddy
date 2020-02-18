@@ -3,13 +3,14 @@ from PyQt5.QtCore import QObject, Qt
 
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
 from eddy.core.output import getLogger
 from eddy.ui.notification import Notification
 
 from eddy.core.common import HasWidgetSystem
 
-from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal
+from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal, IllegalLiteralError
 
 from eddy.core.functions.signals import connect
 from eddy.ui.fields import ComboBox, StringField
@@ -737,7 +738,7 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def __init__(self,node,diagram,session):
         """
-        Initialize the IRI builder dialog.
+        Initialize the Facet builder dialog.
         :type diagram: Diagram
         :type node: FacetNode
         :type session: Session
@@ -749,7 +750,6 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.node = node
         self.facet = None
-        shortest = None
         if self.node.facet:
             self.facet = self.node.facet
         self.project = diagram.project
@@ -901,4 +901,180 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
     @QtCore.pyqtSlot()
     def reject(self):
         self.sgnFacetRejected.emit(self.node)
+        super().reject()
+
+class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
+
+    sgnLiteralAccepted = QtCore.pyqtSignal(LiteralNode)
+    sgnLiteralRejected = QtCore.pyqtSignal(LiteralNode)
+
+    sgnLiteralChanged = QtCore.pyqtSignal(LiteralNode,Literal)
+
+    emptyString = ''
+
+    def __init__(self,node,diagram,session):
+        """
+        Initialize the Literal builder dialog.
+        :type diagram: Diagram
+        :type node: LiteralNode
+        :type session: Session
+        """
+        super().__init__(session)
+        self.diagram = diagram
+        self.session = session
+        connect(self.sgnLiteralAccepted,self.diagram.doAddOntologyLiteralNode)
+
+        self.node = node
+        self.literal = None
+        if self.node._literal:
+            self.literal = self.node._literal
+        self.project = diagram.project
+
+        #############################################
+        # LITERAL TAB
+        #################################
+        comboBoxLabel = IRIDialogsWidgetFactory.getPredefinedDatatypeComboBoxLabel(self)
+        self.addWidget(comboBoxLabel)
+
+        combobox = IRIDialogsWidgetFactory.getPredefinedDatatypeComboBox(self)
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        # combobox.addItems([x+':' for x in self.project.getManagedPrefixes()])
+        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        if self.literal and self.literal.datatype:
+            combobox.setCurrentText(str(self.literal.datatype))
+        else:
+            combobox.setCurrentText(self.emptyString)
+        self.addWidget(combobox)
+
+        lfLabel = IRIDialogsWidgetFactory.getLexicalFormLabel(self)
+        self.addWidget(lfLabel)
+
+        lfTextArea= IRIDialogsWidgetFactory.getLexicalFormTextArea(self)
+        if self.literal:
+            lfTextArea.setText(str(self.literal.lexicalForm))
+        else:
+            lfTextArea.setText(self.emptyString)
+        self.addWidget(lfTextArea)
+
+        comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
+        comboBoxLabel.setFont(Font('Roboto', 12))
+        comboBoxLabel.setText('Lang')
+        self.addWidget(comboBoxLabel)
+        combobox = ComboBox(self, objectName='lang_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if self.literal and self.literal.language:
+            combobox.setCurrentText(str(self.literal.language))
+        else:
+            combobox.setCurrentText(self.emptyString)
+        self.addWidget(combobox)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('datatype_combobox_label'), self.widget('datatype_switch'))
+        formlayout.addRow(self.widget('lexical_form_label'), self.widget('lexical_form_area'))
+        formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('literal_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        confirmation.setFont(Font('Roboto', 12))
+        self.addWidget(confirmation)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+        mainWidget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        mainWidget.addTab(self.widget('literal_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
+                      'Literal')
+        self.addWidget(mainWidget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(740, 420)
+        self.setWindowTitle('Literal Builder')
+
+        #connect(inputField.textEdited, self.onInputChanged)
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+        combobox = self.widget('datatype_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
+        combobox.addItems([str(x) for x in sortedItems])
+        if self.literal and self.literal.datatype:
+            combobox.setCurrentText(str(self.literal.datatype))
+        else:
+            combobox.setCurrentText(self.emptyString)
+        self.addWidget(combobox)
+
+        lfTextArea = self.widget('lexical_form_area')
+        if self.literal:
+            lfTextArea.setText(str(self.literal.literal.lexicalForm))
+        else:
+            lfTextArea.setText(self.emptyString)
+
+        combobox = self.widget('lang_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if self.literal and self.literal.language:
+            combobox.setCurrentText(str(self.literal.language))
+        else:
+            combobox.setCurrentText(self.emptyString)
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        try:
+            datatypeIRI = None
+            dataType = str(self.widget('datatype_switch').currentText())
+            if dataType:
+                datatypeIRI = self.project.getIRI(dataType)
+            lexForm = None
+            if str(self.widget('lexical_form_area').toPlainText()):
+                lexForm = str(self.widget('lexical_form_area').toPlainText())
+            language = None
+            if str(self.widget('lang_switch').currentText()):
+                language = str(self.widget('lang_switch').currentText())
+            literal = Literal(lexForm, datatypeIRI,language)
+            self.node._literal = literal
+            self.sgnLiteralAccepted.emit(self.node)
+            if self.node.diagram:
+                self.node.doUpdateNodeLabel()
+            super().accept()
+        except IllegalLiteralError as e:
+            errorDialog = QtWidgets.QErrorMessage(parent=self)
+            errorDialog.showMessage(e.message)
+            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
+            errorDialog.show()
+            errorDialog.raise_()
+            errorDialog.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        self.sgnLiteralRejected.emit(self.node)
         super().reject()
