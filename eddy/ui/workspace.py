@@ -67,7 +67,7 @@ class WorkspaceDialog(QtWidgets.QDialog):
         self.headTitle = QtWidgets.QLabel('Select a workspace', self)
         self.headTitle.setFont(Font('Roboto', 12, bold=True))
         self.headDescription = QtWidgets.QLabel(dedent("""
-        {0} stores your projects in a directory called workspace.<br/>
+        {0} stores your projects in a directory called <b>workspace</b>.<br/>
         Please choose a workspace directory to use.""".format(APPNAME)), self)
         self.headDescription.setFont(Font('Roboto', 12))
         self.headPix = QtWidgets.QLabel(self)
@@ -94,14 +94,13 @@ class WorkspaceDialog(QtWidgets.QDialog):
 
         self.workspaceField = StringField(self)
         self.workspaceField.setFont(Font('Roboto', 12))
-        self.workspaceField.setFixedWidth(400)
+        self.workspaceField.setMinimumWidth(400)
         self.workspaceField.setReadOnly(True)
         self.workspaceField.setText(expandPath(WORKSPACE))
 
         self.btnBrowse = QtWidgets.QPushButton(self)
         self.btnBrowse.setFont(Font('Roboto', 12))
-        self.btnBrowse.setFixedWidth(30)
-        self.btnBrowse.setText('...')
+        self.btnBrowse.setText('Browse')
 
         self.editLayout = QtWidgets.QHBoxLayout()
         self.editLayout.setContentsMargins(10, 10, 10, 10)
