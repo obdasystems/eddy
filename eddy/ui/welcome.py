@@ -52,7 +52,7 @@ from eddy.core.functions.signals import connect
 from eddy.ui.project import NewProjectDialog
 
 
-class Welcome(QtWidgets.QWidget):
+class Welcome(QtWidgets.QDialog):
     """
     This class is used to display the welcome screen of Eddy.
     """
@@ -199,10 +199,10 @@ class Welcome(QtWidgets.QWidget):
         connect(self.sgnUpdateRecentProjects, self.doUpdateRecentProjects)
 
         desktop = QtWidgets.QDesktopWidget()
-        screen = desktop.screenGeometry()
+        screen = desktop.availableGeometry(self)
         widget = self.geometry()
-        x = (screen.width() - widget.width()) / 2
-        y = (screen.height() - widget.height()) / 2
+        x = screen.x() + (screen.width() - widget.width()) / 2
+        y = screen.y() + (screen.height() - widget.height()) / 2
         self.move(x, y)
 
         # UPDATE RECENT PROJECTS
