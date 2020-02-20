@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
+from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
@@ -13,13 +14,25 @@ from eddy.core.common import HasWidgetSystem
 from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal, IllegalLiteralError
 
 from eddy.core.functions.signals import connect
-from eddy.ui.fields import ComboBox, StringField
+from eddy.ui.fields import ComboBox, StringField, CheckBox
 
 from eddy.core.datatypes.qt import Font
 
 LOGGER = getLogger()
 
 class IRIDialogsWidgetFactory(QObject):
+
+    @staticmethod
+    def getFunctionalLabel(parent):
+        label = QtWidgets.QLabel(parent, objectName='functional_label')
+        label.setFont(Font('Roboto', 12))
+        label.setText('Functional')
+        return label
+
+    @staticmethod
+    def getFunctionalCheckBox(parent):
+        checkBox = CheckBox(parent, objectName='functional_checkbox')
+        return checkBox
 
     @staticmethod
     def getPredefinedDatatypeComboBoxLabel(parent):
@@ -202,6 +215,13 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         formlayout.addRow(self.widget('iri_prefix_combobox_label'), self.widget('iri_prefix_switch'))
         formlayout.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
         formlayout.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
+
+        if isinstance(node, AttributeNode):
+            functLabel = IRIDialogsWidgetFactory.getFunctionalLabel(self)
+            self.addWidget(functLabel)
+            functCheckBox = IRIDialogsWidgetFactory.getFunctionalCheckBox(self)
+            self.addWidget(functCheckBox)
+            formlayout.addRow(self.widget('functional_label'), self.widget('functional_checkbox'))
 
         widget = QtWidgets.QWidget()
         widget.setLayout(formlayout)
