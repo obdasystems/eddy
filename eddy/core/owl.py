@@ -545,13 +545,30 @@ class IRI(QtCore.QObject):
             return self.namespace[index+1:]
         return None
 
-
     def isTopBottomEntity(self):
         """
         Returns True if this iri represents a top/bottom entity, False otherwise
         :rtype: bool
         """
         return TopBottomProperty.isTopBottomEntity(self)
+
+    def isOwlThing(self):
+        return TopBottomProperty.isTopClass(self)
+
+    def isOwlNothing(self):
+        return TopBottomProperty.isBottomClass(self)
+
+    def isTopObjectProperty(self):
+        return TopBottomProperty.isTopRole(self)
+
+    def isBottomObjectProperty(self):
+        return TopBottomProperty.isBottomRole(self)
+
+    def isTopDataProperty(self):
+        return TopBottomProperty.isTopAttribute(self)
+
+    def isBottomDataProperty(self):
+        return TopBottomProperty.isBottomAttribute(self)
 
     def getLabelAnnotationAssertion(self, lang=None):
         '''
@@ -1386,6 +1403,23 @@ class TopBottomProperty(Enum_):
     def isTopBottomEntity(input):
         return input == TopBottomProperty.Thing.value or input is TopBottomProperty.Nothing.value or input is TopBottomProperty.TopObjectProperty or input is TopBottomProperty.BottomObjectProperty or input is TopBottomProperty.TopDataProperty or input is TopBottomProperty.BottomDataProperty
 
+    def isTopClass(input):
+        return input == TopBottomProperty.Thing.value
+
+    def isBottomClass(input):
+        return input == TopBottomProperty.Nothing.value
+
+    def isTopRole(input):
+        return input == TopBottomProperty.TopObjectProperty.value
+
+    def isBottomRole(input):
+        return input == TopBottomProperty.BottomObjectProperty.value
+
+    def isTopAttribute(input):
+        return input == TopBottomProperty.TopDataProperty.value
+
+    def isBottomAttribute(input):
+        return input == TopBottomProperty.BottomDataProperty.value
 
 
 
@@ -1459,22 +1493,22 @@ class OWL2Datatype(Enum_):
         :rtype: set
         """
         if profile is OWL2Profile.OWL2:
-            return {x for x in OWL2Datatype}
+            return {x.value for x in OWL2Datatype}
         elif profile is OWL2Profile.OWL2QL:
-            return {OWL2Datatype.rational, OWL2Datatype.real, OWL2Datatype.PlainLiteral, OWL2Datatype.XMLLiteral,
-                    OWL2Datatype.Literal, OWL2Datatype.anyURI, OWL2Datatype.base64Binary, OWL2Datatype.dateTime,
-                    OWL2Datatype.dateTimeStamp, OWL2Datatype.decimal, OWL2Datatype.hexBinary, OWL2Datatype.integer,
-                    OWL2Datatype.Name, OWL2Datatype.NCName, OWL2Datatype.NMTOKEN, OWL2Datatype.nonNegativeInteger,
-                    OWL2Datatype.normalizedString, OWL2Datatype.string, OWL2Datatype.token}
+            return {OWL2Datatype.rational.value, OWL2Datatype.real.value, OWL2Datatype.PlainLiteral.value, OWL2Datatype.XMLLiteral.value,
+                    OWL2Datatype.Literal.value, OWL2Datatype.anyURI.value, OWL2Datatype.base64Binary.value, OWL2Datatype.dateTime.value,
+                    OWL2Datatype.dateTimeStamp.value, OWL2Datatype.decimal.value, OWL2Datatype.hexBinary.value, OWL2Datatype.integer.value,
+                    OWL2Datatype.Name.value, OWL2Datatype.NCName.value, OWL2Datatype.NMTOKEN.value, OWL2Datatype.nonNegativeInteger.value,
+                    OWL2Datatype.normalizedString.value, OWL2Datatype.string.value, OWL2Datatype.token.value}
         elif profile is OWL2Profile.OWL2RL:
-            return {OWL2Datatype.PlainLiteral, OWL2Datatype.XMLLiteral, OWL2Datatype.Literal, OWL2Datatype.anyURI,
-                    OWL2Datatype.base64Binary, OWL2Datatype.boolean, OWL2Datatype.byte, OWL2Datatype.dateTime,
-                    OWL2Datatype.dateTimeStamp, OWL2Datatype.decimal, OWL2Datatype.double, OWL2Datatype.float,
-                    OWL2Datatype.hexBinary, OWL2Datatype.Name, OWL2Datatype.NCName, OWL2Datatype.negativeInteger,
-                    OWL2Datatype.NMTOKEN, OWL2Datatype.nonNegativeInteger, OWL2Datatype.nonPositiveInteger,
-                    OWL2Datatype.normalizedString, OWL2Datatype.positiveInteger, OWL2Datatype.short,
-                    OWL2Datatype.string, OWL2Datatype.token, OWL2Datatype.unsignedByte, OWL2Datatype.unsignedInt,
-                    OWL2Datatype.unsignedLong, OWL2Datatype.unsignedShort}
+            return {OWL2Datatype.PlainLiteral.value, OWL2Datatype.XMLLiteral.value, OWL2Datatype.Literal.value, OWL2Datatype.anyURI.value,
+                    OWL2Datatype.base64Binary.value, OWL2Datatype.boolean.value, OWL2Datatype.byte.value, OWL2Datatype.dateTime.value,
+                    OWL2Datatype.dateTimeStamp.value, OWL2Datatype.decimal.value, OWL2Datatype.double.value, OWL2Datatype.float.value,
+                    OWL2Datatype.hexBinary.value, OWL2Datatype.Name.value, OWL2Datatype.NCName.value, OWL2Datatype.negativeInteger.value,
+                    OWL2Datatype.NMTOKEN.value, OWL2Datatype.nonNegativeInteger.value, OWL2Datatype.nonPositiveInteger.value,
+                    OWL2Datatype.normalizedString.value, OWL2Datatype.positiveInteger.value, OWL2Datatype.short.value,
+                    OWL2Datatype.string.value, OWL2Datatype.token.value, OWL2Datatype.unsignedByte.value, OWL2Datatype.unsignedInt.value,
+                    OWL2Datatype.unsignedLong.value, OWL2Datatype.unsignedShort.value}
         raise ValueError('unsupported profile: %s' % profile)
 
 

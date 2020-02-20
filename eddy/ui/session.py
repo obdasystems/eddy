@@ -1552,7 +1552,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             action = self.sender()
             elements = action.data()
             diagram.setMode(DiagramMode.Idle)
-            supported = {Item.RoleNode, Item.AttributeNode}
+            supported = {Item.RoleIRINode, Item.AttributeIRINode}
             for node in diagram.selectedNodes(lambda x: x.type() in supported):
                 name = 'compose {0} restriction(s)'.format(node.shortName)
                 addons = compose(diagram, node, elements)
@@ -1891,7 +1891,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 return Item.RangeRestrictionNode
             return Item.DomainRestrictionNode
 
-        f0 = lambda x: x.type() is Item.RoleNode
+        f0 = lambda x: x.type() is Item.RoleIRINode
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
         f3 = lambda x: x.type() is Item.RoleInverseNode
@@ -1903,11 +1903,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if node:
                 swappable = set()
                 collection = dict()
+                '''
                 predicates = self.project.predicates(node.type(), node.text())
                 for predicate in predicates:
                     swappable = set.union(swappable, predicate.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
                     for inv in predicate.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f3):
                         swappable = set.union(swappable, inv.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                '''
+                occurrences = self.project.iriOccurrences(node.type(), node.iri)
+                for occ in occurrences:
+                    swappable = set.union(swappable, occ.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                    for inv in occ.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f3):
+                        swappable = set.union(swappable, inv.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+
                 for xnode in swappable:
                     ynode = xnode.diagram.factory.create(invert(xnode.type()))
                     ynode.setPos(xnode.pos())
@@ -3091,8 +3099,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram()
-            restrictables = {Item.AttributeNode, Item.RoleNode}
-            predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}
+            restrictables = {Item.AttributeIRINode, Item.RoleIRINode}
+            predicates = {Item.ConceptIRINode, Item.AttributeIRINode, Item.RoleIRINode, Item.IndividualIRINode}
             if diagram:
                 nodes = diagram.selectedNodes()
                 edges = diagram.selectedEdges()

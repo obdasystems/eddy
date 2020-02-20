@@ -32,34 +32,40 @@
 #                                                                        #
 ##########################################################################
 
-
 from eddy.core.datatypes.graphol import Item, Identity, Restriction, Special
-from eddy.core.datatypes.owl import Datatype, OWLProfile
+from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.owl import OWL2Datatype, OWL2Profile
 from eddy.core.profiles.common import ProfileError
 from eddy.core.profiles.rules.common import ProfileNodeRule
 from eddy.core.profiles.rules.common import ProfileEdgeRule
 
-
-#Ashwin
-#TODO MODIFICA TUTTO
 class ReflexivityUnsupported(ProfileNodeRule):
     """
     Prevents from using reflexivity in roles which is outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if ('RoleNode' in str(type(node))):
+        '''
+        if ('RoleIRINode' in str(type(node))):
             if node.isReflexive():
                 raise ProfileError('Reflexivity of roles is forbidden in OWL 2 RL')
-
+        '''
+        if isinstance(node,OntologyEntityNode):
+            if node.iri:
+                if node.iri.reflexive:
+                    raise ProfileError('({}) Reflexivity of roles is forbidden in OWL 2 RL'.format(str(node.iri)))
 
 class UnsupportedDatatypeRule(ProfileNodeRule):
     """
     Prevents from using datatypes which are outside of the OWL 2 RL profile.
     """
     def __call__(self, node):
-        if node.type() is Item.ValueDomainNode:
-            if node.datatype not in Datatype.forProfile(OWLProfile.OWL2RL):
+        if node.type() is Item.ValueDomainIRINode:
+            if node.iri and not OWL2Datatype.forProfile(OWL2Profile.OWL2RL):
+                raise ProfileError('Use of datatype {} is forbidden in OWL 2 RL'.format(str(node.iri)))
+            '''
+            if node.datatype not in Datatype.forProfile(OWL2Profile.OWL2RL):
                 raise ProfileError('Datatype {} is forbidden in OWL 2 RL'.format(node.datatype.value))
+            '''
 
 
 class UnsupportedOperatorRule(ProfileNodeRule):
@@ -67,7 +73,7 @@ class UnsupportedOperatorRule(ProfileNodeRule):
     Prevents from using operator nodes which are not supported by the OWL 2 RL profile.
     """
     def __call__(self, node):
-        if node.type() in {Item.DatatypeRestrictionNode, Item.FacetNode}:
+        if node.type() in {Item.DatatypeRestrictionNode, Item.FacetIRINode}:
             raise ProfileError('Usage of {} operator is forbidden in OWL 2 RL'.format(node.shortName))
 
 
@@ -76,9 +82,13 @@ class UnsupportedSpecialOnRoleAndAttributeNode(ProfileNodeRule):
     Make sure that TOP and BOTTOM are not used in Role and Attribute nodes.
     """
     def __call__(self, node):
-        if node.type() in {Item.AttributeNode, Item.RoleNode}:
+        if node.type() in {Item.AttributeIRINode, Item.RoleIRINode}:
+            if node.iri and (node.iri.isTopObjectProperty() or node.iri.isBottomObjectProperty() or  node.iri.isTopDataProperty() or node.iri.isBottomDataProperty()):
+                raise ProfileError('Use of {} is forbidden in OWL 2 RL'.format(str(node.iri)))
+            '''
             if Special.valueOf(node.text()) is not None:
                 raise ProfileError('Usage of {} {} is forbidden in OWL 2 RL'.format(node.text(), node.shortName))
+            '''
 
 
 class EquivalenceBetweenConceptExpressionRule(ProfileEdgeRule):
@@ -94,21 +104,18 @@ class EquivalenceBetweenConceptExpressionRule(ProfileEdgeRule):
             if not {Identity.Role, Identity.Attribute, Identity.Unknown} & {source.identity(), target.identity()}:
                 for node in (source, target):
                     # TOP concept cannot be part of concept equivalence in OWL 2 RL.
-                    if node.type() is Item.ConceptNode:
-                        if (Special.valueOf(node.text()) is Special.Top) or \
-                           (Special.valueOf(node.text()) is Special.TopConcept) or \
-                           (Special.valueOf(node.text()) is Special.TopAttribute) or \
-                           (Special.valueOf(node.text()) is Special.TopRole):
-                            raise ProfileError('Equivalence in presence of a TOP concept is forbidden in OWL 2 RL')
+                    if node.type() is Item.ConceptIRINode:
+                        if node.iri and (node.iri.isOwlThing() or node.iri.isTopObjectProperty() or node.iri.isTopDataProperty()):
+                            raise ProfileError('Use of Equivalence axioms involving a TOP predicate is forbidden in OWL 2 RL')
                     # Complement nodes cannot be part of concept equivalence in OWL 2 RL.
                     elif node.type() is Item.ComplementNode:
-                        raise ProfileError('Equivalence in presence of a concept complement is forbidden in OWL 2 RL')
+                        raise ProfileError('Use of Equivalence axioms involving a concept complement is forbidden in OWL 2 RL')
                     # Enumeration nodes cannot be part of concept equivalence in OWL 2 RL.
                     elif node.type() is Item.EnumerationNode:
-                        raise ProfileError('Equivalence in presence of an enumeration of individuals is forbidden in OWL 2 RL')
+                        raise ProfileError('Use of Equivalence axioms involving an enumeration of individuals is forbidden in OWL 2 RL')
                     # Union of concept expressions cannot be part of concept equivalence in OWL 2 RL.
                     elif node.type() is Item.EnumerationNode:
-                        raise ProfileError('Equivalence in presence of a union of concept expressions is forbidden in OWL 2 RL')
+                        raise ProfileError('Use of Equivalence axioms involving an union of concept expressions is forbidden in OWL 2 RL')
                     # Domain/range restriction cannot be part of concept equivalence in OWL 2 RL.
                     elif node.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                         f1 = lambda x: x.type() is Item.InputEdge
@@ -137,12 +144,10 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                 #################################
 
                 # TOP concept cannot be source of concept inclusion in OWL 2 RL.
-                if source.type() is Item.ConceptNode:
-                    if (Special.valueOf(source.text()) is Special.Top) or \
-                       (Special.valueOf(source.text()) is Special.TopConcept) or \
-                       (Special.valueOf(source.text()) is Special.TopAttribute) or \
-                       (Special.valueOf(source.text()) is Special.TopRole):
-                        raise ProfileError('Inclusion with a TOP concept as source is forbidden in OWL 2 RL')
+                if source.type() is Item.ConceptIRINode:
+                    if source.iri and (
+                            source.iri.isOwlThing() or source.iri.isTopObjectProperty() or source.iri.isTopDataProperty()):
+                        raise ProfileError('Inclusion axioms involving a TOP predicate is forbidden in OWL 2 RL')
                 # Complement nodes cannot be source of concept inclusion in OWL 2 RL.
                 elif source.type() is Item.ComplementNode:
                     raise ProfileError('Inclusion with a concept complement as source is forbidden in OWL 2 RL')
@@ -157,12 +162,10 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                 #################################
 
                 # TOP concept cannot be target of concept inclusion in OWL 2 RL.
-                if target.type() is Item.ConceptNode:
-                    if (Special.valueOf(target.text()) is Special.Top) or \
-                       (Special.valueOf(target.text()) is Special.TopConcept) or \
-                       (Special.valueOf(target.text()) is Special.TopAttribute) or \
-                       (Special.valueOf(target.text()) is Special.TopRole):
-                        raise ProfileError('Inclusion with a TOP concept as target is forbidden in OWL 2 RL')
+                if target.type() is Item.ConceptIRINode:
+                    if target.iri and (
+                            target.iri.isOwlThing() or target.iri.isTopObjectProperty() or target.iri.isTopDataProperty()):
+                        raise ProfileError('Use of inclusion axioms involving a TOP predicate is forbidden in OWL 2 RL')
                 # Enumeration nodes cannot be target of concept inclusion in OWL 2 RL.
                 elif target.type() is Item.EnumerationNode:
                     raise ProfileError('Inclusion with an enumeration of individuals as target is forbidden in OWL 2 RL')
@@ -203,4 +206,4 @@ class InputValueDomainToUnionNodeRule(ProfileEdgeRule):
         if edge.type() is Item.InputEdge:
             if target.type() in {Item.DisjointUnionNode, Item.UnionNode}:
                 if Identity.ValueDomain in {source.identity(), target.identity()}:
-                    raise ProfileError('{} of value-domain expressions is forbidden in OWL 2 RL'.format(target.shortName.capitalize()))
+                    raise ProfileError('Union of of value-domain expressions is forbidden in OWL 2 RL')
