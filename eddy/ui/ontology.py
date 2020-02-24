@@ -67,22 +67,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         ## ONTOLOGY PROPERTIES GROUP
 
         iriLabel = QtWidgets.QLabel(self, objectName='ontology_iri_label')
-        iriLabel.setFont(Font('Roboto', 13))
         iriLabel.setText('Ontology IRI')
         self.addWidget(iriLabel)
 
         iriField = StringField(self, objectName='ontology_iri_field')
-        iriField.setFont(Font('Roboto', 13))
         iriField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/')
         self.addWidget(iriField)
 
         versionLabel = QtWidgets.QLabel(self, objectName='ontology_version_label')
-        versionLabel.setFont(Font('Roboto', 13))
         versionLabel.setText('Ontology Version IRI')
         self.addWidget(versionLabel)
 
         versionField = StringField(self, objectName='ontology_version_field')
-        versionField.setFont(Font('Roboto', 13))
         versionField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/1.0')
         self.addWidget(versionField)
 
@@ -104,7 +100,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setFont(Font('Roboto', 13))
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='ontology_imports_add_button')
@@ -137,7 +132,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setFont(Font('Roboto', 13))
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='ontology_annotations_add_button')
@@ -184,7 +178,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setFont(Font('Roboto', 13))
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='prefixes_add_button')
@@ -231,7 +224,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setFont(Font('Roboto', 13))
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='annotation_properties_add_button')
@@ -271,7 +263,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
         #############################################

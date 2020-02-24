@@ -74,14 +74,12 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         # WORKSPACE GROUP
 
         workspace = StringField(self, objectName='workspace_field')
-        workspace.setFont(Font('Roboto', 12))
         workspace.setMinimumWidth(400)
         workspace.setReadOnly(True)
         workspace.setText(settings.value('workspace/home', WORKSPACE, str))
         self.addWidget(workspace)
 
         browse = QtWidgets.QPushButton(self, objectName='workspace_browse_button')
-        browse.setFont(Font('Roboto', 12))
         browse.setText('Browse')
         connect(browse.clicked, self.browseWorkspace)
         self.addWidget(browse)
@@ -96,12 +94,10 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         ## EDITOR GROUP
 
         prefix = QtWidgets.QLabel(self, objectName='diagram_size_prefix')
-        prefix.setFont(Font('Roboto', 12))
         prefix.setText('Diagram size')
         self.addWidget(prefix)
 
         spinbox = SpinBox(self, objectName='diagram_size_field')
-        spinbox.setFont(Font('Roboto', 12))
         spinbox.setRange(Diagram.MinSize, Diagram.MaxSize)
         spinbox.setSingleStep(100)
         spinbox.setToolTip('Default size of all the new created diagrams')
@@ -117,24 +113,20 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         ## UPDATE GROUP
 
         prefix = QtWidgets.QLabel(self, objectName='update_startup_prefix')
-        prefix.setFont(Font('Roboto', 12))
         prefix.setText('Check for updates on startup')
         self.addWidget(prefix)
 
         checkbox = CheckBox(self, objectName='update_startup_checkbox')
         checkbox.setChecked(settings.value('update/check_on_startup', True, bool))
-        checkbox.setFont(Font('Roboto', 12))
         checkbox.setToolTip('Whether or not application updates needs to be checked upon startup')
         self.addWidget(checkbox)
 
         prefix = QtWidgets.QLabel(self, objectName='update_channel_prefix')
-        prefix.setFont(Font('Roboto', 12))
         prefix.setText('Update channel')
         self.addWidget(prefix)
 
         combobox = ComboBox(objectName='update_channel_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         combobox.setToolTip('Update channel (current = %s)' % settings.value('update/channel', Channel.Stable.value, str))
@@ -260,7 +252,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         table = QtWidgets.QTableWidget(len(self.session.plugins()), 5, self, objectName='plugins_table')
         table.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact', 'Uninstall'])
-        table.setFont(Font('Roboto', 12))
         table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         table.setFocusPolicy(QtCore.Qt.NoFocus)
         self.addWidget(table)
@@ -307,7 +298,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         button = QtWidgets.QToolButton(self, objectName='plugins_install_button')
         button.setDefaultAction(self.session.action('install_plugin'))
         button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
-        button.setFont(Font('Roboto', 13))
         self.addWidget(button)
 
         layout = QtWidgets.QVBoxLayout()
@@ -325,7 +315,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
         #############################################

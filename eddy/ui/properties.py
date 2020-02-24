@@ -48,7 +48,6 @@ from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, 
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype, Namespace
-from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import clamp, isEmpty, first
 from eddy.core.functions.signals import connect
@@ -114,20 +113,16 @@ class DiagramProperty(PropertyDialog):
         #################################
 
         self.nodesLabel = QtWidgets.QLabel(self)
-        self.nodesLabel.setFont(Font('Roboto', 12))
         self.nodesLabel.setText('N° nodes')
         self.nodesField = IntegerField(self)
         self.nodesField.setFixedWidth(300)
-        self.nodesField.setFont(Font('Roboto', 12))
         self.nodesField.setReadOnly(True)
         self.nodesField.setValue(len(self.diagram.nodes()))
 
         self.edgesLabel = QtWidgets.QLabel(self)
-        self.edgesLabel.setFont(Font('Roboto', 12))
         self.edgesLabel.setText('N° edges')
         self.edgesField = IntegerField(self)
         self.edgesField.setFixedWidth(300)
-        self.edgesField.setFont(Font('Roboto', 12))
         self.edgesField.setReadOnly(True)
         self.edgesField.setValue(len(self.diagram.edges()))
 
@@ -143,10 +138,8 @@ class DiagramProperty(PropertyDialog):
         sceneRect = self.diagram.sceneRect()
 
         self.diagramSizeLabel = QtWidgets.QLabel(self)
-        self.diagramSizeLabel.setFont(Font('Roboto', 12))
         self.diagramSizeLabel.setText('Size')
         self.diagramSizeField = SpinBox(self)
-        self.diagramSizeField.setFont(Font('Roboto', 12))
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
         self.diagramSizeField.setValue(max(sceneRect.width(), sceneRect.height()))
@@ -163,7 +156,6 @@ class DiagramProperty(PropertyDialog):
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # MAIN WIDGET
@@ -250,40 +242,32 @@ class NodeProperty(PropertyDialog):
         #################################
 
         self.idLabel = QtWidgets.QLabel(self)
-        self.idLabel.setFont(Font('Roboto', 12))
         self.idLabel.setText('ID')
         self.idField = StringField(self)
-        self.idField.setFont(Font('Roboto', 12))
         self.idField.setFixedWidth(300)
         self.idField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.idField.setReadOnly(True)
         self.idField.setValue(self.node.id)
 
         self.typeLabel = QtWidgets.QLabel(self)
-        self.typeLabel.setFont(Font('Roboto', 12))
         self.typeLabel.setText('Type')
         self.typeField = StringField(self)
-        self.typeField.setFont(Font('Roboto', 12))
         self.typeField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.typeField.setFixedWidth(300)
         self.typeField.setReadOnly(True)
         self.typeField.setValue(node.shortName.capitalize())
 
         self.identityLabel = QtWidgets.QLabel(self)
-        self.identityLabel.setFont(Font('Roboto', 12))
         self.identityLabel.setText('Identity')
         self.identityField = StringField(self)
-        self.identityField.setFont(Font('Roboto', 12))
         self.identityField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.identityField.setFixedWidth(300)
         self.identityField.setReadOnly(True)
         self.identityField.setValue(self.node.identityName)
 
         self.neighboursLabel = QtWidgets.QLabel(self)
-        self.neighboursLabel.setFont(Font('Roboto', 12))
         self.neighboursLabel.setText('Neighbours')
         self.neighboursField = IntegerField(self)
-        self.neighboursField.setFont(Font('Roboto', 12))
         self.neighboursField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.neighboursField.setFixedWidth(300)
         self.neighboursField.setReadOnly(True)
@@ -304,39 +288,31 @@ class NodeProperty(PropertyDialog):
         sceneRect = self.diagram.sceneRect()
 
         self.xLabel = QtWidgets.QLabel(self)
-        self.xLabel.setFont(Font('Roboto', 12))
         self.xLabel.setText('X')
         self.xField = SpinBox(self)
         self.xField.setFixedWidth(60)
-        self.xField.setFont(Font('Roboto', 12))
         self.xField.setRange(sceneRect.left(), sceneRect.right())
         self.xField.setValue(int(nodePos.x()))
 
         self.yLabel = QtWidgets.QLabel(self)
-        self.yLabel.setFont(Font('Roboto', 12))
         self.yLabel.setText('Y')
         self.yField = SpinBox(self)
         self.yField.setFixedWidth(60)
-        self.yField.setFont(Font('Roboto', 12))
         self.yField.setRange(sceneRect.top(), sceneRect.bottom())
         self.yField.setValue(int(nodePos.y()))
 
         self.widthLabel = QtWidgets.QLabel(self)
-        self.widthLabel.setFont(Font('Roboto', 12))
         self.widthLabel.setText('Width')
         self.widthField = SpinBox(self)
         self.widthField.setFixedWidth(60)
-        self.widthField.setFont(Font('Roboto', 12))
         self.widthField.setRange(20, sceneRect.width())
         self.widthField.setReadOnly(True)
         self.widthField.setValue(int(self.node.width()))
 
         self.heightLabel = QtWidgets.QLabel(self)
-        self.heightLabel.setFont(Font('Roboto', 12))
         self.heightLabel.setText('Height')
         self.heightField = SpinBox(self)
         self.heightField.setFixedWidth(60)
-        self.heightField.setFont(Font('Roboto', 12))
         self.heightField.setRange(20, sceneRect.height())
         self.heightField.setReadOnly(True)
         self.heightField.setValue(int(self.node.height()))
@@ -356,7 +332,6 @@ class NodeProperty(PropertyDialog):
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # MAIN WIDGET
@@ -433,21 +408,17 @@ class PredicateNodeProperty(NodeProperty):
         meta = diagram.project.meta(node.type(), node.text())
 
         self.iriLabel = QtWidgets.QLabel(self)
-        self.iriLabel.setFont(Font('Roboto', 12))
         self.iriLabel.setText('IRI')
         self.iriField = StringField(self)
         self.iriField.setFixedWidth(300)
-        self.iriField.setFont(Font('Roboto', 12))
 
         self.iriField.setValue(self.diagram.project.get_iri_of_node(node))
 
         """
         self.iriversionLabel = QtWidgets.QLabel(self)
-        self.iriversionLabel.setFont(Font('Roboto', 12))
         self.iriversionLabel.setText('IRI version')
         self.iriversionField = StringField(self)
         self.iriversionField.setFixedWidth(300)
-        self.iriversionField.setFont(Font('Roboto', 12))
 
         self.iriversionField.setValue(self.node.IRI_version(diagram.project))
         """
@@ -456,11 +427,9 @@ class PredicateNodeProperty(NodeProperty):
         #################################
 
         self.textLabel = QtWidgets.QLabel(self)
-        self.textLabel.setFont(Font('Roboto', 12))
         self.textLabel.setText('IRI Label')
         self.textField = StringField(self)
         self.textField.setFixedWidth(300)
-        self.textField.setFont(Font('Roboto', 12))
         # if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.IndividualNode}:
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or (
                 'IndividualNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
@@ -475,10 +444,8 @@ class PredicateNodeProperty(NodeProperty):
             self.iriField.setReadOnly(True)
 
         self.refactorLabel = QtWidgets.QLabel(self)
-        self.refactorLabel.setFont(Font('Roboto', 12))
         self.refactorLabel.setText('Refactor')
         self.refactorField = CheckBox(self)
-        self.refactorField.setFont(Font('Roboto', 12))
         self.refactorField.setChecked(False)
 
         # if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
@@ -488,11 +455,9 @@ class PredicateNodeProperty(NodeProperty):
                 self.refactorField.setEnabled(False)
 
         self.FulliriLabel = QtWidgets.QLabel(self)
-        self.FulliriLabel.setFont(Font('Roboto', 12))
         self.FulliriLabel.setText('Full IRI')
         self.FulliriField = StringField(self)
         self.FulliriField.setFixedWidth(300)
-        self.FulliriField.setFont(Font('Roboto', 12))
         full_iri = self.project.get_full_IRI(self.iriField.value(), None, self.textField.value().strip())
         self.FulliriField.setValue(full_iri)
         # self.FulliriField.setValue(self.iriField.value()+'#'+self.textField.value().strip())
@@ -744,7 +709,6 @@ class OrderedInputNodeProperty(NodeProperty):
         if self.node.inputs:
 
             self.sortLabel = QtWidgets.QLabel(self)
-            self.sortLabel.setFont(Font('Roboto', 12))
             self.sortLabel.setText('Sort')
             self.list = QtWidgets.QListWidget(self)
             for i in self.node.inputs:
@@ -867,12 +831,10 @@ class FacetNodeProperty(NodeProperty):
                 admissible = Facet.forDatatype(valuedomain.datatype)
 
         self.facetLabel = QtWidgets.QLabel(self)
-        self.facetLabel.setFont(Font('Roboto', 12))
         self.facetLabel.setText('Facet')
         self.facetField = ComboBox(self)
         self.facetField.setFixedWidth(200)
         self.facetField.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.facetField.setFont(Font('Roboto', 12))
         for facet in admissible:
             self.facetField.addItem(facet.value, facet)
         facet = self.node.facet
@@ -884,11 +846,9 @@ class FacetNodeProperty(NodeProperty):
             self.facetField.setCurrentIndex(0)
 
         self.valueLabel = QtWidgets.QLabel(self)
-        self.valueLabel.setFont(Font('Roboto', 12))
         self.valueLabel.setText('Value')
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(200)
-        self.valueField.setFont(Font('Roboto', 12))
         self.valueField.setValue(self.node.value)
 
         self.facetWidget = QtWidgets.QWidget()
@@ -950,12 +910,10 @@ class ValueDomainNodeProperty(NodeProperty):
         #################################
 
         self.datatypeLabel = QtWidgets.QLabel(self)
-        self.datatypeLabel.setFont(Font('Roboto', 12))
         self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
         self.datatypeField.setFixedWidth(200)
         self.datatypeField.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.datatypeField.setFont(Font('Roboto', 12))
 
         for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
@@ -1028,12 +986,10 @@ class ValueNodeProperty(NodeProperty):
         #################################
 
         self.datatypeLabel = QtWidgets.QLabel(self)
-        self.datatypeLabel.setFont(Font('Roboto', 12))
         self.datatypeLabel.setText('Datatype')
         self.datatypeField = ComboBox(self)
         self.datatypeField.setFixedWidth(200)
         self.datatypeField.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.datatypeField.setFont(Font('Roboto', 12))
 
         for datatype in Datatype:
             self.datatypeField.addItem(datatype.value, datatype)
@@ -1046,11 +1002,9 @@ class ValueNodeProperty(NodeProperty):
             self.datatypeField.setCurrentIndex(0)
 
         self.valueLabel = QtWidgets.QLabel(self)
-        self.valueLabel.setFont(Font('Roboto', 12))
         self.valueLabel.setText('Value')
         self.valueField = StringField(self)
         self.valueField.setFixedWidth(200)
-        self.valueField.setFont(Font('Roboto', 12))
         self.valueField.setValue(self.node.value)
 
         self.valueWidget = QtWidgets.QWidget()

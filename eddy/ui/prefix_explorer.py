@@ -75,10 +75,8 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.mainLayout.setSpacing(0)
 
         self.versionKey = Key('Version', self)
-        self.versionKey.setFont(Font('Roboto', 12))
         self.versionKey.setFixedWidth(60)
         self.versionField = String(self)
-        self.versionField.setFont(Font('Roboto', 12))
         self.versionField.setValue(self.project.version)
         connect(self.versionField.editingFinished, self.versionEditingFinished)
         connect(self.project.sgnUpdated, self.redraw)
@@ -97,7 +95,6 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.verticalbox.setSpacing(0)
 
         self.prefixmanagerheader = Key('Prefix Manager', self)
-        self.prefixmanagerheader.setFont(Font('Roboto', 12))
 
         # self.checkbox_layout = QtWidgets.QHBoxLayout(self)
         # self.checkbox_layout.setAlignment(QtCore.Qt.AlignHCenter)
@@ -428,7 +425,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         header_iri = QtWidgets.QTableWidgetItem()
         header_iri.setText('IRI')
-        header_iri.setFont(Font('Roboto', 15, bold=True))
+        header_iri.setFont(Font(scale=1.2, bold=True))
         header_iri.setTextAlignment(QtCore.Qt.AlignCenter)
         # header_iri.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         # header_iri.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -438,7 +435,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         header_prefix = QtWidgets.QTableWidgetItem()
         header_prefix.setText('PREFIX')
-        header_prefix.setFont(Font('Roboto', 15, bold=True))
+        header_prefix.setFont(Font(scale=1.2, bold=True))
         header_prefix.setTextAlignment(QtCore.Qt.AlignCenter)
         # header_prefix.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         # header_prefix.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -448,7 +445,7 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         header_project_prefix = QtWidgets.QTableWidgetItem()
         header_project_prefix.setText('DEFAULT')
-        header_project_prefix.setFont(Font('Roboto', 15, bold=True))
+        header_project_prefix.setFont(Font(scale=1.2, bold=True))
         header_project_prefix.setTextAlignment(QtCore.Qt.AlignCenter)
         # header_project_prefix.setBackground(QtGui.QBrush(QtGui.QColor(90, 80, 80, 200)))
         # header_project_prefix.setForeground(QtGui.QBrush(QtGui.QColor(255, 255, 255, 255)))
@@ -729,7 +726,6 @@ class Header(QtWidgets.QLabel):
         super().__init__(*args)
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setFixedHeight(24)
-        self.setFont(Font('Roboto', 12))
 
 
 class Key(QtWidgets.QLabel):

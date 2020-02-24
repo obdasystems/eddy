@@ -622,43 +622,32 @@ class ProjectInfo(AbstractInfo):
         super().__init__(session, parent)
 
         self.versionKey = Key('Version', self)
-        self.versionKey.setFont(Font('Roboto', 12))
         self.versionField = String(self)
-        self.versionField.setFont(Font('Roboto', 12))
         self.versionField.setReadOnly(True)
         connect(self.versionField.editingFinished, self.versionEditingFinished)
 
         self.prefixKey = Key('Prefix', self)
-        self.prefixKey.setFont(Font('Roboto', 12))
         self.prefixField = String(self)
-        self.prefixField.setFont(Font('Roboto', 12))
         self.prefixField.setReadOnly(True)
         connect(self.prefixField.editingFinished, self.prefixEditingFinished)
         """
         self.prefixesKey = Key('Prefix(es)', self)
-        self.prefixesKey.setFont(Font('Roboto', 12))
         self.prefixesField = String(self)
-        self.prefixesField.setFont(Font('Roboto', 12))
         #self.prefixesField.setReadOnly(True)
         connect(self.prefixesField.editingFinished, self.prefixesEditingFinished)
         """
         self.iriKey = Key('IRI', self)
-        self.iriKey.setFont(Font('Roboto', 12))
         self.iriField = String(self)
-        self.iriField.setFont(Font('Roboto', 12))
         self.iriField.setReadOnly(True)
         connect(self.iriField.editingFinished, self.iriEditingFinished)
 
         """
         self.profileKey = Key('Profile', self)
-        self.profileKey.setFont(Font('Roboto', 12))
         self.profileField = Select(self)
-        self.profileField.setFont(Font('Roboto', 12))
         self.profileField.addItems(self.session.profileNames())
         connect(self.profileField.activated, self.profileChanged)
         """
         self.ontologyPropHeader = Header('Ontology properties', self)
-        self.ontologyPropHeader.setFont(Font('Roboto', 12))
 
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
@@ -669,42 +658,31 @@ class ProjectInfo(AbstractInfo):
         #self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
         self.conceptsKey = Key('Concept', self)
-        self.conceptsKey.setFont(Font('Roboto', 12))
         self.conceptsField = Integer(self)
-        self.conceptsField.setFont(Font('Roboto', 12))
         self.conceptsField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.conceptsField.setReadOnly(True)
 
         self.rolesKey = Key('Role', self)
-        self.rolesKey.setFont(Font('Roboto', 12))
         self.rolesField = Integer(self)
-        self.rolesField.setFont(Font('Roboto', 12))
         self.rolesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.rolesField.setReadOnly(True)
 
         self.attributesKey = Key('Attribute', self)
-        self.attributesKey.setFont(Font('Roboto', 12))
         self.attributesField = Integer(self)
-        self.attributesField.setFont(Font('Roboto', 12))
         self.attributesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.attributesField.setReadOnly(True)
 
         self.inclusionsKey = Key('Inclusion', self)
-        self.inclusionsKey.setFont(Font('Roboto', 12))
         self.inclusionsField = Integer(self)
-        self.inclusionsField.setFont(Font('Roboto', 12))
         self.inclusionsField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.inclusionsField.setReadOnly(True)
 
         self.membershipKey = Key('Membership', self)
-        self.membershipKey.setFont(Font('Roboto', 12))
         self.membershipField = Integer(self)
-        self.membershipField.setFont(Font('Roboto', 12))
         self.membershipField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.membershipField.setReadOnly(True)
 
         self.atomicPredHeader = Header('Atomic predicates', self)
-        self.atomicPredHeader.setFont(Font('Roboto', 12))
 
         self.atomicPredLayout = QtWidgets.QFormLayout()
         self.atomicPredLayout.setSpacing(0)
@@ -713,7 +691,6 @@ class ProjectInfo(AbstractInfo):
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
 
         self.assertionsHeader = Header('Assertions', self)
-        self.assertionsHeader.setFont(Font('Roboto', 12))
 
         self.assertionsLayout = QtWidgets.QFormLayout()
         self.assertionsLayout.setSpacing(0)
@@ -1143,24 +1120,17 @@ class EdgeInfo(AbstractInfo):
         super().__init__(session, parent)
 
         self.h1 = Header('General', self)
-        self.h1.setFont(Font('Roboto', 12))
 
         self.typeKey = Key('Type', self)
-        self.typeKey.setFont(Font('Roboto', 12))
         self.typeField = String(self)
-        self.typeField.setFont(Font('Roboto', 12))
         self.typeField.setReadOnly(True)
 
         self.sourceKey = Key('Source', self)
-        self.sourceKey.setFont(Font('Roboto', 12))
         self.sourceField = String(self)
-        self.sourceField.setFont(Font('Roboto', 12))
         self.sourceField.setReadOnly(True)
 
         self.targetKey = Key('Target', self)
-        self.targetKey.setFont(Font('Roboto', 12))
         self.targetField = String(self)
-        self.targetField.setFont(Font('Roboto', 12))
         self.targetField.setReadOnly(True)
 
         self.generalLayout = QtWidgets.QFormLayout()
@@ -1207,19 +1177,14 @@ class NodeInfo(AbstractInfo):
         self.node = None
 
         self.idKey = Key('ID', self)
-        self.idKey.setFont(Font('Roboto', 12))
         self.idField = String(self)
-        self.idField.setFont(Font('Roboto', 12))
         self.idField.setReadOnly(True)
 
         self.identityKey = Key('Identity', self)
-        self.identityKey.setFont(Font('Roboto', 12))
         self.identityField = String(self)
-        self.identityField.setFont(Font('Roboto', 12))
         self.identityField.setReadOnly(True)
 
         self.nodePropHeader = Header('Node properties', self)
-        self.nodePropHeader.setFont(Font('Roboto', 12))
         self.nodePropLayout = QtWidgets.QFormLayout()
         self.nodePropLayout.setSpacing(0)
         self.nodePropLayout.addRow(self.idKey, self.idField)
@@ -1259,18 +1224,14 @@ class PredicateNodeInfo(NodeInfo):
         super().__init__(session, parent)
 
         self.textKey = Key('Label', self)
-        self.textKey.setFont(Font('Roboto', 12))
         self.textField = String(self)
-        self.textField.setFont(Font('Roboto', 12))
         #self.textField.setReadOnly(False)
         self.textField.setReadOnly(True)
         connect(self.textField.editingFinished, self.editingFinished)
 
         self.brushKey = Key('Color', self)
-        self.brushKey.setFont(Font('Roboto', 12))
         self.brushMenu = QtWidgets.QMenu(self)
         self.brushButton = Button()
-        self.brushButton.setFont(Font('Roboto', 12))
         self.brushButton.setMenu(self.brushMenu)
         self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
@@ -1278,15 +1239,12 @@ class PredicateNodeInfo(NodeInfo):
         #self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.nameKey = Key('Name', self)
-        self.nameKey.setFont(Font('Roboto', 12))
         self.nameField = String(self)
-        self.nameField.setFont(Font('Roboto', 12))
         #self.nameField.setReadOnly(False)
         self.nameField.setReadOnly(True)
         connect(self.nameField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('Predicate properties', self)
-        self.predPropHeader.setFont(Font('Roboto', 12))
         self.predPropLayout = QtWidgets.QFormLayout()
         self.predPropLayout.setSpacing(0)
         self.predPropLayout.addRow(self.nameKey, self.nameField)
@@ -1387,11 +1345,9 @@ class AttributeNodeInfo(PredicateNodeInfo):
         super().__init__(session, parent)
 
         self.functKey = Key('Funct.', self)
-        self.functKey.setFont(Font('Roboto', 12))
         functParent = Parent(self)
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
-        self.functBox.setFont(Font('Roboto', 12))
         self.functBox.setProperty('key', K_FUNCTIONAL)
         connect(self.functBox.clicked, self.flagChanged)
 
@@ -1451,65 +1407,51 @@ class RoleNodeInfo(PredicateNodeInfo):
         super().__init__(session, parent)
 
         self.functKey = Key('Funct.', self)
-        self.functKey.setFont(Font('Roboto', 12))
         functParent = Parent(self)
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
-        self.functBox.setFont(Font('Roboto', 12))
         self.functBox.setProperty('key', K_FUNCTIONAL)
         connect(self.functBox.clicked, self.flagChanged)
 
         self.invFunctKey = Key('Inv. Funct.', self)
-        self.invFunctKey.setFont(Font('Roboto', 12))
         invFunctParent = Parent(self)
         self.invFunctBox = CheckBox(invFunctParent)
         self.invFunctBox.setCheckable(True)
-        self.invFunctBox.setFont(Font('Roboto', 12))
         self.invFunctBox.setProperty('key', K_INVERSE_FUNCTIONAL)
         connect(self.invFunctBox.clicked, self.flagChanged)
 
         self.asymmetricKey = Key('Asymmetric', self)
-        self.asymmetricKey.setFont(Font('Roboto', 12))
         asymmetricParent = Parent(self)
         self.asymmetricBox = CheckBox(asymmetricParent)
         self.asymmetricBox.setCheckable(True)
-        self.asymmetricBox.setFont(Font('Roboto', 12))
         self.asymmetricBox.setProperty('key', K_ASYMMETRIC)
         connect(self.asymmetricBox.clicked, self.flagChanged)
 
         self.irreflexiveKey = Key('Irreflexive', self)
-        self.irreflexiveKey.setFont(Font('Roboto', 12))
         irreflexiveParent = Parent(self)
         self.irreflexiveBox = CheckBox(irreflexiveParent)
         self.irreflexiveBox.setCheckable(True)
-        self.irreflexiveBox.setFont(Font('Roboto', 12))
         self.irreflexiveBox.setProperty('key', K_IRREFLEXIVE)
         connect(self.irreflexiveBox.clicked, self.flagChanged)
 
         self.reflexiveKey = Key('Reflexive', self)
-        self.reflexiveKey.setFont(Font('Roboto', 12))
         reflexiveParent = Parent(self)
         self.reflexiveBox = CheckBox(reflexiveParent)
         self.reflexiveBox.setCheckable(True)
-        self.reflexiveBox.setFont(Font('Roboto', 12))
         self.reflexiveBox.setProperty('key', K_REFLEXIVE)
         connect(self.reflexiveBox.clicked, self.flagChanged)
 
         self.symmetricKey = Key('Symmetric', self)
-        self.symmetricKey.setFont(Font('Roboto', 12))
         symmetricParent = Parent(self)
         self.symmetricBox = CheckBox(symmetricParent)
         self.symmetricBox.setCheckable(True)
-        self.symmetricBox.setFont(Font('Roboto', 12))
         self.symmetricBox.setProperty('key', K_SYMMETRIC)
         connect(self.symmetricBox.clicked, self.flagChanged)
 
         self.transitiveKey = Key('Transitive', self)
-        self.transitiveKey.setFont(Font('Roboto', 12))
         transitiveParent = Parent(self)
         self.transitiveBox = CheckBox(transitiveParent)
         self.transitiveBox.setCheckable(True)
-        self.transitiveBox.setFont(Font('Roboto', 12))
         self.transitiveBox.setProperty('key', K_TRANSITIVE)
         connect(self.transitiveBox.clicked, self.flagChanged)
 
@@ -1595,9 +1537,7 @@ class ValueDomainNodeInfo(NodeInfo):
         """
         super().__init__(session, parent)
         self.datatypeKey = Key('Datatype', self)
-        self.datatypeKey.setFont(Font('Roboto', 12))
         self.datatypeField = Select(self)
-        self.datatypeField.setFont(Font('Roboto', 12))
         connect(self.datatypeField.activated, self.datatypeChanged)
         self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
 
@@ -1648,14 +1588,10 @@ class ValueNodeInfo(NodeInfo):
         """
         super().__init__(session, parent)
         self.datatypeKey = Key('Datatype', self)
-        self.datatypeKey.setFont(Font('Roboto', 12))
         self.datatypeField = Select(self)
-        self.datatypeField.setFont(Font('Roboto', 12))
         connect(self.datatypeField.activated, self.valueChanged)
         self.valueKey = Key('Value', self)
-        self.valueKey.setFont(Font('Roboto', 12))
         self.valueField = String(self)
-        self.valueField.setFont(Font('Roboto', 12))
         self.valueField.setReadOnly(False)
         connect(self.valueField.editingFinished, self.valueChanged)
         self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
@@ -1727,15 +1663,11 @@ class FacetNodeInfo(NodeInfo):
         super().__init__(session, parent)
 
         self.facetKey = Key('Facet', self)
-        self.facetKey.setFont(Font('Roboto', 12))
         self.facetField = Select(self)
-        self.facetField.setFont(Font('Roboto', 12))
         connect(self.facetField.activated, self.facetChanged)
 
         self.valueKey = Key('Value', self)
-        self.valueKey.setFont(Font('Roboto', 12))
         self.valueField = String(self)
-        self.valueField.setFont(Font('Roboto', 12))
         self.valueField.setReadOnly(False)
         connect(self.valueField.editingFinished, self.facetChanged)
 

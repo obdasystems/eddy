@@ -74,14 +74,12 @@ class Notification(QtWidgets.QWidget):
 
         self.btnClose = QtWidgets.QPushButton(self)
         self.btnClose.setContentsMargins(0, 0, 0, 0)
-        self.btnClose.setFont(Font('Roboto', 12))
         self.btnClose.setIcon(QtGui.QIcon(':/icons/18/ic_close_black'))
         self.btnClose.setIconSize(QtCore.QSize(18, 18))
 
         self.popupLabel = QtWidgets.QLabel(self)
         self.popupLabel.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         self.popupLabel.setFixedSize(QtCore.QSize(216, 88))
-        self.popupLabel.setFont(Font('Roboto', 12))
         self.popupLabel.setOpenExternalLinks(True)
         self.popupLabel.setTextFormat(QtCore.Qt.RichText)
         self.popupLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)

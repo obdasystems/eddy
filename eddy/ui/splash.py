@@ -77,11 +77,11 @@ class Splash(QtWidgets.QSplashScreen):
         self.setPixmap(pixmap)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.mtime = time() + mtime
-        self.font1 = Font('Roboto', 40, Font.Light)
+        self.font1 = Font(pixelSize=40, weight=Font.Medium)
         self.font1.setCapitalization(Font.SmallCaps)
-        self.font2 = Font('Roboto', 18, Font.Light)
+        self.font2 = Font(pixelSize=18, weight=Font.Medium)
         self.font2.setCapitalization(Font.SmallCaps)
-        self.font3 = Font('Roboto', 11, Font.Light)
+        self.font3 = Font(pixelSize=11, weight=Font.Medium)
         self.__spaceX = 0
         self.__spaceY = 0
 

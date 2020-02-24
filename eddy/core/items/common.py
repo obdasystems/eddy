@@ -283,7 +283,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self.template = template
         self.setDefaultTextColor(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)).color())
         self.setFlag(AbstractLabel.ItemIsFocusable, self.isEditable())
-        self.setFont(Font('Roboto', 12, Font.Light))
+        self.setFont(Font(weight=Font.Light))
         self.setText(self.template)
         self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
 

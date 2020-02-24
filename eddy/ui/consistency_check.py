@@ -97,7 +97,6 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.setLayout(self.mainLayout)
 
-        self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Please Wait!')
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint)

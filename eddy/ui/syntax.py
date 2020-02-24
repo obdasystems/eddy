@@ -90,11 +90,8 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         #################################
 
         self.buttonAbort = QtWidgets.QPushButton('Abort', self)
-        self.buttonAbort.setFont(Font('Roboto', 12))
         self.buttonIgnore = QtWidgets.QPushButton('Ignore', self)
-        self.buttonIgnore.setFont(Font('Roboto', 12))
         self.buttonShow = QtWidgets.QPushButton('Show', self)
-        self.buttonShow.setFont(Font('Roboto', 12))
 
         self.buttonBox = QtWidgets.QWidget(self)
         self.buttonBox.setVisible(False)
@@ -112,7 +109,6 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.messageField.setAcceptRichText(True)
         self.messageField.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
         self.messageField.setFixedSize(400, 100)
-        self.messageField.setFont(Font('Roboto', 12))
         self.messageField.setReadOnly(True)
 
         self.messageBox = QtWidgets.QWidget(self)

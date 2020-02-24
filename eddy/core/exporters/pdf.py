@@ -185,7 +185,7 @@ class PdfProjectExporter(AbstractProjectExporter):
                             item.setCacheMode(AbstractItem.NoCache)
                     # RENDER DIAGRAM NAME
                     title = QtGui.QTextDocument()
-                    title.setDefaultFont(Font('Roboto', 140))
+                    title.setDefaultFont(Font(pixelSize=140))
                     title.setHtml('{0}<hr width=100%/>'.format(diagram.name))
                     title.setTextWidth(printer.pageRect().width())
                     title.drawContents(painter)
@@ -233,7 +233,7 @@ class PdfProjectExporter(AbstractProjectExporter):
                 htmlTable += '\n'.join(section)
                 htmlTable += '</tbody>'
                 htmlTable += '</table>'
-                doc.setDefaultFont(Font("Roboto", 180))
+                doc.setDefaultFont(Font(pixelSize=180))
                 doc.setHtml(htmlTable)
                 doc.setPageSize(QtCore.QSizeF(printer.pageRect().size()))
                 doc.drawContents(painter)
@@ -300,7 +300,7 @@ class PdfProjectExporter(AbstractProjectExporter):
                 htmlTable += '\n'.join(section)
                 htmlTable += '</tbody>'
                 htmlTable += '</table>'
-                doc.setDefaultFont(Font("Roboto", 180))
+                doc.setDefaultFont(Font(pixelSize=180))
                 doc.setHtml(htmlTable)
                 doc.setPageSize(QtCore.QSizeF(printer.pageRect().size()))
                 doc.drawContents(painter)

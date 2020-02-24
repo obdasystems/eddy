@@ -1249,7 +1249,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         combobox = ComboBox(objectName='profile_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         combobox.setStatusTip('Change the profile of the active project')
@@ -1260,7 +1259,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # TODO: fix reasoner setup when a decent reasoner support is implemented
         combobox = ComboBox(objectName='select_reasoner')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         combobox.setStatusTip('Select one of any available reasoners')

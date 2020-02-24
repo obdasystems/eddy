@@ -153,7 +153,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
 
         self.root = QtGui.QStandardItem()
         self.root.setFlags(self.root.flags() & ~QtCore.Qt.ItemIsEditable)
-        self.root.setFont(Font('Roboto', 12, bold=True))
+        self.root.setFont(Font(bold=True))
         self.root.setIcon(self.iconRoot)
 
         self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence('Ctrl+Shift+d'), self.session)
@@ -209,7 +209,6 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
             item = QtGui.QStandardItem(diagram.name)
             item.setData(diagram)
             item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-            item.setFont(Font('Roboto', 12))
             item.setIcon(self.iconGraphol)
             self.root.appendRow(item)
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)

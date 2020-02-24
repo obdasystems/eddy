@@ -65,11 +65,10 @@ class WorkspaceDialog(QtWidgets.QDialog):
         #################################
 
         self.headTitle = QtWidgets.QLabel('Select a workspace', self)
-        self.headTitle.setFont(Font('Roboto', 12, bold=True))
+        self.headTitle.setFont(Font(bold=True))
         self.headDescription = QtWidgets.QLabel(dedent("""
         {0} stores your projects in a directory called <b>workspace</b>.<br/>
         Please choose a workspace directory to use.""".format(APPNAME)), self)
-        self.headDescription.setFont(Font('Roboto', 12))
         self.headPix = QtWidgets.QLabel(self)
         self.headPix.setPixmap(QtGui.QIcon(':/icons/128/ic_eddy').pixmap(48))
         self.headPix.setContentsMargins(0, 0, 0, 0)
@@ -93,13 +92,11 @@ class WorkspaceDialog(QtWidgets.QDialog):
         #################################
 
         self.workspaceField = StringField(self)
-        self.workspaceField.setFont(Font('Roboto', 12))
         self.workspaceField.setMinimumWidth(400)
         self.workspaceField.setReadOnly(True)
         self.workspaceField.setText(expandPath(WORKSPACE))
 
         self.btnBrowse = QtWidgets.QPushButton(self)
-        self.btnBrowse.setFont(Font('Roboto', 12))
         self.btnBrowse.setText('Browse')
 
         self.editLayout = QtWidgets.QHBoxLayout()
@@ -113,7 +110,6 @@ class WorkspaceDialog(QtWidgets.QDialog):
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT
