@@ -54,7 +54,8 @@ from eddy.core.items.nodes.individual_iri import IndividualNode
 from eddy.core.items.nodes.role_iri import RoleNode
 from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
 from eddy.core.output import getLogger
-from eddy.core.owl import IRIManager, IRI
+from eddy.core.owl import IRIManager, IRI, K_ASYMMETRIC, K_INVERSE_FUNCTIONAL, K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, \
+    K_TRANSITIVE, K_FUNCTIONAL
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
@@ -94,13 +95,7 @@ K_PROPERTY = 'property'
 K_DESCRIPTION = 'description'
 K_DESCRIPTION_STATUS = 'status'
 
-K_FUNCTIONAL = 'functional'
-K_ASYMMETRIC = 'asymmetric'
-K_INVERSE_FUNCTIONAL = 'inverseFunctional'
-K_IRREFLEXIVE = 'irreflexive'
-K_REFLEXIVE = 'reflexive'
-K_SYMMETRIC = 'symmetric'
-K_TRANSITIVE = 'transitive'
+
 
 
 # noinspection PyTypeChecker
@@ -1326,7 +1321,7 @@ class Project(IRIManager):
             self.sgnDiagramRemoved.emit(diagram)
             self.sgnUpdated.emit()
 
-    def setMeta(self, item, name, meta):
+    def SYsetMeta(self, item, name, meta):
         """
         Set metadata for the given predicate type/name combination.
         :type item: Item

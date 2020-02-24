@@ -784,12 +784,20 @@ class OntologyEntityNode(AbstractNode):
         connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
         connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
         connect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
+        self.connectIRIMetaSignals()
 
     def disconnectIRISignals(self):
         disconnect(self.iri.sgnIRIModified, self.onIRIModified)
         disconnect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
         disconnect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
         disconnect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
+        self.disconnectIRIMetaSignals()
+
+    def connectIRIMetaSignals(self):
+        pass
+
+    def disconnectIRIMetaSignals(self):
+        pass
 
     #############################################
     #   SLOTS

@@ -357,6 +357,8 @@ class CommandNodeSetMeta(QtWidgets.QUndoCommand):
             node.updateNode(selected=node.isSelected())
 
 
+
+
 class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
@@ -415,3 +417,44 @@ class CommandNodeSetBrush(QtWidgets.QUndoCommand):
             node.setBrush(self.brush[node]['undo'])
             node.updateNode(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()
+
+
+#TODO IRI NODE COMMANDS
+class CommandIRISetMeta(QtWidgets.QUndoCommand):
+    """
+    This command is used to set IRI properties.
+    """
+    def __init__(self, project, item, iri, undo, redo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type item: Item
+        :type iri: IRI
+        :type undo: dict
+        :type redo: dict
+        :type name: str
+        """
+        super().__init__(name or 'set {0} meta'.format(str(iri)))
+        self._iri = iri
+        self._project = project
+        self._item = item
+        self._undo = undo
+        self._redo = redo
+
+    def redo(self):
+        """redo the command"""
+        self._iri.setMetaProperties(self._redo)
+        # TODO l'aggiornamento dei nodi di cui sotto, non dovrebbe essere necessaria (ci dovrebbero pensare direttamente i segnali della classe IRI)
+        ''' 
+        for node in self._project.predicates(self._item, self._predicate):
+            node.updateNode(selected=node.isSelected())
+        '''
+
+    def undo(self):
+        """undo the command"""
+        self._iri.setMetaProperties(self._undo)
+        # TODO l'aggiornamento dei nodi di cui sotto, non dovrebbe essere necessaria (ci dovrebbero pensare direttamente i segnali della classe IRI)
+        ''' 
+        for node in self._project.predicates(self._item, self._predicate):
+            node.updateNode(selected=node.isSelected())
+        '''

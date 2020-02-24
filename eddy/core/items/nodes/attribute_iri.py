@@ -5,6 +5,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
 from eddy.core.items.nodes.common.label import NodeLabel
@@ -39,6 +40,15 @@ class AttributeNode(OntologyEntityNode, AbstractNode):
         self.label.setAlignment(QtCore.Qt.AlignCenter)
 
 
+    def connectIRIMetaSignals(self):
+        connect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
+
+    def disconnectIRIMetaSignals(self):
+        disconnect(self.iri.sgnFunctionalModified,)
+
+    @QtCore.pyqtSlot()
+    def onFunctionalModified(self):
+        self.updateNode()
 
     #############################################
     #   INTERFACE

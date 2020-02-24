@@ -45,6 +45,14 @@ from rfc3987 import resolve
 
 from eddy.core.functions.signals import connect
 
+K_FUNCTIONAL = 'functional'
+K_ASYMMETRIC = 'asymmetric'
+K_INVERSE_FUNCTIONAL = 'inverseFunctional'
+K_IRREFLEXIVE = 'irreflexive'
+K_REFLEXIVE = 'reflexive'
+K_SYMMETRIC = 'symmetric'
+K_TRANSITIVE = 'transitive'
+
 class Literal(QtCore.QObject):
     """
     Represents Literals
@@ -312,7 +320,10 @@ class IRI(QtCore.QObject):
     sgnAnnotationRemoved = QtCore.pyqtSignal(AnnotationAssertion)
     sgnAnnotationModified = QtCore.pyqtSignal(AnnotationAssertion)
 
-    def __init__(self, namespace, suffix=None, parent=None):
+    sgnFunctionalModified = QtCore.pyqtSignal()
+    sgnInverseFunctionalModified = QtCore.pyqtSignal()
+
+    def __init__(self, namespace, functional=False, invFuctional=False, symmetric=False, asymmetric=False,reflexive=False,irreflexive=False,transitive=False,suffix=None, parent=None):
         """
         Create a new IRI
         """
@@ -321,13 +332,13 @@ class IRI(QtCore.QObject):
             raise IllegalNamespaceError(namespace)
         self._namespace = str(namespace)
         self._suffix = suffix
-        self._isFunctional = None
-        self._isInverseFunctional = None
-        self._isSymmetric = None
-        self._isAsymmetric = None
-        self._isReflexive = None
-        self._isIrreflexive = None
-        self._isTransitive = None
+        self._isFunctional = functional
+        self._isInverseFunctional = invFuctional
+        self._isSymmetric = symmetric
+        self._isAsymmetric = asymmetric
+        self._isReflexive = reflexive
+        self._isIrreflexive = irreflexive
+        self._isTransitive = transitive
         self._manager = None
         self.components = parse(IRI.concat(self._namespace, self._suffix))
         self._annotationAssertionsMap = {}
@@ -401,6 +412,7 @@ class IRI(QtCore.QObject):
     @functional.setter
     def functional(self, funct):
         self._isFunctional = funct
+        self.sgnFunctionalModified.emit()
 
     @property
     def inverseFunctional(self):
@@ -415,6 +427,7 @@ class IRI(QtCore.QObject):
     @inverseFunctional.setter
     def inverseFunctional(self, invFunct):
         self._isInverseFunctional = invFunct
+        self.sgnInverseFunctionalModified.emit()
 
     @property
     def symmetric(self):
@@ -537,6 +550,41 @@ class IRI(QtCore.QObject):
     #############################################
     #   INTERFACE
     #################################
+    def setMetaProperties(self, metaDict):
+        '''
+        :type: metaDict: dict
+        '''
+        for k,v in metaDict.items():
+            if k==K_FUNCTIONAL:
+                self.functional = v
+            if k==K_INVERSE_FUNCTIONAL:
+                self.inverseFunctional = v
+            if k==K_SYMMETRIC:
+                self.symmetric = v
+            if k==K_ASYMMETRIC:
+                self.asymmetric = v
+            if k==K_REFLEXIVE:
+                self.reflexive = v
+            if k==K_IRREFLEXIVE:
+                self.irreflexive = v
+            if k==K_TRANSITIVE:
+                self.transitive = v
+
+    def getMetaProperties(self):
+        """
+        :rtype: dict
+        """
+        result = dict()
+        result[K_FUNCTIONAL]=self.functional
+        result[K_INVERSE_FUNCTIONAL] = self.inverseFunctional
+        result[K_SYMMETRIC] = self.symmetric
+        result[K_ASYMMETRIC] = self.asymmetric
+        result[K_REFLEXIVE] = self.reflexive
+        result[K_IRREFLEXIVE] = self.irreflexive
+        result[K_TRANSITIVE] = self.transitive
+        return result
+
+
     def getSimpleName(self):
         index = self.namespace.rfind('#')
         if not index > -1:

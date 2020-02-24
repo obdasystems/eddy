@@ -326,6 +326,13 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             fullIriField.setText('')
 
+        if isinstance(self.node, AttributeNode):
+            functCheckBox = self.widget('functional_checkbox')
+            if self.node.iri and self.node.iri.functional:
+                functCheckBox.setChecked(True)
+            else:
+                functCheckBox.setChecked(False)
+
         #############################################
         # PREDEFINED DATATYPE TAB
         #################################
