@@ -33,47 +33,56 @@
 ##########################################################################
 
 
-import sys
-
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets
+)
 
 
 class Font(QtGui.QFont):
     """
-    This class extends QtGui.QFont providing better font rendering on different platforms.
+    Thin wrapper around QtGui.QFont to provide convenient constructors.
     """
-    def __init__(self, family, size=12, weight=-1, **kwargs):
+    def __init__(self, family=None, size=-1, weight=-1, italic=False, **kwargs):
         """
         Contruct a new Font instance using the given parameters.
         :type family: str
-        :type size: float
-        :type weight: float
+        :type size: int
+        :type weight: int
+        :type italic: bool
         """
-        if not _MACOS:
-            size = int(round(size * 0.75))
-        super().__init__(family, size, weight)
+        font = kwargs.get('font', None)
+        if font:
+            # CALL COPY CONSTRUCTOR
+            super().__init__(font)
+        elif not family:
+            # CONSTRUCT FROM DEFAULT FONT
+            super().__init__()
+            if size > 0:
+                self.setPointSize(round(size))
+            if weight > 0:
+                self.setWeight(weight)
+            self.setItalic(italic)
+        else:
+            # CALL GENERIC FONT CONSTRUCTOR
+            super().__init__(family, size, weight, italic)
+        # USE PIXEL SIZE IF SPECIFIED
+        pixelSize = kwargs.get('pixelSize', -1)
+        if pixelSize > 0:
+            self.setPixelSize(round(pixelSize))
+        # FONT ATTRIBUTES
+        self.setItalic(italic)
         self.setBold(kwargs.get('bold', False))
-        self.setItalic(kwargs.get('italic', False))
         self.setCapitalization(kwargs.get('capitalization', QtGui.QFont.MixedCase))
         self.setStyleHint(kwargs.get('style', QtGui.QFont.AnyStyle))
-
-    @classmethod
-    def isHDPI(cls):
-        """
-        Checks whether HDPI support is enabled on all the connected desktop screens.
-        :rtype: bool
-        """
-        for screen in QtWidgets.QApplication.screens():
-            if screen.devicePixelRatio() < 2:
-                return False
-        return True
+        # SCALE FACTOR
+        scale = kwargs.get('scale', None)
+        if scale:
+            if self.pointSize() <= 0:
+                self.setPixelSize(round(self.pixelSize() * scale))
+            else:
+                self.setPointSizeF(self.pointSizeF() * scale)
 
 
 class Collator(QtCore.QCollator):
