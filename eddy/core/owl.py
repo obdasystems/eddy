@@ -274,6 +274,24 @@ class AnnotationAssertion(QtCore.QObject):
                     return '<{}>'.format(str(self._value))
             elif isinstance(self._value, str):
                 result = ''
+                if not self.datatype or (self.datatype and self.datatype is OWL2Datatype.PlainLiteral.value):
+                    result = '"{}"'.format(self.value)
+                    if self.language:
+                        result += '@{}'.format(self.language)
+                else:
+                    if self.language:
+                        result += '"{}@{}"'.format(self.value, self.language)
+                    else:
+                        result += '"{}"'.format(self.value)
+                    if self.datatype and not self.datatype is OWL2Datatype.PlainLiteral.value:
+                        prefixedType = self.datatype.manager.getShortestPrefixedForm(self.datatype)
+                        if prefixedType:
+                            result += '^^{}'.format(str(prefixedType))
+                        else:
+                            result += '^^<{}>'.format(self.datatype)
+                return result
+                '''
+                result = ''
                 if self._language:
                     result += '"{}@{}"'.format(self._value,self._language)
                 else:
@@ -285,6 +303,7 @@ class AnnotationAssertion(QtCore.QObject):
                     else:
                         result += '^^<{}>'.format(self._datatype)
                 return result
+                '''
 
     def __hash__(self):
         result = self._property.__hash__()
@@ -323,7 +342,7 @@ class IRI(QtCore.QObject):
     sgnFunctionalModified = QtCore.pyqtSignal()
     sgnInverseFunctionalModified = QtCore.pyqtSignal()
 
-    def __init__(self, namespace, functional=False, invFuctional=False, symmetric=False, asymmetric=False,reflexive=False,irreflexive=False,transitive=False,suffix=None, parent=None):
+    def __init__(self, namespace,suffix=None, functional=False, invFuctional=False, symmetric=False, asymmetric=False,reflexive=False,irreflexive=False,transitive=False, parent=None):
         """
         Create a new IRI
         """
@@ -1100,7 +1119,7 @@ class IRIManager(QtCore.QObject):
         Return true if it's possible to add a language tag to data values having type iri
         :type iri: IRI
         """
-        return iri == OWL2Datatype.PlainLiteral.value
+        return self.areSameIRI(iri,OWL2Datatype.PlainLiteral.value)
 
     def canAddLanguageTag(self, iriString):
         """
@@ -1134,24 +1153,26 @@ class IRIManager(QtCore.QObject):
                 return IRI(namespace, suffix, parent=self)
         return None
 
-    def areSameIRI(self, prefixedIRI, otherPrefixedIRI):
+    def areSameIRI(self, iri, otherIRI):
         """
         Check if two prefixed IRIs represent the same element
-        :type prefixedIRI: PrefixedIRI
-        :type otherPrefixedIRI: PrefixedIRI
+        :type iri: IRI|PrefixedIRI
+        :type otherIRI: IRI|PrefixedIRI
         :rtype bool
         """
-        if not (isinstance(prefixedIRI, PrefixedIRI) and isinstance(otherPrefixedIRI, PrefixedIRI)):
-            return False
-        if not prefixedIRI.prefix in self.prefix2namespaceMap:
-            raise KeyError('Cannot find prefix {}'.format(prefixedIRI.prefix))
-        if not otherPrefixedIRI.prefix in self.prefix2namespaceMap:
-            raise KeyError('Cannot find prefix {}'.format(otherPrefixedIRI.prefix))
-        ns_1 = self.prefix2namespaceMap[prefixedIRI.prefix]
-        iri_1 = IRI(ns_1, suffix=prefixedIRI.suffix, parent=self)
-        ns_2 = self.prefix2namespaceMap[otherPrefixedIRI.prefix]
-        iri_2 = IRI(ns_2, suffix=otherPrefixedIRI.suffix, parent=self)
-        return iri_1 == iri_2
+        first = iri
+        if isinstance(iri,PrefixedIRI):
+            if not iri.prefix in self.prefix2namespaceMap:
+                raise KeyError('Cannot find prefix {}'.format(iri.prefix))
+            ns = self.prefix2namespaceMap[iri.prefix]
+            first = IRI(ns, suffix=iri.suffix, parent=self)
+        second = otherIRI
+        if isinstance(otherIRI, PrefixedIRI):
+            if not otherIRI.prefix in self.prefix2namespaceMap:
+                raise KeyError('Cannot find prefix {}'.format(otherIRI.prefix))
+            ns = self.prefix2namespaceMap[otherIRI.prefix]
+            second = IRI(ns, suffix=otherIRI.suffix, parent=self)
+        return str(first) == str(second)
 
     def getEmptyPrefixResolution(self):
         """

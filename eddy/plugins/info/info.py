@@ -1943,7 +1943,7 @@ class IRIInfo(NodeInfo):
             lang = settings.value('ontology/iri/render/language', 'it')
             labelAssertion = self.node.iri.getLabelAnnotationAssertion(lang)
             if labelAssertion:
-                self.labelField.setValue(labelAssertion.getObjectResourceString())
+                self.labelField.setValue(labelAssertion.getObjectResourceString(True))
             else:
                 self.labelField.setValue('')
 

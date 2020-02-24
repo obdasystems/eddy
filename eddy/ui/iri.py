@@ -216,12 +216,14 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         formlayout.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
         formlayout.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
 
+        '''
         if isinstance(node, AttributeNode):
             functLabel = IRIDialogsWidgetFactory.getFunctionalLabel(self)
             self.addWidget(functLabel)
             functCheckBox = IRIDialogsWidgetFactory.getFunctionalCheckBox(self)
             self.addWidget(functCheckBox)
             formlayout.addRow(self.widget('functional_label'), self.widget('functional_checkbox'))
+        '''
 
         widget = QtWidgets.QWidget()
         widget.setLayout(formlayout)
@@ -326,12 +328,14 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             fullIriField.setText('')
 
+        '''
         if isinstance(self.node, AttributeNode):
             functCheckBox = self.widget('functional_checkbox')
             if self.node.iri and self.node.iri.functional:
                 functCheckBox.setChecked(True)
             else:
                 functCheckBox.setChecked(False)
+        '''
 
         #############################################
         # PREDEFINED DATATYPE TAB
