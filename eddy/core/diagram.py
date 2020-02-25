@@ -36,6 +36,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
+from eddy import ORGANIZATION, APPNAME
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.nodes import CommandNodeAdd
@@ -43,6 +44,7 @@ from eddy.core.commands.nodes import CommandNodeMove
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import snap, partition, first
 from eddy.core.functions.signals import connect
@@ -72,6 +74,8 @@ class Diagram(QtWidgets.QGraphicsScene):
     KeyMoveFactor = 10
     MinSize = 2000
     MaxSize = 1000000
+    MinFontSize = 8
+    MaxFontSize = 40
     SelectionRadius = 4
 
     sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
@@ -105,6 +109,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.mp_Node = None
         self.mp_NodePos = None
         self.mp_Pos = None
+
+        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        self.setFont(Font(font=self.font(), pixelSize=settings.value('diagram/fontsize', self.font().pixelSize(), int)))
 
         connect(self.sgnItemAdded, self.onItemAdded)
         connect(self.sgnItemRemoved, self.onItemRemoved)
@@ -152,6 +159,22 @@ class Diagram(QtWidgets.QGraphicsScene):
     #############################################
     #   EVENTS
     #################################
+
+    def event(self, event: QtCore.QEvent) -> bool:
+        """
+        Executed when an event happens in the scene, before any specialized handler executes.
+        :type event: QtCore.QEvent
+        :rtype: bool
+        """
+        # This event is sent to itself by the scene every time the scene font property changes,
+        # either directly (via setFont()) or indirectly (via QApplication::setFont()).
+        # Here we cascade the event to all top-level widget items in the scene to have
+        # them notified about the font change.
+        if event.type() == QtCore.QEvent.FontChange:
+            # CASCADE THE EVENT TO ALL TOP LEVEL ITEMS IN THE SCENE
+            for item in self.items():
+                self.sendEvent(item, event)
+        return super().event(event)
 
     def dragEnterEvent(self, dragEvent):
         """
@@ -595,6 +618,8 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type _: Diagram
         :type item: AbstractItem
         """
+        # Send a font change event to the item to update its font
+        self.sendEvent(item, QtCore.QEvent(QtCore.QEvent.FontChange))
         if item.isEdge():
             # Execute the node identification procedure only if one of the
             # endpoints we are connecting is currently identified as NEUTRAL.
