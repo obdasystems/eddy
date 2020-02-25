@@ -53,6 +53,7 @@ from eddy.core.datatypes.owl import Facet, Datatype, OWLProfile
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.owl import OWL2Profiles
 from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
@@ -278,6 +279,8 @@ class InfoWidget(QtWidgets.QScrollArea):
         self.infoNode = NodeInfo(self.session, self.stacked)
         self.infoPredicateNode = IRIInfo(self.session, self.stacked)
         self.infoAttributeNode = AttributeIRIInfo(self.session, self.stacked)
+        self.infoRoleNode = RoleIRIInfo(self.session, self.stacked)
+        self.infoLiteral = LiteralInfo(self.session, self.stacked)
         '''
         self.infoPredicateNode = PredicateNodeInfo(self.session, self.stacked)
         self.infoAttributeNode = AttributeNodeInfo(self.session, self.stacked)
@@ -291,8 +294,9 @@ class InfoWidget(QtWidgets.QScrollArea):
         self.stacked.addWidget(self.infoNode)
         self.stacked.addWidget(self.infoAttributeNode)
         self.stacked.addWidget(self.infoPredicateNode)
-        '''
         self.stacked.addWidget(self.infoRoleNode)
+        self.stacked.addWidget(self.infoLiteral)
+        '''
         self.stacked.addWidget(self.infoValueNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoFacet)
@@ -441,16 +445,18 @@ class InfoWidget(QtWidgets.QScrollArea):
                     if item.isPredicate():
                         if item.type() is Item.AttributeIRINode:
                             show = self.infoAttributeNode
+                        elif item.type() is Item.RoleIRINode:
+                            show = self.infoRoleNode
+                        elif item.type() is Item.ValueDomainIRINode:
+                            show = self.infoValueDomainNode
+                        elif item.type() is Item.LiteralNode:
+                            show = self.infoLiteral
                         else:
                             show = self.infoPredicateNode
-                        '''
-                        if item.type() is Item.ValueDomainNode:
-                            show = self.infoValueDomainNode
-                        elif item.type() is Item.RoleNode:
-                            show = self.infoRoleNode
-                        elif item.type() is Item.AttributeNode:
-                            show = self.infoAttributeNode
-                        '''
+                        '''elif item.type() is Item.IndividualIRINode:
+                            show = self.infoIndividual
+                        elif item.type() is Item.LiteralNode:
+                            show = self.infoLiteral'''
                     else:
                         if item.type() is Item.FacetNode:
                             show = self.infoFacet
@@ -1445,7 +1451,7 @@ class AttributeNodeInfo(PredicateNodeInfo):
         super().updateData(node)
         self.functBox.setChecked(node.isFunctional())
 
-        functEnabled = self.functBox.isChecked() or (self.project.profile.type() is not OWLProfile.OWL2QL)
+        functEnabled = self.functBox.isChecked() or (self.project.profile.type() is not OWL2Profiles.OWL2QL)
         self.functBox.setEnabled(functEnabled)
         self.functKey.setEnabled(functEnabled)
 
@@ -1571,26 +1577,26 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.asymmetricBox.setChecked(node.isAsymmetric())
 
         self.functBox.setChecked(node.isFunctional())
-        functEnabled = self.functBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2QL
+        functEnabled = self.functBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
         self.functBox.setEnabled(functEnabled)
         self.functKey.setEnabled(functEnabled)
 
         self.invFunctBox.setChecked(node.isInverseFunctional())
-        invfunctEnabled = self.invFunctBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2QL
+        invfunctEnabled = self.invFunctBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
         self.invFunctBox.setEnabled(invfunctEnabled)
         self.invFunctKey.setEnabled(invfunctEnabled)
 
         self.irreflexiveBox.setChecked(node.isIrreflexive())
 
         self.reflexiveBox.setChecked(node.isReflexive())
-        reflexiveEnabled = self.reflexiveBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2RL
+        reflexiveEnabled = self.reflexiveBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2RL
         self.reflexiveBox.setEnabled(reflexiveEnabled)
         self.reflexiveKey.setEnabled(reflexiveEnabled)
 
         self.symmetricBox.setChecked(node.isSymmetric())
 
         self.transitiveBox.setChecked(node.isTransitive())
-        transitiveEnabled = self.transitiveBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2QL
+        transitiveEnabled = self.transitiveBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
         self.transitiveBox.setEnabled(transitiveEnabled)
         self.transitiveKey.setEnabled(transitiveEnabled)
 
@@ -2021,6 +2027,291 @@ class AttributeIRIInfo(IRIInfo):
         super().updateData(node)
         self.functBox.setChecked(node.isFunctional())
 
-        functEnabled = self.functBox.isChecked() or (self.project.profile.type() is not OWLProfile.OWL2QL)
+        functEnabled = self.functBox.isChecked() or (self.project.profile.type() is not OWL2Profiles.OWL2QL)
         self.functBox.setEnabled(functEnabled)
         self.functKey.setEnabled(functEnabled)
+
+class RoleIRIInfo(IRIInfo):
+    """
+    This class implements the information box for the Role node.
+    """
+    def __init__(self, session, parent=None):
+        """
+        Initialize the Role node information box.
+        :type session: Session
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(session, parent)
+
+        self.functKey = Key('Funct.', self)
+        self.functKey.setFont(Font('Roboto', 12))
+        functParent = Parent(self)
+        self.functBox = CheckBox(functParent)
+        self.functBox.setCheckable(True)
+        self.functBox.setFont(Font('Roboto', 12))
+        self.functBox.setProperty('key', K_FUNCTIONAL)
+        connect(self.functBox.clicked, self.flagChanged)
+
+        self.invFunctKey = Key('Inv. Funct.', self)
+        self.invFunctKey.setFont(Font('Roboto', 12))
+        invFunctParent = Parent(self)
+        self.invFunctBox = CheckBox(invFunctParent)
+        self.invFunctBox.setCheckable(True)
+        self.invFunctBox.setFont(Font('Roboto', 12))
+        self.invFunctBox.setProperty('key', K_INVERSE_FUNCTIONAL)
+        connect(self.invFunctBox.clicked, self.flagChanged)
+
+        self.asymmetricKey = Key('Asymmetric', self)
+        self.asymmetricKey.setFont(Font('Roboto', 12))
+        asymmetricParent = Parent(self)
+        self.asymmetricBox = CheckBox(asymmetricParent)
+        self.asymmetricBox.setCheckable(True)
+        self.asymmetricBox.setFont(Font('Roboto', 12))
+        self.asymmetricBox.setProperty('key', K_ASYMMETRIC)
+        connect(self.asymmetricBox.clicked, self.flagChanged)
+
+        self.irreflexiveKey = Key('Irreflexive', self)
+        self.irreflexiveKey.setFont(Font('Roboto', 12))
+        irreflexiveParent = Parent(self)
+        self.irreflexiveBox = CheckBox(irreflexiveParent)
+        self.irreflexiveBox.setCheckable(True)
+        self.irreflexiveBox.setFont(Font('Roboto', 12))
+        self.irreflexiveBox.setProperty('key', K_IRREFLEXIVE)
+        connect(self.irreflexiveBox.clicked, self.flagChanged)
+
+        self.reflexiveKey = Key('Reflexive', self)
+        self.reflexiveKey.setFont(Font('Roboto', 12))
+        reflexiveParent = Parent(self)
+        self.reflexiveBox = CheckBox(reflexiveParent)
+        self.reflexiveBox.setCheckable(True)
+        self.reflexiveBox.setFont(Font('Roboto', 12))
+        self.reflexiveBox.setProperty('key', K_REFLEXIVE)
+        connect(self.reflexiveBox.clicked, self.flagChanged)
+
+        self.symmetricKey = Key('Symmetric', self)
+        self.symmetricKey.setFont(Font('Roboto', 12))
+        symmetricParent = Parent(self)
+        self.symmetricBox = CheckBox(symmetricParent)
+        self.symmetricBox.setCheckable(True)
+        self.symmetricBox.setFont(Font('Roboto', 12))
+        self.symmetricBox.setProperty('key', K_SYMMETRIC)
+        connect(self.symmetricBox.clicked, self.flagChanged)
+
+        self.transitiveKey = Key('Transitive', self)
+        self.transitiveKey.setFont(Font('Roboto', 12))
+        transitiveParent = Parent(self)
+        self.transitiveBox = CheckBox(transitiveParent)
+        self.transitiveBox.setCheckable(True)
+        self.transitiveBox.setFont(Font('Roboto', 12))
+        self.transitiveBox.setProperty('key', K_TRANSITIVE)
+        connect(self.transitiveBox.clicked, self.flagChanged)
+
+        self.predPropLayout.addRow(self.functKey, functParent)
+        self.predPropLayout.addRow(self.invFunctKey, invFunctParent)
+        self.predPropLayout.addRow(self.asymmetricKey, asymmetricParent)
+        self.predPropLayout.addRow(self.irreflexiveKey, irreflexiveParent)
+        self.predPropLayout.addRow(self.reflexiveKey, reflexiveParent)
+        self.predPropLayout.addRow(self.symmetricKey, symmetricParent)
+        self.predPropLayout.addRow(self.transitiveKey, transitiveParent)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def flagChanged(self):
+        """
+        Executed whenever one of the property fields changes.
+        """
+        sender = self.sender()
+        checked = sender.isChecked()
+        key = sender.property('key')
+        # undo = self.project.meta(self.node.type(), self.node.text())
+        undo = self.node.iri.getMetaProperties()
+        redo = undo.copy()
+        redo[key] = checked
+        if redo != undo:
+            prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
+            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.iri, prop)
+            self.session.undostack.push(
+                CommandIRISetMeta(self.project, self.node.type(), self.node.iri, undo, redo, name))
+            '''
+            self.session.undostack.push(
+                CommandNodeSetMeta(
+                    self.project,
+                    self.node.type(),
+                    self.node.text(),
+                    undo, redo, name))
+            '''
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+
+        self.asymmetricBox.setChecked(node.isAsymmetric())
+
+        self.functBox.setChecked(node.isFunctional())
+        functEnabled = self.functBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
+        self.functBox.setEnabled(functEnabled)
+        self.functKey.setEnabled(functEnabled)
+
+        self.invFunctBox.setChecked(node.isInverseFunctional())
+        invfunctEnabled = self.invFunctBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
+        self.invFunctBox.setEnabled(invfunctEnabled)
+        self.invFunctKey.setEnabled(invfunctEnabled)
+
+        self.irreflexiveBox.setChecked(node.isIrreflexive())
+
+        self.reflexiveBox.setChecked(node.isReflexive())
+        reflexiveEnabled = self.reflexiveBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2RL
+        self.reflexiveBox.setEnabled(reflexiveEnabled)
+        self.reflexiveKey.setEnabled(reflexiveEnabled)
+
+        self.symmetricBox.setChecked(node.isSymmetric())
+
+        self.transitiveBox.setChecked(node.isTransitive())
+        transitiveEnabled = self.transitiveBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
+        self.transitiveBox.setEnabled(transitiveEnabled)
+        self.transitiveKey.setEnabled(transitiveEnabled)
+
+class LiteralInfo(NodeInfo):
+    """
+    This class implements the information box for nodes having an associated IRI.
+    """
+    def __init__(self, session, parent=None):
+        """
+        Initialize the predicate node information box.
+        :type session: Session
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(session, parent)
+
+        self.brushKey = Key('Color', self)
+        self.brushKey.setFont(Font('Roboto', 12))
+        self.brushMenu = QtWidgets.QMenu(self)
+        self.brushButton = Button()
+        self.brushButton.setFont(Font('Roboto', 12))
+        self.brushButton.setMenu(self.brushMenu)
+        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+
+        self.nodePropLayout.addRow(self.brushKey, self.brushButton)
+        #self.nodePropLayout.addRow(self.textKey, self.textField)
+
+        self.lexicalSpaceKey = Key('Lexical space', self)
+        self.lexicalSpaceKey.setFont(Font('Roboto', 12))
+        self.lexicalFormField = String(self)
+        self.lexicalFormField.setFont(Font('Roboto', 12))
+        #self.nameField.setReadOnly(False)
+        self.lexicalFormField.setReadOnly(True)
+        connect(self.lexicalFormField.editingFinished, self.editingFinished)
+
+        self.datatypeKey = Key('Datatype', self)
+        self.datatypeKey.setFont(Font('Roboto', 12))
+        self.datatypeField = String(self)
+        self.datatypeField.setFont(Font('Roboto', 12))
+        # self.nameField.setReadOnly(False)
+        self.datatypeField.setReadOnly(True)
+        connect(self.datatypeField.editingFinished, self.editingFinished)
+
+        self.langKey = Key('Language', self)
+        self.langKey.setFont(Font('Roboto', 12))
+        self.langField = String(self)
+        self.langField.setFont(Font('Roboto', 12))
+        # self.textField.setReadOnly(False)
+        self.langField.setReadOnly(True)
+        connect(self.langField.editingFinished, self.editingFinished)
+
+        self.predPropHeader = Header('Literal properties', self)
+        self.predPropHeader.setFont(Font('Roboto', 12))
+        self.predPropLayout = QtWidgets.QFormLayout()
+        self.predPropLayout.setSpacing(0)
+        self.predPropLayout.addRow(self.datatypeKey, self.datatypeField)
+        self.predPropLayout.addRow(self.lexicalSpaceKey, self.lexicalFormField)
+        self.predPropLayout.addRow(self.langKey, self.langField)
+
+        self.mainLayout.insertWidget(0, self.predPropHeader)
+        self.mainLayout.insertLayout(1, self.predPropLayout)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def editingFinished(self):
+        """
+        Executed whenever we finish to edit the predicate/node name.
+        """
+        if self.node:
+
+            try:
+                sender = self.sender()
+                node = self.node
+                data = sender.value()
+                data = data if not isEmpty(data) else node.label.template
+                if data != node.text():
+                    diagram = node.diagram
+                    project = node.project
+                    if sender is self.lexicalFormField:
+                        self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
+                        for n in project.predicates(node.type(), node.text()):
+                            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), data, refactor=True))
+                        self.session.undostack.endMacro()
+                    else:
+                        self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data))
+            except RuntimeError:
+                pass
+
+        self.lexicalFormField.clearFocus()
+        self.textField.clearFocus()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def     updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+
+        #############################################
+        # BRUSH FIELD
+        #################################
+
+        if self.brushMenu.isEmpty():
+            self.brushMenu.addActions(self.session.action('brush').actions())
+        for action in self.session.action('brush').actions():
+            color = action.data()
+            brush = QtGui.QBrush(QtGui.QColor(color.value))
+            if node.brush() == brush:
+                self.brushButton.setIcon(BrushIcon(12, 12, color.value, '#000000'))
+                self.brushButton.setText(color.value)
+                break
+
+        #############################################
+        # Literal FIELDS
+        #################################
+        if node.literal:
+            self.datatypeField.setValue(str(node.datatype))
+            self.lexicalFormField.setValue(str(node.lexicalForm))
+            if node.language:
+                self.langField.setValue(str(node.language))
+
+        #############################################
+        # ENABLE / DISABLE REFACTORING
+        #################################
+        #TODO NEL CASO SOTTO MODIFICA TUTTO
+        refactor = True
+        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+            if node.special() is not None:
+                refactor = False
+        #self.nameField.setReadOnly(not refactor)

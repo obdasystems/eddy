@@ -1838,7 +1838,29 @@ class ProjectIRIIndex(ProjectIndex):
                     if not self[K_INDIVIDUAL_OCCURRENCES][oldIRI]:
                         self[K_INDIVIDUAL_OCCURRENCES].pop(oldIRI)
 
-        # TODO AGGIUNGI TUTTI ALTRI CASI (Properties, datatypes)
+        if isinstance(node, AttributeNode):
+            if node in self[K_DATA_PROP_OCCURRENCES][oldIRI][node.diagram.name]:
+                self[K_DATA_PROP_OCCURRENCES][oldIRI][node.diagram.name].remove(node)
+                if not self[K_DATA_PROP_OCCURRENCES][oldIRI][node.diagram.name]:
+                    self[K_DATA_PROP_OCCURRENCES][oldIRI].pop(node.diagram.name)
+                    if not self[K_DATA_PROP_OCCURRENCES][oldIRI]:
+                        self[K_DATA_PROP_OCCURRENCES].pop(oldIRI)
+
+        if isinstance(node, RoleNode):
+            if node in self[K_OBJ_PROP_OCCURRENCES][oldIRI][node.diagram.name]:
+                self[K_OBJ_PROP_OCCURRENCES][oldIRI][node.diagram.name].remove(node)
+                if not self[K_OBJ_PROP_OCCURRENCES][oldIRI][node.diagram.name]:
+                    self[K_OBJ_PROP_OCCURRENCES][oldIRI].pop(node.diagram.name)
+                    if not self[K_OBJ_PROP_OCCURRENCES][oldIRI]:
+                        self[K_OBJ_PROP_OCCURRENCES].pop(oldIRI)
+
+        if isinstance(node, ValueDomainNode):
+            if node in self[K_DATATYPE_OCCURRENCES][oldIRI][node.diagram.name]:
+                self[K_DATATYPE_OCCURRENCES][oldIRI][node.diagram.name].remove(node)
+                if not self[K_DATATYPE_OCCURRENCES][oldIRI][node.diagram.name]:
+                    self[K_DATATYPE_OCCURRENCES][oldIRI].pop(node.diagram.name)
+                    if not self[K_DATATYPE_OCCURRENCES][oldIRI]:
+                        self[K_DATATYPE_OCCURRENCES].pop(oldIRI)
 
         self.addIRIOccurenceToDiagram(node.diagram, node)
         if node in self[K_OCCURRENCES][oldIRI][node.diagram.name]:

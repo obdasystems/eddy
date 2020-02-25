@@ -35,6 +35,8 @@
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.common.label import NodeLabel
 
 from eddy.core.functions.misc import snapF
@@ -94,6 +96,18 @@ class RoleNode(OntologyEntityNode, AbstractResizableNode):
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
+
+    def connectIRIMetaSignals(self):
+        connect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
+        connect(self.iri.sgnInverseFunctionalModified, self.onFunctionalModified)
+
+    def disconnectIRIMetaSignals(self):
+        disconnect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
+        disconnect(self.iri.sgnInverseFunctionalModified, self.onFunctionalModified)
+
+    @QtCore.pyqtSlot()
+    def onFunctionalModified(self):
+        self.updateNode()
 
     #############################################
     #   INTERFACE

@@ -36,7 +36,7 @@
 from eddy.core.datatypes.graphol import Item, Identity, Special
 from eddy.core.functions.graph import bfs
 from eddy.core.items.nodes.common.base import OntologyEntityNode
-from eddy.core.owl import OWL2Datatype, OWL2Profile
+from eddy.core.owl import OWL2Datatype, OWL2Profiles
 from eddy.core.profiles.common import ProfileError
 from eddy.core.profiles.rules.common import ProfileNodeRule
 from eddy.core.profiles.rules.common import ProfileEdgeRule
@@ -83,7 +83,7 @@ class UnsupportedDatatypeRule(ProfileNodeRule):
     """
     def __call__(self, node):
         if node.type() is Item.ValueDomainIRINode:
-            if node.iri and not OWL2Datatype.forProfile(OWL2Profile.OWL2RL):
+            if node.iri and not OWL2Datatype.forProfile(OWL2Profiles.OWL2RL):
                 raise ProfileError('Use of datatype {} is forbidden in OWL 2 QL'.format(str(node.iri)))
 
 

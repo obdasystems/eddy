@@ -58,7 +58,7 @@ from eddy.core.commands.edges import CommandSwitchSameDifferentEdge
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.labels import CommandLabelMove
-from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeSetMeta
+from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeSetMeta, CommandIRISetMeta
 from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
@@ -109,7 +109,7 @@ from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
-from eddy.core.owl import IRIRender, IRI
+from eddy.core.owl import IRIRender, IRI, OWL2Profiles
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
@@ -2624,7 +2624,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             action = self.sender()
             color = action.data()
             brush = QtGui.QBrush(QtGui.QColor(color.value))
-            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode,Item.ConceptIRINode}
+            supported = {Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.IndividualIRINode, Item.LiteralNode}
             fn = lambda x: x.type() in supported and x.brush() != brush
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected:
@@ -2641,18 +2641,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             action = self.sender()
             key = action.data()
             checked = action.isChecked()
-            supported = {Item.RoleNode, Item.AttributeNode}
+            supported = {Item.RoleIRINode, Item.AttributeIRINode}
             fn = lambda x: x.type() in supported
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected and len(selected) == 1:
                 node = first(selected)
-                undo = self.project.meta(node.type(), node.text())
+                undo = node.iri.getMetaProperties()
+                #undo = self.project.meta(node.type(), node.text())
                 redo = undo.copy()
                 redo[key] = checked
                 if redo != undo:
                     prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
-                    name = "{0}set '{1}' {2} property".format('' if checked else 'un', node.text(), prop)
-                    self.undostack.push(CommandNodeSetMeta(self.project, node.type(), node.text(), undo, redo, name))
+                    name = "{0}set '{1}' {2} property".format('' if checked else 'un', node.iri, prop)
+                    self.undostack.push(CommandIRISetMeta(self.project, node.type(), node.iri, undo, redo, name))
+                    #self.undostack.push(CommandNodeSetMeta(self.project, node.type(), node.text(), undo, redo, name))
 
     @QtCore.pyqtSlot()
     def doSetPropertyRestriction(self):
@@ -3074,8 +3076,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         isEdgeSwapEnabled = False
         isNodeSelected = False
         isPredicateSelected = False
-        isProfileOWL2QL = self.project.profile.type() is OWLProfile.OWL2QL
-        isProfileOWL2RL = self.project.profile.type() is OWLProfile.OWL2RL
+        isProfileOWL2QL = self.project.profile.type() is OWL2Profiles.OWL2QL
+        isProfileOWL2RL = self.project.profile.type() is OWL2Profiles.OWL2RL
         isPropertyFunctionalEnabled = False
         isPropertyInvFunctionalEnabled = False
         isPropertySymmetricEnabled = False
@@ -3112,9 +3114,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 isDomainRangeUsable = any([x.type() in restrictables for x in nodes])
                 isPredicateSelected = any([x.type() in predicates for x in nodes])
                 isRestrictable = len(nodes) == 1 and first(nodes).type() in restrictables
-                isRoleSelected = isRestrictable and first(nodes).type() is Item.RoleNode
+                isRoleSelected = isRestrictable and first(nodes).type() is Item.RoleIRINode
                 if isRestrictable:
-                    meta = self.project.meta(first(nodes).type(), first(nodes).text())
+                    #meta = self.project.meta(first(nodes).type(), first(nodes).text())
+                    firstNode = first(nodes)
+                    meta = firstNode.iri.getMetaProperties()
                     isPropertyFunctionalChecked = meta.get(K_FUNCTIONAL, False)
                     isPropertyInvFunctionalChecked = meta.get(K_INVERSE_FUNCTIONAL, False)
                     isPropertySymmetricChecked = meta.get(K_SYMMETRIC, False)

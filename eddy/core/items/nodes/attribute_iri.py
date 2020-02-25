@@ -44,7 +44,7 @@ class AttributeNode(OntologyEntityNode, AbstractNode):
         connect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
 
     def disconnectIRIMetaSignals(self):
-        disconnect(self.iri.sgnFunctionalModified,)
+        disconnect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
 
     @QtCore.pyqtSlot()
     def onFunctionalModified(self):

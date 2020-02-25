@@ -1436,7 +1436,7 @@ class IRIRender(Enum_):
     SIMPLE_NAME ='simple_name'
 
 @unique
-class OWL2Profile(Enum_):
+class OWL2Profiles(Enum_):
     """
     Extends Enum providing all the available OWL 2 profiles.
     """
@@ -1561,15 +1561,15 @@ class OWL2Datatype(Enum_):
         :type profile: OWLProfile
         :rtype: set
         """
-        if profile is OWL2Profile.OWL2:
+        if profile is OWL2Profiles.OWL2:
             return {x.value for x in OWL2Datatype}
-        elif profile is OWL2Profile.OWL2QL:
+        elif profile is OWL2Profiles.OWL2QL:
             return {OWL2Datatype.rational.value, OWL2Datatype.real.value, OWL2Datatype.PlainLiteral.value, OWL2Datatype.XMLLiteral.value,
                     OWL2Datatype.Literal.value, OWL2Datatype.anyURI.value, OWL2Datatype.base64Binary.value, OWL2Datatype.dateTime.value,
                     OWL2Datatype.dateTimeStamp.value, OWL2Datatype.decimal.value, OWL2Datatype.hexBinary.value, OWL2Datatype.integer.value,
                     OWL2Datatype.Name.value, OWL2Datatype.NCName.value, OWL2Datatype.NMTOKEN.value, OWL2Datatype.nonNegativeInteger.value,
                     OWL2Datatype.normalizedString.value, OWL2Datatype.string.value, OWL2Datatype.token.value}
-        elif profile is OWL2Profile.OWL2RL:
+        elif profile is OWL2Profiles.OWL2RL:
             return {OWL2Datatype.PlainLiteral.value, OWL2Datatype.XMLLiteral.value, OWL2Datatype.Literal.value, OWL2Datatype.anyURI.value,
                     OWL2Datatype.base64Binary.value, OWL2Datatype.boolean.value, OWL2Datatype.byte.value, OWL2Datatype.dateTime.value,
                     OWL2Datatype.dateTimeStamp.value, OWL2Datatype.decimal.value, OWL2Datatype.double.value, OWL2Datatype.float.value,
