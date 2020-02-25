@@ -104,8 +104,20 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         spinbox.setValue(settings.value('diagram/size', 5000, int))
         self.addWidget(spinbox)
 
+        prefix = QtWidgets.QLabel(self, objectName='diagram_font_size_prefix')
+        prefix.setText('Diagram font size (px)')
+        self.addWidget(prefix)
+
+        spinbox = SpinBox(self, objectName='diagram_font_size_field')
+        spinbox.setRange(Diagram.MinFontSize, Diagram.MaxFontSize)
+        spinbox.setSingleStep(1)
+        spinbox.setToolTip('Default font size for diagram labels (px)')
+        spinbox.setValue(settings.value('diagram/fontsize', QtWidgets.qApp.font().pixelSize(), int))
+        self.addWidget(spinbox)
+
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('diagram_size_prefix'), self.widget('diagram_size_field'))
+        formlayout.addRow(self.widget('diagram_font_size_prefix'), self.widget('diagram_font_size_field'))
         groupbox = QtWidgets.QGroupBox('Editor', self, objectName='editor_widget')
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
@@ -417,8 +429,13 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         settings.setValue('workspace/home', self.widget('workspace_field').text())
         settings.setValue('diagram/size', self.widget('diagram_size_field').value())
+        settings.setValue('diagram/fontsize', self.widget('diagram_font_size_field').value())
         settings.setValue('update/channel', self.widget('update_channel_switch').currentText())
         settings.setValue('update/check_on_startup', self.widget('update_startup_checkbox').isChecked())
+
+        for diagram in self.session.project.diagrams():
+            QtWidgets.QApplication.processEvents()
+            diagram.setFont(Font(font=diagram.font(), pixelSize=self.widget('diagram_font_size_field').value()))
 
         #############################################
         # SAVE & EXIT
