@@ -83,7 +83,6 @@ class DiagramSelectionDialog(HasThreadingSystem, HasWidgetSystem, QtWidgets.QDia
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        confirmation.setFont(Font('Roboto', 12))
         confirmation.setObjectName('confirmation')
         self.addWidget(confirmation)
         # noinspection PyArgumentList
@@ -105,7 +104,6 @@ class DiagramSelectionDialog(HasThreadingSystem, HasWidgetSystem, QtWidgets.QDia
         mainLayout.addWidget(diagramWidget)
         mainLayout.addWidget(buttonWidget)
 
-        self.setFont(Font('Roboto', 12))
         self.setLayout(mainLayout)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Diagram Selection')

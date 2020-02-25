@@ -127,7 +127,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
             action = QtWidgets.QAction(item.realName.title(), group, objectName=item.name, checkable=True)
             action.setChecked(True)
             action.setData(item)
-            action.setFont(Font('Roboto', 11))
             connect(action.triggered, widget.onMenuButtonClicked)
             group.addAction(action)
         self.addAction(group)
@@ -138,7 +137,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
             action = QtWidgets.QAction(status.value if status.value else 'Default', group, objectName=status.name, checkable=True)
             action.setChecked(True)
             action.setData(status)
-            action.setFont(Font('Roboto', 11))
             connect(action.triggered, widget.onMenuButtonClicked)
             group.addAction(action)
         self.addAction(group)
@@ -548,7 +546,6 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         self.startPos = None
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.setFont(Font('Roboto', 12))
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setHeaderHidden(True)
         self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)

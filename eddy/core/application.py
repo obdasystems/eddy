@@ -232,7 +232,12 @@ class Eddy(QtWidgets.QApplication):
         fontDB.addApplicationFont(':/fonts/RobotoMono-Thin')
         fontDB.addApplicationFont(':/fonts/RobotoMono-ThinItalic')
 
-        self.setFont(Font('Roboto', 12))
+        # FONT SUBSTITUTIONS
+        QtGui.QFont.insertSubstitution('Sans Serif', 'Roboto')
+        QtGui.QFont.insertSubstitution('Monospace', 'Roboto Mono')
+
+        # APPLICATION DEFAULT FONT
+        self.setFont(Font('Roboto', pixelSize=12))
 
         #############################################
         # CONFIGURE LAYOUT

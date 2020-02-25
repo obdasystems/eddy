@@ -73,33 +73,25 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.workspace = '{0}{1}'.format(rstrip(self.workspace, os.path.sep), os.path.sep)
 
         self.nameLabel = QtWidgets.QLabel(self)
-        self.nameLabel.setFont(Font('Roboto', 12))
         self.nameLabel.setText('Name')
         self.nameField = StringField(self)
-        self.nameField.setFont(Font('Roboto', 12))
         self.nameField.setMinimumWidth(400)
         self.nameField.setMaxLength(64)
 
         """
         self.prefixLabel = QtWidgets.QLabel(self)
-        self.prefixLabel.setFont(Font('Roboto', 12))
         self.prefixLabel.setText('Prefix')
         self.prefixField = StringField(self)
-        self.prefixField.setFont(Font('Roboto', 12))
         self.prefixField.setMinimumWidth(400)
         """
         self.prefixesLabel = QtWidgets.QLabel(self)
-        self.prefixesLabel.setFont(Font('Roboto', 12))
         self.prefixesLabel.setText('Prefix')
         self.prefixesField = StringField(self)
-        self.prefixesField.setFont(Font('Roboto', 12))
         self.prefixesField.setMinimumWidth(400)
 
         self.iriLabel = QtWidgets.QLabel(self)
-        self.iriLabel.setFont(Font('Roboto', 12))
         self.iriLabel.setText('IRI')
         self.iriField = StringField(self)
-        self.iriField.setFont(Font('Roboto', 12))
         self.iriField.setMinimumWidth(400)
 
         #connect(self.prefixField.textChanged, self.doAcceptForm)
@@ -109,10 +101,8 @@ class NewProjectDialog(QtWidgets.QDialog):
         connect(self.nameField.textChanged, self.onNameFieldChanged)
 
         self.pathLabel = QtWidgets.QLabel(self)
-        self.pathLabel.setFont(Font('Roboto', 12))
         self.pathLabel.setText('Location')
         self.pathField = StringField(self)
-        self.pathField.setFont(Font('Roboto', 12))
         self.pathField.setMinimumWidth(400)
         self.pathField.setReadOnly(True)
         self.pathField.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -139,7 +129,6 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         #############################################
@@ -147,7 +136,6 @@ class NewProjectDialog(QtWidgets.QDialog):
         #################################
 
         self.caption = QtWidgets.QLabel(self)
-        self.caption.setFont(Font('Roboto', 12))
         self.caption.setContentsMargins(8, 0, 8, 0)
         self.caption.setProperty('class', 'invalid')
         self.caption.setVisible(False)

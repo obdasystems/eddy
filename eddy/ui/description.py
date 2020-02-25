@@ -106,7 +106,6 @@ class NodeDescriptionDialog(AbstractDialog):
         # DEFAULT CHAR FORMAT
         #################################
         self.defaultCharFormat = QtGui.QTextCharFormat()
-        self.defaultCharFormat.setFont(Font('Roboto', 12))
         self.defaultCharFormat.setAnchor(False)
 
         #############################################
@@ -116,7 +115,6 @@ class NodeDescriptionDialog(AbstractDialog):
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
                                                           QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # MAIN WIDGET
@@ -184,7 +182,6 @@ class NodeDescriptionDialog(AbstractDialog):
 
         self.description_status = ComboBox(objectName='select_description_status')
         self.description_status.setEditable(False)
-        self.description_status.setFont(Font('Roboto', 12))
         self.description_status.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.description_status.setScrollEnabled(False)
         self.description_status.setStatusTip('Select description status')
@@ -787,13 +784,11 @@ class UrlDialog(QtWidgets.QDialog):
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
                                                           QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # URL BOX
         #################################
         self.URLLabel = QtWidgets.QLabel(self)
-        self.URLLabel.setFont(Font('Roboto', 12))
         self.URLLabel.setText('URL Link')
         self.insertBoxURL = QtWidgets.QLineEdit(self)
         self.insertBoxURL.setMaximumHeight(40)
@@ -802,7 +797,6 @@ class UrlDialog(QtWidgets.QDialog):
         # ALIAS BOX
         #################################
         self.AliasLabel = QtWidgets.QLabel(self)
-        self.AliasLabel.setFont(Font('Roboto', 12))
         self.AliasLabel.setText('Alias')
         self.insertBoxAlias = QtWidgets.QLineEdit(self)
         self.insertBoxAlias.setMaximumHeight(40)
@@ -891,7 +885,6 @@ class UrlImageDialog(QtWidgets.QDialog):
         # URL BOX
         #################################
         self.URLLabel = QtWidgets.QLabel(self)
-        self.URLLabel.setFont(Font('Roboto', 12))
         self.URLLabel.setText('URL Image')
         self.insertBoxURL = QtWidgets.QLineEdit(self)
         self.insertBoxURL.setMaximumHeight(40)
@@ -902,7 +895,6 @@ class UrlImageDialog(QtWidgets.QDialog):
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
                                                           QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # DIALOG WINDOW LAYOUT
@@ -1012,7 +1004,6 @@ class WikiTagDialog(AbstractDialog):
         # LIST WIDGET BOX
         #################################
         self.boxLabel = QtWidgets.QLabel(self)
-        self.boxLabel.setFont(Font('Roboto', 12))
         self.boxLabel.setText('Select Ontology Predicate')
         self.search = StringField(self)
         self.search.setAcceptDrops(False)
@@ -1029,13 +1020,11 @@ class WikiTagDialog(AbstractDialog):
                                                           QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # WIKI LABEL BOX
         #################################
         self.wikiLabel = QtWidgets.QLabel(self)
-        self.wikiLabel.setFont(Font('Roboto', 12))
         self.wikiLabel.setText('Wiki Label')
         self.wikiLabelLineEdit = QtWidgets.QLineEdit(self)
         self.wikiLabelLineEdit.setFont(self.session.font())
@@ -1235,7 +1224,6 @@ class EditSourceDialog(QtWidgets.QDialog):
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
                                                           QtWidgets.QDialogButtonBox.Cancel, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # DIALOG WINDOW LAYOUT
@@ -1321,8 +1309,6 @@ class DescriptionEditor(QtWidgets.QTextEdit):
         self.setReadOnly(False)
         self.setUndoRedoEnabled(True)
         self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
-        self.setFont(Font('Roboto', 12))
-        self.setCurrentFont(Font('Roboto', 12))
         self.setTabStopWidth(33)
 
     ########################################################
@@ -1363,7 +1349,6 @@ class DescriptionSourceEditor(QtWidgets.QPlainTextEdit):
         self.setReadOnly(False)
         self.setUndoRedoEnabled(True)
         self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
-        self.setFont(Font('Roboto', 12))
         self.setTabStopWidth(33)
 
 

@@ -70,11 +70,10 @@ class PluginInstallDialog(QtWidgets.QDialog):
         #################################
 
         self.headTitle = QtWidgets.QLabel('Install a plugin', self)
-        self.headTitle.setFont(Font('Roboto', 12, bold=True))
+        self.headTitle.setFont(Font(bold=True))
         self.headDescription = QtWidgets.QLabel(dedent("""
         Plugins are software components that add specific features to {0}.<br/>
         Please select the plugin you wish to install.""".format(APPNAME)), self)
-        self.headDescription.setFont(Font('Roboto', 12))
         self.headPix = QtWidgets.QLabel(self)
         self.headPix.setPixmap(QtGui.QIcon(':/icons/48/ic_extension_black').pixmap(48))
         self.headPix.setContentsMargins(0, 0, 0, 0)
@@ -99,12 +98,10 @@ class PluginInstallDialog(QtWidgets.QDialog):
         #################################
 
         self.pluginField = StringField(self)
-        self.pluginField.setFont(Font('Roboto', 12))
         self.pluginField.setMinimumWidth(400)
         self.pluginField.setReadOnly(True)
 
         self.btnBrowse = QtWidgets.QPushButton(self)
-        self.btnBrowse.setFont(Font('Roboto', 12))
         self.btnBrowse.setMinimumWidth(30)
         self.btnBrowse.setText('Browse')
 
@@ -120,7 +117,6 @@ class PluginInstallDialog(QtWidgets.QDialog):
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
         self.confirmationBox.setEnabled(False)
-        self.confirmationBox.setFont(Font('Roboto', 12))
 
         #############################################
         # SETUP DIALOG LAYOUT
