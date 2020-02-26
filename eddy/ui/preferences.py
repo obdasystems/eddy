@@ -39,7 +39,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import ORGANIZATION, APPNAME, WORKSPACE
+from eddy import WORKSPACE
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.owl import OWLAxiom
 from eddy.core.datatypes.qt import Font
@@ -48,7 +48,6 @@ from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import isPathValid, expandPath
 from eddy.core.functions.signals import connect
-
 from eddy.ui.fields import CheckBox, StringField
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import SpinBox
@@ -65,7 +64,7 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         super().__init__(session)
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
 
         #############################################
         # GENERAL TAB
@@ -414,7 +413,7 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         for plugin in plugins_to_uninstall:
             self.session.pmanager.uninstall(plugin)
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
 
         #############################################
         # EXPORT TAB

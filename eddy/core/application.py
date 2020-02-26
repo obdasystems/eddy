@@ -170,7 +170,7 @@ class Eddy(QtWidgets.QApplication):
         # CONFIGURE RECENT PROJECTS
         #################################
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
 
         if not settings.contains('project/recent'):
             # From PyQt5 documentation: if the value of the setting is a container (corresponding
@@ -292,7 +292,7 @@ class Eddy(QtWidgets.QApplication):
         self.welcome.show()
         # PROCESS ADDITIONAL COMMAND LINE OPTIONS
         if self.options.isSet(CommandLineParser.OPEN):
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings()
             workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
             if not isdir(workspace):
                 window = WorkspaceDialog()
@@ -359,7 +359,7 @@ class Eddy(QtWidgets.QApplication):
                     # UPDATE RECENT PROJECTS
                     #################################
 
-                    settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+                    settings = QtCore.QSettings()
                     projects = settings.value('project/recent', None, str) or []
 
                     try:
@@ -537,7 +537,7 @@ def main(args):
     JAVA_HOME = findJavaHome()
 
     if not JAVA_HOME or not os.path.isdir(JAVA_HOME):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         shouldDisplayDialog = settings.value('dialogs/noJVM')
         if not shouldDisplayDialog:
             # CHECKBOX CALLBACK

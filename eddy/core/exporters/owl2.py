@@ -40,11 +40,10 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
+from eddy import BUG_TRACKER
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax, Namespace
-from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
 from eddy.core.exporters.common import AbstractOntologyExporter
@@ -166,7 +165,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         self.path = expandPath(path)
         self.project = project
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
 
         self.selected_diagrams = selected_diagrams
 

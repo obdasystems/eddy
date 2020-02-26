@@ -32,16 +32,17 @@
 #                                                                        #
 ##########################################################################
 
-from PyQt5 import QtGui
+
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from eddy import ORGANIZATION, APPNAME
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.edges import CommandEdgeAdd
+from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.nodes import CommandNodeMove
-from eddy.core.commands.labels import CommandLabelMove
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
@@ -49,12 +50,9 @@ from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import snap, partition, first
 from eddy.core.functions.signals import connect
 from eddy.core.generators import GUID
+from eddy.core.items.common import AbstractItem
 from eddy.core.items.factory import ItemFactory
 from eddy.core.output import getLogger
-from eddy.core.items.common import AbstractItem
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-
 
 LOGGER = getLogger()
 
@@ -110,7 +108,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.mp_NodePos = None
         self.mp_Pos = None
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         self.setFont(Font(font=self.font(), pixelSize=settings.value('diagram/fontsize', self.font().pixelSize(), int)))
 
         connect(self.sgnItemAdded, self.onItemAdded)

@@ -39,16 +39,15 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import APPNAME, ORGANIZATION, VERSION
-from eddy import PROJECT_HOME, BUG_TRACKER
+from eddy import APPNAME, VERSION
 from eddy import GRAPHOL_HOME, WORKSPACE
+from eddy import PROJECT_HOME, BUG_TRACKER
+from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
 from eddy.core.functions.fsystem import isdir, rmdir, faccess
 from eddy.core.functions.misc import first, format_exception
-from eddy.core.functions.path import expandPath, shortPath
 from eddy.core.functions.path import compressPath
-from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
+from eddy.core.functions.path import expandPath, shortPath
 from eddy.core.functions.signals import connect
-
 from eddy.ui.project import NewProjectDialog
 
 
@@ -68,7 +67,7 @@ class Welcome(QtWidgets.QDialog):
         """
         super().__init__(parent)
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
 
         self.pending = False
         self.workspace = settings.value('workspace/home', WORKSPACE, str)
@@ -308,7 +307,7 @@ class Welcome(QtWidgets.QDialog):
         """
         recentList = []
         path = expandPath(path)
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         for recent in map(expandPath, settings.value('project/recent', None, str) or []):
             if recent != path:
                 recentList.append(recent)
@@ -323,7 +322,7 @@ class Welcome(QtWidgets.QDialog):
         """
         # UPDATE THE RECENT PROJECT LIST
         recentList = []
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         for path in map(expandPath, settings.value('project/recent', None, str) or []):
             if isdir(path):
                 recentList.append(path)

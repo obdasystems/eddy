@@ -37,9 +37,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import ORGANIZATION, APPNAME
 from eddy.core.common import HasWidgetSystem
-from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.ui.fields import StringField
@@ -58,7 +56,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         super().__init__(session)
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
 
         #############################################
         # GENERAL TAB

@@ -43,7 +43,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy import APPNAME, APP_HOME, BUG_TRACKER, GRAPHOL_HOME, PROJECT_HOME
-from eddy import ORGANIZATION, ORGANIZATION_NAME, ORGANIZATION_URL, VERSION, WORKSPACE
+from eddy import ORGANIZATION_NAME, ORGANIZATION_URL, VERSION, WORKSPACE
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.common import CommandComposeAxiom
 from eddy.core.commands.common import CommandItemsRemove
@@ -55,7 +55,6 @@ from eddy.core.commands.diagram import CommandDiagramRename
 from eddy.core.commands.edges import CommandEdgeBreakpointRemove
 from eddy.core.commands.edges import CommandEdgeSwap
 from eddy.core.commands.edges import CommandSwitchSameDifferentEdge
-from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeSetMeta
@@ -82,7 +81,7 @@ from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.datatypes.graphol import Restriction, Special
 from eddy.core.datatypes.misc import Color, DiagramMode
 from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, Namespace
-from eddy.core.datatypes.qt import BrushIcon, Font
+from eddy.core.datatypes.qt import BrushIcon
 from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
@@ -114,8 +113,9 @@ from eddy.core.profiles.owl2rl import OWL2RLProfile
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_ASYMMETRIC
 from eddy.core.project import K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE
 from eddy.core.regex import RE_CAMEL_SPACE
-from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
+from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
+from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
 from eddy.ui.forms import NewDiagramForm
@@ -125,7 +125,6 @@ from eddy.ui.forms import ValueForm
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import MdiArea
 from eddy.ui.mdi import MdiSubWindow
-from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.prefix_explorer import OntologyExplorerDialog
@@ -343,7 +342,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doCheckForUpdate)
         self.addAction(action)
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         collection = settings.value('project/recent', None, str) or []
         collection = collection[:5]
         group = QtWidgets.QActionGroup(self, objectName='recent_projects')
@@ -1168,7 +1167,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Configure application state by reading the preferences file.
         """
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         self.restoreGeometry(settings.value('session/geometry', QtCore.QByteArray(), QtCore.QByteArray))
         self.restoreState(settings.value('session/state', QtCore.QByteArray(), QtCore.QByteArray))
         self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
@@ -1335,7 +1334,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         progressBar.setVisible(True)
         # RUN THE UPDATE CHECK WORKER IN A THREAD
         try:
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings()
             channel = Channel.valueOf(settings.value('update/channel', channel, str))
         except TypeError:
             pass
@@ -1968,7 +1967,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         form = NewDiagramForm(self.project, self)
         if form.exec_() == NewDiagramForm.Accepted:
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings()
             size = settings.value('diagram/size', 5000, int)
             name = form.nameField.value()
             diagram = Diagram.create(name, size, self.project)
@@ -1983,7 +1982,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Open a project in a new session.
         """
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         workspace = settings.value('workspace/home', WORKSPACE, str)
         dialog = QtWidgets.QFileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
@@ -2734,7 +2733,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Toggle snap to grid setting and viewport display.
         """
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         settings.setValue('diagram/grid', self.action('toggle_grid').isChecked())
         settings.sync()
         for subwindow in self.mdi.subWindowList():
@@ -2901,7 +2900,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.project.sgnDiagramRemoved, self.mdi.onDiagramRemoved)
         connect(self.project.sgnUpdated, self.doUpdateState)
         ## CHECK FOR UPDATES ON STARTUP
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         if settings.value('update/check_on_startup', True, bool):
             action = self.action('check_for_updates')
             action.trigger()
@@ -3062,7 +3061,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Save the current session state.
         """
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         settings.setValue('session/geometry', self.saveGeometry())
         settings.setValue('session/state', self.saveState())
         settings.sync()

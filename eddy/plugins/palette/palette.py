@@ -34,23 +34,19 @@
 
 
 import sys
+from math import ceil, sin, cos, pi as M_PI, sqrt
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from math import ceil, sin, cos, pi as M_PI, sqrt
-
-from eddy import APPNAME, ORGANIZATION
-from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.owl import Facet, OWLProfile
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
-
 from eddy.ui.dock import DockWidget
-
 
 _LINUX = sys.platform.startswith('linux')
 _MACOS = sys.platform.startswith('darwin')
@@ -331,7 +327,7 @@ class PaletteWidget(QtWidgets.QWidget):
             self.addButton(item, button)
 
         # LOAD BUTTONS DISPLAY SETTINGS
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         for item in self.items:
             self.display[item] = settings.value('plugins/palette/{0}'.format(item.name), True, bool)
 
@@ -415,7 +411,7 @@ class PaletteWidget(QtWidgets.QWidget):
         self.buttons[item].setVisible(self.display[item])
         self.redraw(mandatory=True)
         # UPDATE SETTINGS
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         for item in self.items:
             settings.setValue('plugins/palette/{0}'.format(item.name), self.display[item])
         settings.sync()

@@ -39,13 +39,12 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import ORGANIZATION, APPNAME, WORKSPACE
+from eddy import APPNAME, WORKSPACE
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.fsystem import mkdir
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import isPathValid, expandPath
 from eddy.core.functions.signals import connect
-
 from eddy.ui.fields import StringField
 
 
@@ -152,7 +151,7 @@ class WorkspaceDialog(QtWidgets.QDialog):
             msgbox.exec_()
             super().reject()
         else:
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings()
             settings.setValue('workspace/home', path)
             settings.sync()
             super().accept()
