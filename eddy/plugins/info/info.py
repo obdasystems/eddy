@@ -1103,6 +1103,7 @@ class ProjectInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type project: Project
         """
+        return
         self.prefixField.setValue(project.prefix)
         self.prefixField.home(True)
         self.prefixField.clearFocus()

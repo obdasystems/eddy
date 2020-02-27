@@ -107,6 +107,7 @@ from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
+from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v2
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIRender, IRI, OWL2Profiles
@@ -908,7 +909,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         self.addOntologyLoader(GraphMLOntologyLoader)
         self.addOntologyLoader(GrapholOntologyLoader_v2)
-        self.addProjectLoader(GrapholProjectLoader_v2)
+        #self.addProjectLoader(GrapholProjectLoader_v2)
+        self.addProjectLoader(GrapholIRIProjectLoader_v2)
 
     # noinspection PyArgumentList
     def initMenus(self):

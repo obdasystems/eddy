@@ -98,7 +98,7 @@ class LiteralNode(AbstractResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-        self._literal = None
+        self._literal = literal
 
         self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)

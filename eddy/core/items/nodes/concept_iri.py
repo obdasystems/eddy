@@ -16,7 +16,7 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
     """
     DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-    Identities = {Identity.Concept}
+    Identities = {Identity.Concept,Identity.Individual}
     Type = Item.ConceptIRINode
 
     def __init__(self, iri = None, width=110, height=50, brush=None, **kwargs):

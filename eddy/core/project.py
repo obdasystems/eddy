@@ -185,7 +185,7 @@ class Project(IRIManager):
         ############  variables for IRI-prefixes management #############
 
         self.IRI_prefixes_nodes_dict = kwargs.get('IRI_prefixes_nodes_dict')
-        self.init_IRI_prefixes_nodes_dict_with_std_data()
+        #self.init_IRI_prefixes_nodes_dict_with_std_data()
 
         self.iri_of_cut_nodes = []
         #self.iri_of_imported_nodes = []
@@ -198,9 +198,12 @@ class Project(IRIManager):
 
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
-        if self.ontologyIRIString:
+
+        '''
+        if not self.ontologyIRI and self.ontologyIRIString:
             self.setEmptyPrefix(self.ontologyIRIString)
             self.setOntologyIRI(self.ontologyIRIString)
+        '''
 
 
 

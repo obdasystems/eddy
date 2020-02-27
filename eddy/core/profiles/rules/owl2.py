@@ -509,7 +509,8 @@ class InputToPropertyAssertionNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.PropertyAssertionNode:
 
-                if not (source.type() is Item.LiteralNode or source.type() is Item.IndividualIRINode):
+                #if not (source.type() is Item.LiteralNode or source.type() is Item.IndividualIRINode):
+                if not (Identity.Individual in source.identities() or Identity.Value in source.identities()):
                     # Property Assertion operators accepts only Individual and Literal nodes as input: they are
                     # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
@@ -811,7 +812,8 @@ class MembershipFromAssertionCompatibleNodeRule(ProfileEdgeRule):
     """
     def __call__(self, source, edge, target):
         if edge.type() is Item.MembershipEdge:
-            if source.identity() is not Identity.Individual and source.type() is not Item.PropertyAssertionNode:
+            #if source.identity() is not Identity.Individual and source.type() is not Item.PropertyAssertionNode:
+            if Identity.Individual not in source.identities() and source.type() is not Item.PropertyAssertionNode:
                 # The source of the edge must be either an Individual or a Property Assertion node.
                 raise ProfileError('Invalid source for membership edge: {}'.format(source.identityName))
 

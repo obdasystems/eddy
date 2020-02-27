@@ -822,10 +822,20 @@ class OntologyEntityNode(AbstractNode):
         self.nodeLabelObject = self.iri
 
     def renderByPrefixedIRI(self):
-        prefixed = self.project.getShortestPrefixedForm(self.iri)
-        if prefixed:
-            self.setText(str(prefixed))
-            self.nodeLabelObject = prefixed
+        project = None
+        '''
+        if self.project:
+            project = self.project
+        '''
+        if self._diagram_.project:
+            project = self._diagram_.project
+        if project:
+            prefixed = project.getShortestPrefixedForm(self.iri)
+            if prefixed:
+                self.setText(str(prefixed))
+                self.nodeLabelObject = prefixed
+            else:
+                self.renderByFullIRI()
         else:
             self.renderByFullIRI()
 
