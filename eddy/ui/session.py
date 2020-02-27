@@ -977,7 +977,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('&Help', objectName='help')
         menu.addAction(self.action('about'))
-        menu.addAction(self.action('about_qt'))
         if not _MACOS:
             menu.addSeparator()
         menu.addAction(self.action('check_for_updates'))
@@ -2914,6 +2913,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if session:
             # noinspection PyArgumentList
             action = QtWidgets.QAction(session.project.name, self, triggered=self.app.doFocusSession)
+            action.setIconVisibleInMenu(True)
             action.setData(session)
             self.action('sessions').addAction(action)
             if session == self:
