@@ -39,13 +39,20 @@ import sys
 import pkg_resources
 import pytest
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtWidgets,
+)
 
 import eddy
-from eddy import APPNAME, ORGANIZATION
+from eddy import APPNAME
 from eddy.core.application import Eddy
 from eddy.core.datatypes.system import File
-from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
+from eddy.core.jvm import (
+    findJavaHome,
+    addJVMClasspath,
+    addJVMOptions,
+)
 from eddy.core.output import getLogger
 
 
@@ -92,15 +99,14 @@ def qapp(qapp_args, tmpdir_factory):
         # noinspection PyTypeChecker
         addJVMOptions('-ea', '-Xmx512m')
 
+        _qapp_instance = Eddy(qapp_args)
         workspace_tmpdir = tmpdir_factory.mktemp('settings')
         QtCore.QSettings.setPath(QtCore.QSettings.NativeFormat,
                                  QtCore.QSettings.UserScope,
                                  str(workspace_tmpdir))
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         settings.setValue('workspace/home', str(workspace_tmpdir))
         settings.setValue('update/check_on_startup', False)
-
-        _qapp_instance = Eddy(qapp_args)
         _qapp_instance.configure()
         yield _qapp_instance
     else:
