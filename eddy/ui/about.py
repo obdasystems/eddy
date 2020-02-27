@@ -33,30 +33,22 @@
 ##########################################################################
 
 
-import sys
-
 from PyQt5 import QtCore
 
 from eddy.ui.splash import Splash
-
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
 
 
 class AboutDialog(Splash):
     """
     This class is used to display the 'About' dialog.
     """
+
     def __init__(self, parent=None):
         """
         Initialize the dialog.
         :type parent: QWidget
         """
         super().__init__(parent)
-        self.setSpaceX(8 if _MACOS else 0)
-        self.setSpaceY(12 if _MACOS else 0)
         self.setWindowFlags(QtCore.Qt.Popup)
 
     def exec_(self):
