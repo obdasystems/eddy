@@ -38,28 +38,49 @@ import platform
 import subprocess
 import sys
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtNetwork
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtNetwork,
+    QtWidgets,
+)
 
 import eddy
-from eddy import APPID, APPNAME, ORGANIZATION_DOMAIN, ORGANIZATION, WORKSPACE, COPYRIGHT, VERSION, BUG_TRACKER
+from eddy import (
+    APPID,
+    APPNAME,
+    BUG_TRACKER,
+    COPYRIGHT,
+    ORGANIZATION,
+    ORGANIZATION_DOMAIN,
+    ORGANIZATION_REVERSE_DOMAIN,
+    VERSION,
+    WORKSPACE,
+)
 from eddy.core.commandline import CommandLineParser
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import isdir, fexists
+from eddy.core.functions.fsystem import (
+    fexists,
+    isdir,
+)
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
-from eddy.core.jvm import findJavaHome, addJVMClasspath, addJVMOptions
+from eddy.core.jvm import (
+    addJVMClasspath,
+    addJVMOptions,
+    findJavaHome,
+)
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
-from eddy.core.project import ProjectNotFoundError
-from eddy.core.project import ProjectNotValidError
-from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import ProjectVersionError
+from eddy.core.project import (
+    ProjectNotFoundError,
+    ProjectNotValidError,
+    ProjectStopLoadingError,
+    ProjectVersionError,
+)
 from eddy.core.qt import sip
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
@@ -97,17 +118,28 @@ class Eddy(QtWidgets.QApplication):
         """
         super().__init__(argv)
 
-        self.options = CommandLineParser()
-        self.options.process(argv)
         self.openFilePath = None
         self.server = None
-        self.socket = QtNetwork.QLocalSocket()
-        self.socket.connectToServer(APPID)
-        self.running = self.socket.waitForConnected()
         self.sessions = DistinctList()
         self.started = False
         self.welcome = None
 
+        # APPLICATION INFO
+        self.setDesktopFileName('{}.{}'.format(ORGANIZATION_REVERSE_DOMAIN, APPNAME))
+        self.setOrganizationName(ORGANIZATION)
+        self.setOrganizationDomain(ORGANIZATION_DOMAIN)
+        self.setApplicationName(APPNAME)
+        self.setApplicationDisplayName(APPNAME)
+        self.setApplicationVersion(VERSION)
+
+        # PARSE COMMAND LINE ARGUMENTS
+        self.options = CommandLineParser()
+        self.options.process(argv)
+
+        # CHECK FOR A RUNNING INSTANCE
+        self.socket = QtNetwork.QLocalSocket()
+        self.socket.connectToServer(APPID)
+        self.running = self.socket.waitForConnected()
         if not self.isRunning():
             QtNetwork.QLocalServer.removeServer(APPID)
             self.server = QtNetwork.QLocalServer()
@@ -148,23 +180,37 @@ class Eddy(QtWidgets.QApplication):
         Perform initial configuration tasks for Eddy to work properly.
         """
         #############################################
+        # CONFIGURE FONTS
+        #################################
+
+        fontDB = QtGui.QFontDatabase()
+        fonts = QtCore.QDirIterator(':/fonts/')
+        while fonts.hasNext():
+            fontDB.addApplicationFont(fonts.next())
+
+        # FONT SUBSTITUTIONS
+        QtGui.QFont.insertSubstitution('Sans Serif', 'Roboto')
+        QtGui.QFont.insertSubstitution('Monospace', 'Roboto Mono')
+
+        # APPLICATION DEFAULT FONT
+        self.setFont(Font('Roboto', pixelSize=12))
+
+        #############################################
+        # CONFIGURE LAYOUT
+        #################################
+
+        style = EddyProxyStyle('Fusion')
+        self.setStyle(style)
+        self.setStyleSheet(style.stylesheet)
+
+        #############################################
         # DRAW THE SPLASH SCREEN
         #################################
 
         splash = None
         if not self.options.isSet(CommandLineParser.NO_SPLASH):
-            splash = Splash(mtime=4)
+            splash = Splash(mtime=2)
             splash.show()
-
-        #############################################
-        # CONFIGURE APPLICATION INFO
-        #################################
-
-        self.setOrganizationName(ORGANIZATION)
-        self.setOrganizationDomain(ORGANIZATION_DOMAIN)
-        self.setApplicationName(APPNAME)
-        self.setApplicationDisplayName(APPNAME)
-        self.setApplicationVersion(VERSION)
 
         #############################################
         # CONFIGURE RECENT PROJECTS
@@ -197,58 +243,6 @@ class Eddy(QtWidgets.QApplication):
             settings.sync()
 
         #############################################
-        # CONFIGURE FONTS
-        #################################
-
-        fontDB = QtGui.QFontDatabase()
-        fontDB.addApplicationFont(':/fonts/Roboto-Black')
-        fontDB.addApplicationFont(':/fonts/Roboto-BlackItalic')
-        fontDB.addApplicationFont(':/fonts/Roboto-Bold')
-        fontDB.addApplicationFont(':/fonts/Roboto-BoldItalic')
-        fontDB.addApplicationFont(':/fonts/Roboto-Italic')
-        fontDB.addApplicationFont(':/fonts/Roboto-Light')
-        fontDB.addApplicationFont(':/fonts/Roboto-LightItalic')
-        fontDB.addApplicationFont(':/fonts/Roboto-Medium')
-        fontDB.addApplicationFont(':/fonts/Roboto-MediumItalic')
-        fontDB.addApplicationFont(':/fonts/Roboto-Regular')
-        fontDB.addApplicationFont(':/fonts/Roboto-Thin')
-        fontDB.addApplicationFont(':/fonts/Roboto-ThinItalic')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Bold')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-BoldItalic')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Italic')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Light')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-LightItalic')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Medium')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-MediumItalic')
-        fontDB.addApplicationFont(':/fonts/RobotoCondensed-Regular')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-Bold')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-BoldItalic')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-Italic')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-Light')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-LightItalic')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-Medium')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-MediumItalic')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-Regular')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-Thin')
-        fontDB.addApplicationFont(':/fonts/RobotoMono-ThinItalic')
-
-        # FONT SUBSTITUTIONS
-        QtGui.QFont.insertSubstitution('Sans Serif', 'Roboto')
-        QtGui.QFont.insertSubstitution('Monospace', 'Roboto Mono')
-
-        # APPLICATION DEFAULT FONT
-        self.setFont(Font('Roboto', pixelSize=12))
-
-        #############################################
-        # CONFIGURE LAYOUT
-        #################################
-
-        style = EddyProxyStyle('Fusion')
-        self.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
-        self.setStyle(style)
-        self.setStyleSheet(style.stylesheet)
-
-        #############################################
         # LOOKUP PLUGINS
         #################################
 
@@ -262,16 +256,6 @@ class Eddy(QtWidgets.QApplication):
             splash.sleep()
             splash.close()
 
-        #############################################
-        # CONFIGURE THE WORKSPACE
-        #################################
-
-        workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
-        if not isdir(workspace):
-            window = WorkspaceDialog()
-            if window.exec_() == WorkspaceDialog.Rejected:
-                raise SystemExit
-
     def isRunning(self):
         """
         Returns True if there is already another instance of Eddy which is running, False otherwise.
@@ -283,6 +267,15 @@ class Eddy(QtWidgets.QApplication):
         """
         Run the application by showing the welcome dialog.
         """
+        # CONFIGURE THE WORKSPACE
+        settings = QtCore.QSettings()
+        workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
+        if not isdir(workspace):
+            window = WorkspaceDialog()
+            if window.exec_() == WorkspaceDialog.Rejected:
+                raise SystemExit
+
+        # PROCESS COMMAND LINE ARGUMENTS
         args = self.options.positionalArguments()
         if self.openFilePath:
             args.append(self.openFilePath)
@@ -292,12 +285,6 @@ class Eddy(QtWidgets.QApplication):
         self.welcome.show()
         # PROCESS ADDITIONAL COMMAND LINE OPTIONS
         if self.options.isSet(CommandLineParser.OPEN):
-            settings = QtCore.QSettings()
-            workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
-            if not isdir(workspace):
-                window = WorkspaceDialog()
-                if window.exec_() == WorkspaceDialog.Rejected:
-                    raise SystemExit
             value = self.options.value(CommandLineParser.OPEN)
             if value:
                 project = os.path.join(workspace, value)
@@ -524,6 +511,15 @@ def main(args):
     #############################################
     # PARSE ARGUMENTS AND CREATE THE APPLICATION
     #################################
+
+    # ENABLE HIGH-DPI SUPPORT
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_Use96Dpi)
+
+    if _MACOS:
+        # DISABLE MENU ICONS IN MACOS
+        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_DontShowIconsInMenus)
 
     global app
     app = Eddy(args)

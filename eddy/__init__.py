@@ -53,6 +53,7 @@ LICENSE = __license__
 ORGANIZATION = __appname__
 ORGANIZATION_NAME = __organization__
 ORGANIZATION_DOMAIN = 'obdasystems.com'
+ORGANIZATION_REVERSE_DOMAIN = 'com.obdasystems'
 ORGANIZATION_URL = 'https://www.obdasystems.com/'
 PROJECT_HOME = 'https://github.com/obdasystems/eddy'
 SAPIENZA_HOME = 'http://en.uniroma1.it/'
