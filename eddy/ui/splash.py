@@ -76,7 +76,7 @@ class Splash(QtWidgets.QSplashScreen):
         :type mtime: float
         """
         super().__init__(parent, QtGui.QPixmap(), QtCore.Qt.WindowStaysOnTopHint)
-        pixmap = QtGui.QIcon(':/images/im_eddy_splash').pixmap(380 * self.devicePixelRatio())
+        pixmap = QtGui.QIcon(':/images/im_eddy_splash').pixmap(380)
         pixmap.setDevicePixelRatio(self.devicePixelRatio())
         self.setPixmap(pixmap)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
