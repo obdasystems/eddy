@@ -1557,17 +1557,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         with BusyProgressDialog('Exporting {0}...'.format(self.project.name), parent=self):
                             worker = self.createProjectExporter(filetype, self.project, self)
                             worker.run(expandPath(first(dialog.selectedFiles())))
-                        self.addNotification("""
-                        Project export completed: <br><br>
-                        <b><a href={0}>{1}</a></b>
-                        """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+                        if fexists(expandPath(first(dialog.selectedFiles()))):
+                            self.addNotification("""
+                            Project export completed: <br><br>
+                            <b><a href=file:{0}>{1}</a></b>
+                            """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
                     except ValueError:
                         # DIAGRAM SELECTION
                         filterDialog = DiagramSelectionDialog(self)
                         if not filterDialog.exec_():
                             return
                         # EXPORT DIAGRAMS
-                        worker = self.createDiagramExporter(filetype, self.project, self)
                         with BusyProgressDialog(parent=self) as progress:
                             for diagram in filterDialog.selectedDiagrams():
                                 progress.setWindowTitle('Exporting {0}...'.format(diagram.name))
