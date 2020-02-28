@@ -35,24 +35,38 @@
 
 from textwrap import dedent
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtPrintSupport
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+    QtPrintSupport,
+)
 
-from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.graphol import Special
+from eddy.core.common import HasWidgetSystem
+from eddy.core.datatypes.graphol import (
+    Item,
+    Special,
+)
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
-from eddy.core.exporters.common import AbstractDiagramExporter
-from eddy.core.exporters.common import AbstractProjectExporter
+from eddy.core.exporters.common import (
+    AbstractDiagramExporter,
+    AbstractProjectExporter,
+)
 from eddy.core.functions.misc import natsorted
 from eddy.core.functions.path import openPath
+from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.output import getLogger
-from eddy.core.project import K_ASYMMETRIC, K_SYMMETRIC
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_REFLEXIVE, K_IRREFLEXIVE
-from eddy.core.project import K_TRANSITIVE
+from eddy.core.project import (
+    K_ASYMMETRIC,
+    K_FUNCTIONAL,
+    K_INVERSE_FUNCTIONAL,
+    K_IRREFLEXIVE,
+    K_REFLEXIVE,
+    K_SYMMETRIC,
+    K_TRANSITIVE,
+)
 from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
@@ -163,7 +177,7 @@ class PdfProjectExporter(AbstractProjectExporter):
             self.diagrams = dialog.selectedDiagrams()
         # DIAGRAM PAGE SIZE SELECTION
         if self.pageSize is None:
-            dialog = QtPrintSupport.QPageSetupDialog(printer, self.session)
+            dialog = PageSetupDialog(printer, self.session)
             if not dialog.exec_():
                 return
         else:
@@ -183,14 +197,14 @@ class PdfProjectExporter(AbstractProjectExporter):
                     for item in diagram.items():
                         if item.isNode() or item.isEdge():
                             item.setCacheMode(AbstractItem.NoCache)
+                    # RENDER THE DIAGRAM
+                    diagram.render(painter, source=shape)
                     # RENDER DIAGRAM NAME
                     title = QtGui.QTextDocument()
                     title.setDefaultFont(Font(pixelSize=140))
                     title.setHtml('{0}<hr width=100%/>'.format(diagram.name))
                     title.setTextWidth(printer.pageRect().width())
                     title.drawContents(painter)
-                    # RENDER THE DIAGRAM IN THE PAINTER
-                    diagram.render(painter, source=shape)
                     # TURN CACHING ON
                     for item in diagram.items():
                         if item.isNode() or item.isEdge():
@@ -312,3 +326,364 @@ class PdfProjectExporter(AbstractProjectExporter):
         # OPEN THE DOCUMENT
         if self.open:
             openPath(printer.outputFileName())
+
+
+class PageSetupDialog(QtWidgets.QDialog, HasWidgetSystem):
+    """
+    Extends QtWidgets.QDialog to recreate the platform-independent version of QPageSetupDialog.
+    """
+    # noinspection PyArgumentList
+    def __init__(self, printer=None, parent=None):
+        """
+        Initializes the PageSetupDialog.
+        """
+        super().__init__(parent)
+
+        self.printer = printer or QtPrintSupport.QPrinter()
+        self.units = QtGui.QPageLayout.Millimeter
+
+        #############################################
+        #   UNITS
+        #################################
+
+        combobox = QtWidgets.QComboBox(self, objectName='units_combobox')
+        combobox.addItem('Millimiters (mm)', QtGui.QPageLayout.Millimeter)
+        combobox.addItem('Inches (in)', QtGui.QPageLayout.Inch)
+        combobox.addItem('Points (pt)', QtGui.QPageLayout.Point)
+        combobox.addItem('Pica (P̸)', QtGui.QPageLayout.Pica)
+        combobox.addItem('Didot (DD)', QtGui.QPageLayout.Didot)
+        combobox.addItem('Cicero (CC)', QtGui.QPageLayout.Cicero)
+        connect(combobox.currentIndexChanged, self.onUnitsChanged)
+        self.addWidget(combobox)
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(self.widget('units_combobox'))
+
+        groupbox = QtWidgets.QGroupBox('Units', self, objectName='units_group')
+        groupbox.setLayout(layout)
+        self.addWidget(groupbox)
+
+        #############################################
+        #   PAPER
+        #################################
+
+        label = QtWidgets.QLabel('Page size', self, objectName='page_size_label')
+        combobox = QtWidgets.QComboBox(self, objectName='page_size_combobox')
+        for sizeId in range(QtGui.QPageSize.A4, QtGui.QPageSize.LastPageSize):
+            pageSize = QtGui.QPageSize(QtGui.QPageSize.PageSizeId(sizeId))
+            combobox.addItem(pageSize.name() or 'Custom', pageSize)
+        connect(combobox.currentIndexChanged, self.onPaperSizeChanged)
+        self.addWidget(label)
+        self.addWidget(combobox)
+
+        labelW = QtWidgets.QLabel('Width', self, objectName='page_custom_width_label')
+        spinboxW = QtWidgets.QDoubleSpinBox(self, objectName='page_custom_width_spinbox')
+        self.addWidget(labelW)
+        self.addWidget(spinboxW)
+
+        labelH = QtWidgets.QLabel('Height', self, objectName='page_custom_height_label')
+        spinboxH = QtWidgets.QDoubleSpinBox(self, objectName='page_custom_height_spinbox')
+        self.addWidget(labelH)
+        self.addWidget(spinboxH)
+
+        layout = QtWidgets.QFormLayout()
+        layout.addRow(self.widget('page_size_label'), self.widget('page_size_combobox'))
+        layout.addRow(self.widget('page_custom_width_label'), self.widget('page_custom_width_spinbox'))
+        layout.addRow(self.widget('page_custom_height_label'), self.widget('page_custom_height_spinbox'))
+
+        groupbox = QtWidgets.QGroupBox('Paper', self, objectName='paper_group')
+        groupbox.setLayout(layout)
+        self.addWidget(groupbox)
+
+        #############################################
+        #   ORIENTATION
+        #################################
+
+        portrait = QtWidgets.QRadioButton('Portrait', self, objectName='orientation_portrait_radio')
+        landscape = QtWidgets.QRadioButton('Landscape', self, objectName='orientation_landscape_radio')
+        connect(portrait.toggled, self.onOrientationChanged)
+        connect(landscape.toggled, self.onOrientationChanged)
+        self.addWidget(portrait)
+        self.addWidget(landscape)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(portrait)
+        layout.addWidget(landscape)
+
+        groupbox = QtWidgets.QGroupBox('Orientation', self, objectName='orientation_group')
+        groupbox.setLayout(layout)
+        self.addWidget(groupbox)
+
+        #############################################
+        #   MARGINS
+        #################################
+
+        spinboxT = QtWidgets.QDoubleSpinBox(self, objectName='margin_top_spinbox')
+        spinboxB = QtWidgets.QDoubleSpinBox(self, objectName='margin_bottom_spinbox')
+        spinboxL = QtWidgets.QDoubleSpinBox(self, objectName='margin_left_spinbox')
+        spinboxR = QtWidgets.QDoubleSpinBox(self, objectName='margin_right_spinbox')
+        self.addWidgets((spinboxT, spinboxB, spinboxL, spinboxR))
+
+        layout = QtWidgets.QGridLayout()
+        layout.addWidget(spinboxT, 0, 1)
+        layout.addWidget(spinboxR, 1, 0)
+        layout.addWidget(spinboxL, 1, 2)
+        layout.addWidget(spinboxB, 2, 1)
+
+        groupbox = QtWidgets.QGroupBox('Margins', self, objectName='margins_group')
+        groupbox.setLayout(layout)
+        self.addWidget(groupbox)
+
+        #############################################
+        #   BUTTONS
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel,
+            QtCore.Qt.Horizontal, self, objectName='confirmation_buttons')
+        self.addWidget(confirmation)
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+        #############################################
+        #   MAIN LAYOUT
+        #################################
+
+        mainLayout = QtWidgets.QVBoxLayout()
+        mainLayout.addWidget(self.widget('units_group'))
+        mainLayout.addWidget(self.widget('paper_group'))
+        mainLayout.addWidget(self.widget('orientation_group'))
+        mainLayout.addWidget(self.widget('margins_group'))
+        mainLayout.addWidget(self.widget('confirmation_buttons'))
+
+        self.setLayout(mainLayout)
+        self.adjustSize()
+        self.setWindowTitle('Page Setup')
+        self.reloadPrinterLayout()
+        # START WITH MILLIMITER UNITS
+        combobox = self.widget('units_combobox')
+        combobox.setCurrentIndex(combobox.findData(QtGui.QPageLayout.Millimeter))
+        combobox.currentIndexChanged.emit(combobox.findData(QtGui.QPageLayout.Millimeter))
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot(bool)
+    def onOrientationChanged(self, _):
+        """
+        Executed when one of the orientation radio buttons is checked.
+        :type _: bool
+        """
+        # TRIGGER UNITS UPDATE TO SET MARGINS RANGE
+        self.convertUnits(self.units, self.units)
+
+    @QtCore.pyqtSlot(int)
+    def onPaperSizeChanged(self, index):
+        """
+        Executed when the paper size is selected through the QComboBox.
+        :type index: int
+        """
+        data = self.widget('page_size_combobox').itemData(index)
+        self.widget('page_custom_width_spinbox').setEnabled(data.id() == QtGui.QPageSize.Custom)
+        self.widget('page_custom_width_spinbox').setRange(0, 9999)
+        self.widget('page_custom_height_spinbox').setEnabled(data.id() == QtGui.QPageSize.Custom)
+        self.widget('page_custom_height_spinbox').setRange(0, 9999)
+        # TRIGGER UNITS UPDATE TO SET MARGINS RANGE
+        self.convertUnits(self.units, self.units)
+
+    @QtCore.pyqtSlot(int)
+    def onUnitsChanged(self, index):
+        """
+        Executed when the units are selected through the QComboBox.
+        :type index: int
+        """
+        combobox = self.widget('units_combobox')
+        toUnits = combobox.itemData(index)
+        self.convertUnits(self.units, toUnits)
+        self.units = toUnits
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        Saves the user selections to the printer.
+        """
+        pageLayout = self.printer.pageLayout()
+        pageUnits = self.units
+        pageLayout.setUnits(pageUnits)
+        # PAGE SIZE
+        combobox = self.widget('page_size_combobox')
+        pageSize = combobox.currentData()
+        spinboxW = self.widget('page_custom_width_spinbox')
+        customWidth = spinboxW.value()
+        spinboxH = self.widget('page_custom_height_spinbox')
+        customHeight = spinboxH.value()
+        if pageSize.id() == QtGui.QPageSize.Custom:
+            pageSize = QtGui.QPageSize(QtCore.QSizeF(customWidth, customHeight), pageUnits)
+        pageLayout.setPageSize(pageSize)
+        # ORIENTATION
+        portrait = self.widget('orientation_portrait_radio')
+        landscape = self.widget('orientation_landscape_radio')
+        if portrait.isChecked():
+            pageLayout.setOrientation(QtGui.QPageLayout.Portrait)
+        elif landscape.isChecked():
+            pageLayout.setOrientation(QtGui.QPageLayout.Landscape)
+        # MARGINS
+        spinboxT = self.widget('margin_top_spinbox')
+        spinboxB = self.widget('margin_bottom_spinbox')
+        spinboxL = self.widget('margin_left_spinbox')
+        spinboxR = self.widget('margin_right_spinbox')
+        pageMargins = QtCore.QMarginsF(
+            spinboxL.value(), spinboxT.value(), spinboxR.value(), spinboxB.value())
+        pageLayout.setMargins(pageMargins)
+        # UPDATE PRINTER LAYOUT
+        self.printer.setPageLayout(pageLayout)
+        super().accept()
+
+    def convertUnits(self, fromUnits, toUnits):
+        """
+        Updates the UI values from units fromUnits to toUnits, recomputing margin ranges.
+        :type fromUnits: QtGui.QPageSize.Unit
+        :type toUnits:  QtGui.QPageSize.Unit
+        """
+        # We copy the current printer page layout and set its units, orientation
+        # and page size to the target units, orientation and page size to reflect
+        # values in the UI which will trigger the computation of the new minimum
+        # and maximum margins.
+        combobox = self.widget('page_size_combobox')
+        portrait = self.widget('orientation_portrait_radio')
+        pageLayout = self.printer.pageLayout()
+        pageLayout.setPageSize(QtGui.QPageSize(combobox.currentData()))
+        pageLayout.setOrientation(QtGui.QPageLayout.Portrait if portrait.isChecked() else QtGui.QPageLayout.Landscape)
+        pageLayout.setUnits(toUnits)
+        pageMarginsMin = pageLayout.minimumMargins()
+        pageMarginsMax = pageLayout.maximumMargins()
+        unitSuffix = ('mm', 'pt', 'in', 'P̸', 'DD', 'CC')[toUnits]
+        # CUSTOM WIDTH AND HEIGHT
+        spinboxW = self.widget('page_custom_width_spinbox')
+        spinboxW.setValue(self.convertValue(spinboxW.value(), fromUnits, toUnits))
+        spinboxW.setSuffix(unitSuffix)
+        spinboxH = self.widget('page_custom_height_spinbox')
+        spinboxH.setValue(self.convertValue(spinboxH.value(), fromUnits, toUnits))
+        spinboxH.setSuffix(unitSuffix)
+        # UPDATE MARGINS
+        spinboxT = self.widget('margin_top_spinbox')
+        value = self.convertValue(spinboxT.value(), fromUnits, toUnits)
+        spinboxT.setRange(pageMarginsMin.top(), pageMarginsMax.top())
+        spinboxT.setSuffix(unitSuffix)
+        spinboxT.setValue(value)
+        spinboxB = self.widget('margin_bottom_spinbox')
+        value = self.convertValue(spinboxB.value(), fromUnits, toUnits)
+        spinboxB.setRange(pageMarginsMin.bottom(), pageMarginsMax.bottom())
+        spinboxB.setSuffix(unitSuffix)
+        spinboxB.setValue(value)
+        spinboxL = self.widget('margin_left_spinbox')
+        value = self.convertValue(spinboxL.value(), fromUnits, toUnits)
+        spinboxL.setRange(pageMarginsMin.left(), pageMarginsMax.left())
+        spinboxL.setSuffix(unitSuffix)
+        spinboxL.setValue(value)
+        spinboxR = self.widget('margin_right_spinbox')
+        value = self.convertValue(spinboxR.value(), fromUnits, toUnits)
+        spinboxR.setRange(pageMarginsMin.right(), pageMarginsMax.right())
+        spinboxR.setSuffix(unitSuffix)
+        spinboxR.setValue(value)
+
+    def convertValue(self, value, fromUnits, toUnits):
+        """
+        Converts the specified value from units fromUnits to toUnits.
+        Based on QtGui.QPageLayout::qt_convertPoint() implementation.
+        :param value:
+        :param fromUnits:
+        :param toUnits:
+        :return:
+        """
+        # If converting to points then convert and round to 0 decimal places
+        if toUnits == QtGui.QPageLayout.Point:
+            multiplier = self.pointMultiplier(fromUnits)
+            return round(value * multiplier)
+
+        # If converting to other units, need to convert to unrounded points first
+        if fromUnits != QtGui.QPageLayout.Point:
+            value *= self.pointMultiplier(fromUnits)
+
+        # Then convert from points to required units rounded to 2 decimal places
+        multiplier = self.pointMultiplier(toUnits)
+        return round(value * 100 / multiplier) / 100.0
+
+    @staticmethod
+    def pointMultiplier(units):
+        """
+        Returns multiplier for converting the specified units to points.
+        :type units: QtGui.QPageLayout.Unit
+        :rtype: float
+        """
+        if units == QtGui.QPageLayout.Millimeter:
+            return 2.83464566929
+        elif units == QtGui.QPageLayout.Point:
+            return 1.0
+        elif units == QtGui.QPageLayout.Inch:
+            return 72.0
+        elif units == QtGui.QPageLayout.Pica:
+            return 12
+        elif units == QtGui.QPageLayout.Didot:
+            return 1.065826771
+        elif units == QtGui.QPageLayout.Cicero:
+            return 12.789921252
+        else:
+            return 1.0
+
+    def printer(self):
+        """
+        Returns the printer associated with this PageSetupDialog.
+        :rtype: QtPrintSupport.QPrinter
+        """
+        return self.printer
+
+    def reloadPrinterLayout(self):
+        """
+        Updates the UI to reflect the printer layout.
+        """
+        pageLayout = self.printer.pageLayout()
+        pageMargins = pageLayout.margins(pageLayout.units())
+        pageMarginsMin = pageLayout.minimumMargins()
+        pageMarginsMax = pageLayout.maximumMargins()
+        pageUnits = pageLayout.units()
+        unitSuffix = ('mm', 'pt', 'in', 'P̸', 'DD', 'CC')[pageUnits]
+        comboboxUnits = self.widget('units_combobox')
+        comboboxUnits.setCurrentIndex(comboboxUnits.findData(pageUnits))
+        comboboxSize = self.widget('page_size_combobox')
+        comboboxSize.setCurrentIndex(int(self.printer.pageSize()))
+        # CUSTOM WIDTH AND HEIGHT
+        spinboxW = self.widget('page_custom_width_spinbox')
+        spinboxW.setRange(0, 9999)
+        spinboxW.setEnabled(self.printer.pageSize() == QtGui.QPageSize.Custom)
+        spinboxH = self.widget('page_custom_height_spinbox')
+        spinboxH.setRange(0, 9999)
+        spinboxH.setEnabled(self.printer.pageSize() == QtGui.QPageSize.Custom)
+        # ORIENTATION
+        portrait = self.widget('orientation_portrait_radio')
+        portrait.setChecked(pageLayout.orientation() == QtGui.QPageLayout.Portrait)
+        landscape = self.widget('orientation_landscape_radio')
+        landscape.setChecked(pageLayout.orientation() == QtGui.QPageLayout.Landscape)
+        # MARGINS
+        spinboxT = self.widget('margin_top_spinbox')
+        spinboxT.setRange(pageMarginsMin.top(), pageMarginsMax.top())
+        spinboxT.setSuffix(unitSuffix)
+        spinboxT.setValue(pageMargins.top())
+        spinboxB = self.widget('margin_bottom_spinbox')
+        spinboxB.setRange(pageMarginsMin.bottom(), pageMarginsMax.bottom())
+        spinboxB.setSuffix(unitSuffix)
+        spinboxB.setValue(pageMargins.bottom())
+        spinboxL = self.widget('margin_left_spinbox')
+        spinboxL.setRange(pageMarginsMin.left(), pageMarginsMax.left())
+        spinboxL.setSuffix(unitSuffix)
+        spinboxL.setValue(pageMargins.left())
+        spinboxR = self.widget('margin_right_spinbox')
+        spinboxR.setRange(pageMarginsMin.right(), pageMarginsMax.right())
+        spinboxR.setSuffix(unitSuffix)
+        spinboxR.setValue(pageMargins.right())
