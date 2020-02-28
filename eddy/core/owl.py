@@ -1030,6 +1030,7 @@ class IRIManager(QtCore.QObject):
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.IsDefinedBy.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.seeAlso.value)
 
+    ##FACETS
     def addConstrainingFacet(self, iri):
         if not iri in self.constrainingFacets:
             self.addIRI(iri)

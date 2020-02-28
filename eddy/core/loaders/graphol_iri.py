@@ -39,7 +39,7 @@ from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 
 LOGGER = getLogger()
 
-class GrapholIRILoaderMixin_2(object):
+class GrapholProjectIRILoaderMixin_2(object):
     """
     Mixin which adds the ability to create a project out of a Graphol file.
     """
@@ -802,8 +802,54 @@ class GrapholIRILoaderMixin_2(object):
         except KeyError:
             return None
 
+class GrapholOntologyIRILoader_v2(AbstractOntologyLoader, GrapholProjectIRILoaderMixin_2):
+    """
+    Extends AbstractOntologyLoader with facilities to load ontologies from Graphol file format.
+    """
 
-class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholIRILoaderMixin_2):
+    def __init__(self, path, project, session):
+        """
+        Initialize the Graphol importer.
+        :type path: str
+        :type project: Project
+        :type session: Session
+        """
+        super().__init__(expandPath(path), project, session)
+
+    def projectMerge(self):
+        """
+        Merge the loaded project with the one currently loaded in Eddy session.
+        """
+        worker = ProjectMergeWorker(self.project, self.nproject, self.session)
+        worker.run()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.Graphol
+
+    def run(self):
+        """
+        Perform ontology import from Graphol file format and merge the loaded ontology with the current project.
+        """
+        self.createDomDocument()
+        self.createProject()
+        self.createDiagrams()
+
+        self.createPredicatesMeta()
+
+        self.projectRender()
+        self.projectMerge()
+
+
+class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderMixin_2):
     """
     Extends AbstractProjectLoader with facilities to load Graphol projects.
     """
