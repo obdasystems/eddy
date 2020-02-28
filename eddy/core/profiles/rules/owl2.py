@@ -824,7 +824,7 @@ class MembershipFromIndividualRule(ProfileEdgeRule):
     """
     def __call__(self, source, edge, target):
         if edge.type() is Item.MembershipEdge:
-            if source.identity() is Identity.Individual:
+            if Identity.Individual in source.identities():
                 if Identity.Concept not in target.identities():
                     # If the source of the edge is an Individual it means that we are trying to construct a
                     # ClassAssertion and so the target of the edge MUST be a class expression.

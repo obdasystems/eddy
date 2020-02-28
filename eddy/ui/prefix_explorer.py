@@ -37,7 +37,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.project import CommandProjectSetVersion
 from eddy.core.common import HasThreadingSystem
@@ -548,9 +547,6 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         if process is True:
             commands = [CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False),
-                        CommandProjetSetIRIPrefixesNodesDict(self.project,
-                                                             Duplicate_IRI_prefixes_nodes_dict_2,
-                                                             Duplicate_IRI_prefixes_nodes_dict_1, [iri_inp], None),
                         CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False)]
 
             if any(commands):
@@ -627,10 +623,6 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         if process is True:
             commands = [CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False),
-                        CommandProjetSetIRIPrefixesNodesDict(self.project,
-                                                             Duplicate_IRI_prefixes_nodes_dict_2,
-                                                             Duplicate_IRI_prefixes_nodes_dict_1,
-                                                             iris_to_be_updated, None),
                         CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False)]
 
             if any(commands):
@@ -659,8 +651,6 @@ class OntologyExplorerDialog(QtWidgets.QDialog, HasThreadingSystem):
                 Duplicate_dict_1[new_project_iri][2].add('Project_IRI')
 
                 commands = [CommandProjectDisconnectSpecificSignals(self.project),
-                            CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [],
-                                                                 []),
                             CommandProjectConnectSpecificSignals(self.project)]
 
                 self.session.undostack.beginMacro('chenge ontology IRI')

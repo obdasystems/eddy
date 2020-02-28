@@ -42,14 +42,11 @@ from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjectORNodeSetPreferedPrefix
 from eddy.core.commands.nodes import CommandNodeSetMeta, CommandIRISetMeta
-from eddy.core.commands.project import CommandProjectSetIRI
-from eddy.core.commands.project import CommandProjectSetPrefix
 from eddy.core.commands.project import CommandProjectSetProfile
 from eddy.core.commands.project import CommandProjectSetVersion
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.owl import Facet, Datatype, OWLProfile
+from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
@@ -447,8 +444,8 @@ class InfoWidget(QtWidgets.QScrollArea):
                             show = self.infoAttributeNode
                         elif item.type() is Item.RoleIRINode:
                             show = self.infoRoleNode
-                        elif item.type() is Item.ValueDomainIRINode:
-                            show = self.infoValueDomainNode
+                        #elif item.type() is Item.ValueDomainIRINode:
+                        #    show = self.infoValueDomainNode
                         elif item.type() is Item.LiteralNode:
                             show = self.infoLiteral
                         else:
@@ -680,7 +677,7 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
         self.ontologyPropLayout.addRow(self.versionKey, self.versionField)
-        self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
+        #self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         #self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         #self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
@@ -745,8 +742,8 @@ class ProjectInfo(AbstractInfo):
         self.mainLayout.addLayout(self.ontologyPropLayout)
         self.mainLayout.addWidget(self.atomicPredHeader)
         self.mainLayout.addLayout(self.atomicPredLayout)
-        self.mainLayout.addWidget(self.assertionsHeader)
-        self.mainLayout.addLayout(self.assertionsLayout)
+        #self.mainLayout.addWidget(self.assertionsHeader)
+        #self.mainLayout.addLayout(self.assertionsLayout)
 
         self.ENTRY_MODIFIED_OK_var = set()
         self.ENTRY_IGNORE_var = set()
@@ -777,41 +774,6 @@ class ProjectInfo(AbstractInfo):
         """
         new_iri = self.iriField.value()
 
-        if new_iri == '':
-            self.session.statusBar().showMessage('IRI field is blank.', 15000)
-            self.updateData(self.project)
-            return
-
-        IRI_valid = self.project.check_validity_of_IRI(new_iri)
-
-        if(IRI_valid is False):
-            self.session.statusBar().showMessage('IRI is invalid.', 15000)
-            self.updateData(self.project)
-            return
-
-        if (self.project.ontologyIRIString != new_iri) and (new_iri != ''):
-            #self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
-
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
-
-            connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-            connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-            self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, None, new_iri, None, Duplicate_dict_1)
-            if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                self.ENTRY_MODIFIED_OK_var = set()
-                self.ENTRY_IGNORE_var = set()
-
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.ontologyIRIString, new_iri], None)
-                self.session.undostack.push(command)
-
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
-
         self.iriField.clearFocus()
 
     @QtCore.pyqtSlot()
@@ -821,213 +783,10 @@ class ProjectInfo(AbstractInfo):
         """
         prefix_in_field = self.prefixField.value().strip()
 
-        flag = False
 
-
-        for c in prefix_in_field:
-            if c == '':
-                pass
-            elif (not c.isalnum()):
-                flag = True
-                break
-            else:
-                pass
-
-        if prefix_in_field == '':
-            self.session.statusBar().showMessage('Prefix field is blank.', 15000)
-            self.updateData(self.project)
-            return
-
-        if flag is True:
-            self.session.statusBar().showMessage(
-                '(Spaces in between alphanumeric characters) and (special characters) are not allowed in a prefix.',
-                15000)
-            self.updateData(self.project)
-            return
-        else:
-
-            if self.project.prefix != prefix_in_field:
-                # self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
-
-                prefixes_of_project = self.project.prefixes
-
-                commands = []
-
-                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                    self.project.IRI_prefixes_nodes_dict, dict())
-                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                    self.project.IRI_prefixes_nodes_dict, dict())
-
-                if prefix_in_field in prefixes_of_project:
-
-                    #just change the order
-                    new_order = []
-                    new_order.extend(prefixes_of_project)
-                    new_order.remove(prefix_in_field)
-                    new_order.append(prefix_in_field)
-
-                    Duplicate_dict_1[self.project.ontologyIRIString][0] = new_order
-
-                    command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                     Duplicate_dict_1,
-                                                                     [self.project.ontologyIRIString], None)
-
-                    commands.append(command_1)
-
-                else:
-
-                    #try to append (prefix_in_field) to (prefixes_of_project)
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-                    connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-                    connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-                    prefixes_new = []
-                    prefixes_new.extend(prefixes_of_project)
-                    prefixes_new.append(prefix_in_field)
-
-                    self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, prefixes_of_project, self.project.ontologyIRIString,
-                                                        prefixes_new, Duplicate_dict_1)
-
-                    # self.project.print_dictionary(Duplicate_dict_1)
-
-                    if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                        self.ENTRY_MODIFIED_OK_var = set()
-                        self.ENTRY_IGNORE_var = set()
-
-                        command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                         Duplicate_dict_1,
-                                                                         [self.project.ontologyIRIString], None)
-
-                        commands.append(command_1)
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-                if commands:
-                    if len(commands) > 1:
-                        self.session.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
-                        for command in commands:
-                            self.session.undostack.push(command)
-                        self.session.undostack.endMacro()
-                    else:
-                        self.session.undostack.push(first(commands))
 
         self.prefixField.clearFocus()
 
-    # not used
-    @QtCore.pyqtSlot()
-    def prefixEditingFinished_2(self):
-        """
-        Executed whenever we finish to edit the ontology prefix
-        """
-        prefix_in_field = self.prefixField.value().strip()
-
-        flag = False
-
-        for c in prefix_in_field:
-            if c == '':
-                pass
-            elif (not c.isalnum()):
-                flag = True
-                break
-            else:
-                pass
-
-        if flag is True:
-            self.session.statusBar().showMessage(
-                'Spaces in between alphanumeric characters and special characters are not allowed in a prefix.',
-                15000)
-        else:
-
-            if self.project.prefix != prefix_in_field:
-                #self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
-
-                prefixes_of_project = self.project.prefixes
-
-                commands = []
-
-                if prefix_in_field in prefixes_of_project:
-
-                    Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries( \
-                        self.project.prefered_prefix_dict, dict())
-                    Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
-                        self.project.prefered_prefix_dict, dict())
-
-                    Duplicate_dict_1B[self.project.ontologyIRIString] = prefix_in_field
-
-                    nodes_corr_project_iri = self.project.IRI_prefixes_nodes_dict[self.project.ontologyIRIString][1]
-
-                    for node in nodes_corr_project_iri:
-                        Duplicate_dict_1B[str(node)] = prefix_in_field
-
-                    command = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B, \
-                                                                    self.project.ontologyIRIString, None)
-
-                    commands.append(command)
-
-                else:
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-                    connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-                    connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-
-                    prefixes_new = set()
-                    prefixes_new = prefixes_new.union(prefixes_of_project)
-                    prefixes_new.add(prefix_in_field)
-
-                    self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, prefixes_of_project, self.project.ontologyIRIString,
-                                                        prefixes_new, Duplicate_dict_1)
-
-                    # self.project.print_dictionary(Duplicate_dict_1)
-
-                    if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                        self.ENTRY_MODIFIED_OK_var = set()
-                        self.ENTRY_IGNORE_var = set()
-
-                        command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                                         [self.project.ontologyIRIString], None)
-
-                        Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries(\
-                            self.project.prefered_prefix_dict, dict())
-                        Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
-                            self.project.prefered_prefix_dict, dict())
-
-                        nodes_corr_project_iri = Duplicate_dict_1[self.project.ontologyIRIString][1]
-
-                        Duplicate_dict_1B[self.project.ontologyIRIString] = prefix_in_field
-                        for node in nodes_corr_project_iri:
-                            Duplicate_dict_1B[str(node)] = prefix_in_field
-
-                        command_2 = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B, \
-                                                                          self.project.ontologyIRIString, None)
-
-                        commands.append(command_1)
-                        commands.append(command_2)
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-
-                if commands:
-                    if len(commands) > 1:
-                        self.session.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
-                        for command in commands:
-                            self.session.undostack.push(command)
-                        self.session.undostack.endMacro()
-                    else:
-                        self.session.undostack.push(first(commands))
-
-        self.prefixField.clearFocus()
 
     #not used
     @QtCore.pyqtSlot()
@@ -1036,41 +795,6 @@ class ProjectInfo(AbstractInfo):
         Executed whenever we finish to edit the ontology prefix
         """
         prefixes_str = self.prefixesField.value()
-
-        prefixes_new = set()
-
-        prefixes_str_split = prefixes_str.split(', ')
-
-        for p in prefixes_str_split:
-            if p !='':
-                prefixes_new.add(p)
-
-        if (self.project.prefixes.issubset(prefixes_new)) and (prefixes_new.issubset(self.project.prefixes)) :
-            #do nothing
-            pass
-        else:
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
-
-            connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-            connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-            self.project.modifyIRIPrefixesEntry(self.project.ontologyIRIString, self.project.prefixes, self.project.ontologyIRIString, prefixes_new, Duplicate_dict_1)
-
-            #self.project.print_dictionary(Duplicate_dict_1)
-
-            if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                self.ENTRY_MODIFIED_OK_var = set()
-                self.ENTRY_IGNORE_var = set()
-
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.ontologyIRIString], None)
-                self.session.undostack.push(command)
-
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
 
         self.prefixesField.clearFocus()
 
@@ -1103,11 +827,12 @@ class ProjectInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type project: Project
         """
-        return
+        '''
         self.prefixField.setValue(project.prefix)
         self.prefixField.home(True)
         self.prefixField.clearFocus()
         self.prefixField.deselect()
+        '''
         """
         prefixes_str_to_set = ''
         project_prefixes = project.prefixes
@@ -1124,7 +849,7 @@ class ProjectInfo(AbstractInfo):
         self.prefixesField.clearFocus()
         self.prefixesField.deselect()
         """
-        self.iriField.setValue(project.ontologyIRIString)
+        self.iriField.setValue(str(project.ontologyIRI))
         self.iriField.home(True)
         self.iriField.clearFocus()
         self.iriField.deselect()
@@ -1141,11 +866,12 @@ class ProjectInfo(AbstractInfo):
                 break
         """
 
-        self.attributesField.setValue(project.predicateNum(Item.AttributeNode))
-        self.conceptsField.setValue(project.predicateNum(Item.ConceptNode))
-        self.rolesField.setValue(project.predicateNum(Item.RoleNode))
+        self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeIRINode))
+        self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptIRINode))
+        self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleIRINode))
         self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
-        self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
+        #self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
+
 
 
 class EdgeInfo(AbstractInfo):
@@ -1854,7 +1580,7 @@ class IRIInfo(NodeInfo):
         self.nameField.setFont(Font('Roboto', 12))
         #self.nameField.setReadOnly(False)
         self.nameField.setReadOnly(True)
-        connect(self.nameField.editingFinished, self.editingFinished)
+        #connect(self.nameField.editingFinished, self.editingFinished)
 
         self.fullIRIKey = Key('IRI', self)
         self.fullIRIKey.setFont(Font('Roboto', 12))
@@ -1862,7 +1588,7 @@ class IRIInfo(NodeInfo):
         self.fullIRIField.setFont(Font('Roboto', 12))
         # self.nameField.setReadOnly(False)
         self.fullIRIField.setReadOnly(True)
-        connect(self.fullIRIField.editingFinished, self.editingFinished)
+        #connect(self.fullIRIField.editingFinished, self.editingFinished)
 
         self.labelKey = Key('Label', self)
         self.labelKey.setFont(Font('Roboto', 12))
@@ -1870,7 +1596,7 @@ class IRIInfo(NodeInfo):
         self.labelField.setFont(Font('Roboto', 12))
         # self.textField.setReadOnly(False)
         self.labelField.setReadOnly(True)
-        connect(self.labelField.editingFinished, self.editingFinished)
+        #connect(self.labelField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('IRI properties', self)
         self.predPropHeader.setFont(Font('Roboto', 12))

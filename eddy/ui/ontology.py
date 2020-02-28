@@ -71,7 +71,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.prefixIndexMap = {}
         self.project = session.project
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
 
         #############################################
         # GENERAL TAB
@@ -99,11 +98,23 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         versionField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/1.0')
         self.addWidget(versionField)
 
+        saveBtn = QtWidgets.QPushButton('Save', objectName='save_ont_iri_version_button')
+        connect(saveBtn.clicked, self.saveOntologyIRIAndVersion)
+        self.addWidget(saveBtn)
+
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('ontology_iri_label'), self.widget('ontology_iri_field'))
         formlayout.addRow(self.widget('ontology_version_label'), self.widget('ontology_version_field'))
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('save_ont_iri_version_button'))
+
+        outerFormLayout = QtWidgets.QFormLayout()
+        outerFormLayout.addRow(formlayout)
+        outerFormLayout.addRow(boxlayout)
         groupbox = QtWidgets.QGroupBox('Ontology IRI', self, objectName='ontology_iri_widget')
-        groupbox.setLayout(formlayout)
+        groupbox.setLayout(outerFormLayout)
         self.addWidget(groupbox)
 
         ## ONTOLOGY IMPORTS GROUP
@@ -497,15 +508,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # GENERAL TAB
         #################################
         iriField = self.widget('ontology_iri_field')
-        if self.project.ontologyIRIString and self.project.ontologyIRIString != 'NULL':
-            iriField.setText(self.project.ontologyIRIString)
+        if self.project.ontologyIRI:
+            iriField.setText(str(self.project.ontologyIRI))
 
         versionField = self.widget('ontology_version_field')
         if self.project.version and self.project.version != 'NULL':
             versionField.setText(self.project.version)
 
         table = self.widget('annotations_table_widget')
-        ontAnnAss = self.project.getIRI(self.project.ontologyIRIString).annotationAssertions
+        ontAnnAss = self.project.ontologyIRI.annotationAssertions
         table.clear()
         table.setRowCount(len(ontAnnAss))
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
@@ -567,6 +578,27 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     # GENERAL TAB
     #################################
+    @QtCore.pyqtSlot(bool)
+    def saveOntologyIRIAndVersion(self, _):
+        """
+        Adds an ontology import to the current project.
+        :type _: bool
+        """
+        try:
+            iriField = self.widget('ontology_iri_field')
+            ontIriString = iriField.value()
+            self.project.setOntologyIRI(ontIriString)
+            versionField = self.widget('ontology_version_field')
+            version = versionField.value()
+            self.project.version = version
+        except IllegalNamespaceError:
+            errorDialog = QtWidgets.QErrorMessage(parent=self)
+            errorDialog.showMessage('The input string is not a valid IRI')
+            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
+            errorDialog.show()
+            errorDialog.raise_()
+            errorDialog.activateWindow()
+
     @QtCore.pyqtSlot(bool)
     def addOntologyImport(self, _):
         """

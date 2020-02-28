@@ -36,7 +36,7 @@
 from PyQt5 import QtWidgets
 from eddy.core.commands.labels import CommandLabelChange, GenerateNewLabel
 
-
+'''
 class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
 
     def __init__(self, project, dict_old_val, dict_new_val, iris_to_update, nodes_to_update):
@@ -52,6 +52,7 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
         self.nodes_to_update = nodes_to_update
 
     def redo(self):
+
         #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (redo)')
 
         self.project.IRI_prefixes_nodes_dict.clear()
@@ -96,8 +97,9 @@ class CommandProjetSetIRIPrefixesNodesDict(QtWidgets.QUndoCommand):
             self.project.sgnIRIPrefixNodeDictionaryUpdated.emit(None, None, None)
 
         #print('>>>      CommandProjetSetIRIPrefixesNodesDict  (undo) END')
+'''
 
-
+'''
 class CommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
 
 
@@ -121,8 +123,9 @@ class CommandProjetSetIRIofCutNodes(QtWidgets.QUndoCommand):
         for ele in self.list_undo:
             old_list.append(ele)
         self.project.iri_of_cut_nodes = old_list
+'''
 
-
+'''
 class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
 
     def __init__(self, rc_undo, rc_redo, node, project, **kwargs):
@@ -163,8 +166,9 @@ class CommandNodeSetRemainingCharacters(QtWidgets.QUndoCommand):
             #old_text = GenerateNewLabel(self.project, self.node, remaining_characters=self.rc_undo).return_label()
 
             CommandLabelChange(self.node.diagram, self.node, self.old_text, self.new_text, refactor=self.refactor).undo()
+'''
 
-
+'''
 class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):
 
     def __init__(self, project, dict_old_val, dict_new_val, iri_to_update, nodes_to_update):
@@ -212,3 +216,4 @@ class CommandProjectORNodeSetPreferedPrefix(QtWidgets.QUndoCommand):
                 self.project.sgnPreferedPrefixDictionaryUpdated.emit(self.iri_to_update, str(n), prefered_prefix)
 
         #print('>>>      CommandProjectORNodeSetPreferedPrefix  (undo) END')
+'''

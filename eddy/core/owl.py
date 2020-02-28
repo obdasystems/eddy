@@ -605,6 +605,8 @@ class IRI(QtCore.QObject):
 
 
     def getSimpleName(self):
+        if self._suffix:
+            return self._suffix
         index = self.namespace.rfind('#')
         if not index > -1:
             index = self.namespace.rfind('/')
@@ -840,6 +842,7 @@ class IRIManager(QtCore.QObject):
             self.prefix2namespaceMap = {}
         else:
             self.prefix2namespaceMap = prefixMap
+        self.ontologyIRI = None
         if ontologyIRI:
             self.setOntologyIRI(ontologyIRI)
             self.setEmptyPrefix(ontologyIRI)
@@ -876,7 +879,13 @@ class IRIManager(QtCore.QObject):
 
     @QtCore.pyqtSlot(str)
     def setOntologyIRI(self, iriString):
-        self.ontologyIRI = self.getIRI(iriString)
+        newOntIRI = self.getIRI(iriString)
+        annotations = []
+        if self.ontologyIRI:
+            annotations = self.ontologyIRI.annotationAssertions
+        for annot in annotations:
+            newOntIRI.addAnnotationAssertion(annot)
+        self.ontologyIRI = newOntIRI
         self.sgnOntologyIRIModified.emit(self.ontologyIRI)
 
     # TODO dovrai poi capire quando un'IRI dovrà essere rimossa (come capire quando non viene più utilizzata in alcun punto???)

@@ -61,8 +61,6 @@ from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeSetMeta, CommandIRISetMeta
 from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.commands.nodes import CommandNodeSwitchTo
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
 from eddy.core.commands.project import CommandProjectSetProfile
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.common import HasActionSystem
@@ -1593,11 +1591,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 print('Removing OntologyPredicateNode {}'.format(item))
                 #TODO aggiungi comandi per rimozione IRI da indice
 
-        commands = [CommandItemsRemove(diagram, items),
-                    CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                         iris_to_update,
-                                                         nodes_to_update),
-                    CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project)]
+        commands = [CommandItemsRemove(diagram, items)]
 
         self.undostack.beginMacro('>>')
         for command in commands:
@@ -1981,7 +1975,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[from_iri][0].append(to_prefix)
 
                 commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [from_iri], None))
                 commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         # case 3
@@ -2041,8 +2034,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[to_iri][0].append(to_prefix)
 
             commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                           [from_iri, to_iri], list_of_nodes_to_process))
             commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         if any(commands):
@@ -2096,8 +2087,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
                 commands.append(
                     CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                               [from_iri], None))
                 commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         #case 3
@@ -2147,8 +2136,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
             commands.append(
                 CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                               [from_iri, to_iri], [node]))
             commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         if any(commands):
@@ -2719,8 +2706,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
                         commands = [CommandProjectDisconnectSpecificSignals(self.project),
                                     CommandLabelChange(diagram, node, node.text(), new_label),
-                                    CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                         Duplicate_dict_1, [old_iri, new_iri], [node]),
                                     CommandNodeSetRemainingCharacters(node.remaining_characters, data, node,
                                                                       self.project),
                                     CommandLabelChange(diagram, node, node.text(), new_label),
@@ -2779,8 +2764,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
                     commands = [
                         CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False),
-                        CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                             [old_iri, new_iri], [node]),
                         CommandNodeSetRemainingCharacters(node.remaining_characters, new_rc, node, diagram.project),
                         CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False)]
 

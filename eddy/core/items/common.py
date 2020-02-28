@@ -40,9 +40,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive, Compute_RC_with_spaces
+from eddy.core.commands.labels import CommandLabelChange,Compute_RC_with_spaces
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
@@ -386,8 +384,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
 
                     #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
+                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
+                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
                     #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
 
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
