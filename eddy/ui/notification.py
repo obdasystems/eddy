@@ -33,11 +33,12 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
-from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 from eddy.core.timer import PausableTimer
 
@@ -67,6 +68,8 @@ class Notification(QtWidgets.QWidget):
 
         self.sleepTimer = PausableTimer()
         self.sleepTimer.setSingleShot(True)
+
+        self.session.installEventFilter(self)
 
         #############################################
         # SETUP UI
@@ -147,6 +150,19 @@ class Notification(QtWidgets.QWidget):
     #   EVENTS
     #################################
 
+    def eventFilter(self, target, event):
+        """
+        Executed when the Session receives an event in order
+        to keep the notification within the Session geometry boundaries.
+        :type target: QtCore.QObject
+        :type event: QtCore.QEvent
+        :rtype: bool
+        """
+        if event.type() in {QtCore.QEvent.Move, QtCore.QEvent.Resize}:
+            # UPDATE THE NOTIFICATION GEOMETRY
+            self.setNotificationPos()
+        return False
+
     def enterEvent(self, event):
         """
         Executed when the mouse enters the widget.
@@ -194,7 +210,7 @@ class Notification(QtWidgets.QWidget):
             QtCore.Qt.LeftToRight,
             QtCore.Qt.AlignRight | QtCore.Qt.AlignTop,
             self.size(),
-            QtWidgets.QDesktopWidget().availableGeometry(self.session))
+            self.session.geometry())
         # MOVE TO CORRECT LOCATION
         alignedRect.translate(-10, (self.num * (self.height() + 10)) + 40)
         # SET THE NOTIFICATION GEOMETRY
