@@ -35,10 +35,13 @@
 
 import json
 
-from PyQt5 import QtCore
-from PyQt5 import QtNetwork
+from PyQt5 import (
+    QtCore,
+    QtNetwork,
+)
 
 from eddy import VERSION
+from eddy.core.datatypes.qt import VersionNumber
 from eddy.core.datatypes.system import Channel
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
@@ -76,14 +79,16 @@ class NetworkManager(QtNetwork.QNetworkAccessManager):
             if reply.isFinished() and reply.error() == QtNetwork.QNetworkReply.NoError:
                 channel = reply.request().attribute(NetworkManager.ChannelAttribute)
                 version = reply.request().attribute(NetworkManager.VersionAttribute)
-                current_version = QtCore.QVersionNumber.fromString(version)[0]
+                current_version = VersionNumber.fromString(version)
                 update_name = None  # Store update name
-                update_version = QtCore.QVersionNumber.fromString(version)[0]  # Store update version
+                update_version = current_version # Store update version
                 update_url = None  # Store update HTML url
                 releases = json.loads(str(reply.readAll(), encoding='utf-8'))
                 for release in releases:
                     if channel is Channel.Beta or not bool(release.get('prerelease')):
-                        tag_version = QtCore.QVersionNumber.fromString(release.get('tag_name', '').replace('v', ''))[0]
+                        tag_name = release.get('tag_name', '')
+                        tag_name = tag_name[1:] if tag_name.startswith('v') else tag_name
+                        tag_version = VersionNumber.fromString(tag_name)
                         if tag_version > update_version:
                             update_name = release.get('name')
                             update_version = tag_version
