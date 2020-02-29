@@ -16,7 +16,7 @@
         "assets": [],
         "tarball_url": "https://api.github.com/repos/obdasystems/eddy/tarball/v1.1.2",
         "zipball_url": "https://api.github.com/repos/obdasystems/eddy/zipball/v1.1.2",
-        "body": "This is a minor release introducing the following changes:\r\n * Added the ability to filter by type and description status in the ontology explorer.\r\n * Updated project dependencies to the latest stable version.\r\n\r\n[![Download Eddy](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/obda-eddy/files/v1.1.2/)"
+        "body": ""
     },
     {
         "url": "https://api.github.com/repos/obdasystems/eddy/releases/13148987",
@@ -35,6 +35,6 @@
         "assets": [],
         "tarball_url": "https://api.github.com/repos/obdasystems/eddy/tarball/v1.1.1",
         "zipball_url": "https://api.github.com/repos/obdasystems/eddy/zipball/v1.1.1",
-        "body": "This is a bug fix release addressing the following issues:\r\n * Properly set `LD_LIBRARY_PATH` variable on `Linux`, this should make the application open by double-clicking on the executable.\r\n * Fix `SSLError` when checking for updates on `macOS` in case a recent `openssl` library is not installed.\r\n * Add launcher script for `Linux` builds.\r\n * Fix dragging of labels in the diagram causing an error to be thrown.\r\n\r\n[![Download Eddy](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/obda-eddy/files/v1.1.1/)"
+        "body": ""
     }
 ]

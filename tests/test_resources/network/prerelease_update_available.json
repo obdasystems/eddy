@@ -1,0 +1,21 @@
+[
+    {
+        "url": "https://api.github.com/repos/obdasystems/eddy/releases/14476469",
+        "assets_url": "https://api.github.com/repos/obdasystems/eddy/releases/14476469/assets",
+        "upload_url": "https://uploads.github.com/repos/obdasystems/eddy/releases/14476469/assets{?name,label}",
+        "html_url": "https://github.com/obdasystems/eddy/releases/tag/v1.4.0-rc1",
+        "id": 14476469,
+        "node_id": "MDc6UmVsZWFzZTE0NDc2NDY5",
+        "tag_name": "v1.4.0-rc1",
+        "target_commitish": "581e90e49260b332ad555d62ef73a303d9e96e3d",
+        "name": "Eddy v1.4.0-rc1",
+        "draft": false,
+        "prerelease": true,
+        "created_at": "2020-12-11T20:36:43Z",
+        "published_at": "2020-12-12T16:56:14Z",
+        "assets": [],
+        "tarball_url": "https://api.github.com/repos/obdasystems/eddy/tarball/v1.4.0-rc1",
+        "zipball_url": "https://api.github.com/repos/obdasystems/eddy/zipball/v1.4.0-rc1",
+        "body": ""
+    }
+]

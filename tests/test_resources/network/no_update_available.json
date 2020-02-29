@@ -3,20 +3,20 @@
     "url": "https://api.github.com/repos/obdasystems/eddy/releases/14476469",
     "assets_url": "https://api.github.com/repos/obdasystems/eddy/releases/14476469/assets",
     "upload_url": "https://uploads.github.com/repos/obdasystems/eddy/releases/14476469/assets{?name,label}",
-    "html_url": "https://github.com/obdasystems/eddy/releases/tag/v0.13",
+    "html_url": "https://github.com/obdasystems/eddy/releases/tag/v1.1.0",
     "id": 14476469,
     "node_id": "MDc6UmVsZWFzZTE0NDc2NDY5",
-    "tag_name": "v0.13",
+    "tag_name": "v1.1.0",
     "target_commitish": "581e90e49260b332ad555d62ef73a303d9e96e3d",
-    "name": "Eddy v0.13",
+    "name": "Eddy v1.1.0",
     "draft": false,
-    "prerelease": false,
+    "prerelease": true,
     "created_at": "2018-12-11T20:36:43Z",
     "published_at": "2018-12-12T16:56:14Z",
     "assets": [],
-    "tarball_url": "https://api.github.com/repos/obdasystems/eddy/tarball/v0.13",
-    "zipball_url": "https://api.github.com/repos/obdasystems/eddy/zipball/v0.13",
-    "body": "This is a minor release introducing the following changes:\r\n * Added the ability to filter by type and description status in the ontology explorer.\r\n * Updated project dependencies to the latest stable version.\r\n\r\n[![Download Eddy](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/obda-eddy/files/v0.13/)"
+    "tarball_url": "https://api.github.com/repos/obdasystems/eddy/tarball/v1.1.0",
+    "zipball_url": "https://api.github.com/repos/obdasystems/eddy/zipball/v1.1.0",
+    "body": ""
   },
   {
     "url": "https://api.github.com/repos/obdasystems/eddy/releases/13148987",
@@ -35,6 +35,6 @@
     "assets": [],
     "tarball_url": "https://api.github.com/repos/obdasystems/eddy/tarball/v0.12",
     "zipball_url": "https://api.github.com/repos/obdasystems/eddy/zipball/v0.12",
-    "body": "This is a bug fix release addressing the following issues:\r\n * Properly set `LD_LIBRARY_PATH` variable on `Linux`, this should make the application open by double-clicking on the executable.\r\n * Fix `SSLError` when checking for updates on `macOS` in case a recent `openssl` library is not installed.\r\n * Add launcher script for `Linux` builds.\r\n * Fix dragging of labels in the diagram causing an error to be thrown.\r\n\r\n[![Download Eddy](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/obda-eddy/files/v0.12/)"
+    "body": ""
   }
 ]

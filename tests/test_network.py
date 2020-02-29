@@ -33,7 +33,11 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore, QtNetwork, QtTest
+from PyQt5 import (
+    QtCore,
+    QtNetwork,
+    QtTest,
+)
 
 from eddy.core.datatypes.system import Channel
 from eddy.core.functions.fsystem import fread
@@ -45,9 +49,9 @@ from eddy.core.network import NetworkManager
 # NETWORK MANAGER TESTS
 #################################
 
-def test_check_for_update_update_available(qtbot):
+def test_check_for_update_release_update_available(qtbot):
     # GIVEN
-    response_content = fread(expandPath('@tests/test_resources/network/update_available.json')).encode('utf-8')
+    response_content = fread(expandPath('@tests/test_resources/network/release_update_available.json')).encode('utf-8')
     response_data = b'application/json'
     update_provider = UpdateContentProvider(response_content, response_data)
     nmanager = NetworkManagerMock(None, content_provider=update_provider)
@@ -56,6 +60,21 @@ def test_check_for_update_update_available(qtbot):
             qtbot.assertNotEmitted(nmanager.sgnNoUpdateDataAvailable), \
             qtbot.assertNotEmitted(nmanager.sgnNoUpdateAvailable):
         nmanager.checkForUpdate(Channel.Stable, '1.0.0')
+    # THEN
+    assert 1 == len(blocker.all_signals_and_args)
+
+
+def test_check_for_update_prerelease_update_available(qtbot):
+    # GIVEN
+    response_content = fread(expandPath('@tests/test_resources/network/prerelease_update_available.json')).encode('utf-8')
+    response_data = b'application/json'
+    update_provider = UpdateContentProvider(response_content, response_data)
+    nmanager = NetworkManagerMock(None, content_provider=update_provider)
+    # WHEN
+    with qtbot.waitSignals([nmanager.sgnUpdateAvailable]) as blocker, \
+            qtbot.assertNotEmitted(nmanager.sgnNoUpdateDataAvailable), \
+            qtbot.assertNotEmitted(nmanager.sgnNoUpdateAvailable):
+        nmanager.checkForUpdate(Channel.Beta, '1.0.0')
     # THEN
     assert 1 == len(blocker.all_signals_and_args)
 
