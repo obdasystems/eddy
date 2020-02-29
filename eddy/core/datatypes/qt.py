@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+import re
+
 from PyQt5 import (
     QtCore,
     QtGui,
@@ -189,3 +191,183 @@ class PHCQToolButton(QtWidgets.QToolButton):
         :type event: QEvent
         """
         self.unsetCursor()
+
+
+class VersionNumber(QtCore.QVersionNumber):
+    """
+    Extends QtCore.QVersionNumber to provide support for SemVer version numbers.
+    """
+    RE_SEMVER = re.compile(r'''
+        ^(?P<major>0|[1-9]\d*)
+        \.(?P<minor>0|[1-9]\d*)
+        \.(?P<patch>0|[1-9]\d*)
+        (?:-(?P<prerelease>
+            (?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)
+            (?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*
+        ))?
+        (?:\+(?P<build>
+            [0-9a-zA-Z-]+
+            (?:\.[0-9a-zA-Z-]+)*
+        ))?
+        $
+    ''', re.VERBOSE)
+
+    def __init__(self, major=None, minor=0, patch=0, prerelease=None, build=None):
+        """
+        Initializes the VersionNumber.
+        :type major: int
+        :type minor: int
+        :type patch: int
+        :type prerelease: str
+        :type build: str
+        """
+        if major is not None:
+            # CONSTRUCT EXPLICIT VERSION
+            super().__init__(int(major), minor, patch)
+        else:
+            # CONSTRUCT A NULL VERSION NUMBER
+            super().__init__()
+        self._prerelease = prerelease if prerelease is None else str(prerelease)
+        self._build = build if build is None else str(build)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def patchVersion(self):
+        """
+        Returns the patch number for this version (alias for microVersion()).
+        :rtype: int
+        """
+        return self.microVersion()
+
+    def build(self):
+        """
+        Returns the build number for this version as a string.
+        :rtype: str
+        """
+        return self._build
+
+    def prerelease(self):
+        """
+        Returns the prerelease identifier for this version as a string.
+        :rtype str:
+        """
+        return self._prerelease
+
+    @classmethod
+    def compare(cls, v1, v2):
+        """
+        Compares v1 with v2 and returns -1, 0 or +1 if v1 is, respectively,
+        less than, equal or greater than v2.
+        :type v1: VersionNumber
+        :type v2: VersionNumber
+        :rtype: int
+        """
+        value = super().compare(v1.normalized(), v2.normalized())
+        if value != 0:
+            return value
+        # COMPARE PRERELEASE IDENTIFIERS
+        rc1 = v1.prerelease()
+        rc2 = v2.prerelease()
+        collator = Collator(QtCore.QLocale('en_US'))
+        collator.setNumericMode(True)
+        rccmp = collator.compare(v1.prerelease(), v2.prerelease())
+        if not rccmp:
+            return 0
+        elif not rc1:
+            return 1
+        elif not rc2:
+            return -1
+        return rccmp
+
+    @classmethod
+    def fromString(cls, versionStr):
+        """
+        Constructs a VersionNumber from a formatted string.
+        Differently from QtCore.QVersionNumber implementation, this method
+        does not return the suffix index after the numerical segments.
+        :type versionStr: str
+        :rtype: VersionNumber
+        """
+        match = cls.RE_SEMVER.match(versionStr)
+        if not match:
+            return VersionNumber()
+        groups = match.groupdict()
+        major = int(groups['major'])
+        minor = int(groups['minor'])
+        patch = int(groups['patch'])
+        return VersionNumber(major, minor, patch, groups['prerelease'], groups['build'])
+
+    def toString(self):
+        """
+        Returns a string representation of this VersionNumber.
+        :rtype: str
+        """
+        return '{0}{1}{2}'.format(
+            '{0}.{1}.{2}'.format(self.majorVersion(), self.minorVersion(), self.patchVersion()),
+            '-{}'.format(self.prerelease()) if self.prerelease() else '',
+            '+{}'.format(self.build()) if self.build() else ''
+        ) if not self.isNull() else ''
+
+    def __eq__(self, other):
+        """
+        Returns `True` if this version is equal to the other version.
+        :type other: VersionNumber
+        :rtype: bool
+        """
+        return VersionNumber.compare(self, other) == 0
+
+    def __ge__(self, other):
+        """
+        Returns `True` if this version is greater than or equal to the other version.
+        :type other: VersionNumber
+        :rtype: bool
+        """
+        return VersionNumber.compare(self, other) >= 0
+
+    def __gt__(self, other):
+        """
+        Returns `True` if this version is strictly greater than the other version.
+        :type other: VersionNumber
+        :rtype: bool
+        """
+        return VersionNumber.compare(self, other) > 0
+
+    def __le__(self, other):
+        """
+        Returns `True` if this version is less than or equal to the other version.
+        :type other: VersionNumber
+        :rtype: bool
+        """
+        return VersionNumber.compare(self, other) <= 0
+
+    def __lt__(self, other):
+        """
+        Returns `True` if this version is strictly less than the other version.
+        :type other: VersionNumber
+        :rtype: bool
+        """
+        return VersionNumber.compare(self, other) < 0
+
+    def __ne__(self, other):
+        """
+        Returns `True` if this version is *not* equal to the other version.
+        :type other: VersionNumber
+        :rtype: bool
+        """
+        return VersionNumber.compare(self, other) != 0
+
+    def __repr__(self):
+        """
+        Returns a string representation of this VersionNumber.
+        :rtype: str
+        """
+        return '{0}({1})'.format(self.__class__.__name__, self.toString())
+
+    def __str__(self):
+        """
+        Returns a string representation of this VersionNumber.
+        :rtype: str
+        """
+        return self.toString()
