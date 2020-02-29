@@ -41,19 +41,44 @@ import re
 import sys
 
 from abc import ABCMeta
-from configparser import ConfigParser, NoOptionError
+from configparser import (
+    ConfigParser,
+    NoOptionError,
+)
 from importlib.machinery import PathFinder
-from zipfile import is_zipfile, ZipFile
-from verlib import NormalizedVersion
+from zipfile import (
+    is_zipfile,
+    ZipFile,
+)
 
 from PyQt5 import QtCore
 
-from eddy.core.common import HasActionSystem, HasMenuSystem, HasWidgetSystem, HasShortcutSystem
+from eddy.core.common import (
+    HasActionSystem,
+    HasMenuSystem,
+    HasShortcutSystem,
+    HasWidgetSystem,
+)
 from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import fcopy, fexists, fread, fremove
-from eddy.core.functions.fsystem import isdir, mkdir, rmdir
-from eddy.core.functions.misc import first, lstrip
-from eddy.core.functions.path import expandPath, isSubPath
+from eddy.core.functions.fsystem import (
+    fcopy,
+    fexists,
+    fread,
+    fremove,
+)
+from eddy.core.functions.fsystem import (
+    isdir,
+    mkdir,
+    rmdir,
+)
+from eddy.core.functions.misc import (
+    first,
+    lstrip,
+)
+from eddy.core.functions.path import (
+    expandPath,
+    isSubPath,
+)
 from eddy.core.output import getLogger
 
 LOGGER = getLogger()
@@ -161,9 +186,9 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasShortcut
     def version(self):
         """
         Returns the version of the plugin.
-        :rtype: NormalizedVersion
+        :rtype: str
         """
-        return NormalizedVersion(self.spec.get('plugin', 'version'))
+        return self.spec.get('plugin', 'version')
 
     #############################################
     #   HOOKS
