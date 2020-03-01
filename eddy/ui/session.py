@@ -103,8 +103,6 @@ from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
-from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
-from eddy.core.loaders.graphol import GrapholProjectLoader_v2
 from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v2, GrapholOntologyIRILoader_v2
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger

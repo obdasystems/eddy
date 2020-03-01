@@ -46,7 +46,6 @@ from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode
 from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
-from eddy.core.project import K_DESCRIPTION_STATUS
 from eddy.core.plugin import AbstractPlugin
 
 from eddy.ui.dock import DockWidget
@@ -933,9 +932,6 @@ class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
         # PARENT NODE
         if item.hasChildren():
             children = [item.child(c).data() for c in range(item.rowCount())]
-            return super().filterAcceptsRow(sourceRow, sourceIndex) and \
-                   any([Status.valueOf(meta.get(K_DESCRIPTION_STATUS, '')) in self.status for meta in
-                        [self.project.meta(node.type(), node.text()) for node in children
-                         if node.type() in self.items]])
+            return super().filterAcceptsRow(sourceRow, sourceIndex)
         # LEAF NODE
         return super().filterAcceptsRow(sourceRow, sourceIndex)

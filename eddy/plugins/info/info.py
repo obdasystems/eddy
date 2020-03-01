@@ -682,27 +682,28 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         #self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
-        self.conceptsKey = Key('Concept', self)
+        self.conceptsKey = Key('Classes', self)
         self.conceptsKey.setFont(Font('Roboto', 12))
         self.conceptsField = Integer(self)
         self.conceptsField.setFont(Font('Roboto', 12))
         self.conceptsField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.conceptsField.setReadOnly(True)
 
-        self.rolesKey = Key('Role', self)
+        self.rolesKey = Key('Obj prop.', self)
         self.rolesKey.setFont(Font('Roboto', 12))
         self.rolesField = Integer(self)
         self.rolesField.setFont(Font('Roboto', 12))
         self.rolesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.rolesField.setReadOnly(True)
 
-        self.attributesKey = Key('Attribute', self)
+        self.attributesKey = Key('Data prop.', self)
         self.attributesKey.setFont(Font('Roboto', 12))
         self.attributesField = Integer(self)
         self.attributesField.setFont(Font('Roboto', 12))
         self.attributesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.attributesField.setReadOnly(True)
 
+        '''
         self.inclusionsKey = Key('Inclusion', self)
         self.inclusionsKey.setFont(Font('Roboto', 12))
         self.inclusionsField = Integer(self)
@@ -716,6 +717,7 @@ class ProjectInfo(AbstractInfo):
         self.membershipField.setFont(Font('Roboto', 12))
         self.membershipField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.membershipField.setReadOnly(True)
+        '''
 
         self.atomicPredHeader = Header('Atomic predicates', self)
         self.atomicPredHeader.setFont(Font('Roboto', 12))
@@ -725,7 +727,7 @@ class ProjectInfo(AbstractInfo):
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
-
+        '''
         self.assertionsHeader = Header('Assertions', self)
         self.assertionsHeader.setFont(Font('Roboto', 12))
 
@@ -733,6 +735,7 @@ class ProjectInfo(AbstractInfo):
         self.assertionsLayout.setSpacing(0)
         self.assertionsLayout.addRow(self.inclusionsKey, self.inclusionsField)
         self.assertionsLayout.addRow(self.membershipKey, self.membershipField)
+        '''
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -742,8 +745,10 @@ class ProjectInfo(AbstractInfo):
         self.mainLayout.addLayout(self.ontologyPropLayout)
         self.mainLayout.addWidget(self.atomicPredHeader)
         self.mainLayout.addLayout(self.atomicPredLayout)
-        #self.mainLayout.addWidget(self.assertionsHeader)
-        #self.mainLayout.addLayout(self.assertionsLayout)
+        '''
+        self.mainLayout.addWidget(self.assertionsHeader)
+        self.mainLayout.addLayout(self.assertionsLayout)
+        '''
 
         self.ENTRY_MODIFIED_OK_var = set()
         self.ENTRY_IGNORE_var = set()
@@ -869,7 +874,7 @@ class ProjectInfo(AbstractInfo):
         self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeIRINode))
         self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptIRINode))
         self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleIRINode))
-        self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
+        #self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
         #self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
 
 

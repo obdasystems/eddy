@@ -54,7 +54,7 @@ from eddy.core.items.nodes.role_iri import RoleNode
 from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIManager, IRI, K_ASYMMETRIC, K_INVERSE_FUNCTIONAL, K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, \
-    K_TRANSITIVE, K_FUNCTIONAL
+    K_TRANSITIVE, K_FUNCTIONAL, AnnotationAssertion
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.resolvers import PredicateBooleanConflictResolver
 from eddy.ui.resolvers import PredicateDocumentationConflictResolver
@@ -63,12 +63,11 @@ LOGGER = getLogger()
 
 
 # PROJECT INDEX
+K_DESCRIPTION = 'description'
 K_DIAGRAM = 'diagrams'
 K_EDGE = 'edges'
 K_ITEMS = 'items'
-K_META = 'meta'
 K_NODE = 'nodes'
-K_PREDICATE = 'predicates'
 K_TYPE = 'types'
 
 #TODO ADDED
@@ -96,9 +95,6 @@ K_ITEM = 'item'
 K_NAME = 'name'
 K_PROPERTY = 'property'
 
-# PREDICATES META KEYS
-K_DESCRIPTION = 'description'
-K_DESCRIPTION_STATUS = 'status'
 
 
 
@@ -1166,7 +1162,9 @@ class Project(IRIManager):
         Add the given diagram to the Project, together with all its items.
         :type diagram: Diagram
         """
+
         if self.index.addDiagram(diagram):
+            diagram.setParent(self)
             self.sgnDiagramAdded.emit(diagram)
             for item in diagram.items():
                 if item.isNode() or item.isEdge():
@@ -1254,22 +1252,6 @@ class Project(IRIManager):
         """
         return self.index.items(diagram)
 
-    def meta(self, item, name):
-        """
-        Returns metadata for the given predicate, expressed as pair (item, name).
-        :type item: Item
-        :type name: str
-        :rtype: dict
-        """
-        return self.index.meta(item, name)
-
-    def metas(self, *types):
-        """
-        Returns a collection of pairs 'item', 'name' for all the predicates with metadata.
-        :type types: list
-        :rtype: list
-        """
-        return self.index.metas(*types)
 
     def node(self, diagram, nid):
         """
@@ -1301,16 +1283,6 @@ class Project(IRIManager):
         return self.index.predicateNum(item, diagram)
     '''
 
-    def predicates(self, item=None, name=None, diagram=None):
-        """
-        Returns a collection of predicate nodes belonging to the given diagram.
-        If no diagram is supplied the lookup is performed across the whole Project.
-        :type item: Item
-        :type name: str
-        :type diagram: Diagram
-        :rtype: set
-        """
-        return self.index.predicates(item, name, diagram)
 
     def iriOccurrences(self, item=None, iri=None, diagram=None):
         """
@@ -1332,27 +1304,6 @@ class Project(IRIManager):
             for item in self.items(diagram):
                 diagram.sgnItemRemoved.emit(diagram, item)
             self.sgnDiagramRemoved.emit(diagram)
-            self.sgnUpdated.emit()
-
-    def SYsetMeta(self, item, name, meta):
-        """
-        Set metadata for the given predicate type/name combination.
-        :type item: Item
-        :type name: str
-        :type meta: dict
-        """
-        if self.index.setMeta(item, name, meta):
-            self.sgnMetaAdded.emit(item, name)
-            self.sgnUpdated.emit()
-
-    def unsetMeta(self, item, name):
-        """
-        Remove metadata for the given predicate type/name combination.
-        :type item: Item
-        :type name: str
-        """
-        if self.index.unsetMeta(item, name):
-            self.sgnMetaRemoved.emit(item, name)
             self.sgnUpdated.emit()
 
     #############################################
@@ -1438,7 +1389,6 @@ class ProjectIndex(dict):
         self[K_EDGE] = dict()
         self[K_ITEMS] = dict()
         self[K_NODE] = dict()
-        self[K_PREDICATE] = dict()
         self[K_TYPE] = dict()
         self.project = project
 
@@ -1452,6 +1402,39 @@ class ProjectIndex(dict):
             self[K_DIAGRAM][diagram.name] = diagram
             return True
         return False
+
+    def removeDiagram(self, diagram):
+        """
+        Remove the given diagram from the Project index.
+        :type diagram: Diagram
+        :rtype: bool
+        """
+        if diagram.name in self[K_DIAGRAM]:
+            del self[K_DIAGRAM][diagram.name]
+            return True
+        return False
+
+    def diagram(self, did):
+        """
+        Retrieves a diagram given its id.
+        :type did: str
+        :rtype: Diagram
+        """
+        try:
+            return self[K_DIAGRAM][did]
+        except KeyError:
+            return None
+
+    def diagrams(self):
+        """
+        Returns a collection with all the diagrams in this Project Index.
+        :rtype: set
+        """
+        return set(self[K_DIAGRAM].values())
+
+
+
+    #####TODO
 
     def addItem(self, diagram, item):
         """
@@ -1474,40 +1457,12 @@ class ProjectIndex(dict):
                 if diagram.name not in self[K_NODE]:
                     self[K_NODE][diagram.name] = dict()
                 self[K_NODE][diagram.name][item.id] = item
-                if item.isPredicate():
-                    #k = OWLText(item.text())
-                    k = item.text().replace('\n','') #PER LE IRI NON VA BENE. a QUESTO PUNTO IL LABEL ANCORA NON è SETTATO, ALLORA item.text()=empty
-                    if i not in self[K_PREDICATE]:
-                        self[K_PREDICATE][i] = dict()
-                    if k not in self[K_PREDICATE][i]:
-                        self[K_PREDICATE][i][k] = {K_NODE: dict()}
-                    if diagram.name not in self[K_PREDICATE][i][k][K_NODE]:
-                        self[K_PREDICATE][i][k][K_NODE][diagram.name] = set()
-                    self[K_PREDICATE][i][k][K_NODE][diagram.name] |= {item}
             if item.isEdge():
                 if diagram.name not in self[K_EDGE]:
                     self[K_EDGE][diagram.name] = dict()
                 self[K_EDGE][diagram.name][item.id] = item
             return True
         return False
-
-    def diagram(self, did):
-        """
-        Retrieves a diagram given its id.
-        :type did: str
-        :rtype: Diagram
-        """
-        try:
-            return self[K_DIAGRAM][did]
-        except KeyError:
-            return None
-
-    def diagrams(self):
-        """
-        Returns a collection with all the diagrams in this Project Index.
-        :rtype: set
-        """
-        return set(self[K_DIAGRAM].values())
 
     def edge(self, diagram, eid):
         """
@@ -1587,31 +1542,6 @@ class ProjectIndex(dict):
         except (KeyError, TypeError):
             return set()
 
-    def meta(self, item, name):
-        """
-        Retrieves metadata for the given predicate, expressed as pair (item, name).
-        :type item: Item
-        :type name: str
-        :rtype: dict
-        """
-        try:
-            #name = OWLText(name)
-            name = name.replace('\n','')
-            return self[K_PREDICATE][item][name][K_META]
-        except KeyError:
-            return dict()
-
-    def metas(self, *types):
-        """
-        Retrieves a collection of pairs 'item', 'name' for all the predicates with metadata.
-        :type types: list
-        :rtype: list
-        """
-        filter_ = lambda x: not types or x in types
-        return [(k1, k2) for k1 in self[K_PREDICATE] \
-                            for k2 in self[K_PREDICATE][k1] \
-                                if filter_(k1) and K_META in self[K_PREDICATE][k1][k2]]
-
     def node(self, diagram, nid):
         """
         Retrieves the node matching the given id or None if no node is found.
@@ -1637,108 +1567,8 @@ class ProjectIndex(dict):
             return set(self[K_NODE][diagram.name].values())
         except (KeyError, TypeError):
             return set()
-
-    '''
-    def predicateNum(self, item, diagram=None):
-        """
-        Count the number of predicates of the given type which are defined in the given diagram.
-        If no diagram is supplied, the counting is extended to the whole Project Index.
-        :type item: Item
-        :type diagram: Diagram
-        :rtype: int
-        """
-        try:
-            subdict = self[K_PREDICATE]
-            if not diagram:
-                return len(subdict[item])
-            return len({i for i in subdict[item] if diagram.name in subdict[item][i][K_NODE]})
-        except (KeyError, TypeError):
-            return 0
-    '''
     
-    def predicates(self, item=None, name=None, diagram=None):
-        """
-        Returns a collection of predicate nodes belonging to the given diagram.
-        If no diagram is supplied the lookup is performed across the whole Project Index.
-        :type item: Item
-        :type name: str
-        :type diagram: Diagram
-        :rtype: set
-        """
-        try:
-            if not item and not name:
 
-                collection = set()
-
-                if not diagram:
-                    for i in self[K_PREDICATE]:
-                        for j in self[K_PREDICATE][i]:
-                            collection.update(*self[K_PREDICATE][i][j][K_NODE].values())
-                else:
-                    for i in self[K_PREDICATE]:
-                        for j in self[K_PREDICATE][i]:
-                            #collection.update(self[K_PREDICATE][i][j][K_NODE][diagram.name])
-                            if diagram.name in self[K_PREDICATE][i][j][K_NODE]:   #Ashwin
-                                collection.update(self[K_PREDICATE][i][j][K_NODE][diagram.name])
-
-                return collection
-
-            if item and not name:
-
-                collection = set()
-
-                if item in self[K_PREDICATE]:    #Ashwin
-                    if not diagram:
-                        for i in self[K_PREDICATE][item]:
-                            collection.update(*self[K_PREDICATE][item][i][K_NODE].values())
-                    else:
-                        for i in self[K_PREDICATE][item]:
-                            #collection.update(self[K_PREDICATE][item][i][K_NODE][diagram.name])
-                            if diagram.name in self[K_PREDICATE][item][i][K_NODE]:   #Ashwin
-                                collection.update(self[K_PREDICATE][item][i][K_NODE][diagram.name])
-                return collection
-
-            if not item and name:
-
-                collection = set()
-                #name = OWLText(name)
-                name = name.replace('\n','')
-
-                if not diagram:
-                    for i in self[K_PREDICATE]:
-                        if name in self[K_PREDICATE][i]:  #Ashwin
-                            collection.update(*self[K_PREDICATE][i][name][K_NODE].values())
-                else:
-                    for i in self[K_PREDICATE]:
-                        if name in self[K_PREDICATE][i]:  # Ashwin
-                            if diagram.name in self[K_PREDICATE][i][name][K_NODE]:  # Ashwin
-                                collection.update(self[K_PREDICATE][i][name][K_NODE][diagram.name])
-
-                return collection
-
-            if item and name:
-
-                name = name.replace('\n','')
-                #name = OWLText(name)
-                if not diagram:
-
-                    return set.union(*self[K_PREDICATE][item][name][K_NODE].values())
-
-                return self[K_PREDICATE][item][name][K_NODE][diagram.name]
-
-        except KeyError:
-            return set()
-        
-    def removeDiagram(self, diagram):
-        """
-        Remove the given diagram from the Project index.
-        :type diagram: Diagram
-        :rtype: bool
-        """
-        if diagram.name in self[K_DIAGRAM]:
-            del self[K_DIAGRAM][diagram.name]
-            return True
-        return False
 
     def removeItem(self, diagram, item):
         """
@@ -1766,19 +1596,6 @@ class ProjectIndex(dict):
                         del self[K_NODE][diagram.name][item.id]
                         if not self[K_NODE][diagram.name]:
                             del self[K_NODE][diagram.name]
-                if item.isPredicate():
-                    #k = OWLText(item.text())
-                    k = item.text().replace('\n','')
-                    if i in self[K_PREDICATE]:
-                        if k in self[K_PREDICATE][i]:
-                            if diagram.name in self[K_PREDICATE][i][k][K_NODE]:
-                                self[K_PREDICATE][i][k][K_NODE][diagram.name] -= {item}
-                                if not self[K_PREDICATE][i][k][K_NODE][diagram.name]:
-                                    del self[K_PREDICATE][i][k][K_NODE][diagram.name]
-                                    if not self[K_PREDICATE][i][k][K_NODE]:
-                                        del self[K_PREDICATE][i][k]
-                                        if not self[K_PREDICATE][i]:
-                                            del self[K_PREDICATE][i]
             if item.isEdge():
                 if diagram.name in self[K_EDGE]:
                     if item.id in self[K_EDGE][diagram.name]:
@@ -1786,39 +1603,6 @@ class ProjectIndex(dict):
                         if not self[K_EDGE][diagram.name]:
                             del self[K_EDGE][diagram.name]
             return True
-        return False
-                
-    def setMeta(self, item, name, meta):
-        """
-        Set metadata for the given predicate type/name combination.
-        :type item: Item
-        :type name: str
-        :type meta: dict
-        :rtype: bool
-        """
-        try:
-            #name = OWLText(name)
-            name = name.replace('\n','')
-            self[K_PREDICATE][item][name][K_META] = meta
-        except KeyError:
-            return False
-        else:
-            return True
-
-    def unsetMeta(self, item, name):
-        """
-        Unset metadata for the given predicate type/name combination.
-        :type item: Item
-        :type name: str
-        :rtype: bool
-        """
-        #name = OWLText(name)
-        name = name.replace('\n','')
-        if item in self[K_PREDICATE]:
-            if name in self[K_PREDICATE][item]:
-                if K_META in self[K_PREDICATE][item][name]:
-                    del self[K_PREDICATE][item][name][K_META]
-                    return True
         return False
 
 
@@ -1967,12 +1751,14 @@ class ProjectIRIIndex(ProjectIndex):
             currDict[diagram.name] = currSet
             self[K_OCCURRENCES][iri] = currDict
 
+        '''
         if diagram.name in self[K_NODE]:
             self[K_NODE][diagram.name].add(node)
         else:
             currSet = set()
             currSet.add(node)
             self[K_NODE][diagram.name] = currSet
+        '''
 
         k_metatype = ''
         k_iri_metatype = ''
@@ -2028,10 +1814,11 @@ class ProjectIRIIndex(ProjectIndex):
         :type diagram: Diagram
         :type node: OntologyEntityNode
         """
+        '''
         if diagram.name in self[K_NODE]:
             if node in self[K_NODE][diagram.name]:
                 self[K_NODE][diagram.name].remove(node)
-
+        '''
 
         iri = node.iri
         k_metatype = ''
@@ -2219,25 +2006,20 @@ class ProjectIRIMergeWorker(QtCore.QObject):
         # self.commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,home_dictionary_old,home_dictionary,iris_to_update,None))
         self.commands.append(CommandProjectConnectSpecificSignals(self.project))
 
-
     def mergeDiagrams(self):
         """
         Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
         """
-        diagrams_selection_dialog = DiagramSelectionDialog(self.session, project=self.other)
-        diagrams_selection_dialog.exec_()
-        self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+        try:
+            diagrams_selection_dialog = DiagramSelectionDialog(self.session, project=self.other)
+            diagrams_selection_dialog.exec_()
+            self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+        except Exception as e:
+            print(e)
 
-        for d in self.selected_diagrams:
-            # print('d.name', d.name)
-            # print('len(d.nodes())', len(d.nodes()))
-            for n in d.nodes():
-                # print('     n', n)
-                if n.text() is not None:
-                    self.all_names_in_selected_diagrams.append(n.text().replace('\n', ''))
-
-        # for diagram in self.other.diagrams():
+        alreadyAdded = set()
         for diagram in self.selected_diagrams:
+            self.replaceIRIs(diagram,alreadyAdded)
             # We may be in the situation in which we are importing a diagram with name 'X'
             # even though we already have a diagram 'X' in our project. Because we do not
             # want to overwrite diagrams, we perform a rename of the diagram being imported,
@@ -2255,277 +2037,31 @@ class ProjectIRIMergeWorker(QtCore.QObject):
             ## MERGE THE DIAGRAM IN THE CURRENT PROJECT
             self.commands.append(CommandDiagramAdd(diagram, self.project))
 
-        # self.project.iri_of_imported_nodes = []
-
-
-    def merge_prefixes(self, home_dictionary, foreign_prefixes, iri_key):
-
-        old_display_in_widget = ('display_in_widget' in home_dictionary[iri_key][2])
-
-        if old_display_in_widget is False:
-
-            all_home_prefixes = []
-
-            for iri in home_dictionary.keys():
-
-                prefixes = home_dictionary[iri][0]
-
-                if prefixes is not None:
-                    all_home_prefixes.extend(prefixes)
-
-            old_prefixes = home_dictionary[iri_key][0]
-
-            new_prefixes = []
-
-            new_prefixes.extend(old_prefixes)
-
-            # print('all_home_prefixes',all_home_prefixes)
-
-            foreign_prefixes_reversed = []
-
-            for pr_foreign in foreign_prefixes:
-                foreign_prefixes_reversed.insert(0, pr_foreign)
-
-            for pr_foreign in foreign_prefixes_reversed:
-
-                if pr_foreign not in all_home_prefixes:
-                    # print('pr_foreign not in all_home_prefixes-',pr_foreign)
-                    new_prefixes.insert(0, pr_foreign)
-
-            home_dictionary[iri_key][0] = new_prefixes
-
-            # print('old_prefixes',old_prefixes)
-            # print('new_prefixes',new_prefixes)
-
-    # not used
-    def append_foreign_nodes_2(self, home_dictionary, foreign_nodes, iri_key):
-
-        # home_nodes = home_dictionary[iri_key][1]
-        # new_home_nodes = set()
-
-        for n in foreign_nodes:
-            self.project.iri_of_imported_nodes.append(iri_key)
-            self.project.iri_of_imported_nodes.append(n.remaining_characters)
-
-        # home_dictionary[iri_key][1] = new_home_nodes
-
-    def append_foreign_nodes(self, home_dictionary, foreign_nodes, iri_key):
-
-        home_nodes = home_dictionary[iri_key][1]
-
-        # print('home_nodes',home_nodes)
-
-        new_home_nodes = set()
-
-        new_home_nodes = new_home_nodes.union(home_nodes)
-        new_home_nodes = new_home_nodes.union(foreign_nodes)
-
-        # print('new_home_nodes', new_home_nodes)
-
-        home_dictionary[iri_key][1] = new_home_nodes
-
-    def merge_properties(self, home_dictionary, foreign_properties, iri_key, home_contains_display_in_widget):
-
-        home_properties = home_dictionary[iri_key][2]
-
-        new_home_properties = set()
-
-        new_home_properties = new_home_properties.union(home_properties)
-
-        for p in foreign_properties:
-            if home_contains_display_in_widget is True:
-                if (p != 'Project_IRI') and (p != 'display_in_widget'):
-                    new_home_properties.add(p)
-            else:
-                if (p != 'Project_IRI'):
-                    new_home_properties.add(p)
-
-        home_dictionary[iri_key][2] = new_home_properties
-
-        # print('home_properties',home_properties)
-        # print('new_home_properties',new_home_properties)
-
-
-
-    def mergeDiagrams(self):
-        """
-        Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
-        """
-        diagrams_selection_dialog = DiagramSelectionDialog(self.session, project=self.other)
-        diagrams_selection_dialog.exec_()
-        self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
-
-        for d in self.selected_diagrams:
-            # print('d.name', d.name)
-            # print('len(d.nodes())', len(d.nodes()))
-            for n in d.nodes():
-                # print('     n', n)
-                if n.text() is not None:
-                    self.all_names_in_selected_diagrams.append(n.text().replace('\n', ''))
-
-        # for diagram in self.other.diagrams():
-        for diagram in self.selected_diagrams:
-            # We may be in the situation in which we are importing a diagram with name 'X'
-            # even though we already have a diagram 'X' in our project. Because we do not
-            # want to overwrite diagrams, we perform a rename of the diagram being imported,
-            # to be sure to have a unique diagram name, in the current project namespace.
-            occurrence = 1
-            name = diagram.name
-            while self.project.diagram(diagram.name):
-                diagram.name = '{0}_{1}'.format(name, occurrence)
-                occurrence += 1
-            ## SWITCH SIGNAL SLOTS
-            disconnect(diagram.sgnItemAdded, self.other.doAddItem)
-            disconnect(diagram.sgnItemRemoved, self.other.doRemoveItem)
-            connect(diagram.sgnItemAdded, self.project.doAddItem)
-            connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
-            ## MERGE THE DIAGRAM IN THE CURRENT PROJECT
-            self.commands.append(CommandDiagramAdd(diagram, self.project))
-
-        # self.project.iri_of_imported_nodes = []
-
-    def mergeMeta(self):
-        """
-        Perform the merge of predicates metadata.
-        """
-        conflicts = dict()
-        resolutions = dict()
-
-        """
-        project_diags = self.project.diagrams()
-        other_diags = self.other.diagrams()
-
-        other_meats_filtered = []
-        print('****     project predicates     ***')
-        for i in self.project.predicates():
-            print('     ',i)
-
-        for d in project_diags:
-            print('diagram_name',d.name)
-            for i in self.project.predicates(diagram=d):
-                print('     ',i)
-
-        print('\n****     project metas     ***')
-        #print('metas', self.project.metas())
-        for item, name in self.project.metas():
-            print('     ',item)
-            print('     ',name)
-            print('     -')
-
-        print('\n****     other predicates     ***')
-        for i in self.other.predicates():
-            print('     ',i)
-
-        for d in other_diags:
-            print('diagram_name',d.name)
-            for i in self.other.predicates(diagram=d):
-                print('     ',i)
-
-        print('\n****     other metas     ***')
-        #print('metas',self.other.metas())
-        for item, name in self.other.metas():
-            print('     ',item)
-            print('     ',name)
-            print('     -')
-
-
-        all_names_in_selected_diagrams = []
-
-        for d in self.selected_diagrams:
-            print('d.name',d.name)
-            print('len(d.nodes())',len(d.nodes()))
-            for n in d.nodes():
-                print('     n',n)
-                all_names_in_selected_diagrams.append(n.text().replace('\n',''))
-
-        print('all_names_in_selected_diagrams',all_names_in_selected_diagrams)
-        """
-
-        for item, name in self.other.metas():
-
-            if name not in self.all_names_in_selected_diagrams:
-                # print(name,'skipped')
-                continue
-
-            if not self.project.predicates(item, name):
-                ## NO PREDICATE => NO CONFLICT
-                undo = self.project.meta(item, name).copy()
-                redo = self.other.meta(item, name).copy()
-                self.commands.append(CommandNodeSetMeta(self.project, item, name, undo, redo))
-            else:
-                ## CHECK FOR POSSIBLE CONFLICTS
-                metac = self.project.meta(item, name)
-                metai = self.other.meta(item, name)
-                if metac != metai:
-                    if item not in conflicts:
-                        conflicts[item] = dict()
-                    conflicts[item][name] = {K_CURRENT: metac.copy(), K_IMPORTING: metai.copy()}
-                    if item not in resolutions:
-                        resolutions[item] = dict()
-                    resolutions[item][name] = metac.copy()
-
-        ## RESOLVE CONFLICTS
-        aconflicts = []
-        for item in conflicts:
-            for name in conflicts[item]:
-                metac = conflicts[item][name][K_CURRENT]
-                metai = conflicts[item][name][K_IMPORTING]
-
-                ## RESOLVE DOCUMENTATION CONFLICTS
-                docc = metac.get(K_DESCRIPTION, '')
-                statusc = metac.get(K_DESCRIPTION_STATUS, '')
-
-                doci = metai.get(K_DESCRIPTION, '')
-                statusi = metai.get(K_DESCRIPTION_STATUS, '')
-
-                if (docc != doci) or (statusc != statusi):
-                    resolver = PredicateDocumentationConflictResolver(item, name, docc, doci, current_status=statusc,
-                                                                      importing_status=statusi)
-                    if resolver.exec_() == PredicateDocumentationConflictResolver.Rejected:
-                        raise ProjectStopImportingError
-                    resolutions[item][name][K_DESCRIPTION] = resolver.result()[0]
-                    resolutions[item][name][K_DESCRIPTION_STATUS] = resolver.result()[1]
-                ## COLLECT ASSERTIONS CONFLICTS FOR ATTRIBUTES
-                if item is Item.AttributeNode:
-                    vc = metac.get(K_FUNCTIONAL, False)
-                    vi = metai.get(K_FUNCTIONAL, False)
-                    if vc != vi:
-                        aconflicts.append({
-                            K_ITEM: item,
-                            K_NAME: name,
-                            K_PROPERTY: K_FUNCTIONAL,
-                            K_CURRENT: vc,
-                            K_IMPORTING: vi
-                        })
-                ## COLLECT ASSERTIONS CONFLICTS FOR ROLES
-                if item is Item.RoleNode:
-                    for k in (
-                    K_ASYMMETRIC, K_INVERSE_FUNCTIONAL, K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE):
-                        vc = metac.get(k, False)
-                        vi = metai.get(k, False)
-                        if vc != vi:
-                            aconflicts.append({
-                                K_ITEM: item,
-                                K_NAME: name,
-                                K_PROPERTY: k,
-                                K_CURRENT: vc,
-                                K_IMPORTING: vi
-                            })
-
-        ## RESOLVE BOOLEAN PROPERTIES CONFLICTS
-        if aconflicts:
-            resolver = PredicateBooleanConflictResolver(aconflicts)
-            if resolver.exec_() == PredicateBooleanConflictResolver.Rejected:
-                raise ProjectStopImportingError
-            for e in resolver.results():
-                resolutions[e[K_ITEM]][e[K_NAME]][e[K_PROPERTY]] = e[K_FINAL]
-
-        ## GENERATE UNDOCOMMANDS FOR RESOLUTIONS
-        for item in resolutions:
-            for name in resolutions[item]:
-                undo = self.project.meta(item, name)
-                redo = resolutions[item][name]
-                self.commands.append(CommandNodeSetMeta(self.project, item, name, undo, redo))
+    def replaceIRIs(self,diagram,alreadyAdded):
+        for node in diagram.nodes():
+            if isinstance(node,OntologyEntityNode):
+                otherIRI = node.iri
+                projIRI = None
+                if not str(otherIRI) in alreadyAdded and self.project.existIRI(str(otherIRI)):
+                    LOGGER.warning('The IRI <{}> occurs in both projects...'.format(str(otherIRI)))
+                    #TODO Gestisci possibili incongruenze: funct, asymm, annotation assertions, etc, etc,...
+                    projIRI = self.project.getIRI(str(otherIRI))
+                elif str(otherIRI) in alreadyAdded:
+                    projIRI = self.project.getIRI(str(otherIRI))
+                else:
+                    projIRI = self.project.getIRI(str(otherIRI))
+                    projIRI.functional = otherIRI.functional
+                    projIRI.inverseFunctional = otherIRI.inverseFunctional
+                    projIRI.asymmetric = otherIRI.asymmetric
+                    projIRI.symmetric = otherIRI.symmetric
+                    projIRI.reflexive = otherIRI.reflexive
+                    projIRI.irreflexive = otherIRI.irreflexive
+                    projIRI.transitive = otherIRI.transitive
+                    for annAss in otherIRI.annotationAssertions:
+                        newAss = AnnotationAssertion(projIRI,annAss.assertionProperty, annAss.value, annAss.datatype, annAss.language)
+                        projIRI.addAnnotationAssertion(newAss)
+                    alreadyAdded.add(str(otherIRI))
+                node.iri = projIRI
 
     def mergeFinished(self):
         """
@@ -2540,7 +2076,7 @@ class ProjectIRIMergeWorker(QtCore.QObject):
 
 
 
-
+'''
 class ProjectMergeWorker(QtCore.QObject):
     """
     Extends QObject with facilities to merge the content of 2 distinct projects.
@@ -2936,7 +2472,7 @@ class ProjectMergeWorker(QtCore.QObject):
             pass
         else:
             self.mergeFinished()
-
+'''
 
 class ProjectNotFoundError(RuntimeError):
     """

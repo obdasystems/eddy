@@ -60,12 +60,10 @@ from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.project import Project
-from eddy.core.project import ProjectMergeWorker
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -1049,15 +1047,6 @@ class GrapholLoaderMixin_v2(object):
         item = self.itemFromXml[e.attribute('type')]
         name = e.attribute('name')
         meta = self.nproject.meta(item, name)
-        meta[K_DESCRIPTION] = rtfStripFontAttributes(e.firstChildElement(K_DESCRIPTION).text())
-
-        if e.firstChildElement(K_DESCRIPTION).hasAttribute('status'):
-            meta[K_DESCRIPTION_STATUS] = e.firstChildElement(K_DESCRIPTION).attribute('status')
-        else:
-            if meta[K_DESCRIPTION] == '':
-                meta[K_DESCRIPTION_STATUS] = ''
-            else:
-                meta[K_DESCRIPTION_STATUS] = 'Final'
 
         return meta
 
@@ -1902,8 +1891,11 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
+        return
+        '''
         worker = ProjectMergeWorker(self.project, self.nproject, self.session)
         worker.run()
+        '''
 
     #############################################
     #   INTERFACE

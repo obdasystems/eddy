@@ -55,7 +55,7 @@ class DiagramSelectionDialog(HasThreadingSystem, HasWidgetSystem, QtWidgets.QDia
         Initialize the form dialog.
         :type session: Session
         """
-        super().__init__(parent=session, **kwargs)
+        super().__init__(parent=session)
         self.project = kwargs.get('project', session.project)
         diagrams = natsorted(self.project.diagrams(), key=lambda diagram: diagram.name)
         for diagram in diagrams:

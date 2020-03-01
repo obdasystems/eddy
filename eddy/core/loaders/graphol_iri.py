@@ -26,13 +26,11 @@ from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.owl import Literal, Facet, AnnotationAssertion
-from eddy.core.project import Project
-from eddy.core.project import ProjectMergeWorker
+from eddy.core.project import Project, ProjectIRIMergeWorker, K_DESCRIPTION
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
 from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_DESCRIPTION
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
@@ -820,7 +818,7 @@ class GrapholOntologyIRILoader_v2(AbstractOntologyLoader, GrapholProjectIRILoade
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
-        worker = ProjectMergeWorker(self.project, self.nproject, self.session)
+        worker = ProjectIRIMergeWorker(self.project, self.nproject, self.session)
         worker.run()
 
     #############################################

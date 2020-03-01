@@ -42,7 +42,6 @@ from eddy.core.exporters.common import AbstractDiagramExporter
 from eddy.core.functions.fsystem import fwrite
 from eddy.core.functions.misc import isEmpty
 from eddy.core.output import getLogger
-from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 
 
 LOGGER = getLogger()
@@ -436,7 +435,6 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
 
         dataWIKI = self.document.createElement('data')
         dataWIKI.setAttribute('key', GraphMLDiagramExporter.KeyDescription)
-        dataWIKI.appendChild(self.document.createTextNode(meta.get(K_DESCRIPTION, '')))
 
         #############################################
         # NODE
@@ -805,7 +803,6 @@ class GraphMLDiagramExporter(AbstractDiagramExporter):
         root.appendChild(key)
         """
         key = self.document.createElement('key')
-        key.setAttribute('attr.name', K_DESCRIPTION)
         key.setAttribute('attr.type', 'string')
         key.setAttribute('for', 'node')
         key.setAttribute('id', GraphMLDiagramExporter.KeyDescription)
