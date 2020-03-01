@@ -6,6 +6,5 @@
 #
 --no-binary jpype1
 
-jpype1==0.7.1
-rfc3987==1.3.8
-verlib==0.1
+jpype1==0.7.1             # via -r requirements/base.in
+rfc3987==1.3.8            # via -r requirements/base.in

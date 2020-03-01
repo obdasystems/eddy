@@ -1,6 +1,5 @@
 # From PyPi
 rfc3987==1.3.8
-verlib==0.1
 jpype1==0.7.1
 
 # We explicitly disable installation of binary wheels from PyPI for jpype as
