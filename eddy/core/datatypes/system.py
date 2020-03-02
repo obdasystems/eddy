@@ -33,11 +33,18 @@
 ##########################################################################
 
 
+import sys
 from enum import unique
 
 from eddy.core.datatypes.common import Enum_
 from eddy.core.regex import RE_FILE_EXTENSION
 
+IS_FREEBSD = sys.platform.startswith('freebsd')
+IS_LINUX = sys.platform.startswith('linux')
+IS_MACOS = sys.platform.startswith('darwin')
+IS_WIN = sys.platform.startswith('win') or sys.platform.startswith('cygwin')
+
+IS_FROZEN = hasattr(sys, 'frozen')
 
 @unique
 class Channel(Enum_):

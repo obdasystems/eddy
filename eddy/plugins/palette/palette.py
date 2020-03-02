@@ -33,24 +33,33 @@
 ##########################################################################
 
 
-import sys
-from math import ceil, sin, cos, pi as M_PI, sqrt
+from math import (
+    ceil,
+    cos,
+    pi as M_PI,
+    sin,
+    sqrt,
+)
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
-from eddy.core.datatypes.owl import Facet, OWLProfile
+from eddy.core.datatypes.owl import (
+    Facet,
+    OWLProfile,
+)
 from eddy.core.datatypes.qt import Font
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.functions.signals import (
+    connect,
+    disconnect,
+)
 from eddy.core.plugin import AbstractPlugin
 from eddy.ui.dock import DockWidget
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
 
 
 class PalettePlugin(AbstractPlugin):
@@ -181,6 +190,7 @@ class PalettePlugin(AbstractPlugin):
         self.debug('Uninstalling docking area widget')
         self.session.removeDockWidget(self.widget('palette_dock'))
 
+    # noinspection PyArgumentList
     def start(self):
         """
         Perform initialization tasks for the plugin.
@@ -717,7 +727,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
                 painter.drawPolygon(polygonB)
                 painter.setFont(Font(pixelSize=9, weight=Font.Light))
-                painter.drawText(QtCore.QPointF(-19 if _MACOS else -20, -5), Facet.length.value)
+                painter.drawText(QtCore.QPointF(-20, -5), Facet.length.value)
                 painter.drawText(QtCore.QPointF(-8, 12), '"32"')
                 painter.end()
 
@@ -1048,7 +1058,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 P2 = P1 - QtCore.QPointF(sin(A1 + M_PI / 3.0) * 8, cos(A1 + M_PI / 3.0) * 8)
                 P3 = P1 - QtCore.QPointF(sin(A1 + M_PI - M_PI / 3.0) * 8, cos(A1 + M_PI - M_PI / 3.0) * 8)
                 H1 = QtGui.QPolygonF([P1, P2, P3])
-                S1 = 2 if _MACOS else 0
+                S1 = 0
                 painter = QtGui.QPainter(pixmap)
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))

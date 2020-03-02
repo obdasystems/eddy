@@ -38,103 +38,170 @@ import sys
 import textwrap
 from collections import OrderedDict
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
-from eddy import APPNAME, APP_HOME, BUG_TRACKER, GRAPHOL_HOME, PROJECT_HOME
-from eddy import ORGANIZATION_NAME, ORGANIZATION_URL, VERSION, WORKSPACE
+from eddy import (
+    APPNAME,
+    APP_HOME,
+    BUG_TRACKER,
+    GRAPHOL_HOME,
+    ORGANIZATION_NAME,
+    ORGANIZATION_URL,
+    PROJECT_HOME,
+    VERSION,
+    WORKSPACE,
+)
 from eddy.core.clipboard import Clipboard
-from eddy.core.commands.common import CommandComposeAxiom
-from eddy.core.commands.common import CommandItemsRemove
-from eddy.core.commands.common import CommandItemsTranslate
-from eddy.core.commands.common import CommandSnapItemsToGrid
-from eddy.core.commands.diagram import CommandDiagramAdd
-from eddy.core.commands.diagram import CommandDiagramRemove
-from eddy.core.commands.diagram import CommandDiagramRename
-from eddy.core.commands.edges import CommandEdgeBreakpointRemove
-from eddy.core.commands.edges import CommandEdgeSwap
-from eddy.core.commands.edges import CommandSwitchSameDifferentEdge
-from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.labels import CommandLabelMove
-from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeSetMeta
-from eddy.core.commands.nodes import CommandNodeSetDepth
-from eddy.core.commands.nodes import CommandNodeSwitchTo
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjetSetIRIofCutNodes
-from eddy.core.commands.project import CommandProjectSetProfile
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.common import HasActionSystem
-from eddy.core.common import HasDiagramExportSystem
-from eddy.core.common import HasDiagramLoadSystem
-from eddy.core.common import HasMenuSystem
-from eddy.core.common import HasNotificationSystem
-from eddy.core.common import HasOntologyExportSystem
-from eddy.core.common import HasOntologyLoadSystem
-from eddy.core.common import HasPluginSystem
-from eddy.core.common import HasProfileSystem
-from eddy.core.common import HasProjectExportSystem
-from eddy.core.common import HasProjectLoadSystem
-from eddy.core.common import HasThreadingSystem
-from eddy.core.common import HasWidgetSystem
-from eddy.core.datatypes.graphol import Identity, Item
-from eddy.core.datatypes.graphol import Restriction, Special
-from eddy.core.datatypes.misc import Color, DiagramMode
-from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, Namespace
+from eddy.core.commands.common import (
+    CommandComposeAxiom,
+    CommandItemsRemove,
+    CommandItemsTranslate,
+    CommandSnapItemsToGrid,
+)
+from eddy.core.commands.diagram import (
+    CommandDiagramAdd,
+    CommandDiagramRemove,
+    CommandDiagramRename,
+)
+from eddy.core.commands.edges import (
+    CommandEdgeBreakpointRemove,
+    CommandEdgeSwap,
+    CommandSwitchSameDifferentEdge,
+)
+from eddy.core.commands.labels import (
+    CommandLabelChange,
+    CommandLabelMove,
+)
+from eddy.core.commands.nodes import (
+    CommandNodeSetBrush,
+    CommandNodeSetMeta,
+    CommandNodeSetDepth,
+    CommandNodeSwitchTo,
+)
+from eddy.core.commands.nodes_2 import (
+    CommandNodeSetRemainingCharacters,
+    CommandProjetSetIRIPrefixesNodesDict,
+    CommandProjetSetIRIofCutNodes,
+)
+from eddy.core.commands.project import (
+    CommandProjectConnectSpecificSignals,
+    CommandProjectDisconnectSpecificSignals,
+    CommandProjectSetProfile,
+)
+from eddy.core.common import (
+    HasActionSystem,
+    HasDiagramExportSystem,
+    HasDiagramLoadSystem,
+    HasMenuSystem,
+    HasNotificationSystem,
+    HasOntologyExportSystem,
+    HasOntologyLoadSystem,
+    HasPluginSystem,
+    HasProfileSystem,
+    HasProjectExportSystem,
+    HasProjectLoadSystem,
+    HasThreadingSystem,
+    HasWidgetSystem,
+)
+from eddy.core.datatypes.graphol import (
+    Identity,
+    Item,
+    Restriction,
+    Special,
+)
+from eddy.core.datatypes.misc import (
+    Color,
+    DiagramMode,
+)
+from eddy.core.datatypes.owl import (
+    Datatype,
+    Facet,
+    OWLProfile,
+    Namespace,
+)
 from eddy.core.datatypes.qt import BrushIcon
-from eddy.core.datatypes.system import Channel, File
+from eddy.core.datatypes.system import (
+    Channel,
+    File,
+    IS_MACOS,
+)
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.graphreferences import GraphReferencesProjectExporter
-from eddy.core.exporters.image import BmpDiagramExporter
-from eddy.core.exporters.image import JpegDiagramExporter
-from eddy.core.exporters.image import PngDiagramExporter
+from eddy.core.exporters.image import (
+    BmpDiagramExporter,
+    JpegDiagramExporter,
+    PngDiagramExporter,
+)
 from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
-from eddy.core.factory import MenuFactory, PropertyFactory, DescriptionFactory
+from eddy.core.factory import (
+    DescriptionFactory,
+    MenuFactory,
+    PropertyFactory,
+)
 from eddy.core.functions.fsystem import fexists
-from eddy.core.functions.misc import first, format_exception
-from eddy.core.functions.misc import snap, snapF
-from eddy.core.functions.path import expandPath
-from eddy.core.functions.path import shortPath
+from eddy.core.functions.misc import (
+    first,
+    format_exception,
+    snap,
+    snapF,
+)
+from eddy.core.functions.path import (
+    expandPath,
+    shortPath,
+)
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
-from eddy.core.loaders.graphol import GrapholOntologyLoader_v2
-from eddy.core.loaders.graphol import GrapholProjectLoader_v2
+from eddy.core.loaders.graphol import (
+    GrapholOntologyLoader_v2,
+    GrapholProjectLoader_v2,
+)
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
 from eddy.core.profiles.owl2rl import OWL2RLProfile
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_ASYMMETRIC
-from eddy.core.project import K_IRREFLEXIVE, K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE
+from eddy.core.project import (
+    K_ASYMMETRIC,
+    K_FUNCTIONAL,
+    K_INVERSE_FUNCTIONAL,
+    K_IRREFLEXIVE,
+    K_REFLEXIVE,
+    K_SYMMETRIC,
+    K_TRANSITIVE,
+)
 from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.ui.about import AboutDialog
 from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import ComboBox
-from eddy.ui.forms import CardinalityRestrictionForm
-from eddy.ui.forms import NewDiagramForm
-from eddy.ui.forms import RefactorNameForm
-from eddy.ui.forms import RenameDiagramForm
-from eddy.ui.forms import ValueForm
+from eddy.ui.forms import (
+    CardinalityRestrictionForm,
+    NewDiagramForm,
+    RefactorNameForm,
+    RenameDiagramForm,
+    ValueForm,
+)
 from eddy.ui.log import LogDialog
-from eddy.ui.mdi import MdiArea
-from eddy.ui.mdi import MdiSubWindow
+from eddy.ui.mdi import (
+    MdiArea,
+    MdiSubWindow,
+)
 from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
 from eddy.ui.prefix_explorer import OntologyExplorerDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger()
 
@@ -352,7 +419,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             group.addAction(action)
         self.addAction(group)
 
-        if _MACOS:
+        if IS_MACOS:
             self.action('about').setIcon(QtGui.QIcon())
             self.action('open_preferences').setIcon(QtGui.QIcon())
             self.action('quit').setIcon(QtGui.QIcon())
@@ -977,7 +1044,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('&Help', objectName='help')
         menu.addAction(self.action('about'))
-        if not _MACOS:
+        if not IS_MACOS:
             menu.addSeparator()
         menu.addAction(self.action('check_for_updates'))
         menu.addSeparator()
@@ -1544,7 +1611,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Pdf.value)
-            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
+            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
                 # When this is set on macOS, for some reason the native file dialog requires to set
                 # the file filter twice before changing the default suffix, but it already
                 # does this without setting this action. Tested on Qt 5.10.1
@@ -1602,7 +1669,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
-            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not _MACOS:
+            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
                 # When this is set on macOS, for some reason the native file dialog requires to set
                 # the file filter twice before changing the default suffix, but it already
                 # does this without setting this action. Tested on Qt 5.10.1
@@ -3006,7 +3073,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when a keyboard button is pressed
         :type keyEvent: QKeyEvent
         """
-        if _MACOS:
+        if IS_MACOS:
             if keyEvent.key() == QtCore.Qt.Key_Backspace:
                 action = self.action('delete')
                 action.trigger()
