@@ -74,7 +74,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "{commondesktop}\{#EDDY_APPNAME}"; Filename: "{app}\{#EDDY_EXECUTABLE}"; WorkingDir: "{app}"; IconFilename: "{app}\{#EDDY_EXECUTABLE}"; Comment: "Run {#EDDY_APPNAME} {#EDDY_VERSION}"
 Name: "{group}\{#EDDY_APPNAME}"; Filename: "{app}\{#EDDY_EXECUTABLE}"; WorkingDir: "{app}"; IconFilename: "{app}\{#EDDY_EXECUTABLE}"; Comment: "Run {#EDDY_APPNAME} {#EDDY_VERSION}"
 Name: "{group}\Bugtracker"; Filename: "{#EDDY_BUGTRACKER}"; Comment: "Open {#EDDY_APPNAME} bugtracker"
-Name: "{group}\DIAG - Sapienza university"; Filename: "{#EDDY_ORGANIZATION_URL}"; Comment: "Visit the DIAG website"
 Name: "{group}\Graphol website"; Filename: "{#EDDY_GRAPHOL_URL}"; Comment: "Visit the Graphol website"
 Name: "{group}\Uninstall"; Filename: "{uninstallexe}"; Comment: "Uninstall {#EDDY_APPNAME}"
 
