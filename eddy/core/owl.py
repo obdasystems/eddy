@@ -830,7 +830,7 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None):
         """
         Create a new `IRIManager` with a default set of prefixes defined
         :type parent: QtCore.QObject
@@ -845,7 +845,10 @@ class IRIManager(QtCore.QObject):
         self.ontologyIRI = None
         if ontologyIRI:
             self.setOntologyIRI(ontologyIRI)
-            self.setEmptyPrefix(ontologyIRI)
+            if ontologyPrefix:
+                self.setPrefix(ontologyPrefix,ontologyIRI)
+            else:
+                self.setEmptyPrefix(ontologyIRI)
         self.annotationProperties = set()
         self.datatypes = set()
         self.languages = set()
@@ -1421,13 +1424,11 @@ class IRIManager(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
-
 class IllegalPrefixError(RuntimeError):
     """
     Used to signal that a prefix contains illegal characters
     """
     pass
-
 
 class IllegalNamespaceError(RuntimeError):
     """

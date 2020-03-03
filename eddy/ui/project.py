@@ -35,13 +35,14 @@
 
 import os
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtXmlPatterns
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy import ORGANIZATION, APPNAME, WORKSPACE
 from eddy.core.datatypes.qt import Font
 from eddy.core.exporters.graphol import GrapholProjectExporter
+from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import isEmpty, rstrip
 from eddy.core.functions.path import expandPath, isPathValid
@@ -75,36 +76,27 @@ class NewProjectDialog(QtWidgets.QDialog):
 
         self.nameLabel = QtWidgets.QLabel(self)
         self.nameLabel.setFont(Font('Roboto', 12))
-        self.nameLabel.setText('Name')
+        self.nameLabel.setText('Project name')
         self.nameField = StringField(self)
         self.nameField.setFont(Font('Roboto', 12))
         self.nameField.setMinimumWidth(400)
         self.nameField.setMaxLength(64)
 
-        """
-        self.prefixLabel = QtWidgets.QLabel(self)
-        self.prefixLabel.setFont(Font('Roboto', 12))
-        self.prefixLabel.setText('Prefix')
-        self.prefixField = StringField(self)
-        self.prefixField.setFont(Font('Roboto', 12))
-        self.prefixField.setMinimumWidth(400)
-        
-        self.prefixesLabel = QtWidgets.QLabel(self)
-        self.prefixesLabel.setFont(Font('Roboto', 12))
-        self.prefixesLabel.setText('Prefix')
-        self.prefixesField = StringField(self)
-        self.prefixesField.setFont(Font('Roboto', 12))
-        self.prefixesField.setMinimumWidth(400)
-        """
-
         self.iriLabel = QtWidgets.QLabel(self)
         self.iriLabel.setFont(Font('Roboto', 12))
-        self.iriLabel.setText('IRI')
+        self.iriLabel.setText('Ontology IRI')
         self.iriField = StringField(self)
         self.iriField.setFont(Font('Roboto', 12))
         self.iriField.setMinimumWidth(400)
 
-        #connect(self.prefixField.textChanged, self.doAcceptForm)
+        self.prefixLabel = QtWidgets.QLabel(self)
+        self.prefixLabel.setFont(Font('Roboto', 12))
+        self.prefixLabel.setText('Ontology prefix')
+        self.prefixField = StringField(self)
+        self.prefixField.setFont(Font('Roboto', 12))
+        self.prefixField.setMinimumWidth(400)
+
+        connect(self.prefixField.textChanged, self.doAcceptForm)
         #connect(self.prefixesField.textChanged, self.doAcceptForm)
         connect(self.iriField.textChanged, self.doAcceptForm)
         connect(self.nameField.textChanged, self.doAcceptForm)
@@ -127,9 +119,8 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.formWidget = QtWidgets.QWidget(self)
         self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.nameLabel, self.nameField)
-        #self.formLayout.addRow(self.prefixLabel, self.prefixField)
-        #self.formLayout.addRow(self.prefixesLabel, self.prefixesField)
         self.formLayout.addRow(self.iriLabel, self.iriField)
+        self.formLayout.addRow(self.prefixLabel, self.prefixField)
         self.formLayout.addWidget(spacer)
         self.formLayout.addRow(self.pathLabel, self.pathField)
 
@@ -193,46 +184,13 @@ class NewProjectDialog(QtWidgets.QDialog):
         return expandPath('{}{}'.format(self.workspace,self.nameField.value()))
         #return expandPath(self.pathField.value())
 
-    '''
+
     def prefix(self):
         """
         Returns the value of the prefix field (trimmed).
         :rtype: str
         """
         return self.prefixField.value()
-
-    def prefixes(self):
-        """
-        Returns the value of the prefixes field (trimmed).
-        :rtype: str
-        """
-        return self.prefixesField.value()
-
-    def IRI_prefixes_nodes_dict(self):
-
-        IRI_prefixes_nodes_dict = dict()
-
-        prefixes = set()
-        nodes = set()
-        properties = set()
-
-        prefixes_to_add = self.prefixesField.value().split(', ')
-
-        for p in prefixes_to_add:
-            prefixes.add(p)
-
-        properties.add('Project_IRI')
-
-        value = []
-
-        value.append(prefixes)
-        value.append(nodes)
-        value.append(properties)
-
-        IRI_prefixes_nodes_dict[self.iri().strip()] = value
-
-        return IRI_prefixes_nodes_dict
-    '''
 
     #############################################
     # SLOTS
@@ -243,8 +201,9 @@ class NewProjectDialog(QtWidgets.QDialog):
         Accept the project form and creates a new empty project.
         """
         #project = Project(name=self.name(), path=self.path(), prefix=self.prefix(), iri=self.iri(), profile=OWL2Profile())
-        project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), ontologyIRI=self.iri())
-        worker = GrapholProjectExporter(project)
+        project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), ontologyIRI=self.iri(), ontologyPrefix=str(self.prefix()).strip())
+        #worker = GrapholProjectExporter(project)
+        worker = GrapholIRIProjectExporter(project)
         worker.run()
         super().accept()
 
@@ -274,13 +233,15 @@ class NewProjectDialog(QtWidgets.QDialog):
         #############################################
         # CHECK PREFIX
         #################################
-        '''
+
         if enabled:
-            #if not self.prefix():
-            if not self.prefixes():
+            if not self.prefix():
                 caption = ''
                 enabled = False
-        '''
+            elif self.prefix() and not QtXmlPatterns.QXmlName.isNCName(str(self.prefix()).strip()):
+                caption = 'Please insert a legal prefix'
+                enabled = False
+
 
         #############################################
         # CHECK IRI

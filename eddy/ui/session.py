@@ -85,6 +85,7 @@ from eddy.core.datatypes.system import Channel, File
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
+from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.exporters.graphreferences import GraphReferences
 from eddy.core.exporters.image import ImageExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporter
@@ -898,7 +899,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addDiagramExporter(ImageExporter)
         self.addDiagramExporter(GraphReferences)
         self.addOntologyExporter(OWLOntologyExporter)
-        self.addProjectExporter(GrapholProjectExporter)
+        #self.addProjectExporter(GrapholProjectExporter)
+        self.addProjectExporter(GrapholIRIProjectExporter)
 
     def initLoaders(self):
         """
