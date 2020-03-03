@@ -46,6 +46,7 @@ from eddy.core.functions.fsystem import isdir
 from eddy.core.functions.misc import isEmpty, rstrip
 from eddy.core.functions.path import expandPath, isPathValid
 from eddy.core.functions.signals import connect
+from eddy.core.owl import IRI, IllegalNamespaceError
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.project import Project
 
@@ -87,13 +88,14 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.prefixField = StringField(self)
         self.prefixField.setFont(Font('Roboto', 12))
         self.prefixField.setMinimumWidth(400)
-        """
+        
         self.prefixesLabel = QtWidgets.QLabel(self)
         self.prefixesLabel.setFont(Font('Roboto', 12))
         self.prefixesLabel.setText('Prefix')
         self.prefixesField = StringField(self)
         self.prefixesField.setFont(Font('Roboto', 12))
         self.prefixesField.setMinimumWidth(400)
+        """
 
         self.iriLabel = QtWidgets.QLabel(self)
         self.iriLabel.setFont(Font('Roboto', 12))
@@ -103,7 +105,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.iriField.setMinimumWidth(400)
 
         #connect(self.prefixField.textChanged, self.doAcceptForm)
-        connect(self.prefixesField.textChanged, self.doAcceptForm)
+        #connect(self.prefixesField.textChanged, self.doAcceptForm)
         connect(self.iriField.textChanged, self.doAcceptForm)
         connect(self.nameField.textChanged, self.doAcceptForm)
         connect(self.nameField.textChanged, self.onNameFieldChanged)
@@ -126,7 +128,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.formLayout = QtWidgets.QFormLayout(self.formWidget)
         self.formLayout.addRow(self.nameLabel, self.nameField)
         #self.formLayout.addRow(self.prefixLabel, self.prefixField)
-        self.formLayout.addRow(self.prefixesLabel, self.prefixesField)
+        #self.formLayout.addRow(self.prefixesLabel, self.prefixesField)
         self.formLayout.addRow(self.iriLabel, self.iriField)
         self.formLayout.addWidget(spacer)
         self.formLayout.addRow(self.pathLabel, self.pathField)
@@ -188,8 +190,10 @@ class NewProjectDialog(QtWidgets.QDialog):
         Returns the value of the path field (expanded).
         :rtype: str
         """
-        return expandPath(self.pathField.value())
+        return expandPath('{}{}'.format(self.workspace,self.nameField.value()))
+        #return expandPath(self.pathField.value())
 
+    '''
     def prefix(self):
         """
         Returns the value of the prefix field (trimmed).
@@ -228,6 +232,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         IRI_prefixes_nodes_dict[self.iri().strip()] = value
 
         return IRI_prefixes_nodes_dict
+    '''
 
     #############################################
     # SLOTS
@@ -238,7 +243,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         Accept the project form and creates a new empty project.
         """
         #project = Project(name=self.name(), path=self.path(), prefix=self.prefix(), iri=self.iri(), profile=OWL2Profile())
-        project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), IRI_prefixes_nodes_dict=self.IRI_prefixes_nodes_dict())
+        project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), ontologyIRI=self.iri())
         worker = GrapholProjectExporter(project)
         worker.run()
         super().accept()
@@ -269,12 +274,13 @@ class NewProjectDialog(QtWidgets.QDialog):
         #############################################
         # CHECK PREFIX
         #################################
-
+        '''
         if enabled:
             #if not self.prefix():
             if not self.prefixes():
                 caption = ''
                 enabled = False
+        '''
 
         #############################################
         # CHECK IRI
@@ -284,6 +290,12 @@ class NewProjectDialog(QtWidgets.QDialog):
             if not self.iri():
                 caption = ''
                 enabled = False
+            else:
+                try:
+                    iriObj = IRI(self.iri())
+                except IllegalNamespaceError:
+                    caption = 'Please insert a legal IRI'
+                    enabled = False
 
         self.caption.setText(caption)
         self.caption.setVisible(not isEmpty(caption))

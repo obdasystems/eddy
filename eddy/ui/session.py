@@ -892,6 +892,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Initialize diagram and project exporters.
         """
+        #TODO EXPORTERS
         self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(PdfDiagramExporter)
         self.addDiagramExporter(ImageExporter)
