@@ -846,7 +846,6 @@ class GrapholOntologyIRILoader_v2(AbstractOntologyLoader, GrapholProjectIRILoade
         self.projectRender()
         self.projectMerge()
 
-
 class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderMixin_2):
     """
     Extends AbstractProjectLoader with facilities to load Graphol projects.
