@@ -603,7 +603,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         label.setAttribute('x', position.x())
         label.setAttribute('y', position.y())
         #label.appendChild(self.document.createTextNode(node.text()))
-        element = self.exportGenericNode(node)
+        element = self.getNodeDomElement(node)
         element.appendChild(label)
         return element
 

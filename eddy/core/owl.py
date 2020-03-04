@@ -830,7 +830,7 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None):
         """
         Create a new `IRIManager` with a default set of prefixes defined
         :type parent: QtCore.QObject
@@ -840,6 +840,7 @@ class IRIManager(QtCore.QObject):
         self.stringToIRI = {}
         if not prefixMap:
             self.prefix2namespaceMap = {}
+            self.setDefaultPrefixes()
         else:
             self.prefix2namespaceMap = prefixMap
         self.ontologyIRI = None
@@ -849,11 +850,23 @@ class IRIManager(QtCore.QObject):
                 self.setPrefix(ontologyPrefix,ontologyIRI)
             else:
                 self.setEmptyPrefix(ontologyIRI)
+
+        self.addTopBottomPredicateIRIs()
+
         self.annotationProperties = set()
         self.datatypes = set()
         self.languages = set()
         self.constrainingFacets = set()
-        self.setDefaults()
+        if not(datatypes or languages or constrFacets or annotationProperties):
+            self.setDefaults()
+        else:
+            for annProp in annotationProperties:
+                self.addAnnotationProperty(annProp)
+            for dt in datatypes:
+                self.addDatatype(dt)
+            for fac in constrFacets:
+                self.addConstrainingFacet(fac)
+            self.languages = languages
 
     #############################################
     #   LANGUAGES
@@ -969,13 +982,10 @@ class IRIManager(QtCore.QObject):
         self.setDefaults()
 
     def setDefaults(self):
-        self.setDefaultPrefixes()
-        self.addTopBottomPredicateIRIs()
         self.addDefaultAnnotationProperties()
         self.addDefaultDatatypes()
         self.addDefaultLanguages()
         self.addDefaultConstrainingFacets()
-        #TODO Aggiungi default IRI per constraining facets (minInclusive, length etc etc ...)
 
     ##ANNOTATION PROPERTIES
     def getAnnotationPropertyIRIs(self):
@@ -1034,7 +1044,11 @@ class IRIManager(QtCore.QObject):
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.seeAlso.value)
 
     ##FACETS
-    def addConstrainingFacet(self, iri):
+    def addConstrainingFacet(self, iriString):
+        iri = self.getIRI(iriString)
+        return self.addConstrainingFacetIRI(iri)
+
+    def addConstrainingFacetIRI(self, iri):
         if not iri in self.constrainingFacets:
             self.addIRI(iri)
             self.constrainingFacets.add(iri)
@@ -1042,15 +1056,15 @@ class IRIManager(QtCore.QObject):
         return False
 
     def addDefaultConstrainingFacets(self):
-        self.addConstrainingFacet(OWL2Facet.langRange.value)
-        self.addConstrainingFacet(OWL2Facet.length.value)
-        self.addConstrainingFacet(OWL2Facet.maxExclusive.value)
-        self.addConstrainingFacet(OWL2Facet.maxInclusive.value)
-        self.addConstrainingFacet(OWL2Facet.maxLength.value)
-        self.addConstrainingFacet(OWL2Facet.minExclusive.value)
-        self.addConstrainingFacet(OWL2Facet.minInclusive.value)
-        self.addConstrainingFacet(OWL2Facet.minLength.value)
-        self.addConstrainingFacet(OWL2Facet.pattern.value)
+        self.addConstrainingFacetIRI(OWL2Facet.langRange.value)
+        self.addConstrainingFacetIRI(OWL2Facet.length.value)
+        self.addConstrainingFacetIRI(OWL2Facet.maxExclusive.value)
+        self.addConstrainingFacetIRI(OWL2Facet.maxInclusive.value)
+        self.addConstrainingFacetIRI(OWL2Facet.maxLength.value)
+        self.addConstrainingFacetIRI(OWL2Facet.minExclusive.value)
+        self.addConstrainingFacetIRI(OWL2Facet.minInclusive.value)
+        self.addConstrainingFacetIRI(OWL2Facet.minLength.value)
+        self.addConstrainingFacetIRI(OWL2Facet.pattern.value)
 
     ##DATATYPES
     def getDatatypeIRIs(self):

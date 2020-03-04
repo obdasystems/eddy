@@ -146,7 +146,7 @@ class Project(IRIManager):
         """
         Initialize the graphol project.
         """
-        super().__init__(kwargs.get('session'),kwargs.get('prefixMap'),kwargs.get('ontologyIRI'), kwargs.get('ontologyPrefix'))
+        super().__init__(kwargs.get('session'),kwargs.get('prefixMap'),kwargs.get('ontologyIRI'), kwargs.get('ontologyPrefix'), kwargs.get('datatypes'), kwargs.get('languages'), kwargs.get('constrFacets'), kwargs.get('annotationProperties'))
         #self.index = ProjectIndex()
         self.index = ProjectIRIIndex(self)
         #self.iri = kwargs.get('iri', 'NULL')

@@ -104,7 +104,7 @@ from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
-from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v2, GrapholOntologyIRILoader_v2
+from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v3, GrapholOntologyIRILoader_v3
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIRender, IRI, OWL2Profiles
@@ -895,11 +895,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         #TODO EXPORTERS
         self.addDiagramExporter(GraphMLDiagramExporter)
+
         self.addDiagramExporter(PdfDiagramExporter)
         self.addDiagramExporter(ImageExporter)
         self.addDiagramExporter(GraphReferences)
         self.addOntologyExporter(OWLOntologyExporter)
-        #self.addProjectExporter(GrapholProjectExporter)
+
         self.addProjectExporter(GrapholIRIProjectExporter)
 
     def initLoaders(self):
@@ -907,10 +908,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Initialize diagram and project loaders.
         """
         self.addOntologyLoader(GraphMLOntologyLoader)
-        #self.addOntologyLoader(GrapholOntologyLoader_v2)
-        self.addOntologyLoader(GrapholOntologyIRILoader_v2)
-        #self.addProjectLoader(GrapholProjectLoader_v2)
-        self.addProjectLoader(GrapholIRIProjectLoader_v2)
+        self.addOntologyLoader(GrapholOntologyIRILoader_v3)
+        self.addProjectLoader(GrapholIRIProjectLoader_v3)
 
     # noinspection PyArgumentList
     def initMenus(self):
