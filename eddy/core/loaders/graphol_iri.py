@@ -38,6 +38,12 @@ from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 
 LOGGER = getLogger()
 
+    ####################
+    #                  #
+    #   VERSION 2      #
+    #                  #
+    ####################
+
 class GrapholProjectIRILoaderMixin_2(object):
     """
     Mixin which adds the ability to create a project out of a Graphol file.
@@ -914,11 +920,6 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
     #   VERSION 3      #
     #                  #
     ####################
-
-
-    #############################################
-    #   VERSION 3
-    #################################
 
 class GrapholProjectIRILoaderMixin_3(object):
     """

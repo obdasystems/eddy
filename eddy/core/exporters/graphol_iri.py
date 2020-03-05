@@ -61,12 +61,12 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         self.exportFuncForItem = {
             Item.AttributeIRINode: self.exportAttributeNode,
             Item.ComplementNode: self.exportComplementNode,
-            Item.ConceptNode: self.exportConceptNode,
+            Item.ConceptIRINode: self.exportConceptNode,
             Item.DatatypeRestrictionNode: self.exportDatatypeRestrictionNode,
             Item.DisjointUnionNode: self.exportDisjointUnionNode,
             Item.DomainRestrictionNode: self.exportDomainRestrictionNode,
             Item.EnumerationNode: self.exportEnumerationNode,
-            Item.FacetNode: self.exportFacetNode,
+            Item.FacetIRINode: self.exportFacetNode,
             Item.IndividualIRINode: self.exportIndividualNode,
             Item.LiteralNode: self.exportLiteralNode,
             Item.IntersectionNode: self.exportIntersectionNode,
@@ -370,8 +370,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         nodeEl = self.getNodeDomElement(node)
-        labelEl = self.getLabelDomElement(node)
-        nodeEl.appendChild(labelEl)
+        #labelEl = self.getLabelDomElement(node)
+        #nodeEl.appendChild(labelEl)
         return nodeEl
 
     def exportDomainRestrictionNode(self, node):
@@ -410,7 +410,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         label.setAttribute('x', position.x())
         label.setAttribute('y', position.y())
         label.appendChild(self.document.createTextNode(node.text()))
-        element = self.exportGenericNode(node)
+        element = self.getFacetDomElement(node)
         element.appendChild(label)
         return element
 
@@ -603,9 +603,9 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         label.setAttribute('x', position.x())
         label.setAttribute('y', position.y())
         #label.appendChild(self.document.createTextNode(node.text()))
-        element = self.getNodeDomElement(node)
-        element.appendChild(label)
-        return element
+        #element = self.getNodeDomElement(node)
+        #element.appendChild(label)
+        return label
 
     def exportGenericEdge(self, edge):
         """

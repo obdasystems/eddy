@@ -90,6 +90,7 @@ from eddy.core.exporters.graphreferences import GraphReferences
 from eddy.core.exporters.image import ImageExporter
 from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
+from eddy.core.exporters.pdf_iri import PdfIRIDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import MenuFactory, PropertyFactory, DescriptionFactory
 from eddy.core.functions.fsystem import fexists
@@ -896,12 +897,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #TODO EXPORTERS
         self.addDiagramExporter(GraphMLDiagramExporter)
 
-        self.addDiagramExporter(PdfDiagramExporter)
+        #Funzionanti
         self.addDiagramExporter(ImageExporter)
         self.addDiagramExporter(GraphReferences)
-        self.addOntologyExporter(OWLOntologyExporter)
 
         self.addProjectExporter(GrapholIRIProjectExporter)
+        self.addDiagramExporter(PdfIRIDiagramExporter)
+        #NON Funzionanti
+
+        self.addOntologyExporter(OWLOntologyExporter)
+
+
 
     def initLoaders(self):
         """
