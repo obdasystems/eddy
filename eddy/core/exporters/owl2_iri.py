@@ -43,7 +43,7 @@ from PyQt5 import QtWidgets
 from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
 from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
-from eddy.core.datatypes.owl import Datatype, Facet, OWLAxiom, OWLSyntax, Namespace
+from eddy.core.datatypes.owl import Datatype, OWLAxiom, OWLSyntax, Namespace
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
@@ -60,7 +60,7 @@ from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
-from eddy.core.project import K_DESCRIPTION
+from eddy.core.owl import OWL2Facet
 from eddy.core.worker import AbstractWorker
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import ComboBox, CheckBox
@@ -69,11 +69,12 @@ from eddy.ui.syntax import SyntaxValidationWorker
 
 LOGGER = getLogger()
 
-
+#TODO Uguale a vecchio
 class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into a valid OWL 2 ontology.
     """
+
     def __init__(self, project, session=None):
         """
         Initialize the OWL Project exporter
@@ -154,11 +155,12 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
             connect(worker.sgnSyntaxError, self.onSyntaxCheckErrored)
             self.startThread('syntaxCheck', worker)
 
-
+#TODO Uguale a vecchio
 class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog providing the form used to perform Graphol -> OWL ontology translation.
     """
+
     def __init__(self, project, path, session, selected_diagrams):
         """
         Initialize the form dialog.
@@ -367,7 +369,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         """
         return self.widget('exportRichText').isChecked()
 
-
     def syntax(self):
         """
         Returns the value of the OWL syntax field.
@@ -520,12 +521,14 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.vm.initialize()
         self.vm.attachThreadToJVM()
         self.DefaultPrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.util.DefaultPrefixManager')
-        self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+        self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
         self.HashSet = self.vm.getJavaClass('java.util.HashSet')
         self.IRI = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
         self.LinkedList = self.vm.getJavaClass('java.util.LinkedList')
         self.List = self.vm.getJavaClass('java.util.List')
-        self.ManchesterSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.ManchesterSyntaxDocumentFormat = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
         self.OWLAnnotationValue = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationValue')
         self.OWLFacet = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWLFacet')
         self.OWL2Datatype = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
@@ -542,7 +545,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.project = project
         self.axiomsList = kwargs.get('axioms', set())
         self.normalize = kwargs.get('normalize', False)
-        self.export= kwargs.get('export', False)
+        self.export = kwargs.get('export', False)
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
 
         self.selected_diagrams = kwargs.get('diagrams', self.project.diagrams())
@@ -553,7 +556,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.df = None
         self.man = None
         self.num = 0
-        #self.max = len(self.project.nodes()) * 2 + len(self.project.edges())
+        # self.max = len(self.project.nodes()) * 2 + len(self.project.edges())
         self.max = sum([len(diagram.nodes()) * 2 + len(diagram.edges()) for diagram in self.selected_diagrams])
         self.ontology = None
         self.pm = None
@@ -585,18 +588,21 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if node.diagram.name not in self._converted:
             self._converted[node.diagram.name] = dict()
         if node not in self._converted[node.diagram.name]:
-            if node.type() is Item.ConceptNode:
+            if node.type() is Item.ConceptIRINode:
                 self._converted[node.diagram.name][node.id] = self.getConcept(node)
-            elif node.type() is Item.AttributeNode:
+            elif node.type() is Item.AttributeIRINode:
                 self._converted[node.diagram.name][node.id] = self.getAttribute(node)
-            elif node.type() is Item.RoleNode:
+            elif node.type() is Item.RoleIRINode:
                 self._converted[node.diagram.name][node.id] = self.getRole(node)
-            elif node.type() is Item.ValueDomainNode:
+            elif node.type() is Item.ValueDomainIRINode:
                 self._converted[node.diagram.name][node.id] = self.getValueDomain(node)
-            elif node.type() is Item.IndividualNode:
+            elif node.type() is Item.IndividualIRINode:
                 self._converted[node.diagram.name][node.id] = self.getIndividual(node)
-            elif node.type() is Item.FacetNode:
+            elif node.type() is Item.LiteralNode:
+                self._converted[node.diagram.name][node.id] = self.getLiteral(node)
+            elif node.type() is Item.FacetIRINode:
                 self._converted[node.diagram.name][node.id] = self.getFacet(node)
+            
             elif node.type() is Item.RoleInverseNode:
                 self._converted[node.diagram.name][node.id] = self.getRoleInverse(node)
             elif node.type() is Item.RoleChainNode:
@@ -725,48 +731,108 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :type facet: Facet
         :rtype: OWLFacet
         """
-        if facet is Facet.maxExclusive:
+        if facet is OWL2Facet.maxExclusive:
             return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
-        if facet is Facet.maxInclusive:
+        if facet is OWL2Facet.maxInclusive:
             return self.OWLFacet.valueOf('MAX_INCLUSIVE')
-        if facet is Facet.minExclusive:
+        if facet is OWL2Facet.minExclusive:
             return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
-        if facet is Facet.minInclusive:
+        if facet is OWL2Facet.minInclusive:
             return self.OWLFacet.valueOf('MIN_INCLUSIVE')
-        if facet is Facet.langRange:
+        if facet is OWL2Facet.langRange:
             return self.OWLFacet.valueOf('LANG_RANGE')
-        if facet is Facet.length:
+        if facet is OWL2Facet.length:
             return self.OWLFacet.valueOf('LENGTH')
-        if facet is Facet.maxLength:
+        if facet is OWL2Facet.maxLength:
             return self.OWLFacet.valueOf('MIN_LENGTH')
-        if facet is Facet.minLength:
+        if facet is OWL2Facet.minLength:
             return self.OWLFacet.valueOf('MIN_LENGTH')
-        if facet is Facet.pattern:
+        if facet is OWL2Facet.pattern:
             return self.OWLFacet.valueOf('PATTERN')
         raise ValueError('invalid facet supplied: %s' % facet)
 
     #############################################
     #   NODES PROCESSING
     #################################
+    def getConcept(self, node):
+        """
+        Build and returns a OWL 2 concept using the given graphol node.
+        :type node: ConceptIRINode
+        :rtype: OWLClass
+        """
+        iri = node.iri
+        if iri.isOwlThing():
+            return self.df.getOWLThing()
+        if iri.isOwlNothing():
+            return self.df.getOWLNothing()
+        return self.df.getOWLClass(self.IRI.create(str(iri)))
+
+    def getRole(self, node):
+        """
+        Build and returns a OWL 2 role using the given graphol node.
+        :type node: RoleIRINode
+        :rtype: OWLObjectProperty
+        """
+        iri = node.iri
+        if iri.isTopObjectProperty():
+            return self.df.getOWLTopObjectProperty()
+        if iri.isBottomObjectProperty():
+            return self.df.getOWLBottomObjectProperty()
+        return self.df.getOWLObjectProperty(self.IRI.create(str(iri)))
 
     def getAttribute(self, node):
         """
         Build and returns a OWL 2 attribute using the given graphol node.
-        :type node: AttributeNode
+        :type node: AttributeIRINode
         :rtype: OWLDataProperty
         """
-        if (node.special() is Special.Top) or (node.special() is Special.TopAttribute):
+        iri = node.iri
+        if iri.isTopDataProperty():
             return self.df.getOWLTopDataProperty()
-        if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
+        if iri.isBottomDataProperty():
             return self.df.getOWLBottomDataProperty()
+        return self.df.getOWLDataProperty(self.IRI.create(str(iri)))
 
-        if (self.project.get_prefix_of_node(node) is not None):
-            return self.df.getOWLDataProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
-        else:
-            return self.df.getOWLDataProperty(
-                self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+    def getIndividual(self, node):
+        """
+        Build and returns a OWL 2 individual using the given graphol node.
+        Also perform punning if the node is not an IndividualIRINode
+        :type node: IndividualIRINode|ConceptIRINode|RoleIRINode|AttributeIRINode
+        :rtype: OWLNamedIndividual
+        """
+        iri = node.iri
+        return self.df.getOWLNamedIndividual(self.IRI.create(str(iri)))
+
+    def getLiteral(self, node):
+        """
+        Build and returns a OWL 2 individual using the given graphol node.
+        Also perform punning if the node is not an IndividualIRINode
+        :type node: IndividualIRINode|ConceptIRINode|RoleIRINode|AttributeIRINode
+        :rtype: OWLNamedIndividual
+        """
+        literal = node.literal
+        return self.df.getOWLLiteral(literal.lexicalForm, self.df.getOWLDatatype(str(literal.datatype)))
+
+    def getValueDomain(self, node):
+        """
+        Build and returns a OWL 2 datatype using the given graphol node.
+        :type node: ValueDomainIRINode
+        :rtype: OWLDatatype
+        """
+        return self.df.getOWLDatatype(str(node.iri))
+
+    def getFacet(self, node):
+        """
+        Build and returns a OWL 2 facet restriction using the given graphol node.
+        :type node: FacetIRINode
+        :rtype: OWLFacetRestriction
+        """
+        nodeFacet = node.facet
+        literal = self.df.getOWLLiteral(nodeFacet.literal.lexicalForm, self.df.getOWLDatatype(str(nodeFacet.literal.datatype)))
+        facet = self.getOWLApiFacet(nodeFacet.facet)
+        return self.df.getOWLFacetRestriction(facet, literal)
+
+    #TODO RIPARTI DA QUI
 
     def getComplement(self, node):
         """
@@ -796,25 +862,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.convert(operand)
         raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
 
-    def getConcept(self, node):
-        """
-        Build and returns a OWL 2 concept using the given graphol node.
-        :type node: ConceptNode
-        :rtype: OWLClass
-        """
-        if (node.special() is Special.Top) or (node.special() is Special.TopConcept):
-            return self.df.getOWLThing()
-        if (node.special() is Special.Bottom) or (node.special() is Special.BottomConcept):
-            return self.df.getOWLNothing()
-
-        if (self.project.get_prefix_of_node(node) is not None):
-            return self.df.getOWLClass(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
-        else:
-            return self.df.getOWLClass(
-                self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
-
     def getDatatypeRestriction(self, node):
         """
         Build and returns a OWL 2 datatype restriction using the given graphol node.
@@ -822,8 +869,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: OWLDatatypeRestriction
         """
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.ValueDomainNode
-        f3 = lambda x: x.type() is Item.FacetNode
+        f2 = lambda x: x.type() is Item.ValueDomainIRINode
+        f3 = lambda x: x.type() is Item.FacetIRINode
 
         #############################################
         # BUILD DATATYPE
@@ -954,7 +1001,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.IndividualNode
+        f2 = lambda x: x.type() is Item.IndividualIRINode
         individuals = self.HashSet()
         for individual in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
             conversion = self.convert(individual)
@@ -962,37 +1009,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if individuals.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         return self.df.getOWLObjectOneOf(self.vm.cast(self.Set, individuals))
-
-    def getFacet(self, node):
-        """
-        Build and returns a OWL 2 facet restriction using the given graphol node.
-        :type node: FacetNode
-        :rtype: OWLFacetRestriction
-        """
-        datatype = node.datatype
-        if not datatype:
-            raise DiagramMalformedError(node, 'disconnected facet node')
-        literal = self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(datatype))
-        facet = self.getOWLApiFacet(node.facet)
-        return self.df.getOWLFacetRestriction(facet, literal)
-
-    def getIndividual(self, node):
-        """
-        Build and returns a OWL 2 individual using the given graphol node.
-        Also perform punning if the node is not an IndividualNode
-        :type node: IndividualNode|ConceptNode|RoleNode|AttributeNode
-        :rtype: OWLNamedIndividual
-        """
-        if node.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute}:
-            if (self.project.get_prefix_of_node(node) is not None):
-                return self.df.getOWLNamedIndividual(
-                    OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
-            else:
-                return self.df.getOWLNamedIndividual(
-                    self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
-        elif node.identity() is Identity.Value:
-            return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
-        raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
 
     def getIntersection(self, node):
         """
@@ -1024,7 +1040,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         collection = list()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
-            if operand.type() is not Item.IndividualNode:
+            if operand.type() is not Item.IndividualIRINode:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
             conversion = self.convert(operand)
             collection.append(conversion)
@@ -1095,25 +1111,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
-    def getRole(self, node):
-        """
-        Build and returns a OWL 2 role using the given graphol node.
-        :type node: RoleNode
-        :rtype: OWLObjectProperty
-        """
-        if (node.special() is Special.Top) or (node.special() is Special.TopRole):
-            return self.df.getOWLTopObjectProperty()
-        if (node.special() is Special.Bottom) or ((node.special() is Special.BottomRole)):
-            return self.df.getOWLBottomObjectProperty()
-
-        if (self.project.get_prefix_of_node(node) is not None):
-
-            return self.df.getOWLObjectProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
-        else:
-            return self.df.getOWLObjectProperty(
-                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
-
     def getRoleChain(self, node):
         """
         Constructs and returns LinkedList of chained OWLObjectExpression (OPE => Role & RoleInverse).
@@ -1124,7 +1121,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             raise DiagramMalformedError(node, 'missing operand(s)')
         collection = self.LinkedList()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
-            if operand.type() not in {Item.RoleNode, Item.RoleInverseNode}:
+            if operand.type() not in {Item.RoleIRINode, Item.RoleInverseNode}:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
             conversion = self.convert(operand)
             collection.add(conversion)
@@ -1139,7 +1136,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: OWLObjectPropertyExpression
         """
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.RoleNode
+        f2 = lambda x: x.type() is Item.RoleIRINode
         operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if not operand:
             raise DiagramMalformedError(node, 'missing operand')
@@ -1165,13 +1162,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLObjectUnionOf(self.vm.cast(self.Set, collection))
         return self.df.getOWLDataUnionOf(self.vm.cast(self.Set, collection))
 
-    def getValueDomain(self, node):
-        """
-        Build and returns a OWL 2 datatype using the given graphol node.
-        :type node: ValueDomainNode
-        :rtype: OWLDatatype
-        """
-        return self.getOWLApiDatatype(node.datatype)
 
     #############################################
     #   AXIOMS GENERATION
@@ -1187,8 +1177,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if OWLAxiom.Annotation in self.axiomsList:
             meta = self.project.meta(node.type(), node.text())
             if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-
-                aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
+                aproperty = self.df.getOWLAnnotationProperty(
+                    self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
                 text.setHtml(meta.get(K_DESCRIPTION, ''))
 
                 value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
@@ -1221,17 +1211,21 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
                 exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
 
-                if (node.type() == Item.IndividualNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
+                if (node.type() == Item.IndividualIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
 
-                elif (node.type() == Item.ConceptNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
+                elif (node.type() == Item.ConceptIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
 
-                elif (node.type() == Item.AttributeNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
+                elif (node.type() == Item.AttributeIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
 
-                elif (node.type() == Item.RoleNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
+                elif (node.type() == Item.RoleIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
 
                 else:
                     raise ValueError('no conversion of description is available for node %s' % node)
@@ -1256,19 +1250,23 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 strDescription = meta.get(K_DESCRIPTION, '')
                 strPlain = QtGui.QTextDocument()
                 strPlain.setHtml(strDescription)
-                descPlain= strPlain.toPlainText()
+                descPlain = strPlain.toPlainText()
 
-                if (node.type() == Item.IndividualNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
+                if (node.type() == Item.IndividualIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
 
-                elif (node.type() == Item.ConceptNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
+                elif (node.type() == Item.ConceptIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
 
-                elif (node.type() == Item.AttributeNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
+                elif (node.type() == Item.AttributeIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
 
-                elif (node.type() == Item.RoleNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
+                elif (node.type() == Item.RoleIRINode):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
 
                 else:
                     raise ValueError('no conversion of description is available for node %s' % node)
@@ -1304,7 +1302,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
     def createDataPropertyAxiom(self, node):
         """
         Generate OWL 2 Data Property specific axioms.
-        :type node: AttributeNode
+        :type node: AttributeIRINode
         """
         if OWLAxiom.FunctionalDataProperty in self.axiomsList:
             if node.isFunctional():
@@ -1331,7 +1329,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
                     # Perform punning of node
                     conversion = self.getIndividual(node)
-                else: # Node is already an IndividualNode
+                else:  # Node is already an IndividualIRINode
                     conversion = self.convert(node)
                 conversions.append(conversion)
             collection = self.HashSet()
@@ -1476,7 +1474,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         """
         if OWLAxiom.InverseObjectProperties in self.axiomsList:
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.RoleNode
+            f2 = lambda x: x.type() is Item.RoleIRINode
             if edge.source.type() is Item.RoleInverseNode:
                 forward = edge.target
                 inverse = first(edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
@@ -1516,7 +1514,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
     def createObjectPropertyAxiom(self, node):
         """
         Generate OWL 2 ObjectProperty specific axioms.
-        :type node: RoleNode
+        :type node: RoleIRINode
         """
         if OWLAxiom.FunctionalObjectProperty in self.axiomsList:
             if node.isFunctional():
@@ -1633,7 +1631,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
                     # Perform punning of node
                     conversion = self.getIndividual(node)
-                else: # Node is already an IndividualNode
+                else:  # Node is already an IndividualIRINode
                     conversion = self.convert(node)
                 conversions.append(conversion)
             collection = self.HashSet()
@@ -1733,7 +1731,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # INITIALIZE ONTOLOGY
             #################################
 
-            ontologyIRI = rstrip(self.project.ontologyIRIString, '#')
+            ontologyIRI = rstrip(str(self.project.ontologyIRI, '#'))
             mastroIRI = rstrip('http://www.obdasystems.com/mastrostudio', '#')
             versionIRI = '{0}{1}{2}'.format(ontologyIRI, '' if ontologyIRI.endswith('/') else '/', self.project.version)
             ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI))
@@ -1741,30 +1739,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.df = self.OWLManager.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
             self.pm = self.DefaultPrefixManager()
-            #self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
-
-            for iri_key in self.project.IRI_prefixes_nodes_dict.keys():
-                prefixes_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][0]
-                properties_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][2]
-
-                if Namespace.forValue(iri_key):
-                    iri_key_to_append = iri_key
-                    postfix_special_character = ''
-                elif iri_key[-1] == '#' or iri_key[-1] == '/':
-                    iri_key_to_append = iri_key[0:len(iri_key) - 1]
-                    postfix_special_character = iri_key[-1]
-                else:
-                    iri_key_to_append = iri_key
-                    postfix_special_character = '#'
-
-                if postfix_special_character:
-                    if len(prefixes_of_iri_key) == 0:
-                        if 'display_in_widget' in properties_of_iri_key:
-                            self.pm.setPrefix('', postfix(iri_key_to_append, postfix_special_character))
-                    else:
-                        for p in prefixes_of_iri_key:
-                            self.pm.setPrefix(p, postfix(iri_key_to_append, postfix_special_character))
-
+            # self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+            
+            for prefix,ns in self.project.prefixDictItems():
+                self.pm.setPrefix(prefix, ns)
+            
             if self.export:
                 self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
 
@@ -1776,7 +1755,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # NODES PRE-PROCESSING
             #################################
 
-            #for node in self.project.nodes():
+            # for node in self.project.nodes():
             for diagram in self.selected_diagrams:
                 for node in diagram.nodes():
                     self.convert(node)
@@ -1788,15 +1767,15 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # AXIOMS FROM NODES
             #################################
 
-            #for node in self.project.nodes():
+            # for node in self.project.nodes():
             for diagram in self.selected_diagrams:
                 for node in diagram.nodes():
 
-                    if node.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode}:
+                    if node.type() in {Item.ConceptIRINode, Item.AttributeIRINode, Item.RoleIRINode, Item.ValueDomainIRINode}:
                         self.createDeclarationAxiom(node)
-                        if node.type() is Item.AttributeNode:
+                        if node.type() is Item.AttributeIRINode:
                             self.createDataPropertyAxiom(node)
-                        elif node.type() is Item.RoleNode:
+                        elif node.type() is Item.RoleIRINode:
                             self.createObjectPropertyAxiom(node)
                     elif node.type() is Item.DisjointUnionNode:
                         self.createDisjointClassesAxiom(node)
@@ -1822,7 +1801,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # AXIOMS FROM EDGES
             #################################
 
-            #for edge in self.project.edges():
+            # for edge in self.project.edges():
             for diagram in self.selected_diagrams:
                 for edge in diagram.edges():
 
@@ -1839,17 +1818,17 @@ class OWLOntologyExporterWorker(AbstractWorker):
                         elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
                             if edge.source.type() is Item.RoleChainNode:
                                 self.createSubPropertyChainOfAxiom(edge)
-                            elif edge.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                            elif edge.source.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
                                 if edge.target.type() is Item.ComplementNode:
                                     self.createDisjointObjectPropertiesAxiom(edge)
-                                elif edge.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                                elif edge.target.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
                                     self.createSubObjectPropertyOfAxiom(edge)
                         # ATTRIBUTES
                         elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
-                            if edge.source.type() is Item.AttributeNode:
+                            if edge.source.type() is Item.AttributeIRINode:
                                 if edge.target.type() is Item.ComplementNode:
                                     self.createDisjointDataPropertiesAxiom(edge)
-                                elif edge.target.type() is Item.AttributeNode:
+                                elif edge.target.type() is Item.AttributeIRINode:
                                     self.createSubDataPropertyOfAxiom(edge)
                         # VALUE DOMAIN (ONLY DATA PROPERTY RANGE)
                         elif edge.source.type() is Item.RangeRestrictionNode and edge.target.identity() is Identity.ValueDomain:
@@ -1908,9 +1887,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     #################################
 
                     elif edge.type() is Item.SameEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                           edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                           edge.source.identity() == edge.target.identity():
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                      Identity.Attribute} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                           Identity.Attribute} and \
+                                edge.source.identity() == edge.target.identity():
                             self.createSameIndividualAxiom(edge)
                         else:
                             raise DiagramMalformedError(edge, 'invalid sameIndividual assertion')
@@ -1920,9 +1901,11 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     #################################
 
                     elif edge.type() is Item.DifferentEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                           edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                           edge.source.identity() == edge.target.identity():
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                      Identity.Attribute} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                           Identity.Attribute} and \
+                                edge.source.identity() == edge.target.identity():
                             self.createDifferentIndividualsAxiom(edge)
                         else:
                             raise DiagramMalformedError(edge, 'invalid differentIndividuals assertion')
@@ -2009,12 +1992,14 @@ class OWLOntologyFetcher(AbstractWorker):
             self.vm.initialize()
         self.vm.attachThreadToJVM()
         self.DefaultPrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.util.DefaultPrefixManager')
-        self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
+        self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
         self.HashSet = self.vm.getJavaClass('java.util.HashSet')
         self.IRI = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
         self.LinkedList = self.vm.getJavaClass('java.util.LinkedList')
         self.List = self.vm.getJavaClass('java.util.List')
-        self.ManchesterSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
+        self.ManchesterSyntaxDocumentFormat = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
         self.OWLAnnotationValue = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationValue')
         self.OWLFacet = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWLFacet')
         self.OWL2Datatype = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
@@ -2049,7 +2034,7 @@ class OWLOntologyFetcher(AbstractWorker):
 
         self.errored_message = None
 
-    def get_nodes_and_edges_for_axiom(self,axiom):
+    def get_nodes_and_edges_for_axiom(self, axiom):
 
         pass
 
@@ -2080,17 +2065,17 @@ class OWLOntologyFetcher(AbstractWorker):
         if node.diagram.name not in self._converted:
             self._converted[node.diagram.name] = dict()
         if node not in self._converted[node.diagram.name]:
-            if node.type() is Item.ConceptNode:
+            if node.type() is Item.ConceptIRINode:
                 self._converted[node.diagram.name][node.id] = self.getConcept(node, converted_trace)
-            elif node.type() is Item.AttributeNode:
+            elif node.type() is Item.AttributeIRINode:
                 self._converted[node.diagram.name][node.id] = self.getAttribute(node, converted_trace)
-            elif node.type() is Item.RoleNode:
+            elif node.type() is Item.RoleIRINode:
                 self._converted[node.diagram.name][node.id] = self.getRole(node, converted_trace)
-            elif node.type() is Item.ValueDomainNode:
+            elif node.type() is Item.ValueDomainIRINode:
                 self._converted[node.diagram.name][node.id] = self.getValueDomain(node, converted_trace)
-            elif node.type() is Item.IndividualNode:
+            elif node.type() is Item.IndividualIRINode:
                 self._converted[node.diagram.name][node.id] = self.getIndividual(node, converted_trace)
-            elif node.type() is Item.FacetNode:
+            elif node.type() is Item.FacetIRINode:
                 self._converted[node.diagram.name][node.id] = self.getFacet(node, converted_trace)
             elif node.type() is Item.RoleInverseNode:
                 self._converted[node.diagram.name][node.id] = self.getRoleInverse(node, converted_trace)
@@ -2116,7 +2101,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 raise ValueError('no conversion available for node %s' % node)
 
         converted_trace.append(self._converted[node.diagram.name][node.id])
-        #return self._converted[node.diagram.name][node.id]
+        # return self._converted[node.diagram.name][node.id]
 
     def converted(self):
         """
@@ -2134,7 +2119,7 @@ class OWLOntologyFetcher(AbstractWorker):
         self.max += increase
         self.num += num
         self.num = clamp(self.num, minval=0, maxval=self.max)
-        #self.sgnProgress.emit(self.num, self.max)
+        # self.sgnProgress.emit(self.num, self.max)
 
     #############################################
     #   AUXILIARY METHODS
@@ -2247,7 +2232,7 @@ class OWLOntologyFetcher(AbstractWorker):
     #################################
     """
     method name	            Convert func called recursively
-	
+
         getAttribute	         No
         getComplement	         Yes
         getConcept	             No
@@ -2266,11 +2251,10 @@ class OWLOntologyFetcher(AbstractWorker):
         getValueDomain	         No
     """
 
-
     def getAttribute(self, node, conversion_trace):
         """
         Build and returns a OWL 2 attribute using the given graphol node.
-        :type node: AttributeNode
+        :type node: AttributeIRINode
         :rtype: OWLDataProperty
         """
         if (node.special() is Special.Top) or (node.special() is Special.TopAttribute):
@@ -2303,46 +2287,42 @@ class OWLOntologyFetcher(AbstractWorker):
             raise DiagramMalformedError(node, 'too many operands')
         operand = first(incoming)
         if operand.identity() is Identity.Concept:
-
-            #conversion_trace = []
+            # conversion_trace = []
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
-            #conversion = self.convert(operand)
+            # conversion = self.convert(operand)
 
             return self.df.getOWLObjectComplementOf(conversion)
         if operand.identity() is Identity.ValueDomain:
-
-            #conversion_trace = []
+            # conversion_trace = []
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
-            #conversion = self.convert(operand)
+            # conversion = self.convert(operand)
             return self.df.getOWLDataComplementOf(conversion)
 
         if operand.identity() is Identity.Role:
-
-            #conversion_trace = []
+            # conversion_trace = []
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
             return conversion
-            #return self.convert(operand)
+            # return self.convert(operand)
         if operand.identity() is Identity.Attribute:
-
-            #conversion_trace = []
+            # conversion_trace = []
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
             return conversion
-            #return self.convert(operand)
+            # return self.convert(operand)
 
         raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
 
     def getConcept(self, node, conversion_trace):
         """
         Build and returns a OWL 2 concept using the given graphol node.
-        :type node: ConceptNode
+        :type node: ConceptIRINode
         :rtype: OWLClass
         """
         if (node.special() is Special.Top) or (node.special() is Special.TopConcept):
@@ -2355,7 +2335,8 @@ class OWLOntologyFetcher(AbstractWorker):
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
             return self.df.getOWLClass(
-                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                self.IRI.create(
+                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
 
     def getDatatypeRestriction(self, node, conversion_trace):
         """
@@ -2364,8 +2345,8 @@ class OWLOntologyFetcher(AbstractWorker):
         :rtype: OWLDatatypeRestriction
         """
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.ValueDomainNode
-        f3 = lambda x: x.type() is Item.FacetNode
+        f2 = lambda x: x.type() is Item.ValueDomainIRINode
+        f3 = lambda x: x.type() is Item.FacetIRINode
 
         #############################################
         # BUILD DATATYPE
@@ -2375,7 +2356,7 @@ class OWLOntologyFetcher(AbstractWorker):
         if not operand:
             raise DiagramMalformedError(node, 'missing value domain node')
 
-        #de = self.convert(operand)
+        # de = self.convert(operand)
         conversion_trace.append(operand)
         self.convert(operand, conversion_trace)
         conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2391,11 +2372,10 @@ class OWLOntologyFetcher(AbstractWorker):
 
         collection = self.HashSet()
         for facet in incoming:
-
             conversion_trace.append(facet)
             self.convert(facet, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
-            #conversion = self.convert(facet)
+            # conversion = self.convert(facet)
             collection.add(conversion)
 
         #############################################
@@ -2425,7 +2405,7 @@ class OWLOntologyFetcher(AbstractWorker):
             # BUILD OPERAND
             #################################
 
-            #dpe = self.convert(operand)
+            # dpe = self.convert(operand)
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2438,7 +2418,7 @@ class OWLOntologyFetcher(AbstractWorker):
             if not filler:
                 dre = self.df.getTopDatatype()
             else:
-                #dre = self.convert(filler)
+                # dre = self.convert(filler)
                 conversion_trace.append(filler)
                 self.convert(filler, conversion_trace)
                 conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2469,7 +2449,7 @@ class OWLOntologyFetcher(AbstractWorker):
             # BUILD OPERAND
             #################################
 
-            #ope = self.convert(operand)
+            # ope = self.convert(operand)
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2483,7 +2463,7 @@ class OWLOntologyFetcher(AbstractWorker):
             if not filler:
                 ce = self.df.getOWLThing()
             else:
-                #ce = self.convert(filler)
+                # ce = self.convert(filler)
                 conversion_trace.append(filler)
                 self.convert(filler, conversion_trace)
                 conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2519,10 +2499,10 @@ class OWLOntologyFetcher(AbstractWorker):
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.IndividualNode
+        f2 = lambda x: x.type() is Item.IndividualIRINode
         individuals = self.HashSet()
         for individual in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            #conversion = self.convert(individual)
+            # conversion = self.convert(individual)
             conversion_trace.append(individual)
             self.convert(individual, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2534,7 +2514,7 @@ class OWLOntologyFetcher(AbstractWorker):
     def getFacet(self, node, conversion_trace):
         """
         Build and returns a OWL 2 facet restriction using the given graphol node.
-        :type node: FacetNode
+        :type node: FacetIRINode
         :rtype: OWLFacetRestriction
         """
         datatype = node.datatype
@@ -2547,8 +2527,8 @@ class OWLOntologyFetcher(AbstractWorker):
     def getIndividual(self, node, conversion_trace):
         """
         Build and returns a OWL 2 individual using the given graphol node.
-        Also perform punning if the node is not an IndividualNode
-        :type node: IndividualNode|ConceptNode|RoleNode|AttributeNode
+        Also perform punning if the node is not an IndividualIRINode
+        :type node: IndividualIRINode|ConceptIRINode|RoleIRINode|AttributeIRINode
         :rtype: OWLNamedIndividual
         """
         if node.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute}:
@@ -2557,7 +2537,8 @@ class OWLOntologyFetcher(AbstractWorker):
                     OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
             else:
                 return self.df.getOWLNamedIndividual(
-                    self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                    self.IRI.create(
+                        self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
         elif node.identity() is Identity.Value:
             return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
         raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
@@ -2577,7 +2558,7 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
-            #conversion = self.convert(operand)
+            # conversion = self.convert(operand)
             collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
@@ -2595,9 +2576,9 @@ class OWLOntologyFetcher(AbstractWorker):
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         collection = list()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
-            if operand.type() is not Item.IndividualNode:
+            if operand.type() is not Item.IndividualIRINode:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            #conversion = self.convert(operand)
+            # conversion = self.convert(operand)
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2636,7 +2617,7 @@ class OWLOntologyFetcher(AbstractWorker):
             # BUILD OPERAND
             #################################
 
-            #ope = self.convert(operand).getInverseProperty()
+            # ope = self.convert(operand).getInverseProperty()
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2649,7 +2630,7 @@ class OWLOntologyFetcher(AbstractWorker):
             if not filler:
                 ce = self.df.getOWLThing()
             else:
-                #ce = self.convert(filler)
+                # ce = self.convert(filler)
                 conversion_trace.append(filler)
                 self.convert(filler, conversion_trace)
                 conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2679,7 +2660,7 @@ class OWLOntologyFetcher(AbstractWorker):
     def getRole(self, node, conversion_trace):
         """
         Build and returns a OWL 2 role using the given graphol node.
-        :type node: RoleNode
+        :type node: RoleIRINode
         :rtype: OWLObjectProperty
         """
         if (node.special() is Special.Top) or (node.special() is Special.TopRole):
@@ -2692,7 +2673,8 @@ class OWLOntologyFetcher(AbstractWorker):
                 OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
             return self.df.getOWLObjectProperty(
-                self.IRI.create(self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+                self.IRI.create(
+                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
 
     def getRoleChain(self, node, conversion_trace):
         """
@@ -2704,9 +2686,9 @@ class OWLOntologyFetcher(AbstractWorker):
             raise DiagramMalformedError(node, 'missing operand(s)')
         collection = self.LinkedList()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
-            if operand.type() not in {Item.RoleNode, Item.RoleInverseNode}:
+            if operand.type() not in {Item.RoleIRINode, Item.RoleInverseNode}:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            #conversion = self.convert(operand)
+            # conversion = self.convert(operand)
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2722,7 +2704,7 @@ class OWLOntologyFetcher(AbstractWorker):
         :rtype: OWLObjectPropertyExpression
         """
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.RoleNode
+        f2 = lambda x: x.type() is Item.RoleIRINode
         operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if not operand:
             raise DiagramMalformedError(node, 'missing operand')
@@ -2731,7 +2713,7 @@ class OWLOntologyFetcher(AbstractWorker):
         self.convert(operand, conversion_trace)
         conversion = conversion_trace[len(conversion_trace) - 1]
         return conversion.getInverseProperty()
-        #return self.convert(operand).getInverseProperty()
+        # return self.convert(operand).getInverseProperty()
 
     def getUnion(self, node, conversion_trace):
         """
@@ -2745,7 +2727,7 @@ class OWLOntologyFetcher(AbstractWorker):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            #conversion = self.convert(operand)
+            # conversion = self.convert(operand)
             conversion_trace.append(operand)
             self.convert(operand, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
@@ -2759,7 +2741,7 @@ class OWLOntologyFetcher(AbstractWorker):
     def getValueDomain(self, node, conversion_trace):
         """
         Build and returns a OWL 2 datatype using the given graphol node.
-        :type node: ValueDomainNode
+        :type node: ValueDomainIRINode
         :rtype: OWLDatatype
         """
         return self.getOWLApiDatatype(node.datatype)
@@ -2781,9 +2763,9 @@ class OWLOntologyFetcher(AbstractWorker):
                 value = self.vm.cast(self.OWLAnnotationValue, value)
                 annotation = self.df.getOWLAnnotation(aproperty, value)
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation)
                 self.addAxiom(axiom_to_add)
 
@@ -2798,15 +2780,14 @@ class OWLOntologyFetcher(AbstractWorker):
         :type edge: MembershipEdge
         """
         if OWLAxiom.ClassAssertion in self.axiomsList:
-
             conversion_traceA = []
             self.convert(edge.target, conversion_traceA)
             conversionA = conversion_traceA[len(conversion_traceA) - 1]
             conversion_traceB = []
             self.convert(edge.source, conversion_traceB)
             conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            #conversionA = self.convert(edge.target)
-            #conversionB = self.convert(edge.source)
+            # conversionA = self.convert(edge.target)
+            # conversionB = self.convert(edge.source)
             axiom_to_add = self.df.getOWLClassAssertionAxiom(conversionA, conversionB)
             self.addAxiom(axiom_to_add)
 
@@ -2824,7 +2805,6 @@ class OWLOntologyFetcher(AbstractWorker):
         :type edge: MembershipEdge
         """
         if OWLAxiom.DataPropertyAssertion in self.axiomsList:
-
             conversion_traceA = []
             self.convert(edge.target, conversion_traceA)
             conversionA = conversion_traceA[len(conversion_traceA) - 1]
@@ -2834,9 +2814,9 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceC = []
             self.convert(edge.source, conversion_traceC)
             conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            #conversionA = self.convert(edge.target)
-            #conversionB = self.convert(edge.source)[0]
-            #conversionC = self.convert(edge.source)[1]
+            # conversionA = self.convert(edge.target)
+            # conversionB = self.convert(edge.source)[0]
+            # conversionC = self.convert(edge.source)[1]
             axiom_to_add = self.df.getOWLDataPropertyAssertionAxiom(conversionA, conversionB, conversionC)
             self.addAxiom(axiom_to_add)
 
@@ -2852,21 +2832,21 @@ class OWLOntologyFetcher(AbstractWorker):
     def createDataPropertyAxiom(self, node):
         """
         Generate OWL 2 Data Property specific axioms.
-        :type node: AttributeNode
+        :type node: AttributeIRINode
         """
         if OWLAxiom.FunctionalDataProperty in self.axiomsList:
             if node.isFunctional():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLFunctionalDataPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
                 dict_entry = []
                 dict_entry.append(node)
                 dict_entry.extend(conversion_trace)
                 self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
     def createDeclarationAxiom(self, node):
         """
@@ -2877,10 +2857,10 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_trace = []
             self.convert(node, conversion_trace)
             conversion = conversion_trace[len(conversion_trace) - 1]
-            #conversion = self.convert(node)
+            # conversion = self.convert(node)
             axiom_to_add = self.df.getOWLDeclarationAxiom(conversion)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [node]
             dict_entry = []
             dict_entry.append(node)
             dict_entry.extend(conversion_trace)
@@ -2900,7 +2880,7 @@ class OWLOntologyFetcher(AbstractWorker):
                     # Perform punning of node
                     conversion = self.getIndividual(node, [])
                     dict_entry.append(conversion)
-                else: # Node is already an IndividualNode
+                else:  # Node is already an IndividualIRINode
                     conversion_trace = []
                     self.convert(node, conversion_trace)
                     conversion = conversion_trace[-1]
@@ -2928,7 +2908,7 @@ class OWLOntologyFetcher(AbstractWorker):
                     self.convert(operand, conversion_trace)
                     conversion = conversion_trace[len(conversion_trace) - 1]
                     conversion_trace_collection.extend(conversion_trace)
-                    #conversion = self.convert(operand)
+                    # conversion = self.convert(operand)
                     collection.add(conversion)
                 axiom_to_add = self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
@@ -2945,13 +2925,14 @@ class OWLOntologyFetcher(AbstractWorker):
                 conversion_traceA = []
                 self.convert(operand, conversion_traceA)
                 conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                #conversionA = self.convert(operand)
-                node_adjacentNodes = node.adjacentNodes(lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge})
+                # conversionA = self.convert(operand)
+                node_adjacentNodes = node.adjacentNodes(
+                    lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge})
                 for included in node_adjacentNodes:
                     conversion_traceB = []
                     self.convert(included, conversion_traceB)
                     conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    #conversionB = self.convert(included)
+                    # conversionB = self.convert(included)
                     collection = self.HashSet()
                     collection.add(conversionA)
                     collection.add(conversionB)
@@ -2978,8 +2959,8 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceB = []
             self.convert(edge.target, conversion_traceB)
             conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            #conversionA = self.convert(edge.source)
-            #conversionB = self.convert(edge.target)
+            # conversionA = self.convert(edge.source)
+            # conversionB = self.convert(edge.target)
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
@@ -3006,8 +2987,8 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceB = []
             self.convert(edge.target, conversion_traceB)
             conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            #conversionA = self.convert(edge.source)
-            #conversionB = self.convert(edge.target)
+            # conversionA = self.convert(edge.source)
+            # conversionB = self.convert(edge.target)
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
@@ -3071,14 +3052,14 @@ class OWLOntologyFetcher(AbstractWorker):
                 conversion_traceB = []
                 self.convert(edge.target, conversion_traceB)
                 conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                #conversionA = self.convert(edge.source)
-                #conversionB = self.convert(edge.target)
+                # conversionA = self.convert(edge.source)
+                # conversionB = self.convert(edge.target)
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
                 axiom_to_add = self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
                 dict_entry = []
                 dict_entry.extend(conversion_traceA)
@@ -3102,11 +3083,11 @@ class OWLOntologyFetcher(AbstractWorker):
                     conversion_traceB = []
                     self.convert(target, conversion_traceB)
                     conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    #conversionA = self.convert(source)
-                    #conversionB = self.convert(target)
+                    # conversionA = self.convert(source)
+                    # conversionB = self.convert(target)
                     axiom_to_add = self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB)
                     self.addAxiom(axiom_to_add)
-                    #self._axiom_to_node_or_edge[axiom_to_add] = [source, target, edge]
+                    # self._axiom_to_node_or_edge[axiom_to_add] = [source, target, edge]
 
                     dict_entry = []
                     dict_entry.extend(conversion_traceA)
@@ -3122,14 +3103,14 @@ class OWLOntologyFetcher(AbstractWorker):
                 conversion_traceB = []
                 self.convert(edge.target, conversion_traceB)
                 conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                #conversionA = self.convert(edge.source)
-                #conversionB = self.convert(edge.target)
+                # conversionA = self.convert(edge.source)
+                # conversionB = self.convert(edge.target)
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
                 axiom_to_add = self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
                 dict_entry = []
                 dict_entry.extend(conversion_traceA)
@@ -3153,11 +3134,11 @@ class OWLOntologyFetcher(AbstractWorker):
                     conversion_traceB = []
                     self.convert(target, conversion_traceB)
                     conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    #conversionA = self.convert(source)
-                    #conversionB = self.convert(target)
+                    # conversionA = self.convert(source)
+                    # conversionB = self.convert(target)
                     axiom_to_add = self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB)
                     self.addAxiom(axiom_to_add)
-                    #self._axiom_to_node_or_edge[axiom_to_add] = [source, target, edge]
+                    # self._axiom_to_node_or_edge[axiom_to_add] = [source, target, edge]
                     dict_entry = []
                     dict_entry.extend(conversion_traceA)
                     dict_entry.extend(conversion_traceB)
@@ -3173,14 +3154,14 @@ class OWLOntologyFetcher(AbstractWorker):
                 conversion_traceB = []
                 self.convert(edge.target, conversion_traceB)
                 conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                #conversionA = self.convert(edge.source)
-                #conversionB = self.convert(edge.target)
+                # conversionA = self.convert(edge.source)
+                # conversionB = self.convert(edge.target)
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
                 axiom_to_add = self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection))
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
                 dict_entry = []
                 dict_entry.extend(conversion_traceA)
@@ -3197,7 +3178,7 @@ class OWLOntologyFetcher(AbstractWorker):
         """
         if OWLAxiom.InverseObjectProperties in self.axiomsList:
             f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.RoleNode
+            f2 = lambda x: x.type() is Item.RoleIRINode
             if edge.source.type() is Item.RoleInverseNode:
                 forward = edge.target
                 inverse = first(edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
@@ -3212,11 +3193,11 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceB = []
             self.convert(inverse, conversion_traceB)
             conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            #conversionA = self.convert(forward)
-            #conversionB = self.convert(inverse)
+            # conversionA = self.convert(forward)
+            # conversionB = self.convert(inverse)
             axiom_to_add = self.df.getOWLInverseObjectPropertiesAxiom(conversionA, conversionB)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [forward, inverse, edge]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [forward, inverse, edge]
 
             dict_entry = []
             dict_entry.extend(conversion_traceA)
@@ -3244,12 +3225,12 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceC = []
             self.convert(edge.source, conversion_traceC)
             conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            #conversionA = self.convert(ele_A)
-            #conversionB = self.convert(edge.source)[0]
-            #conversionC = self.convert(edge.source)[1]
+            # conversionA = self.convert(ele_A)
+            # conversionB = self.convert(edge.source)[0]
+            # conversionC = self.convert(edge.source)[1]
             axiom_to_add = self.df.getOWLNegativeDataPropertyAssertionAxiom(conversionA, conversionB, conversionC)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [ele_A, edge.source, edge]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [ele_A, edge.source, edge]
 
             dict_entry = []
             dict_entry.append(ele_A)
@@ -3278,12 +3259,12 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceC = []
             self.convert(edge.source, conversion_traceC)
             conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            #conversionA = self.convert(ele_A)
-            #conversionB = self.convert(edge.source)[0]
-            #conversionC = self.convert(edge.source)[1]
+            # conversionA = self.convert(ele_A)
+            # conversionB = self.convert(edge.source)[0]
+            # conversionC = self.convert(edge.source)[1]
             axiom_to_add = self.df.getOWLNegativeObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [ele_A, edge.source, edge]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [ele_A, edge.source, edge]
 
             dict_entry = []
             dict_entry.append(ele_A)
@@ -3297,17 +3278,17 @@ class OWLOntologyFetcher(AbstractWorker):
     def createObjectPropertyAxiom(self, node):
         """
         Generate OWL 2 ObjectProperty specific axioms.
-        :type node: RoleNode
+        :type node: RoleIRINode
         """
         if OWLAxiom.FunctionalObjectProperty in self.axiomsList:
             if node.isFunctional():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLFunctionalObjectPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
                 dict_entry = []
                 dict_entry.append(node)
@@ -3317,12 +3298,12 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.InverseFunctionalObjectProperty in self.axiomsList:
             if node.isInverseFunctional():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLInverseFunctionalObjectPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
                 dict_entry = []
                 dict_entry.append(node)
@@ -3332,12 +3313,12 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.AsymmetricObjectProperty in self.axiomsList:
             if node.isAsymmetric():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLAsymmetricObjectPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
                 dict_entry = []
                 dict_entry.append(node)
@@ -3347,12 +3328,12 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.IrreflexiveObjectProperty in self.axiomsList:
             if node.isIrreflexive():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLIrreflexiveObjectPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
                 dict_entry = []
                 dict_entry.append(node)
@@ -3362,12 +3343,12 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.ReflexiveObjectProperty in self.axiomsList:
             if node.isReflexive():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLReflexiveObjectPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
                 dict_entry = []
                 dict_entry.append(node)
@@ -3377,12 +3358,12 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.SymmetricObjectProperty in self.axiomsList:
             if node.isSymmetric():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLSymmetricObjectPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
                 dict_entry = []
                 dict_entry.append(node)
@@ -3392,12 +3373,12 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.TransitiveObjectProperty in self.axiomsList:
             if node.isTransitive():
                 conversion_trace = []
-                self.convert(node,conversion_trace)
-                conversion = conversion_trace[len(conversion_trace)-1]
-                #conversion = self.convert(node)
+                self.convert(node, conversion_trace)
+                conversion = conversion_trace[len(conversion_trace) - 1]
+                # conversion = self.convert(node)
                 axiom_to_add = self.df.getOWLTransitiveObjectPropertyAxiom(conversion)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [node]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
 
                 dict_entry = []
                 dict_entry.append(node)
@@ -3419,12 +3400,12 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceC = []
             self.convert(edge.source, conversion_traceC)
             conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            #conversionA = self.convert(edge.target)
-            #conversionB = self.convert(edge.source)[0]
-            #conversionC = self.convert(edge.source)[1]
+            # conversionA = self.convert(edge.target)
+            # conversionB = self.convert(edge.source)[0]
+            # conversionC = self.convert(edge.source)[1]
             axiom_to_add = self.df.getOWLObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [edge.target, edge.source, edge]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.target, edge.source, edge]
 
             dict_entry = []
             dict_entry.append(edge.target)
@@ -3456,11 +3437,11 @@ class OWLOntologyFetcher(AbstractWorker):
                         conversion_traceB = []
                         self.convert(concept, conversion_traceB)
                         conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        #conversionA = self.convert(role)
-                        #conversionB = self.convert(concept)
+                        # conversionA = self.convert(role)
+                        # conversionB = self.convert(concept)
                         axiom_to_add = self.df.getOWLObjectPropertyDomainAxiom(conversionA, conversionB)
                         self.addAxiom(axiom_to_add)
-                        #self._axiom_to_node_or_edge[axiom_to_add] = [role, concept, node]
+                        # self._axiom_to_node_or_edge[axiom_to_add] = [role, concept, node]
 
                         dict_entry = []
                         dict_entry.extend(conversion_traceA)
@@ -3486,11 +3467,11 @@ class OWLOntologyFetcher(AbstractWorker):
                         conversion_traceB = []
                         self.convert(concept, conversion_traceB)
                         conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        #conversionA = self.convert(attribute)
-                        #conversionB = self.convert(concept)
+                        # conversionA = self.convert(attribute)
+                        # conversionB = self.convert(concept)
                         axiom_to_add = self.df.getOWLDataPropertyDomainAxiom(conversionA, conversionB)
                         self.addAxiom(axiom_to_add)
-                        #self._axiom_to_node_or_edge[axiom_to_add] = [attribute, concept, node]
+                        # self._axiom_to_node_or_edge[axiom_to_add] = [attribute, concept, node]
 
                         dict_entry = []
                         dict_entry.extend(conversion_traceA)
@@ -3521,11 +3502,11 @@ class OWLOntologyFetcher(AbstractWorker):
                         conversion_traceB = []
                         self.convert(concept, conversion_traceB)
                         conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        #conversionA = self.convert(role)
-                        #conversionB = self.convert(concept)
+                        # conversionA = self.convert(role)
+                        # conversionB = self.convert(concept)
                         axiom_to_add = self.df.getOWLObjectPropertyRangeAxiom(conversionA, conversionB)
                         self.addAxiom(axiom_to_add)
-                        #self._axiom_to_node_or_edge[axiom_to_add] = [role, concept, node]
+                        # self._axiom_to_node_or_edge[axiom_to_add] = [role, concept, node]
 
                         dict_entry = []
                         dict_entry.extend(conversion_traceA)
@@ -3551,11 +3532,11 @@ class OWLOntologyFetcher(AbstractWorker):
                         conversion_traceB = []
                         self.convert(datatype, conversion_traceB)
                         conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        #conversionA = self.convert(attribute)
-                        #conversionB = self.convert(datatype)
+                        # conversionA = self.convert(attribute)
+                        # conversionB = self.convert(datatype)
                         axiom_to_add = self.df.getOWLDataPropertyRangeAxiom(conversionA, conversionB)
                         self.addAxiom(axiom_to_add)
-                        #self._axiom_to_node_or_edge[axiom_to_add] = [attribute, datatype, node]
+                        # self._axiom_to_node_or_edge[axiom_to_add] = [attribute, datatype, node]
 
                         dict_entry = []
                         dict_entry.extend(conversion_traceA)
@@ -3579,7 +3560,7 @@ class OWLOntologyFetcher(AbstractWorker):
                     # Perform punning of node
                     conversion = self.getIndividual(node, [])
                     dict_entry.append(conversion)
-                else: # Node is already an IndividualNode
+                else:  # Node is already an IndividualIRINode
                     conversion_trace = []
                     self.convert(node, conversion_trace)
                     conversion = conversion_trace[-1]
@@ -3626,11 +3607,11 @@ class OWLOntologyFetcher(AbstractWorker):
                     conversion_traceB = []
                     self.convert(edge.target, conversion_traceB)
                     conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    #conversionA = self.convert(operand)
-                    #conversionB = self.convert(edge.target)
+                    # conversionA = self.convert(operand)
+                    # conversionB = self.convert(edge.target)
                     axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
                     self.addAxiom(axiom_to_add)
-                    #self._axiom_to_node_or_edge[axiom_to_add] = [operand, edge.target, edge]
+                    # self._axiom_to_node_or_edge[axiom_to_add] = [operand, edge.target, edge]
 
                     dict_entry = []
                     dict_entry.extend(conversion_traceA)
@@ -3651,11 +3632,11 @@ class OWLOntologyFetcher(AbstractWorker):
                     conversion_traceB = []
                     self.convert(operand, conversion_traceB)
                     conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    #conversionA = self.convert(edge.source)
-                    #conversionB = self.convert(operand)
+                    # conversionA = self.convert(edge.source)
+                    # conversionB = self.convert(operand)
                     axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
                     self.addAxiom(axiom_to_add)
-                    #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, operand, edge]
+                    # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, operand, edge]
 
                     dict_entry = []
                     dict_entry.extend(conversion_traceA)
@@ -3672,11 +3653,11 @@ class OWLOntologyFetcher(AbstractWorker):
                 conversion_traceB = []
                 self.convert(edge.target, conversion_traceB)
                 conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                #conversionA = self.convert(edge.source)
-                #conversionB = self.convert(edge.target)
+                # conversionA = self.convert(edge.source)
+                # conversionB = self.convert(edge.target)
                 axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
                 self.addAxiom(axiom_to_add)
-                #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
                 dict_entry = []
                 dict_entry.extend(conversion_traceA)
@@ -3698,11 +3679,11 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceB = []
             self.convert(edge.target, conversion_traceB)
             conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            #conversionA = self.convert(edge.source)
-            #conversionB = self.convert(edge.target)
+            # conversionA = self.convert(edge.source)
+            # conversionB = self.convert(edge.target)
             axiom_to_add = self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
             dict_entry = []
             dict_entry.extend(conversion_traceA)
@@ -3724,11 +3705,11 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceB = []
             self.convert(edge.target, conversion_traceB)
             conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            #conversionA = self.convert(edge.source)
-            #conversionB = self.convert(edge.target)
+            # conversionA = self.convert(edge.source)
+            # conversionB = self.convert(edge.target)
             axiom_to_add = self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
             dict_entry = []
             dict_entry.extend(conversion_traceA)
@@ -3750,11 +3731,11 @@ class OWLOntologyFetcher(AbstractWorker):
             conversion_traceB = []
             self.convert(edge.target, conversion_traceB)
             conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            #conversionA = self.convert(edge.source)
-            #conversionB = self.convert(edge.target)
+            # conversionA = self.convert(edge.source)
+            # conversionB = self.convert(edge.target)
             axiom_to_add = self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB)
             self.addAxiom(axiom_to_add)
-            #self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
 
             dict_entry = []
             dict_entry.extend(conversion_traceA)
@@ -3786,7 +3767,7 @@ class OWLOntologyFetcher(AbstractWorker):
             self.df = self.OWLManager.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
             self.pm = self.DefaultPrefixManager()
-            #self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+            # self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
 
             for iri_key in self.project.IRI_prefixes_nodes_dict.keys():
 
@@ -3816,7 +3797,7 @@ class OWLOntologyFetcher(AbstractWorker):
             #################################
 
             for node in self.project.nodes():
-                self.convert(node,[])
+                self.convert(node, [])
                 self.step(+1)
 
             self.project.converted_nodes = self._converted
@@ -3829,11 +3810,11 @@ class OWLOntologyFetcher(AbstractWorker):
 
             for node in self.project.nodes():
 
-                if node.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.ValueDomainNode}:
+                if node.type() in {Item.ConceptIRINode, Item.AttributeIRINode, Item.RoleIRINode, Item.ValueDomainIRINode}:
                     self.createDeclarationAxiom(node)
-                    if node.type() is Item.AttributeNode:
+                    if node.type() is Item.AttributeIRINode:
                         self.createDataPropertyAxiom(node)
-                    elif node.type() is Item.RoleNode:
+                    elif node.type() is Item.RoleIRINode:
                         self.createObjectPropertyAxiom(node)
                 elif node.type() is Item.DisjointUnionNode:
                     self.createDisjointClassesAxiom(node)
@@ -3871,17 +3852,17 @@ class OWLOntologyFetcher(AbstractWorker):
                     elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
                         if edge.source.type() is Item.RoleChainNode:
                             self.createSubPropertyChainOfAxiom(edge)
-                        elif edge.source.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                        elif edge.source.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
                             if edge.target.type() is Item.ComplementNode:
                                 self.createDisjointObjectPropertiesAxiom(edge)
-                            elif edge.target.type() in {Item.RoleNode, Item.RoleInverseNode}:
+                            elif edge.target.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
                                 self.createSubObjectPropertyOfAxiom(edge)
                     # ATTRIBUTES
                     elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
-                        if edge.source.type() is Item.AttributeNode:
+                        if edge.source.type() is Item.AttributeIRINode:
                             if edge.target.type() is Item.ComplementNode:
                                 self.createDisjointDataPropertiesAxiom(edge)
-                            elif edge.target.type() is Item.AttributeNode:
+                            elif edge.target.type() is Item.AttributeIRINode:
                                 self.createSubDataPropertyOfAxiom(edge)
                     # VALUE DOMAIN (ONLY DATA PROPERTY RANGE)
                     elif edge.source.type() is Item.RangeRestrictionNode and edge.target.identity() is Identity.ValueDomain:
@@ -3940,8 +3921,10 @@ class OWLOntologyFetcher(AbstractWorker):
                 #################################
 
                 elif edge.type() is Item.SameEdge:
-                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                  Identity.Attribute} and \
+                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                       Identity.Attribute} and \
                             edge.source.identity() == edge.target.identity():
                         self.createSameIndividualAxiom(edge)
                     else:
@@ -3952,8 +3935,10 @@ class OWLOntologyFetcher(AbstractWorker):
                 #################################
 
                 elif edge.type() is Item.DifferentEdge:
-                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                  Identity.Attribute} and \
+                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
+                                                       Identity.Attribute} and \
                             edge.source.identity() == edge.target.identity():
                         self.createDifferentIndividualsAxiom(edge)
                     else:
@@ -3969,8 +3954,8 @@ class OWLOntologyFetcher(AbstractWorker):
 
             if len(self._axiom_to_node_or_edge) != len(self._axioms):
                 LOGGER.error('len(_axiom_to_node_or_edge) != len(_axioms)')
-                LOGGER.error('len(_axiom_to_node_or_edge)',len(self._axiom_to_node_or_edge))
-                LOGGER.error('len(self._axioms)',len(self._axioms))
+                LOGGER.error('len(_axiom_to_node_or_edge)', len(self._axiom_to_node_or_edge))
+                LOGGER.error('len(self._axioms)', len(self._axioms))
 
             #############################################
             # REFINE THE KEYS OF THE DICTIONARY(CAST WITH OWLClass + .toString() ), remove duplicate entries
@@ -3980,8 +3965,8 @@ class OWLOntologyFetcher(AbstractWorker):
             special_cases.append('<class \'eddy.core.items.nodes.range_restriction.RangeRestrictionNode\'>')
             special_cases.append('<class \'eddy.core.items.nodes.domain_restriction.DomainRestrictionNode\'>')
 
-            special_cases.append('<class \'eddy.core.items.nodes.value_domain.ValueDomainNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.facet.FacetNode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.value_domain.ValueDomainIRINode\'>')
+            special_cases.append('<class \'eddy.core.items.nodes.facet.FacetIRINode\'>')
 
             special_cases.append('<class \'eddy.core.items.nodes.intersection.IntersectionNode\'>')
             special_cases.append('<class \'eddy.core.items.nodes.role_chain.RoleChainNode\'>')
@@ -4010,20 +3995,20 @@ class OWLOntologyFetcher(AbstractWorker):
                         refined_value.add(v)
 
                 set_of_nodes_in_value = set()
-                #list_of_edges_in_value = []
+                # list_of_edges_in_value = []
 
                 for v in list(refined_value):
 
                     if 'eddy.core.items.nodes' in str(type(v)):
                         set_of_nodes_in_value.add(v)
-                    #elif 'eddy.core.items.edges' in str(type(v)):
-                        #list_of_edges_in_value.append(v)
+                    # elif 'eddy.core.items.edges' in str(type(v)):
+                    # list_of_edges_in_value.append(v)
 
                 list_of_nodes_in_value = list(set_of_nodes_in_value)
 
-                refined_value_2=set()
+                refined_value_2 = set()
 
-                #for l1 in range(0,len(list_of_nodes_in_value)-1):
+                # for l1 in range(0,len(list_of_nodes_in_value)-1):
                 for l1 in range(0, len(list_of_nodes_in_value)):
 
                     node_1 = list_of_nodes_in_value[l1]
@@ -4033,10 +4018,10 @@ class OWLOntologyFetcher(AbstractWorker):
 
                     edges_1 = node_1.edges
 
-                    #for l2 in range(l1+1,len(list_of_nodes_in_value)):
+                    # for l2 in range(l1+1,len(list_of_nodes_in_value)):
                     for l2 in range(0, len(list_of_nodes_in_value)):
 
-                        if l1==l2:
+                        if l1 == l2:
                             continue
 
                         node_2 = list_of_nodes_in_value[l2]
@@ -4044,7 +4029,7 @@ class OWLOntologyFetcher(AbstractWorker):
 
                         intersection_e1_e2 = edges_1 & edges_2
 
-                        if len(intersection_e1_e2)>0:
+                        if len(intersection_e1_e2) > 0:
                             refined_value_2 = refined_value_2.union(intersection_e1_e2)
 
                 entry_list = []
@@ -4067,10 +4052,10 @@ class OWLOntologyFetcher(AbstractWorker):
 
         except DiagramMalformedError as e:
             LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
-            self.errored_message='Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e)
+            self.errored_message = 'Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e)
         except Exception as e:
             LOGGER.exception('OWL 2 fetch could not be completed')
-            self.errored_message ='OWL 2 fetch could not be completed'
+            self.errored_message = 'OWL 2 fetch could not be completed'
         else:
             LOGGER.debug('OWL 2 fetch could be completed')
         finally:

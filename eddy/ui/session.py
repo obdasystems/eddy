@@ -900,7 +900,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #Funzionanti
         self.addDiagramExporter(ImageExporter)
         self.addDiagramExporter(GraphReferences)
-
         self.addProjectExporter(GrapholIRIProjectExporter)
         self.addDiagramExporter(PdfIRIDiagramExporter)
         #NON Funzionanti

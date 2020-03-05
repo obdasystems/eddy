@@ -133,7 +133,13 @@ class InclusionBetweenExpressionsRule(ProfileEdgeRule):
         if edge.type() is Item.InclusionEdge:
             supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
             shared = source.identities() & target.identities() - {Identity.Neutral, Identity.Unknown}
-            if shared - supported:
+            raiseError = True
+            for sharedId in shared:
+                if sharedId in supported:
+                    raiseError = False
+                    break
+            #if shared - supported:
+            if raiseError:
                 # Here we keep the ValueDomain as supported identity even though we deny the inclusion
                 # between value-domain expressions, unless we are creating a DataPropertyRange axiom.
                 # The reason for this is that if we remove the identity from the supported set the user

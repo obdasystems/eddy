@@ -244,7 +244,6 @@ class Diagram(QtWidgets.QGraphicsScene):
                 commands.append(CommandNodeAdd(self, node))
 
                 if iri is not None:
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
                     commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 if any(commands):
