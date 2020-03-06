@@ -48,6 +48,16 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
     #############################################
     #   INTERFACE
     #################################
+    def occursAsIndividual(self):
+        #Class Assertion
+        for instEdge in [x for x in self.edges if x.type() is Item.MembershipEdge]:
+            if instEdge.source is self:
+                return True
+        #Object[Data] Property Assertion
+        for inputEdge in [x for x in self.edges if x.type() is Item.InputEdge]:
+            if inputEdge.source is self and inputEdge.target.type() is Item.PropertyAssertionNode:
+                return True
+        return False
 
     def boundingRect(self):
         """

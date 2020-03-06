@@ -857,16 +857,15 @@ class IRIManager(QtCore.QObject):
         self.datatypes = set()
         self.languages = set()
         self.constrainingFacets = set()
-        if not(datatypes or languages or constrFacets or annotationProperties):
-            self.setDefaults()
-        else:
-            for annProp in annotationProperties:
-                self.addAnnotationProperty(annProp)
-            for dt in datatypes:
-                self.addDatatype(dt)
-            for fac in constrFacets:
-                self.addConstrainingFacet(fac)
-            self.languages = languages
+        self.setDefaults()
+        for annProp in annotationProperties:
+            self.addAnnotationProperty(annProp)
+        for dt in datatypes:
+            self.addDatatype(dt)
+        for fac in constrFacets:
+            self.addConstrainingFacet(fac)
+        for lang in languages:
+            self.addLanguageTag(lang)
 
     #############################################
     #   LANGUAGES
