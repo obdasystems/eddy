@@ -672,7 +672,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
                         else:
                             raise DiagramMalformedError(edge, 'invalid equivalence assertion')
 
-                    # TODO FINO QUI
                     #############################################
                     # MEMBERSHIP
                     #################################
@@ -680,7 +679,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     elif edge.type() is Item.MembershipEdge:
 
                         # CONCEPTS
-                        if edge.source.identity() is Identity.Individual and edge.target.identity() is Identity.Concept:
+                        if Identity.Individual in edge.source.identities() and edge.target.identity() is Identity.Concept:
                             self.createClassAssertionAxiom(edge)
                         # ROLES
                         elif edge.source.identity() is Identity.RoleInstance:
@@ -696,7 +695,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                                 self.createDataPropertyAssertionAxiom(edge)
                         else:
                             raise DiagramMalformedError(edge, 'invalid membership assertion')
-
+                    # TODO FINO QUI
                     #############################################
                     # SAME
                     #################################
@@ -1628,37 +1627,19 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 collection.add(conversionB)
                 self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
-    #TODO Da sostituire con metodi che leggono iris
-    def createAnnotationAssertionAxiom(self, node):
-        """
-        Generate a OWL 2 annotation axiom as rdfs:comment.
-        :type node: AbstractNode
-        """
-        text = QtGui.QTextDocument()
-
-        if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                aproperty = self.df.getOWLAnnotationProperty(
-                    self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
-                text.setHtml(meta.get(K_DESCRIPTION, ''))
-
-                value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion = self.convert(node)
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-                text.clear()
-
     def createClassAssertionAxiom(self, edge):
         """
         Generate a OWL 2 ClassAssertion axiom.
         :type edge: MembershipEdge
         """
         if OWLAxiom.ClassAssertion in self.axiomsList:
-            conversionA = self.convert(edge.target)
-            conversionB = self.convert(edge.source)
-            self.addAxiom(self.df.getOWLClassAssertionAxiom(conversionA, conversionB))
+            ind = None
+            if edge.source.type() is Item.ConceptIRINode:
+                ind = self._converted_meta_individuals[edge.source.diagram.name][edge.source.id]
+            else:
+                ind = self._converted[edge.source.diagram.name][edge.source.id]
+            cl = self._converted[edge.target.diagram.name][edge.target.id]
+            self.addAxiom(self.df.getOWLClassAssertionAxiom(cl, ind))
 
     def createDataPropertyAssertionAxiom(self, edge):
         """
@@ -1666,10 +1647,51 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :type edge: MembershipEdge
         """
         if OWLAxiom.DataPropertyAssertion in self.axiomsList:
-            conversionA = self.convert(edge.target)
+            dpe = self._converted[edge.target.diagram.name][edge.target.id]
+            conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
+            conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
+            self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
+
+    def createNegativeDataPropertyAssertionAxiom(self, edge):
+        """
+        Generate a OWL 2 NegativeObjectPropertyAssertion axiom.
+        :type edge: MembershipEdge
+        """
+        if OWLAxiom.NegativeDataPropertyAssertion in self.axiomsList:
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.identity() is Identity.Attribute
+            dpeNode = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+            dpe = self._converted[dpeNode.diagram.name][dpeNode.id]
             conversionB = self.convert(edge.source)[0]
             conversionC = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(conversionA, conversionB, conversionC))
+            self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
+
+    def createObjectPropertyAssertionAxiom(self, edge):
+        """
+        Generate a OWL 2 ObjectPropertyAssertion axiom.
+        :type edge: MembershipEdge
+        """
+        if OWLAxiom.ObjectPropertyAssertion in self.axiomsList:
+            ope = self._converted[edge.target.diagram.name][edge.target.id]
+            conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
+            conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
+            self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
+
+    def createNegativeObjectPropertyAssertionAxiom(self, edge):
+        """
+        Generate a OWL 2 NegativeObjectPropertyAssertion axiom.
+        :type edge: MembershipEdge
+        """
+        if OWLAxiom.NegativeObjectPropertyAssertion in self.axiomsList:
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.identity() is Identity.Role
+            opeNode = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+            ope = self._converted[opeNode.diagram.name][opeNode.id]
+            conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
+            conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
+            self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC))
+
+
 
     def createDifferentIndividualsAxiom(self, edge):
         """
@@ -1734,42 +1756,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
             conversionB = self.convert(inverse)
             self.addAxiom(self.df.getOWLInverseObjectPropertiesAxiom(conversionA, conversionB))
 
-    def createNegativeDataPropertyAssertionAxiom(self, edge):
-        """
-        Generate a OWL 2 NegativeObjectPropertyAssertion axiom.
-        :type edge: MembershipEdge
-        """
-        if OWLAxiom.NegativeDataPropertyAssertion in self.axiomsList:
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity() is Identity.Attribute
-            conversionA = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
-            conversionB = self.convert(edge.source)[0]
-            conversionC = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(conversionA, conversionB, conversionC))
 
-    def createNegativeObjectPropertyAssertionAxiom(self, edge):
-        """
-        Generate a OWL 2 NegativeObjectPropertyAssertion axiom.
-        :type edge: MembershipEdge
-        """
-        if OWLAxiom.NegativeObjectPropertyAssertion in self.axiomsList:
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.identity() is Identity.Role
-            conversionA = self.convert(first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)))
-            conversionB = self.convert(edge.source)[0]
-            conversionC = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC))
 
-    def createObjectPropertyAssertionAxiom(self, edge):
-        """
-        Generate a OWL 2 ObjectPropertyAssertion axiom.
-        :type edge: MembershipEdge
-        """
-        if OWLAxiom.ObjectPropertyAssertion in self.axiomsList:
-            conversionA = self.convert(edge.target)
-            conversionB = self.convert(edge.source)[0]
-            conversionC = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC))
+
+
 
     def createSameIndividualAxiom(self, edge):
         """
@@ -1790,8 +1780,27 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 collection.add(conversion)
             self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection)))
 
+    # TODO Da sostituire con metodi che leggono iris
+    def createAnnotationAssertionAxiom(self, node):
+            """
+            Generate a OWL 2 annotation axiom as rdfs:comment.
+            :type node: AbstractNode
+            """
+            text = QtGui.QTextDocument()
 
+            if OWLAxiom.Annotation in self.axiomsList:
+                meta = self.project.meta(node.type(), node.text())
+                if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
+                    aproperty = self.df.getOWLAnnotationProperty(
+                        self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
+                    text.setHtml(meta.get(K_DESCRIPTION, ''))
 
+                    value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
+                    value = self.vm.cast(self.OWLAnnotationValue, value)
+                    annotation = self.df.getOWLAnnotation(aproperty, value)
+                    conversion = self.convert(node)
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+                    text.clear()
 
 
 class OWLOntologyFetcher(AbstractWorker):
