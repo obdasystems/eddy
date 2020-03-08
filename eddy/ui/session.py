@@ -88,7 +88,7 @@ from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.exporters.graphreferences import GraphReferences
 from eddy.core.exporters.image import ImageExporter
-from eddy.core.exporters.owl2 import OWLOntologyExporter
+from eddy.core.exporters.owl2_iri import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfDiagramExporter
 from eddy.core.exporters.pdf_iri import PdfIRIDiagramExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
@@ -901,11 +901,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addDiagramExporter(ImageExporter)
         self.addDiagramExporter(GraphReferences)
         self.addProjectExporter(GrapholIRIProjectExporter)
+        #Esporta male tabelle iri (troppo piccole)
         self.addDiagramExporter(PdfIRIDiagramExporter)
-        #NON Funzionanti
-
+        # Da testare
         self.addOntologyExporter(OWLOntologyExporter)
-
 
 
     def initLoaders(self):

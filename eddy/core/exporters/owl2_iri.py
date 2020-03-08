@@ -60,7 +60,7 @@ from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
-from eddy.core.owl import OWL2Facet
+from eddy.core.owl import OWL2Facet, OWL2Datatype
 from eddy.core.worker import AbstractWorker
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import ComboBox, CheckBox
@@ -498,7 +498,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         connect(worker.sgnProgress, self.onProgress)
         self.startThread('OWL2Export', worker)
 
-
 class OWLOntologyExporterWorker(AbstractWorker):
     """
     Extends AbstractWorker providing a worker thread that will perform the OWL 2 ontology generation.
@@ -662,10 +661,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                             self.createEquivalentClassesAxiom(edge)
                         # ROLES
                         elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                            if Item.RoleInverseNode in {edge.source.type(), edge.target.type()}:
-                                self.createInverseObjectPropertiesAxiom(edge)
-                            else:
-                                self.createEquivalentObjectPropertiesAxiom(edge)
+                            self.createEquivalentObjectPropertiesAxiom(edge)
                         # ATTRIBUTES
                         elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
                             self.createEquivalentDataPropertiesAxiom(edge)
@@ -695,17 +691,15 @@ class OWLOntologyExporterWorker(AbstractWorker):
                                 self.createDataPropertyAssertionAxiom(edge)
                         else:
                             raise DiagramMalformedError(edge, 'invalid membership assertion')
-                    # TODO FINO QUI
+
                     #############################################
                     # SAME
                     #################################
 
                     elif edge.type() is Item.SameEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                      Identity.Attribute} and \
-                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                           Identity.Attribute} and \
-                                edge.source.identity() == edge.target.identity():
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept} and \
+                            edge.source.identities().intersection(edge.target.identities()):
                             self.createSameIndividualAxiom(edge)
                         else:
                             raise DiagramMalformedError(edge, 'invalid sameIndividual assertion')
@@ -715,11 +709,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     #################################
 
                     elif edge.type() is Item.DifferentEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                      Identity.Attribute} and \
-                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                           Identity.Attribute} and \
-                                edge.source.identity() == edge.target.identity():
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept} and \
+                                edge.source.identities().intersection(edge.target.identities()):
                             self.createDifferentIndividualsAxiom(edge)
                         else:
                             raise DiagramMalformedError(edge, 'invalid differentIndividuals assertion')
@@ -727,6 +719,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
+
+            self.addAnnotationAssertions()
+            LOGGER.debug('Generated OWL 2 annotation assertion axioms from edges (axioms = %s)', len(self.axioms()))
 
             #############################################
             # APPLY GENERATED AXIOMS
@@ -793,7 +788,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
     #############################################
     #   INTERFACE
     #################################
-    #TODO MODIFICATO
     def convert(self, node):
         """
         Build and returns the OWL 2 conversion of the given node.
@@ -965,6 +959,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
         raise ValueError('invalid datatype supplied: %s' % datatype)
     '''
+
     def getOWLApiFacet(self, facet):
         """
         Returns the OWLFacet matching the given Facet.
@@ -994,7 +989,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
     #############################################
     #   NODES PROCESSING
     #################################
-    #TODO FUNZIONI NODES MODIFICATE
     def getConcept(self, node):
         """
         Build and returns a OWL 2 concept using the given graphol node.
@@ -1083,7 +1077,17 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: OWLNamedIndividual
         """
         literal = node.literal
-        return self.df.getOWLLiteral(literal.lexicalForm, self.df.getOWLDatatype(str(literal.datatype)))
+        lexForm = literal.lexicalForm
+        lang = literal .language
+        datatype = literal.datatype
+        if lang:
+            return self.df.getOWLLiteral(lexForm, lang)
+        else:
+            if datatype:
+                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype.iri)))
+            else:
+                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral)))
+            return self.df.getOWLLiteral(lexForm, owlApiDatatype)
 
     def getValueDomain(self, node):
         """
@@ -1525,6 +1529,19 @@ class OWLOntologyExporterWorker(AbstractWorker):
             conversionB = self._converted[edge.target.diagram.name][edge.target.id]
             self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
 
+    def createDisjointDataPropertiesAxiom(self, edge):
+        """
+        Generate a OWL 2 DisjointDataProperties axiom.
+        :type edge: InclusionEdge
+        """
+        if OWLAxiom.DisjointDataProperties in self.axiomsList:
+            conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+            conversionB = self._converted[edge.target.diagram.name][edge.target.id]
+            collection = self.HashSet()
+            collection.add(conversionA)
+            collection.add(conversionB)
+            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
+
     def createSubObjectPropertyOfAxiom(self, edge):
         """
         Generate a OWL 2 SubObjectPropertyOf axiom.
@@ -1534,6 +1551,19 @@ class OWLOntologyExporterWorker(AbstractWorker):
             conversionA = self._converted[edge.source.diagram.name][edge.source.id]
             conversionB = self._converted[edge.target.diagram.name][edge.target.id]
             self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
+
+    def createDisjointObjectPropertiesAxiom(self, edge):
+        """
+        Generate a OWL 2 DisjointObjectProperties axiom.
+        :type edge: InclusionEdge
+        """
+        if OWLAxiom.DisjointObjectProperties in self.axiomsList:
+            conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+            conversionB = self._converted[edge.target.diagram.name][edge.target.id]
+            collection = self.HashSet()
+            collection.add(conversionA)
+            collection.add(conversionB)
+            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createSubPropertyChainOfAxiom(self, edge):
         """
@@ -1691,118 +1721,60 @@ class OWLOntologyExporterWorker(AbstractWorker):
             conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
             self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC))
 
-
-
-    def createDifferentIndividualsAxiom(self, edge):
-        """
-        Generate a OWL 2 DifferentIndividuals axiom.
-        :type edge: DifferentEdge
-        """
-        if OWLAxiom.DifferentIndividuals in self.axiomsList:
-            conversions = []
-            for node in [edge.source, edge.target]:
-                if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
-                    # Perform punning of node
-                    conversion = self.getIndividual(node)
-                else:  # Node is already an IndividualIRINode
-                    conversion = self.convert(node)
-                conversions.append(conversion)
-            collection = self.HashSet()
-            for conversion in conversions:
-                collection.add(conversion)
-            self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
-
-    def createDisjointDataPropertiesAxiom(self, edge):
-        """
-        Generate a OWL 2 DisjointDataProperties axiom.
-        :type edge: InclusionEdge
-        """
-        if OWLAxiom.DisjointDataProperties in self.axiomsList:
-            conversionA = self.convert(edge.source)
-            conversionB = self.convert(edge.target)
-            collection = self.HashSet()
-            collection.add(conversionA)
-            collection.add(conversionB)
-            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
-
-    def createDisjointObjectPropertiesAxiom(self, edge):
-        """
-        Generate a OWL 2 DisjointObjectProperties axiom.
-        :type edge: InclusionEdge
-        """
-        if OWLAxiom.DisjointObjectProperties in self.axiomsList:
-            conversionA = self.convert(edge.source)
-            conversionB = self.convert(edge.target)
-            collection = self.HashSet()
-            collection.add(conversionA)
-            collection.add(conversionB)
-            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
-
-    def createInverseObjectPropertiesAxiom(self, edge):
-        """
-        Generate a OWL 2 InverseObjectProperties axiom.
-        :type edge: InclusionEdge
-        """
-        if OWLAxiom.InverseObjectProperties in self.axiomsList:
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.RoleIRINode
-            if edge.source.type() is Item.RoleInverseNode:
-                forward = edge.target
-                inverse = first(edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-            else:
-                forward = edge.source
-                inverse = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-            conversionA = self.convert(forward)
-            conversionB = self.convert(inverse)
-            self.addAxiom(self.df.getOWLInverseObjectPropertiesAxiom(conversionA, conversionB))
-
-
-
-
-
-
     def createSameIndividualAxiom(self, edge):
         """
         Generate a OWL2 SameIndividual axiom.
         :type edge: SameEdge
         """
         if OWLAxiom.SameIndividual in self.axiomsList:
-            conversions = []
-            for node in [edge.source, edge.target]:
-                if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
-                    # Perform punning of node
-                    conversion = self.getIndividual(node)
-                else:  # Node is already an IndividualIRINode
-                    conversion = self.convert(node)
-                conversions.append(conversion)
             collection = self.HashSet()
-            for conversion in conversions:
-                collection.add(conversion)
+            for node in [edge.source, edge.target]:
+                if node.type() is Item.ConceptIRINode:
+                    collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
+                else:
+                    collection.add(self._converted[node.diagram.name][node.id])
             self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection)))
 
-    # TODO Da sostituire con metodi che leggono iris
-    def createAnnotationAssertionAxiom(self, node):
-            """
-            Generate a OWL 2 annotation axiom as rdfs:comment.
-            :type node: AbstractNode
-            """
-            text = QtGui.QTextDocument()
+    def createDifferentIndividualsAxiom(self, edge):
+        """
+        Generate a OWL 2 DifferentIndividuals axiom.
+        :type edge: DifferentEdge
+        """
+        if OWLAxiom.SameIndividual in self.axiomsList:
+            collection = self.HashSet()
+            for node in [edge.source, edge.target]:
+                if node.type() is Item.ConceptIRINode:
+                    collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
+                else:
+                    collection.add(self._converted[node.diagram.name][node.id])
+            self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
 
-            if OWLAxiom.Annotation in self.axiomsList:
-                meta = self.project.meta(node.type(), node.text())
-                if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                    aproperty = self.df.getOWLAnnotationProperty(
-                        self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
-                    text.setHtml(meta.get(K_DESCRIPTION, ''))
+    def addAnnotationAssertions(self):
+        for ann in [x for iri in self.project.iris for x in iri.annotationAssertions]:
+            subj = ann.subject
+            owlApiSubj = self.df.getOWLAnnotationProperty(self.IRI.create(str(subj.iri)))
+            annProp = ann.assertionProperty
+            owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp.iri)))
+            owlApiObj = None
+            if ann.isIRIValued:
+                obj = ann.value
+                owlApiObj = self.df.getOWLAnnotationProperty(self.IRI.create(str(obj.iri)))
 
-                    value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
-                    value = self.vm.cast(self.OWLAnnotationValue, value)
-                    annotation = self.df.getOWLAnnotation(aproperty, value)
-                    conversion = self.convert(node)
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-                    text.clear()
+            else:
+                obj =ann.value
+                datatype = ann.datatype
+                lang = ann.lang
+                if lang:
+                    owlApiObj = self.df.getOWLLiteral(obj,lang)
+                else:
+                    if datatype:
+                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype.iri)))
+                    else:
+                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral)))
+                    owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
+            self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
 
-
+#TODO Da implementare per consistency check
 class OWLOntologyFetcher(AbstractWorker):
 
     def __init__(self, project, **kwargs):
