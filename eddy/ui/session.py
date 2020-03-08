@@ -1081,7 +1081,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
-        menu.addAction(self.action('ontology_consistency_check'))
+        # TODO scommenta dopo corretta implementazione reasoner per consistency check
+        #menu.addAction(self.action('ontology_consistency_check'))
         menu.addSeparator()
         menu.addAction(self.action('open_prefix_manager'))
         self.addMenu(menu)
@@ -1359,15 +1360,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         toolbar = self.widget('reasoner_toolbar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
-        toolbar.addWidget(self.widget('select_reasoner'))
-        toolbar.addAction(self.action('ontology_consistency_check'))
-        toolbar.addAction(self.action('decolour_nodes'))
+        #TODO scommenta dopo corretta implementazione reasoner per consistency check
+        #toolbar.addWidget(self.widget('select_reasoner'))
+        #toolbar.addAction(self.action('ontology_consistency_check'))
+        #toolbar.addAction(self.action('decolour_nodes'))
 
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('document_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('view_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('graphol_toolbar'))
-        self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
+        # TODO scommenta dopo corretta implementazione reasoner per consistency check
+        #self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
 
     # noinspection PyArgumentList
     def initWidgets(self):
