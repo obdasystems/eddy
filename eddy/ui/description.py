@@ -39,7 +39,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.qt import Font

@@ -42,7 +42,6 @@ from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
 from eddy.core.commands.nodes import CommandNodeMove
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype, Namespace

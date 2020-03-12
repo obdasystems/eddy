@@ -54,7 +54,6 @@ from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 
 
 LOGGER = getLogger()

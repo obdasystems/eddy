@@ -39,7 +39,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.commands.labels import CommandLabelChange,Compute_RC_with_spaces
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode

@@ -65,7 +65,6 @@ class CommandNodeAdd(QtWidgets.QUndoCommand):
         self.diagram.sgnItemRemoved.emit(self.diagram, self.node)
         self.diagram.sgnUpdated.emit()
 
-
 class CommandNodeSetDepth(QtWidgets.QUndoCommand):
     """
     This command is used to change the Z value of diagram nodes.
@@ -93,7 +92,6 @@ class CommandNodeSetDepth(QtWidgets.QUndoCommand):
         self.node.setZValue(self.depth['undo'])
         self.node.updateEdges()
         self.diagram.sgnUpdated.emit()
-
 
 class CommandNodeRezize(QtWidgets.QUndoCommand):
     """
@@ -158,7 +156,6 @@ class CommandNodeRezize(QtWidgets.QUndoCommand):
             edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
         self.diagram.sgnUpdated.emit()
-
 
 class CommandNodeMove(QtWidgets.QUndoCommand):
     """
@@ -233,7 +230,6 @@ class CommandNodeMove(QtWidgets.QUndoCommand):
             edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
         # Emit updated signal.
         self._diagram.sgnUpdated.emit()
-
 
 class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
     """
@@ -322,43 +318,6 @@ class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
         self.diagram.sgnItemRemoved.emit(self.diagram, self.node['redo'])
         self.diagram.sgnUpdated.emit()
 
-
-class CommandNodeSetMeta(QtWidgets.QUndoCommand):
-    """
-    This command is used to set predicates meta.
-    """
-    def __init__(self, project, item, predicate, undo, redo, name=None):
-        """
-        Initialize the command.
-        :type project: Project
-        :type item: Item
-        :type predicate: str
-        :type undo: dict
-        :type redo: dict
-        :type name: str
-        """
-        super().__init__(name or 'set {0} meta'.format(predicate))
-        self._predicate = predicate
-        self._project = project
-        self._item = item
-        self._undo = undo
-        self._redo = redo
-
-    def redo(self):
-        """redo the command"""
-        self._project.setMeta(self._item, self._predicate, self._redo)
-        for node in self._project.predicates(self._item, self._predicate):
-            node.updateNode(selected=node.isSelected())
-
-    def undo(self):
-        """undo the command"""
-        self._project.setMeta(self._item, self._predicate, self._undo)
-        for node in self._project.predicates(self._item, self._predicate):
-            node.updateNode(selected=node.isSelected())
-
-
-
-
 class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
@@ -386,7 +345,6 @@ class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
         self.node.inputs = self.inputs['undo']
         self.node.updateEdges()
         self.diagram.sgnUpdated.emit()
-
 
 class CommandNodeSetBrush(QtWidgets.QUndoCommand):
     """
@@ -418,43 +376,3 @@ class CommandNodeSetBrush(QtWidgets.QUndoCommand):
             node.updateNode(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()
 
-
-#TODO IRI NODE COMMANDS
-class CommandIRISetMeta(QtWidgets.QUndoCommand):
-    """
-    This command is used to set IRI properties.
-    """
-    def __init__(self, project, item, iri, undo, redo, name=None):
-        """
-        Initialize the command.
-        :type project: Project
-        :type item: Item
-        :type iri: IRI
-        :type undo: dict
-        :type redo: dict
-        :type name: str
-        """
-        super().__init__(name or 'set {0} meta'.format(str(iri)))
-        self._iri = iri
-        self._project = project
-        self._item = item
-        self._undo = undo
-        self._redo = redo
-
-    def redo(self):
-        """redo the command"""
-        self._iri.setMetaProperties(self._redo)
-        # TODO l'aggiornamento dei nodi di cui sotto, non dovrebbe essere necessaria (ci dovrebbero pensare direttamente i segnali della classe IRI)
-        ''' 
-        for node in self._project.predicates(self._item, self._predicate):
-            node.updateNode(selected=node.isSelected())
-        '''
-
-    def undo(self):
-        """undo the command"""
-        self._iri.setMetaProperties(self._undo)
-        # TODO l'aggiornamento dei nodi di cui sotto, non dovrebbe essere necessaria (ci dovrebbero pensare direttamente i segnali della classe IRI)
-        ''' 
-        for node in self._project.predicates(self._item, self._predicate):
-            node.updateNode(selected=node.isSelected())
-        '''

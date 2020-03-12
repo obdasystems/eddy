@@ -42,6 +42,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy.core.commands.iri import CommandIRISetMeta
 from eddy import APPNAME, APP_HOME, BUG_TRACKER, GRAPHOL_HOME, PROJECT_HOME
 from eddy import ORGANIZATION, ORGANIZATION_NAME, ORGANIZATION_URL, VERSION, WORKSPACE
 from eddy.core.clipboard import Clipboard
@@ -58,11 +59,9 @@ from eddy.core.commands.edges import CommandSwitchSameDifferentEdge
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.labels import CommandLabelMove
-from eddy.core.commands.nodes import CommandNodeSetBrush, CommandNodeSetMeta, CommandIRISetMeta
 from eddy.core.commands.nodes import CommandNodeSetDepth
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.project import CommandProjectSetProfile
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.common import HasActionSystem
 from eddy.core.common import HasDiagramExportSystem
 from eddy.core.common import HasDiagramLoadSystem
@@ -1577,35 +1576,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(first(commands))
 
     def common_commands_for_cut_delete_purge(self,diagram,items):
-        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-        Dup_1B = self.project.iri_of_cut_nodes[:]
-        Dup_2B = self.project.iri_of_cut_nodes[:]
-        iris_to_update = []
-        nodes_to_update = []
-
+        #TODO CONTROLLA BENE SE SET DEI COMANDI è COMPLETO (GESTIONE IRI RIMOSSE)
+        commands = []
         for item in items:
-            if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
-                        'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))) and not isinstance(item,OntologyEntityNode):
-                iri_of_node = self.project.get_iri_of_node(item)
-                iris_to_update.append(iri_of_node)
-                nodes_to_update.append(item)
-                Dup_1B.append(item)
-                Dup_1B.append(iri_of_node)
-                Duplicate_dict_1[iri_of_node][1].remove(item)
-            elif  isinstance(item,OntologyEntityNode):
+            if isinstance(item,OntologyEntityNode):
                 print('Removing OntologyPredicateNode {}'.format(item))
-                #TODO aggiungi comandi per rimozione IRI da indice
-
-        commands = [CommandItemsRemove(diagram, items)]
-
+                # TODO aggiungi comandi per rimozione IRI da indice
+        commands.append(CommandItemsRemove(diagram, items))
         self.undostack.beginMacro('>>')
         for command in commands:
             if command:
                 self.undostack.push(command)
         self.undostack.endMacro()
+
+
 
     @QtCore.pyqtSlot()
     def doCopy(self):

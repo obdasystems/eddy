@@ -37,93 +37,208 @@ from PyQt5 import QtWidgets
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.datatypes.graphol import Item
 
+#############################################
+#   Ontology IRI
+#################################
+from eddy.core.owl import IllegalNamespaceError
 
-class CommandProjectSetIRI(QtWidgets.QUndoCommand):
+
+class CommandProjectSetOntologyIRIAndVersion(QtWidgets.QUndoCommand):
     """
-    This command is used to set the IRI of a project.
+    This command is used to set the IRI identifying the ontology.
     """
-    def __init__(self, project, undo, redo):
+    def __init__(self, project, iriRedo, versionRedo, iriUndo, versionUndo, name=None):
         """
         Initialize the command.
         :type project: Project
-        :type undo: str
-        :type redo: str
+        :type prefix: str
+        :type namespace: str
+        :type name: str
         """
-        #print('CommandProjectSetIRI >>> init')
-        super().__init__("set ontology IRI to '{0}'".format(redo))
+        super().__init__(name or 'Set ontology IRI')
         self._project = project
-        self._undo = undo
-        self._redo = redo
-
+        self._iriRedo = iriRedo
+        self._versionRedo = versionRedo
+        self._iriUndo = iriUndo
+        self._versionUndo = versionUndo
 
     def redo(self):
         """redo the command"""
-        #print('CommandProjectSetIRI >>> redo')
-        self._project.ontologyIRIString = self._redo
-        self._project.sgnUpdated.emit()
+        try:
+            self._project.setOntologyIRI(self._iriRedo)
+            self._project.version = self._versionRedo
+        except IllegalNamespaceError:
+            errorDialog = QtWidgets.QErrorMessage(parent=self)
+            errorDialog.showMessage('The input string is not a valid IRI')
+            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
+            errorDialog.show()
+            errorDialog.raise_()
+            errorDialog.activateWindow()
 
     def undo(self):
         """undo the command"""
-        #print('CommandProjectSetIRI >>> undo')
-        self._project.ontologyIRIString = self._undo
-        self._project.sgnUpdated.emit()
+        self._project.setOntologyIRI(self._iriUndo)
+        self._project.version = self._versionUndo
 
 
-class CommandProjectSetPrefix(QtWidgets.QUndoCommand):
+#############################################
+#   PREFIXES
+#################################
+class CommandProjectAddPrefix(QtWidgets.QUndoCommand):
     """
-    This command is used to set the prefix of a project.
+    This command is used to add a prefix entry.
     """
-    def __init__(self, project, undo, redo):
+    def __init__(self, project, prefix, namespace, name=None):
         """
         Initialize the command.
         :type project: Project
-        :type undo: str
-        :type redo: str
+        :type prefix: str
+        :type namespace: str
+        :type name: str
         """
-        #print('CommandProjectSetPrefix >>> init')
-        super().__init__("set ontology prefix to '{0}'".format(redo))
+        super().__init__(name or 'Add prefix {0} '.format(prefix))
+        self._prefix = prefix
         self._project = project
-        self._undo = undo
-        self._redo = redo
+        self._namespace = namespace
 
     def redo(self):
         """redo the command"""
-        #print('CommandProjectSetPrefix >>> redo')
-        self._project.prefix = self._redo
-        self._project.sgnUpdated.emit()
+        self._project.setPrefix(self._prefix,self._namespace)
 
     def undo(self):
         """undo the command"""
-        #print('CommandProjectSetPrefix >>> undo')
-        self._project.prefix = self._undo
-        self._project.sgnUpdated.emit()
+        self._project.removePrefix(self._prefix)
 
-
-class CommandProjectSetVersion(QtWidgets.QUndoCommand):
+class CommandProjectRemovePrefix(QtWidgets.QUndoCommand):
     """
-    This command is used to set the version of an ontology.
+    This command is used to remove a prefix entry.
     """
-    def __init__(self, project, undo, redo):
+    def __init__(self, project, prefix, namespace, name=None):
         """
         Initialize the command.
         :type project: Project
-        :type undo: str
-        :type redo: str
+        :type prefix: str
+        :type namespace: str
+        :type name: str
         """
-        super().__init__("set ontology version to '{0}'".format(redo))
+        super().__init__(name or 'Remove prefix {0} '.format(prefix))
+        self._prefix = prefix
         self._project = project
-        self._undo = undo
-        self._redo = redo
+        self._namespace = namespace
 
     def redo(self):
         """redo the command"""
-        self._project.version = self._redo
-        self._project.sgnUpdated.emit()
+        self._project.removePrefix(self._prefix)
 
     def undo(self):
         """undo the command"""
-        self._project.version = self._undo
-        self._project.sgnUpdated.emit()
+        self._project.setPrefix(self._prefix,self._namespace)
+
+class CommandProjectModifyPrefixResolution(QtWidgets.QUndoCommand):
+    """
+    This command is used to modify the namespace associated to a prefix.
+    """
+    def __init__(self, project, prefix, namespace, oldNamespace, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type prefix: str
+        :type namespace: str
+        :type oldNamespace: str
+        :type name: str
+        """
+        super().__init__(name or 'Modify prefix {0}'.format(prefix))
+        self._prefix = prefix
+        self._project = project
+        self._namespace = namespace
+        self._oldNamespace = oldNamespace
+
+    def redo(self):
+        """redo the command"""
+        self._project.setPrefix(self._prefix,self._namespace)
+
+    def undo(self):
+        """undo the command"""
+        self._project.setPrefix(self._prefix,self._oldNamespace)
+
+class CommandProjectModifyNamespacePrefix(QtWidgets.QUndoCommand):
+    """
+    This command is used to modify the prefix associated to a namespace.
+    """
+    def __init__(self, project, namespace, prefix, oldPrefix, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type prefix: str
+        :type namespace: str
+        :type oldNamespace: str
+        :type name: str
+        """
+        super().__init__(name or 'Modify prefix {0}'.format(prefix))
+        self._prefix = prefix
+        self._project = project
+        self._namespace = namespace
+        self._oldPrefix = oldPrefix
+
+    def redo(self):
+        """redo the command"""
+        self._project.setPrefix(self._prefix,self._namespace)
+
+    def undo(self):
+        """undo the command"""
+        self._project.setPrefix(self._oldPrefix,self._namespace)
+
+#############################################
+#   ANNOTATION PROPERTIES
+#################################
+class CommandProjectAddAnnotationProperty(QtWidgets.QUndoCommand):
+    """
+    This command is used to add an annotation property entry.
+    """
+    def __init__(self, project, propIriStr, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type propIriStr: str
+        :type name: str
+        """
+        super().__init__(name or 'Add annotation property {0} '.format(propIriStr))
+        self._propIriStr = propIriStr
+        self._project = project
+
+    def redo(self):
+        """redo the command"""
+        self._project.addAnnotationProperty(self._propIriStr)
+
+    def undo(self):
+        """undo the command"""
+        self._project.removeAnnotationProperty(self._propIriStr)
+
+class CommandProjectRemoveAnnotationProperty(QtWidgets.QUndoCommand):
+    """
+    This command is used to remove an annotation property entry.
+    """
+    def __init__(self, project, propIriStr, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type propIriStr: str
+        :type name: str
+        """
+        super().__init__(name or 'Remove annotation property {0} '.format(propIriStr))
+        self._propIriStr = propIriStr
+        self._project = project
+
+    def redo(self):
+        """redo the command"""
+        self._project.removeAnnotationProperty(self._propIriStr)
+
+    def undo(self):
+        """undo the command"""
+        self._project.addAnnotationProperty(self._propIriStr)
+
+#TODO A REGIME METODI SOTTO CANCELLATI (TUTTI??)
+
 
 
 class CommandProjectSetProfile(QtWidgets.QUndoCommand):
@@ -169,59 +284,4 @@ class CommandProjectSetProfile(QtWidgets.QUndoCommand):
         self.project.sgnUpdated.emit()
 
 
-class CommandProjectDisconnectSpecificSignals(QtWidgets.QUndoCommand):
 
-    def __init__(self, project, **kwargs):
-
-        super().__init__("Connect/disconnect specific signals")
-        self.project = project
-        self.add_item_to_IRI_prefixes_nodes_dict = kwargs.get('add_item_to_IRI_prefixes_nodes_dict', True)
-        self.remove_item_from_IRI_prefixes_nodes_dict = kwargs.get('remove_item_from_IRI_prefixes_nodes_dict', True)
-        self.regenerate_label_of_nodes_for_iri = kwargs.get('regenerate_label_of_nodes_for_iri', True)
-
-    def undo(self):
-
-        if self.add_item_to_IRI_prefixes_nodes_dict is True:
-            connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
-            connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
-        if self.regenerate_label_of_nodes_for_iri is True:
-            connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)
-
-    def redo(self):
-
-        if self.add_item_to_IRI_prefixes_nodes_dict is True:
-            disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
-            disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
-        if self.regenerate_label_of_nodes_for_iri is True:
-            disconnect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)
-
-
-class CommandProjectConnectSpecificSignals(QtWidgets.QUndoCommand):
-
-    def __init__(self, project, **kwargs):
-
-        super().__init__("Connect/disconnect specific signals")
-        self.project = project
-        self.add_item_to_IRI_prefixes_nodes_dict = kwargs.get('add_item_to_IRI_prefixes_nodes_dict', True)
-        self.remove_item_from_IRI_prefixes_nodes_dict = kwargs.get('remove_item_from_IRI_prefixes_nodes_dict', True)
-        self.regenerate_label_of_nodes_for_iri = kwargs.get('regenerate_label_of_nodes_for_iri', True)
-
-    def redo(self):
-
-        if self.add_item_to_IRI_prefixes_nodes_dict is True:
-            connect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
-            connect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
-        if self.regenerate_label_of_nodes_for_iri is True:
-            connect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)
-
-    def undo(self):
-
-        if self.add_item_to_IRI_prefixes_nodes_dict is True:
-            disconnect(self.project.sgnItemAdded, self.project.add_item_to_IRI_prefixes_nodes_dict)
-        if self.remove_item_from_IRI_prefixes_nodes_dict is True:
-            disconnect(self.project.sgnItemRemoved, self.project.remove_item_from_IRI_prefixes_nodes_dict)
-        if self.regenerate_label_of_nodes_for_iri is True:
-            disconnect(self.project.sgnIRIPrefixNodeDictionaryUpdated, self.project.regenerate_label_of_nodes_for_iri)

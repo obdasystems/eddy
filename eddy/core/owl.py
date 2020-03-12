@@ -252,11 +252,11 @@ class AnnotationAssertion(QtCore.QObject):
         self._language = lang
         self.sgnAnnotationModified.emit()
 
-    def refactor(self,prop,value,type,lang):
-        self._property=prop
-        self._value=value
-        self._datatype=type
-        self._language=lang
+    def refactor(self,refDict):
+        self._property=refDict['assertionProperty']
+        self._value=refDict['value']
+        self._datatype=refDict['datatype']
+        self._language=refDict['language']
         self.sgnAnnotationModified.emit()
 
     def getObjectResourceString(self, prefixedForm):
@@ -846,10 +846,12 @@ class IRIManager(QtCore.QObject):
         self.ontologyIRI = None
         if ontologyIRI:
             self.setOntologyIRI(ontologyIRI)
-            if ontologyPrefix:
+            if not ontologyPrefix is None:
                 self.setPrefix(ontologyPrefix,ontologyIRI)
+            '''
             else:
                 self.setEmptyPrefix(ontologyIRI)
+            '''
 
         self.addTopBottomPredicateIRIs()
 
@@ -858,14 +860,18 @@ class IRIManager(QtCore.QObject):
         self.languages = set()
         self.constrainingFacets = set()
         self.setDefaults()
-        for annProp in annotationProperties:
-            self.addAnnotationProperty(annProp)
-        for dt in datatypes:
-            self.addDatatype(dt)
-        for fac in constrFacets:
-            self.addConstrainingFacet(fac)
-        for lang in languages:
-            self.addLanguageTag(lang)
+        if annotationProperties:
+            for annProp in annotationProperties:
+                self.addAnnotationProperty(annProp)
+        if datatypes:
+            for dt in datatypes:
+                self.addDatatype(dt)
+        if constrFacets:
+            for fac in constrFacets:
+                self.addConstrainingFacet(fac)
+        if languages:
+            for lang in languages:
+                self.addLanguageTag(lang)
 
     #############################################
     #   LANGUAGES
@@ -956,6 +962,10 @@ class IRIManager(QtCore.QObject):
         self.stringToIRI.pop(oldIRIStr,None)
         self.stringToIRI[str(iri)] = iri
 
+    def isValidIdentifier(self, iriStr):
+        iri = IRI(iriStr)
+        return True
+
     #############################################
     #   INTERFACE
     #################################
@@ -1027,6 +1037,12 @@ class IRIManager(QtCore.QObject):
         """
         iri = self.getIRI(iriString)
         return self.addAnnotationPropertyIRI(iri)
+
+    def existAnnotationProperty(self, iriStr):
+        iri = IRI(iriStr)
+        if iri in self.annotationProperties:
+            return True
+        return False
 
     def addDefaultAnnotationProperties(self):
         """
@@ -1206,6 +1222,7 @@ class IRIManager(QtCore.QObject):
             second = IRI(ns, suffix=otherIRI.suffix, parent=self)
         return str(first) == str(second)
 
+    ##Prefixes
     def getEmptyPrefixResolution(self):
         """
         Returns the string the empty prefix is resolved to, or None if it does not exist
@@ -1344,6 +1361,13 @@ class IRIManager(QtCore.QObject):
         Sets the namespace associated to the default empty prefix name
         """
         self.setPrefix('', namespace)
+
+    def isValidPrefixEntry(self,prefix, namespace):
+        if prefix and not QtXmlPatterns.QXmlName.isNCName(prefix):
+            raise IllegalPrefixError('{0} for namespace: {1}'.format(prefix, namespace))
+        if not IRI.isValidNamespace(namespace):
+            raise IllegalNamespaceError(namespace)
+        return True
 
     def setPrefix(self, prefix, namespace):
         """

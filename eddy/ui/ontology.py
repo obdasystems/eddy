@@ -39,6 +39,10 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
 
+from eddy.core.commands.iri import CommandIRIRemoveAnnotation
+from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
+    CommandProjectModifyPrefixResolution, CommandProjectModifyNamespacePrefix, CommandProjectAddAnnotationProperty, \
+    CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion
 from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion
 
 from eddy import ORGANIZATION, APPNAME
@@ -574,7 +578,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
 
-
     #############################################
     # GENERAL TAB
     #################################
@@ -585,19 +588,34 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type _: bool
         """
         try:
+            oldIri = ''
+            if self.project.ontologyIRI:
+                oldIri = str(self.project.ontologyIRI)
+            oldVersion = ''
+            if self.project.version:
+                oldVersion = self.project.version
+
             iriField = self.widget('ontology_iri_field')
             ontIriString = iriField.value()
-            self.project.setOntologyIRI(ontIriString)
             versionField = self.widget('ontology_version_field')
             version = versionField.value()
-            self.project.version = version
-        except IllegalNamespaceError:
-            errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage('The input string is not a valid IRI')
-            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-            errorDialog.show()
-            errorDialog.raise_()
-            errorDialog.activateWindow()
+
+            self.project.isValidIdentifier(ontIriString)
+
+            command = CommandProjectSetOntologyIRIAndVersion(self.project, ontIriString, version, oldIri, oldVersion)
+            self.session.undostack.beginMacro('Set ontology IRI')
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
+        except IllegalNamespaceError as e:
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal identifier',
+                                                     'IRI definition issue', MsgBoxType.WARNING.value,
+                                                     informativeText='The string "{}" is not a legal identifier'.format(
+                                                         ontIriString),
+                                                     detailedText=str(e))
+            msgBox.exec_()
+
 
     @QtCore.pyqtSlot(bool)
     def addOntologyImport(self, _):
@@ -623,7 +641,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Adds an annotation to the current ontology.
         :type _: bool
         """
-        # TODO: not implemented yet
         LOGGER.debug("addOntologyAnnotation called")
         assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI) #AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
         connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onOntologyAnnotationAssertionAccepted)
@@ -657,11 +674,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
+        commands = []
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
                 assertion = removedItem.data(Qt.UserRole)
-                self.project.ontologyIRI.removeAnnotationAssertion(assertion)
+                command = CommandIRIRemoveAnnotation(self.project, self.project.ontologyIRI, assertion)
+                commands.append(command)
+        self.session.undostack.beginMacro('Remove annotations >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 table.removeRow(row)
@@ -735,7 +759,20 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         nsItemText = corrNSItem.text()
         nsText = str(nsItemText)
         try:
-            self.project.setPrefix(text,nsText)
+            self.project.isValidPrefixEntry(text,nsText)
+
+            oldPrefix = None
+            for pr,ns in self.project.prefixDictItems():
+                if ns==nsText:
+                    oldPrefix = pr
+                    break
+
+            command = CommandProjectModifyNamespacePrefix(self.project,nsText,text,oldPrefix)
+            self.session.undostack.beginMacro('Replace prefix {0} '.format(oldPrefix))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
             #aggiorno mappa
             self.prefixIndexMap[row]=text
         except IllegalPrefixError as e:
@@ -755,7 +792,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         prefixItemText = corrPrefixItem.text()
         prefixText = str(prefixItemText)
         try:
-            self.project.setPrefix(prefixText, text)
+            self.project.isValidPrefixEntry(prefixText, text)
+            namespace = self.project.getPrefixResolution(prefixText)
+            command = CommandProjectModifyPrefixResolution(self.project,prefixText,text,namespace)
+            self.session.undostack.beginMacro('Modify prefix {0} '.format(text))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
         except IllegalNamespaceError as e:
             msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal namespace',
                                                      'Prefix definition issue', MsgBoxType.WARNING.value,
@@ -793,7 +837,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 return
             nsField = self.widget('ns_input_field')
             nsValue = nsField.value()
-            self.project.setPrefix(prefixValue,nsValue)
+
+            self.project.isValidPrefixEntry(prefixValue, nsValue)
+
+            command = CommandProjectAddPrefix(self.project,prefixValue,nsValue)
+            self.session.undostack.beginMacro('Add prefix {0} '.format(prefixValue))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
             self.addingNewPrefix = True
             table = self.widget('prefixes_table_widget')
             rowcount = table.rowCount()
@@ -831,7 +883,13 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 removedItem = table.item(row, 0)
                 itemText = removedItem.text()
                 text = str(itemText)
-                self.project.removePrefix(text)
+                namespace = self.project.getPrefixResolution(text)
+                command = CommandProjectRemovePrefix(self.project, text, namespace)
+                self.session.undostack.beginMacro('Remove prefix {0} '.format(text))
+                if command:
+                    self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 table.removeRow(row)
@@ -849,7 +907,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         try:
             annIRI = self.widget('full_iri_field').value()
-            if self.project.addAnnotationProperty(annIRI):
+            if not self.project.existAnnotationProperty(annIRI):
+                self.project.isValidIdentifier(annIRI)
+
+                command = CommandProjectAddAnnotationProperty(self.project, annIRI)
+                self.session.undostack.beginMacro('Add annotation property {0} '.format(annIRI))
+                if command:
+                    self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+
                 table = self.widget('annotation_properties_table_widget')
                 rowcount = table.rowCount()
                 table.setRowCount(rowcount + 1)
@@ -876,12 +942,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table = self.widget('annotation_properties_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
+        commands = []
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
                 itemText = removedItem.text()
                 text = str(itemText)
-                self.project.removeAnnotationProperty(text)
+                commands.append(CommandProjectRemoveAnnotationProperty(self.project,text))
+        self.session.undostack.beginMacro('remove annotation properties >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 table.removeRow(row)

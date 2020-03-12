@@ -242,7 +242,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         annotationEl.appendChild(propertyEl)
 
         objectEl = self.getDomElement('object')
-        if annotation.isIRIValued:
+        if annotation.isIRIValued():
             objecIriEl = self.getDomElement('iri')
             objecIriEl.appendChild(self.getDomTextNode(str(annotation.value)))
         else:

@@ -37,8 +37,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.commands.project import CommandProjectSetVersion
 from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.owl import Namespace
 from eddy.core.datatypes.qt import Font

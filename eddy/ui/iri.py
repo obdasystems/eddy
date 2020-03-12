@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
+from eddy.core.commands.iri import CommandIRIRemoveAnnotation
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.facet_iri import FacetNode
@@ -654,11 +655,21 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
+        commands = []
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
                 assertion = removedItem.data(Qt.UserRole)
-                self.iri.removeAnnotationAssertion(assertion)
+                command = CommandIRIRemoveAnnotation(self.project, self.iri, assertion)
+                commands.append(command)
+                #self.iri.removeAnnotationAssertion(assertion)
+
+        self.session.undostack.beginMacro('Remove annotations >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 table.removeRow(row)

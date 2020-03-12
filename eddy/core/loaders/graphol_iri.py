@@ -1082,7 +1082,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         if not iriObjEl.isNull():
             value = self.nproject.getIRI(iriObjEl.text())
         else:
-            value = objectEl.firstChildElement('lexicalForm')
+            value = objectEl.firstChildElement('lexicalForm').text()
             datatypeEl = objectEl.firstChildElement('datatype')
             if datatypeEl.text():
                 type = self.nproject.getIRI(datatypeEl.text())

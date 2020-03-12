@@ -41,7 +41,6 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.owl import Datatype, Namespace
 from eddy.core.datatypes.qt import Font

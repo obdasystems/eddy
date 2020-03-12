@@ -38,9 +38,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.commands.diagram import CommandDiagramAdd
-from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
-from eddy.core.commands.nodes import CommandNodeSetMeta
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
+from eddy.core.commands.labels import GenerateNewLabel
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Namespace
 from eddy.core.functions.path import expandPath
@@ -1863,8 +1861,8 @@ class ProjectIRIIndex(ProjectIndex):
                 self[k_metatype][iri][diagram.name].remove(node)
                 if not self[k_metatype][iri][diagram.name]:
                     self[k_metatype][iri].pop(diagram.name)
-                    if node.iri in self[k_iri_metatype][node.diagram.name]:
-                        self[k_iri_metatype][node.diagram.name].remove(node.iri)
+                    if node.iri in self[k_iri_metatype][diagram.name]:
+                        self[k_iri_metatype][diagram.name].remove(node.iri)
                     if not self[k_metatype][iri]:
                         self[k_metatype].pop(iri)
                         return True
@@ -2038,6 +2036,7 @@ class ProjectIRIMergeWorker(QtCore.QObject):
             self.commands.append(CommandDiagramAdd(diagram, self.project))
 
     def replaceIRIs(self,diagram,alreadyAdded):
+        #TODO Reimplementa tutto con opportuni Commands
         for node in diagram.nodes():
             if isinstance(node,OntologyEntityNode):
                 otherIRI = node.iri

@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 
+from eddy.core.commands.iri import CommandIRIAddAnnotation, CommandIRIModifyAnnotation
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
@@ -23,6 +24,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type assertion: AnnotationAssertion
         """
         super().__init__(session)
+        self.session = session
         self.project = session.project
         self.iri = iri
         self.assertion = assertion
@@ -277,13 +279,29 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             language = str(self.widget('lang_switch').currentText())
         if not self.assertion:
             annAss = AnnotationAssertion(self.iri,propertyIRI,value,typeIRI,language)
-            self.iri.addAnnotationAssertion(annAss)
+            command = CommandIRIAddAnnotation(self.project,self.iri,annAss)
+            self.session.undostack.beginMacro('Add annotation to {0} '.format(str(self.iri)))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+            #self.iri.addAnnotationAssertion(annAss)
             self.sgnAnnotationAssertionAccepted.emit(annAss)
         else:
-            self.assertion.assertionProperty=propertyIRI
-            self.assertion.value=value
-            self.assertion.datatype=typeIRI
-            self.assertion.language=language
+            undo = dict()
+            undo['assertionProperty'] = self.assertion.assertionProperty
+            undo['value'] = self.assertion.value
+            undo['datatype'] = self.assertion.datatype
+            undo['language'] = self.assertion.language
+            redo = dict()
+            redo['assertionProperty']=propertyIRI
+            redo['value']=value
+            redo['datatype']=typeIRI
+            redo['language']=language
+            command = CommandIRIModifyAnnotation(self.project,self.assertion,undo,redo)
+            self.session.undostack.beginMacro('Modify annotation {} '.format(str(self.assertion)))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
             self.sgnAnnotationAssertionCorrectlyModified.emit(self.assertion)
         super().accept()
 
