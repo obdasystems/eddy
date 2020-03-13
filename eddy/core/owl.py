@@ -901,11 +901,9 @@ class IRIManager(QtCore.QObject):
     @QtCore.pyqtSlot(str)
     def setOntologyIRI(self, iriString):
         newOntIRI = self.getIRI(iriString)
-        annotations = []
-        if self.ontologyIRI:
-            annotations = self.ontologyIRI.annotationAssertions
-        for annot in annotations:
-            newOntIRI.addAnnotationAssertion(annot)
+        if self.ontologyIRI and not self.ontologyIRI == newOntIRI:
+            for annot in self.ontologyIRI.annotationAssertions:
+                newOntIRI.addAnnotationAssertion(annot)
         self.ontologyIRI = newOntIRI
         self.sgnOntologyIRIModified.emit(self.ontologyIRI)
 

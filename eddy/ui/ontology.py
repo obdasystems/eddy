@@ -317,7 +317,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
-        boxlayout.addWidget(self.widget('annotation_properties_add_button'))
+        #boxlayout.addWidget(self.widget('annotation_properties_add_button'))
         boxlayout.addWidget(self.widget('annotation_properties_delete_button'))
 
         formlayout = QtWidgets.QFormLayout()
