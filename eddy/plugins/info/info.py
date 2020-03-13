@@ -43,8 +43,7 @@ from PyQt5 import QtWidgets
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.commands.iri import CommandIRISetMeta
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.project import CommandProjectSetProfile
-from eddy.core.commands.project import CommandProjectSetVersion
+from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectSetOntologyIRIAndVersion
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.datatypes.qt import BrushIcon, Font
@@ -813,7 +812,7 @@ class ProjectInfo(AbstractInfo):
         """
         version = self.versionField.value()
         if self.project.version != version:
-            self.session.undostack.push(CommandProjectSetVersion(self.project, self.project.version, version))
+            self.session.undostack.push(CommandProjectSetOntologyIRIAndVersion(self.project, self.project.version, version))
         #self.iriField.clearFocus()
         self.versionField.clearFocus()
     #############################################

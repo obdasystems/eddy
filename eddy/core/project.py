@@ -140,6 +140,8 @@ class Project(IRIManager):
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
     sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(OntologyEntityNode,IRI)
 
+    sgnIRIChanged = QtCore.pyqtSignal(OntologyEntityNode, IRI)
+
     def __init__(self, **kwargs):
         """
         Initialize the graphol project.
@@ -197,6 +199,8 @@ class Project(IRIManager):
 
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
+
+        connect(self.sgnIRIChanged, self.doSingleSwitchIRI)
 
         '''
         if not self.ontologyIRI and self.ontologyIRIString:
@@ -992,7 +996,6 @@ class Project(IRIManager):
         if old_label==new_label:
             return
 
-        CommandLabelChange(node.diagram, node, old_label, new_label).redo()
 
         """
         # CHANGE THE CONTENT OF THE LABEL
@@ -2000,9 +2003,6 @@ class ProjectIRIMergeWorker(QtCore.QObject):
 
         for annPropIRI in self.other.getAnnotationPropertyIRIs():
             self.project.addAnnotationProperty(str(annPropIRI))
-        self.commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-        # self.commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project,home_dictionary_old,home_dictionary,iris_to_update,None))
-        self.commands.append(CommandProjectConnectSpecificSignals(self.project))
 
     def mergeDiagrams(self):
         """

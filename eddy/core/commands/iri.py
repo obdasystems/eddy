@@ -1,5 +1,47 @@
+
 from PyQt5 import QtWidgets
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.owl import IRI
+
+#############################################
+#   IRI NODES
+#################################
+
+
+
+class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
+    """
+    This command is used to set IRI properties.
+    """
+
+    def __init__(self, project, node, iriStringRedo, iriStringUndo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type node: OntologyEntityNode
+        :type iriStringRedo: str
+        :type iriStringUndo: str
+        :type name: str
+        """
+        super().__init__(name or 'Node {} set IRI <{}> '.format(node.id,iriStringRedo))
+        self._iriStringRedo = iriStringRedo
+        self._iriStringUndo = iriStringUndo
+        self._project = project
+        self._node = node
+
+    def redo(self):
+        """redo the command"""
+        iri = self._project.getIRI(self._iriStringRedo)
+        oldIri = self._project.getIRI(self._iriStringUndo)
+        self._node.iri = iri
+        self._project.sgnIRIChanged.emit(self._node, oldIri)
+
+    def undo(self):
+        """undo the command"""
+        iri = self._project.getIRI(self._iriStringRedo)
+        oldIri = self._project.getIRI(self._iriStringUndo)
+        self._node.iri = oldIri
+        self._project.sgnIRIChanged.emit(self._node, iri)
 
 #############################################
 #   IRI ANNOTATIONS
@@ -12,7 +54,6 @@ class CommandIRIAddAnnotation(QtWidgets.QUndoCommand):
         """
         Initialize the command.
         :type project: Project
-        :type item: Item
         :type iri: IRI
         :type annAss: AnnotationAssertion
         :type name: str

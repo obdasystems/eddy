@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotation
+from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.facet_iri import FacetNode
@@ -147,7 +147,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     sgnIRIAccepted = QtCore.pyqtSignal(OntologyEntityNode)
     sgnIRIRejected = QtCore.pyqtSignal(OntologyEntityNode)
 
-    sgnIRIChanged = QtCore.pyqtSignal(OntologyEntityNode,IRI)
 
     emptyString = ''
 
@@ -364,23 +363,30 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         fullIri = '{}{}'.format(resolvedPrefix,input)
         self.widget('full_iri_field').setValue(fullIri)
 
+
     @QtCore.pyqtSlot()
     def accept(self):
         try:
             activeTab = self.widget('main_widget').currentWidget()
             if activeTab is self.widget('iri_widget'):
-                inputIri = self.project.getIRI(self.widget('full_iri_field').value())
+                inputIriString = self.widget('full_iri_field').value()
+                self.project.isValidIdentifier(inputIriString)
                 if self.iri:
-                    if not self.iri is inputIri:
-                        self.node.iri = inputIri
-                        self.sgnIRIChanged.emit(self.node,self.iri)
+                    if not str(self.iri) == inputIriString:
+                        command = CommandChangeIRIOfNode(self.project, self.node, inputIriString, str(self.iri))
+                        self.session.undostack.beginMacro('Node {} set IRI <{}> '.format(self.node.id,inputIriString))
+                        if command:
+                            self.session.undostack.push(command)
+                        self.session.undostack.endMacro()
                 else:
+                    inputIri = self.project.getIRI(inputIriString)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
-                if self.node.diagram:
-                    self.node.doUpdateNodeLabel()
+                    if self.node.diagram:
+                        self.node.doUpdateNodeLabel()
                 super().accept()
             elif activeTab is self.widget('predefined_datatype_widget'):
+                #TODO QUI devi intervenire per permettere cambio iri
                 currText = str(self.widget('datatype_switch').currentText())
                 if not currText==self.emptyString:
                     inputIri = self.project.getIRI(currText)

@@ -34,6 +34,7 @@
 
 
 from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.datatypes.graphol import Item
 

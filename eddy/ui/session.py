@@ -2300,7 +2300,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             node = first(diagram.selectedNodes())
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
-                connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
+                #connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()
