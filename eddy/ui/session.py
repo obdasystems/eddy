@@ -866,6 +866,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='node_facet_refactor',
             triggered=self.doOpenFacetDialog))
 
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Facet refactor',
+            self, objectName='node_literal_refactor',
+            triggered=self.doOpenLiteralDialog))
+
         #TODO
         action = QtWidgets.QAction('Render by full IRI', self, objectName='render_full_iri', triggered=self.doRenderByFullIRI)
         action.setCheckable(True)
@@ -2323,6 +2329,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             node = first(diagram.selectedNodes())
             if node:
                 builder = ConstrainingFacetDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenLiteralDialog(self):
+        """
+        Executed when the Literal associated to a node might be modified by the user.
+        :type node: LiteralNode
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            node = first(diagram.selectedNodes())
+            if node:
+                builder = LiteralDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()

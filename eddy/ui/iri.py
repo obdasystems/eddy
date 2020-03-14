@@ -1,7 +1,8 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode, CommandChangeFacetOfNode
+from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode, CommandChangeFacetOfNode, \
+    CommandChangeLiteralOfNode, CommandIRIRefactor, CommandChangeIRIIdentifier
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.facet_iri import FacetNode
@@ -636,7 +637,6 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         Adds an annotation to the current IRI.
         :type _: bool
         """
-        # TODO: not implemented yet
         LOGGER.debug("addOntologyAnnotation called")
         assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.iri) #AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
         connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onAnnotationAssertionAccepted)
@@ -743,18 +743,23 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                 print('IRI corresponding to string {} already exists'.format(fullIRIString))
                 newIRI = self.project.getIRI(fullIRIString)
                 if not newIRI is self.iri:
-                    print('newIRI is NOT oldIRI')
-                    #TODO gestisci cambiamento oggetto iri (cosa devo fare? Distruggere oldIRI e sostituirla con newIRI ovunque????
                     oldIRI = self.iri
                     self.iri = newIRI
                     self.redraw()
-                    self.sgnIRISwitch.emit(oldIRI, newIRI)
+                    command = CommandIRIRefactor(self.project, self.iri, oldIRI)
+                    self.session.undostack.beginMacro('IRI <{}> refactor'.format(self.iri))
+                    if command:
+                        self.session.undostack.push(command)
+                    self.session.undostack.endMacro()
             else:
                 print('IRI corresponding to string {} does not exist'.format(fullIRIString))
                 if not self.iri.namespace == fullIRIString:
                     oldStr = self.iri.namespace
-                    self.iri.namespace = fullIRIString
-                    #self.sgnReHashIRI.emit(self.iri,oldStr)
+                    command = CommandChangeIRIIdentifier(self.project, self.iri, fullIRIString, oldStr)
+                    self.session.undostack.beginMacro('IRI <{}> refactor'.format(fullIRIString))
+                    if command:
+                        self.session.undostack.push(command)
+                    self.session.undostack.endMacro()
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage('The input string cannot be used to build a valid IRI')
@@ -1011,6 +1016,7 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
+        connect(combobox.currentIndexChanged, self.onTypeSwitched)
 
         lfLabel = IRIDialogsWidgetFactory.getLexicalFormLabel(self)
         self.addWidget(lfLabel)
@@ -1111,6 +1117,29 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             combobox.setCurrentText(self.emptyString)
 
+
+    @QtCore.pyqtSlot(int)
+    def onTypeSwitched(self, index):
+        typeIRI = str(self.widget('datatype_switch').itemText(index))
+        if not self.project.canAddLanguageTag(typeIRI):
+            '''
+            model = self.widget('lang_switch').model()
+            allItems = [model.item(i) for i in range(model.rowCount())]
+            for item in allItems:
+                #item.setBackground(QtGui.QColor('grey'))
+
+            palette = self.widget('lang_switch').palette()
+            palette.setColor(QtGui.QPalette.Active,QtGui.QPalette.Button,QtGui.QColor('red'))
+            palette.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Button, QtGui.QColor('pink'))
+            self.widget('lang_switch').setPalette(palette)
+            '''
+
+            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setEnabled(False)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+            self.widget('lang_switch').setEnabled(True)
+
     @QtCore.pyqtSlot()
     def accept(self):
         try:
@@ -1125,10 +1154,18 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
             if str(self.widget('lang_switch').currentText()):
                 language = str(self.widget('lang_switch').currentText())
             literal = Literal(lexForm, datatypeIRI,language)
-            self.node._literal = literal
-            self.sgnLiteralAccepted.emit(self.node)
-            if self.node.diagram:
-                self.node.doUpdateNodeLabel()
+
+            if self.literal:
+                command = CommandChangeLiteralOfNode(self.project, self.node, literal, self.literal)
+                self.session.undostack.beginMacro('Node {} modify Literal '.format(self.node.id))
+                if command:
+                    self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+            else:
+                self.node._literal = literal
+                self.sgnLiteralAccepted.emit(self.node)
+                if self.node.diagram:
+                    self.node.doUpdateNodeLabel()
             super().accept()
         except IllegalLiteralError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)

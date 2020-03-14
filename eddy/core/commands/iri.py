@@ -6,10 +6,65 @@ from eddy.core.owl import IRI
 #############################################
 #   IRI NODES
 #################################
+class CommandChangeIRIIdentifier(QtWidgets.QUndoCommand):
+    """
+    This command is used to change the namespace identifying an IRI .
+    """
+
+    def __init__(self, project, iri, iriRedo, iriUndo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type iri: IRI
+        :type iriRedo: str
+        :type iriUndo: str
+        :type name: str
+        """
+        super().__init__(name or 'IRI <{}> refactor'.format(iriRedo))
+        self._iri = iri
+        self._iriRedo = iriRedo
+        self._iriUndo = iriUndo
+        self._project = project
+
+    def redo(self):
+        """redo the command"""
+        self._iri.namespace = self._iriRedo
+
+    def undo(self):
+        """undo the command"""
+        self._iri.namespace = self._iriUndo
+
+class CommandIRIRefactor(QtWidgets.QUndoCommand):
+    """
+    This command is used to change the IRI associated to (possibly) numerous node.
+    """
+
+    def __init__(self, project,  iriRedo, iriUndo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type node: OntologyEntityNode
+        :type iriRedo: IRI
+        :type iriUndo: IRI
+        :type name: str
+        """
+        super().__init__(name or 'IRI <{}> refactor'.format(iriRedo))
+        self._iriRedo = iriRedo
+        self._iriUndo = iriUndo
+        self._project = project
+
+    def redo(self):
+        """redo the command"""
+        self._project.sgnIRIRefactor.emit(self._iriUndo, self._iriRedo)
+
+    def undo(self):
+        """undo the command"""
+        self._project.sgnIRIRefactor.emit(self._iriRedo, self._iriUndo )
+
 
 class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
     """
-    This command is used to set IRI properties.
+    This command is used to change the IRI associated to a single node.
     """
 
     def __init__(self, project, node, iriStringRedo, iriStringUndo, name=None):
@@ -195,4 +250,38 @@ class CommandChangeFacetOfNode(QtWidgets.QUndoCommand):
     def undo(self):
         """undo the command"""
         self._node.facet = self._facetUndo
+        #self._project.sgnIRIChanged.emit(self._node, iri)
+
+#############################################
+#   LITERAL NODES
+#################################
+
+class CommandChangeLiteralOfNode(QtWidgets.QUndoCommand):
+    """
+    This command is used to set IRI properties.
+    """
+
+    def __init__(self, project, node, literalRedo, literalUndo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type node: FacetNode
+        :type literalRedo: Literal
+        :type literalUndo: Literal
+        :type name: str
+        """
+        super().__init__(name or 'Node {} modify Literal '.format(node.id))
+        self._literalRedo = literalRedo
+        self._literalUndo = literalUndo
+        self._project = project
+        self._node = node
+
+    def redo(self):
+        """redo the command"""
+        self._node.literal = self._literalRedo
+        #self._project.sgnIRIChanged.emit(self._node, oldIri)
+
+    def undo(self):
+        """undo the command"""
+        self._node.literal = self._literalUndo
         #self._project.sgnIRIChanged.emit(self._node, iri)

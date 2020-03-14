@@ -761,7 +761,6 @@ class OntologyEntityNode(AbstractNode):
         Executed when the mouse is double clicked on the text item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        print()
         self.session.doOpenIRIDialog()
         mouseEvent.accept()
 

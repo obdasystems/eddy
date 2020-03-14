@@ -967,6 +967,18 @@ class MenuFactory(QtCore.QObject):
         menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
+    def buildIRILiteralNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for facet nodes.
+        :type diagram: Diagram
+        :type node: LiteralNode
+        :rtype: QMenu
+        """
+        menu = self.buildGenericNodeMenu(diagram, node)
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_literal_refactor'))
+        menu.insertSeparator(self.session.action('node_properties'))
+        return menu
+
     #############################################
     #   LABEL
     #################################
@@ -1013,8 +1025,6 @@ class MenuFactory(QtCore.QObject):
             return self.buildDomainRestrictionNodeMenu(diagram, item)
         if item.type() is Item.EnumerationNode:
             return self.buildEnumerationNodeMenu(diagram, item)
-        if item.type() is Item.FacetNode:
-            return self.buildFacetNodeMenu(diagram, item)
         if item.type() is Item.IntersectionNode:
             return self.buildIntersectionNodeMenu(diagram, item)
         if item.type() is Item.PropertyAssertionNode:
@@ -1041,8 +1051,9 @@ class MenuFactory(QtCore.QObject):
             return self.buildIRIValueDomainNodeMenu(diagram,item)
         if item.type() is Item.FacetIRINode:
             return self.buildIRIFacetNodeMenu(diagram,item)
+        if item.type() is Item.LiteralNode:
+            return self.buildIRILiteralNodeMenu(diagram,item)
 
-        #TODO MANCANO VALUEDOMAIN, LITERAL
 
         ## EDGES
         if item.type() is Item.InclusionEdge:

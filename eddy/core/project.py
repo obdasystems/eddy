@@ -142,6 +142,8 @@ class Project(IRIManager):
 
     sgnIRIChanged = QtCore.pyqtSignal(OntologyEntityNode, IRI)
 
+    sgnIRIRefactor = QtCore.pyqtSignal(IRI, IRI)
+
     def __init__(self, **kwargs):
         """
         Initialize the graphol project.
@@ -201,7 +203,7 @@ class Project(IRIManager):
         connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
 
         connect(self.sgnIRIChanged, self.doSingleSwitchIRI)
-
+        connect(self.sgnIRIRefactor, self.doSwitchIRI)
         '''
         if not self.ontologyIRI and self.ontologyIRIString:
             self.setEmptyPrefix(self.ontologyIRIString)

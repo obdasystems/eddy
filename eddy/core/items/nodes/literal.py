@@ -158,6 +158,14 @@ class LiteralNode(AbstractResizableNode):
         if self.diagram:
             self.doUpdateNodeLabel()
 
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        self.session.doOpenLiteralDialog()
+        mouseEvent.accept()
+
     #############################################
     #   SLOTS
     #################################
