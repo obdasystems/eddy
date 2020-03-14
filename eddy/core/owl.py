@@ -1175,6 +1175,13 @@ class IRIManager(QtCore.QObject):
         return not iriString or self.canAddLanguageTagToIRI(IRI(iriString))
 
     ##IRIs
+    def getAllIriStartingWith(self,start):
+        result = set()
+        for iri in self.iris:
+            if str(iri).startswith(start):
+                result.add(iri)
+        return result
+
     def addTopBottomPredicateIRIs(self):
         self.addIRI(TopBottomProperty.Thing.value)
         self.addIRI(TopBottomProperty.Nothing.value)

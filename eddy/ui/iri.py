@@ -943,7 +943,7 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
                 raise RuntimeError('Please select a constraining facet')
             lexForm = str(self.widget('lexical_form_area').toPlainText())
             if not lexForm:
-                raise RuntimeError('Please insert a constarining value')
+                raise RuntimeError('Please insert a constraining value')
             currDataType = str(self.widget('datatype_switch').currentText())
             literal = Literal(lexForm, self.project.getIRI(currDataType))
             facet = Facet(self.project.getIRI(currConstrFacet), literal)
@@ -961,7 +961,7 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
             super().accept()
         except RuntimeError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage(e.message)
+            errorDialog.showMessage(str(e))
             errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
             errorDialog.show()
             errorDialog.raise_()
@@ -1169,7 +1169,7 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
             super().accept()
         except IllegalLiteralError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage(e.message)
+            errorDialog.showMessage(str(e))
             errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
             errorDialog.show()
             errorDialog.raise_()

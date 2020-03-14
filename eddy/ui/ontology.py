@@ -397,6 +397,59 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.setObjectName('annotations_widget')
         self.addWidget(widget)
 
+        #TODO
+        #############################################
+        # IRI REFACTOR
+        #################################
+        preLabel = QtWidgets.QLabel(self, objectName='pre_input_label')
+        preLabel.setFont(Font('Roboto', 13))
+        preLabel.setText('Pre ')
+        self.addWidget(preLabel)
+
+        preField = StringField(self, objectName='pre_input_field')
+        preField.setFont(Font('Roboto', 13))
+        # prefixField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/')
+        self.addWidget(preField)
+
+        postLabel = QtWidgets.QLabel(self, objectName='post_input_label')
+        postLabel.setFont(Font('Roboto', 13))
+        postLabel.setText('Post ')
+        self.addWidget(postLabel)
+
+        postField = StringField(self, objectName='post_input_field')
+        postField.setFont(Font('Roboto', 13))
+        # prefixField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/')
+        self.addWidget(postField)
+
+        iriRefactorLayout = QtWidgets.QFormLayout()
+        iriRefactorLayout.addRow(self.widget('pre_input_label'), self.widget('pre_input_field'))
+        iriRefactorLayout.addRow(self.widget('post_input_label'), self.widget('post_input_field'))
+
+        refactorBtn = QtWidgets.QPushButton('Refactor', objectName='iri_refactor_button')
+        connect(refactorBtn.clicked, self.doIriRefactor)
+        self.addWidget(refactorBtn)
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('iri_refactor_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(iriRefactorLayout)
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('IRI Refactor', self, objectName='iri_refactor_group_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('iri_refactor_group_widget'), 0, QtCore.Qt.AlignTop)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('iri_widget')
+        self.addWidget(widget)
+
+
+        # TODO END
+
         #############################################
         # CONFIRMATION BOX
         #################################
@@ -418,6 +471,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('general_widget'), 'General')
         widget.addTab(self.widget('prefixes_widget'), 'Prefixes')
         widget.addTab(self.widget('annotations_widget'), 'Annotations')
+        widget.addTab(self.widget('iri_widget'), 'Global IRIs')
         self.addWidget(widget)
 
         layout = QtWidgets.QVBoxLayout()
@@ -979,6 +1033,49 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixStr = prefixStr[0:prefixLimit]
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
+
+    @QtCore.pyqtSlot(bool)
+    def doIriRefactor(self, _):
+        """
+        Add a new prefix entry to the list of ontology prefixes.
+        :type _: bool
+        """
+        try:
+            preField = self.widget('pre_input_field')
+            preValue = preField.value()
+            if not preValue:
+                raise RuntimeError('Please insert a non-empty pre string')
+
+
+            postField = self.widget('post_input_field')
+            postValue = postField.value()
+            self.project.isValidIdentifier(postValue)
+
+
+
+            matchingIRIS = self.project.getAllIriStartingWith(preValue)
+            #TODO RICOMINCIA QUI
+
+
+
+
+
+            preField.setValue('')
+            postField.setValue('')
+        except IllegalNamespaceError as e:
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal Post value',
+                                                     'IRI refactor issue', MsgBoxType.WARNING.value,
+                                                     informativeText='The string "{}" is not a legal namespace'.format(
+                                                         postValue),
+                                                     detailedText=str(e))
+            msgBox.exec_()
+        except RuntimeError as e:
+            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal Pre value',
+                                                     'IRI refactor issue', MsgBoxType.WARNING.value,
+                                                     informativeText='Empty string is not allowed as Pre value',
+                                                     detailedText=str(e))
+            msgBox.exec_()
+
 
 
 
