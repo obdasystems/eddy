@@ -282,12 +282,12 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         return literalEl
 
-    def getFacetDomElement(self, facet):
+    def getFacetDomElement(self, facetNode):
         facetEl = self.getDomElement('facet')
         constrainingFacetEl = self.getDomElement('constrainingFacet')
-        constrainingFacetEl.appendChild(self.getDomTextNode(str(facet.constrainingFacet)))
+        constrainingFacetEl.appendChild(self.getDomTextNode(str(facetNode.facet.constrainingFacet)))
         facetEl.appendChild(constrainingFacetEl)
-        facetEl.appendChild(self.getLiteralDomElement(facet.literal))
+        facetEl.appendChild(self.getLiteralDomElement(facetNode.facet.literal))
         return facetEl
 
     def getDiagramsDomElement(self):

@@ -115,17 +115,6 @@ class FacetNode(AbstractNode):
         :type facet:Facet
         '''
         self._facet = facet
-
-        '''
-        switch = False
-        if self.iri:
-            switch = True
-            self.disconnectIRISignals()
-        self._iri = iriObj
-        self.connectIRISignals()
-        if switch:
-            self.sgnIRISwitched.emit()
-        '''
         if self.diagram:
             self.doUpdateNodeLabel()
 

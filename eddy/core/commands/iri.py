@@ -7,8 +7,6 @@ from eddy.core.owl import IRI
 #   IRI NODES
 #################################
 
-
-
 class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
@@ -164,3 +162,37 @@ class CommandIRISetMeta(QtWidgets.QUndoCommand):
         for node in self._project.predicates(self._item, self._predicate):
             node.updateNode(selected=node.isSelected())
         '''
+
+#############################################
+#   FACET NODES
+#################################
+
+class CommandChangeFacetOfNode(QtWidgets.QUndoCommand):
+    """
+    This command is used to set IRI properties.
+    """
+
+    def __init__(self, project, node, facetRedo, facetUndo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type node: FacetNode
+        :type facetRedo: Facet
+        :type facetUndo: Facet
+        :type name: str
+        """
+        super().__init__(name or 'Node {} modify Facet '.format(node.id))
+        self._facetRedo = facetRedo
+        self._facetUndo = facetUndo
+        self._project = project
+        self._node = node
+
+    def redo(self):
+        """redo the command"""
+        self._node.facet = self._facetRedo
+        #self._project.sgnIRIChanged.emit(self._node, oldIri)
+
+    def undo(self):
+        """undo the command"""
+        self._node.facet = self._facetUndo
+        #self._project.sgnIRIChanged.emit(self._node, iri)

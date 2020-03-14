@@ -860,6 +860,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='node_iri_refactor',
             triggered=self.doOpenIRIDialog))
 
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Facet refactor',
+            self, objectName='node_facet_refactor',
+            triggered=self.doOpenFacetDialog))
+
         #TODO
         action = QtWidgets.QAction('Render by full IRI', self, objectName='render_full_iri', triggered=self.doRenderByFullIRI)
         action.setCheckable(True)
@@ -2301,6 +2307,22 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
                 #connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenFacetDialog(self):
+        """
+        Executed when the Facet associated to a node might be modified by the user.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            node = first(diagram.selectedNodes())
+            if node:
+                builder = ConstrainingFacetDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
                 builder.show()
                 builder.raise_()

@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode
+from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode, CommandChangeFacetOfNode
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.facet_iri import FacetNode
@@ -245,13 +245,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         # MAIN WIDGET
         #################################
         mainWidget = QtWidgets.QTabWidget(self, objectName='main_widget')
-        mainWidget.addTab(self.widget('iri_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
-                      'IRI')
+        iriTabLabel = 'IRI'
 
         #############################################
         # PREDEFINED DATATYPE TAB
         #################################
-        if isinstance(self.node,ValueDomainNode):
+        if isinstance(self.node, ValueDomainNode):
             comboBoxLabel = IRIDialogsWidgetFactory.getPredefinedDatatypeComboBoxLabel(self)
             self.addWidget(comboBoxLabel)
 
@@ -274,7 +273,10 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.addWidget(widget)
             mainWidget.addTab(self.widget('predefined_datatype_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
                               'Predefined Datatypes')
+            iriTabLabel = 'Custom Datatype'
 
+        mainWidget.addTab(self.widget('iri_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
+                      iriTabLabel)
 
         self.addWidget(mainWidget)
         layout = QtWidgets.QVBoxLayout()
@@ -386,22 +388,29 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                         self.node.doUpdateNodeLabel()
                 super().accept()
             elif activeTab is self.widget('predefined_datatype_widget'):
-                #TODO QUI devi intervenire per permettere cambio iri
                 currText = str(self.widget('datatype_switch').currentText())
-                if not currText==self.emptyString:
-                    inputIri = self.project.getIRI(currText)
-                    self.node.iri = inputIri
-                    self.sgnIRIAccepted.emit(self.node)
-                    if self.node.diagram:
-                        self.node.doUpdateNodeLabel()
-                    super().accept()
-                else:
+                if currText==self.emptyString:
                     errorDialog = QtWidgets.QErrorMessage(parent=self)
                     errorDialog.showMessage('Please select a non-empty element from the combobox')
                     errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
                     errorDialog.show()
                     errorDialog.raise_()
                     errorDialog.activateWindow()
+                else:
+                    if self.iri:
+                        if not str(self.iri) == currText:
+                            command = CommandChangeIRIOfNode(self.project, self.node, currText, str(self.iri))
+                            self.session.undostack.beginMacro('Node {} set IRI <{}> '.format(self.node.id, currText))
+                            if command:
+                                self.session.undostack.push(command)
+                            self.session.undostack.endMacro()
+                    else:
+                        inputIri = self.project.getIRI(currText)
+                        self.node.iri = inputIri
+                        self.sgnIRIAccepted.emit(self.node)
+                        if self.node.diagram:
+                            self.node.doUpdateNodeLabel()
+                    super().accept()
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage('The input string is not a valid IRI')
@@ -931,12 +940,19 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
             if not lexForm:
                 raise RuntimeError('Please insert a constarining value')
             currDataType = str(self.widget('datatype_switch').currentText())
-            literal = Literal(lexForm,self.project.getIRI(currDataType))
-            facet = Facet(self.project.getIRI(currConstrFacet),literal)
-            self.node.facet = facet
-            self.sgnFacetAccepted.emit(self.node)
-            if self.node.diagram:
-                self.node.doUpdateNodeLabel()
+            literal = Literal(lexForm, self.project.getIRI(currDataType))
+            facet = Facet(self.project.getIRI(currConstrFacet), literal)
+            if self.facet:
+                command = CommandChangeFacetOfNode(self.project, self.node, facet, self.facet)
+                self.session.undostack.beginMacro('Node {} modify Facet '.format(self.node.id))
+                if command:
+                    self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+            else:
+                self.node.facet = facet
+                self.sgnFacetAccepted.emit(self.node)
+                if self.node.diagram:
+                    self.node.doUpdateNodeLabel()
             super().accept()
         except RuntimeError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
