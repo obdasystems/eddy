@@ -39,7 +39,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotation
+from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandCommmonSubstringIRIsRefactor
 from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
     CommandProjectModifyPrefixResolution, CommandProjectModifyNamespacePrefix, CommandProjectAddAnnotationProperty, \
     CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion
@@ -1045,21 +1045,31 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             preValue = preField.value()
             if not preValue:
                 raise RuntimeError('Please insert a non-empty pre string')
-
-
             postField = self.widget('post_input_field')
             postValue = postField.value()
-            self.project.isValidIdentifier(postValue)
-
-
-
+            if postValue:
+                self.project.isValidIdentifier(postValue)
+            if preValue == postValue:
+                return
             matchingIRIS = self.project.getAllIriStartingWith(preValue)
-            #TODO RICOMINCIA QUI
-
-
-
-
-
+            commandDict = dict()
+            for iri in matchingIRIS:
+                preIriStr = str(iri)
+                postIriStr = str(iri).replace(preValue,postValue,1)
+                try:
+                    self.project.isValidIdentifier(postIriStr)
+                    commandDict[preIriStr] = postIriStr
+                except IllegalNamespaceError as e:
+                    LOGGER.warning("doIriRefactor(pre='{}' post='{}'): {} excluded from refactoring [{}]".format(preValue,postValue,preIriStr,str(e)))
+            command = CommandCommmonSubstringIRIsRefactor(self.project,preValue,commandDict)
+            self.session.undostack.beginMacro("IRIs starting with '{}' refactor".format(preValue))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+            msgBox = MessageBoxFactory.getMessageBox(self, 'IRI refactor',
+                                                     'IRI refactor', MsgBoxType.INFO.value,
+                                                     informativeText="{} IRIs starting with'{}' have been modified".format(len(commandDict), preValue))
+            msgBox.exec_()
             preField.setValue('')
             postField.setValue('')
         except IllegalNamespaceError as e:
