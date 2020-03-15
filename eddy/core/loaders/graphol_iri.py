@@ -1088,7 +1088,7 @@ class GrapholProjectIRILoaderMixin_3(object):
                 type = self.nproject.getIRI(datatypeEl.text())
             languageEl = objectEl.firstChildElement('language')
             if languageEl.text():
-                language = self.nproject.getIRI(languageEl.text())
+                language = languageEl.text()
         return AnnotationAssertion(subject,property,value,type,language)
 
     def getPrefixMap(self, ontologyEl):

@@ -1748,23 +1748,22 @@ class OWLOntologyExporterWorker(AbstractWorker):
     def addAnnotationAssertions(self):
         for ann in [x for iri in self.project.iris for x in iri.annotationAssertions]:
             subj = ann.subject
-            owlApiSubj = self.df.getOWLAnnotationProperty(self.IRI.create(str(subj.iri)))
+            owlApiSubj = self.IRI.create(str(subj))
             annProp = ann.assertionProperty
-            owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp.iri)))
+            owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp)))
             owlApiObj = None
-            if ann.isIRIValued:
+            if ann.isIRIValued():
                 obj = ann.value
-                owlApiObj = self.df.getOWLAnnotationProperty(self.IRI.create(str(obj.iri)))
-
+                owlApiObj = self.IRI.create(str(obj))
             else:
                 obj =ann.value
                 datatype = ann.datatype
-                lang = ann.lang
+                lang = ann.language
                 if lang:
                     owlApiObj = self.df.getOWLLiteral(obj,lang)
                 else:
                     if datatype:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype.iri)))
+                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
                     else:
                         owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral)))
                     owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
