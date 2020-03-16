@@ -117,6 +117,7 @@ class FacetNode(AbstractNode):
         self._facet = facet
         if self.diagram:
             self.doUpdateNodeLabel()
+        self.sgnNodeModified.emit()
 
     #############################################
     #   SLOTS

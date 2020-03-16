@@ -339,6 +339,7 @@ class IRI(QtCore.QObject):
     sgnAnnotationRemoved = QtCore.pyqtSignal(AnnotationAssertion)
     sgnAnnotationModified = QtCore.pyqtSignal(AnnotationAssertion)
 
+    sgnIRIPropModified = QtCore.pyqtSignal()
     sgnFunctionalModified = QtCore.pyqtSignal()
     sgnInverseFunctionalModified = QtCore.pyqtSignal()
 
@@ -432,6 +433,7 @@ class IRI(QtCore.QObject):
     def functional(self, funct):
         self._isFunctional = funct
         self.sgnFunctionalModified.emit()
+        self.sgnIRIPropModified.emit()
 
     @property
     def inverseFunctional(self):
@@ -447,6 +449,7 @@ class IRI(QtCore.QObject):
     def inverseFunctional(self, invFunct):
         self._isInverseFunctional = invFunct
         self.sgnInverseFunctionalModified.emit()
+        self.sgnIRIPropModified.emit()
 
     @property
     def symmetric(self):
@@ -461,6 +464,7 @@ class IRI(QtCore.QObject):
     @symmetric.setter
     def symmetric(self, symm):
         self._isSymmetric = symm
+        self.sgnIRIPropModified.emit()
 
     @property
     def asymmetric(self):
@@ -475,6 +479,7 @@ class IRI(QtCore.QObject):
     @asymmetric.setter
     def asymmetric(self, asymm):
         self._isAsymmetric = asymm
+        self.sgnIRIPropModified.emit()
 
     @property
     def reflexive(self):
@@ -489,6 +494,7 @@ class IRI(QtCore.QObject):
     @reflexive.setter
     def reflexive(self, ref):
         self._isReflexive = ref
+        self.sgnIRIPropModified.emit()
 
     @property
     def irreflexive(self):
@@ -503,6 +509,7 @@ class IRI(QtCore.QObject):
     @irreflexive.setter
     def irreflexive(self, irref):
         self._isIrreflexive = irref
+        self.sgnIRIPropModified.emit()
 
     @property
     def transitive(self):
@@ -517,6 +524,7 @@ class IRI(QtCore.QObject):
     @transitive.setter
     def transitive(self, tran):
         self._isTransitive = tran
+        self.sgnIRIPropModified.emit()
 
     @property
     def annotationAssertions(self):

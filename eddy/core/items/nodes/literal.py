@@ -157,6 +157,7 @@ class LiteralNode(AbstractResizableNode):
         '''
         if self.diagram:
             self.doUpdateNodeLabel()
+        self.sgnNodeModified.emit()
 
     def mouseDoubleClickEvent(self, mouseEvent):
         """

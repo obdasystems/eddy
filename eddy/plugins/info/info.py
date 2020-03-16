@@ -367,6 +367,8 @@ class InfoWidget(QtWidgets.QScrollArea):
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
 
+        self.connectedItem = None
+
     #############################################
     #   PROPERTIES
     #################################
@@ -437,9 +439,17 @@ class InfoWidget(QtWidgets.QScrollArea):
             if not selected or len(selected) > 1:
                 show = self.infoProject
                 show.updateData(self.project)
+                if self.connectedItem:
+                    disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             else:
                 item = first(selected)
                 if item.isNode():
+                    if not item is self.connectedItem:
+                        if self.connectedItem:
+                            disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
+                        self.connectedItem = item
+                        connect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
+
                     if item.isPredicate():
                         if item.type() is Item.AttributeIRINode:
                             show = self.infoAttributeNode
@@ -454,12 +464,18 @@ class InfoWidget(QtWidgets.QScrollArea):
                     else:
                         show = self.infoNode
                 else:
+                    if self.connectedItem:
+                        disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
                     show = self.infoEdge
                 show.updateData(item)
         elif self.project:
+            if self.connectedItem:
+                disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             show = self.infoProject
             show.updateData(self.project)
         else:
+            if self.connectedItem:
+                disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             show = self.infoEmpty
 
         prev = self.stacked.currentWidget()
@@ -469,6 +485,9 @@ class InfoWidget(QtWidgets.QScrollArea):
             scrollbar = self.verticalScrollBar()
             scrollbar.setValue(0)
 
+    @QtCore.pyqtSlot()
+    def onConnectedItemModified(self):
+        self.stack()
 
 #############################################
 #   COMPONENTS

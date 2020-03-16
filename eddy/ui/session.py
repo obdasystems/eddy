@@ -868,7 +868,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'),
-            'Facet refactor',
+            'Literal refactor',
             self, objectName='node_literal_refactor',
             triggered=self.doOpenLiteralDialog))
 

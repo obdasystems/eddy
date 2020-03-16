@@ -55,6 +55,8 @@ class AbstractNode(AbstractItem):
     Identities = {}
     Prefix = 'n'
 
+    sgnNodeModified = QtCore.pyqtSignal()
+
     def __init__(self, **kwargs):
         """
         Initialize the node.
@@ -752,6 +754,7 @@ class OntologyEntityNode(AbstractNode):
             self.sgnIRISwitched.emit()
         if self.diagram:
             self.doUpdateNodeLabel()
+        self.sgnNodeModified.emit()
 
     #############################################
     #   INTERFACE
@@ -780,6 +783,7 @@ class OntologyEntityNode(AbstractNode):
 
     def connectIRISignals(self):
         connect(self.iri.sgnIRIModified, self.onIRIModified)
+        connect(self.iri.sgnIRIPropModified, self.onIRIPropModified)
         connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
         connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
         connect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
@@ -787,6 +791,7 @@ class OntologyEntityNode(AbstractNode):
 
     def disconnectIRISignals(self):
         disconnect(self.iri.sgnIRIModified, self.onIRIModified)
+        disconnect(self.iri.sgnIRIPropModified, self.onIRIPropModified)
         disconnect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
         disconnect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
         disconnect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
@@ -801,6 +806,11 @@ class OntologyEntityNode(AbstractNode):
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot()
+    def onIRIPropModified(self):
+        self.sgnNodeModified.emit()
+
+
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
         settings = QtCore.QSettings(ORGANIZATION, APPNAME)
@@ -868,6 +878,7 @@ class OntologyEntityNode(AbstractNode):
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
+        self.sgnNodeModified.emit()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationRemoved(self, annotation):
@@ -878,6 +889,7 @@ class OntologyEntityNode(AbstractNode):
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
+        self.sgnNodeModified.emit()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationModified(self, annotation):
@@ -888,11 +900,12 @@ class OntologyEntityNode(AbstractNode):
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
+        self.sgnNodeModified.emit()
 
     #@QtCore.pyqtSlot()
     def onIRIModified(self):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
         self.doUpdateNodeLabel()
+        self.sgnNodeModified.emit()
 
     #@QtCore.pyqtSlot('QString','QString')
     def onPrefixAdded(self,pref,ns):
