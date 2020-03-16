@@ -185,7 +185,11 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            combobox.setCurrentText(self.emptyString)
+            ontPrefix = self.project.ontologyPrefix
+            if ontPrefix:
+                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            else:
+                combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
         inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
@@ -315,7 +319,11 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            combobox.setCurrentText(self.emptyString)
+            ontPrefix = self.project.ontologyPrefix
+            if ontPrefix:
+                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            else:
+                combobox.setCurrentText(self.emptyString)
 
         inputField = self.widget('iri_input_field')
         if shortest:
@@ -472,7 +480,11 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix+':'+'  <'+self.project.getNamespace(shortest.prefix)+'>')
         else:
-            combobox.setCurrentText(self.noPrefixString)
+            ontPrefix = self.project.ontologyPrefix
+            if ontPrefix:
+                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            else:
+                combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
         inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
@@ -600,7 +612,11 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            combobox.setCurrentText(self.noPrefixString)
+            ontPrefix = self.project.ontologyPrefix
+            if ontPrefix:
+                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            else:
+                combobox.setCurrentText(self.emptyString)
 
         inputField = self.widget('iri_input_field')
         if shortest:

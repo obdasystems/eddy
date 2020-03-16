@@ -838,7 +838,7 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage=None):
         """
         Create a new `IRIManager` with a default set of prefixes defined
         :type parent: QtCore.QObject
@@ -856,6 +856,8 @@ class IRIManager(QtCore.QObject):
             self.setOntologyIRI(ontologyIRI)
             if not ontologyPrefix is None:
                 self.setPrefix(ontologyPrefix,ontologyIRI)
+            self._ontologyPrefix = ontologyPrefix
+
             '''
             else:
                 self.setEmptyPrefix(ontologyIRI)
@@ -881,9 +883,19 @@ class IRIManager(QtCore.QObject):
             for lang in languages:
                 self.addLanguageTag(lang)
 
+        self._defaultLanguage = defaultLanguage
+
     #############################################
     #   LANGUAGES
     #################################
+    @property
+    def defaultLanguage(self):
+        return self._defaultLanguage
+
+    @defaultLanguage.setter
+    def defaultLanguage(self,lang):
+        self._defaultLanguage = lang
+
     def addLanguageTag(self,lang):
         """
         Add the language tag identified by lang
@@ -946,10 +958,12 @@ class IRIManager(QtCore.QObject):
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
-    def getIRI(self, iriString):
+    def getIRI(self, iriString, addLabelFromSimpleName=False):
         """
-        Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index
+        Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index.
+        If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName
         :type iriString: str
+        :type addLabelFromSimpleName: bool
         """
         if iriString in self.stringToIRI:
             return self.stringToIRI[iriString]
@@ -957,9 +971,19 @@ class IRIManager(QtCore.QObject):
             iri = IRI(iriString)
             iri.manager = self
             self.addIRI(iri)
+            if addLabelFromSimpleName:
+                iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri))
             connect(iri.sgnIRIModified,self.onIRIModified)
             connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
             return iri
+
+    def getLabelAnnotationFromSimpleName(self,iri):
+        """
+        :type iri: IRI
+        """
+        simpleName = iri.getSimpleName()
+        annAss = AnnotationAssertion(iri,AnnotationAssertionProperty.Label.value,simpleName,OWL2Datatype.PlainLiteral.value,self.defaultLanguage)
+        return annAss
 
     @QtCore.pyqtSlot(str)
     def onIRIModified(self,oldIRIStr):
@@ -1236,6 +1260,14 @@ class IRIManager(QtCore.QObject):
         return str(first) == str(second)
 
     ##Prefixes
+    @property
+    def ontologyPrefix(self):
+        return self._ontologyPrefix
+
+    @ontologyPrefix.setter
+    def defaultLanguage(self, ontologyPrefix):
+        self._ontologyPrefix = ontologyPrefix
+
     def getEmptyPrefixResolution(self):
         """
         Returns the string the empty prefix is resolved to, or None if it does not exist

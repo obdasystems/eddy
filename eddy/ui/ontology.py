@@ -51,7 +51,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
-from eddy.ui.fields import StringField,ComboBox
+from eddy.ui.fields import StringField, ComboBox, CheckBox
 from eddy.ui.message_box import MessageBoxFactory, MsgBoxType
 
 LOGGER = getLogger()
@@ -63,6 +63,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     """
 
     noPrefixString = ''
+    emptyString = ''
 
     def __init__(self, session):
         """
@@ -399,8 +400,59 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         #TODO
         #############################################
-        # IRI REFACTOR
+        # Global IRI
         #################################
+        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label')
+        checkBoxLabel.setFont(Font('Roboto', 12))
+        checkBoxLabel.setText('Derive rdfs:label from simple name')
+        self.addWidget(checkBoxLabel)
+        checked = False #TODO leggilo da config
+        checkBox = CheckBox('',self,enabled=True,checked=checked,clicked=self.onLabelcheckBoxClicked, objectName='label_checkbox')
+        self.addWidget(checkBox)
+
+        comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
+        comboBoxLabel.setFont(Font('Roboto', 12))
+        comboBoxLabel.setText('Default rdfs:label language')
+        self.addWidget(comboBoxLabel)
+        combobox = ComboBox(self, objectName='lang_switch')
+        combobox.setEditable(False)
+        combobox.setFont(Font('Roboto', 12))
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if self.project.defaultLanguage:
+            combobox.setCurrentText(self.project.defaultLanguage)
+        else:
+            combobox.setCurrentText(self.emptyString)
+        if checkBox.isChecked():
+            combobox.setStyleSheet("background:#FFFFFF");
+            combobox.setEnabled(True)
+        else:
+            combobox.setStyleSheet("background:#808080");
+            combobox.setEnabled(False)
+
+        self.addWidget(combobox)
+        iriLabelLayout = QtWidgets.QFormLayout()
+        iriLabelLayout.addRow(self.widget('checkBox_label'), self.widget('label_checkbox'))
+        iriLabelLayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
+
+        applyBtn = QtWidgets.QPushButton('Apply', objectName='iri_label_button')
+        connect(applyBtn.clicked, self.doApplyIriLabel)
+        self.addWidget(applyBtn)
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('iri_label_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(iriLabelLayout)
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('IRI Definition', self, objectName='iri_definition_group_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+
+        #REFACTOR
         preLabel = QtWidgets.QLabel(self, objectName='pre_input_label')
         preLabel.setFont(Font('Roboto', 13))
         preLabel.setText('Pre ')
@@ -441,7 +493,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('iri_refactor_group_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('iri_definition_group_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('iri_refactor_group_widget'), 1, QtCore.Qt.AlignTop)
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
         widget.setObjectName('iri_widget')
@@ -626,6 +679,30 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             table.setItem(rowcount,0,propertyItem)
             rowcount += 1
         table.resizeColumnsToContents()
+
+        #############################################
+        # Global IRI
+        #################################
+        checked = False  # TODO leggilo da config
+        checkBox = self.widget('label_checkbox')
+        checkBox.setChecked(checked)
+
+        combobox = self.widget('lang_switch')
+        if self.project.defaultLanguage:
+            combobox.setCurrentText(self.project.defaultLanguage)
+        else:
+            combobox.setCurrentText(self.emptyString)
+        if checkBox.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+            self.widget('lang_switch').setEnabled(True)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setEnabled(False)
+
+        # REFACTOR
+        preField = self.widget('pre_input_field')
+        postField = self.widget('post_input_field')
+
 
         #############################################
         # SAVE & EXIT
@@ -1087,5 +1164,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             msgBox.exec_()
 
 
+    #############################################
+    # Global IRI
+    #################################
+    @QtCore.pyqtSlot()
+    def onLabelcheckBoxClicked(self):
+        checkBox = self.widget('label_checkbox')
+        if checkBox.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+            self.widget('lang_switch').setEnabled(True)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setEnabled(False)
 
-
+    @QtCore.pyqtSlot()
+    def doApplyIriLabel(self):
+        print('doApplyIriLabel')

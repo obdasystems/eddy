@@ -1019,6 +1019,8 @@ class GrapholProjectIRILoaderMixin_3(object):
         projectName = projectEl.attribute('name')
         ontologyEl = projectEl.firstChildElement('ontology')
         ontologyIri = ontologyEl.attribute('iri')
+        ontologyPrefix = ontologyEl.attribute('prefix')
+        ontologyLang = ontologyEl.attribute('lang')
         prefixMap = self.getPrefixMap(ontologyEl)
         datatypes = self.getDatatypes(ontologyEl)
         facets = self.getFacets(ontologyEl)
@@ -1035,7 +1037,9 @@ class GrapholProjectIRILoaderMixin_3(object):
             constrFacets=facets,
             languages=languages,
             annotationProperties=annotationProperties,
-            session=self.session)
+            session=self.session,
+            ontologyPrefix=ontologyPrefix,
+            ontologyLang=ontologyLang)
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
         irisEl = ontologyEl.firstChildElement('iris')
