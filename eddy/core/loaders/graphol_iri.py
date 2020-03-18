@@ -1020,6 +1020,9 @@ class GrapholProjectIRILoaderMixin_3(object):
         ontologyEl = projectEl.firstChildElement('ontology')
         ontologyIri = ontologyEl.attribute('iri')
         ontologyPrefix = ontologyEl.attribute('prefix')
+        labelBoolean = False
+        if ontologyEl.attribute('addLabelFromSimpleName'):
+            labelBoolean = bool(int(ontologyEl.attribute('addLabelFromSimpleName')))
         ontologyLang = ontologyEl.attribute('lang')
         prefixMap = self.getPrefixMap(ontologyEl)
         datatypes = self.getDatatypes(ontologyEl)
@@ -1039,7 +1042,8 @@ class GrapholProjectIRILoaderMixin_3(object):
             annotationProperties=annotationProperties,
             session=self.session,
             ontologyPrefix=ontologyPrefix,
-            ontologyLang=ontologyLang)
+            ontologyLang=ontologyLang,
+            addLabelFromSimpleName=labelBoolean)
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
         irisEl = ontologyEl.firstChildElement('iris')

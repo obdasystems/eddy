@@ -211,7 +211,11 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.iri:
             fullIriField.setText(str(self.iri))
         else:
-            fullIriField.setText('')
+            ontPrefix = self.project.ontologyPrefix
+            if ontPrefix:
+                fullIriField.setText(self.project.getNamespace(ontPrefix))
+            else:
+                fullIriField.setText('')
         self.addWidget(fullIriField)
 
         ###########################
@@ -337,7 +341,11 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.iri:
             fullIriField.setText(str(self.iri))
         else:
-            fullIriField.setText('')
+            ontPrefix = self.project.ontologyPrefix
+            if ontPrefix:
+                fullIriField.setText(self.project.getNamespace(ontPrefix))
+            else:
+                fullIriField.setText('')
 
         '''
         if isinstance(self.node, AttributeNode):
@@ -390,7 +398,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                             self.session.undostack.push(command)
                         self.session.undostack.endMacro()
                 else:
-                    inputIri = self.project.getIRI(inputIriString)
+                    inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=True)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
                     if self.node.diagram:
@@ -757,7 +765,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             existIRI = self.project.existIRI(fullIRIString)
             if existIRI:
                 print('IRI corresponding to string {} already exists'.format(fullIRIString))
-                newIRI = self.project.getIRI(fullIRIString)
+                newIRI = self.project.getIRI(fullIRIString, addLabelFromSimpleName=True)
                 if not newIRI is self.iri:
                     oldIRI = self.iri
                     self.iri = newIRI

@@ -406,7 +406,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         checkBoxLabel.setFont(Font('Roboto', 12))
         checkBoxLabel.setText('Derive rdfs:label from simple name')
         self.addWidget(checkBoxLabel)
-        checked = False #TODO leggilo da config
+        checked = self.project.addLabelFromSimpleName
         checkBox = CheckBox('',self,enabled=True,checked=checked,clicked=self.onLabelcheckBoxClicked, objectName='label_checkbox')
         self.addWidget(checkBox)
 
@@ -683,7 +683,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # Global IRI
         #################################
-        checked = False  # TODO leggilo da config
+        checked = self.project.addLabelFromSimpleName
         checkBox = self.widget('label_checkbox')
         checkBox.setChecked(checked)
 
@@ -1179,4 +1179,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def doApplyIriLabel(self):
-        print('doApplyIriLabel')
+        checkBox = self.widget('label_checkbox')
+        if checkBox.isChecked():
+            self.project.addLabelFromSimpleName = True
+            language = str(self.widget('lang_switch').currentText())
+            if language:
+                self.project.defaultLanguage = language
+        else:
+            self.project.addLabelFromSimpleName = False

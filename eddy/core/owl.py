@@ -838,7 +838,7 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage=None):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage=None, addLabelFromSimpleName=False):
         """
         Create a new `IRIManager` with a default set of prefixes defined
         :type parent: QtCore.QObject
@@ -864,14 +864,7 @@ class IRIManager(QtCore.QObject):
                         if ns==ontologyIRI:
                             self._ontologyPrefix = pr
 
-
-            '''
-            else:
-                self.setEmptyPrefix(ontologyIRI)
-            '''
-
         self.addTopBottomPredicateIRIs()
-
         self.annotationProperties = set()
         self.datatypes = set()
         self.languages = set()
@@ -889,12 +882,20 @@ class IRIManager(QtCore.QObject):
         if languages:
             for lang in languages:
                 self.addLanguageTag(lang)
-
         self._defaultLanguage = defaultLanguage
+        self._addLabelFromSimpleName = addLabelFromSimpleName
 
     #############################################
     #   LANGUAGES
     #################################
+    @property
+    def addLabelFromSimpleName(self):
+        return self._addLabelFromSimpleName
+
+    @addLabelFromSimpleName.setter
+    def addLabelFromSimpleName(self, addLabelFromSimpleName):
+        self._addLabelFromSimpleName = addLabelFromSimpleName
+
     @property
     def defaultLanguage(self):
         return self._defaultLanguage
@@ -978,7 +979,7 @@ class IRIManager(QtCore.QObject):
             iri = IRI(iriString)
             iri.manager = self
             self.addIRI(iri)
-            if addLabelFromSimpleName:
+            if addLabelFromSimpleName and self._addLabelFromSimpleName:
                 iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri))
             connect(iri.sgnIRIModified,self.onIRIModified)
             connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
@@ -1067,12 +1068,12 @@ class IRIManager(QtCore.QObject):
             return True
         return False
 
-    def addAnnotationProperty(self, iriString):
+    def addAnnotationProperty(self, iriString, addLabelFromSimpleName=False):
         """
         Add the IRI identified by iriString to the set of IRIs that can be used as Property into annotation assertions
         :type iriString: str
         """
-        iri = self.getIRI(iriString)
+        iri = self.getIRI(iriString, addLabelFromSimpleName)
         return self.addAnnotationPropertyIRI(iri)
 
     def existAnnotationProperty(self, iriStr):
@@ -1096,8 +1097,8 @@ class IRIManager(QtCore.QObject):
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.seeAlso.value)
 
     ##FACETS
-    def addConstrainingFacet(self, iriString):
-        iri = self.getIRI(iriString)
+    def addConstrainingFacet(self, iriString, addLabelFromSimpleName=False):
+        iri = self.getIRI(iriString, False)
         return self.addConstrainingFacetIRI(iri)
 
     def addConstrainingFacetIRI(self, iri):
@@ -1152,12 +1153,12 @@ class IRIManager(QtCore.QObject):
             return True
         return False
 
-    def addDatatype(self, iriString):
+    def addDatatype(self, iriString, addLabelFromSimpleName=False):
         """
         Add the IRI identified by iriString to the set of IRIs that can be used as datatypes
         :type iriString: str
         """
-        iri = self.getIRI(iriString)
+        iri = self.getIRI(iriString, addLabelFromSimpleName)
         return self.addDatatypeIRI(iri)
 
     def addDefaultDatatypes(self):
@@ -1272,7 +1273,7 @@ class IRIManager(QtCore.QObject):
         return self._ontologyPrefix
 
     @ontologyPrefix.setter
-    def defaultLanguage(self, ontologyPrefix):
+    def ontologyPrefix(self, ontologyPrefix):
         self._ontologyPrefix = ontologyPrefix
 
     def getEmptyPrefixResolution(self):
