@@ -59,7 +59,7 @@ from eddy.core.commands.edges import CommandSwitchSameDifferentEdge
 from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.labels import CommandLabelMove
-from eddy.core.commands.nodes import CommandNodeSetDepth
+from eddy.core.commands.nodes import CommandNodeSetDepth, CommandNodeSetBrush
 from eddy.core.commands.nodes import CommandNodeSwitchTo
 from eddy.core.commands.project import CommandProjectSetProfile
 from eddy.core.common import HasActionSystem

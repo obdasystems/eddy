@@ -1746,7 +1746,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
 
     def addAnnotationAssertions(self):
-        for ann in [x for iri in self.project.iris for x in iri.annotationAssertions]:
+        annList = [x for iri in self.project.iris for x in iri.annotationAssertions]
+
+        for ann in annList:
             subj = ann.subject
             owlApiSubj = self.IRI.create(str(subj))
             annProp = ann.assertionProperty
@@ -1756,7 +1758,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 obj = ann.value
                 owlApiObj = self.IRI.create(str(obj))
             else:
-                obj =ann.value
+                obj = ann.value.replace('\n',' ')
+                print("ann.value= " + ann.value)
+                print("obj= " + obj)
+                print()
                 datatype = ann.datatype
                 lang = ann.language
                 if lang:

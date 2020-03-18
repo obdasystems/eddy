@@ -635,7 +635,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.translate(30, 22)
                 painter.drawRect(QtCore.QRectF(-27, -17, 54, 34))
                 painter.setFont(Font('Roboto', 11, Font.Light))
-                painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'concept')
+                painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'Class')
                 painter.end()
 
             #############################################
@@ -656,8 +656,8 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(0, -17),
                     QtCore.QPointF(-23, 0),
                 ]))
-                painter.setFont(Font('Roboto', 11, Font.Light))
-                painter.drawText(QtCore.QRectF(-23, -17, 46, 34), QtCore.Qt.AlignCenter, 'role')
+                painter.setFont(Font('Roboto', 9, Font.Light))
+                painter.drawText(QtCore.QRectF(-23, -17, 46, 34), QtCore.Qt.AlignCenter, 'Obj.\nProp.')
                 painter.end()
 
             #############################################
@@ -669,7 +669,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter = QtGui.QPainter(pixmap)
                 painter.setFont(Font('Roboto', 9, Font.Light))
                 painter.translate(0, 0)
-                painter.drawText(QtCore.QRectF(0, 0, 60, 22), QtCore.Qt.AlignCenter, 'attribute')
+                painter.drawText(QtCore.QRectF(0, 0, 60, 22), QtCore.Qt.AlignCenter, 'Data Prop.')
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
@@ -690,7 +690,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.translate(30, 22)
                 painter.drawRoundedRect(QtCore.QRectF(-27, -17, 54, 34), 6, 6)
                 painter.setFont(Font('Roboto', 10, Font.Light))
-                painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'xsd:string')
+                painter.drawText(QtCore.QRectF(-27, -17, 54, 34), QtCore.Qt.AlignCenter, 'Datatype')
                 painter.end()
 
             #############################################
