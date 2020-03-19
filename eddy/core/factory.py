@@ -854,6 +854,7 @@ class MenuFactory(QtCore.QObject):
         for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
             self.customMenu['occurrences'].addAction(action)
         menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
+        menu.insertAction(self.session.action('node_properties'),self.session.action('iri_annotations_refactor'))
         menu.addAction(self.session.action('node_iri_refactor'))
 
         # TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
@@ -879,6 +880,7 @@ class MenuFactory(QtCore.QObject):
         #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
         self.insertLabelActions(menu, node)
+        #menu.insertSeparator(self.session.action('brush'))
         menu.insertSeparator(self.session.action('node_properties'))
         #self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu

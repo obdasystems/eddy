@@ -461,7 +461,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
     sgnIRISwitch = QtCore.pyqtSignal(IRI,IRI)
     sgnReHashIRI = QtCore.pyqtSignal(IRI, str)
 
-    def __init__(self,iri,session):
+    def __init__(self,iri,session, focusOnAnnotations=False):
         """
         Initialize the IRI properties dialog.
         :type iri: IRI
@@ -473,7 +473,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.iri = iri
 
         shortest = self.project.getShortestPrefixedForm(self.iri)
-
+        self.focusOnAnnotation = focusOnAnnotations
         #############################################
         # IRI TAB
         #################################
@@ -582,6 +582,9 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('annotation_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
                       'Annotations')
 
+        if self.focusOnAnnotation:
+            widget.setCurrentWidget(self.widget('annotation_widget'))
+
         self.addWidget(widget)
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -654,6 +657,9 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
             rowcount += 1
         table.resizeColumnToContents(0)
+
+        if self.focusOnAnnotation:
+            self.widget('main_widget').setCurrentWidget(self.widget('annotation_widget'))
 
     @QtCore.pyqtSlot(bool)
     def addAnnotation(self, _):

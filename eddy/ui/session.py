@@ -856,6 +856,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Annotations',
+            self, objectName='iri_annotations_refactor',
+            triggered=self.doOpenIRIPropsAnnotationBuilder))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
             'Node IRI',
             self, objectName='node_iri_refactor',
             triggered=self.doOpenIRIDialog))
@@ -1170,10 +1176,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu = QtWidgets.QMenu('Refactor', objectName='refactor')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_shapes_black'))
         menu.addAction(self.action('iri_refactor'))
+        #menu.addAction(self.action('iri_annotations_refactor'))
         #menu.addAction(self.action('refactor_name'))
         #menu.addMenu(self.menu('refactor_change_prefix'))
         menu.addMenu(self.menu('refactor_brush'))
         self.addMenu(menu)
+
 
         #############################################
         # ROLE / ATTRIBUTE SPECIFIC
@@ -2370,6 +2378,27 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.show()
                 builder.raise_()
                 builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenIRIPropsAnnotationBuilder(self):
+        """
+        Executed when IRI props builder needs to be displayed with focus on annotation assertions.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            node = first(diagram.selectedNodes())
+            if isinstance(node, OntologyEntityNode):
+                iri = node.iri
+            if iri:
+                builder = IriPropsDialog(iri, self, True)
+                connect(builder.sgnIRISwitch, self.project.doSwitchIRI)
+                # connect(builder.sgnReHashIRI, self.project.doReHashIRI)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
 
     @QtCore.pyqtSlot(IRI)
     def doOpenAnnotationAssertionBuilder(self,iri,assertion=None):
