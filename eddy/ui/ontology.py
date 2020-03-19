@@ -42,7 +42,8 @@ from PyQt5.QtWidgets import QAbstractItemView
 from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandCommmonSubstringIRIsRefactor
 from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
     CommandProjectModifyPrefixResolution, CommandProjectModifyNamespacePrefix, CommandProjectAddAnnotationProperty, \
-    CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion
+    CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion, \
+    CommandProjectSetProjectLabelFromSimpleNameAndLanguage
 from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion
 
 from eddy import ORGANIZATION, APPNAME
@@ -89,6 +90,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(iriLabel)
 
         iriField = StringField(self, objectName='ontology_iri_field')
+        connect(iriField.textEdited, self.onOntologyIriOrVersionEdited)
         iriField.setFont(Font('Roboto', 13))
         iriField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/')
         self.addWidget(iriField)
@@ -99,11 +101,13 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(versionLabel)
 
         versionField = StringField(self, objectName='ontology_version_field')
+        connect(versionField.textEdited,self.onOntologyIriOrVersionEdited)
         versionField.setFont(Font('Roboto', 13))
         versionField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/1.0')
         self.addWidget(versionField)
 
         saveBtn = QtWidgets.QPushButton('Save', objectName='save_ont_iri_version_button')
+        saveBtn.setEnabled(False)
         connect(saveBtn.clicked, self.saveOntologyIRIAndVersion)
         self.addWidget(saveBtn)
 
@@ -431,6 +435,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             combobox.setStyleSheet("background:#808080");
             combobox.setEnabled(False)
+        connect(combobox.currentIndexChanged, self.onLanguageSwitched)
+
 
         self.addWidget(combobox)
         iriLabelLayout = QtWidgets.QFormLayout()
@@ -438,6 +444,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         iriLabelLayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
 
         applyBtn = QtWidgets.QPushButton('Apply', objectName='iri_label_button')
+        applyBtn.setEnabled(False)
         connect(applyBtn.clicked, self.doApplyIriLabel)
         self.addWidget(applyBtn)
         boxlayout = QtWidgets.QHBoxLayout()
@@ -626,6 +633,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.project.version and self.project.version != 'NULL':
             versionField.setText(self.project.version)
 
+        self.widget('save_ont_iri_version_button').setEnabled(False)
+
         table = self.widget('annotations_table_widget')
         ontAnnAss = self.project.ontologyIRI.annotationAssertions
         table.clear()
@@ -700,6 +709,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('lang_switch').setEnabled(False)
 
         # REFACTOR
+        self.widget('iri_label_button').setEnabled(False)
         preField = self.widget('pre_input_field')
         postField = self.widget('post_input_field')
 
@@ -712,6 +722,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     # GENERAL TAB
     #################################
+    @QtCore.pyqtSlot(str)
+    def onOntologyIriOrVersionEdited(self, textValue):
+        self.widget('save_ont_iri_version_button').setEnabled(True)
+
     @QtCore.pyqtSlot(bool)
     def saveOntologyIRIAndVersion(self, _):
         """
@@ -738,6 +752,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             if command:
                 self.session.undostack.push(command)
             self.session.undostack.endMacro()
+            self.widget('save_ont_iri_version_button').setEnabled(False)
 
         except IllegalNamespaceError as e:
             msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal identifier',
@@ -746,7 +761,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                                                          ontIriString),
                                                      detailedText=str(e))
             msgBox.exec_()
-
 
     @QtCore.pyqtSlot(bool)
     def addOntologyImport(self, _):
@@ -1176,14 +1190,21 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             self.widget('lang_switch').setStyleSheet("background:#808080");
             self.widget('lang_switch').setEnabled(False)
+        self.widget('iri_label_button').setEnabled(True)
+
+    @QtCore.pyqtSlot(int)
+    def onLanguageSwitched(self,index):
+        self.widget('iri_label_button').setEnabled(True)
 
     @QtCore.pyqtSlot()
     def doApplyIriLabel(self):
         checkBox = self.widget('label_checkbox')
-        if checkBox.isChecked():
-            self.project.addLabelFromSimpleName = True
-            language = str(self.widget('lang_switch').currentText())
-            if language:
-                self.project.defaultLanguage = language
-        else:
-            self.project.addLabelFromSimpleName = False
+        undoLanguage = self.project.defaultLanguage
+        redoLanguage = str(self.widget('lang_switch').currentText())
+        command = CommandProjectSetProjectLabelFromSimpleNameAndLanguage(self.project, checkBox.isChecked(), redoLanguage, not checkBox.isChecked(), undoLanguage)
+        self.session.undostack.beginMacro('Set automatic rdf:label management')
+        if command:
+            self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+
+        self.widget('iri_label_button').setEnabled(False)

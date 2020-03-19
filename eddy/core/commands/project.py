@@ -43,6 +43,36 @@ from eddy.core.datatypes.graphol import Item
 #################################
 from eddy.core.owl import IllegalNamespaceError
 
+class CommandProjectSetProjectLabelFromSimpleNameAndLanguage(QtWidgets.QUndoCommand):
+    """
+    This command is used to set the IRI identifying the ontology.
+    """
+    def __init__(self, project, labelFromSimpleNameRedo, languageRedo, labelFromSimpleNameUndo, languageUndo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type labelFromSimpleNameRedo: bool
+        :type languageRedo: str
+        :type labelFromSimpleNameUndo: bool
+        :type languageUndo: str
+        :type name: str
+        """
+        super().__init__(name or 'Set automatic rdf:label management')
+        self._project = project
+        self._labelFromSimpleNameRedo = labelFromSimpleNameRedo
+        self._languageRedo = languageRedo
+        self._labelFromSimpleNameUndo = labelFromSimpleNameUndo
+        self._languageUndo = languageUndo
+
+    def redo(self):
+        """redo the command"""
+        self._project.addLabelFromSimpleName = self._labelFromSimpleNameRedo
+        self._project.defaultLanguage = self._languageRedo
+
+    def undo(self):
+        """undo the command"""
+        self._project.addLabelFromSimpleName = self._labelFromSimpleNameUndo
+        self._project.defaultLanguage = self._languageUndo
 
 class CommandProjectSetOntologyIRIAndVersion(QtWidgets.QUndoCommand):
     """
@@ -52,8 +82,10 @@ class CommandProjectSetOntologyIRIAndVersion(QtWidgets.QUndoCommand):
         """
         Initialize the command.
         :type project: Project
-        :type prefix: str
-        :type namespace: str
+        :type iriRedo: str
+        :type versionRedo: str
+        :type iriUndo: str
+        :type versionUndo: str
         :type name: str
         """
         super().__init__(name or 'Set ontology IRI')

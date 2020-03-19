@@ -1042,8 +1042,9 @@ class GrapholProjectIRILoaderMixin_3(object):
             annotationProperties=annotationProperties,
             session=self.session,
             ontologyPrefix=ontologyPrefix,
-            ontologyLang=ontologyLang,
-            addLabelFromSimpleName=labelBoolean)
+            defaultLanguage=ontologyLang,
+            addLabelFromSimpleName=labelBoolean
+        )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
         irisEl = ontologyEl.firstChildElement('iris')
