@@ -25,6 +25,7 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
+from eddy.core.loaders.graphol import GrapholProjectLoader_v1
 from eddy.core.output import getLogger
 from eddy.core.owl import Literal, Facet, AnnotationAssertion
 from eddy.core.project import Project, ProjectIRIMergeWorker, K_DESCRIPTION
@@ -170,6 +171,13 @@ class GrapholProjectIRILoaderMixin_2(object):
             profile=self.session.createProfile(parse('profile', 'OWL 2')),
             prefixMap=self.getPrefixesDict(section),
             ontologyIRI=self.getOntologyIRI(section),
+            datatypes=None,
+            constrFacets=None,
+            languages=None,
+            annotationProperties=None,
+            ontologyPrefix=None,
+            defaultLanguage='en',
+            addLabelFromSimpleName=False,
             session=self.session)
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
@@ -879,6 +887,17 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
         worker = GrapholProjectExporter(self.session.project)
         worker.run()
     '''
+    def createLegacyProject(self):
+        """
+        Create a Project using the @deprecated Graphol project loader (v2).
+        """
+        worker = GrapholProjectLoader_v1(os.path.dirname(self.path), self.session)
+        worker.run()
+        worker = GrapholProjectExporter(self.session.project)
+        worker.run()
+        print()
+        #self.session.project = None
+
 
     def projectLoaded(self):
         """
@@ -902,12 +921,37 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
         """
         Perform project import.
         """
+        version_1 = False
         try:
+
             self.createDomDocument()
         except (ProjectNotFoundError, ProjectVersionError):
-            #self.createLegacyProject()
-            LOGGER.exception("PROBLEMI NEL CARICAMENTO....")
-        else:
+            self.createLegacyProject()
+            version_1 = True
+        finally:
+            if not version_1:
+                #############################################
+                # LEGACY LOADING CHECK
+                #################################
+
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('Legacy mode')
+                msgbox.setText(textwrap.dedent("""
+                                    You have selected an {EDDY} version <b>2</b> project.<br/>
+                                    If you continue with the loading procedure the project will be automatically
+                                    converted to the most recent project version.<br/><br/>
+                                    Do you want to continue?
+                                    """.format(EDDY=APPNAME)))
+                msgbox.exec_()
+
+                if msgbox.result() == QtWidgets.QMessageBox.No:
+                    raise ProjectStopLoadingError
+            else:
+                self.createDomDocument()
             self.createProject()
             self.createDiagrams()
             self.createPredicatesMeta()
@@ -918,6 +962,13 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
     ####################
     #                  #
     #   VERSION 3      #
+    #                  #
+    ####################
+
+
+    ####################
+    #                  #
+    #   VERSION 2      #
     #                  #
     ####################
 

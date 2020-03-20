@@ -32,29 +32,28 @@
 #                                                                        #
 ##########################################################################
 
-from PyQt5 import QtGui
+
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.edges import CommandEdgeAdd
+from eddy.core.commands.labels import CommandLabelMove
 from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.nodes import CommandNodeMove
-from eddy.core.commands.labels import CommandLabelMove
+from eddy.core.old_only_for_v1_load.old_commands_nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.old_only_for_v1_load.old_commands_project import CommandProjectConnectSpecificSignals, \
+    CommandProjectDisconnectSpecificSignals
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.graph import bfs
 from eddy.core.functions.misc import snap, partition, first
 from eddy.core.functions.signals import connect
 from eddy.core.generators import GUID
-from eddy.core.items.factory import ItemFactory
-from eddy.core.items.nodes.common.base import OntologyEntityNode
-from eddy.core.items.nodes.concept_iri import ConceptNode
-from eddy.core.items.nodes.facet_iri import FacetNode
-from eddy.core.items.nodes.literal import LiteralNode
-from eddy.core.output import getLogger
 from eddy.core.items.common import AbstractItem
-
+from eddy.core.old_only_for_v1_load.old_factory import ItemFactory
+from eddy.core.output import getLogger
 
 LOGGER = getLogger()
 
@@ -74,6 +73,8 @@ class Diagram(QtWidgets.QGraphicsScene):
     KeyMoveFactor = 10
     MinSize = 2000
     MaxSize = 1000000
+    MinFontSize = 8
+    MaxFontSize = 40
     SelectionRadius = 4
 
     sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
@@ -108,6 +109,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.mp_NodePos = None
         self.mp_Pos = None
 
+        settings = QtCore.QSettings()
+        #self.setFont(Font(font=self.font(), pixelSize=settings.value('diagram/fontsize', self.font().pixelSize(), int)))
+
         connect(self.sgnItemAdded, self.onItemAdded)
         connect(self.sgnItemRemoved, self.onItemRemoved)
         connect(self.sgnNodeIdentification, self.doNodeIdentification)
@@ -126,6 +130,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         :rtype: Diagram
         """
         diagram = Diagram(name, project)
+        diagram.setBackgroundBrush(QtCore.Qt.white)
         diagram.setSceneRect(QtCore.QRectF(-size / 2, -size / 2, size, size))
         diagram.setItemIndexMethod(Diagram.BspTreeIndex)
         return diagram
@@ -153,6 +158,22 @@ class Diagram(QtWidgets.QGraphicsScene):
     #############################################
     #   EVENTS
     #################################
+
+    def event(self, event: QtCore.QEvent) -> bool:
+        """
+        Executed when an event happens in the scene, before any specialized handler executes.
+        :type event: QtCore.QEvent
+        :rtype: bool
+        """
+        # This event is sent to itself by the scene every time the scene font property changes,
+        # either directly (via setFont()) or indirectly (via QApplication::setFont()).
+        # Here we cascade the event to all top-level widget items in the scene to have
+        # them notified about the font change.
+        if event.type() == QtCore.QEvent.FontChange:
+            # CASCADE THE EVENT TO ALL TOP LEVEL ITEMS IN THE SCENE
+            for item in self.items():
+                self.sendEvent(item, event)
+        return super().event(event)
 
     def dragEnterEvent(self, dragEvent):
         """
@@ -187,68 +208,45 @@ class Diagram(QtWidgets.QGraphicsScene):
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain') and Item.valueOf(dropEvent.mimeData().text()):
             snapToGrid = self.session.action('toggle_grid').isChecked()
-            #TODO
-            nodeType = dropEvent.mimeData().text()
-            if Item.ConceptIRINode <= int(dropEvent.mimeData().text()) <= Item.IndividualIRINode:
-                #New node associated with IRI object
-                #node = ConceptNode(diagram=self)
-                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
-                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
-                if not data:
-                    #new element
-                    if isinstance(node, FacetNode):
-                        self.session.doOpenConstrainingFacetBuilder(node)
-                    elif isinstance(node, OntologyEntityNode):
-                        self.session.doOpenIRIBuilder(node)
-                    elif isinstance(node, LiteralNode):
-                        self.session.doOpenLiteralBuilder(node)
-                else:
-                    #copy of existing element (e.g. drag and drop from ontology explorer)
-                    data_str = str(data, encoding='utf-8')
-                    iri = self.project.getIRI(data_str)
-                    node.iri = iri
-                    self.doAddOntologyEntityNode(node)
-                    node.doUpdateNodeLabel()
-            else:
-                #Old node type
-                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
-                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
-                iri = None
+            node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
+            data = dropEvent.mimeData().data(dropEvent.mimeData().text())
+            iri = None
 
-                if data is not None:
-                    data_str = str(data, encoding='utf-8')
-                    if data_str is not '':
-                        data_comma_seperated = data_str.split(',')
-                        iri = data_comma_seperated[0]
-                        rc = data_comma_seperated[1]
-                        txt = data_comma_seperated[2]
-                        node.setText(txt)
-                        node.remaining_characters = rc
+            if data is not None:
+                data_str = str(data, encoding='utf-8')
+                if data_str is not '':
+                    data_comma_seperated = data_str.split(',')
+                    iri = data_comma_seperated[0]
+                    rc = data_comma_seperated[1]
+                    txt = data_comma_seperated[2]
+                    node.setText(txt)
+                    node.remaining_characters = rc
 
-                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-                commands = []
-                #node.emptyMethod()
+            node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
+            commands = []
 
-                if iri is not None:
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_1 = self.project.addIRINodeEntry(Duplicate_dict_1, iri, node)
+            if iri is not None:
+                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
+                Duplicate_dict_1 = self.project.addIRINodeEntry(Duplicate_dict_1, iri, node)
 
-                    if Duplicate_dict_1 is not None:
-                        pass
+                if Duplicate_dict_1 is not None:
+                    pass
 
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
-                commands.append(CommandNodeAdd(self, node))
+                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
+            commands.append(CommandNodeAdd(self, node))
 
+            if iri is not None:
+                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
+                commands.append(CommandProjectConnectSpecificSignals(self.project))
 
-
-                if any(commands):
-                    self.session.undostack.beginMacro('node Add - {0}'.format(node.name))
-                    for command in commands:
-                        if command:
-                            self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
+            if any(commands):
+                self.session.undostack.beginMacro('node Add - {0}'.format(node.name))
+                for command in commands:
+                    if command:
+                        self.session.undostack.push(command)
+                self.session.undostack.endMacro()
 
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(QtCore.Qt.CopyAction)
@@ -279,14 +277,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 snapToGrid = self.session.action('toggle_grid').isChecked()
                 node = self.factory.create(Item.valueOf(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
-                if isinstance(node, OntologyEntityNode):
-                    self.session.doOpenIRIBuilder(node)
-                elif isinstance(node, FacetNode):
-                    self.session.doOpenConstrainingFacetBuilder(node)
-                elif isinstance(node, LiteralNode):
-                    self.session.doOpenLiteralBuilder(node)
-                else:
-                    self.session.undostack.push(CommandNodeAdd(self, node))
+                self.session.undostack.push(CommandNodeAdd(self, node))
                 self.sgnItemInsertionCompleted.emit(node, mouseEvent.modifiers())
 
             elif self.mode is DiagramMode.EdgeAdd:
@@ -502,7 +493,6 @@ class Diagram(QtWidgets.QGraphicsScene):
                             edge.target = currentNode
                             insertEdge = True
 
-
                     # We temporarily remove the item from the diagram and we perform the
                     # insertion using the undo command that will also emit the sgnItemAdded
                     # signal hence all the widgets will be notified of the edge insertion.
@@ -588,46 +578,6 @@ class Diagram(QtWidgets.QGraphicsScene):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot(OntologyEntityNode)
-    def doAddOntologyEntityNode(self,node):
-        """
-        Add to this diagram a node identified by an IRI
-        :type node: OntologyEntityNode
-        """
-        if node:
-            command = CommandNodeAdd(self,node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.iri))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-        #self.addItem(node)
-
-    @QtCore.pyqtSlot(FacetNode)
-    def doAddOntologyFacetNode(self, node):
-        """
-        Add to this diagram a node representing a Facet
-        :type node: FacetNode
-        """
-        if node:
-            command = CommandNodeAdd(self, node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.facet))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-
-    @QtCore.pyqtSlot(LiteralNode)
-    def doAddOntologyLiteralNode(self, node):
-        """
-        Add to this diagram a node representing a Literal
-        :type node: FacetNode
-        """
-        if node:
-            command = CommandNodeAdd(self, node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.literal))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-
     @QtCore.pyqtSlot('QGraphicsItem')
     def doNodeIdentification(self, node):
         """
@@ -667,6 +617,8 @@ class Diagram(QtWidgets.QGraphicsScene):
         :type _: Diagram
         :type item: AbstractItem
         """
+        # Send a font change event to the item to update its font
+        self.sendEvent(item, QtCore.QEvent(QtCore.QEvent.FontChange))
         if item.isEdge():
             # Execute the node identification procedure only if one of the
             # endpoints we are connecting is currently identified as NEUTRAL.
@@ -697,9 +649,7 @@ class Diagram(QtWidgets.QGraphicsScene):
         Add an item to the Diagram (will redraw the item to reflect its status).
         :type item: AbstractItem
         """
-        super().addItem(item)#TODO a partire da questo momento item.diagram restituisce risultato diverso da None
-        if item.isIRINode():
-            item.connectSignals()
+        super().addItem(item)
         if item.isNode():
             item.updateNode()
 

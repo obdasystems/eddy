@@ -838,7 +838,7 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage=None, addLabelFromSimpleName=False):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False):
         """
         Create a new `IRIManager` with a default set of prefixes defined
         :type parent: QtCore.QObject
@@ -863,6 +863,8 @@ class IRIManager(QtCore.QObject):
                     for pr,ns in prefixMap.items():
                         if ns==ontologyIRI:
                             self._ontologyPrefix = pr
+        else:
+            self._ontologyPrefix = None
 
         self.addTopBottomPredicateIRIs()
         self.annotationProperties = set()

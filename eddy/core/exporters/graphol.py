@@ -43,10 +43,8 @@ from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.misc import postfix
 from eddy.core.functions.fsystem import fwrite, mkdir
 from eddy.core.output import getLogger
-from eddy.core.project import Project
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
-from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
+from eddy.core.old_only_for_v1_load.old_project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_ASYMMETRIC, K_IRREFLEXIVE, \
+    K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE, Project
 
 
 LOGGER = getLogger()

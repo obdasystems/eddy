@@ -47,9 +47,9 @@ from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Namespace
 from eddy.core.datatypes.system import File
-from eddy.core.diagram import Diagram
-from eddy.core.diagram import DiagramNotFoundError
-from eddy.core.diagram import DiagramNotValidError
+from eddy.core.old_only_for_v1_load.old_diagram import Diagram
+from eddy.core.old_only_for_v1_load.old_diagram import DiagramNotFoundError
+from eddy.core.old_only_for_v1_load.old_diagram import DiagramNotValidError
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir, make_archive
 from eddy.core.functions.misc import rstrip, postfix, rtfStripFontAttributes
@@ -58,15 +58,10 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
+from eddy.core.old_only_for_v1_load.old_project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_ASYMMETRIC, K_IRREFLEXIVE, \
+    K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE, ProjectNotValidError, Project, ProjectNotFoundError, \
+    ProjectStopLoadingError, ProjectVersionError
 from eddy.core.output import getLogger
-from eddy.core.project import Project
-from eddy.core.project import ProjectNotFoundError
-from eddy.core.project import ProjectNotValidError
-from eddy.core.project import ProjectVersionError
-from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
-from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 
 from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
 

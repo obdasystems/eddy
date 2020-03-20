@@ -457,6 +457,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     noPrefixString = ''
+    emptyString = ''
 
     sgnIRISwitch = QtCore.pyqtSignal(IRI,IRI)
     sgnReHashIRI = QtCore.pyqtSignal(IRI, str)
