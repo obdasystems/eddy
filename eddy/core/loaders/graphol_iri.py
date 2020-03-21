@@ -414,6 +414,7 @@ class GrapholProjectIRILoaderMixin_2(object):
                 iriString = 'http://www.w3.org/2002/07/owl#bottomObjectProperty'
             if itemType is Item.ConceptIRINode:
                 iriString = 'http://www.w3.org/2002/07/owl#Nothing'
+        labelText = labelText.replace('\n','')
         iriElList = labelText.split(':')
         if len(iriElList) > 1:
             prefix = iriElList[0]
