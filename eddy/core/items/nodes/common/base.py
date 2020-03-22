@@ -823,8 +823,8 @@ class OntologyEntityNode(AbstractNode):
             self.renderByLabel()
         elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
             self.renderBySimpleName()
-        self.updateTextPos()
-        self.updateNode()
+        #self.updateTextPos()
+        #self.updateNode()
 
     def renderByFullIRI(self):
         self.setText(str(self.iri))

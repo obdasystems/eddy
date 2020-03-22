@@ -1378,20 +1378,14 @@ class GrapholProjectIRILoaderMixin_3(object):
         return node
 
     def importFacetNode(self, diagram, nodeElement):
-        labelElement = nodeElement.firstChildElement('label')
-        labelText = labelElement.text()
-        firstQuote = labelText.find('"')
-        secondQuote = labelText.rfind('"')
-        lexForm = labelText[firstQuote + 1:secondQuote]
-        literal = Literal(lexForm)
-        typeIndex = labelText.find('^')
-        prefixedType = labelText[:typeIndex]
-        colonIndex = prefixedType.find(':')
-        prefix = prefixedType[:colonIndex]
-        ns = prefixedType[colonIndex + 1:]
-        iriString = '{}{}'.format(self.nproject.getPrefixResolution(prefix), ns)
-        conFacetIRI = self.nproject.getIRI(iriString)
-        facet = Facet(conFacetIRI, literal)
+        facetEl = nodeElement.firstChildElement('facet')
+        constrFacetEl = facetEl.firstChildElement('constrainingFacet')
+        constrFacetIRI = self.nproject.getIRI(constrFacetEl.text())
+        literalEl = facetEl.firstChildElement('literal')
+        lexForm = literalEl.firstChildElement('lexicalForm').text()
+        datatypeIRI = self.nproject.getIRI(literalEl.firstChildElement('datatype').text())
+        literal = Literal(lexForm,datatypeIRI)
+        facet = Facet(constrFacetIRI, literal)
         geometryElement = nodeElement.firstChildElement('geometry')
         node = diagram.factory.create(Item.FacetIRINode, **{
             'id': nodeElement.attribute('id'),
@@ -1401,6 +1395,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         })
         node.setPos(QtCore.QPointF(int(geometryElement.attribute('x')), int(geometryElement.attribute('y'))))
         node.doUpdateNodeLabel()
+        labelElement = nodeElement.firstChildElement('label')
         node.setTextPos(
             node.mapFromScene(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y')))))
         return node

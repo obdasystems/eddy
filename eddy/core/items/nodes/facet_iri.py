@@ -133,7 +133,7 @@ class FacetNode(AbstractNode):
 
         literal = self.facet.literal
         self.labelB.setText(str(literal))
-        self.updateNode()
+        #self.updateNode()
 
 
     #############################################

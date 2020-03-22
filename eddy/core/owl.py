@@ -349,7 +349,7 @@ class IRI(QtCore.QObject):
         """
         super().__init__(parent)
         if not IRI.isValidNamespace(namespace):
-            raise IllegalNamespaceError(namespace)
+            raise IllegalNamespaceError('The inserted string "{}" is not a legal namespace'.format(namespace))
         self._namespace = str(namespace)
         self._suffix = suffix
         self._isFunctional = functional

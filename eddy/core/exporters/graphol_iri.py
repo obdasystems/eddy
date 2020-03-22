@@ -410,6 +410,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         #TODO
+        nodeEl = self.getNodeDomElement(node)
+
         position = node.mapToScene(node.textPos())
         label = self.document.createElement('label')
         label.setAttribute('height', node.labelA.height())
@@ -417,9 +419,10 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         label.setAttribute('x', position.x())
         label.setAttribute('y', position.y())
         label.appendChild(self.document.createTextNode(node.text()))
+        nodeEl.appendChild(label)
         element = self.getFacetDomElement(node)
-        element.appendChild(label)
-        return element
+        nodeEl.appendChild(element)
+        return nodeEl
 
     def exportIndividualNode(self, node):
         """

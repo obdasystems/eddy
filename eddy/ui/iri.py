@@ -13,7 +13,8 @@ from eddy.ui.notification import Notification
 
 from eddy.core.common import HasWidgetSystem
 
-from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal, IllegalLiteralError
+from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal, IllegalLiteralError, \
+    OWL2Datatype
 
 from eddy.core.functions.signals import connect
 from eddy.ui.fields import ComboBox, StringField, CheckBox
@@ -975,8 +976,13 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
             lexForm = str(self.widget('lexical_form_area').toPlainText())
             if not lexForm:
                 raise RuntimeError('Please insert a constraining value')
-            currDataType = str(self.widget('datatype_switch').currentText())
-            literal = Literal(lexForm, self.project.getIRI(currDataType))
+            currDataTypeStr = str(self.widget('datatype_switch').currentText())
+            currDataType = None
+            if currDataTypeStr==self.emptyString:
+                currDataType = OWL2Datatype.PlainLiteral.value
+            else:
+                currDataType = self.project.getIRI(currDataTypeStr)
+            literal = Literal(lexForm, currDataType)
             facet = Facet(self.project.getIRI(currConstrFacet), literal)
             if self.facet:
                 command = CommandChangeFacetOfNode(self.project, self.node, facet, self.facet)

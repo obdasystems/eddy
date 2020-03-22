@@ -855,7 +855,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doOpenIRIPropsBuilder))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            QtGui.QIcon(':/icons/24/ic_create_black'),
             'Annotations',
             self, objectName='iri_annotations_refactor',
             triggered=self.doOpenIRIPropsAnnotationBuilder))
