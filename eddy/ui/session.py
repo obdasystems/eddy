@@ -2247,7 +2247,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
+            selected = diagram.selectedNodes()
+            if len(selected) == 1:
+                node = first(selected)
             if node:
                 properties = self.pf.create(diagram, node)
                 properties.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2265,7 +2267,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not node:
-                node = first(diagram.selectedNodes())
+                selected = diagram.selectedNodes()
+                if len(selected) == 1:
+                    node = first(selected)
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2283,7 +2287,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not node:
-                node = first(diagram.selectedNodes())
+                selected = diagram.selectedNodes()
+                if len(selected) == 1:
+                    node = first(selected)
             if node:
                 builder = ConstrainingFacetDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2301,7 +2307,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not node:
-                node = first(diagram.selectedNodes())
+                selected = diagram.selectedNodes()
+                if len(selected) == 1:
+                    node = first(selected)
             if node:
                 builder = LiteralDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2317,7 +2325,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected)==1:
+                node = first(selected)
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
                 #connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
@@ -2334,7 +2345,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected) == 1:
+                node = first(selected)
             if node:
                 builder = ConstrainingFacetDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2351,7 +2365,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected) == 1:
+                node = first(selected)
             if node:
                 builder = LiteralDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2367,8 +2384,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
-            if isinstance(node,OntologyEntityNode):
+            selected = diagram.selectedNodes()
+            node = None
+            iri = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node and isinstance(node,OntologyEntityNode):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self)
@@ -2387,8 +2408,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
-            if isinstance(node, OntologyEntityNode):
+            selected = diagram.selectedNodes()
+            node = None
+            iri = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node and isinstance(node, OntologyEntityNode):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self, True)
