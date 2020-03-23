@@ -41,7 +41,7 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         #TODO to obtain node parent of label ---> self.label.parentItem()
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        self.updateTextPos(moved=False)
+        self.updateTextPos()
 
 
 
@@ -415,3 +415,4 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         Returns repr(self).
         """
         return '{0}:{1}:{2}'.format(self.__class__.__name__, self.text(), self.id)
+

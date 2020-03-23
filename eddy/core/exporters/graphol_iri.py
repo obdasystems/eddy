@@ -7,6 +7,8 @@ from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.fsystem import mkdir, fwrite
 from eddy.core.functions.misc import postfix
+from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.output import getLogger
 
 LOGGER = getLogger()
@@ -606,10 +608,17 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type node: AbstractNode
         :rtype: QDomElement
         """
+        #TODO position arriva sbagliata molte volte (Dopo che si è spostata label da posizione di default)!
         position = node.mapToScene(node.textPos())
         label = self.document.createElement('label')
         label.setAttribute('height', node.label.height())
         label.setAttribute('width', node.label.width())
+        '''
+        if isinstance(node, ConceptNode):
+            label.setAttribute('x', position.x()-30)
+        else:
+            label.setAttribute('x', position.x())
+        '''
         label.setAttribute('x', position.x())
         label.setAttribute('y', position.y())
         #label.appendChild(self.document.createTextNode(node.text()))

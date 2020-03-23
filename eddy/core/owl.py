@@ -961,7 +961,7 @@ class IRIManager(QtCore.QObject):
         :type iri: IRI
         """
         if not iri in self.iris:
-            if not iri.manager:
+            if not (iri.manager and iri.manager is self):
                 iri.manager = self
             self.iris.add(iri)
             self.stringToIRI[str(iri)] = iri

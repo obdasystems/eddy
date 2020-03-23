@@ -1775,7 +1775,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
             self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
 
 #TODO Da implementare per consistency check (consistency check ora è disabilitato a causa dei noti problemi discussi con Valerio)
-'''
 class OWLOntologyFetcher(AbstractWorker):
 
     def __init__(self, project, **kwargs):
@@ -1838,8 +1837,247 @@ class OWLOntologyFetcher(AbstractWorker):
         pass
 
     #############################################
+    #   MAIN WORKER
+    #################################
+    @QtCore.pyqtSlot()
+    def run(self):
+        """
+        Main worker.
+        """
+        try:
+            self.sgnStarted.emit()
+            self.vm.attachThreadToJVM()
+
+            #############################################
+            # INITIALIZE ONTOLOGY
+            #################################
+
+            ontologyIRI = rstrip(str(self.project.ontologyIRI), '#')
+            mastroIRI = rstrip('http://www.obdasystems.com/mastrostudio', '#')
+            versionIRI = '{0}{1}{2}'.format(ontologyIRI, '' if ontologyIRI.endswith('/') else '/', self.project.version)
+            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI))
+            self.man = self.OWLManager.createOWLOntologyManager()
+            self.df = self.OWLManager.getOWLDataFactory()
+            self.ontology = self.man.createOntology(ontologyID)
+            self.pm = self.DefaultPrefixManager()
+            # self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
+
+            for prefix, ns in self.project.prefixDictItems():
+                self.pm.setPrefix(prefix, ns)
+
+            if self.export:
+                self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
+
+            self.vm.cast(self.PrefixManager, self.pm)
+
+            LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
+
+            #############################################
+            # NODES PRE-PROCESSING
+            #################################
+
+            # for node in self.project.nodes():
+            for diagram in self.selected_diagrams:
+                for node in diagram.nodes():
+                    self.convert(node)
+                    self.step(+1)
+
+            LOGGER.debug('Pre-processed %s nodes into OWL 2 expressions', len(self.converted()))
+
+
+            #############################################
+            # AXIOMS FROM EDGES
+            #################################
+
+            # for edge in self.project.edges():
+            for diagram in self.selected_diagrams:
+                for edge in diagram.edges():
+
+                    #############################################
+                    # INCLUSION
+                    #################################
+
+                    if edge.type() is Item.InclusionEdge:
+                        # CONCEPTS
+                        if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
+                            self.createSubclassOfAxiom(edge)
+                        # ROLES
+                        elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
+                            if edge.source.type() is Item.RoleChainNode:
+                                self.createSubPropertyChainOfAxiom(edge)
+                            elif edge.source.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
+                                if edge.target.type() is Item.ComplementNode:
+                                    self.createDisjointObjectPropertiesAxiom(edge)
+                                elif edge.target.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
+                                    self.createSubObjectPropertyOfAxiom(edge)
+                        # ATTRIBUTES
+                        elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
+                            if edge.source.type() is Item.AttributeIRINode:
+                                if edge.target.type() is Item.ComplementNode:
+                                    self.createDisjointDataPropertiesAxiom(edge)
+                                elif edge.target.type() is Item.AttributeIRINode:
+                                    self.createSubDataPropertyOfAxiom(edge)
+                        # VALUE DOMAIN (ONLY DATA PROPERTY RANGE)
+                        elif edge.source.type() is Item.RangeRestrictionNode and edge.target.identity() is Identity.ValueDomain:
+                            # This is being handled already in createPropertyRangeAxiom.
+                            pass
+                        else:
+                            raise DiagramMalformedError(edge, 'invalid inclusion assertion')
+
+                    #############################################
+                    # EQUIVALENCE
+                    #################################
+
+                    elif edge.type() is Item.EquivalenceEdge:
+
+                        # CONCEPTS
+                        if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
+                            self.createEquivalentClassesAxiom(edge)
+                        # ROLES
+                        elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
+                            self.createEquivalentObjectPropertiesAxiom(edge)
+                        # ATTRIBUTES
+                        elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
+                            self.createEquivalentDataPropertiesAxiom(edge)
+                        else:
+                            raise DiagramMalformedError(edge, 'invalid equivalence assertion')
+
+                    #############################################
+                    # MEMBERSHIP
+                    #################################
+
+                    elif edge.type() is Item.MembershipEdge:
+
+                        # CONCEPTS
+                        if Identity.Individual in edge.source.identities() and edge.target.identity() is Identity.Concept:
+                            self.createClassAssertionAxiom(edge)
+                        # ROLES
+                        elif edge.source.identity() is Identity.RoleInstance:
+                            if edge.target.type() is Item.ComplementNode:
+                                self.createNegativeObjectPropertyAssertionAxiom(edge)
+                            else:
+                                self.createObjectPropertyAssertionAxiom(edge)
+                        # ATTRIBUTES
+                        elif edge.source.identity() is Identity.AttributeInstance:
+                            if edge.target.type() is Item.ComplementNode:
+                                self.createNegativeDataPropertyAssertionAxiom(edge)
+                            else:
+                                self.createDataPropertyAssertionAxiom(edge)
+                        else:
+                            raise DiagramMalformedError(edge, 'invalid membership assertion')
+
+                    #############################################
+                    # SAME
+                    #################################
+
+                    elif edge.type() is Item.SameEdge:
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept} and \
+                            edge.source.identities().intersection(edge.target.identities()):
+                            self.createSameIndividualAxiom(edge)
+                        else:
+                            raise DiagramMalformedError(edge, 'invalid sameIndividual assertion')
+
+                    #############################################
+                    # DIFFERENT
+                    #################################
+
+                    elif edge.type() is Item.DifferentEdge:
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept} and \
+                                edge.source.identities().intersection(edge.target.identities()):
+                            self.createDifferentIndividualsAxiom(edge)
+                        else:
+                            raise DiagramMalformedError(edge, 'invalid differentIndividuals assertion')
+
+                    self.step(+1)
+
+            LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
+
+            #############################################
+            # APPLY GENERATED AXIOMS
+            #################################
+
+            LOGGER.debug('Applying OWL 2 axioms on the OWL 2 Ontology')
+
+            for axiom in self.axioms():
+                self.man.addAxiom(self.ontology, axiom)
+
+            self.vm.cast(self.OWLOntology, self.ontology)
+
+        except DiagramMalformedError as e:
+            LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
+            self.sgnErrored.emit(e)
+        except Exception as e:
+            LOGGER.exception('OWL 2 export could not be completed')
+            self.sgnErrored.emit(e)
+        else:
+            self.sgnCompleted.emit()
+        finally:
+            self.vm.detachThreadFromJVM()
+            self.finished.emit()
+
+    #############################################
     #   INTERFACE
     #################################
+    def convert(self, node):
+        """
+        Build and returns the OWL 2 conversion of the given node.
+        :type node: AbstractNode
+        :rtype: OWLObject
+        """
+        if node.diagram.name not in self._converted:
+            self._converted[node.diagram.name] = dict()
+            self._converted_meta_individuals[node.diagram.name] = dict()
+        if node not in self._converted[node.diagram.name]:
+            if node.type() is Item.ConceptIRINode:
+                self._converted[node.diagram.name][node.id] = self.getConcept(node)
+                if node.occursAsIndividual():
+                    self._converted_meta_individuals[node.diagram.name][node.id] = self.getIndividual(node)
+            elif node.type() is Item.AttributeIRINode:
+                self._converted[node.diagram.name][node.id] = self.getAttribute(node)
+            elif node.type() is Item.RoleIRINode:
+                self._converted[node.diagram.name][node.id] = self.getRole(node)
+            elif node.type() is Item.ValueDomainIRINode:
+                self._converted[node.diagram.name][node.id] = self.getValueDomain(node)
+            elif node.type() is Item.IndividualIRINode:
+                self._converted[node.diagram.name][node.id] = self.getIndividual(node)
+            elif node.type() is Item.LiteralNode:
+                self._converted[node.diagram.name][node.id] = self.getLiteral(node)
+            elif node.type() is Item.FacetIRINode:
+                self._converted[node.diagram.name][node.id] = self.getFacet(node)
+            elif node.type() is Item.RoleInverseNode:
+                self._converted[node.diagram.name][node.id] = self.getRoleInverse(node)
+            elif node.type() is Item.RoleChainNode:
+                self._converted[node.diagram.name][node.id] = self.getRoleChain(node)
+            elif node.type() is Item.ComplementNode:
+                self._converted[node.diagram.name][node.id] = self.getComplement(node)
+            elif node.type() is Item.EnumerationNode:
+                self._converted[node.diagram.name][node.id] = self.getEnumeration(node)
+            elif node.type() is Item.IntersectionNode:
+                self._converted[node.diagram.name][node.id] = self.getIntersection(node)
+            elif node.type() in {Item.UnionNode, Item.DisjointUnionNode}:
+                self._converted[node.diagram.name][node.id] = self.getUnion(node)
+            elif node.type() is Item.DatatypeRestrictionNode:
+                self._converted[node.diagram.name][node.id] = self.getDatatypeRestriction(node)
+            elif node.type() is Item.PropertyAssertionNode:
+                self._converted[node.diagram.name][node.id] = self.getPropertyAssertion(node)
+            elif node.type() is Item.DomainRestrictionNode:
+                self._converted[node.diagram.name][node.id] = self.getDomainRestriction(node)
+            elif node.type() is Item.RangeRestrictionNode:
+                self._converted[node.diagram.name][node.id] = self.getRangeRestriction(node)
+            else:
+                raise ValueError('no conversion available for node %s' % node)
+        return self._converted[node.diagram.name][node.id]
+
+    #NEEDED FOR TRANSLATION OF PropertyAssertion nodes (i.e., getPropertyAssertion)
+    def convertPropertyNodeOccurringAsIndividual(self,node):
+        #Per ora considero solo nodi di concetto
+        if node.type() is Item.ConceptIRINode:
+            owlInd = self.getIndividual(node)
+            self._converted_meta_individuals[node.diagram.name][node.id] = owlInd
+            return owlInd
+        return None
 
     def addAxiom(self, axiom):
         """
@@ -1854,53 +2092,6 @@ class OWLOntologyFetcher(AbstractWorker):
         :rtype: set
         """
         return self._axioms
-
-    def convert(self, node, converted_trace):
-        """
-        Build and returns the OWL 2 conversion of the given node.
-        :type node: AbstractNode
-        :rtype: OWLObject
-        """
-        if node.diagram.name not in self._converted:
-            self._converted[node.diagram.name] = dict()
-        if node not in self._converted[node.diagram.name]:
-            if node.type() is Item.ConceptIRINode:
-                self._converted[node.diagram.name][node.id] = self.getConcept(node, converted_trace)
-            elif node.type() is Item.AttributeIRINode:
-                self._converted[node.diagram.name][node.id] = self.getAttribute(node, converted_trace)
-            elif node.type() is Item.RoleIRINode:
-                self._converted[node.diagram.name][node.id] = self.getRole(node, converted_trace)
-            elif node.type() is Item.ValueDomainIRINode:
-                self._converted[node.diagram.name][node.id] = self.getValueDomain(node, converted_trace)
-            elif node.type() is Item.IndividualIRINode:
-                self._converted[node.diagram.name][node.id] = self.getIndividual(node, converted_trace)
-            elif node.type() is Item.FacetIRINode:
-                self._converted[node.diagram.name][node.id] = self.getFacet(node, converted_trace)
-            elif node.type() is Item.RoleInverseNode:
-                self._converted[node.diagram.name][node.id] = self.getRoleInverse(node, converted_trace)
-            elif node.type() is Item.RoleChainNode:
-                self._converted[node.diagram.name][node.id] = self.getRoleChain(node, converted_trace)
-            elif node.type() is Item.ComplementNode:
-                self._converted[node.diagram.name][node.id] = self.getComplement(node, converted_trace)
-            elif node.type() is Item.EnumerationNode:
-                self._converted[node.diagram.name][node.id] = self.getEnumeration(node, converted_trace)
-            elif node.type() is Item.IntersectionNode:
-                self._converted[node.diagram.name][node.id] = self.getIntersection(node, converted_trace)
-            elif node.type() in {Item.UnionNode, Item.DisjointUnionNode}:
-                self._converted[node.diagram.name][node.id] = self.getUnion(node, converted_trace)
-            elif node.type() is Item.DatatypeRestrictionNode:
-                self._converted[node.diagram.name][node.id] = self.getDatatypeRestriction(node, converted_trace)
-            elif node.type() is Item.PropertyAssertionNode:
-                self._converted[node.diagram.name][node.id] = self.getPropertyAssertion(node, converted_trace)
-            elif node.type() is Item.DomainRestrictionNode:
-                self._converted[node.diagram.name][node.id] = self.getDomainRestriction(node, converted_trace)
-            elif node.type() is Item.RangeRestrictionNode:
-                self._converted[node.diagram.name][node.id] = self.getRangeRestriction(node, converted_trace)
-            else:
-                raise ValueError('no conversion available for node %s' % node)
-
-        converted_trace.append(self._converted[node.diagram.name][node.id])
-        # return self._converted[node.diagram.name][node.id]
 
     def converted(self):
         """
@@ -2029,47 +2220,129 @@ class OWLOntologyFetcher(AbstractWorker):
     #############################################
     #   NODES PROCESSING
     #################################
-    """
-    method name	            Convert func called recursively
+    def getConcept(self, node):
+        """
+        Build and returns a OWL 2 concept using the given graphol node.
+        :type node: ConceptIRINode
+        :rtype: OWLClass
+        """
+        iri = node.iri
+        if iri.isOwlThing():
+            return self.df.getOWLThing()
+        if iri.isOwlNothing():
+            return self.df.getOWLNothing()
+        owlCl = self.df.getOWLClass(self.IRI.create(str(iri)))
+        self.addAxiom(self.df.getOWLDeclarationAxiom(owlCl))
+        return owlCl
 
-        getAttribute	         No
-        getComplement	         Yes
-        getConcept	             No
-        getDatatypeRestriction	 Yes
-        getDomainRestriction	 Yes
-        getEnumeration	         Yes
-        getFacet	             No
-        getIndividual	         No
-        getIntersection	         Yes
-        getPropertyAssertion	 Yes
-        getRangeRestriction	     Yes
-        getRole	                 No
-        getRoleChain	         Yes
-        getRoleInverse	         Yes
-        getUnion	             Yes
-        getValueDomain	         No
-    """
+    def getRole(self, node):
+        """
+        Build and returns a OWL 2 role using the given graphol node.
+        :type node: RoleIRINode
+        :rtype: OWLObjectProperty
+        """
+        iri = node.iri
+        if iri.isTopObjectProperty():
+            return self.df.getOWLTopObjectProperty()
+        if iri.isBottomObjectProperty():
+            return self.df.getOWLBottomObjectProperty()
+        owlProp = self.df.getOWLObjectProperty(self.IRI.create(str(iri)))
+        self.addAxiom(self.df.getOWLDeclarationAxiom(owlProp))
+        if OWLAxiom.FunctionalObjectProperty in self.axiomsList:
+            if iri.functional:
+                self.addAxiom(self.df.getOWLFunctionalObjectPropertyAxiom(owlProp))
+        if OWLAxiom.InverseFunctionalObjectProperty in self.axiomsList:
+            if iri.inverseFunctional:
+                self.addAxiom(self.df.getOWLInverseFunctionalObjectPropertyAxiom(owlProp))
+        if OWLAxiom.AsymmetricObjectProperty in self.axiomsList:
+            if iri.asymmetric:
+                self.addAxiom(self.df.getOWLAsymmetricObjectPropertyAxiom(owlProp))
+        if OWLAxiom.IrreflexiveObjectProperty in self.axiomsList:
+            if iri.irreflexive:
+                self.addAxiom(self.df.getOWLIrreflexiveObjectPropertyAxiom(owlProp))
+        if OWLAxiom.ReflexiveObjectProperty in self.axiomsList:
+            if iri.reflexive:
+                self.addAxiom(self.df.getOWLReflexiveObjectPropertyAxiom(owlProp))
+        if OWLAxiom.SymmetricObjectProperty in self.axiomsList:
+            if iri.symmetric:
+                self.addAxiom(self.df.getOWLSymmetricObjectPropertyAxiom(owlProp))
+        if OWLAxiom.TransitiveObjectProperty in self.axiomsList:
+            if iri.transitive:
+                self.addAxiom(self.df.getOWLTransitiveObjectPropertyAxiom(owlProp))
+        return owlProp
 
-    def getAttribute(self, node, conversion_trace):
+    def getAttribute(self, node):
         """
         Build and returns a OWL 2 attribute using the given graphol node.
         :type node: AttributeIRINode
         :rtype: OWLDataProperty
         """
-        if (node.special() is Special.Top) or (node.special() is Special.TopAttribute):
+        iri = node.iri
+        if iri.isTopDataProperty():
             return self.df.getOWLTopDataProperty()
-        if (node.special() is Special.Bottom) or (node.special() is Special.BottomAttribute):
+        if iri.isBottomDataProperty():
             return self.df.getOWLBottomDataProperty()
+        owlProp = self.df.getOWLDataProperty(self.IRI.create(str(iri)))
+        self.addAxiom(self.df.getOWLDeclarationAxiom(owlProp))
+        if iri.functional:
+            self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(owlProp))
+        return owlProp
 
-        if (self.project.get_prefix_of_node(node) is not None):
-            return self.df.getOWLDataProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
+    def getIndividual(self, node):
+        """
+        Build and returns a OWL 2 individual using the given graphol node.
+        Also perform punning if the node is not an IndividualIRINode
+        :type node: IndividualIRINode|ConceptIRINode|RoleIRINode|AttributeIRINode
+        :rtype: OWLNamedIndividual
+        """
+        iri = node.iri
+        owlInd = self.df.getOWLNamedIndividual(self.IRI.create(str(iri)))
+        self.addAxiom(self.df.getOWLDeclarationAxiom(owlInd))
+        return owlInd
+
+    def getLiteral(self, node):
+        """
+        Build and returns a OWL 2 individual using the given graphol node.
+        Also perform punning if the node is not an IndividualIRINode
+        :type node: IndividualIRINode|ConceptIRINode|RoleIRINode|AttributeIRINode
+        :rtype: OWLNamedIndividual
+        """
+        literal = node.literal
+        lexForm = literal.lexicalForm
+        lang = literal.language
+        datatype = literal.datatype
+        if lang:
+            return self.df.getOWLLiteral(lexForm, lang)
         else:
-            return self.df.getOWLDataProperty(
-                self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+            if datatype:
+                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype.iri)))
+            else:
+                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral)))
+            return self.df.getOWLLiteral(lexForm, owlApiDatatype)
 
-    def getComplement(self, node, conversion_trace):
+    def getValueDomain(self, node):
+        """
+        Build and returns a OWL 2 datatype using the given graphol node.
+        :type node: ValueDomainIRINode
+        :rtype: OWLDatatype
+        """
+        owlDt = self.df.getOWLDatatype(self.IRI.create(str(node.iri)))
+        self.addAxiom(self.df.getOWLDeclarationAxiom(owlDt))
+        return owlDt
+
+    def getFacet(self, node):
+        """
+        Build and returns a OWL 2 facet restriction using the given graphol node.
+        :type node: FacetIRINode
+        :rtype: OWLFacetRestriction
+        """
+        nodeFacet = node.facet
+        literal = self.df.getOWLLiteral(nodeFacet.literal.lexicalForm,
+                                        self.df.getOWLDatatype(str(nodeFacet.literal.datatype)))
+        facet = self.getOWLApiFacet(nodeFacet.facet)
+        return self.df.getOWLFacetRestriction(facet, literal)
+
+    def getComplement(self, node):
         """
         Build and returns a OWL 2 complement using the given graphol node.
         :type node: ComplementNode
@@ -2085,59 +2358,28 @@ class OWLOntologyFetcher(AbstractWorker):
         if len(incoming) > 1:
             raise DiagramMalformedError(node, 'too many operands')
         operand = first(incoming)
-        if operand.identity() is Identity.Concept:
-            # conversion_trace = []
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            # conversion = self.convert(operand)
 
+        if node.identity() is Identity.Concept:
+            conversionA = self.convert(operand)
+            for included in node.adjacentNodes(lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}):
+                conversionB = self.convert(included)
+                collection = self.HashSet()
+                collection.add(conversionA)
+                collection.add(conversionB)
+                self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
+        if operand.identity() is Identity.Concept:
+            conversion = self.convert(operand)
             return self.df.getOWLObjectComplementOf(conversion)
         if operand.identity() is Identity.ValueDomain:
-            # conversion_trace = []
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            # conversion = self.convert(operand)
+            conversion = self.convert(operand)
             return self.df.getOWLDataComplementOf(conversion)
-
         if operand.identity() is Identity.Role:
-            # conversion_trace = []
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            return conversion
-            # return self.convert(operand)
+            return self.convert(operand)
         if operand.identity() is Identity.Attribute:
-            # conversion_trace = []
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            return conversion
-            # return self.convert(operand)
-
+            return self.convert(operand)
         raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
 
-    def getConcept(self, node, conversion_trace):
-        """
-        Build and returns a OWL 2 concept using the given graphol node.
-        :type node: ConceptIRINode
-        :rtype: OWLClass
-        """
-        if (node.special() is Special.Top) or (node.special() is Special.TopConcept):
-            return self.df.getOWLThing()
-        if (node.special() is Special.Bottom) or (node.special() is Special.BottomConcept):
-            return self.df.getOWLNothing()
-
-        if (self.project.get_prefix_of_node(node) is not None):
-            return self.df.getOWLClass(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
-        else:
-            return self.df.getOWLClass(
-                self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
-
-    def getDatatypeRestriction(self, node, conversion_trace):
+    def getDatatypeRestriction(self, node):
         """
         Build and returns a OWL 2 datatype restriction using the given graphol node.
         :type node: DatatypeRestrictionNode
@@ -2155,11 +2397,7 @@ class OWLOntologyFetcher(AbstractWorker):
         if not operand:
             raise DiagramMalformedError(node, 'missing value domain node')
 
-        # de = self.convert(operand)
-        conversion_trace.append(operand)
-        self.convert(operand, conversion_trace)
-        conversion = conversion_trace[len(conversion_trace) - 1]
-        de = conversion
+        de = self.convert(operand)
 
         #############################################
         # BUILD FACETS
@@ -2171,10 +2409,7 @@ class OWLOntologyFetcher(AbstractWorker):
 
         collection = self.HashSet()
         for facet in incoming:
-            conversion_trace.append(facet)
-            self.convert(facet, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            # conversion = self.convert(facet)
+            conversion = self.convert(facet)
             collection.add(conversion)
 
         #############################################
@@ -2183,7 +2418,7 @@ class OWLOntologyFetcher(AbstractWorker):
 
         return self.df.getOWLDatatypeRestriction(de, self.vm.cast(self.Set, collection))
 
-    def getDomainRestriction(self, node, conversion_trace):
+    def getDomainRestriction(self, node):
         """
         Build and returns a OWL 2 domain restriction using the given graphol node.
         :type node: DomainRestrictionNode
@@ -2199,30 +2434,28 @@ class OWLOntologyFetcher(AbstractWorker):
             raise DiagramMalformedError(node, 'missing operand(s)')
 
         if operand.identity() is Identity.Attribute:
-
             #############################################
             # BUILD OPERAND
             #################################
-
-            # dpe = self.convert(operand)
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            dpe = conversion
+            dpe = self.convert(operand)
             #############################################
             # BUILD FILLER
             #################################
-
             filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
             if not filler:
                 dre = self.df.getTopDatatype()
             else:
-                # dre = self.convert(filler)
-                conversion_trace.append(filler)
-                self.convert(filler, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                dre = conversion
+                dre = self.convert(filler)
 
+            if OWLAxiom.DataPropertyDomain in self.axiomsList:
+                if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                    if dpe:
+                        f5 = lambda x: x.type() is Item.InclusionEdge
+                        f6 = lambda x: x.type() is Item.EquivalenceEdge
+                        f7 = lambda x: x.identity() is Identity.Concept
+                        for concept in node.outgoingNodes(f5, f7) | node.adjacentNodes(f6, f7):
+                            conversionB = self.convert(concept)
+                            self.addAxiom(self.df.getOWLDataPropertyDomainAxiom(dpe, conversionB))
             if node.restriction() is Restriction.Exists:
                 return self.df.getOWLDataSomeValuesFrom(dpe, dre)
             if node.restriction() is Restriction.Forall:
@@ -2243,31 +2476,27 @@ class OWLOntologyFetcher(AbstractWorker):
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
         elif operand.identity() is Identity.Role:
-
             #############################################
             # BUILD OPERAND
             #################################
-
-            # ope = self.convert(operand)
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            ope = conversion
-
+            ope = self.convert(operand)
             #############################################
             # BUILD FILLER
             #################################
-
             filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4))
             if not filler:
                 ce = self.df.getOWLThing()
             else:
-                # ce = self.convert(filler)
-                conversion_trace.append(filler)
-                self.convert(filler, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                ce = conversion
-
+                ce = self.convert(filler)
+            if OWLAxiom.ObjectPropertyDomain in self.axiomsList:
+                if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                    if ope:
+                        f5 = lambda x: x.type() is Item.InclusionEdge
+                        f6 = lambda x: x.type() is Item.EquivalenceEdge
+                        f7 = lambda x: x.identity() is Identity.Concept
+                        for concept in node.outgoingNodes(f5, f7) | node.adjacentNodes(f6, f7):
+                            conversionB = self.convert(concept)
+                            self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(ope, conversionB))
             if node.restriction() is Restriction.Self:
                 return self.df.getOWLObjectHasSelf(ope)
             if node.restriction() is Restriction.Exists:
@@ -2289,7 +2518,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
 
-    def getEnumeration(self, node, conversion_trace):
+    def getEnumeration(self, node):
         """
         Build and returns a OWL 2 enumeration using the given graphol node.
         :type node: EnumerationNode
@@ -2301,48 +2530,13 @@ class OWLOntologyFetcher(AbstractWorker):
         f2 = lambda x: x.type() is Item.IndividualIRINode
         individuals = self.HashSet()
         for individual in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            # conversion = self.convert(individual)
-            conversion_trace.append(individual)
-            self.convert(individual, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
+            conversion = self.convert(individual)
             individuals.add(conversion)
         if individuals.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         return self.df.getOWLObjectOneOf(self.vm.cast(self.Set, individuals))
 
-    def getFacet(self, node, conversion_trace):
-        """
-        Build and returns a OWL 2 facet restriction using the given graphol node.
-        :type node: FacetIRINode
-        :rtype: OWLFacetRestriction
-        """
-        datatype = node.datatype
-        if not datatype:
-            raise DiagramMalformedError(node, 'disconnected facet node')
-        literal = self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(datatype))
-        facet = self.getOWLApiFacet(node.facet)
-        return self.df.getOWLFacetRestriction(facet, literal)
-
-    def getIndividual(self, node, conversion_trace):
-        """
-        Build and returns a OWL 2 individual using the given graphol node.
-        Also perform punning if the node is not an IndividualIRINode
-        :type node: IndividualIRINode|ConceptIRINode|RoleIRINode|AttributeIRINode
-        :rtype: OWLNamedIndividual
-        """
-        if node.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute}:
-            if (self.project.get_prefix_of_node(node) is not None):
-                return self.df.getOWLNamedIndividual(
-                    OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
-            else:
-                return self.df.getOWLNamedIndividual(
-                    self.IRI.create(
-                        self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
-        elif node.identity() is Identity.Value:
-            return self.df.getOWLLiteral(node.value, self.getOWLApiDatatype(node.datatype))
-        raise DiagramMalformedError(node, 'unsupported identity (%s)' % node.identity())
-
-    def getIntersection(self, node, conversion_trace):
+    def getIntersection(self, node):
         """
         Build and returns a OWL 2 intersection using the given graphol node.
         :type node: IntersectionNode
@@ -2354,10 +2548,7 @@ class OWLOntologyFetcher(AbstractWorker):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            # conversion = self.convert(operand)
+            conversion = self.convert(operand)
             collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
@@ -2365,7 +2556,7 @@ class OWLOntologyFetcher(AbstractWorker):
             return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, collection))
         return self.df.getOWLDataIntersectionOf(self.vm.cast(self.Set, collection))
 
-    def getPropertyAssertion(self, node, conversion_trace):
+    def getPropertyAssertion(self, node):
         """
         Build and returns a collection of individuals that can be used to build property assertions.
         :type node: PropertyAssertionNode
@@ -2375,12 +2566,12 @@ class OWLOntologyFetcher(AbstractWorker):
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         collection = list()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
-            if operand.type() is not Item.IndividualIRINode:
+            if not (operand.type() is Item.IndividualIRINode or operand.type() is Item.ConceptIRINode):
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            # conversion = self.convert(operand)
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
+            if operand.type() is Item.IndividualIRINode:
+                conversion = self.convert(operand)
+            else:
+                conversion = self.convertConceptNodeOccurringAsIndividual(operand)
             collection.append(conversion)
         if len(collection) < 2:
             raise DiagramMalformedError(node, 'missing operand(s)')
@@ -2388,7 +2579,7 @@ class OWLOntologyFetcher(AbstractWorker):
             raise DiagramMalformedError(node, 'too many operands')
         return collection
 
-    def getRangeRestriction(self, node, conversion_trace):
+    def getRangeRestriction(self, node):
         """
         Build and returns a OWL 2 range restriction using the given graphol node.
         :type node: DomainRestrictionNode
@@ -2405,36 +2596,31 @@ class OWLOntologyFetcher(AbstractWorker):
         # another input itself. If one of the above mentioned things happens
         # we'll see an AttributeError added in the application log which will
         # highlight an expression composition problem.
-
         operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if not operand:
             raise DiagramMalformedError(node, 'missing operand(s)')
-
         if operand.identity() is Identity.Role:
-
             #############################################
             # BUILD OPERAND
             #################################
-
-            # ope = self.convert(operand).getInverseProperty()
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            ope = conversion.getInverseProperty()
+            ope = self.convert(operand).getInverseProperty()
             #############################################
             # BUILD FILLER
             #################################
-
             filler = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
             if not filler:
                 ce = self.df.getOWLThing()
             else:
-                # ce = self.convert(filler)
-                conversion_trace.append(filler)
-                self.convert(filler, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                ce = conversion
-
+                ce = self.convert(filler)
+            if OWLAxiom.ObjectPropertyRange in self.axiomsList:
+                if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                    if ope:
+                        f5 = lambda x: x.type() is Item.InclusionEdge
+                        f6 = lambda x: x.type() is Item.EquivalenceEdge
+                        f7 = lambda x: x.identity() is Identity.Concept
+                        for concept in node.outgoingNodes(f5, f7) | node.adjacentNodes(f6, f7):
+                            conversionB = self.convert(concept)
+                            self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(ope, conversionB))
             if node.restriction() is Restriction.Self:
                 return self.df.getOWLObjectHasSelf(ope)
             if node.restriction() is Restriction.Exists:
@@ -2455,27 +2641,19 @@ class OWLOntologyFetcher(AbstractWorker):
                     return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
-
-    def getRole(self, node, conversion_trace):
-        """
-        Build and returns a OWL 2 role using the given graphol node.
-        :type node: RoleIRINode
-        :rtype: OWLObjectProperty
-        """
-        if (node.special() is Special.Top) or (node.special() is Special.TopRole):
-            return self.df.getOWLTopObjectProperty()
-        if (node.special() is Special.Bottom) or ((node.special() is Special.BottomRole)):
-            return self.df.getOWLBottomObjectProperty()
-
-        if (self.project.get_prefix_of_node(node) is not None):
-            return self.df.getOWLObjectProperty(
-                OWLShortIRI(self.project.get_prefix_of_node(node), node.remaining_characters), self.pm)
         else:
-            return self.df.getOWLObjectProperty(
-                self.IRI.create(
-                    self.project.get_full_IRI(self.project.get_iri_of_node(node), None, node.remaining_characters)))
+            if OWLAxiom.DataPropertyRange in self.axiomsList:
+                if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                    dpe = self.convert(operand)
+                    if dpe:
+                        f5 = lambda x: x.type() is Item.InclusionEdge
+                        f6 = lambda x: x.type() is Item.EquivalenceEdge
+                        f7 = lambda x: x.identity() is Identity.ValueDomain
+                        for datatype in node.outgoingNodes(f5, f7) | node.adjacentNodes(f6, f7):
+                            conversionB = self.convert(datatype)
+                            self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(dpe, conversionB))
 
-    def getRoleChain(self, node, conversion_trace):
+    def getRoleChain(self, node):
         """
         Constructs and returns LinkedList of chained OWLObjectExpression (OPE => Role & RoleInverse).
         :type node: RoleChainNode
@@ -2487,16 +2665,13 @@ class OWLOntologyFetcher(AbstractWorker):
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
             if operand.type() not in {Item.RoleIRINode, Item.RoleInverseNode}:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            # conversion = self.convert(operand)
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
+            conversion = self.convert(operand)
             collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
         return self.vm.cast(self.List, collection)
 
-    def getRoleInverse(self, node, conversion_trace):
+    def getRoleInverse(self, node):
         """
         Build and returns a OWL 2 role inverse using the given graphol node.
         :type node: RoleInverseNode
@@ -2507,14 +2682,9 @@ class OWLOntologyFetcher(AbstractWorker):
         operand = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         if not operand:
             raise DiagramMalformedError(node, 'missing operand')
+        return self.convert(operand).getInverseProperty()
 
-        conversion_trace.append(operand)
-        self.convert(operand, conversion_trace)
-        conversion = conversion_trace[len(conversion_trace) - 1]
-        return conversion.getInverseProperty()
-        # return self.convert(operand).getInverseProperty()
-
-    def getUnion(self, node, conversion_trace):
+    def getUnion(self, node):
         """
         Build and returns a OWL 2 union using the given graphol node.
         :type node: UnionNode
@@ -2526,225 +2696,70 @@ class OWLOntologyFetcher(AbstractWorker):
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is node.identity()
         for operand in node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-            # conversion = self.convert(operand)
-            conversion_trace.append(operand)
-            self.convert(operand, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
+            conversion = self.convert(operand)
             collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
+        if node.type() is Item.DisjointUnionNode:
+            self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
         if node.identity() is Identity.Concept:
             return self.df.getOWLObjectUnionOf(self.vm.cast(self.Set, collection))
         return self.df.getOWLDataUnionOf(self.vm.cast(self.Set, collection))
-
-    def getValueDomain(self, node, conversion_trace):
-        """
-        Build and returns a OWL 2 datatype using the given graphol node.
-        :type node: ValueDomainIRINode
-        :rtype: OWLDatatype
-        """
-        return self.getOWLApiDatatype(node.datatype)
 
     #############################################
     #   AXIOMS GENERATION
     #################################
 
-    def createAnnotationAssertionAxiom(self, node):
+    def createSubclassOfAxiom(self, edge):
         """
-        Generate a OWL 2 annotation axiom.
-        :type node: AbstractNode
+        Generate a OWL 2 SubclassOf axiom.
+        :type edge: InclusionEdge
         """
-        if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("rdfs:comment"))
-                value = self.df.getOWLLiteral(OWLAnnotationText(meta.get(K_DESCRIPTION, '')))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation)
-                self.addAxiom(axiom_to_add)
+        if OWLAxiom.SubClassOf in self.axiomsList:
+            if Item.ComplementNode in {edge.source.type(), edge.target.type()}:
+                # We need to discard the case where a complement node is involved in the inclusion, since
+                # we changed the axiom SubClassOf(ClassExpression ObjectComplementOf(ClassExpression)) to
+                # be DisjointClasses(ClassExpression ...) so that it will be serialized in the same way
+                # as for the Disjoint Union node.
+                return
+            if edge.source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
+                # If we have a domain/range restriction node as source for the inclusion
+                # we need to check whether the inclusion edge is just expressing an axiom
+                # among ObjectPropertyDomain, ObjectPropertyRange, DataPropertyDomain,
+                # DataPropertyRange, in which case we do not generate also the SubClassOf
+                # axiom because it would be redundant.
+                if not edge.source.isRestrictionQualified() and edge.source.restriction() is Restriction.Exists:
+                    return
+            if edge.source.type() in {Item.DisjointUnionNode, Item.UnionNode} and self.normalize:
+                # (A OR B) ISA C needs to be normalized to (A ISA C) && (B ISA C)
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Concept
+                for operand in edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                    conversionA = self._converted[operand.diagram.name][operand.id]
+                    conversionB = self._converted[edge.target.diagram.name][edge.target.id]
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+            elif edge.target.type() is Item.IntersectionNode and self.normalize:
+                # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Concept
+                for operand in edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
+                    conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+                    conversionB = self._converted[operand.diagram.name][operand.id]
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+            else:
+                conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+                conversionB = self._converted[edge.target.diagram.name][edge.target.id]
+                self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
 
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createClassAssertionAxiom(self, edge):
+    def createSubDataPropertyOfAxiom(self, edge):
         """
-        Generate a OWL 2 ClassAssertion axiom.
-        :type edge: MembershipEdge
+        Generate a OWL 2 SubDataPropertyOf axiom.
+        :type edge: InclusionEdge
         """
-        if OWLAxiom.ClassAssertion in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.target, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.source, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            # conversionA = self.convert(edge.target)
-            # conversionB = self.convert(edge.source)
-            axiom_to_add = self.df.getOWLClassAssertionAxiom(conversionA, conversionB)
-            self.addAxiom(axiom_to_add)
-
-            dict_entry = []
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.append(edge.target)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createDataPropertyAssertionAxiom(self, edge):
-        """
-        Generate a OWL 2 DataPropertyAssertion axiom.
-        :type edge: MembershipEdge
-        """
-        if OWLAxiom.DataPropertyAssertion in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.target, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.source, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1][0]
-            conversion_traceC = []
-            self.convert(edge.source, conversion_traceC)
-            conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            # conversionA = self.convert(edge.target)
-            # conversionB = self.convert(edge.source)[0]
-            # conversionC = self.convert(edge.source)[1]
-            axiom_to_add = self.df.getOWLDataPropertyAssertionAxiom(conversionA, conversionB, conversionC)
-            self.addAxiom(axiom_to_add)
-
-            dict_entry = []
-            dict_entry.append(edge.target)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge)
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.extend(conversion_traceC)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createDataPropertyAxiom(self, node):
-        """
-        Generate OWL 2 Data Property specific axioms.
-        :type node: AttributeIRINode
-        """
-        if OWLAxiom.FunctionalDataProperty in self.axiomsList:
-            if node.isFunctional():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLFunctionalDataPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-    def createDeclarationAxiom(self, node):
-        """
-        Generate a OWL 2 Declaration axiom.
-        :type node: AbstractNode
-        """
-        if OWLAxiom.Declaration in self.axiomsList:
-            conversion_trace = []
-            self.convert(node, conversion_trace)
-            conversion = conversion_trace[len(conversion_trace) - 1]
-            # conversion = self.convert(node)
-            axiom_to_add = self.df.getOWLDeclarationAxiom(conversion)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-            dict_entry = []
-            dict_entry.append(node)
-            dict_entry.extend(conversion_trace)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createDifferentIndividualsAxiom(self, edge):
-        """
-        Generate a OWL 2 DifferentIndividuals axiom.
-        :type edge: DifferentEdge
-        """
-        if OWLAxiom.DifferentIndividuals in self.axiomsList:
-            conversions = []
-            dict_entry = []
-            dict_entry.extend([edge, edge.source, edge.target])
-            for node in [edge.source, edge.target]:
-                if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
-                    # Perform punning of node
-                    conversion = self.getIndividual(node, [])
-                    dict_entry.append(conversion)
-                else:  # Node is already an IndividualIRINode
-                    conversion_trace = []
-                    self.convert(node, conversion_trace)
-                    conversion = conversion_trace[-1]
-                    dict_entry.extend(conversion_trace)
-                conversions.append(conversion)
-            collection = self.HashSet()
-            for conversion in conversions:
-                collection.add(conversion)
-            axiom = self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection))
-            self.addAxiom(axiom)
-            self._axiom_to_node_or_edge[axiom] = dict_entry
-
-    def createDisjointClassesAxiom(self, node):
-        """
-        Generate a OWL 2 DisjointClasses axiom.
-        :type node: T <= ComplementNode|DisjointUnionNode
-        """
-        if OWLAxiom.DisjointClasses in self.axiomsList:
-            if node.type() is Item.DisjointUnionNode:
-                collection = self.HashSet()
-                node_incomingNodes = node.incomingNodes(lambda x: x.type() is Item.InputEdge)
-                conversion_trace_collection = []
-                for operand in node_incomingNodes:
-                    conversion_trace = []
-                    self.convert(operand, conversion_trace)
-                    conversion = conversion_trace[len(conversion_trace) - 1]
-                    conversion_trace_collection.extend(conversion_trace)
-                    # conversion = self.convert(operand)
-                    collection.add(conversion)
-                axiom_to_add = self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection))
-                self.addAxiom(axiom_to_add)
-
-                dict_entry = []
-                dict_entry.extend(node_incomingNodes)
-                dict_entry.extend(conversion_trace_collection)
-                dict_entry.append(node)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-            elif node.type() is Item.ComplementNode:
-                node_incomingNodes = node.incomingNodes(lambda x: x.type() is Item.InputEdge)
-                operand = first(node_incomingNodes)
-                conversion_traceA = []
-                self.convert(operand, conversion_traceA)
-                conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                # conversionA = self.convert(operand)
-                node_adjacentNodes = node.adjacentNodes(
-                    lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge})
-                for included in node_adjacentNodes:
-                    conversion_traceB = []
-                    self.convert(included, conversion_traceB)
-                    conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    # conversionB = self.convert(included)
-                    collection = self.HashSet()
-                    collection.add(conversionA)
-                    collection.add(conversionB)
-                    axiom_to_add = self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection))
-                    self.addAxiom(axiom_to_add)
-
-                    dict_entry = []
-                    dict_entry.append(operand)
-                    dict_entry.append(included)
-                    dict_entry.append(node)
-                    dict_entry.extend(conversion_traceA)
-                    dict_entry.extend(conversion_traceB)
-                    self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+        if OWLAxiom.SubDataPropertyOf in self.axiomsList:
+            conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+            conversionB = self._converted[edge.target.diagram.name][edge.target.id]
+            self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
 
     def createDisjointDataPropertiesAxiom(self, edge):
         """
@@ -2752,27 +2767,22 @@ class OWLOntologyFetcher(AbstractWorker):
         :type edge: InclusionEdge
         """
         if OWLAxiom.DisjointDataProperties in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.source, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.target, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            # conversionA = self.convert(edge.source)
-            # conversionB = self.convert(edge.target)
+            conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+            conversionB = self._converted[edge.target.diagram.name][edge.target.id]
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            axiom_to_add = self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection))
-            self.addAxiom(axiom_to_add)
+            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
-            dict_entry = []
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.append(edge.target)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+    def createSubObjectPropertyOfAxiom(self, edge):
+        """
+        Generate a OWL 2 SubObjectPropertyOf axiom.
+        :type edge: InclusionEdge
+        """
+        if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
+            conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+            conversionB = self._converted[edge.target.diagram.name][edge.target.id]
+            self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
 
     def createDisjointObjectPropertiesAxiom(self, edge):
         """
@@ -2780,27 +2790,22 @@ class OWLOntologyFetcher(AbstractWorker):
         :type edge: InclusionEdge
         """
         if OWLAxiom.DisjointObjectProperties in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.source, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.target, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            # conversionA = self.convert(edge.source)
-            # conversionB = self.convert(edge.target)
+            conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+            conversionB = self._converted[edge.target.diagram.name][edge.target.id]
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            axiom_to_add = self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection))
-            self.addAxiom(axiom_to_add)
+            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
-            dict_entry = []
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.append(edge.target)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+    def createSubPropertyChainOfAxiom(self, edge):
+        """
+        Generate a OWL 2 SubPropertyChainOf axiom.
+        :type edge: InclusionEdge
+        """
+        if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
+            conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+            conversionB = self._converted[edge.target.diagram.name][edge.target.id]
+            self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB))
 
     def createEquivalentClassesAxiom(self, edge):
         """
@@ -2823,50 +2828,28 @@ class OWLOntologyFetcher(AbstractWorker):
                         f1 = lambda x: x.type() is Item.InputEdge
                         f2 = lambda x: x.identity() is Identity.Concept
                         for operand in source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                            conversionA = self.convert(operand)
-                            conversionB = self.convert(target)
-                            axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
-                            self.addAxiom(axiom_to_add)
-                            self._axiom_to_node_or_edge[axiom_to_add] = [operand, target, edge]
+                            conversionA = self._converted[operand.diagram.name][operand.id]
+                            conversionB = self._converted[target.diagram.name][target.id]
+                            self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     elif edge.target.type() is Item.IntersectionNode:
                         # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
                         f1 = lambda x: x.type() is Item.InputEdge
                         f2 = lambda x: x.identity() is Identity.Concept
                         for operand in target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                            conversionA = self.convert(source)
-                            conversionB = self.convert(operand)
-                            axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
-                            self.addAxiom(axiom_to_add)
-                            self._axiom_to_node_or_edge[axiom_to_add] = [source, operand, edge]
+                            conversionA = self._converted[source.diagram.name][source.id]
+                            conversionB = self._converted[operand.diagram.name][operand.id]
+                            self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     else:
-                        conversionA = self.convert(source)
-                        conversionB = self.convert(target)
-                        axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
-                        self.addAxiom(axiom_to_add)
-                        self._axiom_to_node_or_edge[axiom_to_add] = [source, target, edge]
+                        conversionA = self._converted[source.diagram.name][source.id]
+                        conversionB = self._converted[target.diagram.name][target.id]
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             else:
-                conversion_traceA = []
-                self.convert(edge.source, conversion_traceA)
-                conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                conversion_traceB = []
-                self.convert(edge.target, conversion_traceB)
-                conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                # conversionA = self.convert(edge.source)
-                # conversionB = self.convert(edge.target)
+                conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+                conversionB = self._converted[edge.target.diagram.name][edge.target.id]
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                axiom_to_add = self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection))
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
-
-                dict_entry = []
-                dict_entry.extend(conversion_traceA)
-                dict_entry.extend(conversion_traceB)
-                dict_entry.append(edge.target)
-                dict_entry.append(edge.source)
-                dict_entry.append(edge)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+                self.addAxiom(self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
         """
@@ -2876,48 +2859,16 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.EquivalentDataProperties in self.axiomsList:
             if self.normalize:
                 for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
-                    conversion_traceA = []
-                    self.convert(source, conversion_traceA)
-                    conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                    conversion_traceB = []
-                    self.convert(target, conversion_traceB)
-                    conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    # conversionA = self.convert(source)
-                    # conversionB = self.convert(target)
-                    axiom_to_add = self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB)
-                    self.addAxiom(axiom_to_add)
-                    # self._axiom_to_node_or_edge[axiom_to_add] = [source, target, edge]
-
-                    dict_entry = []
-                    dict_entry.extend(conversion_traceA)
-                    dict_entry.extend(conversion_traceB)
-                    dict_entry.append(target)
-                    dict_entry.append(source)
-                    dict_entry.append(edge)
-                    self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+                    conversionA = self._converted[source.diagram.name][source.id]
+                    conversionB = self._converted[target.diagram.name][target.id]
+                    self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
             else:
-                conversion_traceA = []
-                self.convert(edge.source, conversion_traceA)
-                conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                conversion_traceB = []
-                self.convert(edge.target, conversion_traceB)
-                conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                # conversionA = self.convert(edge.source)
-                # conversionB = self.convert(edge.target)
+                conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+                conversionB = self._converted[edge.target.diagram.name][edge.target.id]
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                axiom_to_add = self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection))
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
-
-                dict_entry = []
-                dict_entry.extend(conversion_traceA)
-                dict_entry.extend(conversion_traceB)
-                dict_entry.append(edge.target)
-                dict_entry.append(edge.source)
-                dict_entry.append(edge)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+                self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
         """
@@ -2927,84 +2878,41 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.EquivalentObjectProperties in self.axiomsList:
             if self.normalize:
                 for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
-                    conversion_traceA = []
-                    self.convert(source, conversion_traceA)
-                    conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                    conversion_traceB = []
-                    self.convert(target, conversion_traceB)
-                    conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    # conversionA = self.convert(source)
-                    # conversionB = self.convert(target)
-                    axiom_to_add = self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB)
-                    self.addAxiom(axiom_to_add)
-                    # self._axiom_to_node_or_edge[axiom_to_add] = [source, target, edge]
-                    dict_entry = []
-                    dict_entry.extend(conversion_traceA)
-                    dict_entry.extend(conversion_traceB)
-                    dict_entry.append(target)
-                    dict_entry.append(source)
-                    dict_entry.append(edge)
-                    self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+                    conversionA = self._converted[source.diagram.name][source.id]
+                    conversionB = self._converted[target.diagram.name][target.id]
+                    self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
             else:
-
-                conversion_traceA = []
-                self.convert(edge.source, conversion_traceA)
-                conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                conversion_traceB = []
-                self.convert(edge.target, conversion_traceB)
-                conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                # conversionA = self.convert(edge.source)
-                # conversionB = self.convert(edge.target)
+                conversionA = self._converted[edge.source.diagram.name][edge.source.id]
+                conversionB = self._converted[edge.target.diagram.name][edge.target.id]
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                axiom_to_add = self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection))
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
+                self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
-                dict_entry = []
-                dict_entry.extend(conversion_traceA)
-                dict_entry.extend(conversion_traceB)
-                dict_entry.append(edge.target)
-                dict_entry.append(edge.source)
-                dict_entry.append(edge)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createInverseObjectPropertiesAxiom(self, edge):
+    def createClassAssertionAxiom(self, edge):
         """
-        Generate a OWL 2 InverseObjectProperties axiom.
-        :type edge: InclusionEdge
+        Generate a OWL 2 ClassAssertion axiom.
+        :type edge: MembershipEdge
         """
-        if OWLAxiom.InverseObjectProperties in self.axiomsList:
-            f1 = lambda x: x.type() is Item.InputEdge
-            f2 = lambda x: x.type() is Item.RoleIRINode
-            if edge.source.type() is Item.RoleInverseNode:
-                forward = edge.target
-                inverse = first(edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        if OWLAxiom.ClassAssertion in self.axiomsList:
+            ind = None
+            if edge.source.type() is Item.ConceptIRINode:
+                ind = self._converted_meta_individuals[edge.source.diagram.name][edge.source.id]
             else:
-                forward = edge.source
-                inverse = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                ind = self._converted[edge.source.diagram.name][edge.source.id]
+            cl = self._converted[edge.target.diagram.name][edge.target.id]
+            self.addAxiom(self.df.getOWLClassAssertionAxiom(cl, ind))
 
-            ############################
-            conversion_traceA = []
-            self.convert(forward, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(inverse, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            # conversionA = self.convert(forward)
-            # conversionB = self.convert(inverse)
-            axiom_to_add = self.df.getOWLInverseObjectPropertiesAxiom(conversionA, conversionB)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [forward, inverse, edge]
-
-            dict_entry = []
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.append(forward)
-            dict_entry.append(inverse)
-            dict_entry.append(edge)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+    def createDataPropertyAssertionAxiom(self, edge):
+        """
+        Generate a OWL 2 DataPropertyAssertion axiom.
+        :type edge: MembershipEdge
+        """
+        if OWLAxiom.DataPropertyAssertion in self.axiomsList:
+            dpe = self._converted[edge.target.diagram.name][edge.target.id]
+            conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
+            conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
+            self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
 
     def createNegativeDataPropertyAssertionAxiom(self, edge):
         """
@@ -3014,31 +2922,22 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.NegativeDataPropertyAssertion in self.axiomsList:
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.identity() is Identity.Attribute
-            ele_A = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-            conversion_traceA = []
-            self.convert(ele_A, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.source, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1][0]
-            conversion_traceC = []
-            self.convert(edge.source, conversion_traceC)
-            conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            # conversionA = self.convert(ele_A)
-            # conversionB = self.convert(edge.source)[0]
-            # conversionC = self.convert(edge.source)[1]
-            axiom_to_add = self.df.getOWLNegativeDataPropertyAssertionAxiom(conversionA, conversionB, conversionC)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [ele_A, edge.source, edge]
+            dpeNode = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+            dpe = self._converted[dpeNode.diagram.name][dpeNode.id]
+            conversionB = self.convert(edge.source)[0]
+            conversionC = self.convert(edge.source)[1]
+            self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
 
-            dict_entry = []
-            dict_entry.append(ele_A)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge)
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.extend(conversion_traceC)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+    def createObjectPropertyAssertionAxiom(self, edge):
+        """
+        Generate a OWL 2 ObjectPropertyAssertion axiom.
+        :type edge: MembershipEdge
+        """
+        if OWLAxiom.ObjectPropertyAssertion in self.axiomsList:
+            ope = self._converted[edge.target.diagram.name][edge.target.id]
+            conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
+            conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
+            self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
 
     def createNegativeObjectPropertyAssertionAxiom(self, edge):
         """
@@ -3048,302 +2947,11 @@ class OWLOntologyFetcher(AbstractWorker):
         if OWLAxiom.NegativeObjectPropertyAssertion in self.axiomsList:
             f1 = lambda x: x.type() is Item.InputEdge
             f2 = lambda x: x.identity() is Identity.Role
-            ele_A = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-            conversion_traceA = []
-            self.convert(ele_A, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.source, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1][0]
-            conversion_traceC = []
-            self.convert(edge.source, conversion_traceC)
-            conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            # conversionA = self.convert(ele_A)
-            # conversionB = self.convert(edge.source)[0]
-            # conversionC = self.convert(edge.source)[1]
-            axiom_to_add = self.df.getOWLNegativeObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [ele_A, edge.source, edge]
-
-            dict_entry = []
-            dict_entry.append(ele_A)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge)
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.extend(conversion_traceC)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createObjectPropertyAxiom(self, node):
-        """
-        Generate OWL 2 ObjectProperty specific axioms.
-        :type node: RoleIRINode
-        """
-        if OWLAxiom.FunctionalObjectProperty in self.axiomsList:
-            if node.isFunctional():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLFunctionalObjectPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.InverseFunctionalObjectProperty in self.axiomsList:
-            if node.isInverseFunctional():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLInverseFunctionalObjectPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.AsymmetricObjectProperty in self.axiomsList:
-            if node.isAsymmetric():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLAsymmetricObjectPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.IrreflexiveObjectProperty in self.axiomsList:
-            if node.isIrreflexive():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLIrreflexiveObjectPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.ReflexiveObjectProperty in self.axiomsList:
-            if node.isReflexive():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLReflexiveObjectPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.SymmetricObjectProperty in self.axiomsList:
-            if node.isSymmetric():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLSymmetricObjectPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.TransitiveObjectProperty in self.axiomsList:
-            if node.isTransitive():
-                conversion_trace = []
-                self.convert(node, conversion_trace)
-                conversion = conversion_trace[len(conversion_trace) - 1]
-                # conversion = self.convert(node)
-                axiom_to_add = self.df.getOWLTransitiveObjectPropertyAxiom(conversion)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [node]
-
-                dict_entry = []
-                dict_entry.append(node)
-                dict_entry.extend(conversion_trace)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createObjectPropertyAssertionAxiom(self, edge):
-        """
-        Generate a OWL 2 ObjectPropertyAssertion axiom.
-        :type edge: MembershipEdge
-        """
-        if OWLAxiom.ObjectPropertyAssertion in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.target, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.source, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1][0]
-            conversion_traceC = []
-            self.convert(edge.source, conversion_traceC)
-            conversionC = conversion_traceC[len(conversion_traceC) - 1][1]
-            # conversionA = self.convert(edge.target)
-            # conversionB = self.convert(edge.source)[0]
-            # conversionC = self.convert(edge.source)[1]
-            axiom_to_add = self.df.getOWLObjectPropertyAssertionAxiom(conversionA, conversionB, conversionC)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.target, edge.source, edge]
-
-            dict_entry = []
-            dict_entry.append(edge.target)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge)
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.extend(conversion_traceC)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createPropertyDomainAxiom(self, node):
-        """
-        Generate OWL 2 ObjectPropertyDomain and DataPropertyDomain axioms.
-        :type node: DomainRestrictionNode
-        """
-        if OWLAxiom.ObjectPropertyDomain in self.axiomsList:
-            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Role
-                role = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-                if role:
-                    f3 = lambda x: x.type() is Item.InclusionEdge
-                    f4 = lambda x: x.type() is Item.EquivalenceEdge
-                    f5 = lambda x: x.identity() is Identity.Concept
-                    for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        conversion_traceA = []
-                        self.convert(role, conversion_traceA)
-                        conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                        conversion_traceB = []
-                        self.convert(concept, conversion_traceB)
-                        conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        # conversionA = self.convert(role)
-                        # conversionB = self.convert(concept)
-                        axiom_to_add = self.df.getOWLObjectPropertyDomainAxiom(conversionA, conversionB)
-                        self.addAxiom(axiom_to_add)
-                        # self._axiom_to_node_or_edge[axiom_to_add] = [role, concept, node]
-
-                        dict_entry = []
-                        dict_entry.extend(conversion_traceA)
-                        dict_entry.extend(conversion_traceB)
-                        dict_entry.append(role)
-                        dict_entry.append(concept)
-                        dict_entry.append(node)
-                        self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.DataPropertyDomain in self.axiomsList:
-            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Attribute
-                attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-                if attribute:
-                    f3 = lambda x: x.type() is Item.InclusionEdge
-                    f4 = lambda x: x.type() is Item.EquivalenceEdge
-                    f5 = lambda x: x.identity() is Identity.Concept
-                    for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        conversion_traceA = []
-                        self.convert(attribute, conversion_traceA)
-                        conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                        conversion_traceB = []
-                        self.convert(concept, conversion_traceB)
-                        conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        # conversionA = self.convert(attribute)
-                        # conversionB = self.convert(concept)
-                        axiom_to_add = self.df.getOWLDataPropertyDomainAxiom(conversionA, conversionB)
-                        self.addAxiom(axiom_to_add)
-                        # self._axiom_to_node_or_edge[axiom_to_add] = [attribute, concept, node]
-
-                        dict_entry = []
-                        dict_entry.extend(conversion_traceA)
-                        dict_entry.extend(conversion_traceB)
-                        dict_entry.append(attribute)
-                        dict_entry.append(concept)
-                        dict_entry.append(node)
-                        self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createPropertyRangeAxiom(self, node):
-        """
-        Generate OWL 2 ObjectPropertyRange and DataPropertyRange axioms.
-        :type node: RangeRestrictionNode
-        """
-        if OWLAxiom.ObjectPropertyRange in self.axiomsList:
-            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Role
-                role = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-                if role:
-                    f3 = lambda x: x.type() is Item.InclusionEdge
-                    f4 = lambda x: x.type() is Item.EquivalenceEdge
-                    f5 = lambda x: x.identity() is Identity.Concept
-                    for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        conversion_traceA = []
-                        self.convert(role, conversion_traceA)
-                        conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                        conversion_traceB = []
-                        self.convert(concept, conversion_traceB)
-                        conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        # conversionA = self.convert(role)
-                        # conversionB = self.convert(concept)
-                        axiom_to_add = self.df.getOWLObjectPropertyRangeAxiom(conversionA, conversionB)
-                        self.addAxiom(axiom_to_add)
-                        # self._axiom_to_node_or_edge[axiom_to_add] = [role, concept, node]
-
-                        dict_entry = []
-                        dict_entry.extend(conversion_traceA)
-                        dict_entry.extend(conversion_traceB)
-                        dict_entry.append(role)
-                        dict_entry.append(concept)
-                        dict_entry.append(node)
-                        self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-        if OWLAxiom.DataPropertyRange in self.axiomsList:
-            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Attribute
-                attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-                if attribute:
-                    f3 = lambda x: x.type() is Item.InclusionEdge
-                    f4 = lambda x: x.type() is Item.EquivalenceEdge
-                    f5 = lambda x: x.identity() is Identity.ValueDomain
-                    for datatype in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
-                        conversion_traceA = []
-                        self.convert(attribute, conversion_traceA)
-                        conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                        conversion_traceB = []
-                        self.convert(datatype, conversion_traceB)
-                        conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                        # conversionA = self.convert(attribute)
-                        # conversionB = self.convert(datatype)
-                        axiom_to_add = self.df.getOWLDataPropertyRangeAxiom(conversionA, conversionB)
-                        self.addAxiom(axiom_to_add)
-                        # self._axiom_to_node_or_edge[axiom_to_add] = [attribute, datatype, node]
-
-                        dict_entry = []
-                        dict_entry.extend(conversion_traceA)
-                        dict_entry.extend(conversion_traceB)
-                        dict_entry.append(attribute)
-                        dict_entry.append(datatype)
-                        dict_entry.append(node)
-                        self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
+            opeNode = first(edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+            ope = self._converted[opeNode.diagram.name][opeNode.id]
+            conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
+            conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
+            self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
 
     def createSameIndividualAxiom(self, edge):
         """
@@ -3351,513 +2959,25 @@ class OWLOntologyFetcher(AbstractWorker):
         :type edge: SameEdge
         """
         if OWLAxiom.SameIndividual in self.axiomsList:
-            conversions = []
-            dict_entry = []
-            dict_entry.extend([edge, edge.source, edge.target])
-            for node in [edge.source, edge.target]:
-                if node.identity() in {Identity.Concept, Identity.Role, Identity.Attribute}:
-                    # Perform punning of node
-                    conversion = self.getIndividual(node, [])
-                    dict_entry.append(conversion)
-                else:  # Node is already an IndividualIRINode
-                    conversion_trace = []
-                    self.convert(node, conversion_trace)
-                    conversion = conversion_trace[-1]
-                    dict_entry.extend(conversion_trace)
-                conversions.append(conversion)
             collection = self.HashSet()
-            for conversion in conversions:
-                collection.add(conversion)
-            axiom = self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection))
-            self.addAxiom(axiom)
-            self._axiom_to_node_or_edge[axiom] = dict_entry
-
-    def createSubclassOfAxiom(self, edge):
-        """
-        Generate a OWL 2 SubclassOf axiom.
-        :type edge: InclusionEdge
-        """
-        if OWLAxiom.SubClassOf in self.axiomsList:
-
-            if Item.ComplementNode in {edge.source.type(), edge.target.type()}:
-                # We need to discard the case where a complement node is involved in the inclusion, since
-                # we changed the axiom SubClassOf(ClassExpression ObjectComplementOf(ClassExpression)) to
-                # be DisjointClasses(ClassExpression ...) so that it will be serialized in the same way
-                # as for the Disjoint Union node.
-                return
-
-            if edge.source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
-                # If we have a domain/range restriction node as source for the inclusion
-                # we need to check whether the inclusion edge is just expressing an axiom
-                # among ObjectPropertyDomain, ObjectPropertyRange, DataPropertyDomain,
-                # DataPropertyRange, in which case we do not generate also the SubClassOf
-                # axiom because it would be redundant.
-                if not edge.source.isRestrictionQualified() and edge.source.restriction() is Restriction.Exists:
-                    return
-
-            if edge.source.type() in {Item.DisjointUnionNode, Item.UnionNode} and self.normalize:
-                # (A OR B) ISA C needs to be normalized to (A ISA C) && (B ISA C)
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Concept
-                for operand in edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                    conversion_traceA = []
-                    self.convert(operand, conversion_traceA)
-                    conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                    conversion_traceB = []
-                    self.convert(edge.target, conversion_traceB)
-                    conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    # conversionA = self.convert(operand)
-                    # conversionB = self.convert(edge.target)
-                    axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
-                    self.addAxiom(axiom_to_add)
-                    # self._axiom_to_node_or_edge[axiom_to_add] = [operand, edge.target, edge]
-
-                    dict_entry = []
-                    dict_entry.extend(conversion_traceA)
-                    dict_entry.extend(conversion_traceB)
-                    dict_entry.append(operand)
-                    dict_entry.append(edge.target)
-                    dict_entry.append(edge)
-                    self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-            elif edge.target.type() is Item.IntersectionNode and self.normalize:
-                # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
-                f1 = lambda x: x.type() is Item.InputEdge
-                f2 = lambda x: x.identity() is Identity.Concept
-                for operand in edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
-                    conversion_traceA = []
-                    self.convert(edge.source, conversion_traceA)
-                    conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                    conversion_traceB = []
-                    self.convert(operand, conversion_traceB)
-                    conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                    # conversionA = self.convert(edge.source)
-                    # conversionB = self.convert(operand)
-                    axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
-                    self.addAxiom(axiom_to_add)
-                    # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, operand, edge]
-
-                    dict_entry = []
-                    dict_entry.extend(conversion_traceA)
-                    dict_entry.extend(conversion_traceB)
-                    dict_entry.append(edge.source)
-                    dict_entry.append(operand)
-                    dict_entry.append(edge)
-                    self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-            else:
-                conversion_traceA = []
-                self.convert(edge.source, conversion_traceA)
-                conversionA = conversion_traceA[len(conversion_traceA) - 1]
-                conversion_traceB = []
-                self.convert(edge.target, conversion_traceB)
-                conversionB = conversion_traceB[len(conversion_traceB) - 1]
-                # conversionA = self.convert(edge.source)
-                # conversionB = self.convert(edge.target)
-                axiom_to_add = self.df.getOWLSubClassOfAxiom(conversionA, conversionB)
-                self.addAxiom(axiom_to_add)
-                # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
-
-                dict_entry = []
-                dict_entry.extend(conversion_traceA)
-                dict_entry.extend(conversion_traceB)
-                dict_entry.append(edge.source)
-                dict_entry.append(edge.target)
-                dict_entry.append(edge)
-                self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createSubDataPropertyOfAxiom(self, edge):
-        """
-        Generate a OWL 2 SubDataPropertyOf axiom.
-        :type edge: InclusionEdge
-        """
-        if OWLAxiom.SubDataPropertyOf in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.source, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.target, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            # conversionA = self.convert(edge.source)
-            # conversionB = self.convert(edge.target)
-            axiom_to_add = self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
-
-            dict_entry = []
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge.target)
-            dict_entry.append(edge)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createSubObjectPropertyOfAxiom(self, edge):
-        """
-        Generate a OWL 2 SubObjectPropertyOf axiom.
-        :type edge: InclusionEdge
-        """
-        if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.source, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.target, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            # conversionA = self.convert(edge.source)
-            # conversionB = self.convert(edge.target)
-            axiom_to_add = self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
-
-            dict_entry = []
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge.target)
-            dict_entry.append(edge)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    def createSubPropertyChainOfAxiom(self, edge):
-        """
-        Generate a OWL 2 SubPropertyChainOf axiom.
-        :type edge: InclusionEdge
-        """
-        if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
-            conversion_traceA = []
-            self.convert(edge.source, conversion_traceA)
-            conversionA = conversion_traceA[len(conversion_traceA) - 1]
-            conversion_traceB = []
-            self.convert(edge.target, conversion_traceB)
-            conversionB = conversion_traceB[len(conversion_traceB) - 1]
-            # conversionA = self.convert(edge.source)
-            # conversionB = self.convert(edge.target)
-            axiom_to_add = self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB)
-            self.addAxiom(axiom_to_add)
-            # self._axiom_to_node_or_edge[axiom_to_add] = [edge.source, edge.target, edge]
-
-            dict_entry = []
-            dict_entry.extend(conversion_traceA)
-            dict_entry.extend(conversion_traceB)
-            dict_entry.append(edge.source)
-            dict_entry.append(edge.target)
-            dict_entry.append(edge)
-            self._axiom_to_node_or_edge[axiom_to_add] = dict_entry
-
-    #############################################
-    #   MAIN WORKER
-    #################################
-
-    def run(self):
-        """
-        Main worker.
-        """
-        try:
-            self.vm.attachThreadToJVM()
-
-            #############################################
-            # INITIALIZE ONTOLOGY
-            #################################
-
-            ontologyIRI = rstrip(self.project.ontologyIRIString, '#')
-            versionIRI = '{0}{1}{2}'.format(ontologyIRI, '' if ontologyIRI.endswith('/') else '/', self.project.version)
-            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI))
-            self.man = self.OWLManager.createOWLOntologyManager()
-            self.df = self.OWLManager.getOWLDataFactory()
-            self.ontology = self.man.createOntology(ontologyID)
-            self.pm = self.DefaultPrefixManager()
-            # self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
-
-            for iri_key in self.project.IRI_prefixes_nodes_dict.keys():
-
-                prefixes_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][0]
-                properties_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][2]
-
-                if iri_key[len(iri_key) - 1] == '#' or iri_key[len(iri_key) - 1] == '/':
-                    iri_key_to_append = iri_key[0:len(iri_key) - 1]
-                    postfix_special_character = iri_key[len(iri_key) - 1]
+            for node in [edge.source, edge.target]:
+                if node.type() is Item.ConceptIRINode:
+                    collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
                 else:
-                    iri_key_to_append = iri_key
-                    postfix_special_character = '#'
+                    collection.add(self._converted[node.diagram.name][node.id])
+            self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection)))
 
-                if (len(prefixes_of_iri_key) == 0):
-                    if 'display_in_widget' in properties_of_iri_key:
-                        self.pm.setPrefix('', postfix(iri_key_to_append, postfix_special_character))
+    def createDifferentIndividualsAxiom(self, edge):
+        """
+        Generate a OWL 2 DifferentIndividuals axiom.
+        :type edge: DifferentEdge
+        """
+        if OWLAxiom.SameIndividual in self.axiomsList:
+            collection = self.HashSet()
+            for node in [edge.source, edge.target]:
+                if node.type() is Item.ConceptIRINode:
+                    collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
                 else:
-                    for p in prefixes_of_iri_key:
-                        self.pm.setPrefix(p, postfix(iri_key_to_append, postfix_special_character))
+                    collection.add(self._converted[node.diagram.name][node.id])
+            self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
 
-            self.vm.cast(self.PrefixManager, self.pm)
-
-            LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
-
-            #############################################
-            # NODES PRE-PROCESSING
-            #################################
-
-            for node in self.project.nodes():
-                self.convert(node, [])
-                self.step(+1)
-
-            self.project.converted_nodes = self._converted
-
-            LOGGER.debug('Pre-processed %s nodes into OWL 2 expressions', len(self.converted()))
-
-            #############################################
-            # AXIOMS FROM NODES
-            #################################
-
-            for node in self.project.nodes():
-
-                if node.type() in {Item.ConceptIRINode, Item.AttributeIRINode, Item.RoleIRINode, Item.ValueDomainIRINode}:
-                    self.createDeclarationAxiom(node)
-                    if node.type() is Item.AttributeIRINode:
-                        self.createDataPropertyAxiom(node)
-                    elif node.type() is Item.RoleIRINode:
-                        self.createObjectPropertyAxiom(node)
-                elif node.type() is Item.DisjointUnionNode:
-                    self.createDisjointClassesAxiom(node)
-                elif node.type() is Item.ComplementNode:
-                    if node.identity() is Identity.Concept:
-                        self.createDisjointClassesAxiom(node)
-                elif node.type() is Item.DomainRestrictionNode:
-                    self.createPropertyDomainAxiom(node)
-                elif node.type() is Item.RangeRestrictionNode:
-                    self.createPropertyRangeAxiom(node)
-
-                if node.isMeta():
-                    self.createAnnotationAssertionAxiom(node)
-
-                self.step(+1)
-
-            LOGGER.debug('Generated OWL 2 axioms from nodes (axioms = %s)', len(self.axioms()))
-
-            #############################################
-            # AXIOMS FROM EDGES
-            #################################
-
-            for edge in self.project.edges():
-
-                #############################################
-                # INCLUSION
-                #################################
-
-                if edge.type() is Item.InclusionEdge:
-
-                    # CONCEPTS
-                    if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
-                        self.createSubclassOfAxiom(edge)
-                    # ROLES
-                    elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                        if edge.source.type() is Item.RoleChainNode:
-                            self.createSubPropertyChainOfAxiom(edge)
-                        elif edge.source.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
-                            if edge.target.type() is Item.ComplementNode:
-                                self.createDisjointObjectPropertiesAxiom(edge)
-                            elif edge.target.type() in {Item.RoleIRINode, Item.RoleInverseNode}:
-                                self.createSubObjectPropertyOfAxiom(edge)
-                    # ATTRIBUTES
-                    elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
-                        if edge.source.type() is Item.AttributeIRINode:
-                            if edge.target.type() is Item.ComplementNode:
-                                self.createDisjointDataPropertiesAxiom(edge)
-                            elif edge.target.type() is Item.AttributeIRINode:
-                                self.createSubDataPropertyOfAxiom(edge)
-                    # VALUE DOMAIN (ONLY DATA PROPERTY RANGE)
-                    elif edge.source.type() is Item.RangeRestrictionNode and edge.target.identity() is Identity.ValueDomain:
-                        # This is being handled already in createPropertyRangeAxiom.
-                        pass
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid inclusion assertion')
-
-                #############################################
-                # EQUIVALENCE
-                #################################
-
-                elif edge.type() is Item.EquivalenceEdge:
-
-                    # CONCEPTS
-                    if edge.source.identity() is Identity.Concept and edge.target.identity() is Identity.Concept:
-                        self.createEquivalentClassesAxiom(edge)
-                    # ROLES
-                    elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                        if Item.RoleInverseNode in {edge.source.type(), edge.target.type()}:
-                            self.createInverseObjectPropertiesAxiom(edge)
-                        else:
-                            self.createEquivalentObjectPropertiesAxiom(edge)
-                    # ATTRIBUTES
-                    elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
-                        self.createEquivalentDataPropertiesAxiom(edge)
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid equivalence assertion')
-
-                #############################################
-                # MEMBERSHIP
-                #################################
-
-                elif edge.type() is Item.MembershipEdge:
-
-                    # CONCEPTS
-                    if edge.source.identity() is Identity.Individual and edge.target.identity() is Identity.Concept:
-                        self.createClassAssertionAxiom(edge)
-                    # ROLES
-                    elif edge.source.identity() is Identity.RoleInstance:
-                        if edge.target.type() is Item.ComplementNode:
-                            self.createNegativeObjectPropertyAssertionAxiom(edge)
-                        else:
-                            self.createObjectPropertyAssertionAxiom(edge)
-                    # ATTRIBUTES
-                    elif edge.source.identity() is Identity.AttributeInstance:
-                        if edge.target.type() is Item.ComplementNode:
-                            self.createNegativeDataPropertyAssertionAxiom(edge)
-                        else:
-                            self.createDataPropertyAssertionAxiom(edge)
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid membership assertion')
-
-                #############################################
-                # SAME
-                #################################
-
-                elif edge.type() is Item.SameEdge:
-                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                  Identity.Attribute} and \
-                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                       Identity.Attribute} and \
-                            edge.source.identity() == edge.target.identity():
-                        self.createSameIndividualAxiom(edge)
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid sameIndividual assertion')
-
-                #############################################
-                # DIFFERENT
-                #################################
-
-                elif edge.type() is Item.DifferentEdge:
-                    if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                  Identity.Attribute} and \
-                            edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role,
-                                                       Identity.Attribute} and \
-                            edge.source.identity() == edge.target.identity():
-                        self.createDifferentIndividualsAxiom(edge)
-                    else:
-                        raise DiagramMalformedError(edge, 'invalid differentIndividuals assertion')
-
-                self.step(+1)
-
-            LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
-
-            #############################################
-            # CHECK IF NUMBER OF AXIOMS IS EQUAL TO THE NUMBER OF ENTRIES IN THE DICTIONARY
-            #################################
-
-            if len(self._axiom_to_node_or_edge) != len(self._axioms):
-                LOGGER.error('len(_axiom_to_node_or_edge) != len(_axioms)')
-                LOGGER.error('len(_axiom_to_node_or_edge)', len(self._axiom_to_node_or_edge))
-                LOGGER.error('len(self._axioms)', len(self._axioms))
-
-            #############################################
-            # REFINE THE KEYS OF THE DICTIONARY(CAST WITH OWLClass + .toString() ), remove duplicate entries
-            #################################
-
-            special_cases = []
-            special_cases.append('<class \'eddy.core.items.nodes.range_restriction.RangeRestrictionNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.domain_restriction.DomainRestrictionNode\'>')
-
-            special_cases.append('<class \'eddy.core.items.nodes.value_domain.ValueDomainIRINode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.facet.FacetIRINode\'>')
-
-            special_cases.append('<class \'eddy.core.items.nodes.intersection.IntersectionNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.role_chain.RoleChainNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.datatype_restriction.DatatypeRestrictionNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.role_inverse.RoleInverseNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.complement.ComplementNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.enumeration.EnumerationNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.union.UnionNode\'>')
-
-            special_cases.append('<class \'eddy.core.items.nodes.disjoint_union.DisjointUnionNode\'>')
-            special_cases.append('<class \'eddy.core.items.nodes.property_assertion.PropertyAssertionNode\'>')
-
-            for d in self._axiom_to_node_or_edge.items():
-                key = d[0]
-                self.vm.cast(self.OWLAxiom, key)
-                new_key = key.toString()
-                value = d[1]
-
-                refined_value = set()
-
-                for v in value:
-                    if 'list' in str(type(v)):
-                        for v2 in v:
-                            refined_value.add(v2)
-                    else:
-                        refined_value.add(v)
-
-                set_of_nodes_in_value = set()
-                # list_of_edges_in_value = []
-
-                for v in list(refined_value):
-
-                    if 'eddy.core.items.nodes' in str(type(v)):
-                        set_of_nodes_in_value.add(v)
-                    # elif 'eddy.core.items.edges' in str(type(v)):
-                    # list_of_edges_in_value.append(v)
-
-                list_of_nodes_in_value = list(set_of_nodes_in_value)
-
-                refined_value_2 = set()
-
-                # for l1 in range(0,len(list_of_nodes_in_value)-1):
-                for l1 in range(0, len(list_of_nodes_in_value)):
-
-                    node_1 = list_of_nodes_in_value[l1]
-
-                    if str(type(node_1)) not in special_cases:
-                        continue
-
-                    edges_1 = node_1.edges
-
-                    # for l2 in range(l1+1,len(list_of_nodes_in_value)):
-                    for l2 in range(0, len(list_of_nodes_in_value)):
-
-                        if l1 == l2:
-                            continue
-
-                        node_2 = list_of_nodes_in_value[l2]
-                        edges_2 = node_2.edges
-
-                        intersection_e1_e2 = edges_1 & edges_2
-
-                        if len(intersection_e1_e2) > 0:
-                            refined_value_2 = refined_value_2.union(intersection_e1_e2)
-
-                entry_list = []
-
-                entry_list.extend(list(refined_value))
-                entry_list.extend(list(refined_value_2))
-
-                self.refined_axiom_to_node_or_edge[new_key] = entry_list
-
-            #############################################
-            # APPLY GENERATED AXIOMS
-            #################################
-
-            LOGGER.debug('Applying OWL 2 axioms on the OWL 2 Ontology')
-
-            for axiom in self.axioms():
-                self.man.addAxiom(self.ontology, axiom)
-
-            self.vm.cast(self.OWLOntology, self.ontology)
-
-        except DiagramMalformedError as e:
-            LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
-            self.errored_message = 'Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e)
-        except Exception as e:
-            LOGGER.exception('OWL 2 fetch could not be completed')
-            self.errored_message = 'OWL 2 fetch could not be completed'
-        else:
-            LOGGER.debug('OWL 2 fetch could be completed')
-        finally:
-            self.vm.detachThreadFromJVM()
-            self.finished.emit()
-'''

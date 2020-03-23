@@ -458,6 +458,10 @@ class AbstractNode(AbstractItem):
         """
         pass
 
+    def mapToScene(self, point) :
+        print('Called mapToScene(self, point) with id={}'.format(self.id))
+        return super().mapToScene(point)
+
 
 class AbstractResizableNode(AbstractNode):
     """
@@ -927,3 +931,4 @@ class OntologyEntityNode(AbstractNode):
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
+

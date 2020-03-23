@@ -1346,6 +1346,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         node.setPos(QtCore.QPointF(int(geometryElement.attribute('x')), int(geometryElement.attribute('y'))))
         node.setTextPos(
             node.mapFromScene(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y')))))
+        #node.setTextPos(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y'))))
         node.doUpdateNodeLabel()
         return node
 
