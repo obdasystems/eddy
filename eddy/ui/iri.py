@@ -187,7 +187,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
             ontPrefix = self.project.ontologyPrefix
-            if ontPrefix:
+            if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)
@@ -325,7 +325,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
             ontPrefix = self.project.ontologyPrefix
-            if ontPrefix:
+            if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)
@@ -491,7 +491,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText(shortest.prefix+':'+'  <'+self.project.getNamespace(shortest.prefix)+'>')
         else:
             ontPrefix = self.project.ontologyPrefix
-            if ontPrefix:
+            if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)
@@ -626,7 +626,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
             ontPrefix = self.project.ontologyPrefix
-            if ontPrefix:
+            if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)

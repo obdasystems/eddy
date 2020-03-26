@@ -897,9 +897,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                                                              informativeText='The prefix "{}" is already used'.format(text))
                     msgBox.exec_()
                     return
-        #elimino vecchio da manager
-        self.project.removePrefix(self.prefixIndexMap[row])
-        #aggiungo nuovo a manager
         corrNSItem = table.item(row, 1)
         nsItemText = corrNSItem.text()
         nsText = str(nsItemText)

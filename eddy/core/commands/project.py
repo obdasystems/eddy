@@ -215,11 +215,19 @@ class CommandProjectModifyNamespacePrefix(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
+        self._project.removePrefix(self._oldPrefix)
         self._project.setPrefix(self._prefix,self._namespace)
+        if self._project.ontologyPrefix and self._oldPrefix == self._project.ontologyPrefix:
+            self._project.ontologyPrefix = self._prefix
+
 
     def undo(self):
         """undo the command"""
+        self._project.removePrefix(self._prefix)
         self._project.setPrefix(self._oldPrefix,self._namespace)
+        if self._project.ontologyPrefix and self._prefix == self._project.ontologyPrefix:
+            self._project.ontologyPrefix = self._oldPrefix
+
 
 #############################################
 #   ANNOTATION PROPERTIES
