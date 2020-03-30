@@ -43,6 +43,7 @@ class CommandNodeAdd(QtWidgets.QUndoCommand):
     """
     This command is used to add a node to a diagram.
     """
+
     def __init__(self, diagram, node):
         """
         Initialize the command.
@@ -65,10 +66,12 @@ class CommandNodeAdd(QtWidgets.QUndoCommand):
         self.diagram.sgnItemRemoved.emit(self.diagram, self.node)
         self.diagram.sgnUpdated.emit()
 
+
 class CommandNodeSetDepth(QtWidgets.QUndoCommand):
     """
     This command is used to change the Z value of diagram nodes.
     """
+
     def __init__(self, diagram, node, zValue):
         """
         Initialize the command.
@@ -93,10 +96,12 @@ class CommandNodeSetDepth(QtWidgets.QUndoCommand):
         self.node.updateEdges()
         self.diagram.sgnUpdated.emit()
 
+
 class CommandNodeRezize(QtWidgets.QUndoCommand):
     """
     This command is used to resize nodes.
     """
+
     def __init__(self, diagram, node, data):
         """
         Initialize the command.
@@ -157,10 +162,12 @@ class CommandNodeRezize(QtWidgets.QUndoCommand):
 
         self.diagram.sgnUpdated.emit()
 
+
 class CommandNodeMove(QtWidgets.QUndoCommand):
     """
     This command is used to move nodes (1 or more).
     """
+
     def __init__(self, diagram, undo, redo):
         """
         Initialize the command.
@@ -172,7 +179,7 @@ class CommandNodeMove(QtWidgets.QUndoCommand):
         self._edges = set()
         self._redo = redo
         self._undo = undo
-        
+
         for node in self._redo['nodes']:
             self._edges |= node.edges
 
@@ -231,10 +238,12 @@ class CommandNodeMove(QtWidgets.QUndoCommand):
         # Emit updated signal.
         self._diagram.sgnUpdated.emit()
 
+
 class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
     """
     This command is used to swap between 2 nodes.
     """
+
     def __init__(self, diagram, node1, node2):
         """
         Initialize the command.
@@ -318,10 +327,47 @@ class CommandNodeSwitchTo(QtWidgets.QUndoCommand):
         self.diagram.sgnItemRemoved.emit(self.diagram, self.node['redo'])
         self.diagram.sgnUpdated.emit()
 
+
+class CommandNodeSetMeta(QtWidgets.QUndoCommand):
+    """
+    This command is used to set predicates meta.
+    """
+
+    def __init__(self, project, item, predicate, undo, redo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type item: Item
+        :type predicate: str
+        :type undo: dict
+        :type redo: dict
+        :type name: str
+        """
+        super().__init__(name or 'set {0} meta'.format(predicate))
+        self._predicate = predicate
+        self._project = project
+        self._item = item
+        self._undo = undo
+        self._redo = redo
+
+    def redo(self):
+        """redo the command"""
+        self._project.setMeta(self._item, self._predicate, self._redo)
+        for node in self._project.predicates(self._item, self._predicate):
+            node.updateNode(selected=node.isSelected())
+
+    def undo(self):
+        """undo the command"""
+        self._project.setMeta(self._item, self._predicate, self._undo)
+        for node in self._project.predicates(self._item, self._predicate):
+            node.updateNode(selected=node.isSelected())
+
+
 class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
     """
     This command is used to change the order of Role chain and Property assertion inputs.
     """
+
     def __init__(self, diagram, node, inputs):
         """
         Initialize the command.
@@ -346,10 +392,12 @@ class CommandNodeChangeInputsOrder(QtWidgets.QUndoCommand):
         self.node.updateEdges()
         self.diagram.sgnUpdated.emit()
 
+
 class CommandNodeSetBrush(QtWidgets.QUndoCommand):
     """
     This command is used to change the brush of predicate nodes.
     """
+
     def __init__(self, diagram, nodes, brush):
         """
         Initialize the command.
@@ -375,4 +423,3 @@ class CommandNodeSetBrush(QtWidgets.QUndoCommand):
             node.setBrush(self.brush[node]['undo'])
             node.updateNode(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()
-

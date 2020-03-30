@@ -151,11 +151,11 @@ class GenerateNewLabel():
                     return_label = self.iri_to_set
                     return return_label
                 if self.prefix_to_set is None:
-                    if self.iri_to_set == self.project.iri:
+                    if self.iri_to_set == self.project.ontologyIRIString:
                         if self.project.prefix is not None:
                             return_label = str(self.project.prefix + ':' + Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
                         else:
-                            return_label = self.project.get_full_IRI(self.project.iri, None, Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
+                            return_label = self.project.get_full_IRI(self.project.ontologyIRIString, None, Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
                     else:
                         return_label = self.project.get_full_IRI(self.iri_to_set, None, Compute_RC_with_spaces(self.rc_to_set, self.old_label).return_result())
                 else:

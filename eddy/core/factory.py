@@ -38,6 +38,7 @@ from operator import attrgetter
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMenu
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.datatypes.owl import Datatype, Facet, OWLProfile, Namespace
@@ -57,6 +58,7 @@ class MenuFactory(QtCore.QObject):
     """
     This class can be used to produce diagram items contextual menus.
     """
+
     def __init__(self, session):
         """
         Initialize the factory.
@@ -65,6 +67,11 @@ class MenuFactory(QtCore.QObject):
         super().__init__(session)
         self.customAction = {}
         self.customMenu = {}
+        self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
+        self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
+        self.iconInstance = QtGui.QIcon(':/icons/18/ic_treeview_instance')
+        self.iconRole = QtGui.QIcon(':/icons/18/ic_treeview_role')
+        self.iconValue = QtGui.QIcon(':/icons/18/ic_treeview_value')
 
     #############################################
     #   PROPERTIES
@@ -247,7 +254,6 @@ class MenuFactory(QtCore.QObject):
         self.customAction['occurrences'] = []
 
         for pnode in self.project.predicates(node.type(), node.text()):
-
             action = QtWidgets.QAction(self.session)
             action.setCheckable(True)
             action.setChecked(pnode is node)
@@ -300,8 +306,7 @@ class MenuFactory(QtCore.QObject):
             for action in self.customAction['change_prefix']:
                 self.customMenu['change_prefix'].addAction(action)
 
-            menu.insertMenu(self.session.action('node_properties'),
-                            self.customMenu['change_prefix'])
+            #menu.insertMenu(self.session.action('node_properties'),self.customMenu['change_prefix'])
             self.customMenu['refactor_change_prefix'] = QtWidgets.QMenu('Change prefix')
             self.customMenu['refactor_change_prefix'].setIcon(QtGui.QIcon(':/icons/24/ic_settings_ethernet_black'))
 
@@ -312,6 +317,7 @@ class MenuFactory(QtCore.QObject):
                                                      self.customMenu['refactor_change_prefix'])
         return menu
 
+    '''
     def buildAttributeNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for attribute nodes.
@@ -329,6 +335,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertSeparator(self.session.action('node_properties'))
         self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
+    '''
 
     def buildComplementNodeMenu(self, diagram, node):
         """
@@ -359,6 +366,7 @@ class MenuFactory(QtCore.QObject):
                 action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
+    '''
     def buildConceptNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for concept nodes.
@@ -374,6 +382,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertSeparator(self.session.action('node_properties'))
         self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
+    '''
 
     def buildDatatypeRestrictionNodeMenu(self, diagram, node):
         """
@@ -447,6 +456,7 @@ class MenuFactory(QtCore.QObject):
                     action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
+    '''
     def buildFacetNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for facet nodes.
@@ -481,7 +491,9 @@ class MenuFactory(QtCore.QObject):
         #################################
 
         return menu
+    '''
 
+    '''
     def buildIndividualNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for individual nodes.
@@ -494,7 +506,6 @@ class MenuFactory(QtCore.QObject):
         self.customAction['occurrences'] = []
 
         for pnode in self.project.predicates(node.type(), node.text()):
-
             action = QtWidgets.QAction(self.session)
             action.setCheckable(True)
             action.setChecked(pnode is node)
@@ -612,6 +623,7 @@ class MenuFactory(QtCore.QObject):
         #################################
 
         return menu
+    '''
 
     def buildIntersectionNodeMenu(self, diagram, node):
         """
@@ -645,8 +657,9 @@ class MenuFactory(QtCore.QObject):
         if self.project.profile.type() is OWLProfile.OWL2QL:
             for action in self.session.action('switch_operator').actions():
                 action.setVisible(action.data() not in {Item.DatatypeRestrictionNode,
-                    Item.DisjointUnionNode, Item.EnumerationNode, Item.RoleChainNode,
-                    Item.UnionNode})
+                                                        Item.DisjointUnionNode, Item.EnumerationNode,
+                                                        Item.RoleChainNode,
+                                                        Item.UnionNode})
         # Add OWL 2 RL switch constraints.
         if self.project.profile.type() is OWLProfile.OWL2RL:
             for action in self.session.action('switch_operator').actions():
@@ -693,6 +706,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
+    '''
     def buildRoleNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for role nodes.
@@ -711,6 +725,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertSeparator(self.session.action('node_properties'))
         self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
+    '''
 
     def buildRoleInverseNodeMenu(self, diagram, node):
         """
@@ -764,6 +779,7 @@ class MenuFactory(QtCore.QObject):
                 action.setVisible(action.isVisible() and action.data() in switch)
         return menu
 
+    '''
     def buildValueDomainNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for value domain nodes.
@@ -790,6 +806,179 @@ class MenuFactory(QtCore.QObject):
         menu.insertSeparator(self.session.action('node_properties'))
         for action in self.customAction['datatype']:
             action.setChecked(node.datatype == action.data())
+        return menu
+    '''
+
+    #############################################
+    #   IRI
+    #################################
+
+    # TODO
+    def buildIRINodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for a predicate node having an associated IRI object (CONCEPT, ROLE, ATTRIBUTE).
+        :type diagram: Diagram
+        :type node: OntologyEntityNode
+        :rtype: QMenu
+        """
+        menu = self.buildGenericNodeMenu(diagram, node)
+
+        # BUILD CUSTOM ACTIONS FOR PREDICATE OCCURRENCES
+        self.customAction['occurrences'] = []
+
+        for pnode in self.project.iriOccurrences(iri=node.iri):
+
+            action = QtWidgets.QAction(self.session)
+            action.setCheckable(True)
+
+            action.setChecked(pnode is node)
+            action.setData(pnode)
+            action.setText('{} ({})'.format(pnode.diagram.name, pnode.id))
+
+            if pnode.type() is Item.ConceptIRINode:
+                action.setIcon(self.iconConcept)
+            elif pnode.type() is Item.RoleIRINode:
+                action.setIcon(self.iconRole)
+            elif pnode.type() is Item.AttributeIRINode:
+                action.setIcon(self.iconAttribute)
+            elif pnode.type() is Item.IndividualIRINode:
+                action.setIcon(self.iconInstance)
+            elif pnode.type() is Item.ValueDomainIRINode:
+                action.setIcon(self.iconValue)
+            connect(action.triggered, self.session.doLookupOccurrence)
+            self.customAction['occurrences'].append(action)
+
+        # BUILD CUSTOM MENU FOR PREDICATE OCCURRENCES
+        self.customMenu['occurrences'] = QtWidgets.QMenu('Occurrences')
+        self.customMenu['occurrences'].setIcon(QtGui.QIcon(':/icons/24/ic_visibility_black'))
+        for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
+            self.customMenu['occurrences'].addAction(action)
+        menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
+        menu.insertAction(self.session.action('node_properties'),self.session.action('iri_annotations_refactor'))
+        menu.addAction(self.session.action('node_iri_refactor'))
+
+        # TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
+        # TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate
+        if not node.iri.isTopBottomEntity():
+            print('The selected node is neither top nor bottom')
+        else:
+            print('The selected node is either top or bottom')
+        return menu
+
+    # TODO
+    def buildIRIConceptNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for concept IRI nodes.
+        :type diagram: Diagram
+        :type node: ConceptIRINode
+        :rtype: QMenu
+        """
+        menu = self.buildIRINodeMenu(diagram, node)
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        #TODO VALUTA REINSERIMENTO OPPORTUNO PER TOP E BOTTOM (SPECIAL MENU)
+        #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
+        self.insertLabelActions(menu, node)
+        #menu.insertSeparator(self.session.action('brush'))
+        menu.insertSeparator(self.session.action('node_properties'))
+        #self.session.action('refactor_name').setEnabled(node.special() is None)
+        return menu
+
+    def buildIRIValueDomainNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for concept IRI nodes.
+        :type diagram: Diagram
+        :type node: ValueDomainNode
+        :rtype: QMenu
+        """
+        menu = self.buildIRINodeMenu(diagram, node)
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        #TODO VALUTA REINSERIMENTO OPPORTUNO PER TOP E BOTTOM (SPECIAL MENU)
+        #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
+        self.insertLabelActions(menu, node)
+        menu.insertSeparator(self.session.action('node_properties'))
+        #self.session.action('refactor_name').setEnabled(node.special() is None)
+        return menu
+
+    def buildIRIRoleNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for role nodes.
+        :type diagram: Diagram
+        :type node: RoleIRINode
+        :rtype: QMenu
+        """
+        menu = self.buildIRINodeMenu(diagram, node)
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose_role'))
+        #if self.project.profile.type() is not OWLProfile.OWL2RL:
+            #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('invert_role'))
+        self.insertLabelActions(menu, node)
+        menu.insertSeparator(self.session.action('node_properties'))
+        #self.session.action('refactor_name').setEnabled(node.special() is None)
+        return menu
+
+    def buildIRIAttributeNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for attribute nodes.
+        :type diagram: Diagram
+        :type node: AttributeIRINode
+        :rtype: QMenu
+        """
+        menu = self.buildIRINodeMenu(diagram, node)
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose_attribute'))
+        #if self.project.profile.type() is not OWLProfile.OWL2RL:
+            #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
+        self.insertLabelActions(menu, node)
+        menu.insertSeparator(self.session.action('node_properties'))
+        #self.session.action('refactor_name').setEnabled(node.special() is None)
+        return menu
+
+    # TODO
+    def buildIRIIndividualNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for concept IRI nodes.
+        :type diagram: Diagram
+        :type node: IndividualNode
+        :rtype: QMenu
+        """
+        menu = self.buildIRINodeMenu(diagram, node)
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
+        self.insertLabelActions(menu, node)
+        menu.insertSeparator(self.session.action('node_properties'))
+        return menu
+
+    def buildIRIFacetNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for facet nodes.
+        :type diagram: Diagram
+        :type node: FacetNode
+        :rtype: QMenu
+        """
+        menu = self.buildGenericNodeMenu(diagram, node)
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_facet_refactor'))
+        menu.insertSeparator(self.session.action('node_properties'))
+        return menu
+
+    def buildIRILiteralNodeMenu(self, diagram, node):
+        """
+        Build and return a QMenu instance for facet nodes.
+        :type diagram: Diagram
+        :type node: LiteralNode
+        :rtype: QMenu
+        """
+        menu = self.buildGenericNodeMenu(diagram, node)
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_literal_refactor'))
+        menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
     #############################################
@@ -828,12 +1017,8 @@ class MenuFactory(QtCore.QObject):
         item = first(items)
 
         ## NODES
-        if item.type() is Item.AttributeNode:
-            return self.buildAttributeNodeMenu(diagram, item)
         if item.type() is Item.ComplementNode:
             return self.buildComplementNodeMenu(diagram, item)
-        if item.type() is Item.ConceptNode:
-            return self.buildConceptNodeMenu(diagram, item)
         if item.type() is Item.DatatypeRestrictionNode:
             return self.buildDatatypeRestrictionNodeMenu(diagram, item)
         if item.type() is Item.DisjointUnionNode:
@@ -842,26 +1027,35 @@ class MenuFactory(QtCore.QObject):
             return self.buildDomainRestrictionNodeMenu(diagram, item)
         if item.type() is Item.EnumerationNode:
             return self.buildEnumerationNodeMenu(diagram, item)
-        if item.type() is Item.IndividualNode:
-            return self.buildIndividualNodeMenu(diagram, item)
-        if item.type() is Item.FacetNode:
-            return self.buildFacetNodeMenu(diagram, item)
         if item.type() is Item.IntersectionNode:
             return self.buildIntersectionNodeMenu(diagram, item)
         if item.type() is Item.PropertyAssertionNode:
             return self.buildPropertyAssertionNodeMenu(diagram, item)
         if item.type() is Item.RangeRestrictionNode:
             return self.buildRangeRestrictionNodeMenu(diagram, item)
-        if item.type() is Item.RoleNode:
-            return self.buildRoleNodeMenu(diagram, item)
         if item.type() is Item.RoleInverseNode:
             return self.buildRoleInverseNodeMenu(diagram, item)
         if item.type() is Item.RoleChainNode:
             return self.buildRoleChainNodeMenu(diagram, item)
         if item.type() is Item.UnionNode:
             return self.buildUnionNodeMenu(diagram, item)
-        if item.type() is Item.ValueDomainNode:
-            return self.buildValueDomainNodeMenu(diagram, item)
+
+        ##IRI NODES
+        if item.type() is Item.ConceptIRINode:
+            return self.buildIRIConceptNodeMenu(diagram, item)
+        if item.type() is Item.RoleIRINode:
+            return self.buildIRIRoleNodeMenu(diagram, item)
+        if item.type() is Item.AttributeIRINode:
+            return self.buildIRIAttributeNodeMenu(diagram, item)
+        if item.type() is Item.IndividualIRINode:
+            return self.buildIRIIndividualNodeMenu(diagram, item)
+        if item.type() is Item.ValueDomainIRINode:
+            return self.buildIRIValueDomainNodeMenu(diagram,item)
+        if item.type() is Item.FacetIRINode:
+            return self.buildIRIFacetNodeMenu(diagram,item)
+        if item.type() is Item.LiteralNode:
+            return self.buildIRILiteralNodeMenu(diagram,item)
+
 
         ## EDGES
         if item.type() is Item.InclusionEdge:
@@ -890,6 +1084,7 @@ class PropertyFactory(QtCore.QObject):
     """
     This class can be used to produce properties dialog windows.
     """
+
     def __init__(self, session):
         """
         Initialize the factory.
@@ -960,6 +1155,7 @@ class DescriptionFactory(QtCore.QObject):
     """
     This class can be used to produce description dialog windows.
     """
+
     def __init__(self, session):
         """
         Initialize the factory.

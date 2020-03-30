@@ -39,10 +39,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive, Compute_RC_with_spaces
+from eddy.core.commands.labels import CommandLabelChange,Compute_RC_with_spaces
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
@@ -71,6 +68,10 @@ class DiagramItemMixin:
         :rtype: Diagram
         """
         return self.scene()
+        if self.scene():
+            return self.scene()
+        else:
+            return self._diagram_
 
     @property
     def project(self):
@@ -118,10 +119,19 @@ class DiagramItemMixin:
         Returns True if this element is a node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type() < Item.InclusionEdge
+        return Item.ConceptNode <= self.type() < Item.InclusionEdge or Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
 
+    def isIRINode(self):
+        """
+        Returns True if this element is a node that is associated to an IRI, False otherwise.
+        :rtype: bool
+        """
+        return Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
 
-class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
+    def connectSignals(self):
+        pass
+
+class AbstractItem(QtWidgets.QGraphicsObject, DiagramItemMixin):
     """
     Base class for all the diagram items.
     """
@@ -137,6 +147,7 @@ class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
         :type id: str
         """
         super().__init__(**kwargs)
+        self._diagram_ = diagram
         self.id = id or diagram.guid.next(self.Prefix)
 
     #############################################
@@ -414,8 +425,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
 
                     #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
+                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
+                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
                     #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
 
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
@@ -517,6 +528,10 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         if self.isEditable():
+            if self._parent:
+                self._parent.mouseDoubleClickEvent(mouseEvent)
+                return
+
             super().mouseDoubleClickEvent(mouseEvent)
 
             self.old_text = self.text()

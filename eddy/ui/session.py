@@ -72,24 +72,17 @@ from eddy.core.commands.edges import (
     CommandEdgeSwap,
     CommandSwitchSameDifferentEdge,
 )
+from eddy.core.commands.iri import CommandIRISetMeta
 from eddy.core.commands.labels import (
     CommandLabelChange,
     CommandLabelMove,
 )
 from eddy.core.commands.nodes import (
     CommandNodeSetBrush,
-    CommandNodeSetMeta,
     CommandNodeSetDepth,
     CommandNodeSwitchTo,
 )
-from eddy.core.commands.nodes_2 import (
-    CommandNodeSetRemainingCharacters,
-    CommandProjetSetIRIPrefixesNodesDict,
-    CommandProjetSetIRIofCutNodes,
-)
 from eddy.core.commands.project import (
-    CommandProjectConnectSpecificSignals,
-    CommandProjectDisconnectSpecificSignals,
     CommandProjectSetProfile,
 )
 from eddy.core.common import (
@@ -132,13 +125,14 @@ from eddy.core.datatypes.system import (
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol import GrapholProjectExporter
+from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.exporters.graphreferences import GraphReferencesProjectExporter
 from eddy.core.exporters.image import (
     BmpDiagramExporter,
     JpegDiagramExporter,
     PngDiagramExporter,
 )
-from eddy.core.exporters.owl2 import OWLOntologyExporter
+from eddy.core.exporters.owl2_iri import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import (
@@ -159,13 +153,19 @@ from eddy.core.functions.path import (
 )
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
+from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.concept_iri import ConceptNode
+from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
+from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v3, GrapholOntologyIRILoader_v3
 from eddy.core.loaders.graphol import (
     GrapholOntologyLoader_v2,
     GrapholProjectLoader_v2,
 )
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
+from eddy.core.owl import IRIRender, IRI, OWL2Profiles
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
@@ -180,10 +180,18 @@ from eddy.core.project import (
     K_TRANSITIVE,
 )
 from eddy.core.regex import RE_CAMEL_SPACE
+from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
+from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import ComboBox
+from eddy.ui.forms import CardinalityRestrictionForm
+from eddy.ui.forms import NewDiagramForm
+from eddy.ui.forms import RefactorNameForm
+from eddy.ui.forms import RenameDiagramForm
+from eddy.ui.forms import ValueForm
+from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
     NewDiagramForm,
@@ -223,6 +231,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     * sgnReady: after the session startup sequence completes.
     * sgnSaveProject: whenever the current project is to be saved.
     * sgnUpdateState: to notify that something in the session state changed.
+    * sgnPrefixAdded: when a prefix entry is added to the IRIManager of the session.
+    * sgnPrefixRemoved: when a prefix entry is adremoved from the IRIManager of the session.
+    * sgnPrefixModified: when a prefix entry managed by the IRIManager of the session is modified.
     """
     sgnClosed = QtCore.pyqtSignal()
     sgnCheckForUpdate = QtCore.pyqtSignal()
@@ -236,6 +247,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnReady = QtCore.pyqtSignal()
     sgnSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
+
+    sgnPrefixAdded = QtCore.pyqtSignal(str, str)
+    sgnPrefixRemoved = QtCore.pyqtSignal(str)
+    sgnPrefixModified = QtCore.pyqtSignal(str, str)
+    sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
+    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(OntologyEntityNode, IRI)
+
+
+    #Signals related to rendering options
+    sgnRenderingModified = QtCore.pyqtSignal(str)
 
     # Signals related to consistency check.
     # May be removed when a new reasoner API is implemented
@@ -292,6 +313,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         worker = self.createProjectLoader(File.Graphol, path, self)
         worker.run()
+        connect(self.project.sgnPrefixAdded,self.onPrefixAddedToProject)
+        connect(self.project.sgnPrefixRemoved, self.onPrefixRemovedFromProject)
+        connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
+        connect(self.project.sgnIRIRemovedFromAllDiagrams, self.onIRIRemovedFromAllDiagrams)
+        connect(self.project.sgnSingleNodeSwitchIRI, self.onSingleNodeSwitchIRI)
+
 
         #############################################
         # COMPLETE SESSION SETUP
@@ -898,12 +925,76 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             group.addAction(action)
         self.addAction(group)
 
+        #############################################
+        # IRI SPECIFIC
+        #################################
+
+        # TODO doOpenIRIPropsBuilder
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'IRI refactor',
+            self, objectName='iri_refactor',
+            triggered=self.doOpenIRIPropsBuilder))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_create_black'),
+            'Annotations',
+            self, objectName='iri_annotations_refactor',
+            triggered=self.doOpenIRIPropsAnnotationBuilder))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Node IRI',
+            self, objectName='node_iri_refactor',
+            triggered=self.doOpenIRIDialog))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Facet refactor',
+            self, objectName='node_facet_refactor',
+            triggered=self.doOpenFacetDialog))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Literal refactor',
+            self, objectName='node_literal_refactor',
+            triggered=self.doOpenLiteralDialog))
+
+        #TODO
+        action = QtWidgets.QAction('Render by full IRI', self, objectName='render_full_iri', triggered=self.doRenderByFullIRI)
+        action.setCheckable(True)
+        self.addAction(action)
+        action = QtWidgets.QAction('Render by prefixed IRI', self, objectName='render_prefixed_iri', triggered=self.doRenderByPrefixedIRI)
+        action.setCheckable(True)
+        self.addAction(action)
+        action = QtWidgets.QAction('Render by simple name', self, objectName='render_simple_name',
+                                   triggered=self.doRenderBySimpleName)
+        action.setCheckable(True)
+        self.addAction(action)
+
+
+        '''action = QtWidgets.QAction('Render by label', self, objectName='render_label', triggered=self.doRenderByLabel)
+        self.addAction(action)
+        action.setCheckable(True)'''
+
+        settings = QtCore.QSettings()
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
+            self.action(objectName='render_full_iri').setChecked(True)
+        elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
+            self.action(objectName='render_prefixed_iri').setChecked(True)
+        elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
+            self.action(objectName='render_simple_name').setChecked(True)
+        '''elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+            self.action(objectName='render_label').setChecked(True)'''
+
+
     def initExporters(self):
         """
         Initialize diagram and project exporters.
         """
         self.addOntologyExporter(OWLOntologyExporter)
-        self.addProjectExporter(GrapholProjectExporter)
+        self.addProjectExporter(GrapholIRIProjectExporter)
         self.addProjectExporter(PdfProjectExporter)
         self.addProjectExporter(GraphReferencesProjectExporter)
         self.addDiagramExporter(GraphMLDiagramExporter)
@@ -916,8 +1007,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Initialize diagram and project loaders.
         """
         self.addOntologyLoader(GraphMLOntologyLoader)
-        self.addOntologyLoader(GrapholOntologyLoader_v2)
-        self.addProjectLoader(GrapholProjectLoader_v2)
+        self.addOntologyLoader(GrapholOntologyIRILoader_v3)
+        self.addProjectLoader(GrapholIRIProjectLoader_v3)
 
     # noinspection PyArgumentList
     def initMenus(self):
@@ -1004,6 +1095,81 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addMenu(menu)
 
         menu = QtWidgets.QMenu('\u200C&View', objectName='view')
+        # RENDER BY IRI,PREFIX,LABEL .... Menu
+        # TODO
+        renderInnerMenu = menu.addMenu('Render by...')
+        renderInnerMenu.addAction(self.action('render_full_iri'))
+        renderInnerMenu.addAction(self.action('render_prefixed_iri'))
+        renderInnerMenu.addAction(self.action('render_simple_name'))
+        # renderInnerMenu.addAction(self.action('render_label'))
+
+        labelMenu = QtWidgets.QMenu('Render by label',objectName='render_label')
+        self.addWidget(labelMenu)
+        action = QtWidgets.QAction('it', self, objectName='render_label_it', triggered=self.doRenderByLabel)
+        action.setData('it')
+        action.setCheckable(True)
+        self.addAction(action)
+        labelMenu.addAction(action)
+        action = QtWidgets.QAction('en', self, objectName='render_label_en', triggered=self.doRenderByLabel)
+        action.setData('en')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+        action = QtWidgets.QAction('es', self, objectName='render_label_es', triggered=self.doRenderByLabel)
+        action.setData('es')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+        action = QtWidgets.QAction('fr', self, objectName='render_label_fr', triggered=self.doRenderByLabel)
+        action.setData('fr')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+        action = QtWidgets.QAction('de', self, objectName='render_label_de', triggered=self.doRenderByLabel)
+        action.setData('de')
+        self.addAction(action)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+
+        settings = QtCore.QSettings()
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+            lang = settings.value('ontology/iri/render/language', 'it')
+            if lang=='it':
+                self.action(objectName='render_label_it').setChecked(True)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang=='en':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(True)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang=='es':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(True)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang=='fr':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(True)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang=='de':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(True)
+
+        renderInnerMenu.addMenu(labelMenu)
+
+
+        menu.addSeparator()
         menu.addAction(self.action('toggle_grid'))
         menu.addSeparator()
         menu.addMenu(self.menu('toolbars'))
@@ -1012,7 +1178,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
-        menu.addAction(self.action('ontology_consistency_check'))
+        # TODO scommenta dopo corretta implementazione reasoner per consistency check
+        #menu.addAction(self.action('ontology_consistency_check'))
         menu.addSeparator()
         menu.addAction(self.action('open_prefix_manager'))
         self.addMenu(menu)
@@ -1088,7 +1255,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('Refactor', objectName='refactor')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_shapes_black'))
-        menu.addAction(self.action('refactor_name'))
+        menu.addAction(self.action('iri_refactor'))
+        #menu.addAction(self.action('iri_annotations_refactor'))
+        #menu.addAction(self.action('refactor_name'))
         #menu.addMenu(self.menu('refactor_change_prefix'))
         menu.addMenu(self.menu('refactor_brush'))
         self.addMenu(menu)
@@ -1289,15 +1458,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         toolbar = self.widget('reasoner_toolbar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
-        toolbar.addWidget(self.widget('select_reasoner'))
-        toolbar.addAction(self.action('ontology_consistency_check'))
-        toolbar.addAction(self.action('decolour_nodes'))
+        #TODO scommenta dopo corretta implementazione reasoner per consistency check
+        #toolbar.addWidget(self.widget('select_reasoner'))
+        #toolbar.addAction(self.action('ontology_consistency_check'))
+        #toolbar.addAction(self.action('decolour_nodes'))
 
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('document_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('view_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('graphol_toolbar'))
-        self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
+        # TODO scommenta dopo corretta implementazione reasoner per consistency check
+        #self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
 
     # noinspection PyArgumentList
     def initWidgets(self):
@@ -1342,6 +1513,26 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot(str, str)
+    def onPrefixAddedToProject(self, pref, ns):
+        self.sgnPrefixAdded.emit(pref,ns)
+
+    @QtCore.pyqtSlot(str)
+    def onPrefixRemovedFromProject(self, pref):
+        self.sgnPrefixRemoved.emit(pref)
+
+    @QtCore.pyqtSlot(str,str)
+    def onPrefixModifiedInProject(self, pref,ns):
+        self.sgnPrefixModified.emit(pref,ns)
+
+    @QtCore.pyqtSlot(IRI)
+    def onIRIRemovedFromAllDiagrams(self, iri):
+        self.sgnIRIRemovedFromAllDiagrams.emit(iri)
+
+    @QtCore.pyqtSlot(OntologyEntityNode,IRI)
+    def onSingleNodeSwitchIRI(self, node, iri):
+        self.sgnSingleNodeSwitchIRI.emit(node,iri)
+
 
     @QtCore.pyqtSlot()
     def doBringToFront(self):
@@ -1465,7 +1656,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             action = self.sender()
             elements = action.data()
             diagram.setMode(DiagramMode.Idle)
-            supported = {Item.RoleNode, Item.AttributeNode}
+            supported = {Item.RoleIRINode, Item.AttributeIRINode}
             for node in diagram.selectedNodes(lambda x: x.type() in supported):
                 name = 'compose {0} restriction(s)'.format(node.shortName)
                 addons = compose(diagram, node, elements)
@@ -1482,31 +1673,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(first(commands))
 
     def common_commands_for_cut_delete_purge(self,diagram,items):
-        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-        Dup_1B = self.project.iri_of_cut_nodes[:]
-        Dup_2B = self.project.iri_of_cut_nodes[:]
-        iris_to_update = []
-        nodes_to_update = []
-
+        #TODO CONTROLLA BENE SE SET DEI COMANDI è COMPLETO (GESTIONE IRI RIMOSSE)
+        commands = []
         for item in items:
-            if (('AttributeNode' in str(type(item))) or ('ConceptNode' in str(type(item))) or (
-                        'IndividualNode' in str(type(item))) or ('RoleNode' in str(type(item)))):
-                iri_of_node = self.project.get_iri_of_node(item)
-                iris_to_update.append(iri_of_node)
-                nodes_to_update.append(item)
-                Dup_1B.append(item)
-                Dup_1B.append(iri_of_node)
-                Duplicate_dict_1[iri_of_node][1].remove(item)
-
-        commands = [CommandItemsRemove(diagram, items),
-                    CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                         iris_to_update,
-                                                         nodes_to_update),
-                    CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project)]
-
+            if isinstance(item,OntologyEntityNode):
+                print('Removing OntologyPredicateNode {}'.format(item))
+                # TODO aggiungi comandi per rimozione IRI da indice
+        commands.append(CommandItemsRemove(diagram, items))
         self.undostack.beginMacro('>>')
         for command in commands:
             if command:
@@ -1769,7 +1942,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 return Item.RangeRestrictionNode
             return Item.DomainRestrictionNode
 
-        f0 = lambda x: x.type() is Item.RoleNode
+        f0 = lambda x: x.type() is Item.RoleIRINode
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
         f3 = lambda x: x.type() is Item.RoleInverseNode
@@ -1781,11 +1954,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if node:
                 swappable = set()
                 collection = dict()
+                '''
                 predicates = self.project.predicates(node.type(), node.text())
                 for predicate in predicates:
                     swappable = set.union(swappable, predicate.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
                     for inv in predicate.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f3):
                         swappable = set.union(swappable, inv.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                '''
+                occurrences = self.project.iriOccurrences(node.type(), node.iri)
+                for occ in occurrences:
+                    swappable = set.union(swappable, occ.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                    for inv in occ.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f3):
+                        swappable = set.union(swappable, inv.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+
                 for xnode in swappable:
                     ynode = xnode.diagram.factory.create(invert(xnode.type()))
                     ynode.setPos(xnode.pos())
@@ -1849,7 +2030,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[from_iri][0].append(to_prefix)
 
                 commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [from_iri], None))
                 commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         # case 3
@@ -1909,8 +2089,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[to_iri][0].append(to_prefix)
 
             commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                           [from_iri, to_iri], list_of_nodes_to_process))
             commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         if any(commands):
@@ -1964,8 +2142,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
                 commands.append(
                     CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                               [from_iri], None))
                 commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         #case 3
@@ -2015,8 +2191,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
             commands.append(
                 CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                               [from_iri, to_iri], [node]))
             commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         if any(commands):
@@ -2116,13 +2290,210 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
+            selected = diagram.selectedNodes()
+            if len(selected) == 1:
+                node = first(selected)
             if node:
                 properties = self.pf.create(diagram, node)
                 properties.setWindowModality(QtCore.Qt.ApplicationModal)
                 properties.show()
                 properties.raise_()
                 properties.activateWindow()
+
+    @QtCore.pyqtSlot(OntologyEntityNode)
+    def doOpenIRIBuilder(self, node):
+        """
+        Executed when an IRI must be associated to an empty node.
+        :type node: OntologyEntityNode
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            if not node:
+                selected = diagram.selectedNodes()
+                if len(selected) == 1:
+                    node = first(selected)
+            if node:
+                builder = IriBuilderDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot(FacetNode)
+    def doOpenConstrainingFacetBuilder(self, node):
+        """
+        Executed when a facet must be associated to a node.
+        :type node: FacetNode
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            if not node:
+                selected = diagram.selectedNodes()
+                if len(selected) == 1:
+                    node = first(selected)
+            if node:
+                builder = ConstrainingFacetDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot(LiteralNode)
+    def doOpenLiteralBuilder(self, node):
+        """
+        Executed when a literal must be associated to a node.
+        :type node: LiteralNode
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            if not node:
+                selected = diagram.selectedNodes()
+                if len(selected) == 1:
+                    node = first(selected)
+            if node:
+                builder = LiteralDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenIRIDialog(self):
+        """
+        Executed when the IRI associated to a node might be modified by the user.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected)==1:
+                node = first(selected)
+            if node:
+                builder = IriBuilderDialog(node, diagram, self)
+                #connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenFacetDialog(self):
+        """
+        Executed when the Facet associated to a node might be modified by the user.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node:
+                builder = ConstrainingFacetDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenLiteralDialog(self):
+        """
+        Executed when the Literal associated to a node might be modified by the user.
+        :type node: LiteralNode
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node:
+                builder = LiteralDialog(node, diagram, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenIRIPropsBuilder(self):
+        """
+        Executed when IRI props builder needs to be displayed.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedNodes()
+            node = None
+            iri = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node and isinstance(node,OntologyEntityNode):
+                iri = node.iri
+            if iri:
+                builder = IriPropsDialog(iri, self)
+                connect(builder.sgnIRISwitch, self.project.doSwitchIRI)
+                #connect(builder.sgnReHashIRI, self.project.doReHashIRI)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenIRIPropsAnnotationBuilder(self):
+        """
+        Executed when IRI props builder needs to be displayed with focus on annotation assertions.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedNodes()
+            node = None
+            iri = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node and isinstance(node, OntologyEntityNode):
+                iri = node.iri
+            if iri:
+                builder = IriPropsDialog(iri, self, True)
+                connect(builder.sgnIRISwitch, self.project.doSwitchIRI)
+                # connect(builder.sgnReHashIRI, self.project.doReHashIRI)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+
+    @QtCore.pyqtSlot(IRI)
+    def doOpenAnnotationAssertionBuilder(self,iri,assertion=None):
+        """
+        Executed when annotation assertion builder needs to be displayed.
+        :type node: IRI
+        """
+        # TODO
+        if iri:
+            builder = AnnotationAssertionBuilderDialog(iri,self,assertion)
+            builder.setWindowModality(QtCore.Qt.ApplicationModal)
+            builder.show()
+            builder.raise_()
+            builder.activateWindow()
+            return builder
+        else:
+            diagram = self.mdi.activeDiagram()
+            if diagram:
+                diagram.setMode(DiagramMode.Idle)
+                node = first(diagram.selectedNodes())
+                builder = AnnotationAssertionBuilderDialog(node.iri, self,assertion)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+
 
     @QtCore.pyqtSlot()
     def doOpenNodeDescription(self):
@@ -2209,12 +2580,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode,
+                                        Item.ConceptIRINode, Item.IndividualIRINode, Item.RoleIRINode, Item.AttributeIRINode}
             node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
                 color = action.data()
-                nodes = self.project.predicates(node.type(), node.text())
+                nodes = []
+                if isinstance(node, OntologyEntityNode):
+                    nodes = self.project.iriOccurrences(node.type(),node.iri)
+                else:
+                    nodes = self.project.predicates(node.type(), node.text())
                 self.undostack.push(CommandNodeSetBrush(diagram, nodes, QtGui.QBrush(QtGui.QColor(color.value))))
 
     @QtCore.pyqtSlot()
@@ -2371,7 +2747,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             action = self.sender()
             color = action.data()
             brush = QtGui.QBrush(QtGui.QColor(color.value))
-            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}
+            supported = {Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.IndividualIRINode, Item.LiteralNode}
             fn = lambda x: x.type() in supported and x.brush() != brush
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected:
@@ -2388,18 +2764,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             action = self.sender()
             key = action.data()
             checked = action.isChecked()
-            supported = {Item.RoleNode, Item.AttributeNode}
+            supported = {Item.RoleIRINode, Item.AttributeIRINode}
             fn = lambda x: x.type() in supported
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected and len(selected) == 1:
                 node = first(selected)
-                undo = self.project.meta(node.type(), node.text())
+                undo = node.iri.getMetaProperties()
+                #undo = self.project.meta(node.type(), node.text())
                 redo = undo.copy()
                 redo[key] = checked
                 if redo != undo:
                     prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
-                    name = "{0}set '{1}' {2} property".format('' if checked else 'un', node.text(), prop)
-                    self.undostack.push(CommandNodeSetMeta(self.project, node.type(), node.text(), undo, redo, name))
+                    name = "{0}set '{1}' {2} property".format('' if checked else 'un', node.iri, prop)
+                    self.undostack.push(CommandIRISetMeta(self.project, node.type(), node.iri, undo, redo, name))
+                    #self.undostack.push(CommandNodeSetMeta(self.project, node.type(), node.text(), undo, redo, name))
 
     @QtCore.pyqtSlot()
     def doSetPropertyRestriction(self):
@@ -2450,7 +2828,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                             (self.project.IRI_prefixes_nodes_dict,dict())
 
                         old_iri = self.project.get_iri_of_node(node)
-                        new_iri = self.project.iri
+                        new_iri = self.project.ontologyIRIString
 
                         if self.project.prefix is None:
                             new_label = self.project.get_full_IRI(new_iri,None,data)
@@ -2462,8 +2840,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
                         commands = [CommandProjectDisconnectSpecificSignals(self.project),
                                     CommandLabelChange(diagram, node, node.text(), new_label),
-                                    CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                         Duplicate_dict_1, [old_iri, new_iri], [node]),
                                     CommandNodeSetRemainingCharacters(node.remaining_characters, data, node,
                                                                       self.project),
                                     CommandLabelChange(diagram, node, node.text(), new_label),
@@ -2522,8 +2898,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
                     commands = [
                         CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False),
-                        CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                             [old_iri, new_iri], [node]),
                         CommandNodeSetRemainingCharacters(node.remaining_characters, new_rc, node, diagram.project),
                         CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False)]
 
@@ -2732,7 +3106,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Perform Ontology Consistency checking on the active ontology/diagram.
         """
-        dialog = OntologyExplorerDialog(self.project, self)
+        #dialog = OntologyExplorerDialog(self.project, self)
+        from eddy.ui.ontology import OntologyManagerDialog
+        dialog = OntologyManagerDialog(self)
         dialog.exec_()
 
     @QtCore.pyqtSlot()
@@ -2819,8 +3195,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         isEdgeSwapEnabled = False
         isNodeSelected = False
         isPredicateSelected = False
-        isProfileOWL2QL = self.project.profile.type() is OWLProfile.OWL2QL
-        isProfileOWL2RL = self.project.profile.type() is OWLProfile.OWL2RL
+        isProfileOWL2QL = self.project.profile.type() is OWL2Profiles.OWL2QL
+        isProfileOWL2RL = self.project.profile.type() is OWL2Profiles.OWL2RL
         isPropertyFunctionalEnabled = False
         isPropertyInvFunctionalEnabled = False
         isPropertySymmetricEnabled = False
@@ -2844,8 +3220,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram()
-            restrictables = {Item.AttributeNode, Item.RoleNode}
-            predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}
+            restrictables = {Item.AttributeIRINode, Item.RoleIRINode}
+            predicates = {Item.ConceptIRINode, Item.AttributeIRINode, Item.RoleIRINode, Item.IndividualIRINode}
             if diagram:
                 nodes = diagram.selectedNodes()
                 edges = diagram.selectedEdges()
@@ -2857,9 +3233,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 isDomainRangeUsable = any([x.type() in restrictables for x in nodes])
                 isPredicateSelected = any([x.type() in predicates for x in nodes])
                 isRestrictable = len(nodes) == 1 and first(nodes).type() in restrictables
-                isRoleSelected = isRestrictable and first(nodes).type() is Item.RoleNode
+                isRoleSelected = isRestrictable and first(nodes).type() is Item.RoleIRINode
                 if isRestrictable:
-                    meta = self.project.meta(first(nodes).type(), first(nodes).text())
+                    #meta = self.project.meta(first(nodes).type(), first(nodes).text())
+                    firstNode = first(nodes)
+                    meta = firstNode.iri.getMetaProperties()
                     isPropertyFunctionalChecked = meta.get(K_FUNCTIONAL, False)
                     isPropertyInvFunctionalChecked = meta.get(K_INVERSE_FUNCTIONAL, False)
                     isPropertySymmetricChecked = meta.get(K_SYMMETRIC, False)
@@ -2930,6 +3308,113 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.widget('select_reasoner').setEnabled(not isProjectEmpty)
         self.action('decolour_nodes').setEnabled(not isProjectEmpty)
         self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
+
+    #TODO
+    @QtCore.pyqtSlot()
+    def doRenderByFullIRI(self):
+        """
+        Render ontology elements by full IRIs
+        """
+        settings = QtCore.QSettings()
+        settings.setValue('ontology/iri/render', IRIRender.FULL.value)
+        self.action(objectName='render_full_iri').setChecked(True)
+        self.action(objectName='render_prefixed_iri').setChecked(False)
+        self.action(objectName='render_simple_name').setChecked(False)
+        #self.action(objectName='render_label').setChecked(False)
+        self.action(objectName='render_label_it').setChecked(False)
+        self.action(objectName='render_label_en').setChecked(False)
+        self.action(objectName='render_label_es').setChecked(False)
+        self.action(objectName='render_label_fr').setChecked(False)
+        self.action(objectName='render_label_de').setChecked(False)
+        self.sgnRenderingModified.emit(IRIRender.FULL.value)
+
+
+    #TODO
+    @QtCore.pyqtSlot()
+    def doRenderByPrefixedIRI(self):
+        """
+        Render ontology elements by prefixed IRIs
+        """
+        settings = QtCore.QSettings()
+        settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
+        self.action(objectName='render_full_iri').setChecked(False)
+        self.action(objectName='render_prefixed_iri').setChecked(True)
+        self.action(objectName='render_simple_name').setChecked(False)
+        # self.action(objectName='render_label').setChecked(False)
+        self.action(objectName='render_label_it').setChecked(False)
+        self.action(objectName='render_label_en').setChecked(False)
+        self.action(objectName='render_label_es').setChecked(False)
+        self.action(objectName='render_label_fr').setChecked(False)
+        self.action(objectName='render_label_de').setChecked(False)
+        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
+
+
+
+    @QtCore.pyqtSlot()
+    def doRenderBySimpleName(self):
+        """
+        Render ontology elements by prefixed IRIs
+        """
+        settings = QtCore.QSettings()
+        settings.setValue('ontology/iri/render', IRIRender.SIMPLE_NAME.value)
+        self.action(objectName='render_full_iri').setChecked(False)
+        self.action(objectName='render_prefixed_iri').setChecked(False)
+        self.action(objectName='render_simple_name').setChecked(True)
+        # self.action(objectName='render_label').setChecked(False)
+        self.action(objectName='render_label_it').setChecked(False)
+        self.action(objectName='render_label_en').setChecked(False)
+        self.action(objectName='render_label_es').setChecked(False)
+        self.action(objectName='render_label_fr').setChecked(False)
+        self.action(objectName='render_label_de').setChecked(False)
+        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
+
+    #TODO
+    @QtCore.pyqtSlot()
+    def doRenderByLabel(self):
+        """
+        Render ontology elements by prefixed IRIs
+        """
+        action = self.sender()
+        lang = action.data()
+
+        settings = QtCore.QSettings()
+        settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
+        settings.setValue('ontology/iri/render/language', lang)
+        self.action(objectName='render_full_iri').setChecked(False)
+        self.action(objectName='render_prefixed_iri').setChecked(False)
+        self.action(objectName='render_simple_name').setChecked(False)
+        # self.action(objectName='render_label').setChecked(True)
+        if lang == 'it':
+            self.action(objectName='render_label_it').setChecked(True)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+        elif lang == 'en':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(True)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+        elif lang == 'es':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(True)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+        elif lang == 'fr':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(True)
+            self.action(objectName='render_label_de').setChecked(False)
+        elif lang == 'de':
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(True)
+        self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):

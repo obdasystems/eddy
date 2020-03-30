@@ -47,9 +47,9 @@ from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Namespace
 from eddy.core.datatypes.system import File
-from eddy.core.diagram import Diagram
-from eddy.core.diagram import DiagramNotFoundError
-from eddy.core.diagram import DiagramNotValidError
+from eddy.core.old_only_for_v1_load.old_diagram import Diagram
+from eddy.core.old_only_for_v1_load.old_diagram import DiagramNotFoundError
+from eddy.core.old_only_for_v1_load.old_diagram import DiagramNotValidError
 from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir, make_archive
 from eddy.core.functions.misc import rstrip, postfix, rtfStripFontAttributes
@@ -58,17 +58,10 @@ from eddy.core.functions.signals import connect, disconnect
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
+from eddy.core.old_only_for_v1_load.old_project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_ASYMMETRIC, K_IRREFLEXIVE, \
+    K_REFLEXIVE, K_SYMMETRIC, K_TRANSITIVE, ProjectNotValidError, Project, ProjectNotFoundError, \
+    ProjectStopLoadingError, ProjectVersionError
 from eddy.core.output import getLogger
-from eddy.core.project import Project
-from eddy.core.project import ProjectMergeWorker
-from eddy.core.project import ProjectNotFoundError
-from eddy.core.project import ProjectNotValidError
-from eddy.core.project import ProjectVersionError
-from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
-from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
 
 from eddy.core.commands.labels import GenerateNewLabel, CommandLabelChange
 
@@ -1049,15 +1042,6 @@ class GrapholLoaderMixin_v2(object):
         item = self.itemFromXml[e.attribute('type')]
         name = e.attribute('name')
         meta = self.nproject.meta(item, name)
-        meta[K_DESCRIPTION] = rtfStripFontAttributes(e.firstChildElement(K_DESCRIPTION).text())
-
-        if e.firstChildElement(K_DESCRIPTION).hasAttribute('status'):
-            meta[K_DESCRIPTION_STATUS] = e.firstChildElement(K_DESCRIPTION).attribute('status')
-        else:
-            if meta[K_DESCRIPTION] == '':
-                meta[K_DESCRIPTION_STATUS] = ''
-            else:
-                meta[K_DESCRIPTION_STATUS] = 'Final'
 
         return meta
 
@@ -1562,8 +1546,8 @@ class GrapholLoaderMixin_v2(object):
 
                     if iri_to_set is None:
                         LOGGER.critical('IRI of node not found in Dictionary - ' + str(node))
-                        if self.nproject.iri is not None:
-                            self.nproject.IRI_prefixes_nodes_dict[self.nproject.iri][1].add(node)
+                        if self.nproject.ontologyIRIString is not None:
+                            self.nproject.IRI_prefixes_nodes_dict[self.nproject.ontologyIRIString][1].add(node)
                             new_text = GenerateNewLabel(self.nproject, node).return_label()
                             node.setText(new_text)
                     else:
@@ -1686,8 +1670,8 @@ class GrapholLoaderMixin_v2(object):
                     self.nproject.setMeta(meta[0], meta[1], meta[2])
                 else:
                     new_meta = str(self.nproject.prefix + ':' + meta[1])
-                    new_meta_2 = str(self.nproject.iri + '#' + meta[1])
-                    new_meta_3 = str(self.nproject.iri + '/' + meta[1])
+                    new_meta_2 = str(self.nproject.ontologyIRIString + '#' + meta[1])
+                    new_meta_3 = str(self.nproject.ontologyIRIString + '/' + meta[1])
                     new_meta_4 = str(':' + meta[1])
                     all_metas = [new_meta, new_meta_2, new_meta_3, new_meta_4]
 
@@ -1902,8 +1886,11 @@ class GrapholOntologyLoader_v2(AbstractOntologyLoader, GrapholLoaderMixin_v2):
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
+        return
+        '''
         worker = ProjectMergeWorker(self.project, self.nproject, self.session)
         worker.run()
+        '''
 
     #############################################
     #   INTERFACE

@@ -42,9 +42,6 @@ from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.nodes import CommandNodeChangeInputsOrder
 from eddy.core.commands.nodes import CommandNodeMove
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Facet, Datatype, Namespace
@@ -649,8 +646,6 @@ class PredicateNodeProperty(NodeProperty):
                 for nd in list_of_nodes_to_process:
                     commands.append(CommandLabelChange(nd.diagram, nd, nd.text(), new_label))
 
-                commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                                     [new_iri, old_iri], list_of_nodes_to_process))
 
                 for nd in list_of_nodes_to_process:
                     commands.append(CommandLabelChange(nd.diagram, nd, nd.text(), new_label))
@@ -1069,8 +1064,6 @@ class ValueNodeProperty(NodeProperty):
             Duplicate_dict_1[new_iri][1].add(self.node)
 
             commands = [CommandLabelChange(self.diagram, self.node, self.node.text(), data),
-                        CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                             [old_iri, new_iri], [self.node]),
                         CommandNodeSetRemainingCharacters(self.node.remaining_characters,
                                                           new_remaining_characters, self.node, self.project),
                         CommandLabelChange(self.diagram, self.node, self.node.text(), data)]

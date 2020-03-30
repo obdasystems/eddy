@@ -52,7 +52,7 @@ from eddy.core.functions.misc import snapF, isEmpty, rstrip, snap
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.output import getLogger
-from eddy.core.project import Project, ProjectMergeWorker
+from eddy.core.project import Project
 
 
 LOGGER = getLogger()
@@ -832,8 +832,12 @@ class GraphMLOntologyLoader(AbstractOntologyLoader):
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
+        return
+        '''
+        worker = ProjectMergeWorker(self.project, self.nproject, self.session)
         worker = ProjectMergeWorker(self.project, self.nproject, self.session, diagrams=self.nproject.diagrams())
         worker.run()
+        '''
 
     def projectRender(self):
         """

@@ -41,9 +41,6 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.owl import Datatype, Namespace
 from eddy.core.datatypes.qt import Font
@@ -315,13 +312,10 @@ class RefactorNameForm(QtWidgets.QDialog):
                     commands_label_change_list_2.append(
                         CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
 
-                command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                           Duplicate_dict_1, [old_iri, new_iri],
-                                                                           list_of_nodes_to_process)
+
                 commands.append(CommandProjectDisconnectSpecificSignals(self.project))
 
                 commands.extend(commands_label_change_list_1)
-                commands.append(command_dict_change)
                 commands.extend(commands_rc_change)
                 commands.extend(commands_label_change_list_2)
 
@@ -353,7 +347,7 @@ class RefactorNameForm(QtWidgets.QDialog):
 
                 if match_old:
                     new_remaining_characters = currentData_processed
-                    new_iri = self.project.iri
+                    new_iri = self.project.ontologyIRIString
 
                     Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
                         self.project.IRI_prefixes_nodes_dict, dict())
@@ -594,8 +588,6 @@ class ValueForm(QtWidgets.QDialog):
 
             commands.append(CommandProjectDisconnectSpecificSignals(self.project))
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
-            commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                                 [old_iri, new_iri], [node]))
             commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node,
                                                               self.project))
             commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))

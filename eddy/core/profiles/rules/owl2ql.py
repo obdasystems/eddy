@@ -34,33 +34,36 @@
 
 
 from eddy.core.datatypes.graphol import Item, Identity, Special
-from eddy.core.datatypes.owl import Datatype, OWLProfile
 from eddy.core.functions.graph import bfs
+from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.owl import OWL2Datatype, OWL2Profiles
 from eddy.core.profiles.common import ProfileError
 from eddy.core.profiles.rules.common import ProfileNodeRule
 from eddy.core.profiles.rules.common import ProfileEdgeRule
 
 
-#Ashwin
 class FunctionalityUnsupported(ProfileNodeRule):
     """
     Prevents from using functionality in attributes or roles which is outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if (('AttributeNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+        '''
+        if (('AttributeIRINode' in str(type(node))) or ('RoleIRINode' in str(type(node)))):
             if node.isFunctional():
                 raise ProfileError('Functionality of roles and attributes is forbidden in OWL 2 QL')
+        '''
+        if isinstance(node,OntologyEntityNode):
+            if node.iri and node.iri.functional:
+                raise ProfileError('({}) Functionality of roles and attributes is forbidden in OWL 2 QL'.format(str(node.iri)))
 
-
-#Ashwin
 class InverseFunctionalityUnsupported(ProfileNodeRule):
     """
     Prevents from using inverse-functionality in roles which is outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if ('RoleNode' in str(type(node))):
-            if node.isInverseFunctional():
-                raise ProfileError('Inverse Functionality of roles is forbidden in OWL 2 QL')
+        if isinstance(node, OntologyEntityNode):
+            if node.iri and node.iri.inverseFunctional:
+                raise ProfileError('({}) Functionality of roles is forbidden in OWL 2 QL'.format(str(node.iri)))
 
 
 #Ashwin
@@ -69,9 +72,9 @@ class TransitivityUnsupported(ProfileNodeRule):
     Prevents from using transitivity in  roles which is outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if ('RoleNode' in str(type(node))):
-            if node.isTransitive():
-                raise ProfileError('Transitivity of roles is forbidden in OWL 2 QL')
+        if isinstance(node, OntologyEntityNode):
+            if node.iri and node.iri.transitive:
+                raise ProfileError('({}) Transitivity of roles is forbidden in OWL 2 QL'.format(str(node.iri)))
 
 
 class UnsupportedDatatypeRule(ProfileNodeRule):
@@ -79,9 +82,9 @@ class UnsupportedDatatypeRule(ProfileNodeRule):
     Prevents from using datatypes which are outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if node.type() is Item.ValueDomainNode:
-            if node.datatype not in Datatype.forProfile(OWLProfile.OWL2QL):
-                raise ProfileError('Datatype {} is forbidden in OWL 2 QL'.format(node.datatype.value))
+        if node.type() is Item.ValueDomainIRINode:
+            if node.iri and not OWL2Datatype.forProfile(OWL2Profiles.OWL2RL):
+                raise ProfileError('Use of datatype {} is forbidden in OWL 2 QL'.format(str(node.iri)))
 
 
 class UnsupportedOperatorRule(ProfileNodeRule):
@@ -90,7 +93,7 @@ class UnsupportedOperatorRule(ProfileNodeRule):
     """
     def __call__(self, node):
         if node.type() in {Item.UnionNode, Item.DisjointUnionNode,
-            Item.DatatypeRestrictionNode, Item.FacetNode,
+            Item.DatatypeRestrictionNode, Item.FacetIRINode,
             Item.EnumerationNode, Item.RoleChainNode}:
             raise ProfileError('Usage of {} operator is forbidden in OWL 2 QL'.format(node.shortName))
 
@@ -101,7 +104,7 @@ class UnsupportedIndividualEqualityRule(ProfileEdgeRule):
     """
     def __call__(self, source, edge, target):
         if edge.type() is Item.SameEdge:
-            raise ProfileError('Usage of SameIndividual assertion is forbidden in OWL 2 QL')
+            raise ProfileError('Usage of SameIndividual axiom is forbidden in OWL 2 QL')
 
 
 class EquivalenceBetweenConceptExpressionRule(ProfileEdgeRule):
@@ -154,17 +157,14 @@ class InputConceptToRestrictionNodeRule(ProfileEdgeRule):
             if target.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                 # OWL 2 QL admits only atomic concepts for role qualified restriction.
                 if source.identity() is Identity.Concept:
-                    if source.type() is not Item.ConceptNode:
+                    if source.type() is not Item.ConceptIRINode:
                         raise ProfileError('OWL 2 QL admits only an atomic concept as filler for a qualified {}'.format(target.shortName))
                     # Given the fact that we are connecting an atomic concept in input to this
                     # restriction node, we need to see if the node is currently being used
                     # as source for a concept expression inclusion, and if so, deny the connection
                     # because OWL 2 QL admits concept inclusion sourcing only from unqualified role
                     # restrictions (we need to skip TOP though, since it won't be qualified then).
-                    if (Special.valueOf(source.text()) is not Special.Top) and \
-                        (Special.valueOf(source.text()) is not Special.TopConcept) and \
-                        (Special.valueOf(source.text()) is not Special.TopRole) and\
-                        (Special.valueOf(source.text()) is not Special.TopAttribute):
+                    if source.iri and not (source.iri.isOwlThing() or source.iri.isTopObjectProperty() or source.iri.isTopDataProperty()):
                         # We found an outgoing inclusion edge and our restriction filler is not TOP.
                         if target.outgoingNodes(filter_on_edges=lambda x: x.type() is Item.InclusionEdge):
                             raise ProfileError('Inclusion with a qualified {} as source is forbidden in OWL 2 QL'.format(target.shortName))

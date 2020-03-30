@@ -98,6 +98,7 @@ class NodeLabel(AbstractLabel):
         """
         moved = self.isMoved()
         super().setText(text)
+        #se commento riga sotto, label viene spostato alla creazione rispetto al centro
         self.updatePos(moved)
 
     def updatePos(self, moved=False):

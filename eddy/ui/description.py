@@ -39,14 +39,12 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.nodes import CommandNodeSetMeta
 from eddy.core.datatypes.graphol import Identity
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.qt import Font
 from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import rtfStripFontAttributes
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.project import K_DESCRIPTION, K_DESCRIPTION_STATUS
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import StringField
 

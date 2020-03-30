@@ -40,18 +40,16 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
+from eddy import ORGANIZATION, APPNAME
+from eddy.core.commands.iri import CommandIRISetMeta
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict, CommandProjectORNodeSetPreferedPrefix
-from eddy.core.commands.nodes import CommandNodeSetMeta
-from eddy.core.commands.project import CommandProjectSetIRI
-from eddy.core.commands.project import CommandProjectSetPrefix
-from eddy.core.commands.project import CommandProjectSetProfile
-from eddy.core.commands.project import CommandProjectSetVersion
+from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectSetOntologyIRIAndVersion
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.owl import Facet, Datatype, OWLProfile
+from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.owl import OWL2Profiles
 from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
@@ -275,21 +273,32 @@ class InfoWidget(QtWidgets.QScrollArea):
         self.infoProject = ProjectInfo(self.session, self.stacked)
         self.infoEdge = EdgeInfo(self.session, self.stacked)
         self.infoNode = NodeInfo(self.session, self.stacked)
+        self.infoPredicateNode = IRIInfo(self.session, self.stacked)
+        self.infoAttributeNode = AttributeIRIInfo(self.session, self.stacked)
+        self.infoRoleNode = RoleIRIInfo(self.session, self.stacked)
+        self.infoLiteral = LiteralInfo(self.session, self.stacked)
+        self.infoFacet = FacetIRIInfo(self.session,self.stacked)
+        '''
         self.infoPredicateNode = PredicateNodeInfo(self.session, self.stacked)
         self.infoAttributeNode = AttributeNodeInfo(self.session, self.stacked)
         self.infoRoleNode = RoleNodeInfo(self.session, self.stacked)
         self.infoValueNode = ValueNodeInfo(self.session, self.stacked)
         self.infoValueDomainNode = ValueDomainNodeInfo(self.session, self.stacked)
         self.infoFacet = FacetNodeInfo(self.session, self.stacked)
+        '''
         self.stacked.addWidget(self.infoProject)
         self.stacked.addWidget(self.infoEdge)
         self.stacked.addWidget(self.infoNode)
-        self.stacked.addWidget(self.infoPredicateNode)
         self.stacked.addWidget(self.infoAttributeNode)
+        self.stacked.addWidget(self.infoPredicateNode)
         self.stacked.addWidget(self.infoRoleNode)
+        self.stacked.addWidget(self.infoLiteral)
+        self.stacked.addWidget(self.infoFacet)
+        '''
         self.stacked.addWidget(self.infoValueNode)
         self.stacked.addWidget(self.infoValueDomainNode)
         self.stacked.addWidget(self.infoFacet)
+        '''
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumSize(QtCore.QSize(216, 120))
@@ -357,6 +366,8 @@ class InfoWidget(QtWidgets.QScrollArea):
 
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
+
+        self.connectedItem = None
 
     #############################################
     #   PROPERTIES
@@ -428,30 +439,43 @@ class InfoWidget(QtWidgets.QScrollArea):
             if not selected or len(selected) > 1:
                 show = self.infoProject
                 show.updateData(self.project)
+                if self.connectedItem:
+                    disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             else:
                 item = first(selected)
                 if item.isNode():
+                    if not item is self.connectedItem:
+                        if self.connectedItem:
+                            disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
+                        self.connectedItem = item
+                        connect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
+
                     if item.isPredicate():
-                        if item.type() is Item.ValueDomainNode:
-                            show = self.infoValueDomainNode
-                        elif item.type() is Item.RoleNode:
-                            show = self.infoRoleNode
-                        elif item.type() is Item.AttributeNode:
+                        if item.type() is Item.AttributeIRINode:
                             show = self.infoAttributeNode
+                        elif item.type() is Item.RoleIRINode:
+                            show = self.infoRoleNode
+                        elif item.type() is Item.LiteralNode:
+                            show = self.infoLiteral
+                        elif item.type() is Item.FacetIRINode:
+                            show = self.infoFacet
                         else:
                             show = self.infoPredicateNode
                     else:
-                        if item.type() is Item.FacetNode:
-                            show = self.infoFacet
-                        else:
-                            show = self.infoNode
+                        show = self.infoNode
                 else:
+                    if self.connectedItem:
+                        disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
                     show = self.infoEdge
                 show.updateData(item)
         elif self.project:
+            if self.connectedItem:
+                disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             show = self.infoProject
             show.updateData(self.project)
         else:
+            if self.connectedItem:
+                disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             show = self.infoEmpty
 
         prev = self.stacked.currentWidget()
@@ -461,6 +485,9 @@ class InfoWidget(QtWidgets.QScrollArea):
             scrollbar = self.verticalScrollBar()
             scrollbar.setValue(0)
 
+    @QtCore.pyqtSlot()
+    def onConnectedItemModified(self):
+        self.stack()
 
 #############################################
 #   COMPONENTS
@@ -568,7 +595,6 @@ class Parent(QtWidgets.QWidget):
 #   INFO WIDGETS
 #################################
 
-
 class AbstractInfo(QtWidgets.QWidget):
     """
     This class implements the base information box.
@@ -652,22 +678,22 @@ class ProjectInfo(AbstractInfo):
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
         self.ontologyPropLayout.addRow(self.versionKey, self.versionField)
-        self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
+        #self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         #self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         #self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
-        self.conceptsKey = Key('Concept', self)
+        self.conceptsKey = Key('Classes', self)
         self.conceptsField = Integer(self)
         self.conceptsField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.conceptsField.setReadOnly(True)
 
-        self.rolesKey = Key('Role', self)
+        self.rolesKey = Key('Obj prop.', self)
         self.rolesField = Integer(self)
         self.rolesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.rolesField.setReadOnly(True)
 
-        self.attributesKey = Key('Attribute', self)
+        self.attributesKey = Key('Data prop.', self)
         self.attributesField = Integer(self)
         self.attributesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.attributesField.setReadOnly(True)
@@ -689,13 +715,14 @@ class ProjectInfo(AbstractInfo):
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
-
+        '''
         self.assertionsHeader = Header('Assertions', self)
 
         self.assertionsLayout = QtWidgets.QFormLayout()
         self.assertionsLayout.setSpacing(0)
         self.assertionsLayout.addRow(self.inclusionsKey, self.inclusionsField)
         self.assertionsLayout.addRow(self.membershipKey, self.membershipField)
+        '''
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -705,8 +732,10 @@ class ProjectInfo(AbstractInfo):
         self.mainLayout.addLayout(self.ontologyPropLayout)
         self.mainLayout.addWidget(self.atomicPredHeader)
         self.mainLayout.addLayout(self.atomicPredLayout)
+        '''
         self.mainLayout.addWidget(self.assertionsHeader)
         self.mainLayout.addLayout(self.assertionsLayout)
+        '''
 
         self.ENTRY_MODIFIED_OK_var = set()
         self.ENTRY_IGNORE_var = set()
@@ -737,41 +766,6 @@ class ProjectInfo(AbstractInfo):
         """
         new_iri = self.iriField.value()
 
-        if new_iri == '':
-            self.session.statusBar().showMessage('IRI field is blank.', 15000)
-            self.updateData(self.project)
-            return
-
-        IRI_valid = self.project.check_validity_of_IRI(new_iri)
-
-        if(IRI_valid is False):
-            self.session.statusBar().showMessage('IRI is invalid.', 15000)
-            self.updateData(self.project)
-            return
-
-        if (self.project.iri != new_iri) and (new_iri != ''):
-            #self.session.undostack.push(CommandProjectSetIRI(self.project, self.project.iri, iri))
-
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
-
-            connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-            connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-            self.project.modifyIRIPrefixesEntry(self.project.iri, None, new_iri, None, Duplicate_dict_1)
-            if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                self.ENTRY_MODIFIED_OK_var = set()
-                self.ENTRY_IGNORE_var = set()
-
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.iri, new_iri], None)
-                self.session.undostack.push(command)
-
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
-
         self.iriField.clearFocus()
 
     @QtCore.pyqtSlot()
@@ -781,211 +775,7 @@ class ProjectInfo(AbstractInfo):
         """
         prefix_in_field = self.prefixField.value().strip()
 
-        flag = False
 
-
-        for c in prefix_in_field:
-            if c == '':
-                pass
-            elif (not c.isalnum()):
-                flag = True
-                break
-            else:
-                pass
-
-        if prefix_in_field == '':
-            self.session.statusBar().showMessage('Prefix field is blank.', 15000)
-            self.updateData(self.project)
-            return
-
-        if flag is True:
-            self.session.statusBar().showMessage(
-                '(Spaces in between alphanumeric characters) and (special characters) are not allowed in a prefix.',
-                15000)
-            self.updateData(self.project)
-            return
-        else:
-
-            if self.project.prefix != prefix_in_field:
-                # self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
-
-                prefixes_of_project = self.project.prefixes
-
-                commands = []
-
-                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                    self.project.IRI_prefixes_nodes_dict, dict())
-                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                    self.project.IRI_prefixes_nodes_dict, dict())
-
-                if prefix_in_field in prefixes_of_project:
-
-                    #just change the order
-                    new_order = []
-                    new_order.extend(prefixes_of_project)
-                    new_order.remove(prefix_in_field)
-                    new_order.append(prefix_in_field)
-
-                    Duplicate_dict_1[self.project.iri][0] = new_order
-
-                    command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                     Duplicate_dict_1,
-                                                                     [self.project.iri], None)
-
-                    commands.append(command_1)
-
-                else:
-
-                    #try to append (prefix_in_field) to (prefixes_of_project)
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-                    connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-                    connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-                    prefixes_new = []
-                    prefixes_new.extend(prefixes_of_project)
-                    prefixes_new.append(prefix_in_field)
-
-                    self.project.modifyIRIPrefixesEntry(self.project.iri, prefixes_of_project, self.project.iri,
-                                                        prefixes_new, Duplicate_dict_1)
-
-                    # self.project.print_dictionary(Duplicate_dict_1)
-
-                    if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                        self.ENTRY_MODIFIED_OK_var = set()
-                        self.ENTRY_IGNORE_var = set()
-
-                        command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                         Duplicate_dict_1,
-                                                                         [self.project.iri], None)
-
-                        commands.append(command_1)
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-                if commands:
-                    if len(commands) > 1:
-                        self.session.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
-                        for command in commands:
-                            self.session.undostack.push(command)
-                        self.session.undostack.endMacro()
-                    else:
-                        self.session.undostack.push(first(commands))
-
-        self.prefixField.clearFocus()
-
-    # not used
-    @QtCore.pyqtSlot()
-    def prefixEditingFinished_2(self):
-        """
-        Executed whenever we finish to edit the ontology prefix
-        """
-        prefix_in_field = self.prefixField.value().strip()
-
-        flag = False
-
-        for c in prefix_in_field:
-            if c == '':
-                pass
-            elif (not c.isalnum()):
-                flag = True
-                break
-            else:
-                pass
-
-        if flag is True:
-            self.session.statusBar().showMessage(
-                'Spaces in between alphanumeric characters and special characters are not allowed in a prefix.',
-                15000)
-        else:
-
-            if self.project.prefix != prefix_in_field:
-                #self.session.undostack.push(CommandProjectSetPrefix(self.project, self.project.prefix, prefix))
-
-                prefixes_of_project = self.project.prefixes
-
-                commands = []
-
-                if prefix_in_field in prefixes_of_project:
-
-                    Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries( \
-                        self.project.prefered_prefix_dict, dict())
-                    Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
-                        self.project.prefered_prefix_dict, dict())
-
-                    Duplicate_dict_1B[self.project.iri] = prefix_in_field
-
-                    nodes_corr_project_iri = self.project.IRI_prefixes_nodes_dict[self.project.iri][1]
-
-                    for node in nodes_corr_project_iri:
-                        Duplicate_dict_1B[str(node)] = prefix_in_field
-
-                    command = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B,\
-                                                        self.project.iri, None)
-
-                    commands.append(command)
-
-                else:
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-                    connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-                    connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-
-                    prefixes_new = set()
-                    prefixes_new = prefixes_new.union(prefixes_of_project)
-                    prefixes_new.add(prefix_in_field)
-
-                    self.project.modifyIRIPrefixesEntry(self.project.iri, prefixes_of_project, self.project.iri,
-                                                        prefixes_new, Duplicate_dict_1)
-
-                    # self.project.print_dictionary(Duplicate_dict_1)
-
-                    if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                        self.ENTRY_MODIFIED_OK_var = set()
-                        self.ENTRY_IGNORE_var = set()
-
-                        command_1 = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1,
-                                                                       [self.project.iri], None)
-
-                        Duplicate_dict_1B = self.project.copy_prefered_prefix_dictionaries(\
-                            self.project.prefered_prefix_dict, dict())
-                        Duplicate_dict_2B = self.project.copy_prefered_prefix_dictionaries( \
-                            self.project.prefered_prefix_dict, dict())
-
-                        nodes_corr_project_iri = Duplicate_dict_1[self.project.iri][1]
-
-                        Duplicate_dict_1B[self.project.iri] = prefix_in_field
-                        for node in nodes_corr_project_iri:
-                            Duplicate_dict_1B[str(node)] = prefix_in_field
-
-                        command_2 = CommandProjectORNodeSetPreferedPrefix(self.project, Duplicate_dict_2B, Duplicate_dict_1B,\
-                                                        self.project.iri, None)
-
-                        commands.append(command_1)
-                        commands.append(command_2)
-
-                    self.ENTRY_MODIFIED_OK_var = set()
-                    self.ENTRY_IGNORE_var = set()
-
-
-                if commands:
-                    if len(commands) > 1:
-                        self.session.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
-                        for command in commands:
-                            self.session.undostack.push(command)
-                        self.session.undostack.endMacro()
-                    else:
-                        self.session.undostack.push(first(commands))
 
         self.prefixField.clearFocus()
 
@@ -996,41 +786,6 @@ class ProjectInfo(AbstractInfo):
         Executed whenever we finish to edit the ontology prefix
         """
         prefixes_str = self.prefixesField.value()
-
-        prefixes_new = set()
-
-        prefixes_str_split = prefixes_str.split(', ')
-
-        for p in prefixes_str_split:
-            if p !='':
-                prefixes_new.add(p)
-
-        if (self.project.prefixes.issubset(prefixes_new)) and (prefixes_new.issubset(self.project.prefixes)) :
-            #do nothing
-            pass
-        else:
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
-
-            connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-            connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-
-            self.project.modifyIRIPrefixesEntry(self.project.iri,self.project.prefixes,self.project.iri,prefixes_new,Duplicate_dict_1)
-
-            #self.project.print_dictionary(Duplicate_dict_1)
-
-            if (True in self.ENTRY_MODIFIED_OK_var) and (True not in self.ENTRY_IGNORE_var):
-                self.ENTRY_MODIFIED_OK_var = set()
-                self.ENTRY_IGNORE_var = set()
-
-                command = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [self.project.iri], None)
-                self.session.undostack.push(command)
-
-            self.ENTRY_MODIFIED_OK_var = set()
-            self.ENTRY_IGNORE_var = set()
 
         self.prefixesField.clearFocus()
 
@@ -1051,7 +806,7 @@ class ProjectInfo(AbstractInfo):
         """
         version = self.versionField.value()
         if self.project.version != version:
-            self.session.undostack.push(CommandProjectSetVersion(self.project, self.project.version, version))
+            self.session.undostack.push(CommandProjectSetOntologyIRIAndVersion(self.project, self.project.version, version))
         #self.iriField.clearFocus()
         self.versionField.clearFocus()
     #############################################
@@ -1063,10 +818,12 @@ class ProjectInfo(AbstractInfo):
         Fetch new information and fill the widget with data.
         :type project: Project
         """
+        '''
         self.prefixField.setValue(project.prefix)
         self.prefixField.home(True)
         self.prefixField.clearFocus()
         self.prefixField.deselect()
+        '''
         """
         prefixes_str_to_set = ''
         project_prefixes = project.prefixes
@@ -1083,7 +840,7 @@ class ProjectInfo(AbstractInfo):
         self.prefixesField.clearFocus()
         self.prefixesField.deselect()
         """
-        self.iriField.setValue(project.iri)
+        self.iriField.setValue(str(project.ontologyIRI))
         self.iriField.home(True)
         self.iriField.clearFocus()
         self.iriField.deselect()
@@ -1100,12 +857,11 @@ class ProjectInfo(AbstractInfo):
                 break
         """
 
-        self.attributesField.setValue(project.predicateNum(Item.AttributeNode))
-        self.conceptsField.setValue(project.predicateNum(Item.ConceptNode))
-        self.rolesField.setValue(project.predicateNum(Item.RoleNode))
-        self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
-        self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
-
+        self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeIRINode))
+        self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptIRINode))
+        self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleIRINode))
+        #self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
+        #self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
 
 class EdgeInfo(AbstractInfo):
     """
@@ -1161,7 +917,6 @@ class EdgeInfo(AbstractInfo):
         self.typeField.home(True)
         self.typeField.deselect()
 
-
 class NodeInfo(AbstractInfo):
     """
     This class implements the information box for generic nodes.
@@ -1210,10 +965,13 @@ class NodeInfo(AbstractInfo):
         self.identityField.setValue(node.identityName)
         self.node = node
 
+#############################################
+#   IRI INFO WIDGETS
+#################################
 
-class PredicateNodeInfo(NodeInfo):
+class IRIInfo(NodeInfo):
     """
-    This class implements the information box for predicate nodes.
+    This class implements the information box for nodes having an associated IRI.
     """
     def __init__(self, session, parent=None):
         """
@@ -1238,16 +996,36 @@ class PredicateNodeInfo(NodeInfo):
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
         #self.nodePropLayout.addRow(self.textKey, self.textField)
 
-        self.nameKey = Key('Name', self)
+        self.nameKey = Key('Simple name', self)
         self.nameField = String(self)
         #self.nameField.setReadOnly(False)
         self.nameField.setReadOnly(True)
-        connect(self.nameField.editingFinished, self.editingFinished)
+        #connect(self.nameField.editingFinished, self.editingFinished)
 
-        self.predPropHeader = Header('Predicate properties', self)
+        self.fullIRIKey = Key('IRI', self)
+        self.fullIRIKey.setFont(Font('Roboto', 12))
+        self.fullIRIField = String(self)
+        self.fullIRIField.setFont(Font('Roboto', 12))
+        # self.nameField.setReadOnly(False)
+        self.fullIRIField.setReadOnly(True)
+        #connect(self.fullIRIField.editingFinished, self.editingFinished)
+
+        self.predPropHeader = Header('IRI properties', self)
+        self.labelKey = Key('Label', self)
+        self.labelKey.setFont(Font('Roboto', 12))
+        self.labelField = String(self)
+        self.labelField.setFont(Font('Roboto', 12))
+        # self.textField.setReadOnly(False)
+        self.labelField.setReadOnly(True)
+        #connect(self.labelField.editingFinished, self.editingFinished)
+
+        self.predPropHeader = Header('IRI properties', self)
+        self.predPropHeader.setFont(Font('Roboto', 12))
         self.predPropLayout = QtWidgets.QFormLayout()
         self.predPropLayout.setSpacing(0)
+        self.predPropLayout.addRow(self.fullIRIKey, self.fullIRIField)
         self.predPropLayout.addRow(self.nameKey, self.nameField)
+        self.predPropLayout.addRow(self.labelKey, self.labelField)
 
         self.mainLayout.insertWidget(0, self.predPropHeader)
         self.mainLayout.insertLayout(1, self.predPropLayout)
@@ -1288,7 +1066,7 @@ class PredicateNodeInfo(NodeInfo):
     #   INTERFACE
     #################################
 
-    def updateData(self, node):
+    def     updateData(self, node):
         """
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
@@ -1310,20 +1088,23 @@ class PredicateNodeInfo(NodeInfo):
                 break
 
         #############################################
-        # NAME / TEXT FIELDS
+        # IRI FIELDS
         #################################
-
-        self.nameField.setValue(node.text().replace('\n',''))
-        self.nameField.home(True)
-        self.nameField.deselect()
-        self.textField.setValue(node.text().replace('\n',''))
-        self.textField.home(True)
-        self.textField.deselect()
+        if node.iri:
+            self.fullIRIField.setValue(str(node.iri))
+            self.nameField.setValue(str(node.iri.getSimpleName()))
+            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            lang = settings.value('ontology/iri/render/language', 'it')
+            labelAssertion = self.node.iri.getLabelAnnotationAssertion(lang)
+            if labelAssertion:
+                self.labelField.setValue(labelAssertion.getObjectResourceString(True))
+            else:
+                self.labelField.setValue('')
 
         #############################################
         # ENABLE / DISABLE REFACTORING
         #################################
-
+        #TODO NEL CASO SOTTO MODIFICA TUTTO
         refactor = True
         #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
         if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
@@ -1331,8 +1112,112 @@ class PredicateNodeInfo(NodeInfo):
                 refactor = False
         #self.nameField.setReadOnly(not refactor)
 
+class FacetIRIInfo(NodeInfo):
+    """
+    This class implements the information box for nodes having an associated Facet.
+    """
+    def __init__(self, session, parent=None):
+        """
+        Initialize the predicate node information box.
+        :type session: Session
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(session, parent)
 
-class AttributeNodeInfo(PredicateNodeInfo):
+        self.brushKey = Key('Color', self)
+        self.brushKey.setFont(Font('Roboto', 12))
+        self.brushMenu = QtWidgets.QMenu(self)
+        self.brushButton = Button()
+        self.brushButton.setFont(Font('Roboto', 12))
+        self.brushButton.setMenu(self.brushMenu)
+        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+
+        self.nodePropLayout.addRow(self.brushKey, self.brushButton)
+        #self.nodePropLayout.addRow(self.textKey, self.textField)
+
+        self.facetKey = Key('Constr. facet', self)
+        self.facetKey.setFont(Font('Roboto', 12))
+        self.facetField = String(self)
+        self.facetField.setFont(Font('Roboto', 12))
+        #self.nameField.setReadOnly(False)
+        self.facetField.setReadOnly(True)
+        connect(self.facetField.editingFinished, self.editingFinished)
+
+        self.valueKey = Key('Constr. value', self)
+        self.valueKey.setFont(Font('Roboto', 12))
+        self.valueField = String(self)
+        self.valueField.setFont(Font('Roboto', 12))
+        # self.nameField.setReadOnly(False)
+        self.valueField.setReadOnly(True)
+        connect(self.valueField.editingFinished, self.editingFinished)
+
+        self.predPropHeader = Header('Literal properties', self)
+        self.predPropHeader.setFont(Font('Roboto', 12))
+        self.predPropLayout = QtWidgets.QFormLayout()
+        self.predPropLayout.setSpacing(0)
+        self.predPropLayout.addRow(self.facetKey, self.facetField)
+        self.predPropLayout.addRow(self.valueKey, self.valueField)
+
+        self.mainLayout.insertWidget(0, self.predPropHeader)
+        self.mainLayout.insertLayout(1, self.predPropLayout)
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def editingFinished(self):
+        """
+        Executed whenever we finish to edit the predicate/node name.
+        """
+        '''
+        if self.node:
+            
+            try:
+                sender = self.sender()
+                node = self.node
+                data = sender.value()
+                data = data if not isEmpty(data) else node.label.template
+                if data != node.text():
+                    diagram = node.diagram
+                    project = node.project
+                    if sender is self.facetField:
+                        self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
+                        for n in project.predicates(node.type(), node.text()):
+                            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), data, refactor=True))
+                        self.session.undostack.endMacro()
+                    else:
+                        self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data))
+            except RuntimeError:
+                pass
+        '''
+
+        self.facetField.clearFocus()
+        self.textField.clearFocus()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def     updateData(self, node):
+        """
+        Fetch new information and fill the widget with data.
+        :type node: AbstractNode
+        """
+        super().updateData(node)
+
+        #############################################
+        # BRUSH FIELD
+        #################################
+
+        #############################################
+        # Literal FIELDS
+        #################################
+        if node.facet:
+            self.valueField.setValue(str(node.facet.literal))
+            self.facetField.setValue(str(node.facet.constrainingFacet))
+
+class AttributeIRIInfo(IRIInfo):
     """
     This class implements the information box for the Attribute node.
     """
@@ -1365,18 +1250,21 @@ class AttributeNodeInfo(PredicateNodeInfo):
         sender = self.sender()
         checked = sender.isChecked()
         key = sender.property('key')
-        undo = self.project.meta(self.node.type(), self.node.text())
+        #undo = self.project.meta(self.node.type(), self.node.text())
+        undo = self.node.iri.getMetaProperties()
         redo = undo.copy()
         redo[key] = checked
         if redo != undo:
             prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
-            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
-            self.session.undostack.push(
+            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.iri, prop)
+            #TODO SWITCHA VERSO CommandIRISetMeta(...)
+            self.session.undostack.push(CommandIRISetMeta(self.project,self.node.type(),self.node.iri,undo,redo,name))
+            '''self.session.undostack.push(
                 CommandNodeSetMeta(
                     self.project,
                     self.node.type(),
                     self.node.text(),
-                    undo, redo, name))
+                    undo, redo, name))'''
 
     #############################################
     #   INTERFACE
@@ -1390,11 +1278,11 @@ class AttributeNodeInfo(PredicateNodeInfo):
         super().updateData(node)
         self.functBox.setChecked(node.isFunctional())
 
-        functEnabled = self.functBox.isChecked() or (self.project.profile.type() is not OWLProfile.OWL2QL)
+        functEnabled = self.functBox.isChecked() or (self.project.profile.type() is not OWL2Profiles.OWL2QL)
         self.functBox.setEnabled(functEnabled)
         self.functKey.setEnabled(functEnabled)
 
-class RoleNodeInfo(PredicateNodeInfo):
+class RoleIRIInfo(IRIInfo):
     """
     This class implements the information box for the Role node.
     """
@@ -1475,18 +1363,23 @@ class RoleNodeInfo(PredicateNodeInfo):
         sender = self.sender()
         checked = sender.isChecked()
         key = sender.property('key')
-        undo = self.project.meta(self.node.type(), self.node.text())
+        # undo = self.project.meta(self.node.type(), self.node.text())
+        undo = self.node.iri.getMetaProperties()
         redo = undo.copy()
         redo[key] = checked
         if redo != undo:
             prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
-            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.text(), prop)
+            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.iri, prop)
+            self.session.undostack.push(
+                CommandIRISetMeta(self.project, self.node.type(), self.node.iri, undo, redo, name))
+            '''
             self.session.undostack.push(
                 CommandNodeSetMeta(
                     self.project,
                     self.node.type(),
                     self.node.text(),
                     undo, redo, name))
+            '''
 
     #############################################
     #   INTERFACE
@@ -1502,132 +1395,122 @@ class RoleNodeInfo(PredicateNodeInfo):
         self.asymmetricBox.setChecked(node.isAsymmetric())
 
         self.functBox.setChecked(node.isFunctional())
-        functEnabled = self.functBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2QL
+        functEnabled = self.functBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
         self.functBox.setEnabled(functEnabled)
         self.functKey.setEnabled(functEnabled)
 
         self.invFunctBox.setChecked(node.isInverseFunctional())
-        invfunctEnabled = self.invFunctBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2QL
+        invfunctEnabled = self.invFunctBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
         self.invFunctBox.setEnabled(invfunctEnabled)
         self.invFunctKey.setEnabled(invfunctEnabled)
 
         self.irreflexiveBox.setChecked(node.isIrreflexive())
 
         self.reflexiveBox.setChecked(node.isReflexive())
-        reflexiveEnabled = self.reflexiveBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2RL
+        reflexiveEnabled = self.reflexiveBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2RL
         self.reflexiveBox.setEnabled(reflexiveEnabled)
         self.reflexiveKey.setEnabled(reflexiveEnabled)
 
         self.symmetricBox.setChecked(node.isSymmetric())
 
         self.transitiveBox.setChecked(node.isTransitive())
-        transitiveEnabled = self.transitiveBox.isChecked() or self.project.profile.type() is not OWLProfile.OWL2QL
+        transitiveEnabled = self.transitiveBox.isChecked() or self.project.profile.type() is not OWL2Profiles.OWL2QL
         self.transitiveBox.setEnabled(transitiveEnabled)
         self.transitiveKey.setEnabled(transitiveEnabled)
 
-class ValueDomainNodeInfo(NodeInfo):
+class LiteralInfo(NodeInfo):
     """
-    This class implements the information box for the Value Domain node.
+    This class implements the information box for nodes having an associated IRI.
     """
     def __init__(self, session, parent=None):
         """
-        Initialize the Value Domain node information box.
+        Initialize the predicate node information box.
         :type session: Session
         :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
+
+        self.brushKey = Key('Color', self)
+        self.brushKey.setFont(Font('Roboto', 12))
+        self.brushMenu = QtWidgets.QMenu(self)
+        self.brushButton = Button()
+        self.brushButton.setFont(Font('Roboto', 12))
+        self.brushButton.setMenu(self.brushMenu)
+        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+
+        self.nodePropLayout.addRow(self.brushKey, self.brushButton)
+        #self.nodePropLayout.addRow(self.textKey, self.textField)
+
+        self.lexicalSpaceKey = Key('Lexical space', self)
+        self.lexicalSpaceKey.setFont(Font('Roboto', 12))
+        self.lexicalFormField = String(self)
+        self.lexicalFormField.setFont(Font('Roboto', 12))
+        #self.nameField.setReadOnly(False)
+        self.lexicalFormField.setReadOnly(True)
+        connect(self.lexicalFormField.editingFinished, self.editingFinished)
+
         self.datatypeKey = Key('Datatype', self)
-        self.datatypeField = Select(self)
-        connect(self.datatypeField.activated, self.datatypeChanged)
-        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
+        self.datatypeField = String(self)
+        # self.nameField.setReadOnly(False)
+        self.datatypeField.setReadOnly(True)
+        connect(self.datatypeField.editingFinished, self.editingFinished)
+
+        self.langKey = Key('Language', self)
+        self.langKey.setFont(Font('Roboto', 12))
+        self.langField = String(self)
+        self.langField.setFont(Font('Roboto', 12))
+        # self.textField.setReadOnly(False)
+        self.langField.setReadOnly(True)
+        connect(self.langField.editingFinished, self.editingFinished)
+
+        self.predPropHeader = Header('Literal properties', self)
+        self.predPropHeader.setFont(Font('Roboto', 12))
+        self.predPropLayout = QtWidgets.QFormLayout()
+        self.predPropLayout.setSpacing(0)
+        self.predPropLayout.addRow(self.datatypeKey, self.datatypeField)
+        self.predPropLayout.addRow(self.lexicalSpaceKey, self.lexicalFormField)
+        self.predPropLayout.addRow(self.langKey, self.langField)
+
+        self.mainLayout.insertWidget(0, self.predPropHeader)
+        self.mainLayout.insertLayout(1, self.predPropLayout)
 
     #############################################
     #   SLOTS
     #################################
 
     @QtCore.pyqtSlot()
-    def datatypeChanged(self):
+    def editingFinished(self):
         """
-        Executed when we need to change the datatype.
-        """
-        if self.node:
-            node = self.node
-            diagram = node.diagram
-            datatype = self.datatypeField.currentData()
-            data = datatype.value
-            if node.text() != data:
-                name = 'change {0} to {1}'.format(node.shortName, data)
-                self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
-        self.datatypeField.clearFocus()
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def updateData(self, node):
-        """
-        Fetch new information and fill the widget with data.
-        :type node: AbstractNode
-        """
-        super().updateData(node)
-        self.datatypeField.clear()
-        for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
-            self.datatypeField.addItem(datatype.value, datatype)
-        self.datatypeField.setCurrentText(node.datatype.value)
-
-
-class ValueNodeInfo(NodeInfo):
-    """
-    This class implements the information box for the Individual node with identity 'Value'.
-    """
-    def __init__(self, session, parent=None):
-        """
-        Initialize the Value node information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
-        """
-        super().__init__(session, parent)
-        self.datatypeKey = Key('Datatype', self)
-        self.datatypeField = Select(self)
-        connect(self.datatypeField.activated, self.valueChanged)
-        self.valueKey = Key('Value', self)
-        self.valueField = String(self)
-        self.valueField.setReadOnly(False)
-        connect(self.valueField.editingFinished, self.valueChanged)
-        self.nodePropLayout.addRow(self.datatypeKey, self.datatypeField)
-        self.nodePropLayout.addRow(self.valueKey, self.valueField)
-
-    #############################################
-    #   SLOTS
-    #################################
-
-    @QtCore.pyqtSlot()
-    def valueChanged(self):
-        """
-        Executed when we need to recompute the Value.
+        Executed whenever we finish to edit the predicate/node name.
         """
         if self.node:
 
             try:
+                sender = self.sender()
                 node = self.node
-                diagram = node.diagram
-                datatype = self.datatypeField.currentData()
-                value = self.valueField.value()
-                data = node.compose(value, datatype)
-                if node.text() != data:
-                    name = 'change value to {0}'.format(data)
-                    self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
+                data = sender.value()
+                data = data if not isEmpty(data) else node.label.template
+                if data != node.text():
+                    diagram = node.diagram
+                    project = node.project
+                    if sender is self.lexicalFormField:
+                        self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
+                        for n in project.predicates(node.type(), node.text()):
+                            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), data, refactor=True))
+                        self.session.undostack.endMacro()
+                    else:
+                        self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data))
             except RuntimeError:
                 pass
 
-        self.datatypeField.clearFocus()
-        self.valueField.clearFocus()
+        self.lexicalFormField.clearFocus()
+        self.textField.clearFocus()
 
     #############################################
     #   INTERFACE
     #################################
 
-    def updateData(self, node):
+    def     updateData(self, node):
         """
         Fetch new information and fill the widget with data.
         :type node: AbstractNode
@@ -1635,104 +1518,35 @@ class ValueNodeInfo(NodeInfo):
         super().updateData(node)
 
         #############################################
-        # DATATYPE FIELD
+        # BRUSH FIELD
         #################################
 
-        self.datatypeField.clear()
-        for datatype in sorted(Datatype.forProfile(self.project.profile.type()), key=attrgetter('value')):
-            self.datatypeField.addItem(datatype.value, datatype)
-        self.datatypeField.setCurrentText(node.datatype.value)
-
-        #############################################
-        # VALUE FIELD
-        #################################
-
-        self.valueField.setValue(node.value)
-
-
-class FacetNodeInfo(NodeInfo):
-    """
-    This class implements the information box for the Facet node.
-    """
-    def __init__(self, session, parent=None):
-        """
-        Initialize the Value Restriction node information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
-        """
-        super().__init__(session, parent)
-
-        self.facetKey = Key('Facet', self)
-        self.facetField = Select(self)
-        connect(self.facetField.activated, self.facetChanged)
-
-        self.valueKey = Key('Value', self)
-        self.valueField = String(self)
-        self.valueField.setReadOnly(False)
-        connect(self.valueField.editingFinished, self.facetChanged)
-
-        self.nodePropLayout.addRow(self.facetKey, self.facetField)
-        self.nodePropLayout.addRow(self.valueKey, self.valueField)
-
-    #############################################
-    #   SLOTS
-    #################################
-
-    @QtCore.pyqtSlot()
-    def facetChanged(self):
-        """
-        Executed when we need to recompute the value of the node.
-        """
-        if self.node:
-            node = self.node
-            diagram = node.diagram
-            data = node.compose(self.facetField.currentData(), self.valueField.value())
-            if node.text() != data:
-                name = 'change {0} to {1}'.format(node.text(), data)
-                self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
-
-        self.facetField.clearFocus()
-        self.valueField.clearFocus()
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def updateData(self, node):
-        """
-        Fetch new information and fill the widget with data.
-        :type node: AbstractNode
-        """
-        super().updateData(node)
-
-        #############################################
-        # FACET FIELD
-        #################################
-
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.type() is Item.DatatypeRestrictionNode
-        f3 = lambda x: x.type() is Item.ValueDomainNode
-        admissible = [x for x in Facet]
-        restriction = first(node.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2))
-        if restriction:
-            valuedomain = first(restriction.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3))
-            if valuedomain:
-                admissible = Facet.forDatatype(valuedomain.datatype)
-
-        self.facetField.clear()
-        for facet in admissible:
-            self.facetField.addItem(facet.value, facet)
-
-        facet = node.facet
-        for i in range(self.facetField.count()):
-            if self.facetField.itemData(i) is facet:
-                self.facetField.setCurrentIndex(i)
+        if self.brushMenu.isEmpty():
+            self.brushMenu.addActions(self.session.action('brush').actions())
+        for action in self.session.action('brush').actions():
+            color = action.data()
+            brush = QtGui.QBrush(QtGui.QColor(color.value))
+            if node.brush() == brush:
+                self.brushButton.setIcon(BrushIcon(12, 12, color.value, '#000000'))
+                self.brushButton.setText(color.value)
                 break
-        else:
-            self.facetField.setCurrentIndex(0)
 
         #############################################
-        # VALUE FIELD
+        # Literal FIELDS
         #################################
+        if node.literal:
+            self.datatypeField.setValue(str(node.datatype))
+            self.lexicalFormField.setValue(str(node.lexicalForm))
+            if node.language:
+                self.langField.setValue(str(node.language))
 
-        self.valueField.setValue(node.value)
+        #############################################
+        # ENABLE / DISABLE REFACTORING
+        #################################
+        #TODO NEL CASO SOTTO MODIFICA TUTTO
+        refactor = True
+        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
+        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
+            if node.special() is not None:
+                refactor = False
+        #self.nameField.setReadOnly(not refactor)
