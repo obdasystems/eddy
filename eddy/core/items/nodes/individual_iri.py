@@ -7,14 +7,14 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode
+from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.functions.signals import connect, disconnect
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
 
 
-class IndividualNode(OntologyEntityNode, AbstractResizableNode):
+class IndividualNode(OntologyEntityResizableNode):
     """
     This class implements the 'Individual' node.
     """
@@ -42,8 +42,7 @@ class IndividualNode(OntologyEntityNode, AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        OntologyEntityNode.__init__(self,iri=iri)
-        AbstractResizableNode.__init__(self, **kwargs)
+        super().__init__(iri=iri,**kwargs)
         w = max(width, 60)
         h = max(height, 60)
         brush = brush or IndividualNode.DefaultBrush

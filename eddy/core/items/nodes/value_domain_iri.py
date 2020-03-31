@@ -43,7 +43,7 @@ from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
 
-class ValueDomainNode(OntologyEntityNode, AbstractNode):
+class ValueDomainNode(OntologyEntityNode):
     """
     This class implements the 'Value-Domain' node.
     """
@@ -59,8 +59,7 @@ class ValueDomainNode(OntologyEntityNode, AbstractNode):
         :type height: int
         :type brush: QBrush
         """
-        OntologyEntityNode.__init__(self, iri=iri)
-        AbstractNode.__init__(self, **kwargs)
+        super().__init__(iri=iri,**kwargs)
         brush = brush or ValueDomainNode.DefaultBrush
         pen = ValueDomainNode.DefaultPen
         self.background = Polygon(QtCore.QRectF(-49, -24, 98, 48))

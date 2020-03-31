@@ -43,10 +43,10 @@ from eddy.core.functions.misc import snapF
 
 from eddy.core.datatypes.graphol import Item, Identity, Special
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode
+from eddy.core.items.nodes.common.base import OntologyEntityResizableNode
 
 
-class RoleNode(OntologyEntityNode, AbstractResizableNode):
+class RoleNode(OntologyEntityResizableNode):
     """
     This class implements the 'Role' node.
     """
@@ -69,8 +69,7 @@ class RoleNode(OntologyEntityNode, AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        OntologyEntityNode.__init__(self, iri=iri)
-        AbstractResizableNode.__init__(self, **kwargs)
+        super().__init__(iri=iri,**kwargs)
 
         w = max(width, 70)
         h = max(height, 50)

@@ -2115,7 +2115,7 @@ class OWLOntologyFetcher(AbstractWorker):
     #############################################
     #   AUXILIARY METHODS
     #################################
-
+    '''
     def getOWLApiDatatype(self, datatype):
         """
         Returns the OWLDatatype matching the given Datatype.
@@ -2191,32 +2191,34 @@ class OWLOntologyFetcher(AbstractWorker):
         if datatype is Datatype.XMLLiteral:
             return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
         raise ValueError('invalid datatype supplied: %s' % datatype)
+    '''
 
     def getOWLApiFacet(self, facet):
         """
         Returns the OWLFacet matching the given Facet.
         :type facet: Facet
-        :rtype: OWLFacet
+        :rtype: OWL2Facet
         """
-        if facet is Facet.maxExclusive:
+        if facet is OWL2Facet.maxExclusive:
             return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
-        if facet is Facet.maxInclusive:
+        if facet is OWL2Facet.maxInclusive:
             return self.OWLFacet.valueOf('MAX_INCLUSIVE')
-        if facet is Facet.minExclusive:
+        if facet is OWL2Facet.minExclusive:
             return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
-        if facet is Facet.minInclusive:
+        if facet is OWL2Facet.minInclusive:
             return self.OWLFacet.valueOf('MIN_INCLUSIVE')
-        if facet is Facet.langRange:
+        if facet is OWL2Facet.langRange:
             return self.OWLFacet.valueOf('LANG_RANGE')
-        if facet is Facet.length:
+        if facet is OWL2Facet.length:
             return self.OWLFacet.valueOf('LENGTH')
-        if facet is Facet.maxLength:
+        if facet is OWL2Facet.maxLength:
             return self.OWLFacet.valueOf('MIN_LENGTH')
-        if facet is Facet.minLength:
+        if facet is OWL2Facet.minLength:
             return self.OWLFacet.valueOf('MIN_LENGTH')
-        if facet is Facet.pattern:
+        if facet is OWL2Facet.pattern:
             return self.OWLFacet.valueOf('PATTERN')
         raise ValueError('invalid facet supplied: %s' % facet)
+
 
     #############################################
     #   NODES PROCESSING

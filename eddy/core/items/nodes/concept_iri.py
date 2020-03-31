@@ -4,13 +4,13 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode
+from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
 from eddy.core.owl import IRI
 
 
-class ConceptNode(OntologyEntityNode, AbstractResizableNode):
+class ConceptNode(OntologyEntityResizableNode):
     """
     This class implements the 'Concept' node.
     """
@@ -27,8 +27,7 @@ class ConceptNode(OntologyEntityNode, AbstractResizableNode):
         :type height: int
         :type brush: QBrush
         """
-        OntologyEntityNode.__init__(self,iri=iri)
-        AbstractResizableNode.__init__(self,**kwargs)
+        super().__init__(iri=iri,**kwargs)
         w = max(width, 110)
         h = max(height, 50)
         brush = brush or ConceptNode.DefaultBrush
