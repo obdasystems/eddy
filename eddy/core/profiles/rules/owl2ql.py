@@ -35,7 +35,7 @@
 
 from eddy.core.datatypes.graphol import Item, Identity, Special
 from eddy.core.functions.graph import bfs
-from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.common.base import OntologyEntityNode, OntologyEntityResizableNode
 from eddy.core.owl import OWL2Datatype, OWL2Profiles
 from eddy.core.profiles.common import ProfileError
 from eddy.core.profiles.rules.common import ProfileNodeRule
@@ -52,7 +52,7 @@ class FunctionalityUnsupported(ProfileNodeRule):
             if node.isFunctional():
                 raise ProfileError('Functionality of roles and attributes is forbidden in OWL 2 QL')
         '''
-        if isinstance(node,OntologyEntityNode):
+        if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
             if node.iri and node.iri.functional:
                 raise ProfileError('({}) Functionality of roles and attributes is forbidden in OWL 2 QL'.format(str(node.iri)))
 
@@ -61,7 +61,7 @@ class InverseFunctionalityUnsupported(ProfileNodeRule):
     Prevents from using inverse-functionality in roles which is outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if isinstance(node, OntologyEntityNode):
+        if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
             if node.iri and node.iri.inverseFunctional:
                 raise ProfileError('({}) Functionality of roles is forbidden in OWL 2 QL'.format(str(node.iri)))
 
@@ -72,7 +72,7 @@ class TransitivityUnsupported(ProfileNodeRule):
     Prevents from using transitivity in  roles which is outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if isinstance(node, OntologyEntityNode):
+        if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
             if node.iri and node.iri.transitive:
                 raise ProfileError('({}) Transitivity of roles is forbidden in OWL 2 QL'.format(str(node.iri)))
 

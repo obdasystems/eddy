@@ -46,7 +46,7 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.attribute_iri import AttributeNode
-from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
+from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.individual_iri import IndividualNode
 from eddy.core.items.nodes.role_iri import RoleNode
@@ -139,9 +139,9 @@ class Project(IRIManager):
     #sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
 
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
-    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(OntologyEntityNode,IRI)
+    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(AbstractNode,IRI)
 
-    sgnIRIChanged = QtCore.pyqtSignal(OntologyEntityNode, IRI)
+    sgnIRIChanged = QtCore.pyqtSignal(AbstractNode, IRI)
 
     sgnIRIRefactor = QtCore.pyqtSignal(IRI, IRI)
 
@@ -434,7 +434,7 @@ class Project(IRIManager):
         if (('AttributeNode' in str(type(item))) or
                 ('ConceptNode' in str(type(item))) or
                 ('IndividualNode' in str(type(item))) or
-                ('RoleNode' in str(type(item)))) and not isinstance(item,OntologyEntityNode):
+                ('RoleNode' in str(type(item)))) and not (isinstance(item,OntologyEntityNode) or isinstance(item, OntologyEntityResizableNode)):
             node = item
             corr_iri = None
             flag = False
@@ -1333,7 +1333,7 @@ class Project(IRIManager):
         #TODO modifica metodi self.index.addItem e self.index.addIRIOccurenceToDiagram in modo che aggiunte in dict self[K_NODE] siano coerenti
         if self.index.addItem(diagram, item):
             #TODO added
-            if isinstance(item, OntologyEntityNode):
+            if isinstance(item, OntologyEntityNode) or isinstance(item, OntologyEntityResizableNode):
                 self.index.addIRIOccurenceToDiagram(diagram, item)
             #TODO end
             self.sgnItemAdded.emit(diagram, item)
@@ -1349,7 +1349,7 @@ class Project(IRIManager):
         """
         if self.index.removeItem(diagram, item):
             # TODO added
-            if isinstance(item, OntologyEntityNode):
+            if isinstance(item, OntologyEntityNode) or isinstance(item, OntologyEntityResizableNode):
                 if self.index.removeIRIOccurenceFromDiagram(diagram, item):
                     self.sgnIRIRemovedFromAllDiagrams.emit(item.iri)
             # TODO end
@@ -1639,7 +1639,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Make all occurrences of sub become occurrences of master
         :type oldIRI: IRI
-        :type node: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         """
 
         if isinstance(node, ConceptNode):
@@ -1740,7 +1740,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Set node as occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         """
         iri = node.iri
         if iri in self[K_OCCURRENCES]:
@@ -1789,7 +1789,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Set node as typed occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         :type k_metatype: str
         """
         iri = node.iri
@@ -1818,7 +1818,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Remove node as occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         """
         '''
         if diagram.name in self[K_NODE]:
@@ -1860,7 +1860,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Remove node as typed occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         :type k_metatype: str
         """
         iri = node.iri
@@ -2043,7 +2043,7 @@ class ProjectIRIMergeWorker(QtCore.QObject):
     def replaceIRIs(self,diagram,alreadyAdded):
         #TODO Reimplementa tutto con opportuni Commands
         for node in diagram.nodes():
-            if isinstance(node,OntologyEntityNode):
+            if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                 otherIRI = node.iri
                 projIRI = None
                 if not str(otherIRI) in alreadyAdded and self.project.existIRI(str(otherIRI)):

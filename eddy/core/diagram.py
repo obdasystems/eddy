@@ -50,7 +50,7 @@ from eddy.core.functions.signals import connect
 from eddy.core.generators import GUID
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.factory import ItemFactory
-from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
@@ -222,7 +222,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                     #new element
                     if isinstance(node, FacetNode):
                         self.session.doOpenConstrainingFacetBuilder(node)
-                    elif isinstance(node, OntologyEntityNode):
+                    elif isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                         self.session.doOpenIRIBuilder(node)
                     elif isinstance(node, LiteralNode):
                         self.session.doOpenLiteralBuilder(node)
@@ -302,7 +302,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 snapToGrid = self.session.action('toggle_grid').isChecked()
                 node = self.factory.create(Item.valueOf(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
-                if isinstance(node, OntologyEntityNode):
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     self.session.doOpenIRIBuilder(node)
                 elif isinstance(node, FacetNode):
                     self.session.doOpenConstrainingFacetBuilder(node)
@@ -611,11 +611,11 @@ class Diagram(QtWidgets.QGraphicsScene):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot(OntologyEntityNode)
+    @QtCore.pyqtSlot(AbstractNode)
     def doAddOntologyEntityNode(self,node):
         """
         Add to this diagram a node identified by an IRI
-        :type node: OntologyEntityNode
+        :type node: AbstractNode
         """
         if node:
             command = CommandNodeAdd(self,node)

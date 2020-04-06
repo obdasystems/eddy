@@ -4,7 +4,7 @@ from PyQt5.QtCore import QObject, Qt
 from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode, CommandChangeFacetOfNode, \
     CommandChangeLiteralOfNode, CommandIRIRefactor, CommandChangeIRIIdentifier
 from eddy.core.items.nodes.attribute_iri import AttributeNode
-from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
@@ -146,8 +146,8 @@ class IRIDialogsWidgetFactory(QObject):
 
 class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
-    sgnIRIAccepted = QtCore.pyqtSignal(OntologyEntityNode)
-    sgnIRIRejected = QtCore.pyqtSignal(OntologyEntityNode)
+    sgnIRIAccepted = QtCore.pyqtSignal(AbstractNode)
+    sgnIRIRejected = QtCore.pyqtSignal(AbstractNode)
 
 
     emptyString = ''

@@ -233,7 +233,7 @@ class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
         """
         Initialize the command.
         :type project: Project
-        :type node: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         :type iriStringRedo: str
         :type iriStringUndo: str
         :type name: str

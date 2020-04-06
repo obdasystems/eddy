@@ -153,7 +153,7 @@ from eddy.core.functions.path import (
 )
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
-from eddy.core.items.nodes.common.base import OntologyEntityNode
+from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
@@ -252,7 +252,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnPrefixRemoved = QtCore.pyqtSignal(str)
     sgnPrefixModified = QtCore.pyqtSignal(str, str)
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
-    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(OntologyEntityNode, IRI)
+    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(AbstractNode, IRI)
 
 
     #Signals related to rendering options
@@ -1676,7 +1676,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #TODO CONTROLLA BENE SE SET DEI COMANDI è COMPLETO (GESTIONE IRI RIMOSSE)
         commands = []
         for item in items:
-            if isinstance(item,OntologyEntityNode):
+            if isinstance(item,OntologyEntityNode) or isinstance(item, OntologyEntityResizableNode):
                 print('Removing OntologyPredicateNode {}'.format(item))
                 # TODO aggiungi comandi per rimozione IRI da indice
         commands.append(CommandItemsRemove(diagram, items))
@@ -2300,11 +2300,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 properties.raise_()
                 properties.activateWindow()
 
-    @QtCore.pyqtSlot(OntologyEntityNode)
+    @QtCore.pyqtSlot(AbstractNode)
     def doOpenIRIBuilder(self, node):
         """
         Executed when an IRI must be associated to an empty node.
-        :type node: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
@@ -2432,7 +2432,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if node and isinstance(node,OntologyEntityNode):
+            if node and (isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode)):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self)
@@ -2456,7 +2456,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if node and isinstance(node, OntologyEntityNode):
+            if node and (isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode)):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self, True)
@@ -2587,7 +2587,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 action = self.sender()
                 color = action.data()
                 nodes = []
-                if isinstance(node, OntologyEntityNode):
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     nodes = self.project.iriOccurrences(node.type(),node.iri)
                 else:
                     nodes = self.project.predicates(node.type(), node.text())

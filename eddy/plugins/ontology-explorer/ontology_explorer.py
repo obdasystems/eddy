@@ -44,7 +44,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.datatypes.annotation import Status
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode
+from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
 from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
 from eddy.core.plugin import AbstractPlugin
 
@@ -380,7 +380,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         node = self.sender()
         self.doAddNode(node.diagram,node)
 
-    @QtCore.pyqtSlot(OntologyEntityNode,IRI)
+    @QtCore.pyqtSlot(AbstractNode,IRI)
     def onSingleNodeIRISwitched(self,node,oldIRI):
         oldParentK = self.parentKeyForIRI(oldIRI, self.project)
         for parent in self.model.findItems(oldParentK, QtCore.Qt.MatchExactly):
@@ -390,7 +390,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                     parent.removeRow(i)
                     break
             if not parent.rowCount():
-                if isinstance(node, OntologyEntityNode):
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     self.disconnectIRISignals(parent.data())
                 self.model.removeRow(parent.index().row())
 
@@ -413,7 +413,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if node.type() in self.items:
             parent = self.parentFor(node)
             if not parent:
-                if not isinstance(node,OntologyEntityNode):
+                if not (isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode)):
                     parent = QtGui.QStandardItem(self.parentKey(node))
                     parent.setIcon(self.iconFor(node))
                 else:
@@ -422,7 +422,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                     self.connectIRISignals(node.iri)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKey(diagram, node))
-            if isinstance(node,OntologyEntityNode):
+            if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                 child.setIcon(self.iconFor(node))
                 connect(node.sgnIRISwitched,self.onNodeIRISwitched)
             child.setData(node)
@@ -450,7 +450,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 if child:
                     parent.removeRow(child.index().row())
                 if not parent.rowCount():
-                    if isinstance(node,OntologyEntityNode):
+                    if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                         self.disconnectIRISignals(parent.data())
                     self.model.removeRow(parent.index().row())
 
@@ -570,7 +570,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     #################################
     def connectNodeSignals(self, node):
         '''
-        :type iri: OntologyEntityNode
+        :type node: OntologyEntityNode | OntologyEntityResizableNode
         '''
         connect(node.sgnIRISwitched, self.onNodeIRISwitched)
 
@@ -629,7 +629,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         diagram = rstrip(diagram.name, File.Graphol.extension)
 
-        if isinstance(node, OntologyEntityNode):
+        if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
             return '{0} - {1}'.format(diagram, node.id)
         else:
             predicate = node.text().replace('\n', '')
@@ -658,7 +658,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :rtype: QtGui.QStandardItem
         """
         parentK = None
-        if isinstance(node,OntologyEntityNode):
+        if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
             parentK = self.parentKeyForIRI(node.iri,self.project)
             for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
                 parentIRI = i.data()
@@ -808,7 +808,7 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                                 itemData = item.child(0).data()
 
                         if itemData:
-                            if isinstance(itemData,OntologyEntityNode):
+                            if isinstance(itemData,OntologyEntityNode) or isinstance(itemData, OntologyEntityResizableNode):
                                 print()
                                 mimeData = QtCore.QMimeData()
 
