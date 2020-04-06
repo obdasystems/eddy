@@ -305,7 +305,6 @@ class SyntaxValidationWorker(AbstractWorker):
         """
         Main worker.
         """
-
         errorMsg = None
         while self.i < len(self.items):
 
