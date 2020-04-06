@@ -187,17 +187,14 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        count = 0
-        for n in self.project.nodes():
-            if n.text() == self.data['undo']:
-                count = count+1
-
+        '''
         meta = None
         # BACKUP METADATA
         if self.item.isNode() and (self.refactor or (count==1)):
             meta = self.project.meta(self.item.type(), self.data['undo'])
             if meta:
                 self.project.unsetMeta(self.item.type(), self.data['undo'])
+        '''
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
@@ -207,10 +204,13 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
             self.project.doAddItem(self.diagram, self.item)
 
         # RESTORE METADATA
+        '''
         if meta:
             self.project.setMeta(self.item.type(), self.data['redo'], meta)
+        '''
 
         # UPDATE PREDICATE NODE STATE TO REFLECT THE CHANGES
+        '''
         for key in ('undo', 'redo'):
             for node in self.project.predicates(self.item.type(), self.data[key]):
                 node.updateNode()
@@ -225,12 +225,14 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
             f4 = lambda x: Identity.Neutral in x.identities()
             for node in self.item.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
                 self.diagram.sgnNodeIdentification.emit(node)
+        '''
 
         # EMIT UPDATED SIGNAL
         self.diagram.sgnUpdated.emit()
 
     def undo(self):
         """undo the command"""
+        '''
         count = 0
         for n in self.project.nodes():
             if n.text() == self.data['redo']:
@@ -242,6 +244,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
             meta = self.project.meta(self.item.type(), self.data['redo'])
             if meta:
                 self.project.unsetMeta(self.item.type(), self.data['redo'])
+        '''
 
         # CHANGE THE CONTENT OF THE LABEL
         if self.item.isNode():
@@ -250,6 +253,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
         if self.item.isNode():
             self.project.doAddItem(self.diagram, self.item)
 
+        '''
         # RESTORE METADATA
         if meta:
             self.project.setMeta(self.item.type(), self.data['undo'], meta)
@@ -269,6 +273,7 @@ class CommandLabelChange(QtWidgets.QUndoCommand):
             f4 = lambda x: Identity.Neutral in x.identities()
             for node in self.item.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4):
                 self.diagram.sgnNodeIdentification.emit(node)
+        '''
 
         # EMIT UPDATED SIGNAL
         self.diagram.sgnUpdated.emit()

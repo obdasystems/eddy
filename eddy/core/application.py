@@ -156,7 +156,7 @@ class Eddy(QtWidgets.QApplication):
         :rtype: bool
         """
         # HANDLE FILEOPEN EVENT (TRIGGERED BY MACOS WHEN DOUBLE CLICKING A FILE)
-        if event.type() == QtCore.QEvent.FileOpen:
+        if event.type() == QtCore.QEvent.FileOpen and not __debug__:
             path = expandPath(event.file())
             if fexists(path):
                 if self.started:
