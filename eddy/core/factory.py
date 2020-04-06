@@ -57,6 +57,7 @@ from eddy.ui.properties import ValueNodeProperty
 class MenuFactory(QtCore.QObject):
     """
     This class can be used to produce diagram items contextual menus.
+    ciccio
     """
 
     def __init__(self, session):

@@ -579,8 +579,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(action)
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_spellcheck_black'), 'Run syntax check',
-            self, objectName='syntax_check', triggered=self.doSyntaxCheck,
+            QtGui.QIcon(':/icons/24/ic_spellcheck_black'), 'Check compliance to profile',
+            self, objectName='syntax_check', triggered=self.doProfileSyntaxCheck,
             statusTip='Run syntax validation according to the selected profile', enabled=False))
 
         self.addAction(QtWidgets.QAction(
@@ -836,6 +836,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             checkable=True, checked=False, triggered=self.doSetNodeMeta)
         action.setData(K_TRANSITIVE)
         self.addAction(action)
+
 
         #############################################
         # PROPERTY DOMAIN / RANGE SPECIFIC
@@ -2029,8 +2030,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[from_iri][0].remove(to_prefix)
                 Duplicate_dict_1[from_iri][0].append(to_prefix)
 
-                commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-                commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         # case 3
         else:
@@ -2088,8 +2087,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[to_iri][0].remove(to_prefix)
                 Duplicate_dict_1[to_iri][0].append(to_prefix)
 
-            commands.append(CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         if any(commands):
             self.undostack.beginMacro('edit {0} refactorsetprefix'.format(node.name))
@@ -2140,9 +2137,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[from_iri][0].remove(to_prefix)
                 Duplicate_dict_1[from_iri][0].append(to_prefix)
 
-                commands.append(
-                    CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-                commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         #case 3
         else:
@@ -2189,9 +2183,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 Duplicate_dict_1[to_iri][0].remove(to_prefix)
                 Duplicate_dict_1[to_iri][0].append(to_prefix)
 
-            commands.append(
-                CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
-            commands.append(CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False))
 
         if any(commands):
             self.undostack.beginMacro('edit {0} setprefix'.format(node.name))
@@ -2838,12 +2829,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         Duplicate_dict_1[old_iri][1].remove(node)
                         Duplicate_dict_1[new_iri][1].add(node)
 
-                        commands = [CommandProjectDisconnectSpecificSignals(self.project),
+                        commands = [
                                     CommandLabelChange(diagram, node, node.text(), new_label),
-                                    CommandNodeSetRemainingCharacters(node.remaining_characters, data, node,
-                                                                      self.project),
-                                    CommandLabelChange(diagram, node, node.text(), new_label),
-                                    CommandProjectConnectSpecificSignals(self.project)]
+                                    CommandLabelChange(diagram, node, node.text(), new_label)]
 
                         if any(commands):
                             self.undostack.beginMacro('edit Forms >> accept() {0}'.format(node))
@@ -2896,10 +2884,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     Duplicate_dict_1[old_iri][1].remove(node)
                     Duplicate_dict_1[new_iri][1].add(node)
 
-                    commands = [
-                        CommandProjectDisconnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False),
-                        CommandNodeSetRemainingCharacters(node.remaining_characters, new_rc, node, diagram.project),
-                        CommandProjectConnectSpecificSignals(self.project, regenerate_label_of_nodes_for_iri=False)]
+                    commands = []
 
                     if any(commands):
                         self.undostack.beginMacro('edit {0} doSetNodeSpecial'.format(node))
@@ -3050,7 +3035,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(CommandNodeSwitchTo(diagram, node, xnode))
 
     @QtCore.pyqtSlot()
-    def doSyntaxCheck(self):
+    def doProfileSyntaxCheck(self):
         """
         Perform syntax checking on the active diagram.
         """

@@ -43,35 +43,42 @@ from eddy.core.datatypes.graphol import Item
 #################################
 from eddy.core.owl import IllegalNamespaceError
 
-class CommandProjectSetProjectLabelFromSimpleNameAndLanguage(QtWidgets.QUndoCommand):
+class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoCommand):
     """
     This command is used to set the IRI identifying the ontology.
     """
-    def __init__(self, project, labelFromSimpleNameRedo, languageRedo, labelFromSimpleNameUndo, languageUndo, name=None):
+    def __init__(self, project, labelFromSimpleNameRedo, labelFromUserInputRedo, languageRedo, labelFromSimpleNameUndo, labelFromUserInputUndo, languageUndo, name=None):
         """
         Initialize the command.
         :type project: Project
         :type labelFromSimpleNameRedo: bool
+        :type labelFromUserInputRedo: bool
         :type languageRedo: str
         :type labelFromSimpleNameUndo: bool
+        :type labelFromUserInputUndo: bool
         :type languageUndo: str
         :type name: str
         """
-        super().__init__(name or 'Set automatic rdf:label management')
+        super().__init__(name or 'Set automatic rdfs:label management')
         self._project = project
         self._labelFromSimpleNameRedo = labelFromSimpleNameRedo
+        self._labelFromUserInputRedo = labelFromUserInputRedo
         self._languageRedo = languageRedo
         self._labelFromSimpleNameUndo = labelFromSimpleNameUndo
+        self._labelFromUserInputUndo = labelFromUserInputUndo
         self._languageUndo = languageUndo
+
 
     def redo(self):
         """redo the command"""
         self._project.addLabelFromSimpleName = self._labelFromSimpleNameRedo
+        self._project.addLabelFromUserInput = self._labelFromUserInputRedo
         self._project.defaultLanguage = self._languageRedo
 
     def undo(self):
         """undo the command"""
         self._project.addLabelFromSimpleName = self._labelFromSimpleNameUndo
+        self._project.addLabelFromUserInput = self._labelFromUserInputUndo
         self._project.defaultLanguage = self._languageUndo
 
 class CommandProjectSetOntologyIRIAndVersion(QtWidgets.QUndoCommand):

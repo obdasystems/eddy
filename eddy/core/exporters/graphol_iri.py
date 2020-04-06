@@ -125,6 +125,12 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         if self.project.addLabelFromSimpleName:
             labelBoolean = '1'
         ontologyEl.setAttribute('addLabelFromSimpleName', labelBoolean)
+
+        labelBoolean = '0'
+        if self.project.addLabelFromUserInput:
+            labelBoolean = '1'
+        ontologyEl.setAttribute('addLabelFromUserInput', labelBoolean)
+
         ontologyEl.setAttribute('lang', str(self.project.defaultLanguage))
 
         prefixesEl = self.getDomElement('prefixes')

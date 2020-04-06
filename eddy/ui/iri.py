@@ -389,6 +389,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         try:
             activeTab = self.widget('main_widget').currentWidget()
             if activeTab is self.widget('iri_widget'):
+                userExplicitInput = self.widget('iri_input_field').value()
                 inputIriString = self.widget('full_iri_field').value()
                 self.project.isValidIdentifier(inputIriString)
                 if self.iri:
@@ -399,7 +400,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                             self.session.undostack.push(command)
                         self.session.undostack.endMacro()
                 else:
-                    inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=True)
+                    inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=userExplicitInput)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
                     if self.node.diagram:
@@ -769,11 +770,12 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
     @QtCore.pyqtSlot(bool)
     def saveIRI(self,_):
         try:
+            userExplicitInput = self.widget('iri_input_field').value()
             fullIRIString = self.widget('full_iri_field').value()
             existIRI = self.project.existIRI(fullIRIString)
             if existIRI:
                 print('IRI corresponding to string {} already exists'.format(fullIRIString))
-                newIRI = self.project.getIRI(fullIRIString, addLabelFromSimpleName=True)
+                newIRI = self.project.getIRI(fullIRIString, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=userExplicitInput)
                 if not newIRI is self.iri:
                     oldIRI = self.iri
                     self.iri = newIRI

@@ -43,7 +43,8 @@ from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandCommmonSub
 from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
     CommandProjectModifyPrefixResolution, CommandProjectModifyNamespacePrefix, CommandProjectAddAnnotationProperty, \
     CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion, \
-    CommandProjectSetProjectLabelFromSimpleNameAndLanguage
+    CommandProjectSetLabelFromSimpleNameOrInputAndLanguage
+from eddy.core.datatypes.qt import Font
 from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion
 
 from eddy.core.common import HasWidgetSystem
@@ -391,11 +392,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # Global IRI
         #################################
-        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label')
+        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_simplename')
         checkBoxLabel.setText('Derive rdfs:label from simple name')
         self.addWidget(checkBoxLabel)
         checked = self.project.addLabelFromSimpleName
-        checkBox = CheckBox('',self,enabled=True,checked=checked,clicked=self.onLabelcheckBoxClicked, objectName='label_checkbox')
+        checkBox = CheckBox('', self, enabled=True, checked=checked, clicked=self.onLabelSimpleNameCheckBoxClicked, objectName='label_simplename_checkbox')
+        self.addWidget(checkBox)
+
+        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_userinput')
+        checkBoxLabel.setText('Derive rdfs:label from user input')
+        self.addWidget(checkBoxLabel)
+        checked = self.project.addLabelFromUserInput
+        checkBox = CheckBox('', self, enabled=True, checked=checked, clicked=self.onLabelUserInputCheckBoxClicked,
+                            objectName='label_userinput_checkbox')
         self.addWidget(checkBox)
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
@@ -422,7 +431,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.addWidget(combobox)
         iriLabelLayout = QtWidgets.QFormLayout()
-        iriLabelLayout.addRow(self.widget('checkBox_label'), self.widget('label_checkbox'))
+        iriLabelLayout.addRow(self.widget('checkBox_label_simplename'), self.widget('label_simplename_checkbox'))
+        iriLabelLayout.addRow(self.widget('checkBox_label_userinput'), self.widget('label_userinput_checkbox'))
         iriLabelLayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
 
         applyBtn = QtWidgets.QPushButton('Apply', objectName='iri_label_button')
@@ -670,7 +680,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # Global IRI
         #################################
         checked = self.project.addLabelFromSimpleName
-        checkBox = self.widget('label_checkbox')
+        checkBox = self.widget('label_simplename_checkbox')
+        checkBox.setChecked(checked)
+
+        checked = self.project.addLabelFromUserInput
+        checkBox = self.widget('label_userinput_checkbox')
         checkBox.setChecked(checked)
 
         combobox = self.widget('lang_switch')
@@ -1156,8 +1170,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     # Global IRI
     #################################
     @QtCore.pyqtSlot()
-    def onLabelcheckBoxClicked(self):
-        checkBox = self.widget('label_checkbox')
+    def onLabelSimpleNameCheckBoxClicked(self):
+        checkBox = self.widget('label_simplename_checkbox')
+        if checkBox.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+            self.widget('lang_switch').setEnabled(True)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setEnabled(False)
+        self.widget('iri_label_button').setEnabled(True)
+
+    @QtCore.pyqtSlot()
+    def onLabelUserInputCheckBoxClicked(self):
+        checkBox = self.widget('label_userinput_checkbox')
         if checkBox.isChecked():
             self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
             self.widget('lang_switch').setEnabled(True)
@@ -1172,11 +1197,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def doApplyIriLabel(self):
-        checkBox = self.widget('label_checkbox')
+        simpleNameCheckBox = self.widget('label_simplename_checkbox')
+        userInputCheckBox = self.widget('label_userinput_checkbox')
         undoLanguage = self.project.defaultLanguage
         redoLanguage = str(self.widget('lang_switch').currentText())
-        command = CommandProjectSetProjectLabelFromSimpleNameAndLanguage(self.project, checkBox.isChecked(), redoLanguage, not checkBox.isChecked(), undoLanguage)
-        self.session.undostack.beginMacro('Set automatic rdf:label management')
+        command = CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(self.project, simpleNameCheckBox.isChecked(), userInputCheckBox.isChecked(),redoLanguage, not simpleNameCheckBox.isChecked(), not userInputCheckBox.isChecked(), undoLanguage)
+        self.session.undostack.beginMacro('Set automatic rdfs:label management')
         if command:
             self.session.undostack.push(command)
         self.session.undostack.endMacro()

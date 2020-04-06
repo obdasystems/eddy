@@ -229,32 +229,34 @@ class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
     This command is used to change the IRI associated to a single node.
     """
 
-    def __init__(self, project, node, iriStringRedo, iriStringUndo, name=None):
+    def __init__(self, project, node, iriStringRedo, iriStringUndo, userExplicitInput=None, name=None):
         """
         Initialize the command.
         :type project: Project
         :type node: OntologyEntityNode | OntologyEntityResizableNode
         :type iriStringRedo: str
         :type iriStringUndo: str
+        :type userExplicitInput: str
         :type name: str
         """
         super().__init__(name or 'Node {} set IRI <{}> '.format(node.id,iriStringRedo))
         self._iriStringRedo = iriStringRedo
         self._iriStringUndo = iriStringUndo
+        self._userExplicitInput = userExplicitInput
         self._project = project
         self._node = node
 
     def redo(self):
         """redo the command"""
-        iri = self._project.getIRI(self._iriStringRedo, addLabelFromSimpleName=True)
-        oldIri = self._project.getIRI(self._iriStringUndo, addLabelFromSimpleName=True)
+        iri = self._project.getIRI(self._iriStringRedo, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=self._userExplicitInput)
+        oldIri = self._project.getIRI(self._iriStringUndo, addLabelFromSimpleName=True, addLabelFromUserInput=True)
         self._node.iri = iri
         self._project.sgnIRIChanged.emit(self._node, oldIri)
 
     def undo(self):
         """undo the command"""
-        iri = self._project.getIRI(self._iriStringRedo, addLabelFromSimpleName=True)
-        oldIri = self._project.getIRI(self._iriStringUndo, addLabelFromSimpleName=True)
+        iri = self._project.getIRI(self._iriStringRedo, addLabelFromSimpleName=True, addLabelFromUserInput=True)
+        oldIri = self._project.getIRI(self._iriStringUndo, addLabelFromSimpleName=True, addLabelFromUserInput=True)
         self._node.iri = oldIri
         self._project.sgnIRIChanged.emit(self._node, iri)
 

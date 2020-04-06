@@ -838,7 +838,7 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False):
         """
         Create a new `IRIManager` with a default set of prefixes defined
         :type parent: QtCore.QObject
@@ -886,6 +886,7 @@ class IRIManager(QtCore.QObject):
                 self.addLanguageTag(lang)
         self._defaultLanguage = defaultLanguage
         self._addLabelFromSimpleName = addLabelFromSimpleName
+        self._addLabelFromUserInput = addLabelFromUserInput
 
     #############################################
     #   LANGUAGES
@@ -897,6 +898,14 @@ class IRIManager(QtCore.QObject):
     @addLabelFromSimpleName.setter
     def addLabelFromSimpleName(self, addLabelFromSimpleName):
         self._addLabelFromSimpleName = addLabelFromSimpleName
+
+    @property
+    def addLabelFromUserInput(self):
+        return self._addLabelFromUserInput
+
+    @addLabelFromUserInput.setter
+    def addLabelFromUserInput(self, addLabelFromUserInput):
+        self._addLabelFromUserInput = addLabelFromUserInput
 
     @property
     def defaultLanguage(self):
@@ -968,12 +977,14 @@ class IRIManager(QtCore.QObject):
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
-    def getIRI(self, iriString, addLabelFromSimpleName=False):
+    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None):
         """
         Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index.
         If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName
         :type iriString: str
         :type addLabelFromSimpleName: bool
+        :type addLabelFromUserInput: bool
+        :type userInput: str
         """
         if iriString in self.stringToIRI:
             return self.stringToIRI[iriString]
@@ -983,6 +994,10 @@ class IRIManager(QtCore.QObject):
             self.addIRI(iri)
             if addLabelFromSimpleName and self._addLabelFromSimpleName:
                 iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri))
+            if addLabelFromUserInput and self._addLabelFromUserInput and userInput:
+                annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
+                                             OWL2Datatype.PlainLiteral.value, self.defaultLanguage)
+                iri.addAnnotationAssertion(annAss)
             connect(iri.sgnIRIModified,self.onIRIModified)
             connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
             return iri
@@ -1070,12 +1085,12 @@ class IRIManager(QtCore.QObject):
             return True
         return False
 
-    def addAnnotationProperty(self, iriString, addLabelFromSimpleName=False):
+    def addAnnotationProperty(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False):
         """
         Add the IRI identified by iriString to the set of IRIs that can be used as Property into annotation assertions
         :type iriString: str
         """
-        iri = self.getIRI(iriString, addLabelFromSimpleName)
+        iri = self.getIRI(iriString, addLabelFromSimpleName, addLabelFromUserInput)
         return self.addAnnotationPropertyIRI(iri)
 
     def existAnnotationProperty(self, iriStr):

@@ -178,6 +178,7 @@ class GrapholProjectIRILoaderMixin_2(object):
             ontologyPrefix=None,
             defaultLanguage='en',
             addLabelFromSimpleName=False,
+            addLabelFromUserInput=False,
             session=self.session)
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
@@ -1075,6 +1076,10 @@ class GrapholProjectIRILoaderMixin_3(object):
         labelBoolean = False
         if ontologyEl.attribute('addLabelFromSimpleName'):
             labelBoolean = bool(int(ontologyEl.attribute('addLabelFromSimpleName')))
+        labelUserInputBoolean = False
+        if ontologyEl.attribute('addLabelFromUserInput'):
+            labelUserInputBoolean = bool(int(ontologyEl.attribute('addLabelFromUserInput')))
+
         ontologyLang = ontologyEl.attribute('lang')
         prefixMap = self.getPrefixMap(ontologyEl)
         datatypes = self.getDatatypes(ontologyEl)
@@ -1095,7 +1100,8 @@ class GrapholProjectIRILoaderMixin_3(object):
             session=self.session,
             ontologyPrefix=ontologyPrefix,
             defaultLanguage=ontologyLang,
-            addLabelFromSimpleName=labelBoolean
+            addLabelFromSimpleName=labelBoolean,
+            addLabelFromUserInput=labelUserInputBoolean
         )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
