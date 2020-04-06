@@ -181,6 +181,7 @@
   <file alias="ic_zoom_out_black@2x">../../resources/icons/24/ic_zoom_out_black_24dp_2x.png</file>
   <file alias="ic_zoom_reset_black">../../resources/icons/24/ic_zoom_reset_black_24dp_1x.png</file>
   <file alias="ic_zoom_reset_black@2x">../../resources/icons/24/ic_zoom_reset_black_24dp_2x.png</file>
+  <file alias="ic_owl">../../resources/icons/24/ic_Owl_24.png</file>
 </qresource>
 <qresource prefix="/icons/48">
   <file alias="ic_code_black">../../resources/icons/48/ic_code_black_48dp_1x.png</file>
@@ -261,6 +262,7 @@
   <file alias="ic_subscript_black@2x">../../resources/icons/48/ic_subscript_black_48dp_2x.png</file>
   <file alias="ic_subscript_black_active">../../resources/icons/48/ic_subscript_black_active_48dp_1x.png</file>
   <file alias="ic_subscript_black_active@2x">../../resources/icons/48/ic_subscript_black_active_48dp_2x.png</file>
+  <file alias="ic_owl">../../resources/icons/48/ic_Owl_48.png</file>
 </qresource>
 <qresource prefix="/icons/128">
   <file alias="ic_eddy">../../resources/icons/128/ic_eddy_128dp_1x.png</file>

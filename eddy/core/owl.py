@@ -1284,6 +1284,14 @@ class IRIManager(QtCore.QObject):
             second = IRI(ns, suffix=otherIRI.suffix, parent=self)
         return str(first) == str(second)
 
+    def isFromReservedVocabulary(self, iri):
+        if isinstance(iri,IRI):
+            iriStr = str(iri)
+            return iriStr.startswith(Namespace.OWL.value) or iriStr.startswith(Namespace.RDF.value) or iriStr.startswith(Namespace.RDFS.value) or iriStr.startswith(Namespace.XSD.value)
+        elif isinstance(iri,str):
+            return iri.startswith(Namespace.OWL.value) or iri.startswith(Namespace.RDF.value) or iri.startswith(Namespace.RDFS.value) or iri.startswith(Namespace.XSD.value)
+        return False
+
     ##Prefixes
     @property
     def ontologyPrefix(self):

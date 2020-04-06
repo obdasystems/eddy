@@ -584,6 +584,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             statusTip='Run syntax validation according to the selected profile', enabled=False))
 
         self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_owl'), 'Check OWL 2 DL compliance',
+            self, objectName='dl_check', triggered=self.doDLCheck,
+            statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
+
+        self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',
             self, objectName='ontology_consistency_check', triggered=self.doOntologyConsistencyCheck,
             statusTip='Run Reasoner', enabled=False))
@@ -1179,6 +1184,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
+        menu.addAction(self.action('dl_check'))
         # TODO scommenta dopo corretta implementazione reasoner per consistency check
         #menu.addAction(self.action('ontology_consistency_check'))
         menu.addSeparator()
@@ -1456,6 +1462,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         toolbar.addWidget(self.widget('profile_switch'))
         toolbar.addAction(self.action('syntax_check'))
+        toolbar.addAction(self.action('dl_check'))
 
         toolbar = self.widget('reasoner_toolbar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -3043,6 +3050,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.exec_()
 
     @QtCore.pyqtSlot()
+    def doDLCheck(self):
+        """
+        Perform OWL DL check on the ontology.
+        """
+        #TODO
+        pass
+
+    @QtCore.pyqtSlot()
     def doSelectReasoner(self):
         """
         Set the currently used project profile.
@@ -3276,6 +3291,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('send_to_back').setEnabled(isNodeSelected)
         self.action('snap_to_grid').setEnabled(isDiagramActive)
         self.action('syntax_check').setEnabled(not isProjectEmpty)
+        self.action('dl_check').setEnabled(not isProjectEmpty)
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
         self.action('switch_same_to_different').setEnabled(isSwitchToDifferentEnabled)
         self.action('switch_different_to_same').setEnabled(isSwitchToSameEnabled)

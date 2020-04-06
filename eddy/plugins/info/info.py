@@ -652,10 +652,10 @@ class ProjectInfo(AbstractInfo):
         self.versionField.setReadOnly(True)
         connect(self.versionField.editingFinished, self.versionEditingFinished)
 
-        self.prefixKey = Key('Prefix', self)
-        self.prefixField = String(self)
-        self.prefixField.setReadOnly(True)
-        connect(self.prefixField.editingFinished, self.prefixEditingFinished)
+        #self.prefixKey = Key('Prefix', self)
+        #self.prefixField = String(self)
+        #self.prefixField.setReadOnly(True)
+        #connect(self.prefixField.editingFinished, self.prefixEditingFinished)
         """
         self.prefixesKey = Key('Prefix(es)', self)
         self.prefixesField = String(self)
@@ -677,10 +677,10 @@ class ProjectInfo(AbstractInfo):
 
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
+        self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         self.ontologyPropLayout.addRow(self.versionKey, self.versionField)
         #self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
         #self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
-        self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         #self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
         self.conceptsKey = Key('Classes', self)

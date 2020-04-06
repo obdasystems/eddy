@@ -1316,6 +1316,9 @@ class Project(IRIManager):
     #   IRI
     #################################
 
+    def isDLCompliant(self):
+        return self.index.isDLCompliant()
+
     def itemDistinctIRICount(self, item, diagram=None):
         return self.index.itemDistinctIRICount(item, diagram)
 
@@ -1634,7 +1637,6 @@ class ProjectIRIIndex(ProjectIndex):
         self[K_IRI_DATATYPE] = dict()
         self[K_IRI_INDIVIDUAL] = dict()
 
-
     def switchIRIForNode(self,node,oldIRI):
         """
         Make all occurrences of sub become occurrences of master
@@ -1949,6 +1951,32 @@ class ProjectIRIIndex(ProjectIndex):
             return result
         except KeyError:
             return set()
+
+    def isDLCompliant(self):
+        objPropNodes = self.iriOccurrences(item=Item.RoleIRINode)
+        dataPropNodes = self.iriOccurrences(item=Item.AttributeIRINode)
+        for objPropNode in objPropNodes:
+            objPropIri = objPropNode.iri
+            if not (objPropIri.isTopObjectProperty or objPropIri.isBottomObjectProperty) and self.project.isFromReservedVocabulary(objPropIri):
+                return False
+            for dataPropNode in dataPropNodes:
+                dataPropIri = dataPropNode.iri
+                if not (dataPropIri.isTopDataProperty or dataPropIri.isBottomDataProperty) and self.project.isFromReservedVocabulary(dataPropIri):
+                    return False
+                if dataPropIri==objPropIri:
+                    return False
+
+        classNodes = self.iriOccurrences(item=Item.ConceptIRINode)
+        datatypeNodes = self.iriOccurrences(item=Item.ValueDomainIRINode)
+        for classNode in classNodes:
+            classIri = classNode.iri
+            if not (classIri.isOwlThing or classIri.isOwlNothing) and self.project.isFromReservedVocabulary(classIri):
+                return False
+            for datatypeNode in datatypeNodes:
+                if datatypeNode.iri == classIri:
+                    return False
+        return True
+
 
 
 class ProjectIRIMergeWorker(QtCore.QObject):
