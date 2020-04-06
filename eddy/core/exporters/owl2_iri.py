@@ -97,8 +97,10 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         """
         Executed when the syntax validation procedure is completed.
         """
+        '''
         self.progress.sleep()
         self.progress.close()
+        '''
         dialog = OWLOntologyExporterDialog(self.project, self.path, self.session, self.selected_diagrams)
         dialog.exec_()
 
@@ -148,12 +150,15 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
                 return
             self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
 
+            ''' RIMOSSO CONTROLLO SINTATTICO
             self.progress = BusyProgressDialog('Performing syntax check...')
             self.progress.show()
             worker = SyntaxValidationWorker(0, self.items, self.project)
             connect(worker.sgnCompleted, self.onSyntaxCheckCompleted)
             connect(worker.sgnSyntaxError, self.onSyntaxCheckErrored)
             self.startThread('syntaxCheck', worker)
+            '''
+            self.onSyntaxCheckCompleted()
 
 #TODO Uguale a vecchio
 class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
@@ -325,7 +330,8 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         # CONFIGURE LAYOUT
         #################################
 
-        for axiom in OWLAxiom.forProfile(self.project.profile.type()):
+        #for axiom in OWLAxiom.forProfile(self.project.profile.type()):
+        for axiom in OWLAxiom:
             checkbox = self.widget(axiom.value)
             checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
             checkbox.setEnabled(True)
