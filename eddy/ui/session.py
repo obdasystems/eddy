@@ -185,6 +185,7 @@ from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
+from eddy.ui.dl import DLSyntaxValidationDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.forms import CardinalityRestrictionForm
 from eddy.ui.forms import NewDiagramForm
@@ -583,8 +584,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='syntax_check', triggered=self.doProfileSyntaxCheck,
             statusTip='Run syntax validation according to the selected profile', enabled=False))
 
+
+        #TODO SCOMMENTA
+        '''
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_owl'), 'Check OWL 2 DL compliance',
+            self, objectName='dl_check', triggered=self.doDLCheck,
+            statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
+        '''
+
+        self.addAction(QtWidgets.QAction( 'DL?',
             self, objectName='dl_check', triggered=self.doDLCheck,
             statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
 
@@ -3055,7 +3064,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Perform OWL DL check on the ontology.
         """
         #TODO
-        pass
+        print('doDLCheck called')
+        dialog = DLSyntaxValidationDialog(self.project, self)
+        dialog.exec_()
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self):

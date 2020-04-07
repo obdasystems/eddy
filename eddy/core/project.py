@@ -1322,6 +1322,9 @@ class Project(IRIManager):
     def itemDistinctIRICount(self, item, diagram=None):
         return self.index.itemDistinctIRICount(item, diagram)
 
+    def itemIRIs(self,item, diagram=None):
+        return self.index.itemIRIs(item,diagram)
+
     #############################################
     #   SLOTS
     #################################
@@ -1896,15 +1899,48 @@ class ProjectIRIIndex(ProjectIndex):
                 k_metatype = K_IRI_DATA_PROP
             elif item is Item.IndividualIRINode:
                 k_metatype = K_IRI_INDIVIDUAL
+            elif item is Item.ValueDomainIRINode:
+                k_metatype = K_IRI_DATATYPE
             if not diagram:
                 result = 0
-                for diag,diagSet in self[k_metatype].items():
+                for diag, diagSet in self[k_metatype].items():
                     result += len(diagSet)
                 return result
             else:
                 return len(self[k_metatype][diagram.name])
         except (KeyError, TypeError):
             return 0
+
+    def itemIRIs(self,item, diagram=None):
+        """
+        Returns the set of IRIs occurring as item in the given diagram.
+        If no diagram is supplied the lookup is performed across the whole Project Index.
+        :type diagram: Diagram
+        :item: Item
+        :rtype: set
+        """
+        try:
+            k_metatype = None
+            if item is Item.ConceptIRINode:
+                k_metatype = K_IRI_CLASS
+            elif item is Item.RoleIRINode:
+                k_metatype = K_IRI_OBJ_PROP
+            elif item is Item.AttributeIRINode:
+                k_metatype = K_IRI_DATA_PROP
+            elif item is Item.IndividualIRINode:
+                k_metatype = K_IRI_INDIVIDUAL
+            elif item is Item.ValueDomainIRINode:
+                k_metatype = K_IRI_DATATYPE
+            if not diagram:
+                result = set()
+                for diag,diagSet in self[k_metatype].items():
+                    result = result|diagSet
+                return result
+            else:
+                return self[k_metatype][diagram.name]
+        except (KeyError, TypeError):
+            return set()
+
 
     def iriOccurrences(self,item=None, iri=None,diagram=None):
         """
