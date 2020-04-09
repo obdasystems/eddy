@@ -3,6 +3,7 @@ from PyQt5.QtCore import QObject, Qt
 
 from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode, CommandChangeFacetOfNode, \
     CommandChangeLiteralOfNode, CommandIRIRefactor, CommandChangeIRIIdentifier
+from eddy.core.commands.nodes import CommandNodeSetFont
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode
 from eddy.core.items.nodes.facet_iri import FacetNode
@@ -17,7 +18,7 @@ from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet
     OWL2Datatype
 
 from eddy.core.functions.signals import connect
-from eddy.ui.fields import ComboBox, StringField, CheckBox
+from eddy.ui.fields import ComboBox, StringField, CheckBox, SpinBox
 
 from eddy.core.datatypes.qt import Font
 
@@ -455,6 +456,104 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixStr = prefixStr[0:prefixLimit]
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
+
+class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
+
+    def __init__(self, session, node, refactor=False):
+        """
+        Initialize the Preferences dialog.
+        :type session: Session
+        """
+        super().__init__(session)
+        self.node = node
+        self.session = session
+        self.refactor = refactor
+
+        prefix = QtWidgets.QLabel(self, objectName='font_size_prefix')
+        prefix.setText('Node font size (px)')
+        self.addWidget(prefix)
+
+        spinbox = SpinBox(self, objectName='font_size_field')
+        spinbox.setRange(node.diagram.MinFontSize, node.diagram.MaxFontSize)
+        spinbox.setSingleStep(1)
+        if not refactor:
+            spinbox.setToolTip('Font size for node label (px)')
+        else:
+            spinbox.setToolTip('Font size for IRI label (px)')
+        spinbox.setValue(node.label.font().pixelSize())
+        self.addWidget(spinbox)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('font_size_prefix'), self.widget('font_size_field'))
+        groupbox = QtWidgets.QGroupBox('Editor', self, objectName='editor_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('editor_widget'), 0, QtCore.Qt.AlignTop)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('general_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        self.addWidget(confirmation)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+
+        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        widget.addTab(self.widget('general_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'), 'General')
+        self.addWidget(widget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(740, 420)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        if not refactor:
+            self.setWindowTitle('Set font size of node {}'.format(node.id))
+        else:
+            self.setWindowTitle('Set font size of IRI {}'.format(str(node.iri)))
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        #############################################
+        # GENERAL TAB
+        #################################
+        pixelSize = self.widget('font_size_field').value()
+        nodes = None
+        if self.refactor:
+            nodes = self.session.project.iriOccurrences(self.node.type(),self.node.iri)
+        else:
+            nodes = [self.node]
+        command = CommandNodeSetFont(self.node.diagram,nodes,pixelSize)
+        self.session.undostack.beginMacro('set {} font size on {} node(s)'.format(pixelSize, len(nodes)))
+        if command:
+            self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().accept()
 
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
@@ -1218,3 +1317,6 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
     def reject(self):
         self.sgnLiteralRejected.emit(self.node)
         super().reject()
+
+
+

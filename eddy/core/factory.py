@@ -858,8 +858,6 @@ class MenuFactory(QtCore.QObject):
         menu.insertAction(self.session.action('node_properties'),self.session.action('iri_annotations_refactor'))
         menu.addAction(self.session.action('node_iri_refactor'))
 
-        # TODO node.special() ritorna "True" se è nodo con IRI dal reserved vocabulary (Thing, Nothing....)
-        # TODO Devi aggiungere implementazione per oggetti con IRI (parti da enumerazione IRI riservate
         if not node.iri.isTopBottomEntity():
             print('The selected node is neither top nor bottom')
         else:
@@ -879,6 +877,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         #TODO VALUTA REINSERIMENTO OPPORTUNO PER TOP E BOTTOM (SPECIAL MENU)
         #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_set_font'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
         self.insertLabelActions(menu, node)
         #menu.insertSeparator(self.session.action('brush'))

@@ -110,6 +110,8 @@ class NodeLabel(AbstractLabel):
             self.setPos(self.defaultPos())
 
 
+
+
 class FacetQuotedLabel(NodeLabel):
     """
     This class implements the quoted label of Facet nodes.

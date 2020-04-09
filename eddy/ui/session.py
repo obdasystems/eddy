@@ -192,7 +192,7 @@ from eddy.ui.forms import NewDiagramForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import RenameDiagramForm
 from eddy.ui.forms import ValueForm
-from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog
+from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
     NewDiagramForm,
@@ -585,18 +585,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             statusTip='Run syntax validation according to the selected profile', enabled=False))
 
 
-        #TODO SCOMMENTA
-
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_owl'), 'Check OWL 2 DL compliance',
             self, objectName='dl_check', triggered=self.doDLCheck,
             statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
-        '''
-
-        self.addAction(QtWidgets.QAction( 'DL?',
-            self, objectName='dl_check', triggered=self.doDLCheck,
-            statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
-        '''
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',
@@ -953,6 +945,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doOpenIRIPropsBuilder))
 
         self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Set font',
+            self, objectName='iri_set_font',
+            triggered=self.doOpenIRIFontDialog))
+
+        self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_create_black'),
             'Annotations',
             self, objectName='iri_annotations_refactor',
@@ -963,6 +961,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             'Node IRI',
             self, objectName='node_iri_refactor',
             triggered=self.doOpenIRIDialog))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Set font',
+            self, objectName='node_set_font',
+            triggered=self.doOpenNodeFontDialog))
+
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'),
@@ -1265,18 +1270,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addActions(self.action('refactor_brush').actions())
         self.addMenu(menu)
 
-        #menu = QtWidgets.QMenu('Change prefix', objectName='refactor_change_prefix')
-        #menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_color_fill_black'))
-        #menu.addActions(self.action('refactor_change_prefix').actions())
-        #self.addMenu(menu)
-
         menu = QtWidgets.QMenu('Refactor', objectName='refactor')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_shapes_black'))
         menu.addAction(self.action('iri_refactor'))
-        #menu.addAction(self.action('iri_annotations_refactor'))
-        #menu.addAction(self.action('refactor_name'))
-        #menu.addMenu(self.menu('refactor_change_prefix'))
         menu.addMenu(self.menu('refactor_brush'))
+        menu.addAction(self.action('iri_set_font'))
         self.addMenu(menu)
 
         #############################################
@@ -2387,6 +2385,39 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.show()
                 builder.raise_()
                 builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenIRIFontDialog(self):
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node:
+                dialog = FontDialog(self, node, refactor=True)
+                dialog.setWindowModality(QtCore.Qt.ApplicationModal)
+                dialog.show()
+                dialog.raise_()
+                dialog.activateWindow()
+
+
+    @QtCore.pyqtSlot()
+    def doOpenNodeFontDialog(self):
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedNodes()
+            node = None
+            if len(selected) == 1:
+                node = first(selected)
+            if node:
+                dialog = FontDialog(self, node)
+                dialog.setWindowModality(QtCore.Qt.ApplicationModal)
+                dialog.show()
+                dialog.raise_()
+                dialog.activateWindow()
 
     @QtCore.pyqtSlot()
     def doOpenFacetDialog(self):

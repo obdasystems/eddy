@@ -318,14 +318,34 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self.setText(self.template)
         self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
 
+        self.customFont = False
+
         document = self.document()
         connect(document.contentsChange[int, int, int], self.onContentsChanged)
 
         self.old_text = None
 
+    def setCustomFont(self, font):
+        self.customFont = True
+
+        # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
+        bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
+        nbbox = QtGui.QFontMetrics(font).boundingRect(self.text())
+        dx = (bbox.width() - nbbox.width()) / 2
+        dy = (bbox.height() - nbbox.height()) / 2
+        # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
+        self.setFont(font)
+        self.adjustSize()
+        self.moveBy(dx, dy)
+
     #############################################
     #   EVENTS
     #################################
+
+    '''
+    def setFont(self, font: QtGui.QFont) -> None:
+        super().setFont(font)
+    '''
 
     def sceneEvent(self, event: QtCore.QEvent) -> bool:
         """
@@ -334,7 +354,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type event: QtCore.QEvent
         :rtype: bool
         """
-        if event.type() == QtCore.QEvent.FontChange:
+        if event.type() == QtCore.QEvent.FontChange and not self.customFont:
             # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
             bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
             nbbox = QtGui.QFontMetrics(self.diagram.font()).boundingRect(self.text())

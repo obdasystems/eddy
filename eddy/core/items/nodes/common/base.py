@@ -35,6 +35,8 @@ from abc import ABCMeta
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
 
 from eddy import ORGANIZATION, APPNAME
@@ -89,6 +91,12 @@ class AbstractNode(AbstractItem):
         """
         identity = self.identity()
         return identity.value
+
+    @property
+    def fontSize(self):
+        if self.label:
+            return self.label.font().pixelSize()
+        return 12
 
     #############################################
     #   INTERFACE
@@ -421,6 +429,11 @@ class AbstractNode(AbstractItem):
         :rtype: int
         """
         pass
+
+    def setFontSize(self,size):
+        if self.label:
+            self.label.setCustomFont(Font(font=self.diagram.font(), pixelSize=size, weight=Font.Light))
+
 
     #############################################
     #   EVENTS

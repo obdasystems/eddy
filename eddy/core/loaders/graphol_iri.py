@@ -445,6 +445,7 @@ class GrapholProjectIRILoaderMixin_2(object):
             'width': int(geometryElement.attribute('width')),
             'iri': iri
         })
+        node.setBrush(QtGui.QBrush(QtGui.QColor(nodeElement.attribute('color', '#fcfcfc'))))
         node.setPos(QtCore.QPointF(int(geometryElement.attribute('x')), int(geometryElement.attribute('y'))))
         node.doUpdateNodeLabel()
         node.setTextPos(
@@ -1115,7 +1116,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         iriEl = irisEl.firstChildElement('iri')
         while not iriEl.isNull():
             try:
-                self.getIri(iriEl)
+                self.getIri(iriEl, datatypes,facets,annotationProperties)
             except Exception as e:
                 LOGGER.exception('Failed to import iri element [{}]'.format(e))
             finally:
@@ -1373,6 +1374,7 @@ class GrapholProjectIRILoaderMixin_3(object):
             'width': int(geometryElement.attribute('width')),
             'iri': iri
         })
+        node.setBrush(QtGui.QBrush(QtGui.QColor(nodeElement.attribute('color', '#fcfcfc'))))
         node.setPos(QtCore.QPointF(int(geometryElement.attribute('x')), int(geometryElement.attribute('y'))))
         node.setTextPos(
             node.mapFromScene(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y')))))

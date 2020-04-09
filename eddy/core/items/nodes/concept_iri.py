@@ -2,6 +2,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Identity, Item, Special
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode, OntologyEntityResizableNode
@@ -37,6 +38,7 @@ class ConceptNode(OntologyEntityResizableNode):
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
         self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
+        #self.label.setFont(Font(pixelSize=24))
         #TODO to obtain node parent of label ---> self.label.parentItem()
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
@@ -47,6 +49,7 @@ class ConceptNode(OntologyEntityResizableNode):
     #############################################
     #   INTERFACE
     #################################
+
     def occursAsIndividual(self):
         #Class Assertion
         for instEdge in [x for x in self.edges if x.type() is Item.MembershipEdge]:

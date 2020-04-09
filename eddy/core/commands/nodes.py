@@ -376,3 +376,32 @@ class CommandNodeSetBrush(QtWidgets.QUndoCommand):
             node.updateNode(selected=node.isSelected())
         self.diagram.sgnUpdated.emit()
 
+class CommandNodeSetFont(QtWidgets.QUndoCommand):
+    """
+    This command is used to change the brush of predicate nodes.
+    """
+    def __init__(self, diagram, nodes, size):
+        """
+        Initialize the command.
+        :type nodes: T <= tuple|list|set
+        :type size: int
+        """
+        self.diagram = diagram
+        self.nodes = nodes
+        self.size = {x: {'undo': x.fontSize, 'redo': size} for x in nodes}
+        super().__init__('set {0} font size on {1} node(s)'.format(size, len(nodes)))
+
+    def redo(self):
+        """redo the command"""
+        for node in self.nodes:
+            node.setFontSize(self.size[node]['redo'])
+            node.updateNode(selected=node.isSelected())
+        self.diagram.sgnUpdated.emit()
+
+    def undo(self):
+        """redo the command"""
+        for node in self.nodes:
+            node.setFontSize(self.size[node]['undo'])
+            node.updateNode(selected=node.isSelected())
+        self.diagram.sgnUpdated.emit()
+
