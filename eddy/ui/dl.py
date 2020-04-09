@@ -72,7 +72,7 @@ class DLSyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.progressBar = QtWidgets.QProgressBar(self)
         self.progressBar.setAlignment(QtCore.Qt.AlignHCenter)
-        self.progressBar.setRange(self.i, 5)
+        self.progressBar.setRange(self.i, 6)
         self.progressBar.setFixedSize(400, 30)
         self.progressBar.setValue(self.i)
 
@@ -233,9 +233,18 @@ class DLSyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.dispose()
         # RUN THE WORKER
         worker = DLSyntaxWorker(self.project)
+        connect(worker.sgnStep, self.onStep)
         connect(worker.sgnCompliant, self.onCompliant)
         connect(worker.sgnNotCompliant, self.onNotCompliant)
         self.startThread('DLSyntaxCheck', worker)
+
+    @QtCore.pyqtSlot(int)
+    def onStep(self, step):
+        """
+        Executed when the syntax validation procedure is completed and the alphabet is not compliant.
+        """
+        self.progressBar.setValue(step)
+        self.progressBar.update()
 
     @QtCore.pyqtSlot()
     def onCompliant(self):
@@ -274,6 +283,7 @@ class DLSyntaxWorker(AbstractWorker):
     """
     sgnCompliant = QtCore.pyqtSignal()
     sgnNotCompliant = QtCore.pyqtSignal(int)
+    sgnStep = QtCore.pyqtSignal(int)
 
     def __init__(self,project):
         """
@@ -300,26 +310,31 @@ class DLSyntaxWorker(AbstractWorker):
         for cls in classes:
             if not (cls.isOwlThing or cls.isOwlNothing) and self.project.isFromReservedVocabulary(cls):
                 issues.append('The iri <{}> cannot occur as class in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(str(cls)))
+        self.sgnStep.emit(1)
 
         for type in datatypes:
             if not (type in defaultDatatypes) and self.project.isFromReservedVocabulary(type):
                 issues.append('The iri <{}> cannot occur as datatype in a OWL 2 DL ontology (it comes from the reserved vocabulary and is not in the OWL 2 default datatype map)'.format(str(type)))
             if type in classes:
                 issues.append('The iri <{}> cannot occur as both datatype and class in a OWL 2 DL ontology'.format(str(type)))
+        self.sgnStep.emit(2)
 
         for objProp in objProps:
             if not (objProp.isTopObjectProperty or objProp.isBottomObjectProperty) and self.project.isFromReservedVocabulary(objProp):
                 issues.append('The iri <{}> cannot occur as object property in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(str(objProp)))
+        self.sgnStep.emit(3)
 
         for dataProp in dataProps:
             if not (dataProp.isTopDataProperty or dataProp.isBottomDataProperty) and self.project.isFromReservedVocabulary(dataProp):
                 issues.append('The iri <{}> cannot occur as object property in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(str(dataProp)))
             if dataProp in objProps:
                 issues.append('The iri <{}> cannot occur as both DataProperty and ObjectProperty in a OWL 2 DL ontology'.format(str(dataProp)))
+        self.sgnStep.emit(4)
 
         for ind in individuals:
             if self.project.isFromReservedVocabulary(ind):
                 issues.append('The iri <{}> cannot occur as individual in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(str(ind)))
+        self.sgnStep.emit(5)
 
         for diagram in self.project.diagrams():
             for node in diagram.nodes():
@@ -329,6 +344,7 @@ class DLSyntaxWorker(AbstractWorker):
                         issues.append(
                             'The datatype <{}> cannot be used to build literals as it has empty lexical space (literal: {})'.format(
                                 str(type), str(node.literal)))
+        self.sgnStep.emit(6)
 
         if issues:
             self.sgnNotCompliant.emit(len(issues))

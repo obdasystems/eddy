@@ -348,8 +348,11 @@ class GrapholProjectIRILoaderMixin_2(object):
                 iriElList = prefixedIriString.split(':')
                 if len(iriElList) > 1:
                     prefix = iriElList[0]
+                    resolvedPrefix = self.nproject.getPrefixResolution(prefix)
+                    if not resolvedPrefix:
+                        resolvedPrefix = ''
                     namespace = iriElList[1]
-                    iriString = '{}{}'.format(self.nproject.getPrefixResolution(prefix), namespace)
+                    iriString = '{}{}'.format(resolvedPrefix, namespace)
                 elif len(iriElList) == 1:
                     iriString = iriElList[0]
                 else:
@@ -419,8 +422,11 @@ class GrapholProjectIRILoaderMixin_2(object):
         iriElList = labelText.split(':')
         if len(iriElList) > 1:
             prefix = iriElList[0]
+            resolvedPrefix = self.nproject.getPrefixResolution(prefix)
+            if not resolvedPrefix:
+                resolvedPrefix = ''
             namespace = iriElList[1]
-            iriString = '{}{}'.format(self.nproject.getPrefixResolution(prefix), namespace)
+            iriString = '{}{}'.format(resolvedPrefix, namespace)
         elif len(iriElList) == 1:
             iriString = iriElList[0]
         else:
@@ -1115,26 +1121,44 @@ class GrapholProjectIRILoaderMixin_3(object):
             finally:
                 iriEl = iriEl.nextSiblingElement('iri')
 
-    def getIri(self,iriEl):
+    def getIri(self,iriEl,datatypes,facets,annotationProperties):
         iriString = iriEl.firstChildElement('value').text()
-        result = self.nproject.getIRI(iriString)
-        result.functional = bool(int(iriEl.firstChildElement('functional').text()))
-        result.inverseFunctional = bool(int(iriEl.firstChildElement('inverseFunctional').text()))
-        result.symmetric = bool(int(iriEl.firstChildElement('symmetric').text()))
-        result.asymmetric = bool(int(iriEl.firstChildElement('asymmetric').text()))
-        result.reflexive = bool(int(iriEl.firstChildElement('reflexive').text()))
-        result.irreflexive = bool(int(iriEl.firstChildElement('irreflexive').text()))
-        result.transitive = bool(int(iriEl.firstChildElement('transitive').text()))
-        annotationsEl = iriEl.firstChildElement('annotations')
-        annotationEl = annotationsEl.firstChildElement('annotation')
-        while not annotationEl.isNull():
-            try:
-                result.addAnnotationAssertion(self.getAnnotationAssertion(annotationEl))
-            except Exception as e:
-                LOGGER.exception('Failed to import annotation element for iri {} [{}]'.format(iriString,e))
-            finally:
-                annotationEl = annotationEl.nextSiblingElement('annotation')
-        return result
+        if not (iriString in datatypes or iriString in facets or iriString in annotationProperties):
+            result = self.nproject.getIRI(iriString)
+            if not iriEl.firstChildElement('functional').isNull():
+                result.functional = True
+            if not iriEl.firstChildElement('inverseFunctional').isNull():
+                result.inverseFunctional = True
+            if not iriEl.firstChildElement('symmetric').isNull():
+                result.symmetric = True
+            if not iriEl.firstChildElement('asymmetric').isNull():
+                result.asymmetric = True
+            if not iriEl.firstChildElement('reflexive').isNull():
+                result.reflexive = True
+            if not iriEl.firstChildElement('irreflexive').isNull():
+                result.irreflexive = True
+            if not iriEl.firstChildElement('transitive').isNull():
+                result.transitive = True
+            '''
+            result.functional = bool(int(iriEl.firstChildElement('functional').text()))
+            result.inverseFunctional = bool(int(iriEl.firstChildElement('inverseFunctional').text()))
+            result.symmetric = bool(int(iriEl.firstChildElement('symmetric').text()))
+            result.asymmetric = bool(int(iriEl.firstChildElement('asymmetric').text()))
+            result.reflexive = bool(int(iriEl.firstChildElement('reflexive').text()))
+            result.irreflexive = bool(int(iriEl.firstChildElement('irreflexive').text()))
+            result.transitive = bool(int(iriEl.firstChildElement('transitive').text()))
+            '''
+            annotationsEl = iriEl.firstChildElement('annotations')
+            if not annotationsEl.isNull():
+                annotationEl = annotationsEl.firstChildElement('annotation')
+                while not annotationEl.isNull():
+                    try:
+                        result.addAnnotationAssertion(self.getAnnotationAssertion(annotationEl))
+                    except Exception as e:
+                        LOGGER.exception('Failed to import annotation element for iri {} [{}]'.format(iriString,e))
+                    finally:
+                        annotationEl = annotationEl.nextSiblingElement('annotation')
+                return result
 
     def getAnnotationAssertion(self,annotationEl):
         subjectEl = annotationEl.firstChildElement('subject')

@@ -586,7 +586,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
 
         #TODO SCOMMENTA
-        '''
+
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_owl'), 'Check OWL 2 DL compliance',
             self, objectName='dl_check', triggered=self.doDLCheck,
@@ -596,6 +596,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(QtWidgets.QAction( 'DL?',
             self, objectName='dl_check', triggered=self.doDLCheck,
             statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
+        '''
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',

@@ -865,25 +865,30 @@ class IRIManager(QtCore.QObject):
                             self._ontologyPrefix = pr
         else:
             self._ontologyPrefix = None
-
         self.addTopBottomPredicateIRIs()
         self.annotationProperties = set()
         self.datatypes = set()
         self.languages = set()
         self.constrainingFacets = set()
-        self.setDefaults()
+        defaults=True
         if annotationProperties:
+            defaults = False
             for annProp in annotationProperties:
                 self.addAnnotationProperty(annProp)
         if datatypes:
+            defaults = False
             for dt in datatypes:
                 self.addDatatype(dt)
         if constrFacets:
+            defaults = False
             for fac in constrFacets:
                 self.addConstrainingFacet(fac)
         if languages:
+            defaults = False
             for lang in languages:
                 self.addLanguageTag(lang)
+        if defaults:
+            self.setDefaults()
         self._defaultLanguage = defaultLanguage
         self._addLabelFromSimpleName = addLabelFromSimpleName
         self._addLabelFromUserInput = addLabelFromUserInput

@@ -176,9 +176,9 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         irisEl = self.getDomElement('iris')
         ontologyEl.appendChild(irisEl)
         for iri in self.project.iris:
-            iriEl = self.getIriDomElement(iri)
-            irisEl.appendChild(iriEl)
-
+            if not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
+                iriEl = self.getIriDomElement(iri)
+                irisEl.appendChild(iriEl)
         return ontologyEl
 
     def getIriDomElement(self,iri):
@@ -190,58 +190,38 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         functionalEl = self.getDomElement('functional')
         if iri.functional:
-            functionalEl.appendChild(self.getDomTextNode('1'))
-        else:
-            functionalEl.appendChild(self.getDomTextNode('0'))
-        iriEl.appendChild(functionalEl)
+            iriEl.appendChild(functionalEl)
 
         inverseFunctionalEl = self.getDomElement('inverseFunctional')
         if iri.inverseFunctional:
-            inverseFunctionalEl.appendChild(self.getDomTextNode('1'))
-        else:
-            inverseFunctionalEl.appendChild(self.getDomTextNode('0'))
-        iriEl.appendChild(inverseFunctionalEl)
+            iriEl.appendChild(inverseFunctionalEl)
 
         symmetricEl = self.getDomElement('symmetric')
         if iri.symmetric:
-            symmetricEl.appendChild(self.getDomTextNode('1'))
-        else:
-            symmetricEl.appendChild(self.getDomTextNode('0'))
-        iriEl.appendChild(symmetricEl)
+            iriEl.appendChild(symmetricEl)
 
         asymmetricEl = self.getDomElement('asymmetric')
         if iri.asymmetric:
-            asymmetricEl.appendChild(self.getDomTextNode('1'))
-        else:
-            asymmetricEl.appendChild(self.getDomTextNode('0'))
-        iriEl.appendChild(asymmetricEl)
+            iriEl.appendChild(asymmetricEl)
 
         reflexiveEl = self.getDomElement('reflexive')
         if iri.reflexive:
-            reflexiveEl.appendChild(self.getDomTextNode('1'))
-        else:
-            reflexiveEl.appendChild(self.getDomTextNode('0'))
-        iriEl.appendChild(reflexiveEl)
+            iriEl.appendChild(reflexiveEl)
 
         irreflexiveEl = self.getDomElement('irreflexive')
         if iri.irreflexive:
-            irreflexiveEl.appendChild(self.getDomTextNode('1'))
-        else:
-            irreflexiveEl.appendChild(self.getDomTextNode('0'))
-        iriEl.appendChild(irreflexiveEl)
+            iriEl.appendChild(irreflexiveEl)
 
         transitiveEl = self.getDomElement('transitive')
         if iri.transitive:
-            transitiveEl.appendChild(self.getDomTextNode('1'))
-        else:
-            transitiveEl.appendChild(self.getDomTextNode('0'))
-        iriEl.appendChild(transitiveEl)
+            iriEl.appendChild(transitiveEl)
 
-        annotationsEl = self.getDomElement('annotations')
-        iriEl.appendChild(annotationsEl)
-        for annotation in iri.annotationAssertions:
-            annotationEl = self.getAnnotationDomElement(annotation)
-            annotationsEl.appendChild(annotationEl)
+        if iri.annotationAssertions:
+            annotationsEl = self.getDomElement('annotations')
+            iriEl.appendChild(annotationsEl)
+            for annotation in iri.annotationAssertions:
+                annotationEl = self.getAnnotationDomElement(annotation)
+                annotationsEl.appendChild(annotationEl)
 
         return iriEl
 
