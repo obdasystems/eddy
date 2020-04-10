@@ -67,7 +67,7 @@ class DiagramItemMixin:
         Returns the diagram holding this item (alias for DiagramItemMixin.scene()).
         :rtype: Diagram
         """
-        return self.scene()
+        #return self.scene()
         if self.scene():
             return self.scene()
         else:

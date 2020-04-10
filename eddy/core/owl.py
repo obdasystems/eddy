@@ -1607,7 +1607,7 @@ class TopBottomProperty(Enum_):
     BottomDataProperty = IRI(Namespace.OWL.value, 'bottomDataProperty')
 
     def isTopBottomEntity(input):
-        return input == TopBottomProperty.Thing.value or input is TopBottomProperty.Nothing.value or input is TopBottomProperty.TopObjectProperty or input is TopBottomProperty.BottomObjectProperty or input is TopBottomProperty.TopDataProperty or input is TopBottomProperty.BottomDataProperty
+        return input == TopBottomProperty.Thing.value or input is TopBottomProperty.Nothing.value or input is TopBottomProperty.TopObjectProperty.value or input is TopBottomProperty.BottomObjectProperty.value or input is TopBottomProperty.TopDataProperty.value or input is TopBottomProperty.BottomDataProperty.value
 
     def isTopClass(input):
         return input == TopBottomProperty.Thing.value

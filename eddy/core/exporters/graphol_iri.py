@@ -119,8 +119,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         """
         ontologyEl = self.getDomElement('ontology')
         ontologyEl.setAttribute('iri',str(self.project.ontologyIRI))
-
-        ontologyEl.setAttribute('prefix', str(self.project.ontologyPrefix))
+        if self.project.ontologyPrefix:
+            ontologyEl.setAttribute('prefix', str(self.project.ontologyPrefix))
         labelBoolean = '0'
         if self.project.addLabelFromSimpleName:
             labelBoolean = '1'
@@ -607,9 +607,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         '''
         label.setAttribute('x', position.x())
         label.setAttribute('y', position.y())
-        #label.appendChild(self.document.createTextNode(node.text()))
-        #element = self.getNodeDomElement(node)
-        #element.appendChild(label)
+        label.setAttribute('customSize', 1 if node.label.customFont else 0)
+        label.setAttribute('size', node.label.font().pixelSize())
         return label
 
     def exportGenericEdge(self, edge):

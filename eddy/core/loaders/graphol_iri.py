@@ -1079,7 +1079,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         projectName = projectEl.attribute('name')
         ontologyEl = projectEl.firstChildElement('ontology')
         ontologyIri = ontologyEl.attribute('iri')
-        ontologyPrefix = ontologyEl.attribute('prefix')
+        ontologyPrefix = ontologyEl.attribute('prefix',None)
         labelBoolean = False
         if ontologyEl.attribute('addLabelFromSimpleName'):
             labelBoolean = bool(int(ontologyEl.attribute('addLabelFromSimpleName')))
@@ -1379,6 +1379,11 @@ class GrapholProjectIRILoaderMixin_3(object):
         node.setTextPos(
             node.mapFromScene(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y')))))
         #node.setTextPos(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y'))))
+
+        customLabelSize = bool(int(labelElement.attribute('customSize', '0')))
+        if customLabelSize:
+            node.setFontSize(int(labelElement.attribute('size', '12')))
+
         node.doUpdateNodeLabel()
         return node
 
@@ -1407,6 +1412,11 @@ class GrapholProjectIRILoaderMixin_3(object):
         labelElement = nodeElement.firstChildElement('label')
         node.setTextPos(
             node.mapFromScene(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y')))))
+
+        customLabelSize = bool(int(labelElement.attribute('customSize', '0')))
+        if customLabelSize:
+            node.setFontSize(int(labelElement.attribute('size', '12')))
+
         node.doUpdateNodeLabel()
         return node
 
@@ -1652,6 +1662,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         :type e: QDomElement
         :rtype: AbstractNode
         """
+        labelElement = e.firstChildElement('label')
         geometry = self.getGeometryFromElement(e)
         node = diagram.factory.create(item, **{
             'id': e.attribute('id'),
@@ -1659,6 +1670,9 @@ class GrapholProjectIRILoaderMixin_3(object):
             'width': int(geometry.attribute('width'))
         })
         node.setPos(QtCore.QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
+        customLabelSize = bool(int(labelElement.attribute('customSize', '0')))
+        if customLabelSize:
+            node.setFontSize(int(labelElement.attribute('size', '12')))
         return node
 
     @staticmethod
