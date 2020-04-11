@@ -376,7 +376,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         nodeEl = self.getNodeDomElement(node)
-        labelEl = self.getLabelDomElement(node)
+        labelEl = self.getLabelDomElement(node, labelText=True)
         nodeEl.appendChild(labelEl)
         return nodeEl
 
@@ -466,7 +466,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :rtype: QDomElement
         """
         nodeEl = self.getNodeDomElement(node)
-        labelEl = self.getLabelDomElement(node)
+        labelEl = self.getLabelDomElement(node, labelText=True)
         nodeEl.appendChild(labelEl)
         return nodeEl
 
@@ -588,7 +588,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
     #   ONTOLOGY DIAGRAMS EXPORT : GENERICS
     #################################
 
-    def getLabelDomElement(self, node):
+    def getLabelDomElement(self, node, labelText=False):
         """
         Export the given node into a QDomElement.
         :type node: AbstractNode
@@ -609,6 +609,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         label.setAttribute('y', position.y())
         label.setAttribute('customSize', 1 if node.label.customFont else 0)
         label.setAttribute('size', node.label.font().pixelSize())
+        if labelText:
+            label.appendChild(self.getDomTextNode(node.text()))
         return label
 
     def exportGenericEdge(self, edge):
