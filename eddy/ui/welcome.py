@@ -287,6 +287,7 @@ class Welcome(QtWidgets.QDialog):
         if not self.pending:
             self.pending = True
             self.sgnCreateSession.emit(expandPath(path))
+            self.pending = False
 
     @QtCore.pyqtSlot()
     def doOpenURL(self):
