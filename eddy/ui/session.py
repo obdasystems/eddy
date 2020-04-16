@@ -643,14 +643,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_top_black'), Special.Top.value,
-            self, objectName='special_top',
+            self, objectName='special_top', iconVisibleInMenu=True,
             triggered=self.doSetNodeSpecial)
         action.setData(Special.Top)
         self.addAction(action)
 
         action = QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_bottom_black'), Special.Bottom.value,
-            self, objectName='special_bottom',
+            self, objectName='special_bottom', iconVisibleInMenu=True,
             triggered=self.doSetNodeSpecial)
         action.setData(Special.Bottom)
         self.addAction(action)
@@ -662,7 +662,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for color in Color:
                 action = QtWidgets.QAction(
                     BrushIcon(isize, isize, color.value), color.name,
-                    self, checkable=False, triggered=trigger)
+                    self, checkable=False, iconVisibleInMenu=True, triggered=trigger)
                 action.setData(color)
                 group.addAction(action)
             self.addAction(group)
