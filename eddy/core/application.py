@@ -498,10 +498,9 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
-def main(args):
+def main():
     """
     Application entry point.
-    :type args: list
     """
     #############################################
     # SETUP EXCEPTION HOOK
@@ -522,7 +521,7 @@ def main(args):
         QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_DontShowIconsInMenus)
 
     global app
-    app = Eddy(args)
+    app = Eddy(sys.argv)
     if app.isRunning():
         sys.exit(0)
 
@@ -620,15 +619,15 @@ def main(args):
     ret = app.exec_()
     if ret == Eddy.RestartCode:
         nargs = []
-        if os.path.basename(args[0]) == 'eddy':
+        if os.path.basename(sys.argv[0]) == 'eddy':
             # LAUNCHED VIA LAUNCHER SCRIPT
-            nargs.append(args[0])
+            nargs.append(sys.argv[0])
         elif hasattr(sys, 'frozen'):
             # LAUNCHED FROM DISTRIBUTION EXECUTABLE
             nargs.append(sys.executable)
         else:
             # LAUNCHED VIA THE INTERPRETER
-            nargs.extend([sys.executable, args[0]])
-        nargs.extend(args[1:])
+            nargs.extend([sys.executable, sys.argv[0]])
+        nargs.extend(sys.argv[1:])
         subprocess.Popen(nargs)
     sys.exit(ret)
