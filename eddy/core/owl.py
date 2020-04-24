@@ -816,6 +816,97 @@ class PrefixedIRI(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+class ImportedOntology(QtCore.QObject):
+
+    def __init__(self, ontIri, location, versionIri=None, localFileSystem=False , parent=None):
+        """
+        Create a new `ImportedOntology`
+        :type parent: QtCore.QObject
+        :type ontIri: IRI|str
+        :type versionIri: IRI|str
+        :type location: str
+        :type localFileSystem: bool
+        """
+        super().__init__(parent)
+        self._ontIri = ontIri
+        self._location = location
+        self._version = versionIri
+        self._localFileSystem = localFileSystem
+        self._iris = set()
+        self._classes = set()
+        self._objProps = set()
+        self._dataProps = set()
+        self._individuals = set()
+
+    @property
+    def ontologyIRI(self):
+        return self._ontIri
+
+    @ontologyIRI.setter
+    def ontologyIRI(self, ontologyIRI):
+        self._ontIri = ontologyIRI
+
+    @property
+    def versionIRI(self):
+        return self._version
+
+    @versionIRI.setter
+    def versionIRI(self, versionIRI):
+        self._version = versionIRI
+
+    @property
+    def docLocation(self):
+        return self._location
+
+    @docLocation.setter
+    def docLocation(self, location):
+        self._location = location
+
+    @property
+    def isLocalDocument(self):
+        return self._version
+
+    @versionIRI.setter
+    def versionIRI(self, versionIRI):
+        self._version = versionIRI
+
+    @property
+    def iris(self):
+        return self._iris
+
+    @property
+    def classes(self):
+        return self._classes
+
+    def addClass(self, iri):
+        self._classes.add(iri)
+        self._iris.add(iri)
+
+    @property
+    def objectProperties(self):
+        return self._objProps
+
+    def addObjectProperty(self, iri):
+        self._objProps.add(iri)
+        self._iris.add(iri)
+
+    @property
+    def dataProperties(self):
+        return self._dataProps
+
+    def addDataProperty(self, iri):
+        self._dataProps.add(iri)
+        self._iris.add(iri)
+
+    @property
+    def individuals(self):
+        return self._individuals
+
+    def addIndividual(self, iri):
+        self._individuals.add(iri)
+        self._iris.add(iri)
+
+
 class IRIManager(QtCore.QObject):
     """
     A `IRIManager` manages: (i)associations between extended IRIs and their prefixed forms, (ii)the set of IRIs identifying active ontology elements
@@ -838,9 +929,9 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False, importedOntologies=set()):
         """
-        Create a new `IRIManager` with a default set of prefixes defined
+        Create a new `IRIManager`
         :type parent: QtCore.QObject
         """
         super().__init__(parent)
@@ -892,6 +983,20 @@ class IRIManager(QtCore.QObject):
         self._defaultLanguage = defaultLanguage
         self._addLabelFromSimpleName = addLabelFromSimpleName
         self._addLabelFromUserInput = addLabelFromUserInput
+        self._importedOntologies = importedOntologies
+
+    #############################################
+    #   IMPORTED ONTOLOGIES
+    #################################
+    @property
+    def importedOntologies(self):
+        return self._importedOntologies
+
+    def addImportedOntology(self, impOnt):
+        self._importedOntologies.add(impOnt)
+
+    def removeImportedOntology(self, impOnt):
+        self._importedOntologies.remove(impOnt)
 
     #############################################
     #   LANGUAGES
@@ -982,10 +1087,11 @@ class IRIManager(QtCore.QObject):
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
-    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None):
+    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported = False):
         """
         Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index.
-        If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName
+        If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName.
+        If imported, then the IRI request come from an ontology import, so the IRI object must not be added to the set of iris that have to be serialized
         :type iriString: str
         :type addLabelFromSimpleName: bool
         :type addLabelFromUserInput: bool
@@ -996,7 +1102,8 @@ class IRIManager(QtCore.QObject):
         else:
             iri = IRI(iriString)
             iri.manager = self
-            self.addIRI(iri)
+            if not imported:
+                self.addIRI(iri)
             if addLabelFromSimpleName and self._addLabelFromSimpleName:
                 iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri))
             if addLabelFromUserInput and self._addLabelFromUserInput and userInput:

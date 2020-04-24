@@ -124,8 +124,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         ## ONTOLOGY IMPORTS GROUP
 
-        table = QtWidgets.QTableWidget(0, 2, self, objectName='ontology_imports_table_widget')
-        table.setHorizontalHeaderLabels(['Name', 'Ontology IRI'])
+        table = QtWidgets.QTableWidget(0, 3, self, objectName='ontology_imports_table_widget')
+        table.setHorizontalHeaderLabels(['Ontology IRI', 'Version IRI', 'Location'])
         table.horizontalHeader().setStretchLastSection(True)
         table.horizontalHeader().setSectionsClickable(False)
         table.horizontalHeader().setMinimumSectionSize(130)
@@ -621,6 +621,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             versionField.setText(self.project.version)
 
         self.widget('save_ont_iri_version_button').setEnabled(False)
+
+
 
         table = self.widget('annotations_table_widget')
         ontAnnAss = self.project.ontologyIRI.annotationAssertions
