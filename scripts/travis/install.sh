@@ -35,11 +35,6 @@
 if [[ ! -z "$TOXENV" ]]; then
     travis_retry pip install -U -r requirements/tox.in
 else
-    # Remove numpy which comes pre-installed in travis virtualenvs on linux
-    # as we don't have it as a dependency but jpype will link to it if its installed.
-    # In case we decide to include numpy as a dependency we can remove this line.
-    pip uninstall -y numpy
-
     travis_retry pip install -U pip setuptools wheel
     travis_retry pip install -U -r requirements/base.in
     travis_retry pip install -U -r requirements/pyqt5.in
