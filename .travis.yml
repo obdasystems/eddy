@@ -34,9 +34,11 @@ jobs:
   fast_finish: true
   allow_failures:
     - python: 3.7
+      dist: bionic
       env: TOXENV=py37-pyqt514
 
     - python: 3.8
+      dist: bionic
       env: TOXENV=py38-pyqt514
 
   include:
@@ -74,6 +76,7 @@ jobs:
       env: TOXENV=py37-pyqt513
 
     - python: 3.7
+      dist: bionic
       env: TOXENV=py37-pyqt514
 
     - python: 3.8
@@ -83,6 +86,7 @@ jobs:
       env: TOXENV=py38-pyqt513
 
     - python: 3.8
+      dist: bionic
       env: TOXENV=py38-pyqt514
 
     - python: 3.7
