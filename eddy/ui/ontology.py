@@ -762,7 +762,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type _: bool
         """
         # TODO: not implemented yet
-        LOGGER.debug("addOntologyImport called")
+        LOGGER.debug("addOntologyAnnotation called")
+        ontImportWidget = self.session.doOpenImportOntologyWizard()
+        #connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onOntologyAnnotationAssertionAccepted)
+        ontImportWidget.exec_()
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyImport(self, _):

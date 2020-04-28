@@ -1042,7 +1042,6 @@ class IRIManager(QtCore.QObject):
     def getLanguages(self):
         return self.languages
 
-
     #############################################
     #   SLOTS
     #################################

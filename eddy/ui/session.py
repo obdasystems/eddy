@@ -165,7 +165,7 @@ from eddy.core.loaders.graphol import (
 )
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
-from eddy.core.owl import IRIRender, IRI, OWL2Profiles
+from eddy.core.owl import IRIRender, IRI, OWL2Profiles, ImportedOntology
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
@@ -192,6 +192,7 @@ from eddy.ui.forms import NewDiagramForm
 from eddy.ui.forms import RefactorNameForm
 from eddy.ui.forms import RenameDiagramForm
 from eddy.ui.forms import ValueForm
+from eddy.ui.import_ontology import ImportOntologyDialog
 from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
@@ -2532,6 +2533,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.raise_()
                 builder.activateWindow()
 
+    @QtCore.pyqtSlot(ImportedOntology)
+    def doOpenImportOntologyWizard(self,importedOntology=None):
+        """
+        Executed when annotation assertion builder needs to be displayed.
+        :type node: IRI
+        """
+
+        builder = ImportOntologyDialog(self,importedOntology)
+        builder.setWindowModality(QtCore.Qt.ApplicationModal)
+        builder.show()
+        builder.raise_()
+        builder.activateWindow()
+        return builder
 
 
     @QtCore.pyqtSlot()

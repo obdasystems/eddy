@@ -519,7 +519,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :type project: Project
         :type path: str
         """
-        """CICCIO"""
         super().__init__()
 
         self.vm = getJavaVM()
