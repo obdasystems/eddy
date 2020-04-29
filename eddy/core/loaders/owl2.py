@@ -13,8 +13,8 @@ class OwlOntologyImportChecker(AbstractWorker):
     """
     Expose facilities to verify if an OWL ontology can be correctly imported starting from the given parameters
     """
-    sgnCompleted = QtCore.pyqtSignal(str, str)
-    sgnErrored = QtCore.pyqtSignal(Exception)
+    sgnCompleted = QtCore.pyqtSignal(str, str, str)
+    sgnErrored = QtCore.pyqtSignal(str,Exception)
     sgnStarted = QtCore.pyqtSignal()
     sgnFinished = QtCore.pyqtSignal()
 
@@ -59,11 +59,18 @@ class OwlOntologyImportChecker(AbstractWorker):
             self.optionalVersionIRI = self.ontologyId.getVersionIRI()
             if self.optionalVersionIRI.isPresent():
                 self.versionIRI = self.optionalOntologyIRI.get().toString()
+
+
+            self.setClasses = self.ontology.getClassesInSignature()
+            for c in self.setClasses:
+                if not (c.isOWLThing() or c.isOWLNothing()):
+                    print('Imported class --> {}'.format(c.getIRI().toString()))
+
         except Exception as e:
             LOGGER.exception('OWL 2 export could not be completed')
-            self.sgnErrored.emit(e)
+            self.sgnErrored.emit(self.location,e)
         else:
-            self.sgnCompleted.emit(self.ontologyIRI,self.versionIRI)
+            self.sgnCompleted.emit(self.location, self.ontologyIRI, self.versionIRI)
         finally:
             self.vm.detachThreadFromJVM()
             self.sgnFinished.emit()

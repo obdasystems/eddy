@@ -18,6 +18,8 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
     sgnOntologyImportCorrectlyModified = QtCore.pyqtSignal(ImportedOntology)
     sgnOntologyImportRejected = QtCore.pyqtSignal()
 
+    VERIFICATION_THREAD_NAME = 'OWL2ImportVerification'
+
     def __init__(self, session, importedOntology=None):
         """
         Initialize the OWL ontology import dialog.
@@ -28,6 +30,8 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         self.session = session
         self.project = session.project
         self.importedOntology = importedOntology
+
+
 
         self.step = 0
 
@@ -43,12 +47,14 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         connect(self.widgetRemoteImport.sgnNotValidURI, self.onNonValidURI)
         self.widgetVerify = VerifyWidget(self.session, self.stacked)
         self.widgetConfirm = ConfirmWidget(self.session, parent=self.stacked)
+        self.widgetError = ErrorWidget(self.session, parent=self.stacked)
 
         self.stacked.addWidget(self.widgetImportType)
         self.stacked.addWidget(self.widgetLocalImport)
         self.stacked.addWidget(self.widgetRemoteImport)
         self.stacked.addWidget(self.widgetVerify)
         self.stacked.addWidget(self.widgetConfirm)
+        self.stacked.addWidget(self.widgetError)
 
         self.stacked.setCurrentWidget(self.widgetImportType)
 
@@ -103,6 +109,8 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
             self.stacked.setCurrentWidget(self.widgetVerify)
         elif self.step==3:
             self.stacked.setCurrentWidget(self.widgetConfirm)
+        elif self.step==4:
+            self.stacked.setCurrentWidget(self.widgetError)
 
         self.widget('back_button').setEnabled(self.isBackButtonEnabled())
         self.widget('continue_button').setEnabled(self.isContinueButtonEnabled())
@@ -135,7 +143,7 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         connect(checker.sgnCompleted, self.onVerificationCompleted)
         connect(checker.sgnErrored, self.onVerificationError)
         self.redraw()
-        self.startThread('OWL2ImportVerification', checker)
+        self.startThread(self.VERIFICATION_THREAD_NAME, checker)
 
     #############################################
     #   SLOTS
@@ -162,6 +170,8 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         """
         if self.step==3:
             self.step -= 2
+        elif self.step==4:
+            self.step -=3
         else:
             self.step -= 1
         self.redraw()
@@ -206,18 +216,24 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         if widget is self.widgetRemoteImport:
             self.widget('continue_button').setEnabled(True)
 
-    @QtCore.pyqtSlot(str,str)
-    def onVerificationCompleted(self, ontologyIri, versionIri):
-        print('OntologyIRI={}     VersionIRI={}'.format(ontologyIri,versionIri))
-        self.widgetConfirm.iriLabel.setText('Ontology IRI: {}'.format(ontologyIri))
-        self.widgetConfirm.versionLabel.setText('Version IRI: {}'.format(versionIri))
+    @QtCore.pyqtSlot(str,str,str)
+    def onVerificationCompleted(self,location, ontologyIri, versionIri):
+        self.widgetVerify.progressStep(0)
+        self.widgetConfirm.locationText.setValue('{}'.format(location))
+        self.widgetConfirm.iriText.setValue('{}'.format(ontologyIri))
+        self.widgetConfirm.versionText.setValue('{}'.format(versionIri))
+        self.stopThread(self.VERIFICATION_THREAD_NAME)
         self.step += 1
         self.redraw()
 
-    @QtCore.pyqtSlot(Exception)
-    def onVerificationError(self, exc):
-        print('Exception= {}'.format(str(exc)))
-
+    @QtCore.pyqtSlot(str, Exception)
+    def onVerificationError(self,location, exc):
+        self.widgetVerify.progressStep(0)
+        self.widgetError.locationText.setText('{}'.format(location))
+        self.widgetError.problemTextArea.setPlainText('{}'.format(str(exc)))
+        self.stopThread(self.VERIFICATION_THREAD_NAME)
+        self.step += 2
+        self.redraw()
 
 
 class ImportTypeWidget(QtWidgets.QWidget):
@@ -382,18 +398,29 @@ class VerifyWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.session = session
 
+        # PROGRESS BAR
+        self.progressBar = QtWidgets.QProgressBar(self)
+        self.progressBar.setAlignment(QtCore.Qt.AlignHCenter)
+        self.progressBar.setRange(0, 100)
+        self.progressBar.setValue(0)
+
         msgLabel = QtWidgets.QLabel(self)
         msgLabel.setText('Verifying ontology import....')
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(msgLabel)
+        boxlayout.addWidget(self.progressBar)
 
         groupbox = QtWidgets.QGroupBox('Import verification', self)
         groupbox.setLayout(boxlayout)
         outerFormLayout = QtWidgets.QFormLayout()
         outerFormLayout.addRow(groupbox)
         self.setLayout(outerFormLayout)
+
+    @QtCore.pyqtSlot(int)
+    def progressStep(self, step):
+        self.progressBar.setValue(step)
 
 class ConfirmWidget(QtWidgets.QWidget):
 
@@ -409,17 +436,29 @@ class ConfirmWidget(QtWidgets.QWidget):
         msgLabel = QtWidgets.QLabel(self)
         msgLabel.setText('The following ontology will be imported:')
 
-        self.locationLabel = QtWidgets.QLabel(self, objectName='location_label')
-        self.locationLabel.setText('Location: {}'.format(location))
-        self.iriLabel = QtWidgets.QLabel(self, objectName='iri_label')
-        self.iriLabel.setText('Ontology IRI: {}'.format(ontIri))
-        self.versionLabel = QtWidgets.QLabel(self, objectName='version_label')
-        self.versionLabel.setText('Version IRI: {}'.format(versionIri))
+        self.locationLabel = QtWidgets.QLabel(self)
+        self.locationLabel.setText('Location: '.format(location))
+        self.locationText = StringField(self)
+        self.locationText.setValue('{}'.format(location))
+        self.locationText.setReadOnly(True)
+
+        self.iriLabel = QtWidgets.QLabel(self)
+        self.iriLabel.setText('Ontology IRI: ')
+        self.iriText = StringField(self)
+        self.iriText.setValue('{}'.format(ontIri))
+        self.iriText.setReadOnly(True)
+
+        self.versionLabel = QtWidgets.QLabel(self)
+        self.versionLabel.setText('Version IRI: ')
+        self.versionText = StringField(self)
+        self.versionText.setValue('{}'.format(versionIri))
+        self.versionText.setReadOnly(True)
+
         formlayout = QtWidgets.QFormLayout()
-        formlayout.addRow(self.locationLabel)
-        formlayout.addRow(self.iriLabel)
-        formlayout.addRow(self.versionLabel)
-        groupbox = QtWidgets.QGroupBox('Ontology specs', self)
+        formlayout.addRow(self.locationLabel,self.locationText)
+        formlayout.addRow(self.iriLabel,self.iriText)
+        formlayout.addRow(self.versionLabel,self.versionText)
+        groupbox = QtWidgets.QGroupBox(parent=self)
         groupbox.setLayout(formlayout)
 
         boxlayout = QtWidgets.QHBoxLayout()
@@ -428,6 +467,48 @@ class ConfirmWidget(QtWidgets.QWidget):
         boxlayout.addWidget(groupbox)
 
         groupbox = QtWidgets.QGroupBox('Finalize import', self)
+        groupbox.setLayout(boxlayout)
+        outerFormLayout = QtWidgets.QFormLayout()
+        outerFormLayout.addRow(groupbox)
+        self.setLayout(outerFormLayout)
+
+class ErrorWidget(QtWidgets.QWidget):
+
+    def __init__(self, session, location='', problemDescription='', parent=None):
+        """
+        Initialize the base information box.
+        :type session: Session
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(parent)
+        self.session = session
+
+        msgLabel = QtWidgets.QLabel(self)
+        msgLabel.setText('Problems encountered while verifying import:')
+
+        self.locationLabel = QtWidgets.QLabel(self)
+        self.locationLabel.setText('Location: ')
+        self.locationText = StringField(self)
+        self.locationText.setValue('{}'.format(location))
+        self.locationText.setReadOnly(True)
+
+        self.problemLabel = QtWidgets.QLabel(self)
+        self.problemLabel.setText('Problem: ')
+        self.problemTextArea = QtWidgets.QPlainTextEdit(self)
+        self.problemTextArea.setPlainText('{}'.format(problemDescription))
+        self.problemTextArea.setReadOnly(True)
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.locationLabel,self.locationText)
+        formlayout.addRow(self.problemLabel,self.problemTextArea)
+        groupbox = QtWidgets.QGroupBox(parent=self)
+        groupbox.setLayout(formlayout)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(msgLabel)
+        boxlayout.addWidget(groupbox)
+
+        groupbox = QtWidgets.QGroupBox('Revision needed', self)
         groupbox.setLayout(boxlayout)
         outerFormLayout = QtWidgets.QFormLayout()
         outerFormLayout.addRow(groupbox)
