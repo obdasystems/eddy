@@ -1090,7 +1090,7 @@ class IRIManager(QtCore.QObject):
             self.deleteIRI(iri)
 
     @QtCore.pyqtSlot(IRI)
-    def addIRI(self, iri):
+    def addIRI(self, iri, imported=False):
         """
         Add the IRI iri to the index
         :type iri: IRI
@@ -1098,7 +1098,8 @@ class IRIManager(QtCore.QObject):
         if not iri in self.iris:
             if not (iri.manager and iri.manager is self):
                 iri.manager = self
-            self.iris.add(iri)
+            if not imported:
+                self.iris.add(iri)
             self.stringToIRI[str(iri)] = iri
             self.sgnIRIAdded.emit(iri)
 
@@ -1118,8 +1119,7 @@ class IRIManager(QtCore.QObject):
         else:
             iri = IRI(iriString, parent=self)
             iri.manager = self
-            if not imported:
-                self.addIRI(iri)
+            self.addIRI(iri, imported)
             if addLabelFromSimpleName and self._addLabelFromSimpleName:
                 iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri))
             if addLabelFromUserInput and self._addLabelFromUserInput and userInput:

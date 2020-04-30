@@ -66,6 +66,14 @@ class OwlOntologyImportWorker(AbstractWorker):
             if self.optionalVersionIRI.isPresent():
                 self.versionIRI = self.optionalOntologyIRI.get().toString()
 
+            if self.ontologyIRI == str(self.project.ontologyIRI):
+                raise Exception('The selected ontology cannot be imported because its IRI "{}" is associated to the working ontology'.format(self.ontologyIRI))
+            for impOnt in self.project.importedOntologies:
+                if self.ontologyIRI == str(impOnt.ontologyIRI):
+                    raise Exception(
+                        'The selected ontology cannot be added to the project because its IRI "{}" is associated to an ontology that has been previously imported'.format(
+                            self.ontologyIRI))
+
             importedOntology = ImportedOntology(self.ontologyIRI, self.location, self.versionIRI, self.isLocalImport, self.project)
 
             self.sgnStepPerformed.emit(1)

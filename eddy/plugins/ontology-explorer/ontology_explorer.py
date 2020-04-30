@@ -491,8 +491,46 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :param impOnt:ImportedOntology
         :return:
         """
-        #TODO To be implemented
-        pass
+        for classIRI in impOnt.classes:
+            parent = self.parentForIRI(classIRI)
+            if parent:
+                child = self.childForImported(parent,impOnt,classIRI)
+                if child:
+                    parent.removeRow((child.index().row()))
+                if not parent.rowCount():
+                    self.disconnectIRISignals(classIRI)
+                    self.model.removeRow(parent.index().row())
+        for objPropIRI in impOnt.objectProperties:
+            parent = self.parentForIRI(objPropIRI)
+            if parent:
+                child = self.childForImported(parent, impOnt, objPropIRI)
+                if child:
+                    parent.removeRow((child.index().row()))
+                if not parent.rowCount():
+                    self.disconnectIRISignals(objPropIRI)
+                    self.model.removeRow(parent.index().row())
+        for dataPropIRI in impOnt.dataProperties:
+            parent = self.parentForIRI(dataPropIRI)
+            if parent:
+                child = self.childForImported(parent, impOnt, dataPropIRI)
+                if child:
+                    parent.removeRow((child.index().row()))
+                if not parent.rowCount():
+                    self.disconnectIRISignals(dataPropIRI)
+                    self.model.removeRow(parent.index().row())
+        for indIRI in impOnt.individuals:
+            parent = self.parentForIRI(indIRI)
+            if parent:
+                child = self.childForImported(parent, impOnt, indIRI)
+                if child:
+                    parent.removeRow((child.index().row()))
+                if not parent.rowCount():
+                    self.disconnectIRISignals(indIRI)
+                    self.model.removeRow(parent.index().row())
+        #APPLY FILTERS AND SORT
+        if self.sender() != self.plugin:
+            self.proxy.invalidateFilter()
+            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
@@ -605,7 +643,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if item and item.data():
                 if isinstance(item.data(),IRI):
                     self.sgnIRIItemDoubleClicked.emit(item.data())
-                else:
+                elif isinstance(item.data(), AbstractNode):
                     self.sgnItemDoubleClicked.emit(item.data())
 
     @QtCore.pyqtSlot('QModelIndex')
@@ -620,7 +658,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if item and item.data():
                 if isinstance(item.data(),IRI):
                     self.sgnIRIItemClicked.emit(item.data())
-                else:
+                elif isinstance(item.data(), AbstractNode):
                     self.sgnItemClicked.emit(item.data())
 
     @QtCore.pyqtSlot(bool)
@@ -709,6 +747,20 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 return child
         return None
 
+    def childForImported(self, parent, impOnt, iri):
+        """
+        Search the item representing this node among parent children.
+        :type parent: QtGui.QStandardItem
+        :type impOnt: ImportedOntology
+        :type iri: IRI
+        """
+        key = self.childKeyForImported(impOnt, iri)
+        for i in range(parent.rowCount()):
+            child = parent.child(i)
+            if child.text() == key:
+                return child
+        return None
+
     @staticmethod
     def childKey(diagram, node):
         """
@@ -750,8 +802,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             return self.iconRole
         if node.type() is Item.ValueDomainIRINode:
             return self.iconValue
-
-    
 
     def parentFor(self, node):
         """
@@ -975,8 +1025,7 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                         menu = self.session.mf.create(node.diagram, [node])
                         menu.exec_(mouseEvent.screenPos().toPoint())
                         '''
-
-                    else:
+                    elif isinstance(item.data(), AbstractNode):
                         node = item.data()
                         self.widget.sgnItemRightClicked.emit(node)
                         menu = self.session.mf.create(node.diagram, [node])

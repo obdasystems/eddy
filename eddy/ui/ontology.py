@@ -622,7 +622,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.widget('save_ont_iri_version_button').setEnabled(False)
 
-
+        table = self.widget('ontology_imports_table_widget')
+        importedOntologies = self.project.importedOntologies
+        table.clear()
+        table.setRowCount(len(importedOntologies))
+        table.setHorizontalHeaderLabels(['Ontology IRI', 'Version IRI', 'Location'])
+        rowcount = 0
+        for impOnt in importedOntologies:
+            ontIriItem = QtWidgets.QTableWidgetItem(str(impOnt.ontologyIRI))
+            ontIriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            ontIriItem.setData(Qt.UserRole, impOnt)
+            table.setItem(rowcount, 0, ontIriItem)
+            versionItem = QtWidgets.QTableWidgetItem(str(impOnt.versionIRI))
+            versionItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(versionItem))
+            locationItem = QtWidgets.QTableWidgetItem(str(impOnt.docLocation))
+            locationItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            table.setItem(rowcount, 2, QtWidgets.QTableWidgetItem(locationItem))
+            rowcount += 1
+        table.resizeColumnToContents(0)
 
         table = self.widget('annotations_table_widget')
         ontAnnAss = self.project.ontologyIRI.annotationAssertions
@@ -792,8 +810,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Removes an ontology import from the current project.
         :type _: bool
         """
-        # TODO: not implemented yet
-        LOGGER.debug("removeOntologyImport called")
         table = self.widget('ontology_imports_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
