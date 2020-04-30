@@ -4,11 +4,12 @@ from urllib.parse import urlparse
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QRadioButton, QButtonGroup, QAbstractButton
 
+from eddy.core.commands.project import CommandProjectAddOntologyImport
 from eddy.core.common import HasWidgetSystem, HasThreadingSystem
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
-from eddy.core.loaders.owl2 import OwlOntologyImportChecker
+from eddy.core.loaders.owl2 import OwlOntologyImportWorker
 from eddy.core.owl import ImportedOntology
 from eddy.ui.fields import StringField
 
@@ -18,7 +19,7 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
     sgnOntologyImportCorrectlyModified = QtCore.pyqtSignal(ImportedOntology)
     sgnOntologyImportRejected = QtCore.pyqtSignal()
 
-    VERIFICATION_THREAD_NAME = 'OWL2ImportVerification'
+    IMPORT_THREAD_NAME = 'OWL2OntologyImport'
 
     def __init__(self, session, importedOntology=None):
         """
@@ -30,8 +31,6 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         self.session = session
         self.project = session.project
         self.importedOntology = importedOntology
-
-
 
         self.step = 0
 
@@ -133,17 +132,18 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         widget = self.stacked.currentWidget()
         return not widget is self.widgetVerify
 
-    def startImportVerification(self):
-        checker = None
+    def startImportProcess(self):
+        self.worker = None
         current = self.stacked.currentWidget()
         if current is self.widgetLocalImport:
-            checker = OwlOntologyImportChecker(current.pathField.value())
+            self.worker = OwlOntologyImportWorker(current.pathField.value(), self.session)
         elif current is self.widgetRemoteImport:
-            checker = OwlOntologyImportChecker(current.uriField.value(), isLocalImport=False)
-        connect(checker.sgnCompleted, self.onVerificationCompleted)
-        connect(checker.sgnErrored, self.onVerificationError)
+            self.worker = OwlOntologyImportWorker(current.uriField.value(), self.session, isLocalImport=False)
+        connect(self.worker.sgnCompleted, self.onImportCompleted)
+        connect(self.worker.sgnErrored, self.onImportError)
+        connect(self.worker.sgnStepPerformed, self.widgetVerify.progressStep)
         self.redraw()
-        self.startThread(self.VERIFICATION_THREAD_NAME, checker)
+        self.startThread(self.IMPORT_THREAD_NAME, self.worker)
 
     #############################################
     #   SLOTS
@@ -153,6 +153,12 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         """
         Executed when the dialog is accepted.
         """
+        command = CommandProjectAddOntologyImport(self.project, self.importedOntology)
+        self.session.undostack.beginMacro('Add ontology import {0} '.format(self.importedOntology.docLocation))
+        if command:
+            self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+        self.sgnOntologyImportAccepted.emit(self.importedOntology)
         super().accept()
 
     @QtCore.pyqtSlot()
@@ -187,7 +193,7 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
             self.redraw()
         elif self.step==1:
             self.step += 1
-            self.startImportVerification()
+            self.startImportProcess()
         else:
             self.step += 1
             self.redraw()
@@ -216,22 +222,23 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         if widget is self.widgetRemoteImport:
             self.widget('continue_button').setEnabled(True)
 
-    @QtCore.pyqtSlot(str,str,str)
-    def onVerificationCompleted(self,location, ontologyIri, versionIri):
+    @QtCore.pyqtSlot(ImportedOntology)
+    def onImportCompleted(self, impOnt):
+        self.importedOntology = impOnt
         self.widgetVerify.progressStep(0)
-        self.widgetConfirm.locationText.setValue('{}'.format(location))
-        self.widgetConfirm.iriText.setValue('{}'.format(ontologyIri))
-        self.widgetConfirm.versionText.setValue('{}'.format(versionIri))
-        self.stopThread(self.VERIFICATION_THREAD_NAME)
+        self.widgetConfirm.locationText.setValue('{}'.format(impOnt.docLocation))
+        self.widgetConfirm.iriText.setValue('{}'.format(impOnt.ontologyIRI))
+        self.widgetConfirm.versionText.setValue('{}'.format(impOnt.versionIRI))
+        self.stopThread(self.IMPORT_THREAD_NAME)
         self.step += 1
         self.redraw()
 
     @QtCore.pyqtSlot(str, Exception)
-    def onVerificationError(self,location, exc):
+    def onImportError(self, location, exc):
         self.widgetVerify.progressStep(0)
         self.widgetError.locationText.setText('{}'.format(location))
         self.widgetError.problemTextArea.setPlainText('{}'.format(str(exc)))
-        self.stopThread(self.VERIFICATION_THREAD_NAME)
+        self.stopThread(self.IMPORT_THREAD_NAME)
         self.step += 2
         self.redraw()
 
@@ -401,7 +408,7 @@ class VerifyWidget(QtWidgets.QWidget):
         # PROGRESS BAR
         self.progressBar = QtWidgets.QProgressBar(self)
         self.progressBar.setAlignment(QtCore.Qt.AlignHCenter)
-        self.progressBar.setRange(0, 100)
+        self.progressBar.setRange(0, OwlOntologyImportWorker.TOTAL_STEP_COUNT)
         self.progressBar.setValue(0)
 
         msgLabel = QtWidgets.QLabel(self)

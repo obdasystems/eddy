@@ -1301,6 +1301,18 @@ class Project(IRIManager):
         """
         return self.index.iriOccurrences(item,iri,diagram)
 
+    def existIriOccurrence(self, iri, item=None, diagram=None):
+        """
+        Returns True if exist a node of type k_metatype identified by the given IRI belonging to the given diagram.
+        If no diagram is supplied the lookup is performed across the whole Project Index.
+        If no type is supplied the lookup is performed across all the nodes.
+        :type iri: IRI
+        :type diagram: Diagram
+        :item: Item
+        :rtype: bool
+        """
+        return self.index.existIriOccurrence(iri, item, diagram)
+
     def removeDiagram(self, diagram):
         """
         Remove the given diagram from the project index, together with all its items.
@@ -1941,12 +1953,12 @@ class ProjectIRIIndex(ProjectIndex):
         except (KeyError, TypeError):
             return set()
 
-
     def iriOccurrences(self,item=None, iri=None,diagram=None):
         """
         Returns a collection of nodes of type k_metatype identified by the given IRI belonging to the given diagram.
         If no diagram is supplied the lookup is performed across the whole Project Index.
         If no type is supplied the lookup is performed across all the nodes.
+        If no iri is supplied the lookup is performed across all the alphabet of the ontology
         :type iri: IRI
         :type diagram: Diagram
         :item: Item
@@ -1972,7 +1984,7 @@ class ProjectIRIIndex(ProjectIndex):
                         for diag in self[k_metatype][occIRI]:
                             result.update(self[k_metatype][occIRI][diag])
                 else:
-                    for occIRI in self[K_OCCURRENCES]:
+                    for occIRI in self[k_metatype]:
                         if diagram.name in self[k_metatype][occIRI]:
                             result.update(self[k_metatype][occIRI][diagram.name])
             else:
@@ -1987,6 +1999,41 @@ class ProjectIRIIndex(ProjectIndex):
             return result
         except KeyError:
             return set()
+
+    def existIriOccurrence(self, iri, item=None, diagram=None):
+        """
+        Returns True if exist a node of type k_metatype identified by the given IRI belonging to the given diagram.
+        If no diagram is supplied the lookup is performed across the whole Project Index.
+        If no type is supplied the lookup is performed across all the nodes.
+        :type iri: IRI
+        :type diagram: Diagram
+        :item: Item
+        :rtype: bool
+        """
+        try:
+            k_metatype = None
+            if item:
+                if item is Item.ConceptIRINode:
+                    k_metatype = K_CLASS_OCCURRENCES
+                elif item is Item.RoleIRINode:
+                    k_metatype = K_OBJ_PROP_OCCURRENCES
+                elif item is Item.AttributeIRINode:
+                    k_metatype = K_DATA_PROP_OCCURRENCES
+                elif item is Item.IndividualIRINode:
+                    k_metatype = K_INDIVIDUAL_OCCURRENCES
+            if not k_metatype:
+                k_metatype = K_OCCURRENCES
+            if not diagram:
+                if iri in self[k_metatype]:
+                    if self[k_metatype][iri]:
+                        return True
+            else:
+                if iri in self[k_metatype]:
+                    if diagram.name in self[k_metatype][iri]:
+                        return True
+            return False
+        except KeyError:
+            return False
 
     def isDLCompliant(self):
         objPropNodes = self.iriOccurrences(item=Item.RoleIRINode)

@@ -45,7 +45,8 @@ from eddy.core.datatypes.annotation import Status
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
-from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
+from eddy.core.items.nodes.concept_iri import ConceptNode
+from eddy.core.owl import IRIRender, AnnotationAssertion, IRI, ImportedOntology
 from eddy.core.plugin import AbstractPlugin
 
 from eddy.ui.dock import DockWidget
@@ -71,7 +72,9 @@ class OntologyExplorerPlugin(AbstractPlugin):
         widget = self.widget('ontology_explorer')
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnItemAdded, widget.doAddNode)
+        connect(self.project.sgnImportedOntologyAdded, widget.onImportedOntologyAdded)
         connect(self.project.sgnItemRemoved, widget.doRemoveNode)
+        connect(self.project.sgnImportedOntologyRemoved, widget.onImportedOntologyRemoved)
         connect(self.project.sgnMetaAdded, widget.onMetaUpdated)
         connect(self.project.sgnMetaRemoved, widget.onMetaUpdated)
         # FILL IN ONTOLOGY EXPLORER WITH DATA
@@ -190,7 +193,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
-
 
 class OntologyExplorerWidget(QtWidgets.QWidget):
     """
@@ -398,10 +400,99 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onIRIRemovedFromAllDiagrams(self,iri):
         parentK = self.parentKeyForIRI(iri, self.project)
         for parent in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
+            removeParent = True
             for i in range(parent.rowCount()):
-                parent.removeRow(i)
-            self.model.removeRow(parent.index().row())
+                childData = parent.child(i).data()
+                if isinstance(childData,OntologyEntityNode) or isinstance(childData, OntologyEntityResizableNode):
+                    parent.removeRow(i)
+                else:
+                    removeParent = False
+            if removeParent:
+                self.model.removeRow(parent.index().row())
 
+    @QtCore.pyqtSlot(ImportedOntology)
+    def onImportedOntologyAdded(self, impOnt):
+        """
+        :param impOnt:ImportedOntology
+        :return:
+        """
+        for classIRI in impOnt.classes:
+            parent = self.parentForIRI(classIRI)
+            if not parent:
+                parent = QtGui.QStandardItem(self.parentKeyForIRI(classIRI, self.project))
+                parent.setData(classIRI)
+                self.connectIRISignals(classIRI)
+                self.model.appendRow(parent)
+            child = QtGui.QStandardItem(self.childKeyForImported(impOnt,classIRI))
+            # CHECK FOR DUPLICATE NODES
+            children = [parent.child(i) for i in range(parent.rowCount())]
+            if not any([(child.text() == c.text() and c.icon() is self.iconConcept) for c in children]):
+                child.setIcon(self.iconConcept)
+                childData = [classIRI, Item.ConceptIRINode.value]
+                child.setData(childData)
+                parent.appendRow(child)
+                
+        for objPropIRI in impOnt.objectProperties:
+            parent = self.parentForIRI(objPropIRI)
+            if not parent:
+                parent = QtGui.QStandardItem(self.parentKeyForIRI(objPropIRI, self.project))
+                parent.setData(objPropIRI)
+                self.connectIRISignals(objPropIRI)
+                self.model.appendRow(parent)
+            child = QtGui.QStandardItem(self.childKeyForImported(impOnt,objPropIRI))
+            # CHECK FOR DUPLICATE NODES
+            children = [parent.child(i) for i in range(parent.rowCount())]
+            if not any([(child.text() == c.text() and c.icon() is self.iconRole) for c in children]):
+                child.setIcon(self.iconRole)
+                childData = [objPropIRI, Item.RoleIRINode.value]
+                child.setData(childData)
+                parent.appendRow(child)
+        
+        for dataPropIRI in impOnt.dataProperties:
+            parent = self.parentForIRI(dataPropIRI)
+            if not parent:
+                parent = QtGui.QStandardItem(self.parentKeyForIRI(dataPropIRI, self.project))
+                parent.setData(dataPropIRI)
+                self.connectIRISignals(dataPropIRI)
+                self.model.appendRow(parent)
+            child = QtGui.QStandardItem(self.childKeyForImported(impOnt,dataPropIRI))
+            # CHECK FOR DUPLICATE NODES
+            children = [parent.child(i) for i in range(parent.rowCount())]
+            if not any([(child.text() == c.text() and c.icon() is self.iconAttribute) for c in children]):
+                child.setIcon(self.iconAttribute)
+                childData = [dataPropIRI, Item.AttributeIRINode.value]
+                child.setData(childData)
+                parent.appendRow(child)
+                
+        for indIRI in impOnt.individuals:
+            parent = self.parentForIRI(indIRI)
+            if not parent:
+                parent = QtGui.QStandardItem(self.parentKeyForIRI(indIRI, self.project))
+                parent.setData(indIRI)
+                self.connectIRISignals(indIRI)
+                self.model.appendRow(parent)
+            child = QtGui.QStandardItem(self.childKeyForImported(impOnt,indIRI))
+            # CHECK FOR DUPLICATE NODES
+            children = [parent.child(i) for i in range(parent.rowCount())]
+            if not any([(child.text() == c.text() and c.icon() is self.iconInstance) for c in children]):
+                child.setIcon(self.iconInstance)
+                childData = [indIRI, Item.IndividualIRINode.value]
+                child.setData(childData)
+                parent.appendRow(child)
+                
+        #APPLY FILTERS AND SORT
+        if self.sender() != self.plugin:
+            self.proxy.invalidateFilter()
+            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+    
+    @QtCore.pyqtSlot(ImportedOntology)
+    def onImportedOntologyRemoved(self, impOnt):
+        """
+        :param impOnt:ImportedOntology
+        :return:
+        """
+        #TODO To be implemented
+        pass
 
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
@@ -426,7 +517,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 child.setIcon(self.iconFor(node))
                 connect(node.sgnIRISwitched,self.onNodeIRISwitched)
             child.setData(node)
-
             # CHECK FOR DUPLICATE NODES
             children = [parent.child(i) for i in range(parent.rowCount())]
             if not any([child.text() == c.text() for c in children]):
@@ -635,6 +725,16 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             predicate = node.text().replace('\n', '')
             return '{0} ({1} - {2})'.format(predicate, diagram, node.id)
 
+    @staticmethod
+    def childKeyForImported(impOnt, iri):
+        """
+        Returns the child key (text) used to place the given node in the treeview.
+        :type impOnt: ImportedOntology
+        :type iri: IRI
+        :rtype: str
+        """
+        return 'Imported from {}'.format(impOnt.docLocation)
+
     def iconFor(self, node):
         """
         Returns the icon for the given node.
@@ -650,6 +750,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             return self.iconRole
         if node.type() is Item.ValueDomainIRINode:
             return self.iconValue
+
+    
 
     def parentFor(self, node):
         """
@@ -670,6 +772,19 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 n = i.child(0).data()
                 if node.type() is n.type():
                     return i
+        return None
+
+    def parentForIRI(self, iri):
+        """
+        Search the parent element of the given iri.
+        :type node: IRI
+        :rtype: QtGui.QStandardItem
+        """
+        parentK = self.parentKeyForIRI(iri,self.project)
+        for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
+            parentIRI = i.data()
+            if iri is parentIRI:
+                return i
         return None
 
     @staticmethod
@@ -724,7 +839,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         return QtCore.QSize(216, 266)
 
-
 class OntologyExplorerView(QtWidgets.QTreeView):
     """
     This class implements the ontology explorer tree view.
@@ -776,10 +890,8 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         :type mouseEvent: QMouseEvent
         """
         self.clearSelection()
-
         if mouseEvent.buttons() & QtCore.Qt.LeftButton:
             self.startPos = mouseEvent.pos()
-
         super().mousePressEvent(mouseEvent)
 
     def mouseMoveEvent(self, mouseEvent):
@@ -794,53 +906,47 @@ class OntologyExplorerView(QtWidgets.QTreeView):
 
                     index = first(self.selectedIndexes())
                     if index:
-
                         model = self.model().sourceModel()
                         index = self.model().mapToSource(index)
-
                         item = model.itemFromIndex(index)
                         itemData = item.data()
-
                         if itemData and isinstance(itemData,AbstractNode):
                             pass
                         else:
                             if item.hasChildren():
                                 itemData = item.child(0).data()
-
                         if itemData:
                             if isinstance(itemData,OntologyEntityNode) or isinstance(itemData, OntologyEntityResizableNode):
-                                print()
                                 mimeData = QtCore.QMimeData()
-
                                 mimeData.setText(str(itemData.Type.value))
-
                                 node_iri = itemData.iri
-
                                 byte_array = QtCore.QByteArray()
                                 byte_array.append(str(node_iri))
-
                                 mimeData.setData(str(itemData.Type.value), byte_array)
-
                                 drag = QtGui.QDrag(self)
                                 drag.setMimeData(mimeData)
-                                # drag.setPixmap(self.icon().pixmap(60, 40))
-                                # drag.setHotSpot(self.startPos - self.rect().topLeft())
+                                drag.exec_(QtCore.Qt.CopyAction)
+                            elif isinstance(itemData,list):
+                                iri = itemData[0]
+                                itemValue = itemData[1]
+                                mimeData = QtCore.QMimeData()
+                                mimeData.setText(str(itemValue))
+                                byte_array = QtCore.QByteArray()
+                                byte_array.append(str(iri))
+                                mimeData.setData(str(itemValue), byte_array)
+                                drag = QtGui.QDrag(self)
+                                drag.setMimeData(mimeData)
                                 drag.exec_(QtCore.Qt.CopyAction)
                             else:
+                                #OLD ELEMENTS should not be used
                                 mimeData = QtCore.QMimeData()
-
                                 mimeData.setText(str(itemData.Type.value))
-
                                 node_iri = self.session.project.get_iri_of_node(itemData)
                                 node_remaining_characters = itemData.remaining_characters
-
                                 comma_seperated_text = str(node_iri + ',' + node_remaining_characters + ',' + itemData.text())
-
                                 byte_array = QtCore.QByteArray()
                                 byte_array.append(comma_seperated_text)
-
                                 mimeData.setData(str(itemData.Type.value), byte_array)
-
                                 drag = QtGui.QDrag(self)
                                 drag.setMimeData(mimeData)
                                 # drag.setPixmap(self.icon().pixmap(60, 40))
@@ -890,7 +996,6 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         :rtype: int
         """
         return max(super().sizeHintForColumn(column), self.viewport().width())
-
 
 class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     """

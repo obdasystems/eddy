@@ -176,7 +176,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         irisEl = self.getDomElement('iris')
         ontologyEl.appendChild(irisEl)
         for iri in self.project.iris:
-            if not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
+            if self.project.existIriOccurrence(iri) and not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
                 iriEl = self.getIriDomElement(iri)
                 irisEl.appendChild(iriEl)
         return ontologyEl

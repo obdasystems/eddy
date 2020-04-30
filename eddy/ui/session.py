@@ -1550,7 +1550,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     def onSingleNodeSwitchIRI(self, node, iri):
         self.sgnSingleNodeSwitchIRI.emit(node,iri)
 
-
     @QtCore.pyqtSlot()
     def doBringToFront(self):
         """
@@ -2539,14 +2538,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when annotation assertion builder needs to be displayed.
         :type node: IRI
         """
-
         builder = ImportOntologyDialog(self,importedOntology)
         builder.setWindowModality(QtCore.Qt.ApplicationModal)
         builder.show()
         builder.raise_()
         builder.activateWindow()
         return builder
-
 
     @QtCore.pyqtSlot()
     def doOpenNodeDescription(self):

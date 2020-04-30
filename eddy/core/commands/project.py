@@ -68,7 +68,6 @@ class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoComm
         self._labelFromUserInputUndo = labelFromUserInputUndo
         self._languageUndo = languageUndo
 
-
     def redo(self):
         """redo the command"""
         self._project.addLabelFromSimpleName = self._labelFromSimpleNameRedo
@@ -119,7 +118,6 @@ class CommandProjectSetOntologyIRIAndVersion(QtWidgets.QUndoCommand):
         """undo the command"""
         self._project.setOntologyIRI(self._iriUndo)
         self._project.version = self._versionUndo
-
 
 #############################################
 #   PREFIXES
@@ -235,7 +233,6 @@ class CommandProjectModifyNamespacePrefix(QtWidgets.QUndoCommand):
         if self._project.ontologyPrefix and self._prefix == self._project.ontologyPrefix:
             self._project.ontologyPrefix = self._oldPrefix
 
-
 #############################################
 #   ANNOTATION PROPERTIES
 #################################
@@ -284,6 +281,57 @@ class CommandProjectRemoveAnnotationProperty(QtWidgets.QUndoCommand):
     def undo(self):
         """undo the command"""
         self._project.addAnnotationProperty(self._propIriStr)
+
+#############################################
+#   ONTOLOGY IMPORTS
+#################################
+class CommandProjectAddOntologyImport(QtWidgets.QUndoCommand):
+    """
+    This command is used to add an imported ontology entry.
+    """
+    def __init__(self, project, impOnt, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type impOnt: ImportedOntology
+        :type name: str
+        """
+        super().__init__(name or 'Add imported ontology {0} '.format(impOnt.docLocation))
+        self._impOnt = impOnt
+        self._project = project
+
+    def redo(self):
+        """redo the command"""
+        self._project.addImportedOntology(self._impOnt)
+
+    def undo(self):
+        """undo the command"""
+        self._project.removeImportedOntology(self._impOnt)
+
+class CommandProjectRemoveOntologyImport(QtWidgets.QUndoCommand):
+    """
+    This command is used to remove an imported ontology entry.
+    """
+    def __init__(self, project, impOnt, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type impOnt: ImportedOntology
+        :type name: str
+        """
+        super().__init__(name or 'Add imported ontology {0} '.format(impOnt.docLocation))
+        self._impOnt = impOnt
+        self._project = project
+
+    def redo(self):
+        """redo the command"""
+        self._project.removeImportedOntology(self._impOnt)
+
+    def undo(self):
+        """undo the command"""
+        self._project.addImportedOntology(self._impOnt)
+
+
 
 #TODO A REGIME METODI SOTTO CANCELLATI (TUTTI??)
 

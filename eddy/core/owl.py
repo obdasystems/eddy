@@ -929,6 +929,9 @@ class IRIManager(QtCore.QObject):
     sgnDatatypeAdded = QtCore.pyqtSignal(IRI)
     sgnDatatypeRemoved = QtCore.pyqtSignal(IRI)
 
+    sgnImportedOntologyAdded = QtCore.pyqtSignal(ImportedOntology)
+    sgnImportedOntologyRemoved = QtCore.pyqtSignal(ImportedOntology)
+
     def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False, importedOntologies=set()):
         """
         Create a new `IRIManager`
@@ -993,10 +996,20 @@ class IRIManager(QtCore.QObject):
         return self._importedOntologies
 
     def addImportedOntology(self, impOnt):
-        self._importedOntologies.add(impOnt)
+        if not impOnt in self.importedOntologies:
+            self.importedOntologies.add(impOnt)
+            self.sgnImportedOntologyAdded.emit(impOnt)
 
     def removeImportedOntology(self, impOnt):
-        self._importedOntologies.remove(impOnt)
+        if impOnt in self.importedOntologies:
+            self.importedOntologies.remove(impOnt)
+            self.sgnImportedOntologyRemoved.emit(impOnt)
+
+    def isImportedIRI(self,iri):
+        for imported in self.importedOntologies:
+            if iri in imported.iris:
+                return True
+        return False
 
     #############################################
     #   LANGUAGES
@@ -1045,6 +1058,11 @@ class IRIManager(QtCore.QObject):
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot(ImportedOntology)
+    def onImportedOntologyRemoved(self, impOnt):
+        for iri in impOnt.iris:
+            if not (self.existIriOccurrence(iri) or self.isImportedIRI(iri)):
+                self.deleteIRI(iri)
 
     @QtCore.pyqtSlot(str)
     def setOntologyIRI(self, iriString):
@@ -1055,7 +1073,6 @@ class IRIManager(QtCore.QObject):
         self.ontologyIRI = newOntIRI
         self.sgnOntologyIRIModified.emit(self.ontologyIRI)
 
-    # TODO dovrai poi capire quando un'IRI dovrà essere rimossa (come capire quando non viene più utilizzata in alcun punto???)
     @QtCore.pyqtSlot(IRI)
     def deleteIRI(self, iri):
         """
@@ -1069,7 +1086,7 @@ class IRIManager(QtCore.QObject):
 
     @QtCore.pyqtSlot(IRI)
     def onIRIRemovedFromAllDiagrams(self,iri):
-        if not (iri is self.ontologyIRI or iri in self.annotationProperties or iri in self.datatypes):
+        if not (iri is self.ontologyIRI or iri in self.annotationProperties or iri in self.datatypes or self.isImportedIRI(iri)):
             self.deleteIRI(iri)
 
     @QtCore.pyqtSlot(IRI)
@@ -1086,7 +1103,7 @@ class IRIManager(QtCore.QObject):
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
-    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported = False):
+    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported=False):
         """
         Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index.
         If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName.
@@ -1099,7 +1116,7 @@ class IRIManager(QtCore.QObject):
         if iriString in self.stringToIRI:
             return self.stringToIRI[iriString]
         else:
-            iri = IRI(iriString)
+            iri = IRI(iriString, parent=self)
             iri.manager = self
             if not imported:
                 self.addIRI(iri)

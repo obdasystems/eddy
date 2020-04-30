@@ -43,9 +43,9 @@ from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandCommmonSub
 from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
     CommandProjectModifyPrefixResolution, CommandProjectModifyNamespacePrefix, CommandProjectAddAnnotationProperty, \
     CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion, \
-    CommandProjectSetLabelFromSimpleNameOrInputAndLanguage
+    CommandProjectSetLabelFromSimpleNameOrInputAndLanguage, CommandProjectRemoveOntologyImport
 from eddy.core.datatypes.qt import Font
-from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion
+from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion, ImportedOntology
 
 from eddy.core.common import HasWidgetSystem
 from eddy.core.functions.signals import connect
@@ -761,11 +761,30 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Adds an ontology import to the current project.
         :type _: bool
         """
-        # TODO: not implemented yet
-        LOGGER.debug("addOntologyAnnotation called")
         ontImportWidget = self.session.doOpenImportOntologyWizard()
-        #connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onOntologyAnnotationAssertionAccepted)
+        connect(ontImportWidget.sgnOntologyImportAccepted,self.onOntologyImportAccepted)
         ontImportWidget.exec_()
+
+    @QtCore.pyqtSlot(ImportedOntology)
+    def onOntologyImportAccepted(self,impOnt):
+        '''
+        :type assertion:AnnotationAssertion
+        '''
+        table = self.widget('ontology_imports_table_widget')
+        rowcount = table.rowCount()
+        table.setRowCount(rowcount + 1)
+        ontIriItem = QtWidgets.QTableWidgetItem(str(impOnt.ontologyIRI))
+        ontIriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        ontIriItem.setData(Qt.UserRole,impOnt)
+        table.setItem(rowcount, 0, ontIriItem)
+        versionItem = QtWidgets.QTableWidgetItem(str(impOnt.versionIRI))
+        versionItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(versionItem))
+        locationItem = QtWidgets.QTableWidgetItem(str(impOnt.docLocation))
+        locationItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 2, QtWidgets.QTableWidgetItem(locationItem))
+        table.scrollToItem(table.item(rowcount, 0))
+        table.resizeColumnToContents(0)
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyImport(self, _):
@@ -775,6 +794,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         """
         # TODO: not implemented yet
         LOGGER.debug("removeOntologyImport called")
+        table = self.widget('ontology_imports_table_widget')
+        rowcount = table.rowCount()
+        selectedRanges = table.selectedRanges()
+        commands = []
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                removedItem = table.item(row, 0)
+                impOnt = removedItem.data(Qt.UserRole)
+                command = CommandProjectRemoveOntologyImport(self.project, impOnt)
+                commands.append(command)
+        self.session.undostack.beginMacro('Remove ontology imports >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                table.removeRow(row)
+        table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
 
     @QtCore.pyqtSlot(bool)
     def addOntologyAnnotation(self, _):
@@ -804,7 +842,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
         table.scrollToItem(table.item(rowcount, 0))
         table.resizeColumnToContents(0)
-
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):
