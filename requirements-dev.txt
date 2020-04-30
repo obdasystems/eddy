@@ -7,9 +7,9 @@
 altgraph==0.17            # via pyinstaller
 appdirs==1.4.3            # via virtualenv
 attrs==19.3.0             # via pytest
-click==7.1.1              # via pip-tools
+click==7.1.2              # via pip-tools
 coverage==5.1             # via pytest-cov
-cython==0.29.16           # via -r requirements/cython.in
+cython==0.29.17           # via -r requirements/cython.in
 distlib==0.3.0            # via virtualenv
 easyprocess==0.2.10       # via pyvirtualdisplay
 entrypoints==0.3          # via flake8
@@ -17,15 +17,15 @@ filelock==3.0.12          # via tox, virtualenv
 flake8==3.7.9             # via -r requirements/dev.in
 graphviz==0.14            # via objgraph
 importlib-metadata==1.6.0  # via pluggy, pytest, tox, virtualenv
-jpype1==0.7.3             # via -r requirements/base.in
+jpype1==0.7.4             # via -r requirements/base.in
 macholib ; sys_platform == 'darwin'  # via pyinstaller
 mccabe==0.6.1             # via flake8
 more-itertools==8.2.0     # via pytest
 objgraph==3.4.1           # via -r requirements/dev.in
 packaging==20.3           # via pytest, tox
 pefile ; sys_platform == 'win32'  # via pyinstaller
-pillow==7.1.1             # via -r requirements/packaging.in
-pip-tools==5.0.0          # via -r requirements/dev.in
+pillow==7.1.2             # via -r requirements/packaging.in
+pip-tools==5.1.0          # via -r requirements/dev.in
 pluggy==0.13.1            # via pytest, tox
 py-cpuinfo==5.0.0         # via pytest-benchmark
 py==1.8.1                 # via pytest, tox
