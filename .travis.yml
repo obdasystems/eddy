@@ -1,5 +1,5 @@
 os: linux
-dist: xenial
+dist: bionic
 
 addons:
   apt:
@@ -34,21 +34,22 @@ jobs:
   fast_finish: true
   allow_failures:
     - python: 3.7
-      dist: bionic
       env: TOXENV=py37-pyqt514
 
     - python: 3.8
-      dist: bionic
       env: TOXENV=py38-pyqt514
 
   include:
     - python: 3.5
+      dist: xenial
       env: TOXENV=py35-pyqt58
 
     - python: 3.5
+      dist: xenial
       env: TOXENV=py35-pyqt59
 
     - python: 3.5
+      dist: xenial
       env: TOXENV=py35-pyqt510
 
     - python: 3.6
@@ -76,7 +77,6 @@ jobs:
       env: TOXENV=py37-pyqt513
 
     - python: 3.7
-      dist: bionic
       env: TOXENV=py37-pyqt514
 
     - python: 3.8
@@ -86,7 +86,6 @@ jobs:
       env: TOXENV=py38-pyqt513
 
     - python: 3.8
-      dist: bionic
       env: TOXENV=py38-pyqt514
 
     - python: 3.7
