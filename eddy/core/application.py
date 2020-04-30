@@ -516,10 +516,6 @@ def main():
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_Use96Dpi)
 
-    if _MACOS:
-        # DISABLE MENU ICONS IN MACOS
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_DontShowIconsInMenus)
-
     global app
     app = Eddy(sys.argv)
     if app.isRunning():
