@@ -3112,7 +3112,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Perform OWL DL check on the ontology.
         """
-        #TODO
         print('doDLCheck called')
         dialog = DLSyntaxValidationDialog(self.project, self)
         dialog.exec_()
@@ -3132,7 +3131,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Perform Ontology Consistency checking on the active ontology/diagram.
         """
         dialog = OntologyConsistencyCheckDialog(self.project, self)
-        #TODO SEGANTURA SEGNALE dialog.sgnUnsatisfiableEntities(int)
         connect(dialog.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
         connect(dialog.sgnOntologyInconsistent, self.onInconsistentOntology)
         self.sgnConsistencyCheckStarted.emit()
