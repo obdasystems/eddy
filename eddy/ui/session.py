@@ -3169,7 +3169,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = OntologyManagerDialog(self)
         dialog.exec_()
 
-    # NEEDED TO REMOVE HIGHLIGHT FROM NODES PREVIOUSLY COMPUTED AS UNSATISFIABLE
+    #TODO. ONCE NEEDED TO REMOVE HIGHLIGHT FROM NODES PREVIOUSLY COMPUTED AS UNSATISFIABLE. NOW REMOVE HIGHLIGHT FROM ENTRIES OF ONTOLOGY EXPLORER WIDGET
     @QtCore.pyqtSlot()
     def doResetConsistencyCheck(self, updateNodes=True, clearReasonerCache=True):
         """
