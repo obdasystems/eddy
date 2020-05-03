@@ -12,7 +12,7 @@ LOGGER = getLogger()
 
 class OwlOntologyImportWorker(AbstractWorker):
     """
-    Expose facilities to verify if an OWL ontology can be correctly imported starting from the given parameters
+    Expose facilities to load an OWL ontology starting from the given parameters
     """
     sgnCompleted = QtCore.pyqtSignal(ImportedOntology)
     sgnErrored = QtCore.pyqtSignal(str,Exception)
@@ -48,15 +48,15 @@ class OwlOntologyImportWorker(AbstractWorker):
         try:
             self.sgnStarted.emit()
             self.vm.attachThreadToJVM()
-            self.ontology = None
+            ontology = None
             self.ontologyManager = self.OWLManagerClass.createOWLOntologyManager()
             if self.isLocalImport:
-                self.fileInstance = self.JavaFileClass(self.location)
-                self.ontology = self.ontologyManager.loadOntologyFromOntologyDocument(self.fileInstance)
+                fileInstance = self.JavaFileClass(self.location)
+                ontology = self.ontologyManager.loadOntologyFromOntologyDocument(fileInstance)
             else:
-                self.iriInstance = self.IRIClass.create(self.location)
-                self.ontology = self.ontologyManager.loadOntology(self.iriInstance)
-            self.ontologyId = self.ontology.getOntologyID()
+                iriInstance = self.IRIClass.create(self.location)
+                ontology = self.ontologyManager.loadOntology(iriInstance)
+            self.ontologyId = ontology.getOntologyID()
             self.ontologyIRI = ''
             self.optionalOntologyIRI = self.ontologyId.getOntologyIRI()
             if self.optionalOntologyIRI.isPresent():
@@ -78,39 +78,140 @@ class OwlOntologyImportWorker(AbstractWorker):
 
             self.sgnStepPerformed.emit(1)
 
-            setClasses = self.ontology.getClassesInSignature()
+            setClasses = ontology.getClassesInSignature()
             for c in setClasses:
                 if not (c.isOWLThing() or c.isOWLNothing()):
                     iri = self.project.getIRI(c.getIRI().toString(),imported=True)
                     importedOntology.addClass(iri)
             self.sgnStepPerformed.emit(2)
 
-            setObjProps = self.ontology.getObjectPropertiesInSignature()
+            setObjProps = ontology.getObjectPropertiesInSignature()
             for objProp in setObjProps:
                 if not (objProp.isOWLTopObjectProperty() or objProp.isOWLBottomObjectProperty()):
                     iri = self.project.getIRI(objProp.getNamedProperty().getIRI().toString(), imported=True)
                     importedOntology.addObjectProperty(iri)
             self.sgnStepPerformed.emit(3)
 
-            setDataProps = self.ontology.getDataPropertiesInSignature()
+            setDataProps = ontology.getDataPropertiesInSignature()
             for dataProp in setDataProps:
                 if not (dataProp.isOWLTopDataProperty() or dataProp.isOWLBottomDataProperty()):
                     iri = self.project.getIRI(dataProp.getIRI().toString(), imported=True)
                     importedOntology.addDataProperty(iri)
             self.sgnStepPerformed.emit(4)
 
-            setIndividuals = self.ontology.getIndividualsInSignature()
+            setIndividuals = ontology.getIndividualsInSignature()
             for ind in setIndividuals:
                 if not ind.isAnonymous():
                     iri = self.project.getIRI(ind.getIRI().toString(), imported=True)
                     importedOntology.addIndividual(iri)
             self.sgnStepPerformed.emit(5)
 
+            importedOntology.correctlyLoaded=True
+
         except Exception as e:
-            LOGGER.exception('OWL 2 export could not be completed')
-            self.sgnErrored.emit(self.location,e)
+            LOGGER.exception('OWL 2 import could not be completed')
+            self.sgnErrored.emit(impOnt.location,e)
         else:
             self.sgnCompleted.emit(importedOntology)
+        finally:
+            self.vm.detachThreadFromJVM()
+            self.sgnFinished.emit()
+
+
+class OwlOntologyImportSetWorker(AbstractWorker):
+    """
+    Expose facilities to load a set of OWL ontologies starting from import declarations
+    """
+    sgnCompleted = QtCore.pyqtSignal(int,int)
+    sgnErrored = QtCore.pyqtSignal(ImportedOntology,Exception)
+    sgnStarted = QtCore.pyqtSignal()
+    sgnFinished = QtCore.pyqtSignal()
+
+    def __init__(self,project):
+        """
+        Initialize the OwlOntologyImportChecker worker.
+        :type project: Project
+        """
+        super().__init__()
+        self.imports = project.importedOntologies
+        self.project = project
+
+        self.vm = getJavaVM()
+        if not self.vm.isRunning():
+            self.vm.initialize()
+        self.vm.attachThreadToJVM()
+
+        self.IRIClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+        self.OWLManagerClass = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        loadCount = 0
+        try:
+            self.sgnStarted.emit()
+            self.vm.attachThreadToJVM()
+            self.ontologyManager = self.OWLManagerClass.createOWLOntologyManager()
+            for impOnt in self.imports:
+                try:
+                    ontology = None
+                    if impOnt.isLocalDocument:
+                        fileInstance = self.JavaFileClass(impOnt.docLocation)
+                        ontology = self.ontologyManager.loadOntologyFromOntologyDocument(fileInstance)
+                    else:
+                        iriInstance = self.IRIClass.create(impOnt.docLocation)
+                        ontology = self.ontologyManager.loadOntology(iriInstance)
+                    ontologyId = ontology.getOntologyID()
+                    ontologyIRI = None
+                    optionalOntologyIRI = ontologyId.getOntologyIRI()
+                    if optionalOntologyIRI.isPresent():
+                        ontologyIRI = optionalOntologyIRI.get().toString()
+                    versionIRI = None
+                    optionalVersionIRI = ontologyId.getVersionIRI()
+                    if optionalVersionIRI.isPresent():
+                        versionIRI = optionalOntologyIRI.get().toString()
+
+                    if ontologyIRI:
+                        impOnt.ontologyIRI = ontologyIRI
+                    if versionIRI:
+                        impOnt.versionIRI = versionIRI
+
+                    setClasses = ontology.getClassesInSignature()
+                    for c in setClasses:
+                        if not (c.isOWLThing() or c.isOWLNothing()):
+                            iri = self.project.getIRI(c.getIRI().toString(),imported=True)
+                            impOnt.addClass(iri)
+
+                    setObjProps = ontology.getObjectPropertiesInSignature()
+                    for objProp in setObjProps:
+                        if not (objProp.isOWLTopObjectProperty() or objProp.isOWLBottomObjectProperty()):
+                            iri = self.project.getIRI(objProp.getNamedProperty().getIRI().toString(), imported=True)
+                            impOnt.addObjectProperty(iri)
+
+                    setDataProps = ontology.getDataPropertiesInSignature()
+                    for dataProp in setDataProps:
+                        if not (dataProp.isOWLTopDataProperty() or dataProp.isOWLBottomDataProperty()):
+                            iri = self.project.getIRI(dataProp.getIRI().toString(), imported=True)
+                            impOnt.addDataProperty(iri)
+
+                    setIndividuals = ontology.getIndividualsInSignature()
+                    for ind in setIndividuals:
+                        if not ind.isAnonymous():
+                            iri = self.project.getIRI(ind.getIRI().toString(), imported=True)
+                            impOnt.addIndividual(iri)
+                    loadCount+=1
+                except Exception as e:
+                    LOGGER.exception('The ontology located in {} cannot be correctly loaded'.format(impOnt.docLocation))
+                    impOnt.correctlyLoaded = False
+                    self.sgnErrored.emit(impOnt, e)
+                else:
+                    loadCount += 1
+                    impOnt.correctlyLoaded = True
+        except Exception as e:
+            LOGGER.exception('Fatal exception while resolving ontology imports: {}'.format(str(e)))
+        else:
+            LOGGER.info('Found {} import declarations, {} loaded'.format(len(self.imports),loadCount))
+            self.sgnCompleted.emit(loadCount, len(self.imports))
         finally:
             self.vm.detachThreadFromJVM()
             self.sgnFinished.emit()

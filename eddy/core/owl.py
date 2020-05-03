@@ -818,7 +818,7 @@ class PrefixedIRI(QtCore.QObject):
 
 class ImportedOntology(QtCore.QObject):
 
-    def __init__(self, ontIri, location, versionIri=None, localFileSystem=False , parent=None):
+    def __init__(self, ontIri, location, versionIri=None, localFileSystem=False , parent=None, correctlyLoaded=False):
         """
         Create a new `ImportedOntology`
         :type parent: QtCore.QObject
@@ -837,6 +837,15 @@ class ImportedOntology(QtCore.QObject):
         self._objProps = set()
         self._dataProps = set()
         self._individuals = set()
+        self._correctlyLoaded = correctlyLoaded
+
+    @property
+    def correctlyLoaded(self):
+        return self._correctlyLoaded
+
+    @correctlyLoaded.setter
+    def correctlyLoaded(self, loaded):
+        self._correctlyLoaded = loaded
 
     @property
     def ontologyIRI(self):
@@ -864,7 +873,7 @@ class ImportedOntology(QtCore.QObject):
 
     @property
     def isLocalDocument(self):
-        return self._version
+        return self._localFileSystem
 
     @versionIRI.setter
     def versionIRI(self, versionIRI):
@@ -906,6 +915,11 @@ class ImportedOntology(QtCore.QObject):
         self._individuals.add(iri)
         self._iris.add(iri)
 
+    def __str__(self):
+        return 'IRI=<{}>  Version=<{}>  Document={}'.format(self.ontologyIRI,self.versionIRI,self.docLocation)
+
+    def __repr__(self):
+        return str(self)
 
 class IRIManager(QtCore.QObject):
     """
@@ -1058,6 +1072,13 @@ class IRIManager(QtCore.QObject):
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot(str)
+    def onIRIModified(self,oldIRIStr):
+        iri = self.sender()
+        self.stringToIRI.pop(oldIRIStr,None)
+        self.stringToIRI[str(iri)] = iri
+
+
     @QtCore.pyqtSlot(ImportedOntology)
     def onImportedOntologyRemoved(self, impOnt):
         for iri in impOnt.iris:
@@ -1115,7 +1136,10 @@ class IRIManager(QtCore.QObject):
         :type userInput: str
         """
         if iriString in self.stringToIRI:
-            return self.stringToIRI[iriString]
+            iri = self.stringToIRI[iriString]
+            if not (iri in self.iris or imported):
+                self.addIRI(iri)
+            return iri
         else:
             iri = IRI(iriString, parent=self)
             iri.manager = self
@@ -1140,7 +1164,6 @@ class IRIManager(QtCore.QObject):
 
     @QtCore.pyqtSlot(str)
     def onIRIModified(self,oldIRIStr):
-        #TODO va testato
         iri = self.sender()
         self.stringToIRI.pop(oldIRIStr,None)
         self.stringToIRI[str(iri)] = iri

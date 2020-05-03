@@ -626,7 +626,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         importedOntologies = self.project.importedOntologies
         table.clear()
         table.setRowCount(len(importedOntologies))
-        table.setHorizontalHeaderLabels(['Ontology IRI', 'Version IRI', 'Location'])
+        table.setHorizontalHeaderLabels(['Ontology IRI', 'Version IRI', 'Document location'])
         rowcount = 0
         for impOnt in importedOntologies:
             ontIriItem = QtWidgets.QTableWidgetItem(str(impOnt.ontologyIRI))
@@ -639,6 +639,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             locationItem = QtWidgets.QTableWidgetItem(str(impOnt.docLocation))
             locationItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             table.setItem(rowcount, 2, QtWidgets.QTableWidgetItem(locationItem))
+            if not impOnt.correctlyLoaded:
+                ontIriItem.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
+                versionItem.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
+                locationItem.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
             rowcount += 1
         table.resizeColumnToContents(0)
 

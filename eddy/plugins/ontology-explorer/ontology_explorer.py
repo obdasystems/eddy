@@ -58,6 +58,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
     This plugin provides the Ontology Explorer widget.
     """
     sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnFakeImportedOntologyAdded = QtCore.pyqtSignal(ImportedOntology)
 
     #############################################
     #   SLOTS
@@ -78,6 +79,9 @@ class OntologyExplorerPlugin(AbstractPlugin):
         connect(self.project.sgnMetaAdded, widget.onMetaUpdated)
         connect(self.project.sgnMetaRemoved, widget.onMetaUpdated)
         # FILL IN ONTOLOGY EXPLORER WITH DATA
+        connect(self.sgnFakeImportedOntologyAdded, widget.onImportedOntologyAdded)
+        for impOnt in self.project.importedOntologies:
+            self.sgnFakeImportedOntologyAdded.emit(impOnt)
         connect(self.sgnFakeItemAdded, widget.doAddNode)
         for node in self.project.nodes():
             self.sgnFakeItemAdded.emit(node.diagram, node)

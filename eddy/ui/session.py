@@ -163,6 +163,7 @@ from eddy.core.loaders.graphol import (
     GrapholOntologyLoader_v2,
     GrapholProjectLoader_v2,
 )
+from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
 from eddy.core.owl import IRIRender, IRI, OWL2Profiles, ImportedOntology
@@ -315,6 +316,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         worker = self.createProjectLoader(File.Graphol, path, self)
         worker.run()
+        worker = OwlOntologyImportSetWorker(self.project)
+        worker.run()
         connect(self.project.sgnPrefixAdded,self.onPrefixAddedToProject)
         connect(self.project.sgnPrefixRemoved, self.onPrefixRemovedFromProject)
         connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
@@ -339,6 +342,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.sgnReady.emit()
 
         LOGGER.info('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
+
+
+
 
     #############################################
     #   SESSION CONFIGURATION
@@ -3126,12 +3132,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Perform Ontology Consistency checking on the active ontology/diagram.
         """
         dialog = OntologyConsistencyCheckDialog(self.project, self)
-        connect(dialog.sgnPerfectOntology, self.onPerfectOntology)
+        #TODO SEGANTURA SEGNALE dialog.sgnUnsatisfiableEntities(int)
         connect(dialog.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
-        connect(dialog.sgnInconsistentOntology, self.onInconsistentOntology)
+        connect(dialog.sgnOntologyInconsistent, self.onInconsistentOntology)
         self.sgnConsistencyCheckStarted.emit()
         dialog.exec_()
 
+    #TODO NOT NEEDED ANYMORE. DEPRECATED, USE onUnsatisfiableEntities INSTEAD
     @QtCore.pyqtSlot()
     def onPerfectOntology(self):
         """
@@ -3147,13 +3154,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         self.sgnInconsistentOntology.emit()
 
-    @QtCore.pyqtSlot()
-    def onUnsatisfiableEntities(self):
+    @QtCore.pyqtSlot(int)
+    def onUnsatisfiableEntities(self, unsatCount):
         """
-        Executed when the consistency check reports that the ontology is consistent
-        but some of the classes are unsatisfiable.
+        Executed when the consistency check reports that the ontology is consistent.
         """
-        self.sgnUnsatisfiableEntities.emit()
+        self.sgnUnsatisfiableEntities.emit(unsatCount)
 
     @QtCore.pyqtSlot()
     def doOpenOntologyExplorer(self):
@@ -3165,6 +3171,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = OntologyManagerDialog(self)
         dialog.exec_()
 
+    # NEEDED TO REMOVE HIGHLIGHT FROM NODES PREVIOUSLY COMPUTED AS UNSATISFIABLE
     @QtCore.pyqtSlot()
     def doResetConsistencyCheck(self, updateNodes=True, clearReasonerCache=True):
         """
@@ -3203,6 +3210,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if updateNodes and clearReasonerCache:
             self.sgnConsistencyCheckReset.emit()
 
+    #NEEDED FOR EXPLANATIONS
     @QtCore.pyqtSlot()
     def doClearReasonerCache(self):
         """

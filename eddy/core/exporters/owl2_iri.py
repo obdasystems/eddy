@@ -513,7 +513,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
     sgnProgress = QtCore.pyqtSignal(int, int)
     sgnStarted = QtCore.pyqtSignal()
 
-    def __init__(self, project, path, **kwargs):
+    def __init__(self, project, path=None, **kwargs):
         """
         Initialize the OWL 2 Exporter worker.
         :type project: Project
@@ -545,6 +545,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.Set = self.vm.getJavaClass('java.util.Set')
         self.StringDocumentTarget = self.vm.getJavaClass('org.semanticweb.owlapi.io.StringDocumentTarget')
         self.TurtleDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
+
+        self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+        self.URIClass = self.vm.getJavaClass('java.net.URI')
+        self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
+        self.ImportsDeclarationClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLImportsDeclaration')
+        self.ImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
+        self.AddImportClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.AddImport')
 
         self.path = path
         self.project = project
@@ -615,7 +622,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     self.step(+1)
 
             LOGGER.debug('Pre-processed %s nodes into OWL 2 expressions', len(self.converted()))
-
 
             #############################################
             # AXIOMS FROM EDGES
@@ -739,48 +745,75 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 self.man.addAxiom(self.ontology, axiom)
 
             #############################################
-            # SERIALIZE THE ONTOLOGY
+            # ADDING IMPORT DECLARATIONS
             #################################
 
-            if self.syntax is OWLSyntax.Functional:
-                DocumentFormat = self.FunctionalSyntaxDocumentFormat
-                DocumentFilter = OWLFunctionalSyntaxDocumentFilter
-            elif self.syntax is OWLSyntax.Manchester:
-                DocumentFormat = self.ManchesterSyntaxDocumentFormat
-                DocumentFilter = OWLManchesterSyntaxDocumentFilter
-            elif self.syntax is OWLSyntax.RDF:
-                DocumentFormat = self.RDFXMLDocumentFormat
-                DocumentFilter = RDFXMLDocumentFilter
-            elif self.syntax is OWLSyntax.Turtle:
-                DocumentFormat = self.TurtleDocumentFormat
-                DocumentFilter = TurtleDocumentFilter
-            else:
-                raise TypeError('unsupported syntax (%s)' % self.syntax)
+            LOGGER.debug('Adding import declarations to the OWL 2 Ontology')
+            for impOnt in self.project.importedOntologies:
+                try:
+                    docObj = None
+                    if impOnt.isLocalDocument:
+                        docObj = self.JavaFileClass(impOnt.docLocation)
+                    else:
+                        docObj = self.URIClass(impOnt.docLocation)
+                    docLocationIRI = self.IRI.create(docObj)
+                    impOntIRI = self.IRI.create(impOnt.ontologyIRI)
+                    #iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
+                    #self.man.getIRIMappers().add(iriMapper)
+                    impDecl = self.df.getOWLImportsDeclaration(impOntIRI)
+                    addImp = self.AddImportClass(self.ontology,impDecl)
+                    self.man.applyChange(addImp)
+                except Exception as e:
+                    LOGGER.exception('The import declaration <{}> cannot be added.\nError:{}'.format(impOnt,str(e)))
+                else:
+                    LOGGER.debug('Ontology declaration ({}) correctly added.'.format(impOnt, str(e)))
 
-            LOGGER.debug('Serializing the OWL 2 Ontology in %s', self.syntax.value)
+            #############################################
+            # SERIALIZE THE ONTOLOGY
+            #################################
+            if self.path:
+                if self.syntax is OWLSyntax.Functional:
+                    DocumentFormat = self.FunctionalSyntaxDocumentFormat
+                    DocumentFilter = OWLFunctionalSyntaxDocumentFilter
+                elif self.syntax is OWLSyntax.Manchester:
+                    DocumentFormat = self.ManchesterSyntaxDocumentFormat
+                    DocumentFilter = OWLManchesterSyntaxDocumentFilter
+                elif self.syntax is OWLSyntax.RDF:
+                    DocumentFormat = self.RDFXMLDocumentFormat
+                    DocumentFilter = RDFXMLDocumentFilter
+                elif self.syntax is OWLSyntax.Turtle:
+                    DocumentFormat = self.TurtleDocumentFormat
+                    DocumentFilter = TurtleDocumentFilter
+                else:
+                    raise TypeError('unsupported syntax (%s)' % self.syntax)
 
-            # COPY PREFIXES
-            ontoFormat = DocumentFormat()
-            ontoFormat.copyPrefixesFrom(self.pm)
+                LOGGER.debug('Serializing the OWL 2 Ontology in %s', self.syntax.value)
 
-            # CREARE TARGET STREAM
-            stream = self.StringDocumentTarget()
-            stream = self.vm.cast(self.OWLOntologyDocumentTarget, stream)
-            # SAVE THE ONTOLOGY TO DISK
-            self.man.setOntologyFormat(self.ontology, ontoFormat)
-            self.man.saveOntology(self.ontology, stream)
-            stream = self.vm.cast(self.StringDocumentTarget, stream)
-            string = DocumentFilter(stream.toString())
-            fwrite(string, self.path)
-            # REMOVE RANDOM FILES GENERATED BY OWL API
-            fremove(os.path.join(os.path.dirname(self.path), 'catalog-v001.xml'))
+                # COPY PREFIXES
+                ontoFormat = DocumentFormat()
+                ontoFormat.copyPrefixesFrom(self.pm)
 
+                # CREARE TARGET STREAM
+                stream = self.StringDocumentTarget()
+                stream = self.vm.cast(self.OWLOntologyDocumentTarget, stream)
+                # SAVE THE ONTOLOGY TO DISK
+                self.man.setOntologyFormat(self.ontology, ontoFormat)
+                self.man.saveOntology(self.ontology, stream)
+                stream = self.vm.cast(self.StringDocumentTarget, stream)
+                string = DocumentFilter(stream.toString())
+                fwrite(string, self.path)
+                # REMOVE RANDOM FILES GENERATED BY OWL API
+                fremove(os.path.join(os.path.dirname(self.path), 'catalog-v001.xml'))
         except DiagramMalformedError as e:
             LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
             self.sgnErrored.emit(e)
+            if not self.path:
+                raise e
         except Exception as e:
             LOGGER.exception('OWL 2 export could not be completed')
             self.sgnErrored.emit(e)
+            if not self.path:
+                raise e
         else:
             self.sgnCompleted.emit()
         finally:

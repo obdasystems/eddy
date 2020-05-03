@@ -9,6 +9,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtXml
 
 from eddy import APPNAME
+from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Namespace
@@ -26,8 +27,9 @@ from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader_v1
+from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker
 from eddy.core.output import getLogger
-from eddy.core.owl import Literal, Facet, AnnotationAssertion
+from eddy.core.owl import Literal, Facet, AnnotationAssertion, ImportedOntology
 from eddy.core.project import Project, ProjectIRIMergeWorker, K_DESCRIPTION
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
@@ -985,7 +987,6 @@ class GrapholProjectIRILoaderMixin_3(object):
     """
     Mixin which adds the ability to create a project out of a Graphol file.
     """
-
     def __init__(self, **kwargs):
         """
         Initialize the object with default parameters.
@@ -1093,6 +1094,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         facets = self.getFacets(ontologyEl)
         annotationProperties = self.getAnnotationproperties(ontologyEl)
         languages = self.getLanguages(ontologyEl)
+        imports = self.getImports(ontologyEl)
         self.nproject = Project(
             name=projectName,
             path=os.path.dirname(self.path),
@@ -1108,7 +1110,8 @@ class GrapholProjectIRILoaderMixin_3(object):
             ontologyPrefix=ontologyPrefix,
             defaultLanguage=ontologyLang,
             addLabelFromSimpleName=labelBoolean,
-            addLabelFromUserInput=labelUserInputBoolean
+            addLabelFromUserInput=labelUserInputBoolean,
+            importedOntologies=imports
         )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
@@ -1121,6 +1124,11 @@ class GrapholProjectIRILoaderMixin_3(object):
                 LOGGER.exception('Failed to import iri element [{}]'.format(e))
             finally:
                 iriEl = iriEl.nextSiblingElement('iri')
+
+        imports = self.getImports(ontologyEl)
+        for impOnt in imports:
+            self.nproject.addImportedOntology(impOnt)
+        LOGGER.info('Added {} import declaration(s)...'.format(len(imports)))
 
     def getIri(self,iriEl,datatypes,facets,annotationProperties):
         iriString = iriEl.firstChildElement('value').text()
@@ -1252,6 +1260,26 @@ class GrapholProjectIRILoaderMixin_3(object):
                 LOGGER.exception('Failed to import language element ')
             finally:
                 languageEl = languageEl.nextSiblingElement('language')
+        return result
+
+    def getImports(self, ontologyEl):
+        result = set()
+        importsEl = ontologyEl.firstChildElement('imports')
+        importEl = importsEl.firstChildElement('import')
+        while not importEl.isNull():
+            try:
+                ontIri = importEl.attribute('iri')
+                versionIri = importEl.attribute('prefix')
+                location = importEl.attribute('location')
+                isLocal = False
+                if importEl.attribute('isLocal'):
+                    isLocal = bool(int(importEl.attribute('isLocal')))
+                ontImp = ImportedOntology(ontIri, location, versionIri, isLocal, self.nproject)
+                result.add(ontImp)
+            except Exception as e:
+                LOGGER.exception('Failed to import import element ')
+            finally:
+                importEl = importEl.nextSiblingElement('language')
         return result
 
     def projectRender(self):
@@ -1804,7 +1832,6 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
         path = postfix(path, File.Graphol.extension)
         super().__init__(path, session)
 
-
     def createLegacyProject(self):
         """
         Create a Project using the @deprecated Graphol project loader (v2).
@@ -1813,7 +1840,6 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
         worker.run()
         worker = GrapholIRIProjectExporter(self.session.project)
         worker.run()
-
 
     def projectLoaded(self):
         """
@@ -1848,10 +1874,4 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
             self.projectRender()
             self.projectLoaded()
 
-
-    ####################
-    #                  #
-    #   VERSION 3      #
-    #                  #
-    ####################
 

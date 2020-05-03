@@ -41,9 +41,11 @@ from eddy.core.datatypes.graphol import Special
 from eddy.core.datatypes.owl import OWLAxiom, OWLSyntax
 from eddy.core.datatypes.qt import Font
 from eddy.core.exporters.owl2 import OWLOntologyFetcher
+from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
+from eddy.core.owl import IRI
 from eddy.core.worker import AbstractWorker
 
 LOGGER = getLogger()
@@ -55,11 +57,11 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     sgnWork = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal()
-    sgnPerfectOntology = QtCore.pyqtSignal()
-    sgnInconsistentOntology = QtCore.pyqtSignal()
-    sgnUnsatisfiableEntities = QtCore.pyqtSignal()
+    sgnOntologyConsistent = QtCore.pyqtSignal()
+    sgnOntologyInconsistent = QtCore.pyqtSignal()
+    sgnUnsatisfiableEntities = QtCore.pyqtSignal(int)
 
-    def __init__(self, project, session):
+    def __init__(self, project, session, includeImports=True, computeUnsatisfiableEntities=True, computeExplanations=False):
         """
         Initialize the dialog.
         :type project: Project
@@ -70,6 +72,10 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.project = project
         self.workerThread = None
         self.worker = None
+
+        self._includeImports = includeImports
+        self._computeUnsatisfiableEntities = computeUnsatisfiableEntities
+        self._computeExplanations = computeExplanations
 
         self.msgbox_busy = QtWidgets.QMessageBox(self)
         self.msgbox_busy.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -110,7 +116,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.msgbox_done = QtWidgets.QMessageBox(self)
         self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.msgbox_done.setWindowTitle('Ontology consistency check complete')
+        self.msgbox_done.setWindowTitle('Ontology consistency check done')
         self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
 
@@ -118,6 +124,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.sgnWork.emit()
         self.session.doResetConsistencyCheck(updateNodes=True, clearReasonerCache=True)
 
+        #TODO DEVI CONNETTERE APPOSITI SEGNALI CON ONTOLOGY EXPLORER: Quando viene modificata l'ontologia (INCLUSI GLI IMPORT)
         connect(self.project.sgnItemAdded, self.project.reset_changes_made_after_reasoning_task)
         connect(self.project.sgnItemRemoved, self.project.reset_changes_made_after_reasoning_task)
 
@@ -174,44 +181,45 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Perform on or more advancements step in the validation procedure.
         """
-        worker = OntologyConsistencyCheckWorker(self.status_bar, self.project, self.session)
+        worker = OntologyReasoningTasksWorker(self.status_bar, self.project, self.session)
         connect(worker.sgnError, self.onErrorInExec)
-        connect(worker.sgnAllOK, self.onPerfectOntology)
-        connect(worker.sgnOntologyInconsistency, self.onOntologicalInconsistency)
-        connect(worker.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
+        connect(worker.sgnConsistent, self.onOntologyConsistent)
+        connect(worker.sgnInconsistent, self.onOntologyInconsistent)
+        connect(worker.sgnUnsatisfiableEntitiesComputed, self.onUnsatisfiableEntitiesComputed)
         self.startThread('OntologyConsistencyCheck', worker)
 
-    @QtCore.pyqtSlot()
-    def onErrorInExec(self):
+    @QtCore.pyqtSlot(Exception)
+    def onErrorInExec(self, exc):
         self.msgbox_error = QtWidgets.QMessageBox(self)
         self.msgbox_error.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_error.setWindowTitle('Error!')
         self.msgbox_error.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msgbox_error.setTextFormat(QtCore.Qt.RichText)
         self.msgbox_error.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
-        self.msgbox_error.setText('An error occured, please see the LOGGER')
+        self.msgbox_error.setText('An error occured!!\n{}'.format(str(exc)))
         self.close()
         self.msgbox_error.exec_()
 
     @QtCore.pyqtSlot()
-    def onPerfectOntology(self):
+    def onOntologyConsistent(self):
         """
         Executed when ontology is perfect
         :type message: str
         """
-        self.msgbox_done = QtWidgets.QMessageBox(self)
-        self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.msgbox_done.setWindowTitle('Ontology consistency check complete')
-        self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
-        self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
-        self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
-        self.msgbox_done.setText('Ontology is consistent and  all classes are satisfiable')
-        self.close()
-        self.msgbox_done.exec_()
-        self.sgnPerfectOntology.emit()
+        if not self._computeUnsatisfiableEntities:
+            self.msgbox_done = QtWidgets.QMessageBox(self)
+            self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            self.msgbox_done.setWindowTitle('Ontology consistency check complete')
+            self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
+            self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
+            self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+            self.msgbox_done.setText('Ontology is consistent and  all classes are satisfiable')
+            self.close()
+            self.msgbox_done.exec_()
+        self.sgnOntologyConsistent.emit()
 
     @QtCore.pyqtSlot()
-    def onOntologicalInconsistency(self):
+    def onOntologyInconsistent(self):
         """
         Executed when the ontology is inconsistent.
         """
@@ -221,37 +229,219 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
+        self.msgbox_done.setText('<p>Ontology is inconsistent.</p>')
+        #TODO al momento non calcoliamo explanations
+        """ 
         self.msgbox_done.setText('<p>Ontology is inconsistent.</p>'
                                  '<p>You may choose to display one explanation at a time in the Explanation Explorer.</p>'
                                  '<p>To reset the background coloring of the nodes in the diagram, '
                                  'press the Reset button in the toolbar.</p>')
+        """
         self.close()
         self.msgbox_done.exec_()
-        self.sgnInconsistentOntology.emit()
+        self.sgnOntologyInconsistent.emit()
 
-    @QtCore.pyqtSlot()
-    def onUnsatisfiableEntities(self):
+    @QtCore.pyqtSlot(int)
+    def onUnsatisfiableEntitiesComputed(self, count):
         """
-        Executed when there is at least 1 unsatisfiable class in the ontology.
+        Executed when the ontology is consistent and the unsatisfiable entities check has been run
         """
         self.msgbox_done = QtWidgets.QMessageBox(self)
         self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_done.setWindowTitle('Ontology consistency check complete')
         self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
-        self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
+        if count>0:
+            self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            self.msgbox_done.setText('<p>Ontology is consistent however {} entities are unsatisfiable.</p>'
+                                     '<p>See highlighted entries in the Ontology Explorer for details.</p>'
+                                     '<p>To reset the highlighting press the Reset button in the toolbar.</p>'.format(str(count)))
+        else:
+            self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+            self.msgbox_done.setText('Ontology is consistent and all Classes, Object Properties, and Data Properties are satisfiable ')
+        # TODO al momento non calcoliamo explanations
+        """
         self.msgbox_done.setText('<p>Ontology is consistent however some class(es) are unsatisfiable.</p>'
                                  '<p>See Unsatisfiable Entity Explorer for details.</p>'
                                  '<p>To reset the background coloring of the nodes in the diagram, '
                                  'press the Reset button in the toolbar.</p>')
+        """
         self.close()
         self.msgbox_done.exec_()
-        self.sgnUnsatisfiableEntities.emit()
+        self.sgnUnsatisfiableEntities.emit(count)
 
-
-class OntologyConsistencyCheckWorker(AbstractWorker):
+class OntologyReasoningTasksWorker(AbstractWorker):
     """
-    Extends QtCore.QObject providing a worker thread that will perform the project Ontology Consistency check
+    Extends QtCore.QObject providing a worker thread that will perform the consistency check over the Project ontology
+    """
+    sgnBusy = QtCore.pyqtSignal(bool)
+    sgnConsistent = QtCore.pyqtSignal()
+    sgnInconsistent = QtCore.pyqtSignal()
+    sgnError = QtCore.pyqtSignal(Exception)
+    sgnUnsatisfiableEntitiesComputed = QtCore.pyqtSignal(int)
+    sgnUnsatisfiableClass = QtCore.pyqtSignal(IRI)
+    sgnUnsatisfiableObjectProperty = QtCore.pyqtSignal(IRI)
+    sgnUnsatisfiableDataProperty = QtCore.pyqtSignal(IRI)
+
+    def __init__(self, status_bar, project, session, includeImports=True, computeUnsatisfiableEntities=True, computeExplanations=False):
+        """
+        Initialize the syntax validation worker.
+        :type current: int
+        :type items: list
+        :type project: Project
+        """
+        super().__init__()
+        self.project = project
+        self.session = session
+        self.status_bar = status_bar
+        self.vm = getJavaVM()
+        if not self.vm.isRunning():
+            self.vm.initialize()
+        self.vm.attachThreadToJVM()
+        #self.ReasonerClass = self.vm.getJavaClass('org.semanticweb.HermiT.Reasoner')
+        self.ReasonerFactoryClass = self.vm.getJavaClass('org.semanticweb.HermiT.ReasonerFactory')
+        self.ReasonerConfigurationClass = self.vm.getJavaClass('org.semanticweb.HermiT.Configuration')
+        self.IRIClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+        self.OWLManagerClass = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+        self.URIClass = self.vm.getJavaClass('java.net.URI')
+
+        self.reasonerInstance = None
+
+        self._isOntologyConsistent = None
+
+        self.javaBottomClassNode=None
+        self.javaBottomObjectPropertyNode = None
+        self.javaBottomDataPropertyNode = None
+        self._unsatisfiableClasses = set()
+        self._unsatisfiableObjectProperties = set()
+        self._unsatisfiableDataProperties = set()
+
+        self._includeImports = includeImports
+        self._computeUnsatisfiableEntities = computeUnsatisfiableEntities
+        self._computeExplanations = computeExplanations
+
+    @property
+    def unsatisfiableClasses(self):
+        return self._unsatisfiableClasses
+
+    @property
+    def unsatisfiableObjectProperties(self):
+        return self._unsatisfiableObjectProperties
+
+    @property
+    def unsatisfiableDataProperties(self):
+        return self._unsatisfiableDataProperties
+
+    def axioms(self):
+        """
+        Returns the set of axioms that needs to be exported.
+        :rtype: set
+        """
+        return {axiom for axiom in OWLAxiom}
+
+    def loadImportedOntologiesIntoManager(self):
+        LOGGER.debug('Loading declared imports into the OWL 2 Manager')
+        for impOnt in self.project.importedOntologies:
+            try:
+                docObj = None
+                if impOnt.isLocalDocument:
+                    docObj = self.JavaFileClass(impOnt.docLocation)
+                else:
+                    docObj = self.URIClass(impOnt.docLocation)
+                docLocationIRI = self.IRI.create(docObj)
+                impOntIRI = self.IRI.create(impOnt.ontologyIRI)
+                iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
+                self.manager.getIRIMappers().add(iriMapper)
+                self.manager.loadOntology(impOntIRI)
+            except Exception as e:
+                LOGGER.exception('The imported ontology <{}> cannot be loaded.\nError:{}'.format(impOnt, str(e)))
+            else:
+                LOGGER.debug('Ontology ({}) correctly loaded.'.format(impOnt))
+
+    def initializeOWLManagerAndReasoner(self, ontology):
+        self.manager = self.OWLManager.createOWLOntologyManager()
+        self.loadImportedOntologiesIntoManager()
+        self.reasonerInstance = self.ReasonerFactoryClass.createReasoner(ontology, self.ReasonerConfigurationClass())
+
+    def isConsistent(self):
+        return self.reasonerInstance.isConsistent()
+
+    def computeUnsatisfiableClasses(self):
+        try:
+            self.javaBottomClassNode = self.reasonerInstance.getBottomClassNode()
+            for owlClass in self.javaBottomClassNode.getEntities:
+                projIRI = self.project.getIRI(owlClass.getIRI().toString())
+                self.sgnUnsatisfiableClass.emit(projIRI)
+                self._unsatisfiableClasses.add(projIRI)
+            #self._unsatisfiableClasses = {x.getIRI().toString() for x in self.javaBottomClassNode.getEntities}
+        except Exception as e:
+            LOGGER.exception('Encountered problems while computing unsatisfiable classes.\nError:{}'.format(str(e)))
+        else:
+            LOGGER.debug('Unsatisfiable classes computed')
+
+    def computeUnsatisfiableObjectProperties(self):
+        try:
+            self.javaBottomObjectPropertyNode = self.reasonerInstance.getBottomObjectPropertyNode()
+            for owlObjProp in self.javaBottomObjectPropertyNode.getEntities:
+                projIRI = self.project.getIRI(owlObjProp.getIRI().toString())
+                self.sgnUnsatisfiableObjectProperty.emit(projIRI)
+                self._unsatisfiableObjectProperties.add()
+            #self._unsatisfiableObjectProperties = {x.getIRI().toString() for x in self.javaBottomObjectPropertyNode.getEntities}
+        except Exception as e:
+            LOGGER.exception('Encountered problems while computing unsatisfiable object properties.\nError:{}'.format(str(e)))
+        else:
+            LOGGER.debug('Unsatisfiable object properties computed')
+
+    def computeUnsatisfiableDataProperties(self):
+        try:
+            self.javaBottomDataPropertyNode = self.reasonerInstance.getBottomDataPropertyNode()
+            for owlDataProp in self.javaBottomDataPropertyNode.getEntities:
+                projIRI = self.project.getIRI(owlDataProp.getIRI().toString())
+                self.sgnUnsatisfiableDataProperty.emit(projIRI)
+                self._unsatisfiableDataProperties.add(projIRI)
+            #self._unsatisfiableDataProperties = {x.getIRI().toString() for x in self.javaBottomDataPropertyNode.getEntities}
+        except Exception as e:
+            LOGGER.exception('Encountered problems while computing unsatisfiable data properties.\nError:{}'.format(str(e)))
+        else:
+            LOGGER.debug('Unsatisfiable data properties computed')
+
+    def runReasoningTasks(self):
+        #TODO VALUTA REINSERIMENTO EXPLANATIONS TRAMITE BOOLEANO self.computeExplanations
+        worker = OWLOntologyExporterWorker(self.project)
+        worker.run()
+        self.initializeOWLManagerAndReasoner(worker.ontology)
+        if not self.isConsistent():
+            self.sgnInconsistent.emit()
+        else:
+            self.sgnConsistent.emit()
+            if self._computeUnsatisfiableEntities:
+                self.computeUnsatisfiableClasses()
+                self.computeUnsatisfiableObjectProperties()
+                self.computeUnsatisfiableDataProperties()
+                unsatisfiableCount = len(self.unsatisfiableClasses) + len(self.unsatisfiableObjectProperties) + len(self.unsatisfiableDataProperties)
+                self.sgnUnsatisfiableEntitiesComputed.emit(unsatisfiableCount)
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            self.sgnStarted.emit()
+            self.vm.attachThreadToJVM()
+            self.runReasoningTasks()
+        except Exception as e:
+            LOGGER.exception('Fatal error while executing reasoning tasks.\nError:{}'.format(str(e)))
+            self.sgnError.emit(e)
+        finally:
+            self.vm.detachThreadFromJVM()
+            self.finished.emit()
+
+
+
+#TODO NOT TO BE USED ANYMORE BECAUSOF THE EXPLANATION COMPUTATION
+class OntologyExplanationsWorker(AbstractWorker):
+    """
+    Extends QtCore.QObject providing a worker thread that will perform all reasoning tasks (unsatisfiable entities, consistency)
+    over the Ontology induced by the diagrams (NO OWL IMPORT TAKEN INTO ACCOUNT) and will compute all the possible explanations
     """
     sgnBusy = QtCore.pyqtSignal(bool)
     sgnAllOK = QtCore.pyqtSignal()

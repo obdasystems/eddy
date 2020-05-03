@@ -133,6 +133,13 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         ontologyEl.setAttribute('lang', str(self.project.defaultLanguage))
 
+        importsEl = self.getDomElement('imports')
+        ontologyEl.appendChild(importsEl)
+        for impOnt in self.project.importedOntologies:
+            importEl = self.getOntologyImportDomElement(impOnt)
+            importsEl.appendChild(importEl)
+
+
         prefixesEl = self.getDomElement('prefixes')
         ontologyEl.appendChild(prefixesEl)
         for prefix,ns in self.project.prefixDictItems():
@@ -180,6 +187,17 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
                 iriEl = self.getIriDomElement(iri)
                 irisEl.appendChild(iriEl)
         return ontologyEl
+
+    def getOntologyImportDomElement(self, impOnt):
+        impEl = self.getDomElement('import')
+        impEl.setAttribute('iri',  impOnt.ontologyIRI)
+        impEl.setAttribute('version', impOnt.versionIRI)
+        impEl.setAttribute('location', impOnt.docLocation)
+        localBoolean = 0
+        if impOnt.isLocalDocument:
+            localBoolean = 1
+        impEl.setAttribute('isLocal', localBoolean)
+        return impEl
 
     def getIriDomElement(self,iri):
         iriEl = self.getDomElement('iri')
