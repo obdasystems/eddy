@@ -766,7 +766,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                 except Exception as e:
                     LOGGER.exception('The import declaration <{}> cannot be added.\nError:{}'.format(impOnt,str(e)))
                 else:
-                    LOGGER.debug('Ontology declaration ({}) correctly added.'.format(impOnt, str(e)))
+                    LOGGER.debug('Ontology declaration ({}) correctly added.'.format(impOnt))
 
             #############################################
             # SERIALIZE THE ONTOLOGY

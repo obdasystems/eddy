@@ -74,6 +74,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnItemAdded, widget.doAddNode)
         connect(self.project.sgnImportedOntologyAdded, widget.onImportedOntologyAdded)
+        connect(self.project.sgnImportedOntologyLoaded, widget.onImportedOntologyAdded)
         connect(self.project.sgnItemRemoved, widget.doRemoveNode)
         connect(self.project.sgnImportedOntologyRemoved, widget.onImportedOntologyRemoved)
         connect(self.project.sgnMetaAdded, widget.onMetaUpdated)
@@ -87,6 +88,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
             self.sgnFakeItemAdded.emit(node.diagram, node)
         widget.doFilterItem('')
         disconnect(self.sgnFakeItemAdded, widget.doAddNode)
+        disconnect(self.sgnFakeImportedOntologyAdded, widget.onImportedOntologyAdded)
 
     #############################################
     #   HOOKS
@@ -103,6 +105,9 @@ class OntologyExplorerPlugin(AbstractPlugin):
         disconnect(self.project.sgnItemRemoved, widget.doRemoveNode)
         disconnect(self.project.sgnMetaAdded, widget.onMetaUpdated)
         disconnect(self.project.sgnMetaRemoved, widget.onMetaUpdated)
+        disconnect(self.project.sgnImportedOntologyAdded, widget.onImportedOntologyAdded)
+        disconnect(self.project.sgnImportedOntologyLoaded, widget.onImportedOntologyAdded)
+        disconnect(self.project.sgnImportedOntologyRemoved, widget.onImportedOntologyRemoved)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')

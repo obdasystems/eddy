@@ -1111,7 +1111,7 @@ class GrapholProjectIRILoaderMixin_3(object):
             defaultLanguage=ontologyLang,
             addLabelFromSimpleName=labelBoolean,
             addLabelFromUserInput=labelUserInputBoolean,
-            importedOntologies=imports
+            ontologies=imports
         )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
@@ -1125,10 +1125,7 @@ class GrapholProjectIRILoaderMixin_3(object):
             finally:
                 iriEl = iriEl.nextSiblingElement('iri')
 
-        imports = self.getImports(ontologyEl)
-        for impOnt in imports:
-            self.nproject.addImportedOntology(impOnt)
-        LOGGER.info('Added {} import declaration(s)...'.format(len(imports)))
+
 
     def getIri(self,iriEl,datatypes,facets,annotationProperties):
         iriString = iriEl.firstChildElement('value').text()
@@ -1269,7 +1266,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         while not importEl.isNull():
             try:
                 ontIri = importEl.attribute('iri')
-                versionIri = importEl.attribute('prefix')
+                versionIri = importEl.attribute('version')
                 location = importEl.attribute('location')
                 isLocal = False
                 if importEl.attribute('isLocal'):
@@ -1277,9 +1274,9 @@ class GrapholProjectIRILoaderMixin_3(object):
                 ontImp = ImportedOntology(ontIri, location, versionIri, isLocal, self.nproject)
                 result.add(ontImp)
             except Exception as e:
-                LOGGER.exception('Failed to import import element ')
+                LOGGER.exception('Failed to import import element. {}'.format(str(e)))
             finally:
-                importEl = importEl.nextSiblingElement('language')
+                importEl = importEl.nextSiblingElement('import')
         return result
 
     def projectRender(self):

@@ -472,7 +472,7 @@ class AbstractNode(AbstractItem):
         pass
 
     def mapToScene(self, point) :
-        print('Called mapToScene(self, point) with id={}'.format(self.id))
+        #print('Called mapToScene(self, point) with id={}'.format(self.id))
         return super().mapToScene(point)
 
 class OntologyEntityNode(AbstractNode):

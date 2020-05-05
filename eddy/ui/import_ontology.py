@@ -16,7 +16,7 @@ from eddy.ui.fields import StringField
 
 class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSystem):
     sgnOntologyImportAccepted = QtCore.pyqtSignal(ImportedOntology)
-    sgnOntologyImportCorrectlyModified = QtCore.pyqtSignal(ImportedOntology)
+    sgnOntologyImportCorrectlyReloaded = QtCore.pyqtSignal(ImportedOntology)
     sgnOntologyImportRejected = QtCore.pyqtSignal()
 
     IMPORT_THREAD_NAME = 'OWL2OntologyImport'
@@ -31,7 +31,11 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         self.session = session
         self.project = session.project
         self.importedOntology = importedOntology
-
+        self.isReloadAttempt = not importedOntology is None
+        self.classes = set()
+        self.objectProperties = set()
+        self.dataProperties = set()
+        self.individuals = set()
         self.step = 0
 
         self.stacked = QtWidgets.QStackedWidget(self)
@@ -90,8 +94,14 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         self.setLayout(formlayout)
 
         self.setMinimumSize(740, 380)
-        self.setWindowTitle('Import ontology')
-        self.redraw()
+        if not self.isReloadAttempt:
+            self.setWindowTitle('Import ontology')
+            self.redraw()
+        else:
+            self.setWindowTitle('Reload ontology <{}>'.format(str(self.importedOntology.ontologyIRI)))
+            self.step = 2
+            self.startImportProcess()
+
 
     def redraw(self):
         """
@@ -134,31 +144,64 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
 
     def startImportProcess(self):
         self.worker = None
-        current = self.stacked.currentWidget()
-        if current is self.widgetLocalImport:
-            self.worker = OwlOntologyImportWorker(current.pathField.value(), self.session)
-        elif current is self.widgetRemoteImport:
-            self.worker = OwlOntologyImportWorker(current.uriField.value(), self.session, isLocalImport=False)
+        if not self.isReloadAttempt:
+            current = self.stacked.currentWidget()
+            if current is self.widgetLocalImport:
+                self.worker = OwlOntologyImportWorker(current.pathField.value(), self.session)
+            elif current is self.widgetRemoteImport:
+                self.worker = OwlOntologyImportWorker(current.uriField.value(), self.session, isLocalImport=False)
+        else:
+            self.worker = OwlOntologyImportWorker(self.importedOntology.docLocation, self.session, isLocalImport=self.importedOntology.isLocalDocument, isReloadAttempt=True)
         connect(self.worker.sgnCompleted, self.onImportCompleted)
         connect(self.worker.sgnErrored, self.onImportError)
         connect(self.worker.sgnStepPerformed, self.widgetVerify.progressStep)
+        connect(self.worker.sgnOntologyDocumentLoaded, self.onOntologyDocumentLoaded)
+        connect(self.worker.sgnClassFetched, self.onClassFetched)
+        connect(self.worker.sgnObjectPropertyFetched, self.onObjectPropertyFetched)
+        connect(self.worker.sgnDataPropertyFetched, self.onDataPropertyFetched)
+        connect(self.worker.sgnIndividualFetched, self.onIndividualFetched)
         self.redraw()
         self.startThread(self.IMPORT_THREAD_NAME, self.worker)
 
     #############################################
     #   SLOTS
     #################################
+    @QtCore.pyqtSlot(str,str,str,bool)
+    def onOntologyDocumentLoaded(self,ontIri, docLoc, versionIri, isLocal):
+        if not self.isReloadAttempt:
+            self.importedOntology = ImportedOntology(ontIri, docLoc, versionIri, isLocal, self.project)
+
+    @QtCore.pyqtSlot(str)
+    def onClassFetched(self, iri):
+        self.classes.add(self.project.getIRI(iri,imported=True))
+
+    @QtCore.pyqtSlot(str)
+    def onObjectPropertyFetched(self, iri):
+        self.objectProperties.add(self.project.getIRI(iri, imported=True))
+
+    @QtCore.pyqtSlot(str)
+    def onDataPropertyFetched(self, iri):
+        self.dataProperties.add(self.project.getIRI(iri, imported=True))
+
+    @QtCore.pyqtSlot(str)
+    def onIndividualFetched(self, iri):
+        self.individuals.add(self.project.getIRI(iri, imported=True))
+
     @QtCore.pyqtSlot()
     def accept(self):
         """
         Executed when the dialog is accepted.
         """
-        command = CommandProjectAddOntologyImport(self.project, self.importedOntology)
-        self.session.undostack.beginMacro('Add ontology import {0} '.format(self.importedOntology.docLocation))
-        if command:
-            self.session.undostack.push(command)
-        self.session.undostack.endMacro()
-        self.sgnOntologyImportAccepted.emit(self.importedOntology)
+        if not self.isReloadAttempt:
+            command = CommandProjectAddOntologyImport(self.project, self.importedOntology)
+            self.session.undostack.beginMacro('Add ontology import {0} '.format(self.importedOntology.docLocation))
+            if command:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+            self.sgnOntologyImportAccepted.emit(self.importedOntology)
+        else:
+            self.project.sgnImportedOntologyLoaded.emit(self.importedOntology)
+            self.sgnOntologyImportCorrectlyReloaded.emit(self.importedOntology)
         super().accept()
 
     @QtCore.pyqtSlot()
@@ -174,13 +217,20 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         Back button pressed
         :type _: bool
         """
-        if self.step==3:
-            self.step -= 2
-        elif self.step==4:
-            self.step -=3
+        if not self.isReloadAttempt:
+            if self.step==3:
+                self.step -= 2
+            elif self.step==4:
+                self.step -=3
+            else:
+                self.step -= 1
+            self.redraw()
         else:
-            self.step -= 1
-        self.redraw()
+            if self.step==3:
+                self.step -= 1
+            elif self.step==4:
+                self.step -=2
+            self.startImportProcess()
 
     @QtCore.pyqtSlot(bool)
     def onContinueClicked(self, _):
@@ -222,19 +272,31 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         if widget is self.widgetRemoteImport:
             self.widget('continue_button').setEnabled(True)
 
-    @QtCore.pyqtSlot(ImportedOntology)
-    def onImportCompleted(self, impOnt):
-        self.importedOntology = impOnt
+    @QtCore.pyqtSlot()
+    def onImportCompleted(self):
+        for iri in self.classes:
+            self.importedOntology.addClass(iri)
+        for iri in self.objectProperties:
+            self.importedOntology.addObjectProperty(iri)
+        for iri in self.dataProperties:
+            self.importedOntology.addDataProperty(iri)
+        for iri in self.individuals:
+            self.importedOntology.addIndividual(iri)
+        self.importedOntology.correctlyLoaded=True
         self.widgetVerify.progressStep(0)
-        self.widgetConfirm.locationText.setValue('{}'.format(impOnt.docLocation))
-        self.widgetConfirm.iriText.setValue('{}'.format(impOnt.ontologyIRI))
-        self.widgetConfirm.versionText.setValue('{}'.format(impOnt.versionIRI))
+        self.widgetConfirm.locationText.setValue('{}'.format(self.importedOntology.docLocation))
+        self.widgetConfirm.iriText.setValue('{}'.format(self.importedOntology.ontologyIRI))
+        self.widgetConfirm.versionText.setValue('{}'.format(self.importedOntology.versionIRI))
         self.stopThread(self.IMPORT_THREAD_NAME)
         self.step += 1
         self.redraw()
 
     @QtCore.pyqtSlot(str, Exception)
     def onImportError(self, location, exc):
+        self.classes = set()
+        self.objectProperties = set()
+        self.dataProperties = set()
+        self.individuals = set()
         self.widgetVerify.progressStep(0)
         self.widgetError.locationText.setText('{}'.format(location))
         self.widgetError.problemTextArea.setPlainText('{}'.format(str(exc)))

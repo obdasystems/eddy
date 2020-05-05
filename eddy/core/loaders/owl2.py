@@ -14,15 +14,21 @@ class OwlOntologyImportWorker(AbstractWorker):
     """
     Expose facilities to load an OWL ontology starting from the given parameters
     """
-    sgnCompleted = QtCore.pyqtSignal(ImportedOntology)
+    sgnCompleted = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal(str,Exception)
     sgnStarted = QtCore.pyqtSignal()
     sgnFinished = QtCore.pyqtSignal()
     sgnStepPerformed = QtCore.pyqtSignal(int)
 
+    sgnOntologyDocumentLoaded = QtCore.pyqtSignal(str,str,str,bool)
+    sgnClassFetched = QtCore.pyqtSignal(str)
+    sgnObjectPropertyFetched= QtCore.pyqtSignal(str)
+    sgnDataPropertyFetched = QtCore.pyqtSignal(str)
+    sgnIndividualFetched = QtCore.pyqtSignal(str)
+
     TOTAL_STEP_COUNT = 5
 
-    def __init__(self, location, session, isLocalImport=True):
+    def __init__(self, location, session, isLocalImport=True, isReloadAttempt=False):
         """
         Initialize the OwlOntologyImportChecker worker.
         :type location: str
@@ -32,7 +38,7 @@ class OwlOntologyImportWorker(AbstractWorker):
         self.location = location
         self.isLocalImport = isLocalImport
         self.project = session.project
-
+        self.isReloadAttempt = isReloadAttempt
 
         self.vm = getJavaVM()
         if not self.vm.isRunning():
@@ -68,51 +74,55 @@ class OwlOntologyImportWorker(AbstractWorker):
 
             if self.ontologyIRI == str(self.project.ontologyIRI):
                 raise Exception('The selected ontology cannot be imported because its IRI "{}" is associated to the working ontology'.format(self.ontologyIRI))
-            for impOnt in self.project.importedOntologies:
-                if self.ontologyIRI == str(impOnt.ontologyIRI):
-                    raise Exception(
-                        'The selected ontology cannot be added to the project because its IRI "{}" is associated to an ontology that has been previously imported'.format(
-                            self.ontologyIRI))
+            if not self.isReloadAttempt:
+                for impOnt in self.project.importedOntologies:
+                    if self.ontologyIRI == str(impOnt.ontologyIRI):
+                        raise Exception(
+                            'The selected ontology cannot be added to the project because its IRI "{}" is associated to an ontology that has been previously imported'.format(
+                                self.ontologyIRI))
 
-            importedOntology = ImportedOntology(self.ontologyIRI, self.location, self.versionIRI, self.isLocalImport, self.project)
+            self.sgnOntologyDocumentLoaded.emit(self.ontologyIRI, self.location, self.versionIRI, self.isLocalImport)
+            #importedOntology = ImportedOntology(self.ontologyIRI, self.location, self.versionIRI, self.isLocalImport, self.project)
 
             self.sgnStepPerformed.emit(1)
 
             setClasses = ontology.getClassesInSignature()
             for c in setClasses:
                 if not (c.isOWLThing() or c.isOWLNothing()):
-                    iri = self.project.getIRI(c.getIRI().toString(),imported=True)
-                    importedOntology.addClass(iri)
+                    self.sgnClassFetched.emit(c.getIRI().toString())
+                    #iri = self.project.getIRI(c.getIRI().toString(),imported=True)
+                    #importedOntology.addClass(iri)
             self.sgnStepPerformed.emit(2)
 
             setObjProps = ontology.getObjectPropertiesInSignature()
             for objProp in setObjProps:
                 if not (objProp.isOWLTopObjectProperty() or objProp.isOWLBottomObjectProperty()):
-                    iri = self.project.getIRI(objProp.getNamedProperty().getIRI().toString(), imported=True)
-                    importedOntology.addObjectProperty(iri)
+                    self.sgnObjectPropertyFetched.emit(c.getIRI().toString())
+                    #iri = self.project.getIRI(objProp.getNamedProperty().getIRI().toString(), imported=True)
+                    #importedOntology.addObjectProperty(iri)
             self.sgnStepPerformed.emit(3)
 
             setDataProps = ontology.getDataPropertiesInSignature()
             for dataProp in setDataProps:
                 if not (dataProp.isOWLTopDataProperty() or dataProp.isOWLBottomDataProperty()):
-                    iri = self.project.getIRI(dataProp.getIRI().toString(), imported=True)
-                    importedOntology.addDataProperty(iri)
+                    self.sgnDataPropertyFetched.emit(c.getIRI().toString())
+                    #iri = self.project.getIRI(dataProp.getIRI().toString(), imported=True)
+                    #importedOntology.addDataProperty(iri)
             self.sgnStepPerformed.emit(4)
 
             setIndividuals = ontology.getIndividualsInSignature()
             for ind in setIndividuals:
                 if not ind.isAnonymous():
-                    iri = self.project.getIRI(ind.getIRI().toString(), imported=True)
-                    importedOntology.addIndividual(iri)
+                    self.sgnIndividualFetched.emit(c.getIRI().toString())
+                    #iri = self.project.getIRI(ind.getIRI().toString(), imported=True)
+                    #importedOntology.addIndividual(iri)
             self.sgnStepPerformed.emit(5)
-
-            importedOntology.correctlyLoaded=True
 
         except Exception as e:
             LOGGER.exception('OWL 2 import could not be completed')
-            self.sgnErrored.emit(impOnt.location,e)
+            self.sgnErrored.emit(self.location,e)
         else:
-            self.sgnCompleted.emit(importedOntology)
+            self.sgnCompleted.emit()
         finally:
             self.vm.detachThreadFromJVM()
             self.sgnFinished.emit()

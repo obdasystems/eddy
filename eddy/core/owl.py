@@ -915,6 +915,14 @@ class ImportedOntology(QtCore.QObject):
         self._individuals.add(iri)
         self._iris.add(iri)
 
+    def resetSignature(self):
+        self._iris = set()
+        self._classes = set()
+        self._objProps = set()
+        self._dataProps = set()
+        self._individuals = set()
+        self._correctlyLoaded = False
+
     def __str__(self):
         return 'IRI=<{}>  Version=<{}>  Document={}'.format(self.ontologyIRI,self.versionIRI,self.docLocation)
 
@@ -945,8 +953,9 @@ class IRIManager(QtCore.QObject):
 
     sgnImportedOntologyAdded = QtCore.pyqtSignal(ImportedOntology)
     sgnImportedOntologyRemoved = QtCore.pyqtSignal(ImportedOntology)
+    sgnImportedOntologyLoaded = QtCore.pyqtSignal(ImportedOntology)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False, importedOntologies=set()):
+    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False, ontologies=set()):
         """
         Create a new `IRIManager`
         :type parent: QtCore.QObject
@@ -1000,7 +1009,7 @@ class IRIManager(QtCore.QObject):
         self._defaultLanguage = defaultLanguage
         self._addLabelFromSimpleName = addLabelFromSimpleName
         self._addLabelFromUserInput = addLabelFromUserInput
-        self._importedOntologies = importedOntologies
+        self._importedOntologies = ontologies
 
     #############################################
     #   IMPORTED ONTOLOGIES

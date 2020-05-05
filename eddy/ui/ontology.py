@@ -83,7 +83,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         ## ONTOLOGY PROPERTIES GROUP
-
         iriLabel = QtWidgets.QLabel(self, objectName='ontology_iri_label')
         iriLabel.setText('Ontology IRI')
         self.addWidget(iriLabel)
@@ -123,7 +122,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(groupbox)
 
         ## ONTOLOGY IMPORTS GROUP
-
         table = QtWidgets.QTableWidget(0, 3, self, objectName='ontology_imports_table_widget')
         table.setHorizontalHeaderLabels(['Ontology IRI', 'Version IRI', 'Location'])
         table.horizontalHeader().setStretchLastSection(True)
@@ -133,19 +131,26 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        connect(table.cellClicked, self.onImportCellClicked)
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='ontology_imports_add_button')
         delBtn = QtWidgets.QPushButton('Remove', objectName='ontology_imports_delete_button')
+        delBtn.setEnabled(False)
+        reloadBtn = QtWidgets.QPushButton('Reload', objectName='ontology_imports_reload_button')
+        reloadBtn.setEnabled(False)
         connect(addBtn.clicked, self.addOntologyImport)
         connect(delBtn.clicked, self.removeOntologyImport)
+        connect(reloadBtn.clicked, self.reloadOntologyImport)
         self.addWidget(addBtn)
         self.addWidget(delBtn)
+        self.addWidget(reloadBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(self.widget('ontology_imports_add_button'))
         boxlayout.addWidget(self.widget('ontology_imports_delete_button'))
+        boxlayout.addWidget(self.widget('ontology_imports_reload_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('ontology_imports_table_widget'))
@@ -155,7 +160,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(groupbox)
 
         ## ONTOLOGY ANNOTATIONS GROUP
-
         table = QtWidgets.QTableWidget(0, 2, self, objectName='annotations_table_widget')
         table.clear()
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
@@ -166,11 +170,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        connect(table.cellClicked, self.onAnnotationCellClicked)
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='ontology_annotations_add_button')
         delBtn = QtWidgets.QPushButton('Remove', objectName='ontology_annotations_delete_button')
+        delBtn.setEnabled(False)
         editBtn = QtWidgets.QPushButton('Edit', objectName='ontology_annotations_edit_button')
+        editBtn.setEnabled(False)
         connect(addBtn.clicked, self.addOntologyAnnotation)
         connect(delBtn.clicked, self.removeOntologyAnnotation)
         connect(editBtn.clicked, self.editOntologyAnnotation)
@@ -192,7 +199,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(groupbox)
 
         ## GENERAL TAB LAYOUT CONFIGURATION
-
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('ontology_iri_widget'), 0, QtCore.Qt.AlignTop)
@@ -218,7 +224,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.addWidget(table)
 
-
         delBtn = QtWidgets.QPushButton('Remove', objectName='prefixes_delete_button')
         #connect(addBtn.clicked, self.addPrefix)
         connect(delBtn.clicked, self.removePrefix)
@@ -237,7 +242,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         definedPrefixesGroupbox = QtWidgets.QGroupBox('Defined Prefixes', self, objectName='defined_prefixes_group_widget')
         definedPrefixesGroupbox.setLayout(formlayout)
         self.addWidget(definedPrefixesGroupbox)
-
 
         prefixLabel = QtWidgets.QLabel(self, objectName='prefix_input_label')
         prefixLabel.setFont(Font('Roboto', 13))
@@ -277,7 +281,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(groupbox)
 
         ## PREFIXES TAB LAYOUT CONFIGURATION
-
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('defined_prefixes_group_widget'), 0, QtCore.Qt.AlignTop)
@@ -292,7 +295,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         ## ANNOTATIONS GROUP
-
         table = QtWidgets.QTableWidget(0, 2, self, objectName='annotation_properties_table_widget')
         table.setHorizontalHeaderLabels(['IRI', 'Comment'])
         table.horizontalHeader().setStretchLastSection(True)
@@ -428,7 +430,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setEnabled(False)
         connect(combobox.currentIndexChanged, self.onLanguageSwitched)
 
-
         self.addWidget(combobox)
         iriLabelLayout = QtWidgets.QFormLayout()
         iriLabelLayout.addRow(self.widget('checkBox_label_simplename'), self.widget('label_simplename_checkbox'))
@@ -449,7 +450,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox = QtWidgets.QGroupBox('IRI Definition', self, objectName='iri_definition_group_widget')
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
-
 
         #REFACTOR
         preLabel = QtWidgets.QLabel(self, objectName='pre_input_label')
@@ -495,7 +495,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.setObjectName('iri_widget')
         self.addWidget(widget)
 
-
         # TODO END
 
         #############################################
@@ -540,7 +539,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   PROPERTIES
     #################################
-
     @property
     def session(self):
         """
@@ -621,7 +619,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             versionField.setText(self.project.version)
 
         self.widget('save_ont_iri_version_button').setEnabled(False)
-
         table = self.widget('ontology_imports_table_widget')
         importedOntologies = self.project.importedOntologies
         table.clear()
@@ -632,19 +629,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             ontIriItem = QtWidgets.QTableWidgetItem(str(impOnt.ontologyIRI))
             ontIriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             ontIriItem.setData(Qt.UserRole, impOnt)
-            table.setItem(rowcount, 0, ontIriItem)
             versionItem = QtWidgets.QTableWidgetItem(str(impOnt.versionIRI))
             versionItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(versionItem))
             locationItem = QtWidgets.QTableWidgetItem(str(impOnt.docLocation))
             locationItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-            table.setItem(rowcount, 2, QtWidgets.QTableWidgetItem(locationItem))
             if not impOnt.correctlyLoaded:
-                ontIriItem.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
                 versionItem.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
+                ontIriItem.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
                 locationItem.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
+            table.setItem(rowcount, 0, ontIriItem)
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(versionItem))
+            table.setItem(rowcount, 2, QtWidgets.QTableWidgetItem(locationItem))
             rowcount += 1
         table.resizeColumnToContents(0)
+        if table.selectedRanges():
+            self.widget('ontology_imports_reload_button').setEnabled(True)
+            self.widget('ontology_imports_delete_button').setEnabled(True)
+        else:
+            self.widget('ontology_imports_reload_button').setEnabled(False)
+            self.widget('ontology_imports_delete_button').setEnabled(False)
 
         table = self.widget('annotations_table_widget')
         ontAnnAss = self.project.ontologyIRI.annotationAssertions
@@ -662,8 +665,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
             rowcount += 1
         table.resizeColumnToContents(0)
-
-        # TODO: reload imports when they are implemented
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                reloadItem = table.item(row, 0)
+                impOnt = reloadItem.data(Qt.UserRole)
+                if not impOnt.correctlyLoaded:
+                    self.widget('ontology_imports_reload_button').setEnabled(True)
+                    break
+        """
+        else:
+            self.widget('ontology_annotations_edit_button').setEnabled(False)
+        """
 
         #############################################
         # PREFIXES TAB
@@ -777,6 +790,41 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                                                      detailedText=str(e))
             msgBox.exec_()
 
+    @QtCore.pyqtSlot(int, int)
+    def onImportCellClicked(self, row, column):
+        table = self.widget('ontology_imports_table_widget')
+        found = False
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                reloadItem = table.item(row, 0)
+                impOnt = reloadItem.data(Qt.UserRole)
+                if not impOnt.correctlyLoaded:
+                    found= True
+                    break
+        self.widget('ontology_imports_reload_button').setEnabled(found)
+        self.widget('ontology_imports_delete_button').setEnabled(True)
+
+    @QtCore.pyqtSlot(bool)
+    def reloadOntologyImport(self, _):
+        """
+        Try to reload an ontology import that has not been resolved so far.
+        :type _: bool
+        """
+        self.widget('ontology_imports_reload_button').setEnabled(False)
+        self.widget('ontology_imports_delete_button').setEnabled(False)
+        table = self.widget('ontology_imports_table_widget')
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                reloadItem = table.item(row, 0)
+                impOnt = reloadItem.data(Qt.UserRole)
+                if not impOnt.correctlyLoaded:
+                    ontImportWidget = self.session.doOpenImportOntologyWizard(impOnt)
+                    connect(ontImportWidget.sgnOntologyImportCorrectlyReloaded, self.onOntologyImportCorrectlyReloaded)
+                    ontImportWidget.exec_()
+                    break
+
     @QtCore.pyqtSlot(bool)
     def addOntologyImport(self, _):
         """
@@ -789,9 +837,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(ImportedOntology)
     def onOntologyImportAccepted(self,impOnt):
-        '''
-        :type assertion:AnnotationAssertion
-        '''
         table = self.widget('ontology_imports_table_widget')
         rowcount = table.rowCount()
         table.setRowCount(rowcount + 1)
@@ -808,12 +853,29 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.scrollToItem(table.item(rowcount, 0))
         table.resizeColumnToContents(0)
 
+    @QtCore.pyqtSlot(ImportedOntology)
+    def onOntologyImportCorrectlyReloaded(self, impOnt):
+        table = self.widget('ontology_imports_table_widget')
+        rowcount = table.rowCount()
+        for row in range(0, rowcount):
+            ontIriItem = table.item(row, 0)
+            itemImpOnt = ontIriItem.data(Qt.UserRole)
+            if itemImpOnt is impOnt:
+                versionItem = table.item(row, 1)
+                locationItem = table.item(row, 2)
+                ontIriItem.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+                versionItem.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+                locationItem.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+                break
+
     @QtCore.pyqtSlot(bool)
     def removeOntologyImport(self, _):
         """
         Removes an ontology import from the current project.
         :type _: bool
         """
+        self.widget('ontology_imports_reload_button').setEnabled(False)
+        self.widget('ontology_imports_delete_button').setEnabled(False)
         table = self.widget('ontology_imports_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
@@ -869,6 +931,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         Removes an annotation from the current ontology.
         :type _: bool
         """
+        self.widget('ontology_annotations_delete_button').setEnabled(False)
+        self.widget('ontology_annotations_edit_button').setEnabled(False)
         table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
@@ -889,8 +953,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 table.removeRow(row)
         table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
 
+    @QtCore.pyqtSlot(int,int)
+    def onAnnotationCellClicked(self,row,column):
+        self.widget('ontology_annotations_delete_button').setEnabled(True)
+        self.widget('ontology_annotations_edit_button').setEnabled(True)
+
     @QtCore.pyqtSlot(bool)
     def editOntologyAnnotation(self, _):
+        self.widget('ontology_annotations_edit_button').setEnabled(False)
         table = self.widget('annotations_table_widget')
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
@@ -1226,7 +1296,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                                                      informativeText='Empty string is not allowed as Pre value',
                                                      detailedText=str(e))
             msgBox.exec_()
-
 
     #############################################
     # Global IRI
