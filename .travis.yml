@@ -32,13 +32,6 @@ branches:
 
 jobs:
   fast_finish: true
-  allow_failures:
-    - python: 3.7
-      env: TOXENV=py37-pyqt514
-
-    - python: 3.8
-      env: TOXENV=py38-pyqt514
-
   include:
     - python: 3.5
       dist: xenial
@@ -98,12 +91,7 @@ jobs:
 
     - os: osx
       language: generic
-      osx_image: xcode9.4
-      env: OSX=high-sierra PYTHON_VERSION=3.7.7
-
-    - os: osx
-      language: generic
-      osx_image: xcode11.2
+      osx_image: xcode11.3
       env: OSX=mojave PYTHON_VERSION=3.7.7
 
 before_install:
