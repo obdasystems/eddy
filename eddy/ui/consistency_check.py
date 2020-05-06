@@ -60,6 +60,9 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
     sgnOntologyConsistent = QtCore.pyqtSignal()
     sgnOntologyInconsistent = QtCore.pyqtSignal()
     sgnUnsatisfiableEntities = QtCore.pyqtSignal(int)
+    sgnUnsatisfiableClass = QtCore.pyqtSignal(IRI)
+    sgnUnsatisfiableObjectProperty = QtCore.pyqtSignal(IRI)
+    sgnUnsatisfiableDataProperty = QtCore.pyqtSignal(IRI)
 
     def __init__(self, project, session, includeImports=True, computeUnsatisfiableEntities=True, computeExplanations=False):
         """
@@ -186,6 +189,9 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         connect(worker.sgnConsistent, self.onOntologyConsistent)
         connect(worker.sgnInconsistent, self.onOntologyInconsistent)
         connect(worker.sgnUnsatisfiableEntitiesComputed, self.onUnsatisfiableEntitiesComputed)
+        connect(worker.sgnUnsatisfiableClass, self.onUnsatisfiableClass)
+        connect(worker.sgnUnsatisfiableObjectProperty, self.onUnsatisfiableObjectProperty)
+        connect(worker.sgnUnsatisfiableDataProperty, self.onUnsatisfiableDataProperty)
         self.startThread('OntologyConsistencyCheck', worker)
 
     @QtCore.pyqtSlot(Exception)
@@ -270,6 +276,18 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.exec_()
         self.sgnUnsatisfiableEntities.emit(count)
 
+    @QtCore.pyqtSlot(IRI)
+    def onUnsatisfiableClass(self,iri):
+        self.sgnUnsatisfiableClass.emit(iri)
+
+    @QtCore.pyqtSlot(IRI)
+    def onUnsatisfiableObjectProperty(self, iri):
+        self.sgnUnsatisfiableObjectProperty.emit(iri)
+
+    @QtCore.pyqtSlot(IRI)
+    def onUnsatisfiableDataProperty(self, iri):
+        self.sgnUnsatisfiableDataProperty.emit(iri)
+
 class OntologyReasoningTasksWorker(AbstractWorker):
     """
     Extends QtCore.QObject providing a worker thread that will perform the consistency check over the Project ontology
@@ -307,21 +325,16 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         self.JavaFileClass = self.vm.getJavaClass('java.io.File')
         self.URIClass = self.vm.getJavaClass('java.net.URI')
         self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
-
         self.OWLClassClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClass')
         self.OWLImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
-
         self.reasonerInstance = None
-
         self._isOntologyConsistent = None
-
         self.javaBottomClassNode=None
         self.javaBottomObjectPropertyNode = None
         self.javaBottomDataPropertyNode = None
         self._unsatisfiableClasses = set()
         self._unsatisfiableObjectProperties = set()
         self._unsatisfiableDataProperties = set()
-
         self._includeImports = includeImports
         self._computeUnsatisfiableEntities = computeUnsatisfiableEntities
         self._computeExplanations = computeExplanations
@@ -358,12 +371,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
                 impOntIRI = self.IRIClass.create(impOnt.ontologyIRI)
                 iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
                 self.manager.getIRIMappers().add(iriMapper)
-                print('Loading ontology with IRI '.format(impOntIRI.toString()))
                 loaded = self.manager.loadOntology(impOntIRI)
-                print('loaded.toString ='.format(
-                    loaded.toString()))
-                print('loaded by manager has size='.format(
-                    loaded.getSignature(self.OWLImportsEnum.EXCLUDED).size()))
             except Exception as e:
                 LOGGER.exception('The imported ontology <{}> cannot be loaded.\nError:{}'.format(impOnt, str(e)))
             else:
@@ -373,6 +381,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         self.manager = ontology.getOWLOntologyManager()
         self.loadImportedOntologiesIntoManager()
         self.reasonerInstance = self.ReasonerClass(self.ReasonerConfigurationClass(), ontology)
+        #TODO se si usano metodi factory di Hermit, oggetto 'ontology' non viene riconosciuto come istanza di OWLReasoner
         #self.reasonerInstance = self.ReasonerFactoryClass.createReasoner(ontology, self.ReasonerConfigurationClass())
         #self.reasonerInstance = self.ReasonerFactoryClass.createReasoner(ontology)
 
@@ -381,44 +390,12 @@ class OntologyReasoningTasksWorker(AbstractWorker):
 
     def computeUnsatisfiableClasses(self):
         try:
-            rootOntology = self.reasonerInstance.getRootOntology()
-            for impOnt in rootOntology.getImportsClosure():
-                print('Imported ontology {}'.format(impOnt.getOntologyID().getOntologyIRI().get().toString()))
-
-            for impDec in rootOntology.getImportsDeclarations():
-                print('Import declaration  {}'.format(impDec.getIRI().toString()))
-
-
-
-
-
-            print('Signature size EXCLUDED={}'.format(rootOntology.getSignature(self.OWLImportsEnum.EXCLUDED).size()))
-            print('Signature size INCLUDED={}'.format(rootOntology.getSignature(self.OWLImportsEnum.INCLUDED).size()))
-
-            importedOntology = self.manager.getOntology(self.IRIClass.create('http://www.co-ode.org/ontologies/pizza'))
-            print('importedOntology')
-            print('imported From manager has size='.format(importedOntology.getSignature(self.OWLImportsEnum.EXCLUDED).size()))
-
-
-            genre = self.OWLManagerClass.getOWLDataFactory().getOWLClass(self.IRIClass.create('http://www.movieontology.org/ontology/Genre'))
-            genreSC = self.reasonerInstance.getSubClasses(genre, False)
-            for node in genreSC.getNodes():
-                for subC in node.getEntities():
-                    print('{} is a subclass of Genre'.format(subC.toString()))
-
-
-
-            gen = self.OWLManagerClass.getOWLDataFactory().getOWLClass(self.IRIClass.create('http://www.movieontology.org/ontology/Gen'))
-            genSC = self.reasonerInstance.getSubClasses(gen, False)
-            for node in genSC.getNodes():
-                for subC in node.getEntities():
-                    print('{} is a subclass of Gen'.format(subC.toString()))
-
             self.javaBottomClassNode = self.reasonerInstance.getBottomClassNode()
             for owlClass in self.javaBottomClassNode.getEntities():
-                projIRI = self.project.getIRI(owlClass.getIRI().toString())
-                self.sgnUnsatisfiableClass.emit(projIRI)
-                self._unsatisfiableClasses.add(projIRI)
+                if not(owlClass.isTopEntity() or owlClass.isBottomEntity()):
+                    projIRI = self.project.getIRI(owlClass.getIRI().toString())
+                    self.sgnUnsatisfiableClass.emit(projIRI)
+                    self._unsatisfiableClasses.add(projIRI)
             #self._unsatisfiableClasses = {x.getIRI().toString() for x in self.javaBottomClassNode.getEntities()}
         except Exception as e:
             LOGGER.exception('Encountered problems while computing unsatisfiable classes.\nError:{}'.format(str(e)))
@@ -429,9 +406,10 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         try:
             self.javaBottomObjectPropertyNode = self.reasonerInstance.getBottomObjectPropertyNode()
             for owlObjProp in self.javaBottomObjectPropertyNode.getEntities():
-                projIRI = self.project.getIRI(owlObjProp.getIRI().toString())
-                self.sgnUnsatisfiableObjectProperty.emit(projIRI)
-                self._unsatisfiableObjectProperties.add(projIRI)
+                if not (owlObjProp.isTopEntity() or owlObjProp.isBottomEntity()):
+                    projIRI = self.project.getIRI(owlObjProp.getIRI().toString())
+                    self.sgnUnsatisfiableObjectProperty.emit(projIRI)
+                    self._unsatisfiableObjectProperties.add(projIRI)
             #self._unsatisfiableObjectProperties = {x.getIRI().toString() for x in self.javaBottomObjectPropertyNode.getEntities()}
         except Exception as e:
             LOGGER.exception('Encountered problems while computing unsatisfiable object properties.\nError:{}'.format(str(e)))
@@ -442,9 +420,10 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         try:
             self.javaBottomDataPropertyNode = self.reasonerInstance.getBottomDataPropertyNode()
             for owlDataProp in self.javaBottomDataPropertyNode.getEntities():
-                projIRI = self.project.getIRI(owlDataProp.getIRI().toString())
-                self.sgnUnsatisfiableDataProperty.emit(projIRI)
-                self._unsatisfiableDataProperties.add(projIRI)
+                if not (owlDataProp.isTopEntity() or owlDataProp.isBottomEntity()):
+                    projIRI = self.project.getIRI(owlDataProp.getIRI().toString())
+                    self.sgnUnsatisfiableDataProperty.emit(projIRI)
+                    self._unsatisfiableDataProperties.add(projIRI)
             #self._unsatisfiableDataProperties = {x.getIRI().toString() for x in self.javaBottomDataPropertyNode.getEntities()}
         except Exception as e:
             LOGGER.exception('Encountered problems while computing unsatisfiable data properties.\nError:{}'.format(str(e)))

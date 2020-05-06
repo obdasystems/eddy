@@ -37,7 +37,8 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAbstractItemView
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QStyledItemDelegate
 
 from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandCommmonSubstringIRIsRefactor
 from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
@@ -56,6 +57,54 @@ from eddy.ui.message_box import MessageBoxFactory, MsgBoxType
 
 LOGGER = getLogger()
 
+'''
+class BoldDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        # decide here if item should be bold and set font weight to bold if needed
+        #option.backgroundBrush.setColor(QtGui.QColor(255, 0, 0))
+        
+        option.font.setWeight(QtGui.QFont.Bold)
+        option.font.setItalic(True)
+        option.font.setUnderline(True)
+        
+        painter.save()
+        displayText = index.data(Qt.DisplayRole)
+        #painter.setBrush(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
+        painter.setPen(QtGui.QColor(255, 0, 0))
+        if (option.state & QtWidgets.QStyle.State_Selected): painter.fillRect(option.rect, option.palette.highlight())
+
+        painter.drawText(option.rect, QtCore.Qt.AlignVCenter, displayText)
+        painter.restore()
+        #QStyledItemDelegate.paint(self, painter, option, index)
+
+class ComponentItem(QStandardItem):
+    """docstring for ComponentItem"""
+    def __init__(self, text, role=Qt.DisplayRole):
+        super().__init__()
+        self.setData(text, role)
+
+
+
+class ComponentModel(QStandardItemModel):
+    """docstring for ComponentModel"""
+    def __init__(self, parent=None):
+        super(ComponentModel, self).__init__()
+        self.parent = parent
+
+        _component = ComponentItem("Hello World")  #How do I change Text Color?
+        #_component.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)),QtCore.Qt.ForegroundRole) #Does not work
+        #_component.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
+        self.appendRow(_component)
+
+class ComponentTree(QTreeView):
+    """docstring for ComponentTree"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+
+        self.setModel(ComponentModel(self))
+        self.setItemDelegate(BoldDelegate(self))
+'''
 
 class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     """
@@ -76,7 +125,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addingNewPrefix = False
         self.prefixIndexMap = {}
         self.project = session.project
-
 
         #############################################
         # GENERAL TAB
@@ -767,21 +815,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             oldVersion = ''
             if self.project.version:
                 oldVersion = self.project.version
-
             iriField = self.widget('ontology_iri_field')
             ontIriString = iriField.value()
             versionField = self.widget('ontology_version_field')
             version = versionField.value()
-
             self.project.isValidIdentifier(ontIriString)
-
             command = CommandProjectSetOntologyIRIAndVersion(self.project, ontIriString, version, oldIri, oldVersion)
             self.session.undostack.beginMacro('Set ontology IRI')
             if command:
                 self.session.undostack.push(command)
             self.session.undostack.endMacro()
             self.widget('save_ont_iri_version_button').setEnabled(False)
-
         except IllegalNamespaceError as e:
             msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal identifier',
                                                      'IRI definition issue', MsgBoxType.WARNING.value,

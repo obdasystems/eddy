@@ -268,6 +268,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnInconsistentOntology = QtCore.pyqtSignal()
     sgnUnsatisfiableEntities = QtCore.pyqtSignal(int)
     sgnConsistencyCheckReset = QtCore.pyqtSignal()
+    sgnUnsatisfiableClass = QtCore.pyqtSignal(IRI)
+    sgnUnsatisfiableObjectProperty = QtCore.pyqtSignal(IRI)
+    sgnUnsatisfiableDataProperty = QtCore.pyqtSignal(IRI)
 
     def __init__(self, application, path, **kwargs):
         """
@@ -342,9 +345,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.sgnReady.emit()
 
         LOGGER.info('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
-
-
-
 
     #############################################
     #   SESSION CONFIGURATION
@@ -2408,7 +2408,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dialog.raise_()
                 dialog.activateWindow()
 
-
     @QtCore.pyqtSlot()
     def doOpenNodeFontDialog(self):
         diagram = self.mdi.activeDiagram()
@@ -2511,7 +2510,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.show()
                 builder.raise_()
                 builder.activateWindow()
-
 
     @QtCore.pyqtSlot(IRI)
     def doOpenAnnotationAssertionBuilder(self,iri,assertion=None):
@@ -3133,8 +3131,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = OntologyConsistencyCheckDialog(self.project, self)
         connect(dialog.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
         connect(dialog.sgnOntologyInconsistent, self.onInconsistentOntology)
+        connect(dialog.sgnUnsatisfiableClass, self.onUnsatisfiableClass)
+        connect(dialog.sgnUnsatisfiableObjectProperty, self.onUnsatisfiableObjectProperty)
+        connect(dialog.sgnUnsatisfiableDataProperty, self.onUnsatisfiableDataProperty)
         self.sgnConsistencyCheckStarted.emit()
         dialog.exec_()
+
+    @QtCore.pyqtSlot(IRI)
+    def onUnsatisfiableClass(self, iri):
+        self.sgnUnsatisfiableClass.emit(iri)
+
+    @QtCore.pyqtSlot(IRI)
+    def onUnsatisfiableObjectProperty(self, iri):
+        self.sgnUnsatisfiableObjectProperty.emit(iri)
+
+    @QtCore.pyqtSlot(IRI)
+    def onUnsatisfiableDataProperty(self, iri):
+        self.sgnUnsatisfiableDataProperty.emit(iri)
 
     #TODO NOT NEEDED ANYMORE. DEPRECATED, USE onUnsatisfiableEntities INSTEAD
     @QtCore.pyqtSlot()

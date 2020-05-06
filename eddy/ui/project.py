@@ -189,7 +189,25 @@ class NewProjectDialog(QtWidgets.QDialog):
         Accept the project form and creates a new empty project.
         """
         #project = Project(name=self.name(), path=self.path(), prefix=self.prefix(), iri=self.iri(), profile=OWL2Profile())
-        project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), ontologyIRI=self.iri(), ontologyPrefix=str(self.prefix()).strip())
+        #project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), ontologyIRI=self.iri(), ontologyPrefix=str(self.prefix()).strip())
+        project = Project(
+            name=self.name(),
+            path=self.path(),
+            version=None,
+            profile=OWL2Profile(),
+            prefixMap=None,
+            ontologyIRI=self.iri(),
+            datatypes=None,
+            constrFacets=None,
+            languages=None,
+            annotationProperties=None,
+            session=None,
+            ontologyPrefix=str(self.prefix()).strip(),
+            defaultLanguage="en",
+            addLabelFromSimpleName=False,
+            addLabelFromUserInput=False,
+            ontologies=set()
+        )
         #worker = GrapholProjectExporter(project)
         worker = GrapholIRIProjectExporter(project)
         worker.run()
