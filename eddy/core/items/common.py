@@ -324,15 +324,13 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :rtype: bool
         """
         if event.type() == QtCore.QEvent.FontChange:
-            # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
-            bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
-            nbbox = QtGui.QFontMetrics(self.diagram.font()).boundingRect(self.text())
-            dx = (bbox.width() - nbbox.width()) / 2
-            dy = (bbox.height() - nbbox.height()) / 2
-            # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
-            self.setFont(Font(font=self.diagram.font(), weight=Font.Light))
-            self.adjustSize()
-            self.moveBy(dx, dy)
+            nfont = Font(font=self.diagram.font(), weight=Font.Light)
+            if self.font() != nfont:
+                # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
+                npos = self.pos()
+                self.setFont(nfont)
+                self.setAlignment(self.alignment())
+                self.setPos(npos)
             # CASCADE THE EVENT TO EACH CHILD ITEM
             for item in self.childItems():
                 self.diagram.sendEvent(item, event)
