@@ -11,5 +11,5 @@
 # From PyPi
 flake8==3.7.9
 objgraph==3.4.1
-pip-tools==5.1.0
-PyQt5-stubs==5.14.2.0
+pip-tools==5.1.2
+PyQt5-stubs==5.14.2.2
