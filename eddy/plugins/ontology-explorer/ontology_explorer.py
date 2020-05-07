@@ -78,7 +78,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
         connect(self.project.sgnImportedOntologyLoaded, widget.onImportedOntologyAdded)
         connect(self.project.sgnItemRemoved, widget.doRemoveNode)
         connect(self.project.sgnImportedOntologyRemoved, widget.onImportedOntologyRemoved)
-        connect(self.project.sgnUpdated, widget.doResetReasonerHighlight)
+        #connect(self.project.sgnUpdated, widget.doResetReasonerHighlight)
         connect(self.session.sgnUnsatisfiableClass, widget.onUnsatisfiableClass)
         connect(self.session.sgnUnsatisfiableObjectProperty, widget.onUnsatisfiableObjectProperty)
         connect(self.session.sgnUnsatisfiableDataProperty, widget.onUnsatisfiableDataProperty)

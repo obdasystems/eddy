@@ -181,6 +181,7 @@ class GrapholProjectIRILoaderMixin_2(object):
             defaultLanguage='en',
             addLabelFromSimpleName=False,
             addLabelFromUserInput=False,
+            ontologies=set(),
             session=self.session)
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 

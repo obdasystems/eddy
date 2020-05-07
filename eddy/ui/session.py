@@ -327,6 +327,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
         connect(self.project.sgnIRIRemovedFromAllDiagrams, self.onIRIRemovedFromAllDiagrams)
         connect(self.project.sgnSingleNodeSwitchIRI, self.onSingleNodeSwitchIRI)
+        connect(self.project.sgnUpdated, self.doResetConsistencyCheck)
 
 
         #############################################
@@ -605,7 +606,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_refresh_black'), 'Reset consistency check',
-            self, objectName='decolour_nodes', triggered=self.doResetConsistencyCheck,
+            self, objectName='reset_reasoner', triggered=self.doResetConsistencyCheck,
             statusTip='Reset Reasoner', enabled=False))
 
         self.addAction(QtWidgets.QAction(
@@ -1486,7 +1487,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #TODO scommenta dopo corretta implementazione reasoner per consistency check
         #toolbar.addWidget(self.widget('select_reasoner'))
         toolbar.addAction(self.action('ontology_consistency_check'))
-        toolbar.addAction(self.action('decolour_nodes'))
+        toolbar.addAction(self.action('reset_reasoner'))
 
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('document_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
@@ -3158,6 +3159,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when the consistency check reports that the ontology is consistent and all classes
         are satisfiable.
         """
+        self.action('reset_reasoner').setEnabled(True)
         self.sgnPerfectOntology.emit()
 
     @QtCore.pyqtSlot()
@@ -3165,6 +3167,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Executed when the consistency check reports that the ontology is inconsistent.
         """
+        self.action('reset_reasoner').setEnabled(True)
         self.sgnInconsistentOntology.emit()
 
     @QtCore.pyqtSlot(int)
@@ -3172,6 +3175,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Executed when the consistency check reports that the ontology is consistent.
         """
+        self.action('reset_reasoner').setEnabled(True)
         self.sgnUnsatisfiableEntities.emit(unsatCount)
 
     @QtCore.pyqtSlot()
@@ -3193,6 +3197,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type updateNodes: bool
         :type clearReasonerCache: bool
         """
+        self.action('reset_reasoner').setEnabled(False)
         self.sgnConsistencyCheckReset.emit()
         '''
         OLD. NOT USED ANYMORE
@@ -3388,7 +3393,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.widget('button_set_brush').setEnabled(isPredicateSelected)
         self.widget('profile_switch').setCurrentText(self.project.profile.name())
         self.widget('select_reasoner').setEnabled(not isProjectEmpty)
-        self.action('decolour_nodes').setEnabled(not isProjectEmpty)
+        #self.action('reset_reasoner').setEnabled(not isProjectEmpty)
         self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
 
     #TODO

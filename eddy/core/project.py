@@ -118,14 +118,7 @@ class Project(IRIManager):
     sgnDiagramRemoved = QtCore.pyqtSignal('QGraphicsScene')
     sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnItemRemoved = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
-    sgnMetaAdded = QtCore.pyqtSignal(Item, str)
-    sgnMetaRemoved = QtCore.pyqtSignal(Item, str)
     sgnUpdated = QtCore.pyqtSignal()
-
-    sgnIRIPrefixesEntryModified = QtCore.pyqtSignal(str,str,str,str)
-    sgnIRIPrefixEntryAdded = QtCore.pyqtSignal(str,str,str)
-    sgnIRIPrefixEntryRemoved = QtCore.pyqtSignal(str,str,str)
-    sgnIRIPrefixesEntryIgnored = QtCore.pyqtSignal(str,str,str)
 
     sgnIRINodeEntryAdded = QtCore.pyqtSignal(str,str,str)
     sgnIRINodeEntryRemoved = QtCore.pyqtSignal(str,str,str)
@@ -134,9 +127,6 @@ class Project(IRIManager):
     sgnIRIVersionEntryAdded = QtCore.pyqtSignal(str,str,str)
     sgnIRIVersionEntryRemoved = QtCore.pyqtSignal(str,str,str)
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str,str,str)
-
-    sgnIRIPrefixNodeDictionaryUpdated = QtCore.pyqtSignal(str,str,str)
-    #sgnPreferedPrefixListUpdated = QtCore.pyqtSignal(str,str,str)
 
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
     sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(AbstractNode,IRI)
@@ -201,7 +191,6 @@ class Project(IRIManager):
         connect(self.sgnIRIRemovedFromAllDiagrams,self.onIRIRemovedFromAllDiagrams)
 
         #connect(self.sgnItemRemoved, self.remove_item_from_prefered_prefix_list)
-        connect(self.sgnIRIPrefixNodeDictionaryUpdated, self.regenerate_label_of_nodes_for_iri)
 
         connect(self.sgnIRIChanged, self.doSingleSwitchIRI)
         connect(self.sgnIRIRefactor, self.doSwitchIRI)
