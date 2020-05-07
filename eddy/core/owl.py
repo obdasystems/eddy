@@ -1022,11 +1022,16 @@ class IRIManager(QtCore.QObject):
         if not impOnt in self.importedOntologies:
             self.importedOntologies.add(impOnt)
             self.sgnImportedOntologyAdded.emit(impOnt)
+            if hasattr(self,'sgnUpdated'):
+                self.sgnUpdated.emit()
+
 
     def removeImportedOntology(self, impOnt):
         if impOnt in self.importedOntologies:
             self.importedOntologies.remove(impOnt)
             self.sgnImportedOntologyRemoved.emit(impOnt)
+            if hasattr(self,'sgnUpdated'):
+                self.sgnUpdated.emit()
 
     def isImportedIRI(self,iri):
         for imported in self.importedOntologies:

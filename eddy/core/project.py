@@ -1348,12 +1348,10 @@ class Project(IRIManager):
         :type diagram: Diagram
         :type item: AbstractItem
         """
-        #TODO modifica metodi self.index.addItem e self.index.addIRIOccurenceToDiagram in modo che aggiunte in dict self[K_NODE] siano coerenti
         if self.index.addItem(diagram, item):
-            #TODO added
             if isinstance(item, OntologyEntityNode) or isinstance(item, OntologyEntityResizableNode):
+                self.addIRI(item.iri)
                 self.index.addIRIOccurenceToDiagram(diagram, item)
-            #TODO end
             self.sgnItemAdded.emit(diagram, item)
             self.sgnUpdated.emit()
 
@@ -1366,11 +1364,9 @@ class Project(IRIManager):
         :type item: AbstractItem
         """
         if self.index.removeItem(diagram, item):
-            # TODO added
             if isinstance(item, OntologyEntityNode) or isinstance(item, OntologyEntityResizableNode):
                 if self.index.removeIRIOccurenceFromDiagram(diagram, item):
                     self.sgnIRIRemovedFromAllDiagrams.emit(item.iri)
-            # TODO end
             self.sgnItemRemoved.emit(diagram, item)
             self.sgnUpdated.emit()
 

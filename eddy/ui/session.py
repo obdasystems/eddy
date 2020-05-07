@@ -134,6 +134,7 @@ from eddy.core.exporters.image import (
 )
 from eddy.core.exporters.owl2_iri import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfProjectExporter
+from eddy.core.exporters.pdf_iri import PdfProjectExporter_v3
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import (
     DescriptionFactory,
@@ -1023,7 +1024,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholIRIProjectExporter)
-        self.addProjectExporter(PdfProjectExporter)
+        #self.addProjectExporter(PdfProjectExporter)
+        self.addProjectExporter(PdfProjectExporter_v3)
         self.addProjectExporter(GraphReferencesProjectExporter)
         self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(BmpDiagramExporter)
@@ -3191,6 +3193,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type updateNodes: bool
         :type clearReasonerCache: bool
         """
+        self.sgnConsistencyCheckReset.emit()
+        '''
+        OLD. NOT USED ANYMORE
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
 
         # RESET NODE HIGHLIGHT
@@ -3220,8 +3225,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         if updateNodes and clearReasonerCache:
             self.sgnConsistencyCheckReset.emit()
+        '''
 
-    #NEEDED FOR EXPLANATIONS
+    #ONCE NEEDED FOR EXPLANATIONS
+    '''
     @QtCore.pyqtSlot()
     def doClearReasonerCache(self):
         """
@@ -3242,6 +3249,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.project.nodes_or_edges_of_axioms_to_display_in_widget = []
         self.project.nodes_or_edges_of_explanations_to_display_in_widget = []
         self.project.converted_nodes = dict()
+    '''
 
     @QtCore.pyqtSlot()
     def doToggleGrid(self):

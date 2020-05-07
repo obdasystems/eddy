@@ -78,11 +78,12 @@ class OntologyExplorerPlugin(AbstractPlugin):
         connect(self.project.sgnImportedOntologyLoaded, widget.onImportedOntologyAdded)
         connect(self.project.sgnItemRemoved, widget.doRemoveNode)
         connect(self.project.sgnImportedOntologyRemoved, widget.onImportedOntologyRemoved)
-        connect(self.project.sgnMetaAdded, widget.onMetaUpdated)
-        connect(self.project.sgnMetaRemoved, widget.onMetaUpdated)
+        connect(self.project.sgnUpdated, widget.doResetReasonerHighlight)
         connect(self.session.sgnUnsatisfiableClass, widget.onUnsatisfiableClass)
         connect(self.session.sgnUnsatisfiableObjectProperty, widget.onUnsatisfiableObjectProperty)
         connect(self.session.sgnUnsatisfiableDataProperty, widget.onUnsatisfiableDataProperty)
+        connect(self.session.sgnConsistencyCheckReset, widget.doResetReasonerHighlight)
+
         # FILL IN ONTOLOGY EXPLORER WITH DATA
         connect(self.sgnFakeImportedOntologyAdded, widget.onImportedOntologyAdded)
         for impOnt in self.project.importedOntologies:
@@ -107,8 +108,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
         self.debug('Disconnecting from project: %s', self.project.name)
         disconnect(self.project.sgnItemAdded, widget.doAddNode)
         disconnect(self.project.sgnItemRemoved, widget.doRemoveNode)
-        disconnect(self.project.sgnMetaAdded, widget.onMetaUpdated)
-        disconnect(self.project.sgnMetaRemoved, widget.onMetaUpdated)
         disconnect(self.project.sgnImportedOntologyAdded, widget.onImportedOntologyAdded)
         disconnect(self.project.sgnImportedOntologyLoaded, widget.onImportedOntologyAdded)
         disconnect(self.project.sgnImportedOntologyRemoved, widget.onImportedOntologyRemoved)
@@ -451,7 +450,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             self.unsatisfiableItems.append(parent)
 
     @QtCore.pyqtSlot()
-    def onReasonerReset(self):
+    def doResetReasonerHighlight(self):
         for item in self.unsatisfiableItems:
             item.setData(None, QtCore.Qt.ForegroundRole)
         self.unsatisfiableItems = list()
@@ -727,16 +726,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.proxy.invalidateFilter()
         self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
-    @QtCore.pyqtSlot(Item, str)
-    def onMetaUpdated(self, item, name):
-        """
-        Executed when metadata of the predicate for the given item/name combination is updated
-        :type item: Item
-        :type name: str
-        """
-        self.proxy.invalidateFilter()
-        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-
     @QtCore.pyqtSlot()
     def onReturnPressed(self):
         """
@@ -939,7 +928,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         return QtCore.QSize(216, 266)
 
-
 class OntologyExplorerItemDelegate(QtWidgets.QStyledItemDelegate):
     IconRole = QtCore.Qt.UserRole + 1000
 
@@ -979,7 +967,6 @@ class OntologyExplorerItemDelegate(QtWidgets.QStyledItemDelegate):
         
         painter.drawText(textRect, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, itemText)
         painter.restore()
-
 
 class OntologyExplorerView(QtWidgets.QTreeView):
     """

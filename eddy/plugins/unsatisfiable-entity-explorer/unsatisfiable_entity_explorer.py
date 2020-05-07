@@ -280,12 +280,14 @@ class UnsatisfiableEntityExplorerPlugin(AbstractPlugin):
 
         # CONFIGURE SIGNALS
         self.debug('Configuring session specific signals')
+        '''
         connect(self.session.sgnReady, self.onSessionReady)
         connect(self.session.sgnConsistencyCheckStarted, self.onConsistencyCheckStarted)
         connect(self.session.sgnConsistencyCheckReset, self.onConsistencyCheckReset)
         connect(self.session.sgnPerfectOntology, self.onPerfectOntology)
         connect(self.session.sgnInconsistentOntology, self.onInconsistentOntology)
         connect(self.session.sgnUnsatisfiableEntities, self.onUnsatisfiableEntities)
+        '''
 
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
