@@ -34,18 +34,15 @@
 
 
 from abc import ABCMeta, abstractmethod
-from operator import attrgetter
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import ORGANIZATION, APPNAME
 from eddy.core.commands.iri import CommandIRISetMeta
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectSetOntologyIRIAndVersion
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.owl import Facet, Datatype
 from eddy.core.datatypes.qt import BrushIcon, Font
 from eddy.core.functions.misc import first, clamp, isEmpty
 from eddy.core.functions.signals import connect, disconnect
@@ -1093,7 +1090,7 @@ class IRIInfo(NodeInfo):
         if node.iri:
             self.fullIRIField.setValue(str(node.iri))
             self.nameField.setValue(str(node.iri.getSimpleName()))
-            settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+            settings = QtCore.QSettings()
             lang = settings.value('ontology/iri/render/language', 'it')
             labelAssertion = self.node.iri.getLabelAnnotationAssertion(lang)
             if labelAssertion:

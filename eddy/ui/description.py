@@ -82,7 +82,7 @@ class AbstractDialog(QtWidgets.QDialog):
         """
         return self.parent()
 
-
+#TODO CLASSE SOTTO DOVREBBE ESSERE INUTILE (ORA GESTIAMO ANNOTATION ASSERTIONS)
 class NodeDescriptionDialog(AbstractDialog):
     """
     This class implements the 'Node description' dialog.

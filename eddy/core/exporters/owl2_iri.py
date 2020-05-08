@@ -34,26 +34,24 @@
 
 
 import os
-import re
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy import APPNAME, BUG_TRACKER, ORGANIZATION
+from eddy import BUG_TRACKER
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
-from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
-from eddy.core.datatypes.owl import Datatype, OWLAxiom, OWLSyntax, Namespace
+from eddy.core.datatypes.graphol import Item, Identity, Restriction
+from eddy.core.datatypes.owl import  OWLAxiom, OWLSyntax
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
 from eddy.core.exporters.common import AbstractOntologyExporter
 from eddy.core.functions.fsystem import fwrite, fremove
-from eddy.core.functions.misc import first, clamp, isEmpty, rtfStripFontAttributes
+from eddy.core.functions.misc import first, clamp
 from eddy.core.functions.misc import rstrip, postfix, format_exception
 from eddy.core.functions.owl import OWLFunctionalSyntaxDocumentFilter
 from eddy.core.functions.owl import OWLManchesterSyntaxDocumentFilter
-from eddy.core.functions.owl import OWLShortIRI, OWLAnnotationText
 from eddy.core.functions.owl import RDFXMLDocumentFilter
 from eddy.core.functions.owl import TurtleDocumentFilter
 from eddy.core.functions.path import expandPath, openPath
@@ -64,8 +62,6 @@ from eddy.core.owl import OWL2Facet, OWL2Datatype
 from eddy.core.worker import AbstractWorker
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import ComboBox, CheckBox
-from eddy.ui.progress import BusyProgressDialog
-from eddy.ui.syntax import SyntaxValidationWorker
 
 LOGGER = getLogger()
 
@@ -178,7 +174,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         self.path = expandPath(path)
         self.project = project
 
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
 
         self.selected_diagrams = selected_diagrams
 

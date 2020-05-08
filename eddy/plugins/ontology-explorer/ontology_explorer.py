@@ -36,17 +36,13 @@ import typing
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QStyleOptionViewItem
 
-from eddy import ORGANIZATION, APPNAME
-from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.qt import Font
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.datatypes.annotation import Status
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
-from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.owl import IRIRender, AnnotationAssertion, IRI, ImportedOntology
 from eddy.core.plugin import AbstractPlugin
 
@@ -356,21 +352,21 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot(str, str)
     def onPrefixAdded(self, pref, ns):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
             self.redrawIRIItem()
 
     @QtCore.pyqtSlot(str)
     def onPrefixRemoved(self, pref):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
             self.redrawIRIItem()
 
     @QtCore.pyqtSlot(str)
     def onPrefixModified(self, pref):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
             self.redrawIRIItem()
@@ -879,7 +875,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
 
     @staticmethod
     def parentKeyForIRI(iri,project):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
             return str(iri)

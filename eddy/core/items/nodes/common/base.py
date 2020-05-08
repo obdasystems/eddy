@@ -39,8 +39,6 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
 
-from eddy import ORGANIZATION, APPNAME
-
 from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
@@ -569,7 +567,7 @@ class OntologyEntityNode(AbstractNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
             self.renderByFullIRI()
@@ -612,7 +610,7 @@ class OntologyEntityNode(AbstractNode):
             self.renderByPrefixedIRI()
 
     def renderByLabel(self):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         lang = settings.value('ontology/iri/render/language', 'it')
         labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
         if labelAssertion:
@@ -630,7 +628,7 @@ class OntologyEntityNode(AbstractNode):
         '''
         :type annotation: AnnotationAssertion
         '''
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
@@ -641,7 +639,7 @@ class OntologyEntityNode(AbstractNode):
         '''
         :type annotation: AnnotationAssertion
         '''
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
@@ -652,7 +650,7 @@ class OntologyEntityNode(AbstractNode):
         '''
         :type annotation: AnnotationAssertion
         '''
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
@@ -665,21 +663,21 @@ class OntologyEntityNode(AbstractNode):
 
     #@QtCore.pyqtSlot('QString','QString')
     def onPrefixAdded(self,pref,ns):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(str)
     def onPrefixRemoved(self,pref):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(str)
     def onPrefixModified(self,pref):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
@@ -1038,7 +1036,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
             self.renderByFullIRI()
@@ -1081,7 +1079,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             self.renderByPrefixedIRI()
 
     def renderByLabel(self):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         lang = settings.value('ontology/iri/render/language', 'it')
         labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
         if labelAssertion:
@@ -1099,7 +1097,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         '''
         :type annotation: AnnotationAssertion
         '''
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
@@ -1110,7 +1108,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         '''
         :type annotation: AnnotationAssertion
         '''
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
@@ -1121,7 +1119,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         '''
         :type annotation: AnnotationAssertion
         '''
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
@@ -1134,21 +1132,21 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     #@QtCore.pyqtSlot('QString','QString')
     def onPrefixAdded(self,pref,ns):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(str)
     def onPrefixRemoved(self,pref):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(str)
     def onPrefixModified(self,pref):
-        settings = QtCore.QSettings(ORGANIZATION, APPNAME)
+        settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()

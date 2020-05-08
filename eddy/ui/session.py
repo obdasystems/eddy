@@ -113,7 +113,6 @@ from eddy.core.datatypes.misc import (
 from eddy.core.datatypes.owl import (
     Datatype,
     Facet,
-    OWLProfile,
     Namespace,
 )
 from eddy.core.datatypes.qt import BrushIcon
@@ -124,7 +123,6 @@ from eddy.core.datatypes.system import (
 )
 from eddy.core.diagram import Diagram
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
-from eddy.core.exporters.graphol import GrapholProjectExporter
 from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.exporters.graphreferences import GraphReferencesProjectExporter
 from eddy.core.exporters.image import (
@@ -133,7 +131,6 @@ from eddy.core.exporters.image import (
     PngDiagramExporter,
 )
 from eddy.core.exporters.owl2_iri import OWLOntologyExporter
-from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.exporters.pdf_iri import PdfProjectExporter_v3
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import (
@@ -160,10 +157,6 @@ from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v3, GrapholOntologyIRILoader_v3
-from eddy.core.loaders.graphol import (
-    GrapholOntologyLoader_v2,
-    GrapholProjectLoader_v2,
-)
 from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
@@ -189,11 +182,6 @@ from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.dl import DLSyntaxValidationDialog
 from eddy.ui.fields import ComboBox
-from eddy.ui.forms import CardinalityRestrictionForm
-from eddy.ui.forms import NewDiagramForm
-from eddy.ui.forms import RefactorNameForm
-from eddy.ui.forms import RenameDiagramForm
-from eddy.ui.forms import ValueForm
 from eddy.ui.import_ontology import ImportOntologyDialog
 from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog
 from eddy.ui.forms import (
@@ -210,7 +198,6 @@ from eddy.ui.mdi import (
 )
 from eddy.ui.plugin import PluginInstallDialog
 from eddy.ui.preferences import PreferencesDialog
-from eddy.ui.prefix_explorer import OntologyExplorerDialog
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
@@ -2011,6 +1998,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         self.sgnFocusItem.emit(self.sender().data())
 
+    #TODO TO BE REMOVED
     @QtCore.pyqtSlot()
     def refactorsetprefix(self):
 
@@ -2552,6 +2540,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         builder.activateWindow()
         return builder
 
+    # TODO TO BE REMOVED
     @QtCore.pyqtSlot()
     def doOpenNodeDescription(self):
         """
@@ -2561,7 +2550,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             node = first(diagram.selectedNodes())
-            if node and node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode}:
+            if node and node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode, Item.IndividualNode\
+                                        }:
                 description = self.df.create(diagram, node)
                 description.setWindowModality(QtCore.Qt.ApplicationModal)
                 description.show()
@@ -2650,6 +2640,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     nodes = self.project.predicates(node.type(), node.text())
                 self.undostack.push(CommandNodeSetBrush(diagram, nodes, QtGui.QBrush(QtGui.QColor(color.value))))
 
+    # TODO TO BE REMOVED
     @QtCore.pyqtSlot()
     def doRefactorName(self):
         """
@@ -2910,6 +2901,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     form = ValueForm(node, self)
                     form.exec_()
 
+    # TODO TO BE REMOVED
     @QtCore.pyqtSlot()
     def doSetNodeSpecial(self):
         """
