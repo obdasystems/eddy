@@ -39,9 +39,8 @@ from PyQt5 import QtWidgets
 from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.graphol import Special
 from eddy.core.datatypes.owl import OWLAxiom, OWLSyntax
-from eddy.core.datatypes.qt import Font
 from eddy.core.exporters.owl2 import OWLOntologyFetcher
-from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker
+from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
@@ -432,7 +431,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
 
     def runReasoningTasks(self):
         #TODO VALUTA REINSERIMENTO EXPLANATIONS TRAMITE BOOLEANO self.computeExplanations
-        worker = OWLOntologyExporterWorker(self.project)
+        worker = OWLOntologyExporterWorker_v3(self.project,axioms=self.axioms())
         worker.run()
         self.initializeOWLManagerAndReasoner(worker.ontology)
         if not self.isConsistent():

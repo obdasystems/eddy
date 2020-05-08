@@ -66,7 +66,7 @@ from eddy.ui.fields import ComboBox, CheckBox
 LOGGER = getLogger()
 
 #TODO Uguale a vecchio
-class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
+class OWLOntologyExporter_v3(AbstractOntologyExporter, HasThreadingSystem):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into a valid OWL 2 ontology.
     """
@@ -97,7 +97,7 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         self.progress.sleep()
         self.progress.close()
         '''
-        dialog = OWLOntologyExporterDialog(self.project, self.path, self.session, self.selected_diagrams)
+        dialog = OWLOntologyExporterDialog_v3(self.project, self.path, self.session, self.selected_diagrams)
         dialog.exec_()
 
     @QtCore.pyqtSlot(str)
@@ -157,7 +157,7 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
             self.onSyntaxCheckCompleted()
 
 #TODO Uguale a vecchio
-class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
+class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog providing the form used to perform Graphol -> OWL ontology translation.
     """
@@ -489,10 +489,10 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         Perform the Graphol -> OWL translation in a separate thread.
         """
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
-        worker = OWLOntologyExporterWorker(self.project, self.path,
-                                           axioms=self.axioms(), normalize=self.normalize(),
-                                           syntax=self.syntax(), export=self.exportInRichText(),
-                                           diagrams=self.selected_diagrams)
+        worker = OWLOntologyExporterWorker_v3(self.project, self.path,
+                                              axioms=self.axioms(), normalize=self.normalize(),
+                                              syntax=self.syntax(), export=self.exportInRichText(),
+                                              diagrams=self.selected_diagrams)
 
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
@@ -500,7 +500,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         connect(worker.sgnProgress, self.onProgress)
         self.startThread('OWL2Export', worker)
 
-class OWLOntologyExporterWorker(AbstractWorker):
+class OWLOntologyExporterWorker_v3(AbstractWorker):
     """
     Extends AbstractWorker providing a worker thread that will perform the OWL 2 ontology generation.
     """
