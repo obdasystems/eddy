@@ -2007,6 +2007,7 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
             print(e)
 
         alreadyAdded = set()
+        alreadyAddedDiagram = set()
         for diagram in self.selected_diagrams:
             self.replaceIRIs(diagram,alreadyAdded)
             # We may be in the situation in which we are importing a diagram with name 'X'
@@ -2015,7 +2016,7 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
             # to be sure to have a unique diagram name, in the current project namespace.
             occurrence = 1
             name = diagram.name
-            while self.project.diagram(diagram.name):
+            while self.project.diagram(diagram.name) or diagram.name in alreadyAddedDiagram:
                 diagram.name = '{0}_{1}'.format(name, occurrence)
                 occurrence += 1
             ## SWITCH SIGNAL SLOTS
@@ -2025,6 +2026,7 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
             connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
             ## MERGE THE DIAGRAM IN THE CURRENT PROJECT
             self.commands.append(CommandDiagramAdd(diagram, self.project))
+            alreadyAddedDiagram.add(diagram.name)
 
     def replaceIRIs(self,diagram,alreadyAdded):
         for node in diagram.nodes():
