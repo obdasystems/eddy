@@ -850,8 +850,7 @@ class GrapholOntologyIRILoader_v2(AbstractOntologyLoader, GrapholProjectIRILoade
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
-        worker = ProjectIRIMergeWorker(self.project, self.nproject, self.session)
-        worker.run()
+        pass
 
     #############################################
     #   INTERFACE
@@ -1103,7 +1102,8 @@ class GrapholProjectIRILoaderMixin_3(object):
         imports = self.getImports(ontologyEl)
         self.nproject = Project(
             name=projectName,
-            path=os.path.dirname(self.path),
+            # TODO path=os.path.dirname(self.path),
+            path=self.path,
             version=projectVersion,
             profile=self.session.createProfile('OWL 2'),
             prefixMap=prefixMap,
@@ -1831,8 +1831,8 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
         :type session: Session
         """
         path = expandPath(path)
-        path = os.path.join(path, os.path.basename(path))
-        path = postfix(path, File.Graphol.extension)
+        #path = os.path.join(path, os.path.basename(path))
+        #path = postfix(path, File.Graphol.extension)
         super().__init__(path, session)
 
     def createLegacyProject(self):
@@ -1876,7 +1876,6 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
             self.createDiagrams()
             self.projectRender()
             self.projectLoaded()
-
 
 class ProjectIRIMergeWorker_v3(QtCore.QObject):
     """

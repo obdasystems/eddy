@@ -43,6 +43,7 @@ from eddy import APPNAME, VERSION
 from eddy import GRAPHOL_HOME, WORKSPACE
 from eddy import PROJECT_HOME, BUG_TRACKER
 from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
+from eddy.core.datatypes.system import File
 from eddy.core.functions.fsystem import isdir, rmdir, faccess
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import compressPath
@@ -269,6 +270,7 @@ class Welcome(QtWidgets.QDialog):
         """
         Bring up a modal window used to open a project.
         """
+        '''
         dialog = QtWidgets.QFileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(expandPath(self.workspace))
@@ -277,6 +279,16 @@ class Welcome(QtWidgets.QDialog):
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.sgnOpenProject.emit(first(dialog.selectedFiles()))
+        '''
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setDirectory(expandPath('~'))
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        dialog.setNameFilters([File.Graphol.value])
+        if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
+            self.sgnOpenProject.emit(first(dialog.selectedFiles()))
+
 
     @QtCore.pyqtSlot(str)
     def doOpenProject(self, path):

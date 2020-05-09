@@ -5,7 +5,7 @@ from PyQt5 import QtXml
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractProjectExporter
-from eddy.core.functions.fsystem import mkdir, fwrite
+from eddy.core.functions.fsystem import mkdir, fwrite, fexists, isdir
 from eddy.core.functions.misc import postfix
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
@@ -678,10 +678,15 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         Serialize a previously created QDomDocument to disk.
         """
         try:
-            mkdir(self.project.path)
-            filename = postfix(self.project.name, File.Graphol.extension)
-            filepath = os.path.join(self.project.path, filename)
-            fwrite(self.document.toString(2), filepath)
+            if not fexists(self.project.path):
+                folderPath = os.path.dirname(self.project.path)
+                if not isdir(folderPath):
+                    mkdir(folderPath)
+                os.open(self.project.path,os.O_CREAT)
+            #TODO filename = postfix(self.project.name, File.Graphol.extension)
+            #TODO filepath = os.path.join(self.project.path, filename)
+            #TODO fwrite(self.document.toString(2), filepath)
+            fwrite(self.document.toString(2), self.project.path)
         except Exception as e:
             raise e
         else:
