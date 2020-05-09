@@ -9,6 +9,9 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtXml
 
 from eddy import APPNAME
+from eddy.core.commands.diagram import CommandDiagramAdd
+from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectAddAnnotationProperty, \
+    CommandProjectAddOntologyImport
 from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
@@ -23,14 +26,15 @@ from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir, make_archi
 from eddy.core.functions.misc import rstrip, postfix, rtfStripFontAttributes
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.items.nodes.common.base import OntologyEntityResizableNode
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader_v1
-from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker
+from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker, OwlOntologyImportWorker
 from eddy.core.output import getLogger
 from eddy.core.owl import Literal, Facet, AnnotationAssertion, ImportedOntology
-from eddy.core.project import Project, ProjectIRIMergeWorker, K_DESCRIPTION
+from eddy.core.project import Project, K_DESCRIPTION, ProjectStopImportingError
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
 from eddy.core.project import ProjectVersionError
@@ -38,6 +42,7 @@ from eddy.core.project import ProjectStopLoadingError
 from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
 from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
 from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
+from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
 
@@ -1789,7 +1794,7 @@ class GrapholOntologyIRILoader_v3(AbstractOntologyLoader, GrapholProjectIRILoade
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
-        worker = ProjectIRIMergeWorker(self.project, self.nproject, self.session)
+        worker = ProjectIRIMergeWorker_v3(self.project, self.nproject, self.session)
         worker.run()
 
     #############################################
@@ -1871,5 +1876,192 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
             self.createDiagrams()
             self.projectRender()
             self.projectLoaded()
+
+
+class ProjectIRIMergeWorker_v3(QtCore.QObject):
+    """
+    Extends QObject with facilities to merge the content of 2 distinct projects.
+    """
+
+    def __init__(self, project, other, session):
+        """
+        Initialize the project merge worker.
+        :type project: Project
+        :type other: Project
+        :type session: Session
+        """
+        super().__init__(session)
+        self.commands = list()
+        self.project = project
+        self.other = other
+
+        self.selected_diagrams = None
+        self.all_names_in_selected_diagrams = []
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the active session (alias for ProjectMergeWorker.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   INTERFACE
+    #################################
+    def run(self):
+        """
+        Perform the merge of the 2 projects.
+        """
+        try:
+            LOGGER.info('Performing project import: %s <- %s...', self.project.name, self.other.name)
+            self.mergeDiagrams()
+            self.importPrefixesTypesAndAnnotations()
+            self.importImportedOntologies()
+        except ProjectStopImportingError as e:
+            LOGGER.exception('Fatal error during project merge: {}'.format(str(e)))
+        else:
+            self.mergeFinished()
+
+    def importPrefixesTypesAndAnnotations(self):
+        for prefix,ns in self.other.prefixDictItems():
+            if not prefix in self.project.getManagedPrefixes():
+                self.commands.append(CommandProjectAddPrefix(self.project,prefix,ns))
+                #self.project.setPrefix(prefix, ns)
+        '''
+        for datatypeIRI in self.other.getDatatypeIRIs():
+            self.project.addDatatype(str(datatypeIRI))
+        '''
+
+        for annPropIRI in self.other.getAnnotationPropertyIRIs():
+            self.commands.append(CommandProjectAddAnnotationProperty(self.project, str(annPropIRI)))
+            #self.project.addAnnotationProperty(str(annPropIRI))
+
+    def importImportedOntologies(self):
+        importToBeLoaded = []
+        alreadyLoadedOntIRIs = [str(x.ontologyIRI) for x in self.project.importedOntologies]
+        for otherImpOnt in self.other.importedOntologies:
+            if not str(otherImpOnt.ontologyIRI) in alreadyLoadedOntIRIs:
+                self.currImpOnt = ImportedOntology(otherImpOnt.ontologyIRI, otherImpOnt.docLocation, otherImpOnt.versionIRI, otherImpOnt.isLocalDocument, self.project)
+                self.worker = OwlOntologyImportWorker(self.currImpOnt.docLocation, self.session, isLocalImport=self.currImpOnt.docLocation)
+                connect(self.worker.sgnCompleted, self.onImportCompleted)
+                connect(self.worker.sgnErrored, self.onImportError)
+                connect(self.worker.sgnClassFetched, self.onClassFetched)
+                connect(self.worker.sgnObjectPropertyFetched, self.onObjectPropertyFetched)
+                connect(self.worker.sgnDataPropertyFetched, self.onDataPropertyFetched)
+                connect(self.worker.sgnIndividualFetched, self.onIndividualFetched)
+
+    @QtCore.pyqtSlot(str)
+    def onClassFetched(self, iri):
+        self.currImpOnt.addClass(self.project.getIRI(iri, imported=True))
+
+    @QtCore.pyqtSlot(str)
+    def onObjectPropertyFetched(self, iri):
+        self.currImpOnt.addObjectProperty(self.project.getIRI(iri, imported=True))
+
+    @QtCore.pyqtSlot(str)
+    def onDataPropertyFetched(self, iri):
+        self.currImpOnt.addDataProperty(self.project.getIRI(iri, imported=True))
+
+    @QtCore.pyqtSlot(str)
+    def onIndividualFetched(self, iri):
+        self.currImpOnt.addIndividual(self.project.getIRI(iri, imported=True))
+
+    @QtCore.pyqtSlot()
+    def onImportCompleted(self):
+        command = CommandProjectAddOntologyImport(self.project, self.currImpOnt)
+        self.commands.append(command)
+        disconnect(self.worker.sgnCompleted, self.onImportCompleted)
+        disconnect(self.worker.sgnErrored, self.onImportError)
+        disconnect(self.worker.sgnClassFetched, self.onClassFetched)
+        disconnect(self.worker.sgnObjectPropertyFetched, self.onObjectPropertyFetched)
+        disconnect(self.worker.sgnDataPropertyFetched, self.onDataPropertyFetched)
+        disconnect(self.worker.sgnIndividualFetched, self.onIndividualFetched)
+        self.currImpOnt = None
+        self.worker = None
+
+    @QtCore.pyqtSlot(str, Exception)
+    def onImportError(self, location, exc):
+        LOGGER.exception('OWL 2 import located in {} could not be completed during merge. Error: {}'.format(location,str(exc)))
+        self.currImpOnt = None
+        disconnect(self.worker.sgnCompleted, self.onImportCompleted)
+        disconnect(self.worker.sgnErrored, self.onImportError)
+        disconnect(self.worker.sgnClassFetched, self.onClassFetched)
+        disconnect(self.worker.sgnObjectPropertyFetched, self.onObjectPropertyFetched)
+        disconnect(self.worker.sgnDataPropertyFetched, self.onDataPropertyFetched)
+        disconnect(self.worker.sgnIndividualFetched, self.onIndividualFetched)
+
+    def mergeDiagrams(self):
+        """
+        Perform the merge of the diagrams by importing all the diagrams in the 'other' project in the loaded one.
+        """
+        try:
+            diagrams_selection_dialog = DiagramSelectionDialog(self.session, project=self.other)
+            diagrams_selection_dialog.exec_()
+            self.selected_diagrams = diagrams_selection_dialog.selectedDiagrams()
+        except Exception as e:
+            print(e)
+
+        alreadyAdded = set()
+        for diagram in self.selected_diagrams:
+            self.replaceIRIs(diagram,alreadyAdded)
+            # We may be in the situation in which we are importing a diagram with name 'X'
+            # even though we already have a diagram 'X' in our project. Because we do not
+            # want to overwrite diagrams, we perform a rename of the diagram being imported,
+            # to be sure to have a unique diagram name, in the current project namespace.
+            occurrence = 1
+            name = diagram.name
+            while self.project.diagram(diagram.name):
+                diagram.name = '{0}_{1}'.format(name, occurrence)
+                occurrence += 1
+            ## SWITCH SIGNAL SLOTS
+            disconnect(diagram.sgnItemAdded, self.other.doAddItem)
+            disconnect(diagram.sgnItemRemoved, self.other.doRemoveItem)
+            connect(diagram.sgnItemAdded, self.project.doAddItem)
+            connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
+            ## MERGE THE DIAGRAM IN THE CURRENT PROJECT
+            self.commands.append(CommandDiagramAdd(diagram, self.project))
+
+    def replaceIRIs(self,diagram,alreadyAdded):
+        for node in diagram.nodes():
+            if isinstance(node,OntologyEntityResizableNode) or isinstance(node, OntologyEntityResizableNode):
+                otherIRI = node.iri
+                projIRI = None
+                if not str(otherIRI) in alreadyAdded and self.project.existIRI(str(otherIRI)):
+                    LOGGER.warning('The IRI <{}> occurs in both projects...'.format(str(otherIRI)))
+                    #TODO Gestisci possibili incongruenze: funct, asymm, annotation assertions, etc, etc,...
+                    projIRI = self.project.getIRI(str(otherIRI))
+                elif str(otherIRI) in alreadyAdded:
+                    projIRI = self.project.getIRI(str(otherIRI))
+                else:
+                    projIRI = self.project.getIRI(str(otherIRI))
+                    projIRI.functional = otherIRI.functional
+                    projIRI.inverseFunctional = otherIRI.inverseFunctional
+                    projIRI.asymmetric = otherIRI.asymmetric
+                    projIRI.symmetric = otherIRI.symmetric
+                    projIRI.reflexive = otherIRI.reflexive
+                    projIRI.irreflexive = otherIRI.irreflexive
+                    projIRI.transitive = otherIRI.transitive
+                    for annAss in otherIRI.annotationAssertions:
+                        newAss = AnnotationAssertion(projIRI,annAss.assertionProperty, annAss.value, annAss.datatype, annAss.language)
+                        projIRI.addAnnotationAssertion(newAss)
+                    alreadyAdded.add(str(otherIRI))
+                node.iri = projIRI
+
+    def mergeFinished(self):
+        """
+        Completes the merge by executing the commands in the buffer on the undostack.
+        """
+        if self.commands:
+            self.session.undostack.beginMacro(
+                'import project "{0}" into "{1}"'.format(self.other.name, self.project.name))
+            for command in self.commands:
+                self.session.undostack.push(command)
+            self.session.undostack.endMacro()
+
 
 

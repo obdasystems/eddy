@@ -1614,7 +1614,6 @@ class ProjectIndex(dict):
             return True
         return False
 
-
 class ProjectIRIIndex(ProjectIndex):
     """
     Extends ProjectIndex to manage Project IRI index.
@@ -2045,8 +2044,7 @@ class ProjectIRIIndex(ProjectIndex):
                     return False
         return True
 
-
-
+'''
 class ProjectIRIMergeWorker(QtCore.QObject):
     """
     Extends QObject with facilities to merge the content of 2 distinct projects.
@@ -2173,7 +2171,7 @@ class ProjectIRIMergeWorker(QtCore.QObject):
             for command in self.commands:
                 self.session.undostack.push(command)
             self.session.undostack.endMacro()
-
+'''
 
 
 '''
