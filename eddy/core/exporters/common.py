@@ -165,7 +165,7 @@ class AbstractProjectExporter(AbstractExporter):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, project, session):
+    def __init__(self, project, session, exportPath=None):
         """
         Initialize the AbstractProjectExporter.
         :type project: Project
@@ -173,6 +173,7 @@ class AbstractProjectExporter(AbstractExporter):
         """
         super().__init__(session)
         self.project = project
+        self.exportPath = exportPath
 
     #############################################
     #   INTERFACE

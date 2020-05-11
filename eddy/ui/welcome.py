@@ -44,7 +44,7 @@ from eddy import GRAPHOL_HOME, WORKSPACE
 from eddy import PROJECT_HOME, BUG_TRACKER
 from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
 from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import isdir, rmdir, faccess
+from eddy.core.functions.fsystem import isdir, rmdir, faccess, fexists
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import compressPath
 from eddy.core.functions.path import expandPath, shortPath
@@ -58,6 +58,7 @@ class Welcome(QtWidgets.QDialog):
     """
     sgnCreateSession = QtCore.pyqtSignal(str)
     sgnOpenProject = QtCore.pyqtSignal(str)
+    sgnCreateSessionFromScratch = QtCore.pyqtSignal(str,str,str)
     sgnUpdateRecentProjects = QtCore.pyqtSignal()
 
     def __init__(self, application, parent=None):
@@ -192,6 +193,8 @@ class Welcome(QtWidgets.QDialog):
         self.setWindowTitle('Welcome to {0}'.format(APPNAME))
         
         connect(self.sgnCreateSession, application.doCreateSession)
+        connect(self.sgnCreateSessionFromScratch, application.doCreateSessionFromScratch)
+
         connect(self.sgnOpenProject, self.doOpenProject)
         connect(self.sgnUpdateRecentProjects, self.doUpdateRecentProjects)
 
@@ -236,8 +239,10 @@ class Welcome(QtWidgets.QDialog):
         msgbox.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
         msgbox.setTextFormat(QtCore.Qt.RichText)
         msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        msgbox.setWindowTitle('Remove project: {0}?'.format(os.path.basename(path)))
-        msgbox.setText('Are you sure you want to remove project: <b>{0}</b>'.format(os.path.basename(path)))
+        #msgbox.setWindowTitle('Remove project: {0}?'.format(os.path.basename(path)))
+        msgbox.setWindowTitle('Remove project: {0}?'.format(path))
+        #msgbox.setText('Are you sure you want to remove project: <b>{0}</b>'.format(os.path.basename(path)))
+        msgbox.setText('Are you sure you want to remove project: <b>{0}</b>'.format(path))
         msgbox.exec_()
         if msgbox.result() == QtWidgets.QMessageBox.Yes:
             try:
@@ -249,7 +254,7 @@ class Welcome(QtWidgets.QDialog):
                 msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
                 msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
                 msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setText('Eddy could not remove the specified project: <b>{0}</b>!'.format(os.path.basename(path)))
+                msgbox.setText('Eddy could not remove the specified project: <b>{0}</b>!'.format(path))
                 msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
                 msgbox.setWindowTitle('ERROR!')
                 msgbox.exec_()
@@ -263,7 +268,8 @@ class Welcome(QtWidgets.QDialog):
         """
         form = NewProjectDialog(self)
         if form.exec_() == NewProjectDialog.Accepted:
-            self.sgnCreateSession.emit(expandPath(form.pathField.value()))
+            self.sgnCreateSessionFromScratch.emit(form.name(),form.iri(),form.prefix())
+            #self.sgnCreateSession.emit(expandPath(form.pathField.value()))
 
     @QtCore.pyqtSlot()
     def doOpen(self):
@@ -336,7 +342,7 @@ class Welcome(QtWidgets.QDialog):
         recentList = []
         settings = QtCore.QSettings()
         for path in map(expandPath, settings.value('project/recent', None, str) or []):
-            if isdir(path):
+            if fexists(path):
                 recentList.append(path)
         settings.setValue('project/recent', recentList)
         settings.sync()

@@ -94,6 +94,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         connect(self.nameField.textChanged, self.doAcceptForm)
         connect(self.nameField.textChanged, self.onNameFieldChanged)
 
+        '''
         self.pathLabel = QtWidgets.QLabel(self)
         self.pathLabel.setText('Location')
         self.pathField = StringField(self)
@@ -101,6 +102,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.pathField.setReadOnly(True)
         self.pathField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.pathField.setValue(self.workspace)
+        '''
 
         spacer = QtWidgets.QFrame()
         spacer.setFrameShape(QtWidgets.QFrame.HLine)
@@ -112,7 +114,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.formLayout.addRow(self.iriLabel, self.iriField)
         self.formLayout.addRow(self.prefixLabel, self.prefixField)
         self.formLayout.addWidget(spacer)
-        self.formLayout.addRow(self.pathLabel, self.pathField)
+        #self.formLayout.addRow(self.pathLabel, self.pathField)
 
         #############################################
         # CONFIRMATION AREA
@@ -188,8 +190,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         """
         Accept the project form and creates a new empty project.
         """
-        #project = Project(name=self.name(), path=self.path(), prefix=self.prefix(), iri=self.iri(), profile=OWL2Profile())
-        #project = Project(name=self.name(), path=self.path(), profile=OWL2Profile(), ontologyIRI=self.iri(), ontologyPrefix=str(self.prefix()).strip())
+        '''
         project = Project(
             name=self.name(),
             path=self.path(),
@@ -208,9 +209,9 @@ class NewProjectDialog(QtWidgets.QDialog):
             addLabelFromUserInput=False,
             ontologies=set()
         )
-        #worker = GrapholProjectExporter(project)
         worker = GrapholIRIProjectExporter(project)
         worker.run()
+        '''
         super().accept()
 
     @QtCore.pyqtSlot()
@@ -228,6 +229,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         if not self.name():
             caption = ''
             enabled = False
+        '''
         else:
             if isdir(self.path()):
                 caption = "Project '{0}' already exists!".format(self.name())
@@ -235,6 +237,7 @@ class NewProjectDialog(QtWidgets.QDialog):
             elif not isPathValid(self.path()):
                 caption = "'{0}' is not a valid project name!".format(self.name())
                 enabled = False
+        '''
 
         #############################################
         # CHECK PREFIX
@@ -275,4 +278,5 @@ class NewProjectDialog(QtWidgets.QDialog):
         Update the project location field to reflect the new project name.
         :type name: str
         """
-        self.pathField.setValue('{0}{1}'.format(self.workspace, name.strip()))
+        #self.pathField.setValue('{0}{1}'.format(self.workspace, name.strip()))
+        pass

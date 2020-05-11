@@ -144,7 +144,7 @@ class Project(IRIManager):
         self.index = ProjectIRIIndex(self)
         #self.iri = kwargs.get('iri', 'NULL')
         self.name = kwargs.get('name')
-        self.path = expandPath(kwargs.get('path'))
+        self.path = expandPath(kwargs.get('path')) if kwargs.get('path') else None
         #self.prefix = kwargs.get('prefix', 'NULL')
         self.profile = kwargs.get('profile')
         self.profile.setParent(self)

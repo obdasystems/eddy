@@ -64,7 +64,7 @@ from eddy.core.datatypes.system import File, IS_MACOS, IS_WIN, IS_FROZEN
 from eddy.core.functions.fsystem import (
     fexists,
     isdir,
-)
+    fwrite)
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
@@ -128,6 +128,14 @@ class Eddy(QtWidgets.QApplication):
         self.setApplicationDisplayName(APPNAME)
         self.setApplicationVersion(VERSION)
 
+        '''
+        argStr = 'argv size={}  -- '.format(len(argv))
+        for arg in argv:
+            argStr += 'arg: "{}" -- '.format(arg)
+
+        fwrite(argStr, '/Users/lorenzo/Desktop/test_args.txt')
+        '''
+
         # PARSE COMMAND LINE ARGUMENTS
         self.options = CommandLineParser()
         self.options.process(argv)
@@ -156,14 +164,18 @@ class Eddy(QtWidgets.QApplication):
         :rtype: bool
         """
         # HANDLE FILEOPEN EVENT (TRIGGERED BY MACOS WHEN DOUBLE CLICKING A FILE)
-        if event.type() == QtCore.QEvent.FileOpen and not __debug__:
+        #if event.type() == QtCore.QEvent.FileOpen and not __debug__:
+        if event.type() == QtCore.QEvent.FileOpen:
             path = expandPath(event.file())
-            if fexists(path):
-                if self.started:
-                    self.sgnCreateSession.emit(os.path.dirname(path))
-                else:
-                    # CACHE PATH UNTIL APPLICATION STARTUP HAS COMPLETED
-                    self.openFilePath = path
+            #fileName,fileExtension = os.path.splitext(path)
+            type = File.forPath(path)
+            if type and type is File.Graphol:
+                if fexists(path):
+                    if self.started:
+                        self.sgnCreateSession.emit(path)
+                    else:
+                        # CACHE PATH UNTIL APPLICATION STARTUP HAS COMPLETED
+                        self.openFilePath = path
 
         return super().event(event)
 
@@ -233,7 +245,7 @@ class Eddy(QtWidgets.QApplication):
             # filesystem. If they do not exists we remove them from our recent list.
             projects = []
             for path in map(expandPath, settings.value('project/recent', None, str) or []):
-                if isdir(path) and path not in projects:
+                if fexists(path) and path not in projects:
                     projects.append(path)
             settings.setValue('project/recent', projects)
             settings.sync()
@@ -264,6 +276,7 @@ class Eddy(QtWidgets.QApplication):
         Run the application by showing the welcome dialog.
         """
         # CONFIGURE THE WORKSPACE
+        ''''''
         settings = QtCore.QSettings()
         workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
         if not isdir(workspace):
@@ -273,6 +286,7 @@ class Eddy(QtWidgets.QApplication):
 
         # PROCESS COMMAND LINE ARGUMENTS
         args = self.options.positionalArguments()
+
         if self.openFilePath:
             args.append(self.openFilePath)
             self.openFilePath = None
@@ -292,7 +306,8 @@ class Eddy(QtWidgets.QApplication):
         elif args:
             fname = expandPath(args[0])
             if fexists(fname):
-                project = os.path.dirname(fname)
+                #project = os.path.dirname(fname)
+                project = fname
                 self.sgnCreateSession.emit(project)
             else:
                 LOGGER.warning('Unable to open file: %s', fname)
@@ -317,8 +332,7 @@ class Eddy(QtWidgets.QApplication):
                 break
         else:
             # If we do not have a session for the given project we'll create one.
-            with BusyProgressDialog('Loading project: {0}'.format(os.path.basename(path))):
-
+            with BusyProgressDialog('Loading project: {0}'.format(path)):
                 try:
                     session = Session(self, path)
                 except ProjectStopLoadingError:
@@ -327,7 +341,7 @@ class Eddy(QtWidgets.QApplication):
                     LOGGER.warning('Failed to create session for project %s: %s', path, e)
                     msgbox = QtWidgets.QMessageBox()
                     msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setText('Failed to create session for project: <b>{0}</b>!'.format(os.path.basename(path)))
+                    msgbox.setText('Failed to create session for project: <b>{0}</b>!'.format(path))
                     msgbox.setTextFormat(QtCore.Qt.RichText)
                     msgbox.setDetailedText(format_exception(e))
                     msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
@@ -354,6 +368,56 @@ class Eddy(QtWidgets.QApplication):
                         projects = projects[:8]
                         settings.setValue('project/recent', projects)
                         settings.sync()
+
+                    #############################################
+                    # CLOSE THE WELCOME SCREEN IF NECESSARY
+                    #################################
+
+                    try:
+                        self.welcome.close()
+                    except (AttributeError, RuntimeError):
+                        pass
+
+                    #############################################
+                    # STARTUP THE SESSION
+                    #################################
+
+                    connect(session.sgnQuit, self.doQuit)
+                    connect(session.sgnClosed, self.onSessionClosed)
+                    self.sessions.append(session)
+                    self.sgnSessionCreated.emit(session)
+                    session.show()
+
+    @QtCore.pyqtSlot(str, str, str)
+    def doCreateSessionFromScratch(self, projName, ontIri, ontPrefix):
+        """
+        Create a session for a new brand project.
+        """
+        for session in self.sessions:
+            # Look among the active sessions and see if we already have
+            # a session loaded for the given project: if so, focus it.
+            if not session.project.path and session.project.name == projName and session.project.ontologyIRI == ontIri:
+                session.show()
+                break
+        else:
+            # If we do not have a session for the given project we'll create one.
+            with BusyProgressDialog('Creating new project with name: {0}'.format(projName)):
+                try:
+                    session = Session(self, path=None, projName=projName, ontIri=ontIri, ontPrefix=ontPrefix)
+                except ProjectStopLoadingError:
+                    pass
+                except Exception as e:
+                    LOGGER.warning('Failed to create session for new project : %s',  e)
+                    msgbox = QtWidgets.QMessageBox()
+                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                    msgbox.setText('Failed to create session for new project')
+                    msgbox.setTextFormat(QtCore.Qt.RichText)
+                    msgbox.setDetailedText(format_exception(e))
+                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowTitle('Project Error!')
+                    msgbox.exec_()
+                else:
 
                     #############################################
                     # CLOSE THE WELCOME SCREEN IF NECESSARY

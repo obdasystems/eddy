@@ -173,7 +173,7 @@ from eddy.core.project import (
     K_REFLEXIVE,
     K_SYMMETRIC,
     K_TRANSITIVE,
-)
+    Project)
 from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
@@ -260,7 +260,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnUnsatisfiableObjectProperty = QtCore.pyqtSignal(IRI)
     sgnUnsatisfiableDataProperty = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, application, path, **kwargs):
+    def __init__(self, application, path=None, projName=None, ontIri=None, ontPrefix=None, **kwargs):
         """
         Initialize the application main working session.
         :type application: QApplication
@@ -302,13 +302,32 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.initState()
 
         #############################################
-        # LOAD THE GIVEN PROJECT
+        # LOAD THE PROJECT IF ONE GIVEN, OTHERWISE CREATE NEW PROJECT FROM SCRATCH
         #################################
-
-        worker = self.createProjectLoader(File.Graphol, path, self)
-        worker.run()
-        worker = OwlOntologyImportSetWorker(self.project)
-        worker.run()
+        if path:
+            worker = self.createProjectLoader(File.Graphol, path, self)
+            worker.run()
+            worker = OwlOntologyImportSetWorker(self.project)
+            worker.run()
+        else:
+            self.project = Project(
+                name=projName,
+                path=None,
+                version=None,
+                profile=OWL2Profile(),
+                prefixMap=None,
+                ontologyIRI=ontIri,
+                datatypes=None,
+                constrFacets=None,
+                languages=None,
+                annotationProperties=set(),
+                session=self,
+                ontologyPrefix=ontPrefix,
+                defaultLanguage="en",
+                addLabelFromSimpleName=False,
+                addLabelFromUserInput=False,
+                ontologies=set()
+            )
         connect(self.project.sgnPrefixAdded,self.onPrefixAddedToProject)
         connect(self.project.sgnPrefixRemoved, self.onPrefixRemovedFromProject)
         connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
@@ -529,7 +548,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_save_black'), 'Save As...', self,
             objectName='save_as', shortcut=QtGui.QKeySequence.SaveAs,
-            statusTip='Create a copy of the active diagram',
+            statusTip='Save the current project',
             enabled=False, triggered=self.doSaveAs))
 
         #self.addAction(QtWidgets.QAction(
@@ -1044,7 +1063,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu.addAction(self.action('save'))
         # DISABLE SAVE AS ACTION
         # See: https://github.com/obdasystems/eddy/issues/9
-        #menu.addAction(self.action('save_as'))
+        menu.addAction(self.action('save_as'))
         menu.addAction(self.action('close_project'))
         menu.addSeparator()
         #menu.addAction(self.action('import'))
@@ -2225,6 +2244,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Open a project in a new session.
         """
+        '''
         settings = QtCore.QSettings()
         workspace = settings.value('workspace/home', WORKSPACE, str)
         dialog = QtWidgets.QFileDialog(self)
@@ -2233,6 +2253,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        '''
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setDirectory(expandPath('~'))
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        dialog.setNameFilters([File.Graphol.value])
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.app.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
 
@@ -2712,8 +2739,46 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Save the current project.
         """
         try:
-            worker = self.createProjectExporter(File.Graphol, self.project, self)
-            worker.run()
+            if self.project.path:
+                worker = self.createProjectExporter(File.Graphol, self.project, self)
+                worker.run()
+            else:
+                if not self.project.isEmpty():
+                    dialog = QtWidgets.QFileDialog(self)
+                    dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+                    dialog.setDirectory(expandPath('~/'))
+                    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+                    #dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
+                    dialog.setNameFilter(File.Graphol.value)
+                    dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+                    dialog.selectFile(self.project.name)
+                    dialog.selectNameFilter(File.Graphol.value)
+                    if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
+                        # When this is set on macOS, for some reason the native file dialog requires to set
+                        # the file filter twice before changing the default suffix, but it already
+                        # does this without setting this action. Tested on Qt 5.10.1
+                        connect(dialog.filterSelected, lambda value: \
+                            dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
+                    if dialog.exec_():
+                        filetype = File.valueOf(dialog.selectedNameFilter())
+                        self.project.path = expandPath(first(dialog.selectedFiles()))
+                        worker = self.createProjectExporter(filetype, self.project, self)
+                        worker.run()
+
+                        #############################################
+                        # UPDATE RECENT PROJECTS
+                        #################################
+                        settings = QtCore.QSettings()
+                        projects = settings.value('project/recent', None, str) or []
+                        try:
+                            projects.remove(self.project.path)
+                        except ValueError:
+                            pass
+                        finally:
+                            projects.insert(0, self.project.path)
+                            projects = projects[:8]
+                            settings.setValue('project/recent', projects)
+                            settings.sync()
         except Exception as e:
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
@@ -2730,22 +2795,65 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @QtCore.pyqtSlot()
     def doSaveAs(self):
         """
-        Creates a copy of the currently open diagram.
+        Save the current project as...
         """
-        diagram = self.mdi.activeDiagram()
-        if diagram:
+        try:
+            workingPath = self.project.path if self.project.path else None
             dialog = QtWidgets.QFileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
+            if workingPath:
+                dialog.setDirectory(expandPath(workingPath))
+            else:
+                dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(self.diagramExporterNameFilters({File.Xml}))
+            # dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
+            dialog.setNameFilter(File.Graphol.value)
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            dialog.selectFile(diagram.name)
-            dialog.selectNameFilter(File.Pdf.value)
+            #dialog.selectFile(self.project.name)
+            dialog.selectNameFilter(File.Graphol.value)
+            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
+                # When this is set on macOS, for some reason the native file dialog requires to set
+                # the file filter twice before changing the default suffix, but it already
+                # does this without setting this action. Tested on Qt 5.10.1
+                connect(dialog.filterSelected, lambda value: \
+                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
-                worker = self.createDiagramExporter(filetype, diagram, self)
-                worker.run(expandPath(first(dialog.selectedFiles())))
+                savePath = expandPath(first(dialog.selectedFiles()))
+                worker = None
+                if not workingPath:
+                    self.project.path = savePath
+                    worker = self.createProjectExporter(filetype, self.project, self)
+                else:
+                    worker = self.createProjectExporter(filetype,self.project,self,savePath)
+                worker.run()
+                #############################################
+                # UPDATE RECENT PROJECTS
+                #################################
+                settings = QtCore.QSettings()
+                projects = settings.value('project/recent', None, str) or []
+                try:
+                    projects.remove(savePath)
+                except ValueError:
+                    pass
+                finally:
+                    projects.insert(0, savePath)
+                    projects = projects[:8]
+                    settings.setValue('project/recent', projects)
+                    settings.sync()
+        except Exception as e:
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setDetailedText(format_exception(e))
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+            msgbox.setText('Eddy could not save the current project!')
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Save failed!')
+            msgbox.exec_()
+        else:
+            if not workingPath or expandPath(savePath)==expandPath(self.project.path):
+                self.undostack.setClean()
+                self.sgnProjectSaved.emit()
 
     @QtCore.pyqtSlot()
     def doSelectAll(self):
@@ -3364,7 +3472,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('property_transitive').setChecked(isPropertyTransitiveChecked)
         self.action('property_transitive').setEnabled(isPropertyTransitiveEnabled)
         self.action('save').setEnabled(not isUndoStackClean)
-        self.action('save_as').setEnabled(isDiagramActive)
+        self.action('save_as').setEnabled(not isProjectEmpty)
         self.action('select_all').setEnabled(isDiagramActive)
         self.action('send_to_back').setEnabled(isNodeSelected)
         self.action('snap_to_grid').setEnabled(isDiagramActive)
@@ -3703,7 +3811,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type project: Project
         :type diagram: Diagram
         """
-        title = '{0} - [{1}]'.format(project.name, shortPath(project.path))
+        title = project.name if not project.path else '{0} - [{1}]'.format(project.name, shortPath(project.path))
         if diagram:
             title = '{0} - {1}'.format(diagram.name, title)
         super().setWindowTitle(title)

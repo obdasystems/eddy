@@ -23,13 +23,13 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
      -   ...
     """
 
-    def __init__(self, project, session=None):
+    def __init__(self, project, session=None, exportPath=None):
         """
         Initialize the project exporter.
         :type project: Project
         :type session: Session
         """
-        super().__init__(project, session)
+        super().__init__(project, session, exportPath)
 
         self.document = None
 
@@ -678,19 +678,20 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         Serialize a previously created QDomDocument to disk.
         """
         try:
-            if not fexists(self.project.path):
-                folderPath = os.path.dirname(self.project.path)
+            currPath = self.exportPath if self.exportPath else self.project.path
+            if not fexists(currPath):
+                folderPath = os.path.dirname(currPath)
                 if not isdir(folderPath):
                     mkdir(folderPath)
-                os.open(self.project.path,os.O_CREAT)
+                os.open(currPath,os.O_CREAT)
             #TODO filename = postfix(self.project.name, File.Graphol.extension)
             #TODO filepath = os.path.join(self.project.path, filename)
             #TODO fwrite(self.document.toString(2), filepath)
-            fwrite(self.document.toString(2), self.project.path)
+            fwrite(self.document.toString(2), currPath)
         except Exception as e:
             raise e
         else:
-            LOGGER.info('Saved project %s to %s', self.project.name, self.project.path)
+            LOGGER.info('Saved project %s to %s', self.project.name, currPath)
 
     def getDomElement(self,elName):
         return self.document.createElement(elName)
