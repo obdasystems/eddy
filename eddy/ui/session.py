@@ -304,11 +304,20 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #############################################
         # LOAD THE PROJECT IF ONE GIVEN, OTHERWISE CREATE NEW PROJECT FROM SCRATCH
         #################################
+        self.projectFromFile = False
+        self.owlOntologyImportSize = None
+        self.owlOntologyImportLoadedCount = None
+        self.owlOntologyImportErrors = None
         if path:
+            self.projectFromFile = True
             worker = self.createProjectLoader(File.Graphol, path, self)
             worker.run()
             worker = OwlOntologyImportSetWorker(self.project)
             worker.run()
+            self.owlOntologyImportSize = worker.importSize
+            self.owlOntologyImportLoadedCount = worker.loadCount
+            if self.owlOntologyImportSize>0 and not self.owlOntologyImportSize==self.owlOntologyImportLoadedCount:
+                self.owlOntologyImportErrors = worker.owlOntologyImportErrors
         else:
             self.project = Project(
                 name=projName,
@@ -1947,6 +1956,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                             progress.setWindowTitle('Importing {0}...'.format(os.path.basename(path)))
                             worker = self.createOntologyLoader(filetype, path, self.project, self)
                             worker.run()
+                            if worker.owlOntologyImportErrors:
+                                msgbox = QtWidgets.QMessageBox(self)
+                                msgbox.setDetailedText(
+                                    '{} OWL 2 ontologies declared as imports have not been loaded. Please open the ontology manager for more details '
+                                    ' and to retry loading'.format(
+                                        len(worker.owlOntologyImportErrors)))
+                                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                                msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+                                msgbox.setText(
+                                    'Eddy could not correctly load some of the declared OWL ontology imports')
+                                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                                msgbox.setWindowTitle('Problem managing OWL ontology import declaration(s)')
+                                msgbox.exec_()
                 except Exception as e:
                     msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -3642,6 +3664,16 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if settings.value('update/check_on_startup', True, bool):
             action = self.action('check_for_updates')
             action.trigger()
+        if self.owlOntologyImportSize>0 and not self.owlOntologyImportSize==self.owlOntologyImportLoadedCount:
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setDetailedText('{} OWL 2 ontologies declared as imports have not been loaded. Please open the ontology manager for more details '
+                                   ' and to retry loading'.format(self.owlOntologyImportSize-self.owlOntologyImportLoadedCount))
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+            msgbox.setText('Eddy could not correctly load some of the declared OWL ontology imports')
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Problem managing OWL ontology import declaration(s)')
+            msgbox.exec_()
 
     @QtCore.pyqtSlot('QMainWindow')
     def onSessionCreated(self, session):

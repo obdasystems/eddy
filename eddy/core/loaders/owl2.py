@@ -155,10 +155,28 @@ class OwlOntologyImportSetWorker(AbstractWorker):
         self.IRIClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
         self.OWLManagerClass = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
         self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+        self._owlOtologyImportErrors = set()
+        self._loadCount = 0
+
+    @property
+    def importSize(self):
+        return len(self.imports)
+
+    @property
+    def loadCount(self):
+        return self._loadCount
+
+    @property
+    def owlOntologyImportErrors(self):
+        return self._owlOtologyImportErrors
+
+    @QtCore.pyqtSlot(str, Exception)
+    def onImportError(self, location, exc):
+        self._owlOtologyImportErrors.update([(location, str(exc))])
 
     @QtCore.pyqtSlot()
     def run(self):
-        loadCount = 0
+
         try:
             self.sgnStarted.emit()
             self.vm.attachThreadToJVM()
@@ -211,19 +229,18 @@ class OwlOntologyImportSetWorker(AbstractWorker):
                             if not ind.isAnonymous():
                                 iri = self.project.getIRI(ind.getIRI().toString(), imported=True)
                                 impOnt.addIndividual(iri)
-                        loadCount+=1
                     except Exception as e:
                         LOGGER.exception('The ontology located in {} cannot be correctly loaded'.format(impOnt.docLocation))
                         impOnt.correctlyLoaded = False
                         self.sgnErrored.emit(impOnt, e)
                     else:
-                        loadCount += 1
+                        self._loadCount += 1
                         impOnt.correctlyLoaded = True
         except Exception as e:
             LOGGER.exception('Fatal exception while resolving ontology imports: {}'.format(str(e)))
         else:
-            LOGGER.info('Found {} import declarations, {} loaded'.format(len(self.imports),loadCount))
-            self.sgnCompleted.emit(loadCount, len(self.imports))
+            LOGGER.info('Found {} import declarations, {} loaded'.format(len(self.imports),self._loadCount))
+            self.sgnCompleted.emit(self._loadCount, len(self.imports))
         finally:
             self.vm.detachThreadFromJVM()
             self.sgnFinished.emit()

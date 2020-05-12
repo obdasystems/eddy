@@ -1778,7 +1778,7 @@ class GrapholProjectIRILoaderMixin_3(object):
 
 class GrapholOntologyIRILoader_v3(AbstractOntologyLoader, GrapholProjectIRILoaderMixin_3):
     """
-    Extends AbstractOntologyLoader with facilities to load ontologies from Graphol file format.
+    Extends AbstractOntologyLoader with facilities to load ontologies from Graphol file format and merge them with current project
     """
 
     def __init__(self, path, project, session):
@@ -1789,13 +1789,25 @@ class GrapholOntologyIRILoader_v3(AbstractOntologyLoader, GrapholProjectIRILoade
         :type session: Session
         """
         super().__init__(expandPath(path), project, session)
+        self._owlOntologyImportErrors = set()
+
+    @property
+    def owlOntologyImportErrors(self):
+        return self._owlOntologyImportErrors
 
     def projectMerge(self):
         """
         Merge the loaded project with the one currently loaded in Eddy session.
         """
         worker = ProjectIRIMergeWorker_v3(self.project, self.nproject, self.session)
+        connect(worker.sgnErrorManagingOWLOntologyImport, self.onImportError)
         worker.run()
+        disconnect(worker.sgnErrorManagingOWLOntologyImport, self.onImportError)
+
+    @QtCore.pyqtSlot(str, Exception)
+    def onImportError(self, location, exc):
+        self._owlOntologyImportErrors.update([(location,str(exc))])
+        print()
 
     #############################################
     #   INTERFACE
@@ -1882,6 +1894,8 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
     Extends QObject with facilities to merge the content of 2 distinct projects.
     """
 
+    sgnErrorManagingOWLOntologyImport = QtCore.pyqtSignal(str, Exception)
+
     def __init__(self, project, other, session):
         """
         Initialize the project merge worker.
@@ -1946,13 +1960,14 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
         for otherImpOnt in self.other.importedOntologies:
             if not str(otherImpOnt.ontologyIRI) in alreadyLoadedOntIRIs:
                 self.currImpOnt = ImportedOntology(otherImpOnt.ontologyIRI, otherImpOnt.docLocation, otherImpOnt.versionIRI, otherImpOnt.isLocalDocument, self.project)
-                self.worker = OwlOntologyImportWorker(self.currImpOnt.docLocation, self.session, isLocalImport=self.currImpOnt.docLocation)
+                self.worker = OwlOntologyImportWorker(self.currImpOnt.docLocation, self.session, isLocalImport=self.currImpOnt.isLocalDocument)
                 connect(self.worker.sgnCompleted, self.onImportCompleted)
                 connect(self.worker.sgnErrored, self.onImportError)
                 connect(self.worker.sgnClassFetched, self.onClassFetched)
                 connect(self.worker.sgnObjectPropertyFetched, self.onObjectPropertyFetched)
                 connect(self.worker.sgnDataPropertyFetched, self.onDataPropertyFetched)
                 connect(self.worker.sgnIndividualFetched, self.onIndividualFetched)
+                self.worker.run()
 
     @QtCore.pyqtSlot(str)
     def onClassFetched(self, iri):
@@ -1986,6 +2001,8 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
     @QtCore.pyqtSlot(str, Exception)
     def onImportError(self, location, exc):
         LOGGER.exception('OWL 2 import located in {} could not be completed during merge. Error: {}'.format(location,str(exc)))
+        command = CommandProjectAddOntologyImport(self.project, self.currImpOnt)
+        self.commands.append(command)
         self.currImpOnt = None
         disconnect(self.worker.sgnCompleted, self.onImportCompleted)
         disconnect(self.worker.sgnErrored, self.onImportError)
@@ -1993,6 +2010,7 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
         disconnect(self.worker.sgnObjectPropertyFetched, self.onObjectPropertyFetched)
         disconnect(self.worker.sgnDataPropertyFetched, self.onDataPropertyFetched)
         disconnect(self.worker.sgnIndividualFetched, self.onIndividualFetched)
+        self.sgnErrorManagingOWLOntologyImport.emit(location, exc)
 
     def mergeDiagrams(self):
         """
