@@ -167,8 +167,7 @@ def postfix(string, value):
     :type value: str
     :rtype: str
     """
-    if not string.endswith(value):
-        return '{0}{1}'.format(string, value)
+    return '{0}{1}'.format(string, value) if not string.endswith(value) else string
 
 
 def prefix(string, value):
