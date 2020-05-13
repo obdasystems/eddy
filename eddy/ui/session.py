@@ -1867,6 +1867,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     <b><font color="#7E0B17">ERROR</font></b>:
                     Could not complete the export, see the System Log for details.
                     """)
+                    msgbox = QtWidgets.QMessageBox(self)
+                    msgbox.setDetailedText(format_exception(e))
+                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
+                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+                    msgbox.setText('Eddy could not Could not complete the export, see the System Log for details.')
+                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowTitle('PDF export failed!')
+                    msgbox.exec_()
 
     @QtCore.pyqtSlot()
     def doExportOntology(self):

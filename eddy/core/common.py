@@ -812,7 +812,7 @@ class HasProjectExportSystem(object):
         exporter = self.projectExporter(filetype)
         if not exporter:
             raise ValueError("missing project exporter for filetype %s" % filetype.value)
-        return exporter(project, session, exportPath)
+        return exporter(project, session, exportPath=exportPath)
 
     def insertProjectExporter(self, exporter, before):
         """
