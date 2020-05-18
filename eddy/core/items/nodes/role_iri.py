@@ -91,7 +91,7 @@ class RoleNode(OntologyEntityResizableNode):
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
 
-        self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
+        self.label = NodeLabel(template='Empty', pos=lambda: self.center() - QtCore.QPointF(0, 30), parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()

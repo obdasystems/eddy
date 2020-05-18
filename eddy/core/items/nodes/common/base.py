@@ -1046,6 +1046,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             self.renderByLabel()
         elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
             self.renderBySimpleName()
+        self.diagram.sgnUpdated.emit()
         #self.updateTextPos()
         #self.updateNode()
 

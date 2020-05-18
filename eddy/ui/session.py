@@ -2769,11 +2769,22 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Save the current project.
         """
         try:
+            settings = QtCore.QSettings()
+            projects = settings.value('project/recent', None, str) or []
             if self.project.path:
                 worker = self.createProjectExporter(File.Graphol, self.project, self)
                 worker.run()
+                try:
+                    projects.remove(self.project.path)
+                except ValueError:
+                    pass
+                finally:
+                    projects.insert(0, self.project.path)
+                    projects = projects[:8]
+                    settings.setValue('project/recent', projects)
+                    settings.sync()
             else:
-                if not self.project.isEmpty():
+                if self.project.diagrams():
                     dialog = QtWidgets.QFileDialog(self)
                     dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
                     dialog.setDirectory(expandPath('~/'))
@@ -2798,8 +2809,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         #############################################
                         # UPDATE RECENT PROJECTS
                         #################################
-                        settings = QtCore.QSettings()
-                        projects = settings.value('project/recent', None, str) or []
+
                         try:
                             projects.remove(self.project.path)
                         except ValueError:
@@ -3672,7 +3682,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if settings.value('update/check_on_startup', True, bool):
             action = self.action('check_for_updates')
             action.trigger()
-        if self.owlOntologyImportSize>0 and not self.owlOntologyImportSize==self.owlOntologyImportLoadedCount:
+        if self.projectFromFile and self.owlOntologyImportSize>0 and not self.owlOntologyImportSize==self.owlOntologyImportLoadedCount:
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText('{} OWL 2 ontologies declared as imports have not been loaded. Please open the ontology manager for more details '
                                    ' and to retry loading'.format(self.owlOntologyImportSize-self.owlOntologyImportLoadedCount))

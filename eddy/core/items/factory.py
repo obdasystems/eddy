@@ -152,6 +152,9 @@ class ItemFactory(QtCore.QObject):
         if item is Item.RangeRestrictionNode:
             return RangeRestrictionNode
 
+        if item is Item.ConceptNode:
+            return eddy.core.items.nodes.concept.ConceptNode
+
         raise RuntimeError('unknown item type ({0})'.format(item))
 
     def create(self, item, **kwargs):

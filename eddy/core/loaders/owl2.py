@@ -97,7 +97,7 @@ class OwlOntologyImportWorker(AbstractWorker):
             setObjProps = ontology.getObjectPropertiesInSignature()
             for objProp in setObjProps:
                 if not (objProp.isOWLTopObjectProperty() or objProp.isOWLBottomObjectProperty()):
-                    self.sgnObjectPropertyFetched.emit(c.getIRI().toString())
+                    self.sgnObjectPropertyFetched.emit(objProp.getIRI().toString())
                     #iri = self.project.getIRI(objProp.getNamedProperty().getIRI().toString(), imported=True)
                     #importedOntology.addObjectProperty(iri)
             self.sgnStepPerformed.emit(3)
@@ -105,7 +105,7 @@ class OwlOntologyImportWorker(AbstractWorker):
             setDataProps = ontology.getDataPropertiesInSignature()
             for dataProp in setDataProps:
                 if not (dataProp.isOWLTopDataProperty() or dataProp.isOWLBottomDataProperty()):
-                    self.sgnDataPropertyFetched.emit(c.getIRI().toString())
+                    self.sgnDataPropertyFetched.emit(dataProp.getIRI().toString())
                     #iri = self.project.getIRI(dataProp.getIRI().toString(), imported=True)
                     #importedOntology.addDataProperty(iri)
             self.sgnStepPerformed.emit(4)
@@ -113,7 +113,7 @@ class OwlOntologyImportWorker(AbstractWorker):
             setIndividuals = ontology.getIndividualsInSignature()
             for ind in setIndividuals:
                 if not ind.isAnonymous():
-                    self.sgnIndividualFetched.emit(c.getIRI().toString())
+                    self.sgnIndividualFetched.emit(ind.getIRI().toString())
                     #iri = self.project.getIRI(ind.getIRI().toString(), imported=True)
                     #importedOntology.addIndividual(iri)
             self.sgnStepPerformed.emit(5)

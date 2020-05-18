@@ -8,7 +8,7 @@ from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 
-from eddy.core.owl import IRI
+from eddy.core.owl import IRI, IRIRender
 
 
 class ConceptNode(OntologyEntityResizableNode):
@@ -37,9 +37,39 @@ class ConceptNode(OntologyEntityResizableNode):
         self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
-        self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
-        #self.label.setFont(Font(pixelSize=24))
-        #TODO to obtain node parent of label ---> self.label.parentItem()
+        template = 'Empty'
+        if self.iri:
+            settings = QtCore.QSettings()
+            rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+            if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
+                template = str(self.iri)
+            elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
+                project = None
+                if self._diagram_.project:
+                    project = self._diagram_.project
+                if project:
+                    prefixed = project.getShortestPrefixedForm(self.iri)
+                    if prefixed:
+                        template = prefixed
+                    else:
+                        template = str(self.iri)
+                else:
+                    template = str(self.iri)
+            elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+                lang = settings.value('ontology/iri/render/language', 'it')
+                labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
+                if labelAssertion:
+                    template = str(labelAssertion.value)
+                else:
+                    template = str(self.iri)
+            elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
+                if self.iri.getSimpleName():
+                    template = self.iri.getSimpleName()
+                else:
+                    template = str(self.iri)
+
+
+        self.label = NodeLabel(template=template, pos=lambda:self.center(), parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
