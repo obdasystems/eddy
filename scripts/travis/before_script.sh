@@ -39,6 +39,9 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ ! -z "$VIRTUAL_ENV" ]]; then
     # PyInstaller since it causes a lot of clutter to be included in
     # the packaged application.
 
-    # Remove Gtk3 platform theme. Remember to update this line when updating python from 3.6.8
+    # Remove Gtk3 platform theme.
+    rm -rf "$VIRTUAL_ENV/lib/python3.5/site-packages/PyQt5/Qt/plugins/platformthemes/libqgtk3.so"
     rm -rf "$VIRTUAL_ENV/lib/python3.6/site-packages/PyQt5/Qt/plugins/platformthemes/libqgtk3.so"
+    rm -rf "$VIRTUAL_ENV/lib/python3.7/site-packages/PyQt5/Qt/plugins/platformthemes/libqgtk3.so"
+    rm -rf "$VIRTUAL_ENV/lib/python3.8/site-packages/PyQt5/Qt/plugins/platformthemes/libqgtk3.so"
 fi

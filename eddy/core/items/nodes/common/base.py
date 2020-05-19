@@ -35,6 +35,7 @@ from abc import ABCMeta
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+from PyQt5.QtWidgets import QGraphicsSimpleTextItem
 
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
@@ -1056,10 +1057,6 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     def renderByPrefixedIRI(self):
         project = None
-        '''
-        if self.project:
-            project = self.project
-        '''
         if self._diagram_.project:
             project = self._diagram_.project
         if project:
@@ -1151,4 +1148,6 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
+
+
 

@@ -50,7 +50,7 @@ class ConceptNode(OntologyEntityResizableNode):
                 if project:
                     prefixed = project.getShortestPrefixedForm(self.iri)
                     if prefixed:
-                        template = prefixed
+                        template = str(prefixed)
                     else:
                         template = str(self.iri)
                 else:

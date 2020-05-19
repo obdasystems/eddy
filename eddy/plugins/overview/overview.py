@@ -145,6 +145,7 @@ class OverviewPlugin(AbstractPlugin):
 
         # UNINSTALL THE PALETTE DOCK WIDGET
         self.debug('Uninstalling docking area widget')
+        self.widget('overview_dock').removeEventFilter(self)
         self.session.removeDockWidget(self.widget('overview_dock'))
 
     def start(self):

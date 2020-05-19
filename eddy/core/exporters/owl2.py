@@ -1740,19 +1740,18 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     iri_key_to_append = iri_key
                     postfix_special_character = ''
                 elif iri_key[-1] == '#' or iri_key[-1] == '/':
-                    iri_key_to_append = iri_key[0:len(iri_key) - 1]
+                    iri_key_to_append = iri_key[0:-1]
                     postfix_special_character = iri_key[-1]
                 else:
                     iri_key_to_append = iri_key
                     postfix_special_character = '#'
 
-                if postfix_special_character:
-                    if len(prefixes_of_iri_key) == 0:
-                        if 'display_in_widget' in properties_of_iri_key:
-                            self.pm.setPrefix('', postfix(iri_key_to_append, postfix_special_character))
-                    else:
-                        for p in prefixes_of_iri_key:
-                            self.pm.setPrefix(p, postfix(iri_key_to_append, postfix_special_character))
+                if len(prefixes_of_iri_key) == 0:
+                    if 'display_in_widget' in properties_of_iri_key:
+                        self.pm.setPrefix('', postfix(iri_key_to_append, postfix_special_character))
+                else:
+                    for p in prefixes_of_iri_key:
+                        self.pm.setPrefix(p, postfix(iri_key_to_append, postfix_special_character))
 
             if self.export:
                 self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
@@ -2236,7 +2235,7 @@ class OWLOntologyFetcher(AbstractWorker):
     #################################
     """
     method name	            Convert func called recursively
-	
+
         getAttribute	         No
         getComplement	         Yes
         getConcept	             No
@@ -3778,18 +3777,20 @@ class OWLOntologyFetcher(AbstractWorker):
             #self.pm.setPrefix(self.project.prefix, postfix(ontologyIRI, '#'))
 
             for iri_key in self.project.IRI_prefixes_nodes_dict.keys():
-
                 prefixes_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][0]
                 properties_of_iri_key = self.project.IRI_prefixes_nodes_dict[iri_key][2]
 
-                if iri_key[len(iri_key) - 1] == '#' or iri_key[len(iri_key) - 1] == '/':
-                    iri_key_to_append = iri_key[0:len(iri_key) - 1]
-                    postfix_special_character = iri_key[len(iri_key) - 1]
+                if Namespace.forValue(iri_key):
+                    iri_key_to_append = iri_key
+                    postfix_special_character = ''
+                elif iri_key[-1] == '#' or iri_key[-1] == '/':
+                    iri_key_to_append = iri_key[0:-1]
+                    postfix_special_character = iri_key[-1]
                 else:
                     iri_key_to_append = iri_key
                     postfix_special_character = '#'
 
-                if (len(prefixes_of_iri_key) == 0):
+                if len(prefixes_of_iri_key) == 0:
                     if 'display_in_widget' in properties_of_iri_key:
                         self.pm.setPrefix('', postfix(iri_key_to_append, postfix_special_character))
                 else:

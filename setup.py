@@ -359,7 +359,7 @@ if MACOS:
              'where to put the generated disk image (default: %s)' % os.path.relpath(DIST_DIR)),
             ('skip-build', None,
              'skip rebuilding everything (for testing/debugging)'),
-            ('applications-shortcut=', None, 
+            ('applications-shortcut=', None,
              'whether to include shortcut to Applications in the disk image'),
             ('volume-background=', None,
              'the path to use as background of the generated volume'),
@@ -502,7 +502,7 @@ setuptools.setup(
     ],
     python_requires='>=3.5',
     install_requires=[
-        'jpype1',
+        'jpype1>=0.7.1,!=0.7.2',
         'rfc3987',
     ],
     packages=setuptools.find_packages(exclude=['tests', 'scripts', 'support']),

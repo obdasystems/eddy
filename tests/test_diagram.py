@@ -39,6 +39,7 @@ from PyQt5 import QtCore
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
+from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import expandPath
 from eddy.ui.session import Session
@@ -205,3 +206,31 @@ class TestDiagram:
         assert num_edges_in_diagram == len(diagram.edges())
         assert num_items_in_project == len(project.items())
         assert num_edges_in_project == len(project.edges())
+
+    def test_change_diagram_font(self, session):
+        # GIVEN
+        project = session.project
+        diagram = session.mdi.activeDiagram()
+        node1 = first(project.predicates(Item.ConceptNode, 'test:Male', diagram))
+        node2 = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+        node3 = first(project.predicates(Item.RoleNode, 'test:hasMother', diagram))
+        node4 = first(project.predicates(Item.RoleNode, 'test:hasFather', diagram))
+        pos1 = node1.textPos()
+        pos2 = node2.textPos()
+        pos3 = node3.textPos()
+        pos4 = node4.textPos()
+        font = diagram.font()
+        # WHEN
+        diagram.setFont(Font(font=font, pixelSize=font.pixelSize() * 2))
+        # THEN
+        assert pos1 == node1.textPos()
+        assert pos2 == node2.textPos()
+        assert pos3 == node3.textPos()
+        assert pos4 == node4.textPos()
+        # WHEN
+        diagram.setFont(font)
+        # THEN
+        assert pos1 == node1.textPos()
+        assert pos2 == node2.textPos()
+        assert pos3 == node3.textPos()
+        assert pos4 == node4.textPos()

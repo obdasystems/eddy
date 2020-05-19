@@ -39,7 +39,10 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.labels import CommandLabelChange,Compute_RC_with_spaces
+from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
+from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
+from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
+from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive, Compute_RC_with_spaces
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
@@ -67,11 +70,7 @@ class DiagramItemMixin:
         Returns the diagram holding this item (alias for DiagramItemMixin.scene()).
         :rtype: Diagram
         """
-        #return self.scene()
-        if self.scene():
-            return self.scene()
-        else:
-            return self._diagram_
+        return self.scene()
 
     @property
     def project(self):
@@ -119,19 +118,10 @@ class DiagramItemMixin:
         Returns True if this element is a node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type() < Item.InclusionEdge or Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
+        return Item.ConceptNode <= self.type() < Item.InclusionEdge
 
-    def isIRINode(self):
-        """
-        Returns True if this element is a node that is associated to an IRI, False otherwise.
-        :rtype: bool
-        """
-        return Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
 
-    def connectSignals(self):
-        pass
-
-class AbstractItem(QtWidgets.QGraphicsObject, DiagramItemMixin):
+class AbstractItem(QtWidgets.QGraphicsItem, DiagramItemMixin):
     """
     Base class for all the diagram items.
     """
@@ -147,7 +137,6 @@ class AbstractItem(QtWidgets.QGraphicsObject, DiagramItemMixin):
         :type id: str
         """
         super().__init__(**kwargs)
-        self._diagram_ = diagram
         self.id = id or diagram.guid.next(self.Prefix)
 
     #############################################
@@ -318,34 +307,14 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self.setText(self.template)
         self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
 
-        self.customFont = False
-
         document = self.document()
         connect(document.contentsChange[int, int, int], self.onContentsChanged)
 
         self.old_text = None
 
-    def setCustomFont(self, font):
-        self.customFont = True
-
-        # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
-        bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
-        nbbox = QtGui.QFontMetrics(font).boundingRect(self.text())
-        dx = (bbox.width() - nbbox.width()) / 2
-        dy = (bbox.height() - nbbox.height()) / 2
-        # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
-        self.setFont(font)
-        self.adjustSize()
-        self.moveBy(dx, dy)
-
     #############################################
     #   EVENTS
     #################################
-
-    '''
-    def setFont(self, font: QtGui.QFont) -> None:
-        super().setFont(font)
-    '''
 
     def sceneEvent(self, event: QtCore.QEvent) -> bool:
         """
@@ -354,16 +323,14 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type event: QtCore.QEvent
         :rtype: bool
         """
-        if event.type() == QtCore.QEvent.FontChange and not self.customFont:
-            # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
-            bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
-            nbbox = QtGui.QFontMetrics(self.diagram.font()).boundingRect(self.text())
-            dx = (bbox.width() - nbbox.width()) / 2
-            dy = (bbox.height() - nbbox.height()) / 2
-            # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
-            self.setFont(Font(font=self.diagram.font(), weight=Font.Light))
-            self.adjustSize()
-            self.moveBy(dx, dy)
+        if event.type() == QtCore.QEvent.FontChange:
+            nfont = Font(font=self.diagram.font(), weight=Font.Light)
+            if self.font() != nfont:
+                # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
+                npos = self.pos()
+                self.setFont(nfont)
+                self.setAlignment(self.alignment())
+                self.setPos(npos)
             # CASCADE THE EVENT TO EACH CHILD ITEM
             for item in self.childItems():
                 self.diagram.sendEvent(item, event)
@@ -441,14 +408,16 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     self.setText(self.old_text)
 
+                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
 
                     #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
+                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
                     #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
 
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
+                    commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 else:
                     self.setText(self.old_text)
@@ -479,6 +448,9 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     #print('currentData', currentData)
                     #print('currentData_processed',currentData_processed)
 
+                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
+
+                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
                     """
                     if NewlineFeedInsensitive(node.remaining_characters,currentData_processed).result() is True:
                         commands.append(
@@ -486,6 +458,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     else:
                         commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
                     """
+                    commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 if any(commands):
                     self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))
@@ -542,10 +515,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         if self.isEditable():
-            if self._parent:
-                self._parent.mouseDoubleClickEvent(mouseEvent)
-                return
-
             super().mouseDoubleClickEvent(mouseEvent)
 
             self.old_text = self.text()
@@ -680,13 +649,10 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         """
         if len(__args) == 1:
             pos = __args[0]
-            print('SetPos called with arg[0]={}'.format(pos))
         elif len(__args) == 2:
             pos = QtCore.QPointF(__args[0], __args[1])
-            print('SetPos called with arg[0]={}'.format(pos))
         else:
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
-        #super().setPos(pos)
         super().setPos(pos - QtCore.QPointF(self.width() / 2, self.height() / 2))
 
     def setText(self, text):
