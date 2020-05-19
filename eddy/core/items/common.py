@@ -39,9 +39,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.commands.project import CommandProjectDisconnectSpecificSignals, CommandProjectConnectSpecificSignals
-from eddy.core.commands.nodes_2 import CommandProjetSetIRIPrefixesNodesDict
-from eddy.core.commands.nodes_2 import CommandNodeSetRemainingCharacters
 from eddy.core.commands.labels import CommandLabelChange, NewlineFeedInsensitive, Compute_RC_with_spaces
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
@@ -408,16 +405,11 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     self.setText(self.old_text)
 
-                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
 
                     #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
-                    commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
 
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
-                    commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 else:
                     self.setText(self.old_text)
@@ -444,13 +436,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     if flag is True:
                         self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
-                    #print('self.old_text',self.old_text)
-                    #print('currentData', currentData)
-                    #print('currentData_processed',currentData_processed)
 
-                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-
-                    commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
                     """
                     if NewlineFeedInsensitive(node.remaining_characters,currentData_processed).result() is True:
                         commands.append(
@@ -458,7 +444,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     else:
                         commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
                     """
-                    commands.append(CommandProjectConnectSpecificSignals(self.project))
 
                 if any(commands):
                     self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))
