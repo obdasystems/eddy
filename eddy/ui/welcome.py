@@ -44,7 +44,7 @@ from eddy import GRAPHOL_HOME, WORKSPACE
 from eddy import PROJECT_HOME, BUG_TRACKER
 from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
 from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import isdir, rmdir, faccess, fexists, fremove
+from eddy.core.functions.fsystem import faccess, fexists, fremove
 from eddy.core.functions.misc import first, format_exception
 from eddy.core.functions.path import compressPath
 from eddy.core.functions.path import expandPath, shortPath
