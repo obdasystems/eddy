@@ -38,35 +38,6 @@ class ConceptNode(OntologyEntityResizableNode):
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
         template = 'Empty'
-        if self.iri:
-            settings = QtCore.QSettings()
-            rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
-            if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
-                template = str(self.iri)
-            elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
-                project = None
-                if self._diagram_.project:
-                    project = self._diagram_.project
-                if project:
-                    prefixed = project.getShortestPrefixedForm(self.iri)
-                    if prefixed:
-                        template = prefixed
-                    else:
-                        template = str(self.iri)
-                else:
-                    template = str(self.iri)
-            elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
-                lang = settings.value('ontology/iri/render/language', 'it')
-                labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
-                if labelAssertion:
-                    template = str(labelAssertion.value)
-                else:
-                    template = str(self.iri)
-            elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
-                if self.iri.getSimpleName():
-                    template = self.iri.getSimpleName()
-                else:
-                    template = str(self.iri)
 
 
         self.label = NodeLabel(template=template, pos=lambda:self.center(), parent=self, editable=True)

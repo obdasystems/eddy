@@ -354,6 +354,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type event: QtCore.QEvent
         :rtype: bool
         """
+        '''
         if event.type() == QtCore.QEvent.FontChange and not self.customFont:
             # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
             bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
@@ -367,6 +368,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             # CASCADE THE EVENT TO EACH CHILD ITEM
             for item in self.childItems():
                 self.diagram.sendEvent(item, event)
+        '''
         return super().sceneEvent(event)
 
     def focusInEvent(self, focusEvent):

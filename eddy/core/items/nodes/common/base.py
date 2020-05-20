@@ -1046,9 +1046,9 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             self.renderByLabel()
         elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
             self.renderBySimpleName()
+
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.diagram.sgnUpdated.emit()
-        #self.updateTextPos()
-        #self.updateNode()
 
     def renderByFullIRI(self):
         self.setText(str(self.iri))

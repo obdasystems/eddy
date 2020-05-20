@@ -1415,7 +1415,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         if customLabelSize:
             node.setFontSize(int(labelElement.attribute('size', '12')))
 
-        #node.doUpdateNodeLabel()
+        node.doUpdateNodeLabel()
         return node
 
     def importLiteralNode(self, diagram, nodeElement):
