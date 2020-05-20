@@ -518,7 +518,7 @@ class OntologyEntityNode(AbstractNode):
         Executed when the mouse is double clicked on the text item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.session.doOpenIRIDialog()
+        self.session.doOpenIRIDialog(self)
         mouseEvent.accept()
 
     def connectSignals(self):
@@ -987,7 +987,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         Executed when the mouse is double clicked on the text item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.session.doOpenIRIDialog()
+        self.session.doOpenIRIDialog(self)
         mouseEvent.accept()
 
     def connectSignals(self):

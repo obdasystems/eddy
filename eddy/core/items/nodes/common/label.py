@@ -79,6 +79,7 @@ class NodeLabel(AbstractLabel):
         """
         if self.diagram.mode is DiagramMode.LabelEdit:
             super().mousePressEvent(mouseEvent)
+        super().mousePressEvent(mouseEvent)
 
     #############################################
     #   INTERFACE

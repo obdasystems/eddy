@@ -38,6 +38,7 @@ from abc import ABCMeta, abstractmethod
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QPointF
 
 from eddy.core.commands.labels import CommandLabelChange,Compute_RC_with_spaces
 from eddy.core.datatypes.graphol import Item
@@ -326,9 +327,16 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self.old_text = None
 
     def setCustomFont(self, font):
+        '''
+        oldRect = self.boundingRect()
         self.customFont = True
-
+        self.setFont(font)
+        x = self.pos().x() - self.boundingRect().width() / 2.0 + oldRect.width() / 2.0;
+        y = self.pos().y() - self.boundingRect().height() / 2.0 + oldRect.height() / 2.0;
+        self.setPos(QPointF(x, y));
+        '''
         # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
+
         bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
         nbbox = QtGui.QFontMetrics(font).boundingRect(self.text())
         dx = (bbox.width() - nbbox.width()) / 2
@@ -337,6 +345,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self.setFont(font)
         self.adjustSize()
         self.moveBy(dx, dy)
+
+        super().setFont(font)
 
     #############################################
     #   EVENTS
@@ -391,7 +401,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         Executed when the text item loses the focus.
         :type focusEvent: QFocusEvent
         """
-        if self.diagram.mode is DiagramMode.LabelEdit:
+        if True or self.diagram.mode is DiagramMode.LabelEdit:
 
             if isEmpty(self.text()):
                 self.setText(self.template)
@@ -544,18 +554,21 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         if self.isEditable():
+            '''
             if self._parent:
                 self._parent.mouseDoubleClickEvent(mouseEvent)
                 return
+            '''
 
             super().mouseDoubleClickEvent(mouseEvent)
 
             self.old_text = self.text()
-            prev_rc_without_whitespace = self._parent.remaining_characters
+            self.setText(self.old_text)
+            #prev_rc_without_whitespace = self._parent.remaining_characters
 
-            prev_rc = Compute_RC_with_spaces(prev_rc_without_whitespace, self.old_text).return_result()
+            #prev_rc = Compute_RC_with_spaces(prev_rc_without_whitespace, self.old_text).return_result()
 
-            self.setText(prev_rc)
+            #self.setText(prev_rc)
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
             self.setFocus()
 

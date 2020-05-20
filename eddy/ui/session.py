@@ -2421,7 +2421,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenIRIDialog(self):
+    def doOpenIRIDialog(self, node):
         """
         Executed when the IRI associated to a node might be modified by the user.
         """
@@ -2429,9 +2429,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             selected = diagram.selectedNodes()
-            node = None
-            if len(selected)==1:
-                node = first(selected)
+            #node = None
+            if not node:
+                if len(selected)==1:
+                    node = first(selected)
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
                 #connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
