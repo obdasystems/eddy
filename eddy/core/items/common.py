@@ -401,7 +401,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         Executed when the text item loses the focus.
         :type focusEvent: QFocusEvent
         """
-        if True or self.diagram.mode is DiagramMode.LabelEdit:
+        '''
+        if self.diagram.mode is DiagramMode.LabelEdit:
 
             if isEmpty(self.text()):
                 self.setText(self.template)
@@ -455,11 +456,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
 
-                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-                    #commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node, self.project, regenerate_label=False))
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [old_iri, new_iri], [node]))
-
                     commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
 
                 else:
@@ -487,17 +483,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                     if flag is True:
                         self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
 
-                    #print('self.old_text',self.old_text)
-                    #print('currentData', currentData)
-                    #print('currentData_processed',currentData_processed)
-
-                    """
-                    if NewlineFeedInsensitive(node.remaining_characters,currentData_processed).result() is True:
-                        commands.append(
-                            CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project, refactor=True))
-                    else:
-                        commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node, self.project))
-                    """
 
                 if any(commands):
                     self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))
@@ -515,6 +500,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
+        '''
 
         super().focusOutEvent(focusEvent)
 
@@ -554,11 +540,10 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         if self.isEditable():
-            '''
+
             if self._parent:
                 self._parent.mouseDoubleClickEvent(mouseEvent)
                 return
-            '''
 
             super().mouseDoubleClickEvent(mouseEvent)
 

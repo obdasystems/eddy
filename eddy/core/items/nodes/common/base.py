@@ -35,6 +35,7 @@ from abc import ABCMeta
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+from PyQt5.QtGui import QFocusEvent
 
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
@@ -1047,11 +1048,13 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
             self.renderBySimpleName()
 
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        #self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.diagram.sgnUpdated.emit()
 
     def renderByFullIRI(self):
         self.setText(str(self.iri))
+        focusOutEvent = QFocusEvent(9, 3)
+        self.label.focusOutEvent(focusOutEvent)
         self.nodeLabelObject = self.iri
 
     def renderByPrefixedIRI(self):
@@ -1066,6 +1069,8 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             prefixed = project.getShortestPrefixedForm(self.iri)
             if prefixed:
                 self.setText(str(prefixed))
+                focusOutEvent = QFocusEvent(9, 3)
+                self.label.focusOutEvent(focusOutEvent)
                 self.nodeLabelObject = prefixed
             else:
                 self.renderByFullIRI()
@@ -1075,6 +1080,8 @@ class OntologyEntityResizableNode(AbstractResizableNode):
     def renderBySimpleName(self):
         if self.iri.getSimpleName():
             self.setText(self.iri.getSimpleName())
+            focusOutEvent = QFocusEvent(9, 3)
+            self.label.focusOutEvent(focusOutEvent)
             self.nodeLabelObject = self.iri.getSimpleName()
         else:
             self.renderByPrefixedIRI()
@@ -1085,6 +1092,9 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
         if labelAssertion:
             self.setText(str(labelAssertion.value))
+            focusOutEvent = QFocusEvent(9,3)
+            self.label.focusOutEvent(focusOutEvent)
+
             self.nodeLabelObject = labelAssertion
         else:
             self.renderByPrefixedIRI()

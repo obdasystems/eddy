@@ -63,6 +63,16 @@ class NodeLabel(AbstractLabel):
     #   EVENTS
     #################################
 
+    '''
+    def paint(self, painter, option, widget):
+        painter.save()
+
+        painter.drawEllipse(option.fontMetrics.boundingRect(self.text()))
+        painter.drawEllipse(option.rect)
+        #painter.drawText(option.rect, QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter, option.t)
+        painter.restore()
+    '''
+
     def keyPressEvent(self, keyEvent):
         """
         Executed when a key is pressed.
