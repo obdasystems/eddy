@@ -80,10 +80,10 @@ class ConceptNode(OntologyEntityResizableNode):
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'iri': self.iri,
+            'iri': None,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         #print('copy END >> self', self)
         return node

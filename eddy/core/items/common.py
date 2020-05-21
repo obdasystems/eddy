@@ -668,10 +668,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         """
         if len(__args) == 1:
             pos = __args[0]
-            print('SetPos called with arg[0]={}'.format(pos))
         elif len(__args) == 2:
             pos = QtCore.QPointF(__args[0], __args[1])
-            print('SetPos called with arg[0]={}'.format(pos))
         else:
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
         #super().setPos(pos)

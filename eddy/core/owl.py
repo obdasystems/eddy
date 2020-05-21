@@ -1756,9 +1756,9 @@ class IRIRender(Enum_):
             if prefixed:
                 return str(prefixed)
             else:
-                return IRIRender.renderByFullIRI()
+                return IRIRender.renderByFullIRI(iri)
         else:
-            return IRIRender.renderByFullIRI()
+            return IRIRender.renderByFullIRI(iri)
 
     @staticmethod
     def renderByLabel(iri):
@@ -1775,7 +1775,7 @@ class IRIRender(Enum_):
         if iri.getSimpleName():
             return iri.getSimpleName()
         else:
-            return IRIRender.renderByPrefixedIRI()
+            return IRIRender.renderByPrefixedIRI(iri)
 
 @unique
 class OWL2Profiles(Enum_):

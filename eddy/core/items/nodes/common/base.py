@@ -985,11 +985,14 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         if switch:
             self.sgnIRISwitched.emit()
 
-        if self.label:
-            labelPos = self.label.pos()
-
+        '''
         self.labelString = IRIRender.iriLabelString(self._iri)
-        self.label = NodeLabel(template=self.labelString, pos=lambda: self.center(), parent=self, editable=True)
+        if not self.label:
+            self.label = NodeLabel(template=self.labelString, pos=lambda: self.center(), parent=self, editable=True)
+        else:
+            self.doUpdateNodeLabel()
+        '''
+        self.doUpdateNodeLabel()
         '''
         if self.diagram:
             self.doUpdateNodeLabel()
@@ -1052,6 +1055,15 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
+        labelPos = lambda:self.center()
+        if self.label:
+            oldLabelPos = self.label.pos()
+            labelPos = lambda:oldLabelPos
+            self.diagram.removeItem(self.label)
+        self.labelString = IRIRender.iriLabelString(self._iri)
+
+        self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
+        '''
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
@@ -1062,7 +1074,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             self.renderByLabel()
         elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
             self.renderBySimpleName()
-
+        '''
         self.diagram.sgnUpdated.emit()
 
     def renderByFullIRI(self):
