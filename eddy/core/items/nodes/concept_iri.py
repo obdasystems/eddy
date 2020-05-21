@@ -37,13 +37,14 @@ class ConceptNode(OntologyEntityResizableNode):
         self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
+        self.updateNode()
+        '''
         template = 'Supercalifragilistichespiralidoso'
-
-
         self.label = NodeLabel(template=template, pos=lambda:self.center(), parent=self, editable=True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
+        '''
 
 
 

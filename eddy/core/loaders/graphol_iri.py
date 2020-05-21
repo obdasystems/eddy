@@ -1403,19 +1403,19 @@ class GrapholProjectIRILoaderMixin_3(object):
             'id': nodeElement.attribute('id'),
             'height': int(geometryElement.attribute('height')),
             'width': int(geometryElement.attribute('width')),
-            'iri': iri
+            'iri': None
         })
+        node.iri = iri
         node.setBrush(QtGui.QBrush(QtGui.QColor(nodeElement.attribute('color', '#fcfcfc'))))
         node.setPos(QtCore.QPointF(int(geometryElement.attribute('x')), int(geometryElement.attribute('y'))))
         node.setTextPos(
             node.mapFromScene(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y')))))
-        #node.setTextPos(QtCore.QPointF(int(labelElement.attribute('x')), int(labelElement.attribute('y'))))
 
         customLabelSize = bool(int(labelElement.attribute('customSize', '0')))
         if customLabelSize:
             node.setFontSize(int(labelElement.attribute('size', '12')))
 
-        node.doUpdateNodeLabel()
+        #node.doUpdateNodeLabel()
         return node
 
     def importLiteralNode(self, diagram, nodeElement):

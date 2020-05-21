@@ -44,6 +44,7 @@ from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.items.common import AbstractItem, Polygon
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.owl import IRIRender
 
 
@@ -953,6 +954,13 @@ class OntologyEntityResizableNode(AbstractResizableNode):
     def __init__(self, iri, **kwargs):
         super().__init__(**kwargs)
         self._iri = iri
+        self.labelString = None
+        self.label = None
+        '''
+        if self._iri:
+            self.labelString = IRIRender.iriLabelString(self._iri)
+            self.label = NodeLabel(template=self.labelString, pos=lambda: self.center(), parent=self, editable=True)
+        '''
         # store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
         self.nodeLabelObject = None
 
@@ -976,8 +984,16 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         self.connectIRISignals()
         if switch:
             self.sgnIRISwitched.emit()
+
+        if self.label:
+            labelPos = self.label.pos()
+
+        self.labelString = IRIRender.iriLabelString(self._iri)
+        self.label = NodeLabel(template=self.labelString, pos=lambda: self.center(), parent=self, editable=True)
+        '''
         if self.diagram:
             self.doUpdateNodeLabel()
+        '''
         self.sgnNodeModified.emit()
 
     #############################################
@@ -1034,7 +1050,6 @@ class OntologyEntityResizableNode(AbstractResizableNode):
     def onIRIPropModified(self):
         self.sgnNodeModified.emit()
 
-
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
         settings = QtCore.QSettings()
@@ -1048,29 +1063,20 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
             self.renderBySimpleName()
 
-        #self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.diagram.sgnUpdated.emit()
 
     def renderByFullIRI(self):
         self.setText(str(self.iri))
-        focusOutEvent = QFocusEvent(9, 3)
-        self.label.focusOutEvent(focusOutEvent)
         self.nodeLabelObject = self.iri
 
     def renderByPrefixedIRI(self):
         project = None
-        '''
-        if self.project:
-            project = self.project
-        '''
         if self._diagram_.project:
             project = self._diagram_.project
         if project:
             prefixed = project.getShortestPrefixedForm(self.iri)
             if prefixed:
                 self.setText(str(prefixed))
-                focusOutEvent = QFocusEvent(9, 3)
-                self.label.focusOutEvent(focusOutEvent)
                 self.nodeLabelObject = prefixed
             else:
                 self.renderByFullIRI()
@@ -1080,8 +1086,6 @@ class OntologyEntityResizableNode(AbstractResizableNode):
     def renderBySimpleName(self):
         if self.iri.getSimpleName():
             self.setText(self.iri.getSimpleName())
-            focusOutEvent = QFocusEvent(9, 3)
-            self.label.focusOutEvent(focusOutEvent)
             self.nodeLabelObject = self.iri.getSimpleName()
         else:
             self.renderByPrefixedIRI()
@@ -1092,9 +1096,6 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
         if labelAssertion:
             self.setText(str(labelAssertion.value))
-            focusOutEvent = QFocusEvent(9,3)
-            self.label.focusOutEvent(focusOutEvent)
-
             self.nodeLabelObject = labelAssertion
         else:
             self.renderByPrefixedIRI()

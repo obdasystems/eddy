@@ -1732,6 +1732,51 @@ class IRIRender(Enum_):
     LABEL = 'label'
     SIMPLE_NAME ='simple_name'
 
+    @staticmethod
+    def iriLabelString(iri):
+        settings = QtCore.QSettings()
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+        if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
+            return IRIRender.renderByFullIRI(iri)
+        elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
+            return IRIRender.renderByPrefixedIRI(iri)
+        elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+            return IRIRender.renderByLabel(iri)
+        elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
+            return IRIRender.renderBySimpleName(iri)
+
+    @staticmethod
+    def renderByFullIRI(iri):
+        return  str(iri)
+
+    @staticmethod
+    def renderByPrefixedIRI(iri):
+        if iri.manager:
+            prefixed = iri.manager.getShortestPrefixedForm(iri)
+            if prefixed:
+                return str(prefixed)
+            else:
+                return IRIRender.renderByFullIRI()
+        else:
+            return IRIRender.renderByFullIRI()
+
+    @staticmethod
+    def renderByLabel(iri):
+        settings = QtCore.QSettings()
+        lang = settings.value('ontology/iri/render/language', 'it')
+        labelAssertion = iri.getLabelAnnotationAssertion(lang)
+        if labelAssertion:
+            return str(labelAssertion.value)
+        else:
+            return IRIRender.renderByPrefixedIRI(iri)
+
+    @staticmethod
+    def renderBySimpleName(iri):
+        if iri.getSimpleName():
+            return iri.getSimpleName()
+        else:
+            return IRIRender.renderByPrefixedIRI()
+
 @unique
 class OWL2Profiles(Enum_):
     """
