@@ -82,16 +82,20 @@ from eddy.core.project import (
     ProjectVersionError,
 )
 from eddy.core.qt import sip
-# noinspection PyUnresolvedReferences
-from eddy.ui import fonts_rc
-# noinspection PyUnresolvedReferences
-from eddy.ui import images_rc
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
 from eddy.ui.welcome import Welcome
 from eddy.ui.workspace import WorkspaceDialog
+# noinspection PyUnresolvedReferences
+from eddy.ui import fonts_rc
+# noinspection PyUnresolvedReferences
+from eddy.ui import images_rc
+
+_LINUX = sys.platform.startswith('linux')
+_MACOS = sys.platform.startswith('darwin')
+_WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger()
 app = None
@@ -276,7 +280,6 @@ class Eddy(QtWidgets.QApplication):
         Run the application by showing the welcome dialog.
         """
         # CONFIGURE THE WORKSPACE
-        ''''''
         settings = QtCore.QSettings()
         workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
         if not isdir(workspace):
@@ -557,11 +560,10 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
             msgbox = None
 
 
-# noinspection PyTypeChecker
-def main(args):
+# noinspection PyUnresolvedReferences,PyTypeChecker
+def main():
     """
     Application entry point.
-    :type args: list
     """
     #############################################
     # SETUP EXCEPTION HOOK
@@ -577,12 +579,8 @@ def main(args):
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_Use96Dpi)
 
-    if IS_MACOS:
-        # DISABLE MENU ICONS IN MACOS
-        QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_DontShowIconsInMenus)
-
     global app
-    app = Eddy(args)
+    app = Eddy(sys.argv)
     if app.isRunning():
         sys.exit(0)
 
@@ -680,15 +678,15 @@ def main(args):
     ret = app.exec_()
     if ret == Eddy.RestartCode:
         nargs = []
-        if os.path.basename(args[0]) == 'eddy':
+        if os.path.basename(sys.argv[0]) == 'eddy':
             # LAUNCHED VIA LAUNCHER SCRIPT
-            nargs.append(args[0])
+            nargs.append(sys.argv[0])
         elif IS_FROZEN:
             # LAUNCHED FROM DISTRIBUTION EXECUTABLE
             nargs.append(sys.executable)
         else:
             # LAUNCHED VIA THE INTERPRETER
-            nargs.extend([sys.executable, args[0]])
-        nargs.extend(args[1:])
+            nargs.extend([sys.executable, sys.argv[0]])
+        nargs.extend(sys.argv[1:])
         subprocess.Popen(nargs)
     sys.exit(ret)

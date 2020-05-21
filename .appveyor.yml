@@ -5,7 +5,6 @@ image: Visual Studio 2015
 branches:
   only:
     - master
-    - develop
     - /^deploy-.*$/
 
 cache:
@@ -13,16 +12,16 @@ cache:
 
 environment:
   matrix:
-    - PYTHON: "C:\\Python36"
-      PYTHON_VERSION: "3.6.8"
+    - PYTHON: "C:\\Python37"
+      PYTHON_VERSION: "3.7.5"
       PYTHON_ARCH: "32"
       ARCH: "32"
       JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
       ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
       VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
 
-    - PYTHON: "C:\\Python36-x64"
-      PYTHON_VERSION: "3.6.8"
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7.5"
       PYTHON_ARCH: "64"
       ARCH: "64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
@@ -41,7 +40,7 @@ install:
   - gem install dpl
   - "%PYTHON%\\python -m ensurepip"
   - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\base.in --no-binary jpype1"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\base.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\tests.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.in"

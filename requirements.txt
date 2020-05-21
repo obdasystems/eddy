@@ -4,7 +4,5 @@
 #
 #    pip-compile --output-file=requirements.txt requirements/base.in
 #
---no-binary jpype1
-
-jpype1==0.7.1             # via -r requirements/base.in
+jpype1==0.7.4             # via -r requirements/base.in
 rfc3987==1.3.8            # via -r requirements/base.in

@@ -1,9 +1,3 @@
 # From PyPi
 rfc3987==1.3.8
-jpype1==0.7.1
-
-# We explicitly disable installation of binary wheels from PyPI for jpype as
-# they are built with numpy support which we do not bundle in the binary distribution.
-# We also need to make sure that numpy is not installed at the time of building jpype
-# as it will detect it and compile against it by default.
---no-binary=jpype1
+jpype1==0.7.4

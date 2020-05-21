@@ -47,7 +47,7 @@ DiagramView {
 QMessageBox QLabel {
   font-weight: normal;
 }
-QLabel[class=invalid] {
+QLabel[class="invalid"] {
   color: #EC3F3A;
 }
 
@@ -82,7 +82,7 @@ Notification QPushButton:hover {
 /*  Plugins                                */
 /*******************************************/
 
-PluginInstallDialog QWidget[class=head] {
+PluginInstallDialog QWidget[class="head"] {
   background: #FFFFFF;
   border-bottom: 1px solid #BABABA;
 }

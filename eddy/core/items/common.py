@@ -335,17 +335,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         y = self.pos().y() - self.boundingRect().height() / 2.0 + oldRect.height() / 2.0;
         self.setPos(QPointF(x, y));
         '''
-        # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
-
-        bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
-        nbbox = QtGui.QFontMetrics(font).boundingRect(self.text())
-        dx = (bbox.width() - nbbox.width()) / 2
-        dy = (bbox.height() - nbbox.height()) / 2
         # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
         self.setFont(font)
-        self.adjustSize()
-        self.moveBy(dx, dy)
-
         super().setFont(font)
 
     #############################################
@@ -364,21 +355,17 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type event: QtCore.QEvent
         :rtype: bool
         """
-        '''
-        if event.type() == QtCore.QEvent.FontChange and not self.customFont:
-            # COMPUTE POSITION DISPLACEMENT (TO PRESERVE ALIGNMENT)
-            bbox = QtGui.QFontMetrics(self.font()).boundingRect(self.text())
-            nbbox = QtGui.QFontMetrics(self.diagram.font()).boundingRect(self.text())
-            dx = (bbox.width() - nbbox.width()) / 2
-            dy = (bbox.height() - nbbox.height()) / 2
-            # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
-            self.setFont(Font(font=self.diagram.font(), weight=Font.Light))
-            self.adjustSize()
-            self.moveBy(dx, dy)
+        if event.type() == QtCore.QEvent.FontChange:
+            nfont = Font(font=self.diagram.font(), weight=Font.Light)
+            if self.font() != nfont:
+                # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
+                npos = self.pos()
+                self.setFont(nfont)
+                self.setAlignment(self.alignment())
+                self.setPos(npos)
             # CASCADE THE EVENT TO EACH CHILD ITEM
             for item in self.childItems():
                 self.diagram.sendEvent(item, event)
-        '''
         return super().sceneEvent(event)
 
     def focusInEvent(self, focusEvent):
@@ -812,3 +799,4 @@ class Polygon(object):
         :type pen: QPen
         """
         self._pen = pen
+

@@ -301,7 +301,7 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
                 ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                  'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
     # AND
-    assert len(content) == 59
+    assert len(content) == 63
 
 
 def test_export_project_to_owl_with_normalization(session, tmpdir):
@@ -404,4 +404,4 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
                 ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                  'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
     # AND
-    assert len(content) == 66
+    assert len(content) == 70

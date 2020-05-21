@@ -40,4 +40,4 @@ import sys
 from eddy.core.application import main
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main())

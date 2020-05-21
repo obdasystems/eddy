@@ -4,4 +4,4 @@
 ## Used to upload coverage statistics to coveralls.io
 ##
 
-coveralls==1.7.0
+coveralls==2.0.0
