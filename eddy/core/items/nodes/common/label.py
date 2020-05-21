@@ -112,6 +112,8 @@ class NodeLabel(AbstractLabel):
         #se commento riga sotto, label viene spostato alla creazione rispetto al centro
         self.updatePos(moved)
 
+    
+
     def updatePos(self, moved=False):
         """
         Update the current text position with respect to its parent node.

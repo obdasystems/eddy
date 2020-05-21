@@ -501,7 +501,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
         '''
-
+        self.setAlignment(self.alignment())
+        self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         super().focusOutEvent(focusEvent)
 
     def hoverMoveEvent(self, moveEvent):
