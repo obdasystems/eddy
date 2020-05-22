@@ -90,11 +90,7 @@ class RoleNode(OntologyEntityResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-
-        self.label = NodeLabel(template='Empty', pos=lambda: self.center() - QtCore.QPointF(0, 30), parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        self.updateTextPos()
 
     def connectIRIMetaSignals(self):
         connect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
@@ -111,6 +107,9 @@ class RoleNode(OntologyEntityResizableNode):
     #############################################
     #   INTERFACE
     #################################
+    def initialLabelPosition(self):
+        return self.center() - QtCore.QPointF(0, 30)
+
 
     def boundingRect(self):
         """
@@ -131,10 +130,10 @@ class RoleNode(OntologyEntityResizableNode):
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'iri': self.iri,
+            'iri': None,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 

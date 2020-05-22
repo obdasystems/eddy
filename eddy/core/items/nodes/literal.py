@@ -100,10 +100,10 @@ class LiteralNode(AbstractResizableNode):
 
         self._literal = literal
 
-        self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        #self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
+        #self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        self.updateTextPos()
+        #self.updateTextPos()
 
     @property
     def datatype(self):
@@ -145,39 +145,42 @@ class LiteralNode(AbstractResizableNode):
         :type literal:Literal
         '''
         self._literal = literal
-        '''
-        switch = False
-        if self.iri:
-            switch = True
-            self.disconnectIRISignals()
-        self._iri = iriObj
-        self.connectIRISignals()
-        if switch:
-            self.sgnIRISwitched.emit()
-        '''
         if self.diagram:
             self.doUpdateNodeLabel()
         self.sgnNodeModified.emit()
 
-    def mouseDoubleClickEvent(self, mouseEvent):
-        """
-        Executed when the mouse is double clicked on the text item.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        self.session.doOpenLiteralDialog()
-        mouseEvent.accept()
+    def initialLabelPosition(self):
+        return self.center()
+
 
     #############################################
     #   SLOTS
     #################################
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        self.setText(str(self.literal))
-        self.updateNode()
+        if self.label and not self.labelString == str(self.literal):
+            self.labelString = str(self.literal)
+            labelPos = lambda: self.label.pos()
+            self.label.diagram.removeItem(self.label)
+            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
+            self.diagram.sgnUpdated.emit()
+        else:
+            self.labelString = str(self.literal)
+            self.label = NodeLabel(template=self.labelString, pos=lambda: self.initialLabelPosition(), parent=self,
+                                   editable=True)
+            self.diagram.sgnUpdated.emit()
+
 
     #############################################
     #   INTERFACE
     #################################
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        self.session.doOpenLiteralDialog(self)
+        mouseEvent.accept()
 
     def boundingRect(self):
         """
@@ -211,7 +214,7 @@ class LiteralNode(AbstractResizableNode):
             'literal': self._literal,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        node.literal = self._literal
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 

@@ -404,8 +404,10 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                     inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=userExplicitInput)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
+                    '''
                     if self.node.diagram:
                         self.node.doUpdateNodeLabel()
+                    '''
                 super().accept()
             elif activeTab is self.widget('predefined_datatype_widget'):
                 currText = str(self.widget('datatype_switch').currentText())
@@ -1302,8 +1304,10 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 self.node._literal = literal
                 self.sgnLiteralAccepted.emit(self.node)
+                '''
                 if self.node.diagram:
                     self.node.doUpdateNodeLabel()
+                '''
             super().accept()
         except IllegalLiteralError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)

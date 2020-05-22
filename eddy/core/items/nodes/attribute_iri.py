@@ -35,8 +35,6 @@ class AttributeNode(OntologyEntityNode):
         self.selection = Polygon(QtCore.QRectF(-14, -14, 28, 28))
         self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
 
-        self.label = NodeLabel(template='Empty', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
 
     def connectIRIMetaSignals(self):
@@ -52,6 +50,8 @@ class AttributeNode(OntologyEntityNode):
     #############################################
     #   INTERFACE
     #################################
+    def initialLabelPosition(self):
+        return self.center() - QtCore.QPointF(0, 22)
 
     def boundingRect(self):
         """
@@ -70,10 +70,10 @@ class AttributeNode(OntologyEntityNode):
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'iri': self.iri,
+            'iri': None,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 

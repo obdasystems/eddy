@@ -2493,7 +2493,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenLiteralDialog(self):
+    def doOpenLiteralDialog(self, node):
         """
         Executed when the Literal associated to a node might be modified by the user.
         :type node: LiteralNode
@@ -2502,7 +2502,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             selected = diagram.selectedNodes()
-            node = None
+            #node = None
             if len(selected) == 1:
                 node = first(selected)
             if node:

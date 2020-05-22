@@ -1437,8 +1437,9 @@ class GrapholProjectIRILoaderMixin_3(object):
             'id': nodeElement.attribute('id'),
             'height': int(geometryElement.attribute('height')),
             'width': int(geometryElement.attribute('width')),
-            'literal': literal
+            'literal': None
         })
+        node.literal = literal
         node.setPos(QtCore.QPointF(int(geometryElement.attribute('x')), int(geometryElement.attribute('y'))))
         labelElement = nodeElement.firstChildElement('label')
         node.setTextPos(
@@ -1448,7 +1449,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         if customLabelSize:
             node.setFontSize(int(labelElement.attribute('size', '12')))
 
-        node.doUpdateNodeLabel()
+        #node.doUpdateNodeLabel()
         return node
 
     def importFacetNode(self, diagram, nodeElement):

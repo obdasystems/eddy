@@ -38,19 +38,14 @@ class ConceptNode(OntologyEntityResizableNode):
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
         self.updateNode()
-        '''
-        template = 'Supercalifragilistichespiralidoso'
-        self.label = NodeLabel(template=template, pos=lambda:self.center(), parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.updateNode()
-        self.updateTextPos()
-        '''
-
 
 
     #############################################
     #   INTERFACE
     #################################
+
+    def initialLabelPosition(self):
+        return self.center()
 
     def occursAsIndividual(self):
         #Class Assertion

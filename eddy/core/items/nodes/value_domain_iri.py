@@ -65,11 +65,7 @@ class ValueDomainNode(OntologyEntityNode):
         self.background = Polygon(QtCore.QRectF(-49, -24, 98, 48))
         self.selection = Polygon(QtCore.QRectF(-49, -24, 98, 48))
         self.polygon = Polygon(QtCore.QRectF(-45, -20, 90, 40), brush, pen)
-
-
-        self.label = NodeLabel("Empty", pos=self.center, editable=True, movable=False, parent=self)
         self.updateNode()
-        self.updateTextPos()
 
     #############################################
     #   PROPERTIES
@@ -86,6 +82,8 @@ class ValueDomainNode(OntologyEntityNode):
     #############################################
     #   INTERFACE
     #################################
+    def initialLabelPosition(self):
+        return self.center()
 
     def boundingRect(self):
         """
@@ -104,10 +102,10 @@ class ValueDomainNode(OntologyEntityNode):
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'iri': self.iri
+            'iri': None
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -213,7 +211,8 @@ class ValueDomainNode(OntologyEntityNode):
         Update the current node.
         """
         # POLYGON + BACKGROUND + SELECTION (GEOMETRY)
-        width = max(self.label.width() + 16, 90)
+        #width = max(self.label.width() + 16, 90)
+        width = self.width()
         self.polygon.setGeometry(QtCore.QRectF(-width / 2, -20, width, 40))
         self.background.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.selection.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))

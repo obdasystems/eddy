@@ -481,12 +481,11 @@ class OntologyEntityNode(AbstractNode):
     """
     sgnIRISwitched = QtCore.pyqtSignal()
 
-
-    def __init__(self, iri,**kwargs):
+    def __init__(self, iri, **kwargs):
         super().__init__(**kwargs)
         self._iri = iri
-        # store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
-        self.nodeLabelObject = None
+        self.labelString = None
+        self.label = None
 
     @property
     def iri(self):
@@ -508,9 +507,11 @@ class OntologyEntityNode(AbstractNode):
         self.connectIRISignals()
         if switch:
             self.sgnIRISwitched.emit()
-        if self.diagram:
-            self.doUpdateNodeLabel()
+        self.doUpdateNodeLabel()
         self.sgnNodeModified.emit()
+
+    def initialLabelPosition(self):
+        pass
 
     #############################################
     #   INTERFACE
@@ -569,29 +570,25 @@ class OntologyEntityNode(AbstractNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
-        if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
-            self.renderByFullIRI()
-        elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
-            self.renderByPrefixedIRI()
-        elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
-            self.renderByLabel()
-        elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
-            self.renderBySimpleName()
-        #self.updateTextPos()
-        #self.updateNode()
+        if self.label and not self.labelString == IRIRender.iriLabelString(self._iri):
+            self.labelString = IRIRender.iriLabelString(self._iri)
+            labelPos = lambda: self.label.pos()
+            self.label.diagram.removeItem(self.label)
+            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
+            self.diagram.sgnUpdated.emit()
+        else:
+            self.labelString = IRIRender.iriLabelString(self._iri)
+            self.label = NodeLabel(template=self.labelString, pos=lambda: self.initialLabelPosition(), parent=self,
+                                   editable=True)
+            self.diagram.sgnUpdated.emit()
 
+    '''
     def renderByFullIRI(self):
         self.setText(str(self.iri))
         self.nodeLabelObject = self.iri
 
     def renderByPrefixedIRI(self):
         project = None
-        '''
-        if self.project:
-            project = self.project
-        '''
         if self._diagram_.project:
             project = self._diagram_.project
         if project:
@@ -620,6 +617,7 @@ class OntologyEntityNode(AbstractNode):
             self.nodeLabelObject = labelAssertion
         else:
             self.renderByPrefixedIRI()
+    '''
 
     #@QtCore.pyqtSlot(str)
     def onRenderingModified(self,rendering):
@@ -951,18 +949,11 @@ class OntologyEntityResizableNode(AbstractResizableNode):
     """
     sgnIRISwitched = QtCore.pyqtSignal()
 
-    def __init__(self, iri, **kwargs):
+    def __init__(self, iri,**kwargs):
         super().__init__(**kwargs)
         self._iri = iri
         self.labelString = None
         self.label = None
-        '''
-        if self._iri:
-            self.labelString = IRIRender.iriLabelString(self._iri)
-            self.label = NodeLabel(template=self.labelString, pos=lambda: self.center(), parent=self, editable=True)
-        '''
-        # store the object(IRI, AnnotationAssertion) that is currently used to set the value of the qt label of the node
-        self.nodeLabelObject = None
 
     @property
     def iri(self):
@@ -984,20 +975,12 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         self.connectIRISignals()
         if switch:
             self.sgnIRISwitched.emit()
-
-        '''
-        self.labelString = IRIRender.iriLabelString(self._iri)
-        if not self.label:
-            self.label = NodeLabel(template=self.labelString, pos=lambda: self.center(), parent=self, editable=True)
-        else:
-            self.doUpdateNodeLabel()
-        '''
         self.doUpdateNodeLabel()
-        '''
-        if self.diagram:
-            self.doUpdateNodeLabel()
-        '''
         self.sgnNodeModified.emit()
+
+
+    def initialLabelPosition(self):
+        pass
 
     #############################################
     #   INTERFACE
@@ -1055,14 +1038,16 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        labelPos = lambda:self.center()
-        if self.label:
-            oldLabelPos = self.label.pos()
-            labelPos = lambda:oldLabelPos
-            self.diagram.removeItem(self.label)
-        self.labelString = IRIRender.iriLabelString(self._iri)
-
-        self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
+        if self.label and not self.labelString == IRIRender.iriLabelString(self._iri):
+            self.labelString = IRIRender.iriLabelString(self._iri)
+            labelPos = lambda:self.label.pos()
+            self.label.diagram.removeItem(self.label)
+            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
+            self.diagram.sgnUpdated.emit()
+        else:
+            self.labelString = IRIRender.iriLabelString(self._iri)
+            self.label = NodeLabel(template=self.labelString, pos=lambda:self.initialLabelPosition() , parent=self, editable=True)
+            self.diagram.sgnUpdated.emit()
         '''
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
@@ -1074,9 +1059,10 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             self.renderByLabel()
         elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
             self.renderBySimpleName()
-        '''
         self.diagram.sgnUpdated.emit()
+        '''
 
+    '''
     def renderByFullIRI(self):
         self.setText(str(self.iri))
         self.nodeLabelObject = self.iri
@@ -1111,6 +1097,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             self.nodeLabelObject = labelAssertion
         else:
             self.renderByPrefixedIRI()
+    '''
 
     #@QtCore.pyqtSlot(str)
     def onRenderingModified(self,rendering):
