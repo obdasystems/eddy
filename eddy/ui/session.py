@@ -969,7 +969,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doOpenIRIPropsBuilder))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            QtGui.QIcon(':/icons/24/ic_font_size'),
             'Set font',
             self, objectName='iri_set_font',
             triggered=self.doOpenIRIFontDialog))
@@ -987,7 +987,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doOpenIRIDialog))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            QtGui.QIcon(':/icons/24/ic_font_size'),
             'Set font',
             self, objectName='node_set_font',
             triggered=self.doOpenNodeFontDialog))

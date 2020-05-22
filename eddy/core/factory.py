@@ -879,10 +879,8 @@ class MenuFactory(QtCore.QObject):
         #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('node_set_font'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
-        self.insertLabelActions(menu, node)
-        #menu.insertSeparator(self.session.action('brush'))
+        self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertSeparator(self.session.action('node_properties'))
-        #self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
 
     def buildIRIValueDomainNodeMenu(self, diagram, node):
@@ -897,8 +895,9 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
         #TODO VALUTA REINSERIMENTO OPPORTUNO PER TOP E BOTTOM (SPECIAL MENU)
         #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_set_font'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
-        self.insertLabelActions(menu, node)
+        self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertSeparator(self.session.action('node_properties'))
         #self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
@@ -913,11 +912,11 @@ class MenuFactory(QtCore.QObject):
         menu = self.buildIRINodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
-        menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose_role'))
-        #if self.project.profile.type() is not OWLProfile.OWL2RL:
-            #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_set_font'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('invert_role'))
-        self.insertLabelActions(menu, node)
+        menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose_role'))
+        self.insertLabelActions(menu, node, self.session.action('invert_role'))
         menu.insertSeparator(self.session.action('node_properties'))
         #self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
@@ -932,13 +931,13 @@ class MenuFactory(QtCore.QObject):
         menu = self.buildIRINodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_set_font'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
+        self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('compose_attribute'))
         #if self.project.profile.type() is not OWLProfile.OWL2RL:
             #menu.insertMenu(self.session.action('node_properties'), self.session.menu('special'))
-        menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
-        self.insertLabelActions(menu, node)
         menu.insertSeparator(self.session.action('node_properties'))
-        #self.session.action('refactor_name').setEnabled(node.special() is None)
         return menu
 
     # TODO
@@ -952,8 +951,9 @@ class MenuFactory(QtCore.QObject):
         menu = self.buildIRINodeMenu(diagram, node)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('refactor'))
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('brush'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_set_font'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('node_iri_refactor'))
-        self.insertLabelActions(menu, node)
+        self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
@@ -977,7 +977,9 @@ class MenuFactory(QtCore.QObject):
         :rtype: QMenu
         """
         menu = self.buildGenericNodeMenu(diagram, node)
+        menu.insertAction(self.session.action('node_properties'), self.session.action('node_set_font'))
         menu.insertAction(self.session.action('node_properties'), self.session.action('node_literal_refactor'))
+        self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
@@ -985,14 +987,18 @@ class MenuFactory(QtCore.QObject):
     #   LABEL
     #################################
 
-    def insertLabelActions(self, menu, node):
+    def insertLabelActions(self, menu, node, beforeAction):
         """
         Insert label specific actions in the given menu.
         :type menu: QtWidgets.QMenu
         :type node: AbstractNode
         """
         if node.label.isMovable() and node.label.isMoved():
-            menu.insertAction(self.session.action('node_properties'), self.session.action('relocate_label'))
+            self.session.action('relocate_label').setEnabled(True)
+            menu.insertAction(beforeAction, self.session.action('relocate_label'))
+        else:
+            self.session.action('relocate_label').setEnabled(False)
+            menu.insertAction(beforeAction, self.session.action('relocate_label'))
 
     #############################################
     #   FACTORY

@@ -216,7 +216,7 @@ class ValueDomainNode(OntologyEntityNode):
         self.polygon.setGeometry(QtCore.QRectF(-width / 2, -20, width, 40))
         self.background.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.selection.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
-        self.updateTextPos()
+        #self.updateTextPos()
         self.updateEdges()
 
         # SELECTION + BACKGROUND + CACHE REFRESH

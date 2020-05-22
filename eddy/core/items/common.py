@@ -327,26 +327,16 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self.old_text = None
 
     def setCustomFont(self, font):
-        '''
-        oldRect = self.boundingRect()
+        if not font==self.font():
+            npos = self.pos()
+            self.setFont(font)
+            self.setAlignment(self.alignment())
+            self.setPos(npos)
         self.customFont = True
-        self.setFont(font)
-        x = self.pos().x() - self.boundingRect().width() / 2.0 + oldRect.width() / 2.0;
-        y = self.pos().y() - self.boundingRect().height() / 2.0 + oldRect.height() / 2.0;
-        self.setPos(QPointF(x, y));
-        '''
-        # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
-        self.setFont(font)
-        super().setFont(font)
 
     #############################################
     #   EVENTS
     #################################
-
-    '''
-    def setFont(self, font: QtGui.QFont) -> None:
-        super().setFont(font)
-    '''
 
     def sceneEvent(self, event: QtCore.QEvent) -> bool:
         """
@@ -355,7 +345,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type event: QtCore.QEvent
         :rtype: bool
         """
-        if event.type() == QtCore.QEvent.FontChange:
+        if event.type() == QtCore.QEvent.FontChange and not self.customFont:
             nfont = Font(font=self.diagram.font(), weight=Font.Light)
             if self.font() != nfont:
                 # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
