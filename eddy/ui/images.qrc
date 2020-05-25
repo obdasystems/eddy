@@ -266,11 +266,15 @@
   <file alias="ic_owl">../../resources/icons/48/ic_Owl_48.png</file>
 </qresource>
 <qresource prefix="/icons/128">
-  <file alias="ic_eddy">../../resources/icons/128/ic_eddy_128dp_1x.png</file>
-  <file alias="ic_eddy@2x">../../resources/icons/128/ic_eddy_128dp_2x.png</file>
+  <file alias="ic_eddy_old">../../resources/icons/128/ic_eddy_128dp_1x.png</file>
+  <file alias="ic_eddy_old@2x">../../resources/icons/128/ic_eddy_128dp_2x.png</file>
+  <file alias="ic_new_eddy_black">../../resources/icons/128/ic_new_eddy_black_128.png</file>
+  <file alias="ic_eddy">../../resources/icons/128/ic_new_eddy_colour_128.png</file>
+  <file alias="ic_new_eddy_white">../../resources/icons/128/ic_new_eddy_white_128.png</file>
 </qresource>
 <qresource prefix="/images">
-  <file alias="eddy">../../resources/images/eddy.png</file>
+  <file alias="eddy_old">../../resources/images/eddy.png</file>
+  <file alias="eddy">../../resources/images/new_logo/colour/logo/eddy-logo-1024.png</file>
   <file alias="eddy-sad">../../resources/images/eddy_sad.png</file>
   <file alias="eddy-smile">../../resources/images/eddy_smile.png</file>
   <file alias="eddy-smile-small-noframe">../../resources/images/eddy_smile_small_noframe.png</file>

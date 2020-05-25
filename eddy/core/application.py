@@ -539,7 +539,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         if not msgbox:
             LOGGER.critical(format_exception(exc_value))
             msgbox = QtWidgets.QMessageBox()
-            msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
+            #msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Fatal error!')
             msgbox.setText('This is embarrassing ...\n\n'
@@ -601,7 +601,7 @@ def main():
 
             chkbox = QtWidgets.QCheckBox("Don't show this warning again.")
             msgbox = QtWidgets.QMessageBox()
-            msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
+            #msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Missing Java Runtime Environment')
             msgbox.setText('Unable to locate a valid Java installation on your system.')
