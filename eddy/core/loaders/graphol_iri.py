@@ -173,16 +173,16 @@ class GrapholProjectIRILoaderMixin_2(object):
 
         self.nproject = Project(
             name=parse(tag='name', default=rstrip(os.path.basename(self.path), File.Graphol.extension)),
-            path=os.path.dirname(self.path),
+            path=self.path,
             version=parse(tag='version', default='1.0'),
-            profile=self.session.createProfile(parse('profile', 'OWL 2')),
+            profile=self.session.createProfile('OWL 2'),
             prefixMap=self.getPrefixesDict(section),
             ontologyIRI=self.getOntologyIRI(section),
             datatypes=None,
             constrFacets=None,
             languages=None,
             annotationProperties=None,
-            ontologyPrefix=None,
+            ontologyPrefix=self.getOntologyPrefix(section),
             defaultLanguage='en',
             addLabelFromSimpleName=False,
             addLabelFromUserInput=False,
@@ -209,6 +209,37 @@ class GrapholProjectIRILoaderMixin_2(object):
                     else:
                         if property_value == 'Project_IRI':
                             return namespace
+                    finally:
+                        sube_property = sube_property.nextSiblingElement('property')
+            except Exception:
+                LOGGER.exception('Failed to fetch namespace  %s', namespace)
+            finally:
+                sube = sube.nextSiblingElement('iri')
+        return result
+
+    def getOntologyPrefix(self, ontologySection):
+        result = ''
+        e = ontologySection.firstChildElement('IRI_prefixes_nodes_dict')
+        sube = e.firstChildElement('iri')
+        while not sube.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                sube_properties = sube.firstChildElement('properties')
+                sube_property = sube_properties.firstChildElement('property')
+                while not sube_property.isNull():
+                    try:
+                        QtWidgets.QApplication.processEvents()
+                        property_value = sube_property.attribute('property_value')
+                    except Exception:
+                        LOGGER.exception('Failed to fetch property %s', property_value)
+                    else:
+                        if property_value == 'Project_IRI':
+                            prefix_value = None
+                            sube_prefixes = sube.firstChildElement('prefixes')
+                            sube_prefix = sube_prefixes.firstChildElement('prefix')
+                            if not sube_prefix.isNull():
+                                prefix_value = sube_prefix.attribute('prefix_value')
+                            return prefix_value
                     finally:
                         sube_property = sube_property.nextSiblingElement('property')
             except Exception:
@@ -889,8 +920,8 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
         :type session: Session
         """
         path = expandPath(path)
-        path = os.path.join(path, os.path.basename(path))
-        path = postfix(path, File.Graphol.extension)
+        #path = os.path.join(path, os.path.basename(path))
+        #path = postfix(path, File.Graphol.extension)
         super().__init__(path, session)
 
     '''
@@ -939,7 +970,6 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
         """
         version_1 = False
         try:
-
             self.createDomDocument()
         except (ProjectNotFoundError, ProjectVersionError):
             self.createLegacyProject()
@@ -1852,7 +1882,8 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
         """
         Create a Project using the @deprecated Graphol project loader (v2).
         """
-        worker = GrapholIRIProjectLoader_v2(os.path.dirname(self.path), self.session)
+        #worker = GrapholIRIProjectLoader_v2(os.path.dirname(self.path), self.session)
+        worker = GrapholIRIProjectLoader_v2(self.path, self.session)
         worker.run()
         worker = GrapholIRIProjectExporter(self.session.project)
         worker.run()

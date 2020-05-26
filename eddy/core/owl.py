@@ -987,6 +987,9 @@ class IRIManager(QtCore.QObject):
         self.datatypes = set()
         self.languages = set()
         self.constrainingFacets = set()
+
+        self.addDefaultDatatypes()
+        self.addDefaultConstrainingFacets()
         defaults=True
         if annotationProperties:
             defaults = False
@@ -1212,9 +1215,9 @@ class IRIManager(QtCore.QObject):
 
     def setDefaults(self):
         self.addDefaultAnnotationProperties()
-        self.addDefaultDatatypes()
+        #self.addDefaultDatatypes()
         self.addDefaultLanguages()
-        self.addDefaultConstrainingFacets()
+        #self.addDefaultConstrainingFacets()
 
     ##ANNOTATION PROPERTIES
     def getAnnotationPropertyIRIs(self):
