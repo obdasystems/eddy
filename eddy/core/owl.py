@@ -1255,8 +1255,12 @@ class IRIManager(QtCore.QObject):
         Add the IRI identified by iriString to the set of IRIs that can be used as Property into annotation assertions
         :type iriString: str
         """
-        iri = self.getIRI(iriString, addLabelFromSimpleName, addLabelFromUserInput)
-        return self.addAnnotationPropertyIRI(iri)
+        defaultAnnProp = AnnotationAssertionProperty.forString(iriString)
+        if defaultAnnProp:
+            return self.addAnnotationPropertyIRI(defaultAnnProp)
+        else:
+            iri = self.getIRI(iriString, addLabelFromSimpleName, addLabelFromUserInput)
+            return self.addAnnotationPropertyIRI(iri)
 
     def existAnnotationProperty(self, iriStr):
         iri = IRI(iriStr)
@@ -1849,6 +1853,29 @@ class AnnotationAssertionProperty(Enum_):
     IsDefinedBy = IRI(Namespace.RDFS.value, 'isDefinedBy')
     Label = IRI(Namespace.RDFS.value, 'label')
     seeAlso = IRI(Namespace.RDFS.value, 'backwardCompatibleWith')
+
+    @staticmethod
+    def forString(iriStr):
+        result = None
+        if iriStr == str(AnnotationAssertionProperty.BackwardCompatibleWith.value):
+            result = AnnotationAssertionProperty.BackwardCompatibleWith.value
+        elif iriStr == str(AnnotationAssertionProperty.Deprecated.value):
+            result = AnnotationAssertionProperty.Deprecated.value
+        elif iriStr == str(AnnotationAssertionProperty.IncompatibleWith.value):
+            result = AnnotationAssertionProperty.IncompatibleWith.value
+        elif iriStr == str(AnnotationAssertionProperty.PriorVersion.value):
+            result = AnnotationAssertionProperty.PriorVersion.value
+        elif iriStr == str(AnnotationAssertionProperty.VersionInfo.value):
+            result = AnnotationAssertionProperty.VersionInfo.value
+        elif iriStr == str(AnnotationAssertionProperty.Comment.value):
+            result = AnnotationAssertionProperty.Comment.value
+        elif iriStr == str(AnnotationAssertionProperty.IsDefinedBy.value):
+            result = AnnotationAssertionProperty.IsDefinedBy.value
+        elif iriStr == str(AnnotationAssertionProperty.Label.value):
+            result = AnnotationAssertionProperty.Label.value
+        elif iriStr == str(AnnotationAssertionProperty.seeAlso.value):
+            result = AnnotationAssertionProperty.seeAlso.value
+        return result
 
 @unique
 class OWL2Datatype(Enum_):
