@@ -765,19 +765,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # Global IRI
         #################################
         checked = self.project.addLabelFromSimpleName
-        checkBox = self.widget('label_simplename_checkbox')
-        checkBox.setChecked(checked)
+        checkBoxSimpleName = self.widget('label_simplename_checkbox')
+        checkBoxSimpleName.setChecked(checked)
 
         checked = self.project.addLabelFromUserInput
-        checkBox = self.widget('label_userinput_checkbox')
-        checkBox.setChecked(checked)
+        checkBoxUserInput = self.widget('label_userinput_checkbox')
+        checkBoxUserInput.setChecked(checked)
 
         combobox = self.widget('lang_switch')
         if self.project.defaultLanguage:
             combobox.setCurrentText(self.project.defaultLanguage)
         else:
             combobox.setCurrentText(self.emptyString)
-        if checkBox.isChecked():
+        if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
             self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
             self.widget('lang_switch').setEnabled(True)
         else:
@@ -1346,23 +1346,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #################################
     @QtCore.pyqtSlot()
     def onLabelSimpleNameCheckBoxClicked(self):
-        checkBox = self.widget('label_simplename_checkbox')
-        if checkBox.isChecked():
-            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+        checkBoxSimpleName = self.widget('label_simplename_checkbox')
+        checkBoxUserInput = self.widget('label_userinput_checkbox')
+        if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
         else:
-            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
         self.widget('iri_label_button').setEnabled(True)
 
     @QtCore.pyqtSlot()
     def onLabelUserInputCheckBoxClicked(self):
-        checkBox = self.widget('label_userinput_checkbox')
-        if checkBox.isChecked():
-            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+        checkBoxSimpleName = self.widget('label_simplename_checkbox')
+        checkBoxUserInput = self.widget('label_userinput_checkbox')
+        if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
         else:
-            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
         self.widget('iri_label_button').setEnabled(True)
 
