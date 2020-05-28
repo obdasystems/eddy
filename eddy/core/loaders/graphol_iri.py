@@ -33,7 +33,8 @@ from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader_v1
 from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker, OwlOntologyImportWorker
 from eddy.core.output import getLogger
-from eddy.core.owl import Literal, Facet, AnnotationAssertion, ImportedOntology
+from eddy.core.owl import Literal, Facet, AnnotationAssertion, ImportedOntology, AnnotationAssertionProperty, \
+    OWL2Datatype
 from eddy.core.project import Project, K_DESCRIPTION, ProjectStopImportingError
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
@@ -441,9 +442,10 @@ class GrapholProjectIRILoaderMixin_2(object):
     #############################################
     #   NODES
     #################################
-    def getIriFromLabelText(self,labelText, itemType):
+    def getIriFromLabelText(self,labelText, itemType, addRdfsLabel=False, lang=None):
         iriString = ''
         if labelText == 'TOP':
+            addRdfsLabel = False
             if itemType is Item.AttributeIRINode:
                 iriString = 'http://www.w3.org/2002/07/owl#topDataProperty'
             if itemType is Item.RoleIRINode:
@@ -451,14 +453,15 @@ class GrapholProjectIRILoaderMixin_2(object):
             if itemType is Item.ConceptIRINode:
                 iriString = 'http://www.w3.org/2002/07/owl#Thing'
         elif labelText == 'BOTTOM':
+            addRdfsLabel = False
             if itemType is Item.AttributeIRINode:
                 iriString = 'http://www.w3.org/2002/07/owl#bottomDataProperty'
             if itemType is Item.RoleIRINode:
                 iriString = 'http://www.w3.org/2002/07/owl#bottomObjectProperty'
             if itemType is Item.ConceptIRINode:
                 iriString = 'http://www.w3.org/2002/07/owl#Nothing'
-        labelText = labelText.replace('\n','')
-        iriElList = labelText.split(':')
+        labelTextForIRI = labelText.replace('\n','')
+        iriElList = labelTextForIRI.split(':')
         if len(iriElList) > 1:
             prefix = iriElList[0]
             resolvedPrefix = self.nproject.getPrefixResolution(prefix)
@@ -469,14 +472,20 @@ class GrapholProjectIRILoaderMixin_2(object):
         elif len(iriElList) == 1:
             iriString = iriElList[0]
         else:
-            iriString = labelText
+            iriString = labelTextForIRI
         iri = self.nproject.getIRI(iriString)
+        if addRdfsLabel:
+            annAss = iri.getAnnotationAssertion(AnnotationAssertionProperty.Label.value, lang=lang)
+            if not annAss:
+                annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, labelText,OWL2Datatype.PlainLiteral.value, lang)
+                iri.addAnnotationAssertion(annAss)
         return iri
 
     def getIriPredicateNode(self, diagram, nodeElement, itemType):
+        addRdfsLabel = False if itemType is Item.ValueDomainIRINode else True
         labelElement = nodeElement.firstChildElement('label')
         labelText = labelElement.text()
-        iri = self.getIriFromLabelText(labelText,itemType)
+        iri = self.getIriFromLabelText(labelText,itemType,addRdfsLabel=addRdfsLabel)
         geometryElement = nodeElement.firstChildElement('geometry')
         node = diagram.factory.create(itemType, **{
             'id': nodeElement.attribute('id'),
