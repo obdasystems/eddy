@@ -1768,9 +1768,10 @@ class IRIRender(Enum_):
             return IRIRender.renderByFullIRI(iri)
 
     @staticmethod
-    def renderByLabel(iri):
+    def renderByLabel(iri, lang=None):
         settings = QtCore.QSettings()
-        lang = settings.value('ontology/iri/render/language', 'it')
+        if not lang:
+            lang = settings.value('ontology/iri/render/language', 'it')
         labelAssertion = iri.getLabelAnnotationAssertion(lang)
         if labelAssertion:
             return str(labelAssertion.value)
