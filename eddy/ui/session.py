@@ -3556,6 +3556,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action(objectName='render_label_de').setChecked(False)
         self.sgnRenderingModified.emit(IRIRender.FULL.value)
 
+        '''
+        progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('Checking for updates...')
+        progressBar.setVisible(True)
+        '''
+
 
     #TODO
     @QtCore.pyqtSlot()
@@ -3576,6 +3582,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action(objectName='render_label_de').setChecked(False)
         self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
 
+        '''
+        progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('Checking for updates...')
+        progressBar.setVisible(True)
+        '''
 
 
     @QtCore.pyqtSlot()
@@ -3595,6 +3606,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action(objectName='render_label_fr').setChecked(False)
         self.action(objectName='render_label_de').setChecked(False)
         self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
+        '''
+        progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('Checking for updates...')
+        progressBar.setVisible(True)
+        '''
 
     #TODO
     @QtCore.pyqtSlot()
@@ -3643,6 +3659,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_label_fr').setChecked(False)
             self.action(objectName='render_label_de').setChecked(True)
         self.sgnRenderingModified.emit(IRIRender.LABEL.value)
+        '''
+        progressBar = self.widget('progress_bar')
+        progressBar.setToolTip('Checking for updates...')
+        progressBar.setVisible(True)
+        '''
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):
