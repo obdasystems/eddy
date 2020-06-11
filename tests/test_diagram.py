@@ -153,12 +153,18 @@ class TestDiagram:
         view = session.mdi.activeView()
         diagram = session.mdi.activeDiagram()
         diagram.setMode(DiagramMode.NodeAdd, Item.ConceptIRINode)
+        init_num_nodes_in_diagram = len(diagram.nodes())
+        init_num_items_in_project = len(project.items())
+        init_num_nodes_in_project = len(project.nodes())
 
         iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Person')
         node = first(project.iriOccurrences(Item.ConceptIRINode, iri, diagram))
 
         positions = [view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200)]
         alreadyAddedIDs = []
+
+        newStr = 'http://www.dis.uniroma1.it/~graphol/test_project/NewClass'
+        newIri = project.getIRI(newStr)
 
         qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, positions[0])
         sleep(1)
@@ -171,8 +177,6 @@ class TestDiagram:
                 dialog = child
                 break
         if dialog:
-            newStr = 'http://www.dis.uniroma1.it/~graphol/test_project/NewClass'
-            newIri = project.getIRI(newStr)
             newCount = len(project.iriOccurrences(Item.ConceptIRINode, newIri))
             dialog.widget('full_iri_field').setValue(newStr)
             dialog.accept()
@@ -198,8 +202,6 @@ class TestDiagram:
                     dialog = child
                     break
         if dialog:
-            newStr = 'http://www.dis.uniroma1.it/~graphol/test_project/NewClass2'
-            newIri = project.getIRI(newStr)
             newCount = len(project.iriOccurrences(Item.ConceptIRINode, newIri))
             dialog.widget('full_iri_field').setValue(newStr)
             dialog.accept()
@@ -224,10 +226,7 @@ class TestDiagram:
                     dialog = child
                     break
         if dialog:
-            newStr = 'http://www.dis.uniroma1.it/~graphol/test_project/NewClass'
-            newIri = project.getIRI(newStr)
             newCount = len(project.iriOccurrences(Item.ConceptIRINode, newIri))
-
             dialog.widget('full_iri_field').setValue(newStr)
             dialog.accept()
         assert not dialog is None
@@ -237,6 +236,109 @@ class TestDiagram:
         assert len(project.iriOccurrences(Item.ConceptIRINode, iri)) == 1
         assert newCount == len(project.iriOccurrences(Item.ConceptIRINode, newIri)) - 1
 
+        # FINALLY
+        assert init_num_nodes_in_diagram == len(diagram.nodes()) - 3
+        assert init_num_items_in_project == len(project.items()) - 3
+        assert init_num_nodes_in_project == len(project.nodes()) - 3
+        assert len(project.iriOccurrences(Item.ConceptIRINode, iri)) == 1
+        assert len(project.iriOccurrences(Item.ConceptIRINode, newIri)) == 3
+
+    def test_insert_multiple_concept_nodes_with_control_modifier_released_after_insertion(self, session, qtbot):
+        # GIVEN
+        project = session.project
+        view = session.mdi.activeView()
+        diagram = session.mdi.activeDiagram()
+        diagram.setMode(DiagramMode.NodeAdd, Item.ConceptIRINode)
+        init_num_nodes_in_diagram = len(diagram.nodes())
+        init_num_items_in_project = len(project.items())
+        init_num_nodes_in_project = len(project.nodes())
+
+        iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Person')
+        node = first(project.iriOccurrences(Item.ConceptIRINode, iri, diagram))
+
+        positions = [view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200)]
+        alreadyAddedIDs = []
+
+        newStr = 'http://www.dis.uniroma1.it/~graphol/test_project/NewClass'
+        newIri = project.getIRI(newStr)
+
+        qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, positions[0])
+        sleep(1)
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(project.items())
+        num_nodes_in_project = len(project.nodes())
+        dialog = None
+        for child in session.children():
+            if isinstance(child, IriBuilderDialog):
+                dialog = child
+                break
+        if dialog:
+            newCount = len(project.iriOccurrences(Item.ConceptIRINode, newIri))
+            dialog.widget('full_iri_field').setValue(newStr)
+            dialog.accept()
+            alreadyAddedIDs.append(dialog.node.id)
+        assert not dialog is None
+        assert not diagram.mode == DiagramMode.NodeAdd
+        assert num_nodes_in_diagram == len(diagram.nodes()) - 1
+        assert num_items_in_project == len(project.items()) - 1
+        assert num_nodes_in_project == len(project.nodes()) - 1
+        assert len(project.iriOccurrences(Item.ConceptIRINode, iri)) == 1
+        assert newCount == len(project.iriOccurrences(Item.ConceptIRINode, newIri)) - 1
+        sleep(1)
+        diagram.setMode(DiagramMode.NodeAdd, Item.ConceptIRINode)
+
+        qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, positions[1])
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(project.items())
+        num_nodes_in_project = len(project.nodes())
+        dialog = None
+        for child in session.children():
+            if isinstance(child, IriBuilderDialog):
+                if not child.node.id in alreadyAddedIDs:
+                    dialog = child
+                    break
+        if dialog:
+            newCount = len(project.iriOccurrences(Item.ConceptIRINode, newIri))
+            dialog.widget('full_iri_field').setValue(newStr)
+            dialog.accept()
+            alreadyAddedIDs.append(dialog.node.id)
+        assert not dialog is None
+        assert num_nodes_in_diagram == len(diagram.nodes()) - 1
+        assert num_items_in_project == len(project.items()) - 1
+        assert num_nodes_in_project == len(project.nodes()) - 1
+        assert len(project.iriOccurrences(Item.ConceptIRINode, iri)) == 1
+        assert newCount == len(project.iriOccurrences(Item.ConceptIRINode, newIri)) - 1
+        sleep(1)
+        diagram.setMode(DiagramMode.NodeAdd, Item.ConceptIRINode)
+
+        qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, positions[2])
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(project.items())
+        num_nodes_in_project = len(project.nodes())
+        dialog = None
+        for child in session.children():
+            if isinstance(child, IriBuilderDialog):
+                if not child.node.id in alreadyAddedIDs:
+                    dialog = child
+                    break
+        if dialog:
+            newCount = len(project.iriOccurrences(Item.ConceptIRINode, newIri))
+            dialog.widget('full_iri_field').setValue(newStr)
+            dialog.accept()
+        assert not dialog is None
+        assert num_nodes_in_diagram == len(diagram.nodes()) - 1
+        assert num_items_in_project == len(project.items()) - 1
+        assert num_nodes_in_project == len(project.nodes()) - 1
+        assert len(project.iriOccurrences(Item.ConceptIRINode, iri)) == 1
+        assert newCount == len(project.iriOccurrences(Item.ConceptIRINode, newIri)) - 1
+
+        # FINALLY
+        qtbot.keyRelease(session, QtCore.Qt.Key_Control)
+        assert init_num_nodes_in_diagram == len(diagram.nodes()) - 3
+        assert init_num_items_in_project == len(project.items()) - 3
+        assert init_num_nodes_in_project == len(project.nodes()) - 3
+        assert len(project.iriOccurrences(Item.ConceptIRINode, iri)) == 1
+        assert len(project.iriOccurrences(Item.ConceptIRINode, newIri)) == 3
 
     '''
     def test_insert_multiple_concept_nodes_with_control_modifier(self, session, qtbot):
@@ -352,6 +454,7 @@ class TestDiagram:
         QtCore.QTimer.singleShot(100, callback)
         qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, positions[0])
         # FINALLY
+        qtbot.keyRelease(session, QtCore.Qt.Key_Control)
         #QtCore.QTimer.singleShot(2000, finalCallback)
     
     '''
