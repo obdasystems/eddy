@@ -1,0 +1,1678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="3">
+  <project name="test_project_2" version="1.0">
+    <ontology addLabelFromUserInput="0" iri="None" lang="en" addLabelFromSimpleName="0">
+      <imports/>
+      <prefixes>
+        <prefix>
+          <value>xml</value>
+          <namespace>http://www.w3.org/XML/1998/namespace</namespace>
+        </prefix>
+        <prefix>
+          <value>xsd</value>
+          <namespace>http://www.w3.org/2001/XMLSchema#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdf</value>
+          <namespace>http://www.w3.org/1999/02/22-rdf-syntax-ns#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdfs</value>
+          <namespace>http://www.w3.org/2000/01/rdf-schema#</namespace>
+        </prefix>
+        <prefix>
+          <value>owl</value>
+          <namespace>http://www.w3.org/2002/07/owl#</namespace>
+        </prefix>
+      </prefixes>
+      <datatypes>
+        <datatype>http://www.w3.org/2001/XMLSchema#language</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#anyURI</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedByte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#long</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#base64Binary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedInt</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#Name</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#boolean</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedLong</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NCName</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#byte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedShort</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#negativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#token</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTime</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NMTOKEN</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTimeStamp</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonNegativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#decimal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonPositiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#double</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#rational</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#normalizedString</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#float</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#real</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#positiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#hexBinary</datatype>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#short</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#int</datatype>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#string</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+        <datatype>http://www.w3.org/2000/01/rdf-schema#Literal</datatype>
+      </datatypes>
+      <languages>
+        <language>es</language>
+        <language>it</language>
+        <language>de</language>
+        <language>fr</language>
+        <language>en</language>
+      </languages>
+      <facets>
+        <facet>http://www.w3.org/2001/XMLSchema#length</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#pattern</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#langRange</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxInclusive</facet>
+      </facets>
+      <annotationProperties>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#label</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#versionInfo</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#deprecated</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#comment</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#incompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#isDefinedBy</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#priorVersion</annotationProperty>
+      </annotationProperties>
+      <iris>
+        <iri>
+          <value>C5</value>
+          <annotations>
+            <annotation>
+              <subject>C5</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>C5</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>R6</value>
+          <annotations>
+            <annotation>
+              <subject>R6</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>R6</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>R9</value>
+          <annotations>
+            <annotation>
+              <subject>R9</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>R9</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>I2</value>
+          <annotations>
+            <annotation>
+              <subject>I2</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>I2</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>I1</value>
+          <annotations>
+            <annotation>
+              <subject>I1</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>I1</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>I3</value>
+          <annotations>
+            <annotation>
+              <subject>I3</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>I3</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>A2</value>
+          <annotations>
+            <annotation>
+              <subject>A2</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>A2</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>R2</value>
+          <annotations>
+            <annotation>
+              <subject>R2</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>R2</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>I4</value>
+          <annotations>
+            <annotation>
+              <subject>I4</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>I4</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>C8</value>
+          <annotations>
+            <annotation>
+              <subject>C8</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>C8</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>A3</value>
+          <annotations>
+            <annotation>
+              <subject>A3</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>A3</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>A4</value>
+          <annotations>
+            <annotation>
+              <subject>A4</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>A4</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>C1</value>
+          <annotations>
+            <annotation>
+              <subject>C1</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>C1</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>C7</value>
+          <annotations>
+            <annotation>
+              <subject>C7</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>C7</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>attribute</value>
+          <annotations>
+            <annotation>
+              <subject>attribute</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>attribute</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>R1</value>
+          <annotations>
+            <annotation>
+              <subject>R1</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>R1</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>C6</value>
+          <annotations>
+            <annotation>
+              <subject>C6</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>C6</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>A1</value>
+          <annotations>
+            <annotation>
+              <subject>A1</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>A1</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>C2</value>
+          <annotations>
+            <annotation>
+              <subject>C2</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>C2</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>R4</value>
+          <annotations>
+            <annotation>
+              <subject>R4</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>R4</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>R5</value>
+          <annotations>
+            <annotation>
+              <subject>R5</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>R5</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+      </iris>
+    </ontology>
+    <diagrams>
+      <diagram name="diagram4" width="5000" height="5000">
+        <node id="n9" color="#fcfcfc" type="literal">
+          <geometry x="40" y="80" width="115" height="60"/>
+          <literal>
+            <lexicalForm>32</lexicalForm>
+            <datatype>http://www.w3.org/2001/XMLSchema#string</datatype>
+            <language/>
+          </literal>
+          <label x="40" customSize="0" y="80" width="91" height="23" size="12"/>
+        </node>
+        <node id="n6" color="#fcfcfc" type="enumeration">
+          <geometry x="40" y="-140" width="50" height="30"/>
+          <label x="40" customSize="0" y="-140" width="40" height="23" size="12"/>
+        </node>
+        <node id="n7" color="#fcfcfc" type="individual">
+          <geometry x="-20" y="-40" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-20" customSize="0" y="-40" width="17" height="23" size="12"/>
+        </node>
+        <node id="n8" color="#fcfcfc" type="individual">
+          <geometry x="100" y="-40" width="60" height="60"/>
+          <iri>I2</iri>
+          <label x="100" customSize="0" y="-40" width="17" height="23" size="12"/>
+        </node>
+        <edge id="e4" type="input" source="n8" target="n6">
+          <point x="100" y="-40"/>
+          <point x="40" y="-140"/>
+        </edge>
+        <edge id="e3" type="input" source="n7" target="n6">
+          <point x="-20" y="-40"/>
+          <point x="40" y="-140"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram10" width="5000" height="5000">
+        <node inputs="" id="n10" color="#fcfcfc" type="role-chain">
+          <geometry x="-40" y="0" width="50" height="30"/>
+          <label x="-40" customSize="0" y="0" width="36" height="23" size="12"/>
+        </node>
+        <node id="n8" color="#fcfcfc" type="domain-restriction">
+          <geometry x="60" y="0" width="20" height="20"/>
+          <label x="60" customSize="0" y="-22" width="39" height="23" size="12">exists</label>
+        </node>
+      </diagram>
+      <diagram name="diagram37" width="5000" height="5000">
+        <node id="n2" color="#000000" type="range-restriction">
+          <geometry x="60" y="10" width="20" height="20"/>
+          <label x="60" customSize="0" y="-12" width="39" height="23" size="12">exists</label>
+        </node>
+        <node inputs="" id="n0" color="#fcfcfc" type="role-chain">
+          <geometry x="-40" y="10" width="50" height="30"/>
+          <label x="-40" customSize="0" y="10" width="36" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram19" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="complement">
+          <geometry x="0" y="10" width="50" height="30"/>
+          <label x="0" customSize="0" y="10" width="25" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="intersection">
+          <geometry x="0" y="-110" width="50" height="30"/>
+          <label x="0" customSize="0" y="-110" width="27" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="role">
+          <geometry x="0" y="110" width="70" height="50"/>
+          <iri>R1</iri>
+          <label x="0" customSize="0" y="110" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="inclusion" source="n0" target="n1">
+          <point x="0" y="10"/>
+          <point x="0" y="-110"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram45" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="individual">
+          <geometry x="-140" y="-40" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-140" customSize="0" y="-40" width="17" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="literal">
+          <geometry x="-140" y="40" width="60" height="60"/>
+          <literal>
+            <lexicalForm>32</lexicalForm>
+            <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+            <language/>
+          </literal>
+          <label x="-140" customSize="0" y="40" width="97" height="23" size="12"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="role">
+          <geometry x="140" y="0" width="70" height="50"/>
+          <iri>R1</iri>
+          <label x="140" customSize="0" y="0" width="22" height="23" size="12"/>
+        </node>
+        <node inputs="e0,e3" id="n3" color="#fcfcfc" type="property-assertion">
+          <geometry x="-20" y="0" width="52" height="30"/>
+        </node>
+        <edge id="e3" type="input" source="n1" target="n3">
+          <point x="-140" y="40"/>
+          <point x="-20" y="0"/>
+        </edge>
+        <edge id="e0" type="input" source="n0" target="n3">
+          <point x="-140" y="-40"/>
+          <point x="-20" y="0"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram33" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="domain-restriction">
+          <geometry x="60" y="0" width="20" height="20"/>
+          <label x="60" customSize="0" y="-22" width="39" height="23" size="12">exists</label>
+        </node>
+        <node id="n1" color="#fcfcfc" type="individual">
+          <geometry x="-40" y="0" width="60" height="60"/>
+          <iri>I4</iri>
+          <label x="-40" customSize="0" y="0" width="17" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram9" width="5000" height="5000">
+        <node id="n4" color="#fcfcfc" type="domain-restriction">
+          <geometry x="20" y="-40" width="20" height="20"/>
+          <label x="20" customSize="0" y="-62" width="39" height="23" size="12">exists</label>
+        </node>
+        <node id="n6" color="#fcfcfc" type="attribute">
+          <geometry x="100" y="-40" width="20" height="20"/>
+          <iri>A4</iri>
+          <label x="100" customSize="0" y="-62" width="22" height="23" size="12"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="concept">
+          <geometry x="20" y="60" width="110" height="50"/>
+          <iri>C8</iri>
+          <label x="20" customSize="0" y="60" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e3" type="input" source="n5" target="n4">
+          <point x="20" y="60"/>
+          <point x="20" y="-40"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram43" width="5000" height="5000">
+        <node inputs="" id="n0" color="#fcfcfc" type="role-chain">
+          <geometry x="160" y="20" width="50" height="30"/>
+          <label x="160" customSize="0" y="20" width="36" height="23" size="12"/>
+        </node>
+        <node inputs="e2,e3" id="n1" color="#fcfcfc" type="property-assertion">
+          <geometry x="60" y="20" width="52" height="30"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="individual">
+          <geometry x="-60" y="-20" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-60" customSize="0" y="-20" width="17" height="23" size="12"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="individual">
+          <geometry x="-60" y="60" width="60" height="60"/>
+          <iri>I2</iri>
+          <label x="-60" customSize="0" y="60" width="17" height="23" size="12"/>
+        </node>
+        <edge id="e2" type="input" source="n4" target="n1">
+          <point x="-60" y="-20"/>
+          <point x="60" y="20"/>
+        </edge>
+        <edge id="e3" type="input" source="n5" target="n1">
+          <point x="-60" y="60"/>
+          <point x="60" y="20"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram32" width="5000" height="5000">
+        <node id="n3" color="#fcfcfc" type="attribute">
+          <geometry x="0" y="-100" width="20" height="20"/>
+          <iri>A4</iri>
+          <label x="0" customSize="0" y="-122" width="22" height="23" size="12"/>
+        </node>
+        <node inputs="e0" id="n0" color="#fcfcfc" type="property-assertion">
+          <geometry x="0" y="0" width="52" height="30"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="literal">
+          <geometry x="-60" y="80" width="60" height="60"/>
+          <literal>
+            <lexicalForm>12</lexicalForm>
+            <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+            <language/>
+          </literal>
+          <label x="-60" customSize="0" y="80" width="97" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="literal">
+          <geometry x="60" y="80" width="60" height="60"/>
+          <literal>
+            <lexicalForm>32</lexicalForm>
+            <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+            <language/>
+          </literal>
+          <label x="60" customSize="0" y="80" width="97" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n1" target="n0">
+          <point x="-60" y="80"/>
+          <point x="0" y="0"/>
+        </edge>
+        <edge id="e1" type="membership" source="n0" target="n3">
+          <point x="0" y="0"/>
+          <point x="0" y="-100"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram47" width="5000" height="5000">
+        <node id="n6" color="#fcfcfc" type="individual">
+          <geometry x="-140" y="30" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-140" customSize="0" y="30" width="17" height="23" size="12"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="union">
+          <geometry x="300" y="-10" width="50" height="30"/>
+          <label x="300" customSize="0" y="-10" width="18" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="intersection">
+          <geometry x="240" y="70" width="50" height="30"/>
+          <label x="240" customSize="0" y="70" width="27" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="union">
+          <geometry x="360" y="70" width="50" height="30"/>
+          <label x="360" customSize="0" y="70" width="18" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="complement">
+          <geometry x="120" y="70" width="50" height="30"/>
+          <label x="120" customSize="0" y="70" width="25" height="23" size="12"/>
+        </node>
+        <node inputs="e0,e1" id="n5" color="#fcfcfc" type="property-assertion">
+          <geometry x="-20" y="70" width="52" height="30"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="literal">
+          <geometry x="-140" y="110" width="60" height="60"/>
+          <literal>
+            <lexicalForm>12</lexicalForm>
+            <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+            <language/>
+          </literal>
+          <label x="-145" customSize="0" y="155" width="97" height="23" size="12"/>
+        </node>
+        <edge id="e3" type="input" source="n0" target="n4">
+          <point x="360" y="70"/>
+          <point x="300" y="-10"/>
+        </edge>
+        <edge id="e0" type="input" source="n3" target="n5">
+          <point x="-140" y="110"/>
+          <point x="-20" y="70"/>
+        </edge>
+        <edge id="e4" type="input" source="n1" target="n4">
+          <point x="240" y="70"/>
+          <point x="300" y="-10"/>
+        </edge>
+        <edge id="e1" type="input" source="n6" target="n5">
+          <point x="-140" y="30"/>
+          <point x="-20" y="70"/>
+        </edge>
+        <edge id="e2" type="input" source="n2" target="n1">
+          <point x="120" y="70"/>
+          <point x="240" y="70"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram50" width="5000" height="5000">
+        <node id="n5" color="#fcfcfc" type="attribute">
+          <geometry x="-220" y="-40" width="20" height="20"/>
+          <iri>A1</iri>
+          <label x="-220" customSize="0" y="-62" width="22" height="23" size="12"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="complement">
+          <geometry x="-40" y="-40" width="50" height="30"/>
+          <label x="-40" customSize="0" y="-40" width="25" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="union">
+          <geometry x="200" y="60" width="50" height="30"/>
+          <label x="200" customSize="0" y="60" width="18" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="union">
+          <geometry x="80" y="60" width="50" height="30"/>
+          <label x="80" customSize="0" y="60" width="18" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="intersection">
+          <geometry x="140" y="-40" width="50" height="30"/>
+          <label x="140" customSize="0" y="-40" width="27" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n2" target="n1">
+          <point x="80" y="60"/>
+          <point x="140" y="-40"/>
+        </edge>
+        <edge id="e2" type="input" source="n0" target="n1">
+          <point x="200" y="60"/>
+          <point x="140" y="-40"/>
+        </edge>
+        <edge id="e1" type="input" source="n4" target="n1">
+          <point x="-40" y="-40"/>
+          <point x="140" y="-40"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram39" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="role">
+          <geometry x="56" y="-36" width="70" height="50"/>
+          <iri>R5</iri>
+          <label x="56" customSize="0" y="-36" width="22" height="23" size="12"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="role">
+          <geometry x="-60" y="60" width="70" height="50"/>
+          <iri>R1</iri>
+          <label x="-60" customSize="0" y="60" width="22" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#000000" type="range-restriction">
+          <geometry x="-60" y="-40" width="20" height="20"/>
+          <label x="-60" customSize="0" y="-62" width="39" height="23" size="12">exists</label>
+        </node>
+        <edge id="e4" type="input" source="n5" target="n3">
+          <point x="-60" y="60"/>
+          <point x="-60" y="-40"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram23" width="5000" height="5000">
+        <node id="n0" color="#000000" type="range-restriction">
+          <geometry x="0" y="-90" width="20" height="20"/>
+          <label x="0" customSize="0" y="-112" width="39" height="23" size="12">exists</label>
+        </node>
+        <node id="n3" color="#fcfcfc" type="union">
+          <geometry x="0" y="-10" width="50" height="30"/>
+          <label x="0" customSize="0" y="-10" width="18" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="value-domain">
+          <geometry x="80" y="90" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="80" customSize="0" y="90" width="60" height="23" size="12"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="attribute">
+          <geometry x="60" y="-90" width="20" height="20"/>
+          <iri>A3</iri>
+          <label x="60" customSize="0" y="-112" width="22" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="value-domain">
+          <geometry x="-80" y="90" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-80" customSize="0" y="90" width="60" height="23" size="12"/>
+        </node>
+        <edge id="e2" type="input" source="n4" target="n0">
+          <point x="60" y="-90"/>
+          <point x="0" y="-90"/>
+        </edge>
+        <edge id="e0" type="input" source="n2" target="n3">
+          <point x="-80" y="90"/>
+          <point x="-80" y="-10"/>
+          <point x="0" y="-10"/>
+        </edge>
+        <edge id="e1" type="input" source="n1" target="n3">
+          <point x="80" y="90"/>
+          <point x="80" y="-10"/>
+          <point x="0" y="-10"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram1" width="5000" height="5000">
+        <node id="n14" color="#fcfcfc" type="role-inverse">
+          <geometry x="100" y="20" width="50" height="30"/>
+          <label x="100" customSize="0" y="20" width="23" height="23" size="12"/>
+        </node>
+        <node id="n6" color="#fcfcfc" type="value-domain">
+          <geometry x="-20" y="120" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-20" customSize="0" y="120" width="60" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="role">
+          <geometry x="-160" y="-100" width="70" height="50"/>
+          <iri>R1</iri>
+          <label x="-160" customSize="0" y="-100" width="22" height="23" size="12"/>
+        </node>
+        <node id="n11" color="#fcfcfc" type="intersection">
+          <geometry x="100" y="-160" width="50" height="30"/>
+          <label x="100" customSize="0" y="-160" width="27" height="23" size="12"/>
+        </node>
+        <node id="n20" color="#fcfcfc" type="role-inverse">
+          <geometry x="200" y="20" width="50" height="30"/>
+          <label x="200" customSize="0" y="20" width="23" height="23" size="12"/>
+        </node>
+        <node id="n22" color="#fcfcfc" type="union">
+          <geometry x="200" y="-100" width="50" height="30"/>
+          <label x="200" customSize="0" y="-100" width="18" height="23" size="12"/>
+        </node>
+        <node id="n9" color="#fcfcfc" type="attribute">
+          <geometry x="-20" y="60" width="20" height="20"/>
+          <iri>A2</iri>
+          <label x="-20" customSize="0" y="38" width="22" height="23" size="12"/>
+        </node>
+        <node id="n24" color="#fcfcfc" type="enumeration">
+          <geometry x="200" y="-220" width="50" height="30"/>
+          <label x="200" customSize="0" y="-220" width="40" height="23" size="12"/>
+        </node>
+        <node id="n12" color="#fcfcfc" type="union">
+          <geometry x="100" y="-100" width="50" height="30"/>
+          <label x="100" customSize="0" y="-100" width="18" height="23" size="12"/>
+        </node>
+        <node inputs="" id="n19" color="#fcfcfc" type="role-chain">
+          <geometry x="200" y="80" width="50" height="30"/>
+          <label x="200" customSize="0" y="80" width="36" height="23" size="12"/>
+        </node>
+        <node id="n13" color="#fcfcfc" type="complement">
+          <geometry x="100" y="-40" width="50" height="30"/>
+          <label x="100" customSize="0" y="-40" width="25" height="23" size="12"/>
+        </node>
+        <node id="n23" color="#fcfcfc" type="intersection">
+          <geometry x="200" y="-160" width="50" height="30"/>
+          <label x="200" customSize="0" y="-160" width="27" height="23" size="12"/>
+        </node>
+        <node id="n8" color="#fcfcfc" type="concept">
+          <geometry x="-20" y="-20" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="-20" customSize="0" y="-20" width="22" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="concept">
+          <geometry x="-160" y="-20" width="110" height="50"/>
+          <iri>C1</iri>
+          <label x="-160" customSize="0" y="-20" width="22" height="23" size="12"/>
+        </node>
+        <node id="n26" color="#000000" type="disjoint-union">
+          <geometry x="200" y="200" width="50" height="30"/>
+        </node>
+        <node id="n10" color="#fcfcfc" type="value-domain">
+          <geometry x="-160" y="120" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-160" customSize="0" y="120" width="60" height="23" size="12"/>
+        </node>
+        <node inputs="" id="n15" color="#fcfcfc" type="role-chain">
+          <geometry x="100" y="80" width="50" height="30"/>
+          <label x="100" customSize="0" y="80" width="36" height="23" size="12"/>
+        </node>
+        <node id="n7" color="#fcfcfc" type="role">
+          <geometry x="-20" y="-100" width="70" height="50"/>
+          <iri>R2</iri>
+          <label x="-20" customSize="0" y="-100" width="22" height="23" size="12"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="attribute">
+          <geometry x="-160" y="60" width="20" height="20"/>
+          <iri>A1</iri>
+          <label x="-160" customSize="0" y="38" width="22" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="individual">
+          <geometry x="-20" y="-180" width="60" height="60"/>
+          <iri>I2</iri>
+          <label x="-20" customSize="0" y="-180" width="17" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="individual">
+          <geometry x="-160" y="-180" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-160" customSize="0" y="-180" width="17" height="23" size="12"/>
+        </node>
+        <node id="n16" color="#fcfcfc" type="enumeration">
+          <geometry x="100" y="-220" width="50" height="30"/>
+          <label x="100" customSize="0" y="-220" width="40" height="23" size="12"/>
+        </node>
+        <node id="n18" color="#fcfcfc" type="datatype-restriction">
+          <geometry x="100" y="140" width="50" height="30"/>
+          <label x="100" customSize="0" y="140" width="31" height="23" size="12"/>
+        </node>
+        <node id="n17" color="#000000" type="disjoint-union">
+          <geometry x="100" y="200" width="50" height="30"/>
+        </node>
+        <node id="n25" color="#fcfcfc" type="datatype-restriction">
+          <geometry x="200" y="140" width="50" height="30"/>
+          <label x="200" customSize="0" y="140" width="31" height="23" size="12"/>
+        </node>
+        <node id="n21" color="#fcfcfc" type="complement">
+          <geometry x="200" y="-40" width="50" height="30"/>
+          <label x="200" customSize="0" y="-40" width="25" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram11" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="role">
+          <geometry x="-140" y="-80" width="70" height="50"/>
+          <iri>R1</iri>
+          <label x="-140" customSize="0" y="-80" width="22" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="domain-restriction">
+          <geometry x="-40" y="-80" width="20" height="20"/>
+          <label x="-40" customSize="0" y="-102" width="39" height="23" size="12">exists</label>
+        </node>
+        <node id="n3" color="#fcfcfc" type="concept">
+          <geometry x="-40" y="20" width="110" height="50"/>
+          <iri>C1</iri>
+          <label x="-40" customSize="0" y="20" width="22" height="23" size="12"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="concept">
+          <geometry x="100" y="20" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="100" customSize="0" y="20" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e2" type="input" source="n3" target="n2">
+          <point x="-40" y="20"/>
+          <point x="-40" y="-80"/>
+        </edge>
+        <edge id="e1" type="input" source="n0" target="n2">
+          <point x="-140" y="-80"/>
+          <point x="-40" y="-80"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram5" width="5000" height="5000">
+        <node inputs="" id="n5" color="#fcfcfc" type="property-assertion">
+          <geometry x="40" y="0" width="52" height="30"/>
+        </node>
+        <node id="n6" color="#fcfcfc" type="domain-restriction">
+          <geometry x="-60" y="0" width="20" height="20"/>
+          <label x="-60" customSize="0" y="-22" width="39" height="23" size="12">exists</label>
+        </node>
+      </diagram>
+      <diagram name="diagram40" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="attribute">
+          <geometry x="-60" y="10" width="20" height="20"/>
+          <iri>A4</iri>
+          <label x="-60" customSize="0" y="-12" width="22" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#000000" type="range-restriction">
+          <geometry x="40" y="10" width="20" height="20"/>
+          <label x="40" customSize="0" y="-12" width="27" height="23" size="12">self</label>
+        </node>
+      </diagram>
+      <diagram name="diagram18" width="5000" height="5000">
+        <node id="n6" color="#fcfcfc" type="value-domain">
+          <geometry x="-60" y="170" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-60" customSize="0" y="170" width="60" height="23" size="12"/>
+        </node>
+        <node id="n7" color="#fcfcfc" type="intersection">
+          <geometry x="20" y="-50" width="50" height="30"/>
+          <label x="20" customSize="0" y="-50" width="27" height="23" size="12"/>
+        </node>
+        <node id="n9" color="#fcfcfc" type="intersection">
+          <geometry x="100" y="50" width="50" height="30"/>
+          <label x="100" customSize="0" y="50" width="27" height="23" size="12"/>
+        </node>
+        <node id="n10" color="#fcfcfc" type="intersection">
+          <geometry x="20" y="-170" width="50" height="30"/>
+          <label x="20" customSize="0" y="-170" width="27" height="23" size="12"/>
+        </node>
+        <node id="n8" color="#fcfcfc" type="union">
+          <geometry x="-60" y="50" width="50" height="30"/>
+          <label x="-60" customSize="0" y="50" width="18" height="23" size="12"/>
+        </node>
+        <edge id="e4" type="input" source="n8" target="n7">
+          <point x="-60" y="50"/>
+          <point x="-60" y="-50"/>
+          <point x="20" y="-50"/>
+        </edge>
+        <edge id="e3" type="inclusion" source="n7" target="n10">
+          <point x="20" y="-50"/>
+          <point x="20" y="-170"/>
+        </edge>
+        <edge id="e5" type="input" source="n9" target="n7">
+          <point x="100" y="50"/>
+          <point x="100" y="-50"/>
+          <point x="20" y="-50"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram7" width="5000" height="5000">
+        <node id="n7" color="#fcfcfc" type="individual">
+          <geometry x="0" y="80" width="60" height="60"/>
+          <iri>I3</iri>
+          <label x="0" customSize="0" y="80" width="17" height="23" size="12"/>
+        </node>
+        <node inputs="e1,e2" id="n4" color="#fcfcfc" type="property-assertion">
+          <geometry x="0" y="-80" width="52" height="30"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="individual">
+          <geometry x="-60" y="0" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-60" customSize="0" y="0" width="17" height="23" size="12"/>
+        </node>
+        <node id="n6" color="#fcfcfc" type="individual">
+          <geometry x="60" y="0" width="60" height="60"/>
+          <iri>I2</iri>
+          <label x="60" customSize="0" y="0" width="17" height="23" size="12"/>
+        </node>
+        <edge id="e1" type="input" source="n5" target="n4">
+          <point x="-60" y="0"/>
+          <point x="0" y="-80"/>
+        </edge>
+        <edge id="e2" type="input" source="n6" target="n4">
+          <point x="60" y="0"/>
+          <point x="0" y="-80"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram17" width="5000" height="5000">
+        <node id="n2" color="#fcfcfc" type="value-domain">
+          <geometry x="80" y="-70" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="80" customSize="0" y="-70" width="60" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#000000" type="disjoint-union">
+          <geometry x="-80" y="-70" width="50" height="30"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="concept">
+          <geometry x="-80" y="50" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="-80" customSize="0" y="50" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n1" target="n3">
+          <point x="-80" y="50"/>
+          <point x="-80" y="-70"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram16" width="5000" height="5000">
+        <node id="n1" color="#fcfcfc" type="union">
+          <geometry x="-80" y="-60" width="50" height="30"/>
+          <label x="-80" customSize="0" y="-60" width="18" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="value-domain">
+          <geometry x="80" y="-60" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="80" customSize="0" y="-60" width="60" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="concept">
+          <geometry x="-80" y="60" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="-80" customSize="0" y="60" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n0" target="n1">
+          <point x="-80" y="60"/>
+          <point x="-80" y="-60"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram51" width="5000" height="5000">
+        <node inputs="e1" id="n1" color="#fcfcfc" type="property-assertion">
+          <geometry x="0" y="0" width="52" height="30"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="literal">
+          <geometry x="0" y="90" width="60" height="60"/>
+          <literal>
+            <lexicalForm>12</lexicalForm>
+            <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+            <language/>
+          </literal>
+          <label x="0" customSize="0" y="90" width="97" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="attribute">
+          <geometry x="0" y="-100" width="20" height="20"/>
+          <iri>A4</iri>
+          <label x="0" customSize="0" y="-122" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="membership" source="n1" target="n2">
+          <point x="0" y="0"/>
+          <point x="0" y="-100"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram20" width="5000" height="5000">
+        <node inputs="" id="n0" color="#fcfcfc" type="role-chain">
+          <geometry x="0" y="-30" width="50" height="30"/>
+          <label x="0" customSize="0" y="-30" width="36" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="role-inverse">
+          <geometry x="0" y="30" width="50" height="30"/>
+          <label x="0" customSize="0" y="30" width="23" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram8" width="5000" height="5000">
+        <node id="n15" color="#fcfcfc" type="domain-restriction">
+          <geometry x="0" y="-40" width="20" height="20"/>
+          <label x="0" customSize="0" y="-62" width="27" height="23" size="12">self</label>
+        </node>
+        <node id="n7" color="#fcfcfc" type="value-domain">
+          <geometry x="0" y="60" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="0" customSize="0" y="60" width="60" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram35" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="attribute">
+          <geometry x="-60" y="-20" width="20" height="20"/>
+          <iri>attribute</iri>
+          <label x="-60" customSize="0" y="-42" width="52" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="value-domain">
+          <geometry x="20" y="80" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="20" customSize="0" y="80" width="60" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#000000" type="range-restriction">
+          <geometry x="20" y="-20" width="20" height="20"/>
+          <label x="20" customSize="0" y="-42" width="39" height="23" size="12">exists</label>
+        </node>
+        <edge id="e0" type="input" source="n0" target="n1">
+          <point x="-60" y="-20"/>
+          <point x="20" y="-20"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram3" width="5000" height="5000">
+        <node id="n18" color="#fcfcfc" type="concept">
+          <geometry x="60" y="100" width="110" height="50"/>
+          <iri>C7</iri>
+          <label x="60" customSize="0" y="100" width="22" height="23" size="12"/>
+        </node>
+        <node id="n17" color="#fcfcfc" type="domain-restriction">
+          <geometry x="60" y="20" width="20" height="20"/>
+          <label x="60" customSize="0" y="-2" width="39" height="23" size="12">exists</label>
+        </node>
+        <node id="n16" color="#fcfcfc" type="attribute">
+          <geometry x="-20" y="20" width="20" height="20"/>
+          <iri>A1</iri>
+          <label x="-20" customSize="0" y="-2" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e8" type="input" source="n16" target="n17">
+          <point x="-20" y="20"/>
+          <point x="60" y="20"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram12" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="role">
+          <geometry x="-60" y="-40" width="70" height="50"/>
+          <iri>R1</iri>
+          <label x="-60" customSize="0" y="-40" width="22" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="concept">
+          <geometry x="40" y="40" width="110" height="50"/>
+          <iri>C1</iri>
+          <label x="40" customSize="0" y="40" width="22" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="domain-restriction">
+          <geometry x="40" y="-40" width="20" height="20"/>
+          <label x="40" customSize="0" y="-62" width="27" height="23" size="12">self</label>
+        </node>
+        <edge id="e0" type="input" source="n0" target="n1">
+          <point x="-60" y="-40"/>
+          <point x="40" y="-40"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram42" width="5000" height="5000">
+        <node id="n1" color="#fcfcfc" type="concept">
+          <geometry x="100" y="0" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="100" customSize="0" y="0" width="22" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="concept">
+          <geometry x="-120" y="0" width="110" height="50"/>
+          <iri>C1</iri>
+          <label x="-120" customSize="0" y="0" width="22" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram34" width="5000" height="5000">
+        <node id="n4" color="#000000" type="range-restriction">
+          <geometry x="-20" y="-50" width="20" height="20"/>
+          <label x="-20" customSize="0" y="-72" width="39" height="23" size="12">exists</label>
+        </node>
+        <node id="n3" color="#fcfcfc" type="concept">
+          <geometry x="-20" y="50" width="110" height="50"/>
+          <iri>C1</iri>
+          <label x="-20" customSize="0" y="50" width="22" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="concept">
+          <geometry x="120" y="50" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="120" customSize="0" y="50" width="22" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="role">
+          <geometry x="-120" y="-50" width="70" height="50"/>
+          <iri>R1</iri>
+          <label x="-120" customSize="0" y="-50" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n0" target="n4">
+          <point x="-120" y="-50"/>
+          <point x="-20" y="-50"/>
+        </edge>
+        <edge id="e1" type="input" source="n3" target="n4">
+          <point x="-20" y="50"/>
+          <point x="-20" y="-50"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram22" width="5000" height="5000">
+        <node inputs="" id="n1" color="#fcfcfc" type="role-chain">
+          <geometry x="0" y="40" width="50" height="30"/>
+          <label x="0" customSize="0" y="40" width="36" height="23" size="12"/>
+        </node>
+        <node inputs="" id="n0" color="#fcfcfc" type="role-chain">
+          <geometry x="0" y="-40" width="50" height="30"/>
+          <label x="0" customSize="0" y="-40" width="36" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram29" width="5000" height="5000">
+        <node id="n0" color="#000000" type="facet">
+          <geometry x="80" y="160" width="118" height="0"/>
+          <label x="80" y="160" width="131" height="23">Facet(&lt;http://www.w3.org/2001/XMLSchema#maxExclusive> "32")</label>
+          <facet>
+            <constrainingFacet>http://www.w3.org/2001/XMLSchema#maxExclusive</constrainingFacet>
+            <literal>
+              <lexicalForm>32</lexicalForm>
+              <datatype/>
+              <language/>
+            </literal>
+          </facet>
+        </node>
+        <node id="n1" color="#fcfcfc" type="value-domain">
+          <geometry x="220" y="160" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="220" customSize="0" y="160" width="60" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="datatype-restriction">
+          <geometry x="80" y="60" width="50" height="30"/>
+          <label x="80" customSize="0" y="60" width="31" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n1" target="n2">
+          <point x="220" y="160"/>
+          <point x="80" y="60"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram6" width="5000" height="5000">
+        <node id="n0" color="#000000" type="facet">
+          <geometry x="-60" y="40" width="118" height="0"/>
+          <label x="-60" y="40" width="131" height="23">Facet(&lt;http://www.w3.org/2001/XMLSchema#maxExclusive> "32")</label>
+          <facet>
+            <constrainingFacet>http://www.w3.org/2001/XMLSchema#maxExclusive</constrainingFacet>
+            <literal>
+              <lexicalForm>32</lexicalForm>
+              <datatype/>
+              <language/>
+            </literal>
+          </facet>
+        </node>
+        <node id="n1" color="#fcfcfc" type="datatype-restriction">
+          <geometry x="-60" y="-60" width="50" height="30"/>
+          <label x="-60" customSize="0" y="-60" width="31" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="value-domain">
+          <geometry x="80" y="40" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="80" customSize="0" y="40" width="60" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n0" target="n1">
+          <point x="-60" y="40"/>
+          <point x="-60" y="-60"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram2" width="5000" height="5000">
+        <node id="n19" color="#fcfcfc" type="intersection">
+          <geometry x="-80" y="-70" width="50" height="30"/>
+          <label x="-80" customSize="0" y="-70" width="27" height="23" size="12"/>
+        </node>
+        <node id="n17" color="#fcfcfc" type="concept">
+          <geometry x="-80" y="50" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="-80" customSize="0" y="50" width="22" height="23" size="12"/>
+        </node>
+        <node id="n18" color="#fcfcfc" type="value-domain">
+          <geometry x="80" y="-70" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="80" customSize="0" y="-70" width="60" height="23" size="12"/>
+        </node>
+        <edge id="e9" type="input" source="n17" target="n19">
+          <point x="-80" y="50"/>
+          <point x="-80" y="-70"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram27" width="5000" height="5000">
+        <node inputs="e0" id="n3" color="#fcfcfc" type="property-assertion">
+          <geometry x="-20" y="-70" width="52" height="30"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="concept">
+          <geometry x="40" y="40" width="110" height="50"/>
+          <iri>C1</iri>
+          <label x="40" customSize="0" y="40" width="22" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="individual">
+          <geometry x="-80" y="40" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-80" customSize="0" y="40" width="17" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n1" target="n3">
+          <point x="-80" y="40"/>
+          <point x="-20" y="-70"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram24" width="5000" height="5000">
+        <node id="n1" color="#fcfcfc" type="individual">
+          <geometry x="-60" y="80" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-60" customSize="0" y="80" width="17" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="individual">
+          <geometry x="60" y="80" width="60" height="60"/>
+          <iri>I2</iri>
+          <label x="60" customSize="0" y="80" width="17" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="enumeration">
+          <geometry x="0" y="0" width="50" height="30"/>
+          <label x="0" customSize="0" y="0" width="40" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="concept">
+          <geometry x="0" y="-100" width="110" height="50"/>
+          <iri>C5</iri>
+          <label x="0" customSize="0" y="-100" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e1" type="input" source="n1" target="n3">
+          <point x="-60" y="80"/>
+          <point x="0" y="0"/>
+        </edge>
+        <edge id="e0" type="input" source="n0" target="n3">
+          <point x="60" y="80"/>
+          <point x="0" y="0"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram48" width="5000" height="5000">
+        <node id="n3" color="#fcfcfc" type="individual">
+          <geometry x="-120" y="40" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-120" customSize="0" y="40" width="17" height="23" size="12"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="union">
+          <geometry x="320" y="0" width="50" height="30"/>
+          <label x="320" customSize="0" y="0" width="18" height="23" size="12"/>
+        </node>
+        <node inputs="e3" id="n1" color="#fcfcfc" type="property-assertion">
+          <geometry x="0" y="80" width="52" height="30"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="complement">
+          <geometry x="140" y="80" width="50" height="30"/>
+          <label x="140" customSize="0" y="80" width="25" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="union">
+          <geometry x="380" y="80" width="50" height="30"/>
+          <label x="380" customSize="0" y="80" width="18" height="23" size="12"/>
+        </node>
+        <node id="n6" color="#fcfcfc" type="intersection">
+          <geometry x="260" y="80" width="50" height="30"/>
+          <label x="260" customSize="0" y="80" width="27" height="23" size="12"/>
+        </node>
+        <edge id="e2" type="input" source="n4" target="n6">
+          <point x="140" y="80"/>
+          <point x="260" y="80"/>
+        </edge>
+        <edge id="e1" type="input" source="n6" target="n5">
+          <point x="260" y="80"/>
+          <point x="320" y="0"/>
+        </edge>
+        <edge id="e3" type="input" source="n3" target="n1">
+          <point x="-120" y="40"/>
+          <point x="0" y="80"/>
+        </edge>
+        <edge id="e0" type="input" source="n2" target="n5">
+          <point x="380" y="80"/>
+          <point x="320" y="0"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram28" width="5000" height="5000">
+        <node id="n1" color="#fcfcfc" type="individual">
+          <geometry x="-60" y="80" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-60" customSize="0" y="80" width="17" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="role">
+          <geometry x="0" y="-80" width="70" height="50"/>
+          <iri>R2</iri>
+          <label x="0" customSize="0" y="-80" width="22" height="23" size="12"/>
+        </node>
+        <node inputs="e0" id="n2" color="#fcfcfc" type="property-assertion">
+          <geometry x="0" y="0" width="52" height="30"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="literal">
+          <geometry x="60" y="80" width="60" height="60"/>
+          <literal>
+            <lexicalForm>12</lexicalForm>
+            <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+            <language/>
+          </literal>
+          <label x="60" customSize="0" y="80" width="97" height="23" size="12"/>
+        </node>
+        <edge id="e1" type="membership" source="n2" target="n0">
+          <point x="0" y="0"/>
+          <point x="0" y="-80"/>
+        </edge>
+        <edge id="e0" type="input" source="n1" target="n2">
+          <point x="-60" y="80"/>
+          <point x="0" y="0"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram14" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="role">
+          <geometry x="56" y="-26" width="70" height="50"/>
+          <iri>R5</iri>
+          <label x="56" customSize="0" y="-26" width="22" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="value-domain">
+          <geometry x="-64" y="54" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-64" customSize="0" y="54" width="60" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="domain-restriction">
+          <geometry x="-64" y="-26" width="20" height="20"/>
+          <label x="-64" customSize="0" y="-48" width="39" height="23" size="12">exists</label>
+        </node>
+        <edge id="e0" type="input" source="n2" target="n1">
+          <point x="-64" y="54"/>
+          <point x="-64" y="-26"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram49" width="5000" height="5000">
+        <node id="n1" color="#fcfcfc" type="intersection">
+          <geometry x="160" y="-40" width="50" height="30"/>
+          <label x="160" customSize="0" y="-40" width="27" height="23" size="12"/>
+        </node>
+        <node id="n4" color="#fcfcfc" type="union">
+          <geometry x="220" y="60" width="50" height="30"/>
+          <label x="220" customSize="0" y="60" width="18" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="union">
+          <geometry x="100" y="60" width="50" height="30"/>
+          <label x="100" customSize="0" y="60" width="18" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="complement">
+          <geometry x="-20" y="-40" width="50" height="30"/>
+          <label x="-20" customSize="0" y="-40" width="25" height="23" size="12"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="role">
+          <geometry x="-220" y="-40" width="70" height="50"/>
+          <iri>R9</iri>
+          <label x="-220" customSize="0" y="-40" width="22" height="23" size="12"/>
+        </node>
+        <edge id="e1" type="input" source="n4" target="n1">
+          <point x="220" y="60"/>
+          <point x="160" y="-40"/>
+        </edge>
+        <edge id="e0" type="input" source="n3" target="n1">
+          <point x="100" y="60"/>
+          <point x="160" y="-40"/>
+        </edge>
+        <edge id="e2" type="input" source="n0" target="n1">
+          <point x="-20" y="-40"/>
+          <point x="160" y="-40"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram31" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="individual">
+          <geometry x="-60" y="80" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-60" customSize="0" y="80" width="17" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="attribute">
+          <geometry x="0" y="-100" width="20" height="20"/>
+          <iri>A4</iri>
+          <label x="0" customSize="0" y="-122" width="22" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="individual">
+          <geometry x="60" y="80" width="60" height="60"/>
+          <iri>I2</iri>
+          <label x="60" customSize="0" y="80" width="17" height="23" size="12"/>
+        </node>
+        <node inputs="e1" id="n1" color="#fcfcfc" type="property-assertion">
+          <geometry x="0" y="0" width="52" height="30"/>
+        </node>
+        <edge id="e0" type="membership" source="n1" target="n2">
+          <point x="0" y="0"/>
+          <point x="0" y="-100"/>
+        </edge>
+        <edge id="e1" type="input" source="n0" target="n1">
+          <point x="-60" y="80"/>
+          <point x="0" y="0"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram26" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="value-domain">
+          <geometry x="120" y="-60" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#integer</iri>
+          <label x="120" customSize="0" y="-60" width="66" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="value-domain">
+          <geometry x="-140" y="40" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-140" customSize="0" y="40" width="60" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="datatype-restriction">
+          <geometry x="-20" y="-60" width="50" height="30"/>
+          <label x="-20" customSize="0" y="-60" width="31" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#000000" type="facet">
+          <geometry x="-20" y="40" width="80" height="0"/>
+          <label x="-20" y="40" width="92" height="23">Facet(&lt;http://www.w3.org/2001/XMLSchema#length> "32")</label>
+          <facet>
+            <constrainingFacet>http://www.w3.org/2001/XMLSchema#length</constrainingFacet>
+            <literal>
+              <lexicalForm>32</lexicalForm>
+              <datatype/>
+              <language/>
+            </literal>
+          </facet>
+        </node>
+        <edge id="e1" type="input" source="n3" target="n2">
+          <point x="-20" y="40"/>
+          <point x="-20" y="-60"/>
+        </edge>
+        <edge id="e0" type="input" source="n1" target="n2">
+          <point x="-140" y="40"/>
+          <point x="-140" y="-60"/>
+          <point x="-20" y="-60"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram21" width="5000" height="5000">
+        <node id="n1" color="#fcfcfc" type="role-inverse">
+          <geometry x="0" y="-30" width="50" height="30"/>
+          <label x="0" customSize="0" y="-30" width="23" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="role-inverse">
+          <geometry x="0" y="30" width="50" height="30"/>
+          <label x="0" customSize="0" y="30" width="23" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram13" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="role">
+          <geometry x="-60" y="-40" width="70" height="50"/>
+          <iri>R6</iri>
+          <label x="-60" customSize="0" y="-40" width="22" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="value-domain">
+          <geometry x="40" y="60" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="40" customSize="0" y="60" width="60" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="domain-restriction">
+          <geometry x="40" y="-40" width="20" height="20"/>
+          <label x="40" customSize="0" y="-62" width="39" height="23" size="12">exists</label>
+        </node>
+        <edge id="e0" type="input" source="n0" target="n1">
+          <point x="-60" y="-40"/>
+          <point x="40" y="-40"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram38" width="5000" height="5000">
+        <node inputs="" id="n0" color="#fcfcfc" type="property-assertion">
+          <geometry x="60" y="10" width="52" height="30"/>
+        </node>
+        <node id="n2" color="#000000" type="range-restriction">
+          <geometry x="-40" y="10" width="20" height="20"/>
+          <label x="-40" customSize="0" y="-12" width="39" height="23" size="12">exists</label>
+        </node>
+      </diagram>
+      <diagram name="diagram30" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="attribute">
+          <geometry x="-40" y="0" width="20" height="20"/>
+          <iri>A4</iri>
+          <label x="-40" customSize="0" y="-22" width="22" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="domain-restriction">
+          <geometry x="60" y="0" width="20" height="20"/>
+          <label x="60" customSize="0" y="-22" width="27" height="23" size="12">self</label>
+        </node>
+      </diagram>
+      <diagram name="diagram46" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="complement">
+          <geometry x="100" y="60" width="50" height="30"/>
+          <label x="100" customSize="0" y="60" width="25" height="23" size="12"/>
+        </node>
+        <node inputs="e3,e4" id="n4" color="#fcfcfc" type="property-assertion">
+          <geometry x="-40" y="60" width="52" height="30"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="union">
+          <geometry x="280" y="-20" width="50" height="30"/>
+          <label x="280" customSize="0" y="-20" width="18" height="23" size="12"/>
+        </node>
+        <node id="n5" color="#fcfcfc" type="individual">
+          <geometry x="-160" y="20" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-160" customSize="0" y="20" width="17" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="intersection">
+          <geometry x="220" y="60" width="50" height="30"/>
+          <label x="220" customSize="0" y="60" width="27" height="23" size="12"/>
+        </node>
+        <node id="n6" color="#fcfcfc" type="individual">
+          <geometry x="-160" y="100" width="60" height="60"/>
+          <iri>I2</iri>
+          <label x="-160" customSize="0" y="100" width="17" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#fcfcfc" type="union">
+          <geometry x="340" y="60" width="50" height="30"/>
+          <label x="340" customSize="0" y="60" width="18" height="23" size="12"/>
+        </node>
+        <edge id="e1" type="input" source="n3" target="n2">
+          <point x="340" y="60"/>
+          <point x="280" y="-20"/>
+        </edge>
+        <edge id="e4" type="input" source="n5" target="n4">
+          <point x="-160" y="20"/>
+          <point x="-40" y="60"/>
+        </edge>
+        <edge id="e2" type="input" source="n0" target="n1">
+          <point x="100" y="60"/>
+          <point x="220" y="60"/>
+        </edge>
+        <edge id="e0" type="input" source="n1" target="n2">
+          <point x="220" y="60"/>
+          <point x="280" y="-20"/>
+        </edge>
+        <edge id="e3" type="input" source="n6" target="n4">
+          <point x="-160" y="100"/>
+          <point x="-40" y="60"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram25" width="5000" height="5000">
+        <node id="n1" color="#fcfcfc" type="value-domain">
+          <geometry x="-140" y="40" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-140" customSize="0" y="40" width="60" height="23" size="12"/>
+        </node>
+        <node id="n0" color="#fcfcfc" type="concept">
+          <geometry x="140" y="-60" width="110" height="50"/>
+          <iri>C6</iri>
+          <label x="140" customSize="0" y="-60" width="22" height="23" size="12"/>
+        </node>
+        <node id="n3" color="#000000" type="facet">
+          <geometry x="-20" y="40" width="80" height="0"/>
+          <label x="-20" y="40" width="92" height="23">Facet(&lt;http://www.w3.org/2001/XMLSchema#length> "32")</label>
+          <facet>
+            <constrainingFacet>http://www.w3.org/2001/XMLSchema#length</constrainingFacet>
+            <literal>
+              <lexicalForm>32</lexicalForm>
+              <datatype/>
+              <language/>
+            </literal>
+          </facet>
+        </node>
+        <node id="n2" color="#fcfcfc" type="datatype-restriction">
+          <geometry x="-20" y="-60" width="50" height="30"/>
+          <label x="-20" customSize="0" y="-60" width="31" height="23" size="12"/>
+        </node>
+        <edge id="e1" type="input" source="n3" target="n2">
+          <point x="-20" y="40"/>
+          <point x="-20" y="-60"/>
+        </edge>
+        <edge id="e0" type="input" source="n1" target="n2">
+          <point x="-140" y="40"/>
+          <point x="-140" y="-60"/>
+          <point x="-20" y="-60"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram41" width="5000" height="5000">
+        <node id="n0" color="#000000" type="facet">
+          <geometry x="60" y="-20" width="80" height="0"/>
+          <label x="60" y="-20" width="92" height="23">Facet(&lt;http://www.w3.org/2001/XMLSchema#length> "32")</label>
+          <facet>
+            <constrainingFacet>http://www.w3.org/2001/XMLSchema#length</constrainingFacet>
+            <literal>
+              <lexicalForm>32</lexicalForm>
+              <datatype/>
+              <language/>
+            </literal>
+          </facet>
+        </node>
+        <node id="n1" color="#fcfcfc" type="value-domain">
+          <geometry x="60" y="100" width="90" height="40"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="60" customSize="0" y="100" width="60" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram44" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="individual">
+          <geometry x="-100" y="0" width="60" height="60"/>
+          <iri>I1</iri>
+          <label x="-100" customSize="0" y="0" width="17" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="role">
+          <geometry x="80" y="0" width="70" height="50"/>
+          <iri>R4</iri>
+          <label x="80" customSize="0" y="0" width="22" height="23" size="12"/>
+        </node>
+      </diagram>
+      <diagram name="diagram15" width="5000" height="5000">
+        <node id="n0" color="#fcfcfc" type="concept">
+          <geometry x="-80" y="60" width="110" height="50"/>
+          <iri>C1</iri>
+          <label x="-80" customSize="0" y="60" width="22" height="23" size="12"/>
+        </node>
+        <node id="n2" color="#fcfcfc" type="concept">
+          <geometry x="80" y="-60" width="110" height="50"/>
+          <iri>C2</iri>
+          <label x="80" customSize="0" y="-60" width="22" height="23" size="12"/>
+        </node>
+        <node id="n1" color="#fcfcfc" type="complement">
+          <geometry x="-80" y="-60" width="50" height="30"/>
+          <label x="-80" customSize="0" y="-60" width="25" height="23" size="12"/>
+        </node>
+        <edge id="e0" type="input" source="n0" target="n1">
+          <point x="-80" y="60"/>
+          <point x="-80" y="-60"/>
+        </edge>
+      </diagram>
+      <diagram name="diagram36" width="5000" height="5000">
+        <node id="n2" color="#000000" type="range-restriction">
+          <geometry x="80" y="10" width="20" height="20"/>
+          <label x="80" customSize="0" y="-12" width="39" height="23" size="12">exists</label>
+        </node>
+        <node id="n1" color="#fcfcfc" type="individual">
+          <geometry x="-20" y="10" width="60" height="60"/>
+          <iri>I4</iri>
+          <label x="-20" customSize="0" y="10" width="17" height="23" size="12"/>
+        </node>
+      </diagram>
+    </diagrams>
+  </project>
+</graphol>

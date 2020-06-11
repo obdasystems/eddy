@@ -698,7 +698,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('ontology_imports_delete_button').setEnabled(False)
 
         table = self.widget('annotations_table_widget')
-        ontAnnAss = self.project.ontologyIRI.annotationAssertions
+        ontAnnAss=[]
+        if self.project.ontologyIRI:
+            ontAnnAss = self.project.ontologyIRI.annotationAssertions
         table.clear()
         table.setRowCount(len(ontAnnAss))
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])

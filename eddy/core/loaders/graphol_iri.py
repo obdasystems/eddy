@@ -1497,7 +1497,15 @@ class GrapholProjectIRILoaderMixin_3(object):
         constrFacetIRI = self.nproject.getIRI(constrFacetEl.text())
         literalEl = facetEl.firstChildElement('literal')
         lexForm = literalEl.firstChildElement('lexicalForm').text()
-        datatypeIRI = self.nproject.getIRI(literalEl.firstChildElement('datatype').text())
+
+
+
+        datatypeStr = literalEl.firstChildElement('datatype').text()
+        if datatypeStr:
+            datatypeIRI = self.nproject.getIRI(datatypeStr)
+        else:
+            datatypeIRI = OWL2Datatype.PlainLiteral.value
+
         literal = Literal(lexForm,datatypeIRI)
         facet = Facet(constrFacetIRI, literal)
         geometryElement = nodeElement.firstChildElement('geometry')

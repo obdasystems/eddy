@@ -59,7 +59,7 @@ def session(qapp, qtbot, logging_disabled):
     Provide an initialized Session instance.
     """
     with logging_disabled:
-        session = Session(qapp, expandPath('@tests/test_project_1'))
+        session = Session(qapp, expandPath('@tests/test_project_3/test_project_3_1.graphol'))
         session.show()
     qtbot.addWidget(session)
     qtbot.waitExposed(session, timeout=3000)

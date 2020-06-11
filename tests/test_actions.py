@@ -54,7 +54,7 @@ def session(qapp, qtbot, logging_disabled):
     Provide an initialized Session instance.
     """
     with logging_disabled:
-        session = Session(qapp, expandPath('@tests/test_project_1'))
+        session = Session(qapp, expandPath('@tests/test_project_3/test_project_3_1.graphol'))
         session.show()
     qtbot.addWidget(session)
     qtbot.waitExposed(session, timeout=3000)
@@ -72,7 +72,10 @@ def test_action_copy(session):
     project = session.project
     diagram = session.mdi.activeDiagram()
     action = session.action('copy')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+
     num_nodes_in_diagram = len(diagram.nodes())
     num_edges_in_diagram = len(diagram.edges())
     diagram.clearSelection()
@@ -93,7 +96,10 @@ def test_action_copy_and_paste_single_predicate_node_on_the_same_diagram(session
     diagram = session.mdi.activeDiagram()
     action_copy = session.action('copy')
     action_paste = session.action('paste')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -113,8 +119,8 @@ def test_action_copy_and_paste_single_predicate_node_on_the_same_diagram(session
     assert num_items_in_project + 1 == len(project.items(diagram))
     assert num_nodes_in_project + 1 == len(project.nodes(diagram))
     assert num_edges_in_project == len(project.edges(diagram))
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri)) == 2
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 1
     assert not session.undostack.isClean()
@@ -126,7 +132,11 @@ def test_action_copy_and_paste_single_predicate_node_with_hanging_edges_on_the_s
     diagram = session.mdi.activeDiagram()
     action_copy = session.action('copy')
     action_paste = session.action('paste')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+
+
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -148,8 +158,8 @@ def test_action_copy_and_paste_single_predicate_node_with_hanging_edges_on_the_s
     assert num_items_in_project + 1 == len(project.items(diagram))
     assert num_nodes_in_project + 1 == len(project.nodes(diagram))
     assert num_edges_in_project == len(project.edges(diagram))
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri)) == 2
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 1
     assert not session.undostack.isClean()
@@ -161,10 +171,20 @@ def test_action_copy_and_paste_multiple_predicate_nodes_on_the_same_diagram(sess
     diagram = session.mdi.activeDiagram()
     action_copy = session.action('copy')
     action_paste = session.action('paste')
-    node1 = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
-    node2 = first(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram))
-    node3 = first(project.predicates(Item.RoleNode, 'test:hasFather', diagram))
-    node4 = first(project.predicates(Item.RoleNode, 'test:hasMother', diagram))
+    
+    iri1 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node1 = first(project.iriOccurrences(Item.RoleIRINode, iri1, diagram))
+
+    iri2 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor')
+    node2 = first(project.iriOccurrences(Item.RoleIRINode, iri2, diagram))
+
+    iri3 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasFather')
+    node3 = first(project.iriOccurrences(Item.RoleIRINode, iri3, diagram))
+
+    iri4 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasMother')
+    node4 = first(project.iriOccurrences(Item.RoleIRINode, iri4, diagram))
+
+    
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -187,14 +207,14 @@ def test_action_copy_and_paste_multiple_predicate_nodes_on_the_same_diagram(sess
     assert num_items_in_project + 4 == len(project.items(diagram))
     assert num_nodes_in_project + 4 == len(project.nodes(diagram))
     assert num_edges_in_project == len(project.edges(diagram))
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor')) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather')) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother')) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4)) == 2
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 4
     assert not session.undostack.isClean()
@@ -206,17 +226,27 @@ def test_action_copy_and_paste_multiple_predicate_nodes_with_shared_edges_on_the
     diagram = session.mdi.activeDiagram()
     action_copy = session.action('copy')
     action_paste = session.action('paste')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+    iri1 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node1 = first(project.iriOccurrences(Item.RoleIRINode, iri1, diagram))
+
+    iri2 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor')
+    node2 = first(project.iriOccurrences(Item.RoleIRINode, iri2, diagram))
+
+    iri3 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasFather')
+    node3 = first(project.iriOccurrences(Item.RoleIRINode, iri3, diagram))
+
+    iri4 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasMother')
+    node4 = first(project.iriOccurrences(Item.RoleIRINode, iri4, diagram))
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
     num_nodes_in_diagram = len(diagram.nodes())
     num_edges_in_diagram = len(diagram.edges())
     diagram.clearSelection()
-    node.setSelected(True)
-    for edge in node.edges:
+    node1.setSelected(True)
+    for edge in node1.edges:
         edge.setSelected(True)
-        edge.other(node).setSelected(True)
+        edge.other(node1).setSelected(True)
     # WHEN
     action_copy.trigger()
     action_paste.trigger()
@@ -229,14 +259,14 @@ def test_action_copy_and_paste_multiple_predicate_nodes_with_shared_edges_on_the
     assert num_items_in_project + 7 == len(project.items(diagram))
     assert num_nodes_in_project + 4 == len(project.nodes(diagram))
     assert num_edges_in_project + 3 == len(project.edges(diagram))
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor')) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather')) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother', diagram)) == 2
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother')) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4, diagram)) == 2
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4)) == 2
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 7
     assert not session.undostack.isClean()
@@ -247,7 +277,10 @@ def test_action_cut(session):
     project = session.project
     diagram = session.mdi.activeDiagram()
     action = session.action('cut')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -266,8 +299,8 @@ def test_action_cut(session):
     assert num_items_in_project == len(project.items(diagram)) + 4
     assert num_nodes_in_project == len(project.nodes(diagram)) + 1
     assert num_edges_in_project == len(project.edges(diagram)) + 3
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri, diagram)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri)) == 0
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 1
     assert not session.undostack.isClean()
@@ -279,7 +312,10 @@ def test_action_cut_and_paste_single_predicate_node_on_the_same_diagram(session)
     diagram = session.mdi.activeDiagram()
     action_cut = session.action('cut')
     action_paste = session.action('paste')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+    
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+    
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -299,8 +335,8 @@ def test_action_cut_and_paste_single_predicate_node_on_the_same_diagram(session)
     assert num_items_in_project == len(project.items(diagram)) + 3
     assert num_nodes_in_project == len(project.nodes(diagram))
     assert num_edges_in_project == len(project.edges(diagram)) + 3
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri)) == 1
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 1
     assert not session.undostack.isClean()
@@ -312,7 +348,10 @@ def test_action_cut_and_paste_single_predicate_node_with_hanging_edges_on_the_sa
     diagram = session.mdi.activeDiagram()
     action_cut = session.action('cut')
     action_paste = session.action('paste')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+    
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+    
     num_nodes_in_diagram = len(diagram.nodes())
     num_edges_in_diagram = len(diagram.edges())
     num_items_in_project = len(project.items())
@@ -334,8 +373,8 @@ def test_action_cut_and_paste_single_predicate_node_with_hanging_edges_on_the_sa
     assert num_items_in_project == len(project.items(diagram)) + 3
     assert num_nodes_in_project == len(project.nodes(diagram))
     assert num_edges_in_project == len(project.edges(diagram)) + 3
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri)) == 1
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 1
     assert not session.undostack.isClean()
@@ -347,10 +386,19 @@ def test_action_cut_and_paste_multiple_predicate_nodes_on_the_same_diagram(sessi
     diagram = session.mdi.activeDiagram()
     action_cut = session.action('cut')
     action_paste = session.action('paste')
-    node1 = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
-    node2 = first(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram))
-    node3 = first(project.predicates(Item.RoleNode, 'test:hasFather', diagram))
-    node4 = first(project.predicates(Item.RoleNode, 'test:hasMother', diagram))
+    
+    iri1 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node1 = first(project.iriOccurrences(Item.RoleIRINode, iri1, diagram))
+
+    iri2 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor')
+    node2 = first(project.iriOccurrences(Item.RoleIRINode, iri2, diagram))
+
+    iri3 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasFather')
+    node3 = first(project.iriOccurrences(Item.RoleIRINode, iri3, diagram))
+
+    iri4 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasMother')
+    node4 = first(project.iriOccurrences(Item.RoleIRINode, iri4, diagram))
+    
     num_nodes_in_diagram = len(diagram.nodes())
     num_edges_in_diagram = len(diagram.edges())
     num_items_in_project = len(project.items())
@@ -373,14 +421,14 @@ def test_action_cut_and_paste_multiple_predicate_nodes_on_the_same_diagram(sessi
     assert num_items_in_project == len(project.items(diagram)) + 8
     assert num_nodes_in_project == len(project.nodes(diagram))
     assert num_edges_in_project == len(project.edges(diagram)) + 8
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor')) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather')) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother')) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4)) == 1
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 4
     assert not session.undostack.isClean()
@@ -392,17 +440,29 @@ def test_action_cut_and_paste_multiple_predicate_nodes_with_shared_edges_on_the_
     diagram = session.mdi.activeDiagram()
     action_cut = session.action('cut')
     action_paste = session.action('paste')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+
+    iri1 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node1 = first(project.iriOccurrences(Item.RoleIRINode, iri1, diagram))
+
+    iri2 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor')
+    node2 = first(project.iriOccurrences(Item.RoleIRINode, iri2, diagram))
+
+    iri3 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasFather')
+    node3 = first(project.iriOccurrences(Item.RoleIRINode, iri3, diagram))
+
+    iri4 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasMother')
+    node4 = first(project.iriOccurrences(Item.RoleIRINode, iri4, diagram))
+    
     num_nodes_in_diagram = len(diagram.nodes())
     num_edges_in_diagram = len(diagram.edges())
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
     diagram.clearSelection()
-    node.setSelected(True)
-    for edge in node.edges:
+    node1.setSelected(True)
+    for edge in node1.edges:
         edge.setSelected(True)
-        edge.other(node).setSelected(True)
+        edge.other(node1).setSelected(True)
     # WHEN
     action_cut.trigger()
     action_paste.trigger()
@@ -415,14 +475,14 @@ def test_action_cut_and_paste_multiple_predicate_nodes_with_shared_edges_on_the_
     assert num_items_in_project == len(project.items(diagram)) + 5
     assert num_nodes_in_project == len(project.nodes(diagram))
     assert num_edges_in_project == len(project.edges(diagram)) + 5
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor')) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather')) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother', diagram)) == 1
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother')) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4, diagram)) == 1
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4)) == 1
     assert not session.clipboard.empty()
     assert session.clipboard.size() == 7
     assert not session.undostack.isClean()
@@ -437,7 +497,10 @@ def test_action_delete_single_predicate_node(session):
     project = session.project
     diagram = session.mdi.activeDiagram()
     action = session.action('delete')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+    
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+    
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -456,8 +519,8 @@ def test_action_delete_single_predicate_node(session):
     assert num_items_in_project == len(project.items(diagram)) + 4
     assert num_nodes_in_project == len(project.nodes(diagram)) + 1
     assert num_edges_in_project == len(project.edges(diagram)) + 3
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri, diagram)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri)) == 0
     assert not session.undostack.isClean()
 
 
@@ -466,16 +529,28 @@ def test_action_delete_multiple_predicate_nodes_with_shared_edges(session):
     project = session.project
     diagram = session.mdi.activeDiagram()
     action = session.action('delete')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+
+    iri1 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node1 = first(project.iriOccurrences(Item.RoleIRINode, iri1, diagram))
+
+    iri2 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor')
+    node2 = first(project.iriOccurrences(Item.RoleIRINode, iri2, diagram))
+
+    iri3 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasFather')
+    node3 = first(project.iriOccurrences(Item.RoleIRINode, iri3, diagram))
+
+    iri4 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasMother')
+    node4 = first(project.iriOccurrences(Item.RoleIRINode, iri4, diagram))
+    
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
     num_nodes_in_diagram = len(diagram.nodes())
     num_edges_in_diagram = len(diagram.edges())
     diagram.clearSelection()
-    node.setSelected(True)
-    for edge in node.edges:
-        edge.other(node).setSelected(True)
+    node1.setSelected(True)
+    for edge in node1.edges:
+        edge.other(node1).setSelected(True)
     # WHEN
     action.trigger()
     # THEN
@@ -487,14 +562,14 @@ def test_action_delete_multiple_predicate_nodes_with_shared_edges(session):
     assert num_items_in_project == len(project.items(diagram)) + 12
     assert num_nodes_in_project == len(project.nodes(diagram)) + 4
     assert num_edges_in_project == len(project.edges(diagram)) + 8
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent', diagram)) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasParent')) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram)) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor')) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather', diagram)) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasFather')) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother', diagram)) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasMother')) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1, diagram)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri1)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2, diagram)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri2)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3, diagram)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri3)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4, diagram)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri4)) == 0
     assert not session.undostack.isClean()
 
 
@@ -503,7 +578,10 @@ def test_action_delete_multiple_edges(session):
     project = session.project
     diagram = session.mdi.activeDiagram()
     action = session.action('delete')
-    node = first(project.predicates(Item.RoleNode, 'test:hasParent', diagram))
+    
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+    
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -531,7 +609,10 @@ def test_action_purge_role_node(session):
     project = session.project
     diagram = session.mdi.activeDiagram()
     action = session.action('purge')
-    node = first(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram))
+    
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+    
     num_items_in_project = len(project.items())
     num_nodes_in_project = len(project.nodes())
     num_edges_in_project = len(project.edges())
@@ -550,8 +631,8 @@ def test_action_purge_role_node(session):
     assert num_items_in_project == len(project.items(diagram)) + 9
     assert num_nodes_in_project == len(project.nodes(diagram)) + 3
     assert num_edges_in_project == len(project.edges(diagram)) + 6
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor', diagram)) == 0
-    assert len(project.predicates(Item.RoleNode, 'test:hasAncestor')) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri, diagram)) == 0
+    assert len(project.iriOccurrences(Item.RoleIRINode, iri)) == 0
     assert not session.undostack.isClean()
 
 
@@ -597,17 +678,17 @@ def test_action_open_properties_dialog(session, qtbot: QtBot):
 
 
 #############################################
-#   DESCRIPTION DIALOG
+#   IRI PROPS DIALOG
 #################################
 
 def test_action_open_description_dialog(session, qtbot):
     # GIVEN
     project = session.project
     diagram = session.mdi.activeDiagram()
-    action = session.action('node_description')
+    action = session.action('iri_annotations_refactor')
     diagram.clearSelection()
     for node in project.nodes(diagram):
-        if node.type() in {Item.ConceptNode, Item.AttributeNode, Item.RoleNode, Item.IndividualNode}:
+        if node.type() in {Item.ConceptIRINode, Item.AttributeIRINode, Item.RoleIRINode, Item.IndividualIRINode}:
             node.setSelected(True)
             # WHEN
             action.trigger()
