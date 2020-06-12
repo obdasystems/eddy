@@ -282,10 +282,12 @@ class Eddy(QtWidgets.QApplication):
         # CONFIGURE THE WORKSPACE
         settings = QtCore.QSettings()
         workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
+        '''
         if not isdir(workspace):
             window = WorkspaceDialog()
             if window.exec_() == WorkspaceDialog.Rejected:
                 raise SystemExit
+        '''
 
         # PROCESS COMMAND LINE ARGUMENTS
         args = self.options.positionalArguments()

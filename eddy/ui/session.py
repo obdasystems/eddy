@@ -1820,7 +1820,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol}) + self.diagramExporterNameFilters())
+            dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol,File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Pdf.value)
@@ -1953,7 +1953,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        dialog.setNameFilters(self.ontologyLoaderNameFilters())
+        dialog.setNameFilters(self.ontologyLoaderNameFilters({File.GraphML}))
         if dialog.exec_():
             filetype = File.valueOf(dialog.selectedNameFilter())
             selected = [x for x in dialog.selectedFiles() if File.forPath(x) is filetype and fexists(x)]
