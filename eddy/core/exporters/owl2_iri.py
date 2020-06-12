@@ -1402,7 +1402,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             #############################################
             # BUILD OPERAND
             #################################
-            ope = self.convert(operand).getInverseProperty()
+            #ope = self.convert(operand).getInverseProperty()
+            ope = self.convert(operand)
             #############################################
             # BUILD FILLER
             #################################
@@ -1794,9 +1795,6 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 owlApiObj = self.IRI.create(str(obj))
             else:
                 obj = ann.value.replace('\n',' ')
-                print("ann.value= " + ann.value)
-                print("obj= " + obj)
-                print()
                 datatype = ann.datatype
                 lang = ann.language
                 if lang:
@@ -1805,7 +1803,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     if datatype:
                         owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
                     else:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral)))
+                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
                     owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
             self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
 

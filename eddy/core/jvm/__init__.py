@@ -165,8 +165,10 @@ def findJavaHome():
     # JPype offers a nice utility to find Java from known locations
     if JniLib.JPYPE in _jvmLibraries:
         from jpype import get_default_jvm_path
+        from jpype import getDefaultJVMPath
         try:
-            jni_lib = get_default_jvm_path()
+            #jni_lib = get_default_jvm_path()
+            jni_lib = getDefaultJVMPath()
             # Try to locate the root of the Java installation walking
             # the path backwards and checking for the existence
             # of the `java` executable.
