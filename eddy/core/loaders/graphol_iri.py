@@ -240,11 +240,14 @@ class GrapholProjectIRILoaderMixin_2(object):
                             sube_prefix = sube_prefixes.firstChildElement('prefix')
                             if not sube_prefix.isNull():
                                 prefix_value = sube_prefix.attribute('prefix_value')
+                            else:
+                                prefix_value =''
                             return prefix_value
                     finally:
                         sube_property = sube_property.nextSiblingElement('property')
             except Exception:
-                LOGGER.exception('Failed to fetch namespace  %s', namespace)
+                iriValue = sube.attribute('iri_value')
+                LOGGER.exception('Failed to fetch namespace  %s', iriValue if iriValue else '"unknown"')
             finally:
                 sube = sube.nextSiblingElement('iri')
         return result

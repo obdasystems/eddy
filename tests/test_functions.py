@@ -171,12 +171,6 @@ def test_snapF_with_skip():
     assert 8.0 == snapF(value=8.0, size=10.0, perform=False)
     assert 6.0 == snapF(value=6.0, size=10.0, perform=False)
 
-
-def test_owl_short_iri():
-    assert 'prefix:this_is_my_content' == OWLShortIRI('prefix', 'this_is my content')
-    assert 'prefix:this_is_my_content' == OWLShortIRI('prefix', 'this\n\nis_my content')
-
-
 def test_owl_text():
     assert 'this_is_a_long_string' == OWLText('this_is_a_long_string')
     assert 'this_is_a_long_string' == OWLText('this_is_a\nlong _string')

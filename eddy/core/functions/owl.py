@@ -129,6 +129,7 @@ def TurtleDocumentFilter(content, **kwargs):
     firstLine = 0 if not skipDefaultPrefix else 1
     return '\n'.join(content.split('\n')[firstLine:])
 
+#Deprecated, use methods of IRIManager instead
 
 def OWLShortIRI(prefix, resource):
     """

@@ -72,7 +72,7 @@ def no_message_box(monkeypatch):
 #############################################
 #   GRAPHOL IMPORT
 #################################
-
+'''
 def test_load_project_from_graphol_v1(session, qtbot, tmpdir):
     # GIVEN
     graphol = tmpdir.join('LUBM')
@@ -92,6 +92,7 @@ def test_load_project_from_graphol_v1(session, qtbot, tmpdir):
     assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.project.diagram(diagram).nodes()))) == 9
     assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.project.diagram(diagram).nodes()))) == 5
     assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.project.diagram(diagram).nodes()))) == 0
+'''
 
 
 def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
