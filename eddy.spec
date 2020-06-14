@@ -71,7 +71,6 @@ if LINUX:
 if MACOS:
     EXEC_ARCH = platform.machine().lower()
     EXEC_ICON = 'resources/images/eddy.icns'
-    #EXEC_ICON = 'resources/images/new_logo/colour/icon/png/eddy-icon-48.png'
     EXEC_NAME = APPNAME
 
 if WIN32:

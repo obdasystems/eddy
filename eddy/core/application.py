@@ -280,8 +280,8 @@ class Eddy(QtWidgets.QApplication):
         Run the application by showing the welcome dialog.
         """
         # CONFIGURE THE WORKSPACE
-        settings = QtCore.QSettings()
-        workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
+        #settings = QtCore.QSettings()
+        #workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
         '''
         if not isdir(workspace):
             window = WorkspaceDialog()
