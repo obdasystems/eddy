@@ -74,15 +74,16 @@ def test_insert_single_node(session, qtbot):
     view = session.mdi.activeView()
     plugin = session.plugin('palette')
     palette = plugin.widget('palette')
-    button = palette.button(Item.ConceptNode)
-    node = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    button = palette.button(Item.ConceptIRINode)
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Person')
+    node = first(project.iriOccurrences(Item.ConceptIRINode, iri, diagram))
     position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
     # WHEN
     qtbot.mouseClick(button, QtCore.Qt.LeftButton)
     # THEN
     assert button.isChecked()
     assert diagram.mode is DiagramMode.NodeAdd
-    assert diagram.modeParam is Item.ConceptNode
+    assert diagram.modeParam is Item.ConceptIRINode
     # WHEN
     qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, position)
     # THEN
@@ -98,21 +99,22 @@ def test_insert_single_node_with_control_modifier(session, qtbot):
     view = session.mdi.activeView()
     plugin = session.plugin('palette')
     palette = plugin.widget('palette')
-    button = palette.button(Item.ConceptNode)
-    node = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    button = palette.button(Item.ConceptIRINode)
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Person')
+    node = first(project.iriOccurrences(Item.ConceptIRINode, iri, diagram))
     position = view.mapFromScene(node.pos() - QtCore.QPointF(-200, 0))
     # WHEN
     qtbot.mouseClick(button, QtCore.Qt.LeftButton)
     # THEN
     assert button.isChecked()
     assert diagram.mode is DiagramMode.NodeAdd
-    assert diagram.modeParam is Item.ConceptNode
+    assert diagram.modeParam is Item.ConceptIRINode
     # WHEN
     qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
     # THEN
-    assert button.isChecked()
-    assert diagram.mode is DiagramMode.NodeAdd
-    assert diagram.modeParam is Item.ConceptNode
+    assert not button.isChecked()
+    assert not diagram.mode is DiagramMode.NodeAdd
+    assert not diagram.modeParam is Item.ConceptIRINode
 
 
 def test_insert_multiple_nodes_with_control_modifier(session, qtbot):
@@ -122,22 +124,23 @@ def test_insert_multiple_nodes_with_control_modifier(session, qtbot):
     view = session.mdi.activeView()
     plugin = session.plugin('palette')
     palette = plugin.widget('palette')
-    button = palette.button(Item.RoleNode)
-    node = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+    button = palette.button(Item.RoleIRINode)
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Person')
+    node = first(project.iriOccurrences(Item.ConceptIRINode, iri, diagram))
     positions = (view.mapFromScene(node.pos() - QtCore.QPointF(-300, x)) for x in (0, +200, -200))
     # WHEN
     qtbot.mouseClick(button, QtCore.Qt.LeftButton)
     # THEN
     assert button.isChecked()
     assert diagram.mode is DiagramMode.NodeAdd
-    assert diagram.modeParam is Item.RoleNode
+    assert diagram.modeParam is Item.RoleIRINode
     # WHEN
     for position in positions:
         qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
     # THEN
-    assert button.isChecked()
-    assert diagram.mode is DiagramMode.NodeAdd
-    assert diagram.modeParam is Item.RoleNode
+    assert not button.isChecked()
+    assert not diagram.mode is DiagramMode.NodeAdd
+    assert not diagram.modeParam is Item.RoleIRINode
 
 
 #############################################
@@ -152,8 +155,13 @@ def test_insert_edge(session, qtbot):
     plugin = session.plugin('palette')
     palette = plugin.widget('palette')
     button = palette.button(Item.InclusionEdge)
-    node1 = first(project.predicates(Item.ConceptNode, 'test:Male', diagram))
-    node2 = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+
+    iri1 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Male')
+    node1 = first(project.iriOccurrences(Item.ConceptIRINode, iri1, diagram))
+
+    iri2 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Person')
+    node2 = first(project.iriOccurrences(Item.ConceptIRINode, iri2, diagram))
+
     pos1 = view.mapFromScene(node1.pos())
     pos2 = view.mapFromScene(node2.pos())
     # WHEN
@@ -183,8 +191,13 @@ def test_insert_edge_with_control_modifier(session, qtbot):
     plugin = session.plugin('palette')
     palette = plugin.widget('palette')
     button = palette.button(Item.InclusionEdge)
-    node1 = first(project.predicates(Item.ConceptNode, 'test:Male', diagram))
-    node2 = first(project.predicates(Item.ConceptNode, 'test:Person', diagram))
+
+    iri1 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Male')
+    node1 = first(project.iriOccurrences(Item.ConceptIRINode, iri1, diagram))
+
+    iri2 = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/Person')
+    node2 = first(project.iriOccurrences(Item.ConceptIRINode, iri2, diagram))
+
     pos1 = view.mapFromScene(node1.pos())
     pos2 = view.mapFromScene(node2.pos())
     # WHEN
@@ -204,3 +217,4 @@ def test_insert_edge_with_control_modifier(session, qtbot):
     assert button.isChecked()
     assert diagram.mode is DiagramMode.EdgeAdd
     assert diagram.modeParam is Item.InclusionEdge
+

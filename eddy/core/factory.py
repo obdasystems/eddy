@@ -430,7 +430,7 @@ class MenuFactory(QtCore.QObject):
             action.setChecked(node.restriction() is action.data())
             action.setVisible(action.data() is not Restriction.Self or not qualified and not attribute)
         menu.insertSeparator(self.session.action('node_properties'))
-        self.insertLabelActions(menu, node)
+        self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
@@ -703,7 +703,7 @@ class MenuFactory(QtCore.QObject):
                 action.setChecked(node.restriction() is action.data())
                 action.setVisible(action.data() is not Restriction.Self or not qualified)
         menu.insertSeparator(self.session.action('node_properties'))
-        self.insertLabelActions(menu, node)
+        self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
@@ -864,7 +864,6 @@ class MenuFactory(QtCore.QObject):
             print('The selected node is either top or bottom')
         return menu
 
-    # TODO
     def buildIRIConceptNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for concept IRI nodes.
@@ -940,7 +939,6 @@ class MenuFactory(QtCore.QObject):
         menu.insertSeparator(self.session.action('node_properties'))
         return menu
 
-    # TODO
     def buildIRIIndividualNodeMenu(self, diagram, node):
         """
         Build and return a QMenu instance for concept IRI nodes.
