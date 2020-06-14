@@ -54,7 +54,7 @@ def session(qapp, qtbot, logging_disabled):
     Provide an initialized Session instance.
     """
     with logging_disabled:
-        session = Session(qapp, expandPath('@tests/test_project_3/test_project_3_1.graphol'))
+        session = Session(qapp, expandPath('@tests/test_project_3/test_project_3_2.graphol'))
         session.show()
     qtbot.addWidget(session)
     qtbot.waitExposed(session, timeout=3000)
@@ -124,24 +124,28 @@ def test_inclusion_no_graphol_expression(session, qtbot):
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion must involve two graphol expressions'
     assert not session.project.profile.pvr().isValid()
 
-'''
+
 def test_inclusion_between_concept_and_role(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
-    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptIRINode, 'test:C1'), (Item.RoleIRINode, 'test:R1'), qtbot)
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
+    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptIRINode, iri1), (Item.RoleIRINode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between Concept and Role'
     assert not session.project.profile.pvr().isValid()
 
-
+'''
 def test_inclusion_between_concept_and_attribute(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptIRINode, 'test:C1'), (Item.AttributeIRINode, 'test:A1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -154,6 +158,8 @@ def test_inclusion_between_concept_and_value_domain(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptIRINode, 'test:C1'), (Item.ValueDomainIRINode, 'xsd:string'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -166,6 +172,8 @@ def test_inclusion_between_role_and_attribute(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, 'test:R1'), (Item.AttributeIRINode, 'test:A1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -178,6 +186,8 @@ def test_inclusion_between_role_and_value_domain(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, 'test:R1'), (Item.ValueDomainIRINode, 'xsd:string'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -190,6 +200,8 @@ def test_inclusion_between_attribute_and_value_domain(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, 'test:A1'), (Item.ValueDomainIRINode, 'xsd:string'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -203,6 +215,8 @@ def test_inclusion_between_role_and_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -216,6 +230,8 @@ def test_inclusion_between_role_and_disjoint_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -229,6 +245,8 @@ def test_inclusion_between_role_and_intersection_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -242,6 +260,8 @@ def test_inclusion_between_attribute_and_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, 'test:A1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -255,6 +275,8 @@ def test_inclusion_between_attribute_and_disjoint_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, 'test:A1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -268,6 +290,8 @@ def test_inclusion_between_attribute_and_intersection_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, 'test:A1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -281,6 +305,8 @@ def test_inclusion_between_value_domain_expressions(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -294,6 +320,8 @@ def test_inclusion_between_complement_node_and_role(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, source, (Item.RoleIRINode, 'test:R1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -307,6 +335,8 @@ def test_inclusion_between_complement_node_and_attribute(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, source, (Item.AttributeIRINode, 'test:A1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -321,6 +351,8 @@ def test_inclusion_between_role_chain_node_and_role_chain_node(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RoleChainNode and x is not source, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -334,6 +366,8 @@ def test_inclusion_between_role_and_role_chain_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -347,6 +381,8 @@ def test_inclusion_between_role_and_complement_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, 'test:R9'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -360,6 +396,8 @@ def test_inclusion_between_attribute_and_complement_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, 'test:A1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -376,6 +414,8 @@ def test_equivalence_no_graphol_expression(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.IndividualIRINode, 'test:I1'), (Item.IndividualIRINode, 'test:I2'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -388,6 +428,8 @@ def test_equivalence_between_concept_and_role(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptIRINode, 'test:C1'), (Item.RoleIRINode, 'test:R1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -400,6 +442,8 @@ def test_equivalence_between_concept_and_attribute(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptIRINode, 'test:C1'), (Item.AttributeIRINode, 'test:A1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -412,6 +456,8 @@ def test_equivalence_between_concept_and_value_domain(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptIRINode, 'test:C1'), (Item.ValueDomainIRINode, 'xsd:string'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -424,6 +470,8 @@ def test_equivalence_between_role_and_attribute(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, 'test:R1'), (Item.AttributeIRINode, 'test:A1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -436,6 +484,8 @@ def test_equivalence_between_role_and_value_domain(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, 'test:R1'), (Item.ValueDomainIRINode, 'xsd:string'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -448,6 +498,8 @@ def test_equivalence_between_attribute_and_value_domain(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, 'test:A1'), (Item.ValueDomainIRINode, 'xsd:string'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -461,6 +513,8 @@ def test_equivalence_between_role_and_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -474,6 +528,8 @@ def test_equivalence_between_role_and_disjoint_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -487,6 +543,8 @@ def test_equivalence_between_role_and_intersection_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -500,6 +558,8 @@ def test_equivalence_between_attribute_and_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, 'test:A1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -513,6 +573,8 @@ def test_equivalence_between_attribute_and_disjoint_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, 'test:A1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -526,6 +588,8 @@ def test_equivalence_between_attribute_and_intersection_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, 'test:A1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -539,6 +603,8 @@ def test_equivalence_between_value_domain_expressions(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -552,6 +618,8 @@ def test_equivalence_between_complement_node_and_role(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, source, (Item.RoleIRINode, 'test:R1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -565,6 +633,8 @@ def test_equivalence_between_complement_node_and_attribute(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, source, (Item.AttributeIRINode, 'test:A1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -579,6 +649,8 @@ def test_equivalence_between_role_chain_node_and_role_chain_node(session, qtbot)
     source = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RoleChainNode and x is not source, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -592,6 +664,8 @@ def test_equivalence_between_role_and_role_chain_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -608,6 +682,8 @@ def test_input_between_concept_node_and_concept_node(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C1'), (Item.ConceptIRINode, 'test:C2'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -620,6 +696,8 @@ def test_input_between_role_node_and_role_node(session, qtbot):
     __give_focus_to_diagram(session, 'diagram1', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, 'test:R1'), (Item.RoleIRINode, 'test:R2'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -633,6 +711,8 @@ def test_input_between_individual_node_and_complement_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, 'test:I1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -646,6 +726,8 @@ def test_input_between_individual_node_and_union_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, 'test:I1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -659,6 +741,8 @@ def test_input_between_individual_node_and_intersection_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, 'test:I1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -672,6 +756,8 @@ def test_input_between_value_domain_node_and_chain_of_inclusion_connected_neutra
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -685,6 +771,8 @@ def test_input_between_concept_node_and_complement_node_with_already_an_input(se
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C2'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -698,6 +786,8 @@ def test_input_between_role_node_and_complement_node_with_outgoing_edge(session,
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, 'test:R1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -711,6 +801,8 @@ def test_input_between_value_domain_node_and_non_neutral_union_node(session, qtb
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -724,6 +816,8 @@ def test_input_between_value_domain_node_and_non_neutral_disjoint_union_node(ses
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -737,6 +831,8 @@ def test_input_between_value_domain_node_and_non_neutral_intersection_node(sessi
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -751,6 +847,8 @@ def test_input_between_range_restriction_node_and_union_of_value_domain_nodes(se
     source = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -764,6 +862,8 @@ def test_input_between_concept_node_and_enumeration_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.EnumerationNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C5'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -777,6 +877,8 @@ def test_input_between_value_node_and_enumeration_node_with_individuals(session,
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.EnumerationNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"32"^^xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -791,6 +893,8 @@ def test_input_between_role_chain_node_and_role_inverse_node(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RoleInverseNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -805,6 +909,8 @@ def test_input_between_role_inverse_node_and_role_inverse_node(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.RoleInverseNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RoleInverseNode and x is not source, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -819,6 +925,8 @@ def test_input_between_role_chain_node_and_role_chain_node(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RoleChainNode and x is not source, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -832,6 +940,8 @@ def test_input_between_concept_node_and_datatype_restriction_node(session, qtbot
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C6'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -845,6 +955,8 @@ def test_input_between_value_domain_node_and_datatype_restriction_node_with_data
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:integer'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -858,6 +970,8 @@ def test_input_between_value_domain_node_and_datatype_restriction_node_with_inco
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -872,6 +986,8 @@ def test_input_between_facet_node_and_datatype_restriction_node_with_incompatibl
     source = first(filter(lambda x: x.type() is Item.FacetNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -885,6 +1001,8 @@ def test_input_between_concept_node_and_property_assertion_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -898,6 +1016,8 @@ def test_input_between_individual_node_and_property_assertion_node_with_already_
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, 'test:I3'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -911,6 +1031,8 @@ def test_input_between_value_node_and_property_assertion_node_set_as_role_instan
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"12"^^xsd:integer'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -924,6 +1046,8 @@ def test_input_between_value_node_and_property_assertion_node_with_no_subject(se
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"12"^^xsd:integer'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -937,6 +1061,8 @@ def test_input_between_individual_node_and_property_assertion_node_set_as_attrib
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, 'test:I2'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -950,6 +1076,8 @@ def test_input_between_value_node_and_property_assertion_node_set_as_attribute_i
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"32"^^xsd:integer'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -962,6 +1090,8 @@ def test_input_between_concept_node_and_domain_restriction_node_with_filler(sess
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C2'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -975,6 +1105,8 @@ def test_input_between_individual_node_and_domain_restriction_node(session, qtbo
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, 'test:I4'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -989,6 +1121,8 @@ def test_input_between_role_chain_node_and_domain_restriction_node(session, qtbo
     source = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1003,6 +1137,8 @@ def test_input_between_property_assertion_node_and_domain_restriction_node(sessi
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1016,6 +1152,8 @@ def test_input_between_concept_node_and_domain_restriction_node_with_self_restri
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C1'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1029,6 +1167,8 @@ def test_input_between_concept_node_and_domain_restriction_node_with_attribute_i
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C7'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1042,6 +1182,8 @@ def test_input_between_role_node_and_domain_restriction_node_with_value_domain_i
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, 'test:R5'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1055,6 +1197,8 @@ def test_input_between_attribute_node_and_domain_restriction_node_with_self_rest
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, 'test:A4'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1068,6 +1212,8 @@ def test_input_between_attribute_node_and_domain_restriction_node_with_concept_i
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, 'test:A4'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1081,6 +1227,8 @@ def test_input_between_value_domain_node_and_domain_restriction_node_with_self_r
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1094,6 +1242,8 @@ def test_input_between_value_domain_node_and_domain_restriction_node_with_role_i
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1107,6 +1257,8 @@ def test_input_between_concept_node_and_range_restriction_node_with_filler(sessi
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, 'test:C2'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1120,6 +1272,8 @@ def test_input_between_value_domain_node_and_range_restriction_node_with_attribu
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1133,6 +1287,8 @@ def test_input_between_individual_node_and_range_restriction_node(session, qtbot
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, 'test:I4'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1147,6 +1303,8 @@ def test_input_between_role_chain_node_and_range_restriction_node(session, qtbot
     source = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1161,6 +1319,8 @@ def test_input_between_property_assertion_node_and_range_restriction_node(sessio
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1174,6 +1334,8 @@ def test_input_between_role_node_and_range_restriction_node_with_role_node_in_in
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, 'test:R5'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1187,6 +1349,8 @@ def test_input_between_attribute_node_and_range_restriction_node_with_self_restr
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, 'test:A4'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1200,6 +1364,8 @@ def test_input_between_value_domain_node_and_facet_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     target = first(filter(lambda x: x.type() is Item.FacetNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, 'xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1216,6 +1382,8 @@ def test_membership_between_concept_and_concept(session, qtbot):
     __give_focus_to_diagram(session, 'diagram42', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.MembershipEdge, (Item.ConceptIRINode, 'test:C1'), (Item.ConceptIRINode, 'test:C2'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1228,6 +1396,8 @@ def test_membership_between_individual_and_role(session, qtbot):
     __give_focus_to_diagram(session, 'diagram44', qtbot)
     num_edges_in_project = len(session.project.edges())
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.MembershipEdge, (Item.IndividualIRINode, 'test:I1'), (Item.RoleIRINode, 'test:R4'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1242,6 +1412,8 @@ def test_membership_between_role_instance_and_role_chain_node(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.MembershipEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1256,6 +1428,8 @@ def test_membership_between_role_instance_and_neutral_chained_complement_node(se
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.MembershipEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1269,6 +1443,8 @@ def test_membership_between_attribute_instance_and_role_node(session, qtbot):
     num_edges_in_project = len(session.project.edges())
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.MembershipEdge, source, (Item.RoleIRINode, 'test:R1'), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1283,6 +1459,8 @@ def test_membership_between_attribute_instance_and_neutral_chained_complement_no
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.MembershipEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
@@ -1297,6 +1475,8 @@ def test_membership_between_neutral_property_assertion_node_and_neutral_chained_
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
+    iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
     __insert_edge_between(session, Item.MembershipEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
