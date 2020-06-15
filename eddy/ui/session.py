@@ -2858,6 +2858,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 # does this without setting this action. Tested on Qt 5.10.1
                 connect(dialog.filterSelected, lambda value: \
                     dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
+            savePath=None
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
                 savePath = expandPath(first(dialog.selectedFiles()))
@@ -2892,7 +2893,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             msgbox.setWindowTitle('Save failed!')
             msgbox.exec_()
         else:
-            if not workingPath or expandPath(savePath)==expandPath(self.project.path):
+            if not workingPath or (savePath and expandPath(savePath)==expandPath(self.project.path)):
                 self.undostack.setClean()
                 self.sgnProjectSaved.emit()
 
