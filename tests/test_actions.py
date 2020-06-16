@@ -62,6 +62,7 @@ def session(qapp, qtbot, logging_disabled):
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(session.project.diagram('diagram'))
     yield session
+    print()
 
 
 #############################################
