@@ -683,7 +683,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
                 folderPath = os.path.dirname(currPath)
                 if not isdir(folderPath):
                     mkdir(folderPath)
-                os.open(currPath,os.O_CREAT)
+                fd = os.open(currPath,os.O_CREAT)
+                os.close(fd)
             #TODO filename = postfix(self.project.name, File.Graphol.extension)
             #TODO filepath = os.path.join(self.project.path, filename)
             #TODO fwrite(self.document.toString(2), filepath)
