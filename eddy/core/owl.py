@@ -1985,7 +1985,7 @@ class OWL2Facet(Enum_):
             OWL2Datatype.anyURI.value: anyuri,
             OWL2Datatype.base64Binary.value: binary,
             OWL2Datatype.boolean.value: [],
-            OWL2Datatype.byte.value: numbers.value,
+            OWL2Datatype.byte.value: numbers,
             OWL2Datatype.dateTime.value: numbers,
             OWL2Datatype.dateTimeStamp.value: numbers,
             OWL2Datatype.decimal.value: numbers,

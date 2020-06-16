@@ -36,11 +36,12 @@
 """
 Tests for built-in actions.
 """
+import os
 
 import pytest
 from pytestqt.qtbot import QtBot
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import first
@@ -66,7 +67,6 @@ def session(qapp, qtbot, logging_disabled):
 #############################################
 #   CUT / COPY / PASTE
 #################################
-
 def test_action_copy(session):
     # GIVEN
     project = session.project
@@ -702,4 +702,36 @@ def test_action_open_description_dialog(session, qtbot):
                 attempts += 1
             QtWidgets.QApplication.activeModalWidget().close()
             node.setSelected(False)
+
+'''
+#############################################
+#   SAVE AS PROJECT
+#################################
+def test_action_save_as_project(session, qtbot, tmpdir):
+    # GIVEN
+    fileName = 'savedAs.graphol'
+    savePath = tmpdir.join('savedAs.graphol')
+    project = session.project
+    diagram = session.mdi.activeDiagram()
+    action = session.action('save_as')
+
+    def on_timeout():
+        # THEN
+        dialog = None
+        for child in session.children():
+            if isinstance(child, QtWidgets.QFileDialog):
+                dialog = child
+                break
+        assert not dialog is None
+        dialog.setDirectory(tmpdir)
+        dialog.selectFile(fileName)
+        dialog.accept()
+        assert os.path.isfile(str(savePath))
+
+
+    #WHEN
+    QtCore.QTimer.singleShot(5000, on_timeout)
+    action.trigger()
+'''
+
 

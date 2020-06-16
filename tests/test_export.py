@@ -306,6 +306,29 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
     assert any([line in content for line in
                 ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                  'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
+
+    assert 'AnnotationAssertion(rdfs:label test:drives "drives")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasAncestor "hasAncestor")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasFather "hasFather")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasMother "hasMother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasParent "hasParent")' in content
+    assert 'AnnotationAssertion(rdfs:label test:isAncestorOf "isAncestorOf")' in content
+    assert 'AnnotationAssertion(rdfs:label test:name "name")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Adult "Adult")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Father "Father")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Female "Female")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Less_than_50_cc "Less_than_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Male "Male")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Mother "Mother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Over_50_cc "Over_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Person "Person")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Underage "Underage")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vegetable "Vegetable")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vehicle "Vehicle")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Alice "Alice")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Bob "Bob")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Trudy "Trudy")' in content
+
     # AND
     assert len(content) == 81
 
@@ -421,6 +444,29 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
     assert any([line in content for line in
                 ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                  'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
+
+    assert 'AnnotationAssertion(rdfs:label test:drives "drives")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasAncestor "hasAncestor")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasFather "hasFather")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasMother "hasMother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasParent "hasParent")' in content
+    assert 'AnnotationAssertion(rdfs:label test:isAncestorOf "isAncestorOf")' in content
+    assert 'AnnotationAssertion(rdfs:label test:name "name")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Adult "Adult")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Father "Father")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Female "Female")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Less_than_50_cc "Less_than_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Male "Male")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Mother "Mother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Over_50_cc "Over_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Person "Person")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Underage "Underage")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vegetable "Vegetable")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vehicle "Vehicle")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Alice "Alice")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Bob "Bob")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Trudy "Trudy")' in content
+
     # AND
     assert len(content) == 89
 

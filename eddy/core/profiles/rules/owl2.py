@@ -702,7 +702,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                     raise ProfileError('Too many inputs to {}'.format(target.name))
 
                 f1 = lambda x: x.type() is Item.InputEdge and x is not edge
-                f2 = lambda x: x.type() is Item.AttributeIRINodeNode
+                f2 = lambda x: x.type() is Item.AttributeIRINode
                 if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 1:
                     # Range restriction node having an attribute as input can receive no other input.
                     raise ProfileError('Too many inputs to attribute {}'.format(target.shortName))
