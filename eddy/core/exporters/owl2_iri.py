@@ -1402,7 +1402,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             #############################################
             # BUILD OPERAND
             #################################
-            #ope = self.convert(operand).getInverseProperty()
+            invOPE = self.convert(operand).getInverseProperty()
             ope = self.convert(operand)
             #############################################
             # BUILD FILLER
@@ -1414,7 +1414,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 ce = self.convert(filler)
             if OWLAxiom.ObjectPropertyRange in self.axiomsList:
                 if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
-                    if ope:
+                    if invOPE:
                         f5 = lambda x: x.type() is Item.InclusionEdge
                         f6 = lambda x: x.type() is Item.EquivalenceEdge
                         f7 = lambda x: x.identity() is Identity.Concept
@@ -1422,19 +1422,19 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                             conversionB = self.convert(concept)
                             self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(ope, conversionB))
             if node.restriction() is Restriction.Self:
-                return self.df.getOWLObjectHasSelf(ope)
+                return self.df.getOWLObjectHasSelf(invOPE)
             if node.restriction() is Restriction.Exists:
-                return self.df.getOWLObjectSomeValuesFrom(ope, ce)
+                return self.df.getOWLObjectSomeValuesFrom(invOPE, ce)
             if node.restriction() is Restriction.Forall:
-                return self.df.getOWLObjectAllValuesFrom(ope, ce)
+                return self.df.getOWLObjectAllValuesFrom(invOPE, ce)
             if node.restriction() is Restriction.Cardinality:
                 cardinalities = self.HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality:
-                    cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, ope, ce))
+                    cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, invOPE, ce))
                 if max_cardinality is not None:
-                    cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
+                    cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, invOPE, ce))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
@@ -1806,7 +1806,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
                     owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
             self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
-
+'''
 #TODO Da implementare per consistency check (consistency check ora è disabilitato a causa dei noti problemi discussi con Valerio)
 class OWLOntologyFetcher(AbstractWorker):
 
@@ -2147,83 +2147,7 @@ class OWLOntologyFetcher(AbstractWorker):
     #############################################
     #   AUXILIARY METHODS
     #################################
-    '''
-    def getOWLApiDatatype(self, datatype):
-        """
-        Returns the OWLDatatype matching the given Datatype.
-        :type datatype: Datatype
-        :rtype: OWLDatatype
-        """
-        if datatype is Datatype.anyURI:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_ANY_URI').getIRI())
-        if datatype is Datatype.base64Binary:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BASE_64_BINARY').getIRI())
-        if datatype is Datatype.boolean:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BOOLEAN').getIRI())
-        if datatype is Datatype.byte:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_BYTE').getIRI())
-        if datatype is Datatype.dateTime:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME').getIRI())
-        if datatype is Datatype.dateTimeStamp:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DATE_TIME_STAMP').getIRI())
-        if datatype is Datatype.decimal:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DECIMAL').getIRI())
-        if datatype is Datatype.double:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_DOUBLE').getIRI())
-        if datatype is Datatype.float:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_FLOAT').getIRI())
-        if datatype is Datatype.hexBinary:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_HEX_BINARY').getIRI())
-        if datatype is Datatype.int:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INT').getIRI())
-        if datatype is Datatype.integer:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_INTEGER').getIRI())
-        if datatype is Datatype.language:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LANGUAGE').getIRI())
-        if datatype is Datatype.Literal:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDFS_LITERAL').getIRI())
-        if datatype is Datatype.long:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_LONG').getIRI())
-        if datatype is Datatype.Name:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NAME').getIRI())
-        if datatype is Datatype.NCName:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NCNAME').getIRI())
-        if datatype is Datatype.negativeInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NEGATIVE_INTEGER').getIRI())
-        if datatype is Datatype.NMTOKEN:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NMTOKEN').getIRI())
-        if datatype is Datatype.nonNegativeInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_NEGATIVE_INTEGER').getIRI())
-        if datatype is Datatype.nonPositiveInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NON_POSITIVE_INTEGER').getIRI())
-        if datatype is Datatype.normalizedString:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_NORMALIZED_STRING').getIRI())
-        if datatype is Datatype.PlainLiteral:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_PLAIN_LITERAL').getIRI())
-        if datatype is Datatype.positiveInteger:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_POSITIVE_INTEGER').getIRI())
-        if datatype is Datatype.rational:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_RATIONAL').getIRI())
-        if datatype is Datatype.real:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('OWL_REAL').getIRI())
-        if datatype is Datatype.short:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_SHORT').getIRI())
-        if datatype is Datatype.string:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_STRING').getIRI())
-        if datatype is Datatype.token:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_TOKEN').getIRI())
-        if datatype is Datatype.unsignedByte:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_BYTE').getIRI())
-        if datatype is Datatype.unsignedInt:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_INT').getIRI())
-        if datatype is Datatype.unsignedLong:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_LONG').getIRI())
-        if datatype is Datatype.unsignedShort:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('XSD_UNSIGNED_SHORT').getIRI())
-        if datatype is Datatype.XMLLiteral:
-            return self.df.getOWLDatatype(self.OWL2Datatype.valueOf('RDF_XML_LITERAL').getIRI())
-        raise ValueError('invalid datatype supplied: %s' % datatype)
-    '''
+    
 
     def getOWLApiFacet(self, facet):
         """
@@ -2638,7 +2562,8 @@ class OWLOntologyFetcher(AbstractWorker):
             #############################################
             # BUILD OPERAND
             #################################
-            ope = self.convert(operand).getInverseProperty()
+            ope = self.convert(operand)
+            invOPE = self.convert(operand).getInverseProperty()
             #############################################
             # BUILD FILLER
             #################################
@@ -2649,7 +2574,7 @@ class OWLOntologyFetcher(AbstractWorker):
                 ce = self.convert(filler)
             if OWLAxiom.ObjectPropertyRange in self.axiomsList:
                 if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
-                    if ope:
+                    if invOPE:
                         f5 = lambda x: x.type() is Item.InclusionEdge
                         f6 = lambda x: x.type() is Item.EquivalenceEdge
                         f7 = lambda x: x.identity() is Identity.Concept
@@ -2657,19 +2582,19 @@ class OWLOntologyFetcher(AbstractWorker):
                             conversionB = self.convert(concept)
                             self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(ope, conversionB))
             if node.restriction() is Restriction.Self:
-                return self.df.getOWLObjectHasSelf(ope)
+                return self.df.getOWLObjectHasSelf(invOPE)
             if node.restriction() is Restriction.Exists:
-                return self.df.getOWLObjectSomeValuesFrom(ope, ce)
+                return self.df.getOWLObjectSomeValuesFrom(invOPE, ce)
             if node.restriction() is Restriction.Forall:
-                return self.df.getOWLObjectAllValuesFrom(ope, ce)
+                return self.df.getOWLObjectAllValuesFrom(invOPE, ce)
             if node.restriction() is Restriction.Cardinality:
                 cardinalities = self.HashSet()
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality:
-                    cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, ope, ce))
+                    cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, invOPE, ce))
                 if max_cardinality is not None:
-                    cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, ope, ce))
+                    cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, invOPE, ce))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
@@ -3015,4 +2940,4 @@ class OWLOntologyFetcher(AbstractWorker):
                 else:
                     collection.add(self._converted[node.diagram.name][node.id])
             self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
-
+'''
