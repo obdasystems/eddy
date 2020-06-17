@@ -39,6 +39,7 @@ import pytest
 from PyQt5 import QtPrintSupport
 
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
+from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.exporters.image import BmpDiagramExporter
 from eddy.core.exporters.image import JpegDiagramExporter
 from eddy.core.exporters.image import PngDiagramExporter
@@ -67,7 +68,15 @@ def session(qapp, qtbot, logging_disabled):
 #############################################
 #   PROJECT EXPORT
 #################################
-#TODO
+def test_export_project_as_graphol(session, qtbot, tmpdir):
+    # GIVEN
+    savePath = tmpdir.join('savedAs.graphol')
+    project = session.project
+    #WHEN
+    worker = GrapholIRIProjectExporter(project,session,str(savePath))
+    worker.run()
+    #THEN
+    assert os.path.isfile(str(savePath))
 
 
 #############################################
