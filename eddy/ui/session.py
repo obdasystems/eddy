@@ -149,7 +149,7 @@ from eddy.core.functions.path import (
     expandPath,
     shortPath,
 )
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
@@ -358,6 +358,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.setCorner(QtCore.Qt.BottomRightCorner, QtCore.Qt.RightDockWidgetArea)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
+
+        self.renderingBusyProgressDialog = None
 
         self.sgnReady.emit()
 
@@ -3538,24 +3540,26 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #self.action('reset_reasoner').setEnabled(not isProjectEmpty)
         self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
 
-    #TODO
+
     @QtCore.pyqtSlot()
     def doRenderByFullIRI(self):
         """
         Render ontology elements by full IRIs
         """
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.FULL.value)
-        self.action(objectName='render_full_iri').setChecked(True)
-        self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_simple_name').setChecked(False)
-        #self.action(objectName='render_label').setChecked(False)
-        self.action(objectName='render_label_it').setChecked(False)
-        self.action(objectName='render_label_en').setChecked(False)
-        self.action(objectName='render_label_es').setChecked(False)
-        self.action(objectName='render_label_fr').setChecked(False)
-        self.action(objectName='render_label_de').setChecked(False)
-        self.sgnRenderingModified.emit(IRIRender.FULL.value)
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.FULL.value)
+            self.action(objectName='render_full_iri').setChecked(True)
+            self.action(objectName='render_prefixed_iri').setChecked(False)
+            self.action(objectName='render_simple_name').setChecked(False)
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
 
     #TODO
@@ -3564,86 +3568,91 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Render ontology elements by prefixed IRIs
         """
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
-        self.action(objectName='render_full_iri').setChecked(False)
-        self.action(objectName='render_prefixed_iri').setChecked(True)
-        self.action(objectName='render_simple_name').setChecked(False)
-        # self.action(objectName='render_label').setChecked(False)
-        self.action(objectName='render_label_it').setChecked(False)
-        self.action(objectName='render_label_en').setChecked(False)
-        self.action(objectName='render_label_es').setChecked(False)
-        self.action(objectName='render_label_fr').setChecked(False)
-        self.action(objectName='render_label_de').setChecked(False)
-        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
-
-
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
+            self.action(objectName='render_full_iri').setChecked(False)
+            self.action(objectName='render_prefixed_iri').setChecked(True)
+            self.action(objectName='render_simple_name').setChecked(False)
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
     @QtCore.pyqtSlot()
     def doRenderBySimpleName(self):
         """
         Render ontology elements by prefixed IRIs
         """
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.SIMPLE_NAME.value)
-        self.action(objectName='render_full_iri').setChecked(False)
-        self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_simple_name').setChecked(True)
-        # self.action(objectName='render_label').setChecked(False)
-        self.action(objectName='render_label_it').setChecked(False)
-        self.action(objectName='render_label_en').setChecked(False)
-        self.action(objectName='render_label_es').setChecked(False)
-        self.action(objectName='render_label_fr').setChecked(False)
-        self.action(objectName='render_label_de').setChecked(False)
-        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.SIMPLE_NAME.value)
+            self.action(objectName='render_full_iri').setChecked(False)
+            self.action(objectName='render_prefixed_iri').setChecked(False)
+            self.action(objectName='render_simple_name').setChecked(True)
+            # self.action(objectName='render_label').setChecked(False)
+            self.action(objectName='render_label_it').setChecked(False)
+            self.action(objectName='render_label_en').setChecked(False)
+            self.action(objectName='render_label_es').setChecked(False)
+            self.action(objectName='render_label_fr').setChecked(False)
+            self.action(objectName='render_label_de').setChecked(False)
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
-    #TODO
+
     @QtCore.pyqtSlot()
     def doRenderByLabel(self):
         """
         Render ontology elements by prefixed IRIs
         """
-        action = self.sender()
-        lang = action.data()
-
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
-        settings.setValue('ontology/iri/render/language', lang)
-        self.action(objectName='render_full_iri').setChecked(False)
-        self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_simple_name').setChecked(False)
-        # self.action(objectName='render_label').setChecked(True)
-        if lang == 'it':
-            self.action(objectName='render_label_it').setChecked(True)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'en':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(True)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'es':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(True)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'fr':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(True)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'de':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(True)
-        self.sgnRenderingModified.emit(IRIRender.LABEL.value)
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            action = self.sender()
+            lang = action.data()
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
+            settings.setValue('ontology/iri/render/language', lang)
+            self.action(objectName='render_full_iri').setChecked(False)
+            self.action(objectName='render_prefixed_iri').setChecked(False)
+            self.action(objectName='render_simple_name').setChecked(False)
+            # self.action(objectName='render_label').setChecked(True)
+            if lang == 'it':
+                self.action(objectName='render_label_it').setChecked(True)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'en':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(True)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'es':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(True)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'fr':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(True)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'de':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(True)
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):
