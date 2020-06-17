@@ -704,35 +704,6 @@ def test_action_open_description_dialog(session, qtbot):
             QtWidgets.QApplication.activeModalWidget().close()
             node.setSelected(False)
 
-'''
-#############################################
-#   SAVE AS PROJECT
-#################################
-def test_action_save_as_project(session, qtbot, tmpdir):
-    # GIVEN
-    fileName = 'savedAs.graphol'
-    savePath = tmpdir.join('savedAs.graphol')
-    project = session.project
-    diagram = session.mdi.activeDiagram()
-    action = session.action('save_as')
 
-    def on_timeout():
-        # THEN
-        dialog = None
-        for child in session.children():
-            if isinstance(child, QtWidgets.QFileDialog):
-                dialog = child
-                break
-        assert not dialog is None
-        dialog.setDirectory(tmpdir)
-        dialog.selectFile(fileName)
-        dialog.accept()
-        assert os.path.isfile(str(savePath))
-
-
-    #WHEN
-    QtCore.QTimer.singleShot(5000, on_timeout)
-    action.trigger()
-'''
 
 
