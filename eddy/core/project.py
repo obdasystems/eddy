@@ -200,7 +200,6 @@ class Project(IRIManager):
             self.setEmptyPrefix(self.ontologyIRIString)
             self.setOntologyIRI(self.ontologyIRIString)
         '''
-        connect(self.session.sgnRenderingModified, self.onRenderingModified)
 
 
     @property

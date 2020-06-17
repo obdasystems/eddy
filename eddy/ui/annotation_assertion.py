@@ -115,7 +115,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         comboBoxLabel.setText('Lang')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='lang_switch')
-        combobox.setEditable(False)
+        combobox.setEditable(True)
         combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
@@ -277,6 +277,8 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         language = None
         if self.widget('lang_switch').isEnabled():
             language = str(self.widget('lang_switch').currentText())
+            if not language in self.project.getLanguages():
+                self.project.addLanguageTag(language)
         if not self.assertion:
             annAss = AnnotationAssertion(self.iri,propertyIRI,value,typeIRI,language)
             command = CommandIRIAddAnnotation(self.project,self.iri,annAss)

@@ -343,12 +343,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.project.sgnIRIRemovedFromAllDiagrams, self.onIRIRemovedFromAllDiagrams)
         connect(self.project.sgnSingleNodeSwitchIRI, self.onSingleNodeSwitchIRI)
         connect(self.project.sgnUpdated, self.doResetConsistencyCheck)
+        connect(self.project.sgnLanguageTagAdded, self.doAddLanguageTagToMenu)
 
 
         #############################################
         # COMPLETE SESSION SETUP
         #################################
-
+        self.loadLanguageTagActions()
         self.setAcceptDrops(False)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
@@ -368,6 +369,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #############################################
     #   SESSION CONFIGURATION
     #################################
+
+    def loadLanguageTagActions(self):
+        for langTag in self.project.getLanguages():
+            actionObjName = 'render_label_{}'.format(langTag)
+            if not self.action(objectName=actionObjName):
+                labelMenu = self.menu('render_label')
+                action = QtWidgets.QAction(langTag, self, objectName='render_label_{}'.format(langTag),
+                                           triggered=self.doRenderByLabel)
+                action.setData(langTag)
+                action.setCheckable(True)
+                labelMenu.addAction(action)
+                self.addAction(action)
+
 
     # noinspection PyArgumentList
     def initActions(self):
@@ -1058,6 +1072,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addOntologyLoader(GrapholOntologyIRILoader_v3)
         self.addProjectLoader(GrapholIRIProjectLoader_v3)
 
+
+
     # noinspection PyArgumentList
     def initMenus(self):
         """
@@ -1152,7 +1168,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # renderInnerMenu.addAction(self.action('render_label'))
 
         labelMenu = QtWidgets.QMenu('Render by label',objectName='render_label')
-        self.addWidget(labelMenu)
+        self.addMenu(labelMenu)
         action = QtWidgets.QAction('it', self, objectName='render_label_it', triggered=self.doRenderByLabel)
         action.setData('it')
         action.setCheckable(True)
@@ -1727,6 +1743,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if command:
                 self.undostack.push(command)
         self.undostack.endMacro()
+
+    @QtCore.pyqtSlot(str)
+    def doAddLanguageTagToMenu(self, lang):
+        """
+        Add an action to RenderByLabel menu to allow selecting 'lang'
+        """
+        labelMenu = self.menu('render_label')
+        action = QtWidgets.QAction(lang, self, objectName='render_label_{}'.format(lang), triggered=self.doRenderByLabel)
+        action.setData(lang)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+        self.addAction(action)
 
     @QtCore.pyqtSlot()
     def doCopy(self):
@@ -3552,17 +3580,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_full_iri').setChecked(True)
             self.action(objectName='render_prefixed_iri').setChecked(False)
             self.action(objectName='render_simple_name').setChecked(False)
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
 
-
-    #TODO
     @QtCore.pyqtSlot()
     def doRenderByPrefixedIRI(self):
         """
@@ -3574,11 +3598,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_full_iri').setChecked(False)
             self.action(objectName='render_prefixed_iri').setChecked(True)
             self.action(objectName='render_simple_name').setChecked(False)
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
@@ -3595,11 +3617,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_prefixed_iri').setChecked(False)
             self.action(objectName='render_simple_name').setChecked(True)
             # self.action(objectName='render_label').setChecked(False)
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
@@ -3620,6 +3640,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_prefixed_iri').setChecked(False)
             self.action(objectName='render_simple_name').setChecked(False)
             # self.action(objectName='render_label').setChecked(True)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(lang)
+                self.action(objectName=actionObjName).setChecked(lang==langTag)
+            '''
             if lang == 'it':
                 self.action(objectName='render_label_it').setChecked(True)
                 self.action(objectName='render_label_en').setChecked(False)
@@ -3650,6 +3674,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.action(objectName='render_label_es').setChecked(False)
                 self.action(objectName='render_label_fr').setChecked(False)
                 self.action(objectName='render_label_de').setChecked(True)
+            '''
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()

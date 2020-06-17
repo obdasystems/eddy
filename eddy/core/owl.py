@@ -955,6 +955,8 @@ class IRIManager(QtCore.QObject):
     sgnImportedOntologyRemoved = QtCore.pyqtSignal(ImportedOntology)
     sgnImportedOntologyLoaded = QtCore.pyqtSignal(ImportedOntology)
 
+    sgnLanguageTagAdded = QtCore.pyqtSignal(str)
+
     def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False, ontologies=set()):
         """
         Create a new `IRIManager`
@@ -990,6 +992,7 @@ class IRIManager(QtCore.QObject):
 
         self.addDefaultDatatypes()
         self.addDefaultConstrainingFacets()
+        self.addDefaultLanguages()
         defaults=True
         if annotationProperties:
             defaults = False
@@ -1007,6 +1010,7 @@ class IRIManager(QtCore.QObject):
             defaults = False
             for lang in languages:
                 self.addLanguageTag(lang)
+
         if defaults:
             self.setDefaults()
         self._defaultLanguage = defaultLanguage
@@ -1074,7 +1078,9 @@ class IRIManager(QtCore.QObject):
         Add the language tag identified by lang
         :type lang:str
         """
-        self.languages.add(lang)
+        if not lang in self.languages:
+            self.languages.add(lang)
+            self.sgnLanguageTagAdded.emit(lang)
 
     def addDefaultLanguages(self):
         self.addLanguageTag('it')
@@ -1216,7 +1222,7 @@ class IRIManager(QtCore.QObject):
     def setDefaults(self):
         self.addDefaultAnnotationProperties()
         #self.addDefaultDatatypes()
-        self.addDefaultLanguages()
+        #self.addDefaultLanguages()
         #self.addDefaultConstrainingFacets()
 
     ##ANNOTATION PROPERTIES
