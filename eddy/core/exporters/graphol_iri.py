@@ -10,6 +10,7 @@ from eddy.core.functions.misc import postfix
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.output import getLogger
+from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
 
@@ -23,15 +24,16 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
      -   ...
     """
 
-    def __init__(self, project, session=None, exportPath=None):
+    def __init__(self, project, session=None, exportPath=None, selectDiagrams=False):
         """
         Initialize the project exporter.
         :type project: Project
         :type session: Session
         """
-        super().__init__(project, session, exportPath)
+        super().__init__(project, session, exportPath, selectDiagrams)
 
         self.document = None
+        self.selectedDiagrams = None
 
         self.itemToXml = {
             Item.AttributeIRINode: 'attribute',
@@ -182,11 +184,25 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         irisEl = self.getDomElement('iris')
         ontologyEl.appendChild(irisEl)
-        for iri in self.project.iris:
-            if (self.project.existIriOccurrence(iri) or iri==self.project.ontologyIRI) and not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
-                iriEl = self.getIriDomElement(iri)
-                irisEl.appendChild(iriEl)
+        if not self.selectedDiagrams:
+            for iri in self.project.iris:
+                if (self.project.existIriOccurrence(iri) or iri==self.project.ontologyIRI) and not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
+                        iriEl = self.getIriDomElement(iri)
+                        irisEl.appendChild(iriEl)
+            else:
+                for iri in self.project.iris:
+                    if (self.project.existIriOccurrence(iri) or iri == self.project.ontologyIRI) and not (
+                        iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
+                        if self.occursInAtLeastOneSelectedDiagrams(iri):
+                            iriEl = self.getIriDomElement(iri)
+                            irisEl.appendChild(iriEl)
         return ontologyEl
+
+    def occursInAtLeastOneSelectedDiagrams(self,iri):
+        for diagram in self.selectedDiagrams:
+            if self.project.iriOccurrences(iri=iri,diagram=diagram):
+                return True
+        return False
 
     def getOntologyImportDomElement(self, impOnt):
         impEl = self.getDomElement('import')
@@ -305,7 +321,11 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
     def getDiagramsDomElement(self):
         diagramsEl = self.getDomElement('diagrams')
-        for diagram in self.project.diagrams():
+        if self.selectedDiagrams:
+            currSet = self.selectedDiagrams
+        else:
+            currSet = self.project.diagrams()
+        for diagram in currSet:
             diagramsEl.appendChild(self.getDiagramDomElement(diagram))
         return diagramsEl
 
@@ -712,6 +732,15 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         """
         Perform Project export to disk.
         """
+        # DIAGRAM SELECTION
+        if self.selectDiagrams:
+            dialog = DiagramSelectionDialog(self.session)
+            if not dialog.exec_():
+                return
+            self.selectedDiagrams = dialog.selectedDiagrams()
+            if not self.selectedDiagrams:
+                return
+
         self.createDomDocument()
         #self.createOntology()
         #self.createDiagrams()

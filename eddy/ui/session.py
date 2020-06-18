@@ -1855,7 +1855,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol,File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
+            #dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol,File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
+            dialog.setNameFilters(self.projectExporterNameFilters({File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Pdf.value)
@@ -1870,15 +1871,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 try:
                     try:
                         with BusyProgressDialog('Exporting {0}...'.format(self.project.name), parent=self):
-                            worker = self.createProjectExporter(filetype, self.project, self)
-                            worker.run(expandPath(first(dialog.selectedFiles())))
-                        if fexists(expandPath(first(dialog.selectedFiles()))):
-                            self.addNotification("""
-                            Project export completed: <br><br>
-                            <b><a href=file:{0}>{1}</a></b>
-                            """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
-                    except ValueError:
+                            if filetype is File.Graphol:
+                                worker = self.createProjectExporter(filetype, self.project, self, exportPath=expandPath(first(dialog.selectedFiles())), selectDiagrams=True)
+                                worker.run()
+                                if fexists(expandPath(first(dialog.selectedFiles()))):
+                                    self.addNotification("""Project export completed""")
+                            else:
+                                worker = self.createProjectExporter(filetype, self.project, self)
+                                worker.run(expandPath(first(dialog.selectedFiles())))
+                                if fexists(expandPath(first(dialog.selectedFiles()))):
+
+                                    self.addNotification("""
+                                    Project export completed: <br><br>
+                                    <b><a href=file:{0}>{1}</a></b>
+                                    """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+                    except ValueError as e:
                         # DIAGRAM SELECTION
+                        print(str(e))
                         filterDialog = DiagramSelectionDialog(self)
                         if not filterDialog.exec_():
                             return

@@ -165,7 +165,7 @@ class AbstractProjectExporter(AbstractExporter):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, project, session, exportPath=None):
+    def __init__(self, project, session, exportPath=None, selectDiagrams=False):
         """
         Initialize the AbstractProjectExporter.
         :type project: Project
@@ -174,6 +174,7 @@ class AbstractProjectExporter(AbstractExporter):
         super().__init__(session)
         self.project = project
         self.exportPath = exportPath
+        self.selectDiagrams = selectDiagrams
 
     #############################################
     #   INTERFACE
