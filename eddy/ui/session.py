@@ -372,15 +372,22 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
     def loadLanguageTagActions(self):
         for langTag in self.project.getLanguages():
+            settings = QtCore.QSettings()
+            rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+
+
             actionObjName = 'render_label_{}'.format(langTag)
             if not self.action(objectName=actionObjName):
                 labelMenu = self.menu('render_label')
-                action = QtWidgets.QAction(langTag, self, objectName='render_label_{}'.format(langTag),
+                action = QtWidgets.QAction(langTag, self, objectName=actionObjName,
                                            triggered=self.doRenderByLabel)
                 action.setData(langTag)
                 action.setCheckable(True)
                 labelMenu.addAction(action)
                 self.addAction(action)
+                if rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+                    lang = settings.value('ontology/iri/render/language', 'it')
+                    action.setChecked(lang==langTag)
 
 
     # noinspection PyArgumentList
@@ -1071,8 +1078,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addOntologyLoader(GraphMLOntologyLoader)
         self.addOntologyLoader(GrapholOntologyIRILoader_v3)
         self.addProjectLoader(GrapholIRIProjectLoader_v3)
-
-
 
     # noinspection PyArgumentList
     def initMenus(self):
@@ -3624,7 +3629,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
 
-
     @QtCore.pyqtSlot()
     def doRenderByLabel(self):
         """
@@ -3641,8 +3645,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_simple_name').setChecked(False)
             # self.action(objectName='render_label').setChecked(True)
             for langTag in self.project.getLanguages():
-                actionObjName = 'render_label_{}'.format(lang)
-                self.action(objectName=actionObjName).setChecked(lang==langTag)
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(langTag==lang)
             '''
             if lang == 'it':
                 self.action(objectName='render_label_it').setChecked(True)
