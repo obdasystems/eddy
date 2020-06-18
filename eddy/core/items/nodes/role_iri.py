@@ -59,7 +59,7 @@ class RoleNode(OntologyEntityResizableNode):
     DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap,
                             QtCore.Qt.RoundJoin)
-    Identities = {Identity.Role}
+    Identities = {Identity.Role,Identity.Individual}
     Type = Item.RoleIRINode
 
     def __init__(self, iri = None, width=70, height=50, brush=None, **kwargs):
@@ -110,6 +110,16 @@ class RoleNode(OntologyEntityResizableNode):
     def initialLabelPosition(self):
         return self.center() - QtCore.QPointF(0, 30)
 
+    def occursAsIndividual(self):
+        #Class Assertion
+        for instEdge in [x for x in self.edges if x.type() is Item.MembershipEdge]:
+            if instEdge.source is self:
+                return True
+        #Object[Data] Property Assertion
+        for inputEdge in [x for x in self.edges if x.type() is Item.InputEdge]:
+            if inputEdge.source is self and inputEdge.target.type() is Item.PropertyAssertionNode:
+                return True
+        return False
 
     def boundingRect(self):
         """

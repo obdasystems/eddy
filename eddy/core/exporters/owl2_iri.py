@@ -65,7 +65,6 @@ from eddy.ui.fields import ComboBox, CheckBox
 
 LOGGER = getLogger()
 
-#TODO Uguale a vecchio
 class OWLOntologyExporter_v3(AbstractOntologyExporter, HasThreadingSystem):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into a valid OWL 2 ontology.
@@ -156,7 +155,6 @@ class OWLOntologyExporter_v3(AbstractOntologyExporter, HasThreadingSystem):
             '''
             self.onSyntaxCheckCompleted()
 
-#TODO Uguale a vecchio
 class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog providing the form used to perform Graphol -> OWL ontology translation.
@@ -835,8 +833,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     self._converted_meta_individuals[node.diagram.name][node.id] = self.getIndividual(node)
             elif node.type() is Item.AttributeIRINode:
                 self._converted[node.diagram.name][node.id] = self.getAttribute(node)
+                if node.occursAsIndividual():
+                    self._converted_meta_individuals[node.diagram.name][node.id] = self.getIndividual(node)
             elif node.type() is Item.RoleIRINode:
                 self._converted[node.diagram.name][node.id] = self.getRole(node)
+                if node.occursAsIndividual():
+                    self._converted_meta_individuals[node.diagram.name][node.id] = self.getIndividual(node)
             elif node.type() is Item.ValueDomainIRINode:
                 self._converted[node.diagram.name][node.id] = self.getValueDomain(node)
             elif node.type() is Item.IndividualIRINode:
@@ -870,13 +872,13 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         return self._converted[node.diagram.name][node.id]
 
     #NEEDED FOR TRANSLATION OF PropertyAssertion nodes (i.e., getPropertyAssertion)
-    def convertPropertyNodeOccurringAsIndividual(self,node):
+
+    def convertPredicateNodeOccurringAsIndividual(self,node):
         #Per ora considero solo nodi di concetto
-        if node.type() is Item.ConceptIRINode:
-            owlInd = self.getIndividual(node)
-            self._converted_meta_individuals[node.diagram.name][node.id] = owlInd
-            return owlInd
-        return None
+        owlInd = self.getIndividual(node)
+        self._converted_meta_individuals[node.diagram.name][node.id] = owlInd
+        return owlInd
+
 
     def addAxiom(self, axiom):
         """
@@ -1115,9 +1117,9 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             return self.df.getOWLLiteral(lexForm, lang)
         else:
             if datatype:
-                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype.iri)))
+                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
             else:
-                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral)))
+                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
             return self.df.getOWLLiteral(lexForm, owlApiDatatype)
 
     def getValueDomain(self, node):
@@ -1365,12 +1367,13 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         collection = list()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
-            if not (operand.type() is Item.IndividualIRINode or operand.type() is Item.ConceptIRINode):
+            #if not (operand.type() is Item.IndividualIRINode or operand.type() is Item.ConceptIRINode):
+            if not operand.type() in [Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.LiteralNode]:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
-            if operand.type() is Item.IndividualIRINode:
+            if operand.type() in [Item.IndividualIRINode, Item.LiteralNode]:
                 conversion = self.convert(operand)
             else:
-                conversion = self.convertConceptNodeOccurringAsIndividual(operand)
+                conversion = self.convertPredicateNodeOccurringAsIndividual(operand)
             collection.append(conversion)
         if len(collection) < 2:
             raise DiagramMalformedError(node, 'missing operand(s)')
@@ -1696,7 +1699,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         """
         if OWLAxiom.ClassAssertion in self.axiomsList:
             ind = None
-            if edge.source.type() is Item.ConceptIRINode:
+            if not edge.source.type() is Item.IndividualIRINode :
                 ind = self._converted_meta_individuals[edge.source.diagram.name][edge.source.id]
             else:
                 ind = self._converted[edge.source.diagram.name][edge.source.id]
@@ -1806,6 +1809,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
                     owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
             self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
+
 '''
 #TODO Da implementare per consistency check (consistency check ora è disabilitato a causa dei noti problemi discussi con Valerio)
 class OWLOntologyFetcher(AbstractWorker):
