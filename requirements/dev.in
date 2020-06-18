@@ -9,7 +9,7 @@
 -r tox.in
 
 # From PyPi
-flake8==3.7.9
+flake8==3.8.3
 objgraph==3.4.1
-pip-tools==5.1.2
+pip-tools==5.2.1
 PyQt5-stubs==5.14.2.2

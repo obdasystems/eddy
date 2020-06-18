@@ -5,54 +5,53 @@
 #    pip-compile --output-file=requirements-dev.txt requirements/dev.in
 #
 altgraph==0.17            # via pyinstaller
-appdirs==1.4.3            # via virtualenv
+appdirs==1.4.4            # via virtualenv
 attrs==19.3.0             # via pytest
 click==7.1.2              # via pip-tools
 coverage==5.1             # via pytest-cov
-cython==0.29.17           # via -r requirements/cython.in
+cython==0.29.20           # via -r requirements/cython.in
 distlib==0.3.0            # via virtualenv
 easyprocess==0.3          # via pyvirtualdisplay
-entrypoints==0.3          # via flake8
 filelock==3.0.12          # via tox, virtualenv
-flake8==3.7.9             # via -r requirements/dev.in
+flake8==3.8.3             # via -r requirements/dev.in
 graphviz==0.14            # via objgraph
-importlib-metadata==1.6.0  # via pluggy, pytest, tox, virtualenv
-jpype1==0.7.4             # via -r requirements/base.in
+importlib-metadata==1.6.1  # via flake8, pluggy, pytest, tox, virtualenv
+jpype1==0.7.5             # via -r requirements/base.in
 macholib ; sys_platform == 'darwin'  # via pyinstaller
 mccabe==0.6.1             # via flake8
-more-itertools==8.2.0     # via pytest
+more-itertools==8.4.0     # via pytest
 objgraph==3.4.1           # via -r requirements/dev.in
-packaging==20.3           # via pytest, tox
+packaging==20.4           # via pytest, tox
 pefile ; sys_platform == 'win32'  # via pyinstaller
 pillow==7.1.2             # via -r requirements/packaging.in
-pip-tools==5.1.2          # via -r requirements/dev.in
+pip-tools==5.2.1          # via -r requirements/dev.in
 pluggy==0.13.1            # via pytest, tox
-py-cpuinfo==5.0.0         # via pytest-benchmark
-py==1.8.1                 # via pytest, tox
-pycodestyle==2.5.0        # via flake8
-pyflakes==2.1.1           # via flake8
+py-cpuinfo==6.0.0         # via pytest-benchmark
+py==1.8.2                 # via pytest, tox
+pycodestyle==2.6.0        # via flake8
+pyflakes==2.2.0           # via flake8
 pyinstaller==3.6          # via -r requirements/packaging.in
 pyparsing==2.4.7          # via packaging
-pyqt5-sip==12.7.2         # via pyqt5
+pyqt5-sip==12.8.0         # via pyqt5
 pyqt5-stubs==5.14.2.2     # via -r requirements/dev.in
 pyqt5==5.14.2             # via -r requirements/pyqt5.in
 pytest-benchmark==3.2.3   # via -r requirements/tests.in
-pytest-cov==2.8.1         # via -r requirements/tests.in
-pytest-instafail==0.4.1.post0  # via -r requirements/tests.in
-pytest-mock==3.1.0        # via -r requirements/tests.in
+pytest-cov==2.10.0        # via -r requirements/tests.in
+pytest-instafail==0.4.2   # via -r requirements/tests.in
+pytest-mock==3.1.1        # via -r requirements/tests.in
 pytest-qt==3.3.0          # via -r requirements/tests.in
 pytest-repeat==0.8.0      # via -r requirements/tests.in
-pytest-xvfb==1.2.0 ; sys_platform != "win32"  # via -r requirements/tests.in
-pytest==5.4.1             # via -r requirements/tests.in, pytest-benchmark, pytest-cov, pytest-instafail, pytest-mock, pytest-qt, pytest-repeat, pytest-xvfb
-pyvirtualdisplay==0.2.5   # via pytest-xvfb
+pytest-xvfb==2.0.0 ; sys_platform != "win32"  # via -r requirements/tests.in
+pytest==5.4.3             # via -r requirements/tests.in, pytest-benchmark, pytest-cov, pytest-instafail, pytest-mock, pytest-qt, pytest-repeat, pytest-xvfb
+pyvirtualdisplay==1.3.2   # via pytest-xvfb
 pywin32-ctypes ; sys_platform == 'win32'  # via pyinstaller
 pyyaml==5.3.1 ; sys_platform == 'win32'  # via pyinstaller
 rfc3987==1.3.8            # via -r requirements/base.in
-six==1.14.0               # via packaging, pip-tools, tox, virtualenv
-toml==0.10.0              # via tox
-tox==3.15.0               # via -r requirements/tox.in
-virtualenv==20.0.20       # via tox
-wcwidth==0.1.9            # via pytest
+six==1.15.0               # via packaging, pip-tools, tox, virtualenv
+toml==0.10.1              # via tox
+tox==3.15.2               # via -r requirements/tox.in
+virtualenv==20.0.23       # via tox
+wcwidth==0.2.4            # via pytest
 zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
