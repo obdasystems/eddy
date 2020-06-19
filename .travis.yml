@@ -27,6 +27,7 @@ language: python
 branches:
   only:
     - master
+    - develop
     - /^deploy-.*$/
     - /^v\d+\.\d+(\.\d+)?(\S*)?$/
 
