@@ -133,7 +133,7 @@ def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    loader = GrapholIRIProjectLoader_v3(str(graphol), session)
+    loader = GrapholIRIProjectLoader_v2(str(graphol), session)
     loader.run()
     # THEN
     assert diagram1 in map(lambda d: d.name, loader.session.project.diagrams())
