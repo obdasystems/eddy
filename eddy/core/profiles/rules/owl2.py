@@ -46,32 +46,39 @@ class EquivalenceBetweenExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an equivalence edge is traced only between graphol expressions.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.EquivalenceEdge:
             supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
             shared = source.identities() & target.identities() - {Identity.Neutral, Identity.Unknown}
-            if shared - supported:
-                # Here we keep the ValueDomain as supported identity even though we deny the equivalence
-                # between value-domain expressions. The reason for this is that if we remove the identity
-                # from the supported set the user will see the message which explains that the equivalence
-                # is denied because it does not involve two graphol expressions, while it actually does.
-                # We handle this special case in a separate rule which will highlight the error with a more
-                # specific message.
-                raise ProfileError('Type mismatch: equivalence must involve two graphol expressions')
+            if shared:
+                raiseError = True
+                for sharedId in shared:
+                    if sharedId in supported or (
+                        sharedId is Identity.Individual and len(source.identities()) > 1 and len(
+                        target.identities()) > 1):
+                        raiseError = False
+                        break
+                # if shared - supported:
+                if raiseError:
+                    raise ProfileError('Type mismatch: equivalence must involve two graphol expressions')
 
 
 class EquivalenceBetweenCompatibleExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an equivalence edge is traced only between compatible Graphol expressions.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.EquivalenceEdge:
-        
-            if Identity.Neutral not in {source.identity(), target.identity()} and source.identity() is not target.identity():
+
+            if Identity.Neutral not in {source.identity(),
+                                        target.identity()} and source.identity() is not target.identity():
                 # If both nodes are not NEUTRAL and they have a different identity we can't create an equivalence.
-                raise ProfileError('Type mismatch: equivalence between {} and {}'.format(source.identityName, target.identityName))
-            
+                raise ProfileError(
+                    'Type mismatch: equivalence between {} and {}'.format(source.identityName, target.identityName))
+
             if not source.identities() & target.identities() - {Identity.Neutral, Identity.Unknown}:
                 # If source and target nodes do not share a common identity then we can't create an equivalence.
                 raise ProfileError('Type mismatch: {} and {} are not compatible'.format(source.name, target.name))
@@ -81,6 +88,7 @@ class EquivalenceBetweenValueDomainExpressionsRule(ProfileEdgeRule):
     """
     Prevents equivalence edges from being traced between Value-domain expressions.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.EquivalenceEdge:
             if Identity.ValueDomain in {source.identity(), target.identity()}:
@@ -92,6 +100,7 @@ class EquivalenceBetweenRoleExpressionAndComplementRule(ProfileEdgeRule):
     """
     Prevents equivalence edges from being traced between a Role expression and a Complement node.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.EquivalenceEdge:
             if Identity.Role in {source.identity(), target.identity()}:
@@ -104,6 +113,7 @@ class EquivalenceBetweenAttributeExpressionAndComplementRule(ProfileEdgeRule):
     """
     Prevents equivalence edges from being traced between an Attribute expression and a Complement node.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.EquivalenceEdge:
             if Identity.Attribute in {source.identity(), target.identity()}:
@@ -116,6 +126,7 @@ class EquivalenceBetweenRoleExpressionAndRoleChainRule(ProfileEdgeRule):
     """
     Make sure that equivalence edges are never traced in presence of a Role chain node.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.EquivalenceEdge:
             if Item.RoleChainNode in {source.type(), target.type()}:
@@ -129,6 +140,7 @@ class InclusionBetweenExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an inclusion edge is traced only between graphol expressions.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.InclusionEdge:
             supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
@@ -136,10 +148,12 @@ class InclusionBetweenExpressionsRule(ProfileEdgeRule):
             if shared:
                 raiseError = True
                 for sharedId in shared:
-                    if sharedId in supported:
+                    if sharedId in supported or (
+                        sharedId is Identity.Individual and len(source.identities()) > 1 and len(
+                        target.identities()) > 1):
                         raiseError = False
                         break
-                #if shared - supported:
+                # if shared - supported:
                 if raiseError:
                     # Here we keep the ValueDomain as supported identity even though we deny the inclusion
                     # between value-domain expressions, unless we are creating a DataPropertyRange axiom.
@@ -154,16 +168,18 @@ class InclusionBetweenCompatibleExpressionsRule(ProfileEdgeRule):
     """
     Make sure that an inclusion edge is traced only between compatible Graphol expressions.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.InclusionEdge:
-          
-            if Identity.Neutral not in {source.identity(), target.identity()} and source.identity() is not target.identity():
+
+            if Identity.Neutral not in {source.identity(),
+                                        target.identity()} and source.identity() is not target.identity():
                 # If both nodes are not NEUTRAL and they have a different identity we can't create an inclusion.
                 idA = source.identityName
                 idB = target.identityName
                 raise ProfileError('Type mismatch: inclusion between {} and {}'.format(idA, idB))
-          
+
             if not source.identities() & target.identities() - {Identity.Neutral, Identity.Unknown}:
                 # If source and target nodes do not share a common identity then we can't create an inclusion.
                 raise ProfileError('Type mismatch: {} and {} are not compatible'.format(source.name, target.name))
@@ -173,6 +189,7 @@ class InclusionBetweenValueDomainExpressionsRule(ProfileEdgeRule):
     """
     Prevents inclusion edged from being traced between Value-domain expressions.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.InclusionEdge:
             if Identity.ValueDomain in {source.identity(), target.identity()}:
@@ -190,6 +207,7 @@ class InclusionBetweenRoleExpressionAndComplementNodeRule(ProfileEdgeRule):
     """
     Prevents inclusion edges sourcing from Complement nodes to target Role expressions.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InclusionEdge:
@@ -220,6 +238,7 @@ class InclusionBetweenAttributeExpressionAndComplementNodeRule(ProfileEdgeRule):
     """
     Prevents inclusion edges sourcing from Complement nodes to target Attribute expressions.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InclusionEdge:
@@ -250,18 +269,19 @@ class InclusionBetweenRoleExpressionAndRoleChainNodeRule(ProfileEdgeRule):
     """
     Make sure that inclusion edges sourcing from Role chain nodes target only Role expressions.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.InclusionEdge:
-        
+
             if source.type() is Item.RoleChainNode:
-        
+
                 if target.type() not in {Item.RoleIRINode, Item.RoleInverseNode}:
                     # Role expressions constructed with chain nodes can be included only
                     # in basic role expressions, that are either Role nodes or RoleInverse
                     # nodes with one input Role node (this check is done elsewhere).
                     raise ProfileError('Inclusion between {} and {} is forbidden'.format(source.name, target.name))
-        
+
             if target.type() is Item.RoleChainNode:
                 # Role expressions constructed with chain nodes cannot be the target of any inclusion edge.
                 raise ProfileError('Role chain nodes cannot be target of a Role inclusion')
@@ -271,6 +291,7 @@ class InputToConstructorNodeRule(ProfileEdgeRule):
     """
     Make sure that input edges only target constructor nodes.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.InputEdge:
             if not target.isConstructor():
@@ -285,20 +306,21 @@ class InputToComplementNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Complement nodes.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.InputEdge:
-            
+
             if target.type() is Item.ComplementNode:
 
                 if source.identity() not in target.identities():
                     # Source node identity is not supported by the target node.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
-                
+
                 if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge)) > 0:
                     # The Complement operator may have at most one node connected to it.
                     raise ProfileError('Too many inputs to {}'.format(target.name))
-                
+
                 if source.type() in {Item.RoleIRINode, Item.RoleInverseNode, Item.AttributeIRINode}:
                     # If the source of the node matches an ObjectPropertyExpression or a
                     # DataPropertyExpression, we check for the node not to have any outgoing
@@ -308,7 +330,7 @@ class InputToComplementNodeRule(ProfileEdgeRule):
                     # Union and Disjoint Union operator nodes.
                     if len(target.outgoingNodes(lambda x: x.type() in {Item.InputEdge, Item.InclusionEdge})) > 0:
                         raise ProfileError('Invalid negative {} expression'.format(source.identityName))
-                    
+
                 if source.identity() is Identity.ValueDomain and target.identity() is Identity.Neutral:
                     # We are here connecting a Value-Domain expression in input to a complement node
                     # whose identity is still NEUTRAL, hence it may be an isolated node or a chain of
@@ -332,23 +354,24 @@ class InputToIntersectionOrUnionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting either Intersection or (Disjoint)Union nodes.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.InputEdge:
-            
+
             if target.type() in {Item.IntersectionNode, Item.UnionNode, Item.DisjointUnionNode}:
-                
+
                 if source.identity() not in target.identities():
                     # Source node identity is not supported by the target node.
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
-                
+
                 if Identity.Neutral not in {source.identity(), target.identity()}:
                     if source.identity() is not target.identity():
                         # Union/Intersection between different type of graphol expressions.
                         idA = source.identityName
                         idB = target.identityName
                         raise ProfileError('Type mismatch: {} between {} and {}'.format(target.shortName, idA, idB))
-                
+
                 if Identity.ValueDomain in {source.identity(), target.identity()}:
 
                     if source.type() is Item.RangeRestrictionNode:
@@ -356,7 +379,7 @@ class InputToIntersectionOrUnionNodeRule(ProfileEdgeRule):
                         # though the identity matches the Attribute range restriction node is used only to
                         # express a DataPropertyRange axiom and we can't give it in input to an AND|OR node.
                         raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
-                    
+
                 if source.identity() is Identity.ValueDomain and target.identity() is Identity.Neutral:
                     # We are here connecting a Value-Domain expression in input to an intersection/union
                     # node whose identity is still NEUTRAL, hence it may be an isolated node or a chain
@@ -380,6 +403,7 @@ class InputToEnumerationNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Enumeration nodes.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InputEdge:
@@ -408,13 +432,16 @@ class InputToEnumerationNodeRule(ProfileEdgeRule):
                     # If this Enumeration node is acting as filler for a domain/range restriction
                     # we need to check for the Enumeration node to have at most one input.
                     if len(target.incomingNodes(filter_on_edges=f3)) > 0:
-                        raise ProfileError('Enumeration acting as filler for qualified {} can have at most one input'.format(node.shortName))
+                        raise ProfileError(
+                            'Enumeration acting as filler for qualified {} can have at most one input'.format(
+                                node.shortName))
 
 
 class InputToRoleInverseNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Role Inverse nodes.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InputEdge:
@@ -432,12 +459,13 @@ class InputToRoleInverseNodeRule(ProfileEdgeRule):
                     # The Role Inverse operator may have at most one Role node connected to it: if we need to
                     # define multiple Role inverse we would need to use multiple Role Inverse operator nodes.
                     raise ProfileError('Too many inputs to {}'.format(target.name))
-                
-                
+
+
 class InputToRoleChainNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Role Chain nodes.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InputEdge:
@@ -453,12 +481,13 @@ class InputToRoleChainNodeRule(ProfileEdgeRule):
                     # Role nodes and Role Inverse nodes as sources of our edge (it's not possible to create a chain
                     # of chains, despite the identity matches Role in both expressions).
                     raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
-                
+
 
 class InputToDatatypeRestrictionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Role Chain nodes.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InputEdge:
@@ -489,7 +518,8 @@ class InputToDatatypeRestrictionNodeRule(ProfileEdgeRule):
                         if node.facet.constrainingFacet not in OWL2Facet.forDatatype(source.datatype):
                             nA = source.datatype
                             nB = node.facet.constrainingFacet
-                            raise ProfileError('Type mismatch: datatype {} is not compatible by facet {}'.format(nA, nB))
+                            raise ProfileError(
+                                'Type mismatch: datatype {} is not compatible by facet {}'.format(nA, nB))
 
                 if source.type() is Item.FacetIRINode:
 
@@ -503,20 +533,22 @@ class InputToDatatypeRestrictionNodeRule(ProfileEdgeRule):
                         if source.facet.constrainingFacet not in OWL2Facet.forDatatype(node.datatype):
                             nA = source.facet.constrainingFacet
                             nB = node.datatype
-                            raise ProfileError('Type mismatch: facet {} is not compatible by datatype {}'.format(nA, nB))
-                        
+                            raise ProfileError(
+                                'Type mismatch: facet {} is not compatible by datatype {}'.format(nA, nB))
+
 
 class InputToPropertyAssertionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Property Assertion nodes.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InputEdge:
 
             if target.type() is Item.PropertyAssertionNode:
 
-                #if not (source.type() is Item.LiteralNode or source.type() is Item.IndividualIRINode):
+                # if not (source.type() is Item.LiteralNode or source.type() is Item.IndividualIRINode):
                 if not (Identity.Individual in source.identities() or Identity.Value in source.identities()):
                     # Property Assertion operators accepts only Individual and Literal nodes as input: they are
                     # used to construct ObjectPropertyAssertion and DataPropertyAssertion axioms.
@@ -564,6 +596,7 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Domain Restriction nodes.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InputEdge:
@@ -574,7 +607,8 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                     # Domain Restriction node can have at most 2 inputs.
                     raise ProfileError('Too many inputs to {}'.format(target.name))
 
-                supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain, Identity.Neutral}
+                supported = {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain,
+                             Identity.Neutral}
                 if source.identity() not in supported:
                     # Domain Restriction node takes as input:
                     #  - Role => OWL 2 ObjectPropertyExpression
@@ -592,7 +626,8 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
 
                 if source.identity() is Identity.Neutral:
 
-                    if not source.identities() & {Identity.Concept, Identity.Attribute, Identity.Role, Identity.ValueDomain}:
+                    if not source.identities() & {Identity.Concept, Identity.Attribute, Identity.Role,
+                                                  Identity.ValueDomain}:
                         # We can connect a Neutral node in input only if the source node admits a supported
                         # identity among the declared ones: Concept || Attribute || Role || ValueDomain.
                         raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
@@ -602,19 +637,23 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                         if node.identity() is Identity.Role and Identity.Concept not in source.identities():
                             # If the target node has a Role in input, we can connect the source
                             # node iff it admits the Concept identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
+                            raise ProfileError(
+                                'Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.Concept and Identity.Role not in source.identities():
                             # If the target node has a Concept in input, we can connect the source
                             # node iff it admits the Role identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
+                            raise ProfileError(
+                                'Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.Attribute and Identity.ValueDomain not in source.identities():
                             # If the target node has a Attribute in input, we can connect the source
                             # node iff it admits the ValueDomain identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
+                            raise ProfileError(
+                                'Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.ValueDomain and Identity.Attribute not in source.identities():
                             # If the target node has a Attribute in input, we can connect the source
                             # node iff it admits the ValueDomain identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
+                            raise ProfileError(
+                                'Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
 
                 # SOURCE => CONCEPT EXPRESSION
 
@@ -623,7 +662,8 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                     if target.restriction() is Restriction.Self:
                         # Not a Qualified Restriction.
                         name = target.restriction().toString()
-                        raise ProfileError('Invalid restriction type for qualified {}: {}'.format(target.shortName, name))
+                        raise ProfileError(
+                            'Invalid restriction type for qualified {}: {}'.format(target.shortName, name))
 
                     # A Concept can be given as input only if there is no input or if the other input is a Role.
                     node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
@@ -639,7 +679,9 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                     # version of ObjectHasValue(ObjectPropertyExpression A), where A is an individual.
                     if source.type() is Item.EnumerationNode:
                         if len(source.incomingNodes(lambda x: x.type() is Item.InputEdge)) > 1:
-                            raise ProfileError('Enumeration acting as filler for qualified {} can have at most one input'.format(target.shortName))
+                            raise ProfileError(
+                                'Enumeration acting as filler for qualified {} can have at most one input'.format(
+                                    target.shortName))
 
                 # SOURCE => ROLE EXPRESSION
 
@@ -676,7 +718,8 @@ class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
                     if target.restriction() is Restriction.Self:
                         # Not a Qualified Restriction.
                         name = target.restriction().toString()
-                        raise ProfileError('Invalid restriction type for qualified {}: {}'.format(target.shortName, name))
+                        raise ProfileError(
+                            'Invalid restriction type for qualified {}: {}'.format(target.shortName, name))
 
                     # We can connect a ValueDomain only if there is no other input or if the other input is an Attribute.
                     node = first(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge))
@@ -691,6 +734,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Range Restriction nodes.
     """
+
     def __call__(self, source, edge, target):
 
         if edge.type() is Item.InputEdge:
@@ -733,11 +777,13 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                         if node.identity() is Identity.Role and Identity.Concept not in source.identities():
                             # If the target node has a Role in input, we can connect the source
                             # node iff it admits the Concept identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
+                            raise ProfileError(
+                                'Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
                         if node.identity() is Identity.Concept and Identity.Role not in source.identities():
                             # If the target node has a Concept in input, we can connect the source
                             # node iff it admits the Role identity among the declared ones.
-                            raise ProfileError('Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
+                            raise ProfileError(
+                                'Unsupported input for qualified {}: {}'.format(target.shortName, source.name))
 
                 # SOURCE => CONCEPT EXPRESSION
 
@@ -763,7 +809,9 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                     # version of ObjectHasValue(ObjectPropertyExpression A), where A is an individual.
                     if source.type() is Item.EnumerationNode:
                         if len(source.incomingNodes(lambda x: x.type() is Item.InputEdge)) > 1:
-                            raise ProfileError('Enumeration acting as filler for qualified {} can have at most one input'.format(target.shortName))
+                            raise ProfileError(
+                                'Enumeration acting as filler for qualified {} can have at most one input'.format(
+                                    target.shortName))
 
                 # SOURCE => ROLE EXPRESSION
 
@@ -790,7 +838,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                     if target.restriction() is Restriction.Self:
                         # Attributes don't have self.
                         raise ProfileError('Attributes do not have self')
-                    
+
                     # We can connect an Attribute in input only if the identity is either Neutral or Value-Domain:
                     if target.identity() not in {Identity.Neutral, Identity.ValueDomain}:
                         # Must be a concept, so we cannot create the connection with the Attribute.
@@ -807,6 +855,7 @@ class InputToFacetNodeRule(ProfileEdgeRule):
     """
     Perform validation procedures on input edges targeting Facet nodes.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.InputEdge:
             if target.type() is Item.FacetIRINode:
@@ -817,9 +866,10 @@ class MembershipFromAssertionCompatibleNodeRule(ProfileEdgeRule):
     """
     Make sure that membership assertion edges source from either Individual or Property Assertion nodes.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.MembershipEdge:
-            #if source.identity() is not Identity.Individual and source.type() is not Item.PropertyAssertionNode:
+            # if source.identity() is not Identity.Individual and source.type() is not Item.PropertyAssertionNode:
             if Identity.Individual not in source.identities() and source.type() is not Item.PropertyAssertionNode:
                 # The source of the edge must be either an Individual or a Property Assertion node.
                 raise ProfileError('Invalid source for membership edge: {}'.format(source.identityName))
@@ -829,6 +879,7 @@ class MembershipFromIndividualRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from Individuals.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() is Item.MembershipEdge:
             if Identity.Individual in source.identities():
@@ -837,16 +888,17 @@ class MembershipFromIndividualRule(ProfileEdgeRule):
                     # ClassAssertion and so the target of the edge MUST be a class expression.
                     # OWL 2: ClassAssertion(axiomAnnotations ClassExpression Individual)
                     raise ProfileError('Invalid target for Concept assertion: {}'.format(target.identityName))
-                
+
 
 class MembershipFromRoleInstanceRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from a Role Instance.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.MembershipEdge:
-            
+
             if source.identity() is Identity.RoleInstance:
 
                 if target.identity() not in {Identity.Role, Identity.Neutral}:
@@ -885,8 +937,9 @@ class MembershipFromAttributeInstanceRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from an Attribute Instance.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.MembershipEdge:
 
             if source.identity() is Identity.AttributeInstance:
@@ -917,10 +970,11 @@ class MembershipFromNeutralPropertyAssertionRule(ProfileEdgeRule):
     """
     Perform validation procedures on membership edges sourcing from Neutral Property Assertion nodes.
     """
+
     def __call__(self, source, edge, target):
-        
+
         if edge.type() is Item.MembershipEdge:
-            
+
             if source.type() is Item.PropertyAssertionNode:
 
                 if source.identity() is Identity.Neutral:
@@ -956,9 +1010,11 @@ class SameFromCompatibleNodeRule(ProfileEdgeRule):
     """
     Permit same edges only for nodes of the same type. This also accounts for OWL 2 punning.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() == Item.SameEdge:
-            if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode}:
+            if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode,
+                                     Item.AttributeIRINode}:
                 raise ProfileError('Invalid source for same assertion: {0}'.format(source.name))
             if source.type() != target.type():
                 raise ProfileError('Invalid target for same assertion: {0}'.format(target.name))
@@ -968,9 +1024,11 @@ class DifferentFromCompatibleNodeRule(ProfileEdgeRule):
     """
     Permit different edges only for nodes of the same type. This also accounts for OWL 2 punning.
     """
+
     def __call__(self, source, edge, target):
         if edge.type() == Item.DifferentEdge:
-            if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode}:
+            if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode,
+                                     Item.AttributeIRINode}:
                 raise ProfileError('Invalid source for different assertion: {0}'.format(source.name))
             if source.type() != target.type():
                 raise ProfileError('Invalid target for different assertion: {0}'.format(target.name))
@@ -980,6 +1038,7 @@ class SelfConnectionRule(ProfileEdgeRule):
     """
     Prevents from generating self connections.
     """
+
     def __call__(self, source, edge, target):
         if source is target:
             # We never allow self connection, no matter the edge type.
@@ -990,6 +1049,7 @@ class CardinalityRestrictionNodeRule(ProfileNodeRule):
     """
     Make sure that the cardinality specified is consistent.
     """
+
     def __call__(self, node):
         if node.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
             if node.restriction() is Restriction.Cardinality:
@@ -1007,6 +1067,7 @@ class UnknownIdentityNodeRule(ProfileNodeRule):
     """
     Make sure that the no node has an unknown identity.
     """
+
     def __call__(self, node):
         if node.identity() is Identity.Unknown:
             raise ProfileError('Unknown node identity detected on {}'.format(node))
