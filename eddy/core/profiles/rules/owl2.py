@@ -50,14 +50,17 @@ class EquivalenceBetweenExpressionsRule(ProfileEdgeRule):
         if edge.type() is Item.EquivalenceEdge:
             supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
             shared = source.identities() & target.identities() - {Identity.Neutral, Identity.Unknown}
-            if shared - supported:
-                # Here we keep the ValueDomain as supported identity even though we deny the equivalence
-                # between value-domain expressions. The reason for this is that if we remove the identity
-                # from the supported set the user will see the message which explains that the equivalence
-                # is denied because it does not involve two graphol expressions, while it actually does.
-                # We handle this special case in a separate rule which will highlight the error with a more
-                # specific message.
-                raise ProfileError('Type mismatch: equivalence must involve two graphol expressions')
+            if shared:
+                raiseError = True
+                for sharedId in shared:
+                    if sharedId in supported or (
+                        sharedId is Identity.Individual and len(source.identities()) > 1 and len(
+                        target.identities()) > 1):
+                        raiseError = False
+                        break
+                # if shared - supported:
+                if raiseError:
+                    raise ProfileError('Type mismatch: equivalence must involve two graphol expressions')
 
 
 class EquivalenceBetweenCompatibleExpressionsRule(ProfileEdgeRule):
@@ -136,7 +139,7 @@ class InclusionBetweenExpressionsRule(ProfileEdgeRule):
             if shared:
                 raiseError = True
                 for sharedId in shared:
-                    if sharedId in supported:
+                    if sharedId in supported or (sharedId is Identity.Individual and len(source.identities())>1 and len(target.identities())>1):
                         raiseError = False
                         break
                 #if shared - supported:

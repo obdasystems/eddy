@@ -189,13 +189,13 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
                 if (self.project.existIriOccurrence(iri) or iri==self.project.ontologyIRI) and not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
                         iriEl = self.getIriDomElement(iri)
                         irisEl.appendChild(iriEl)
-            else:
-                for iri in self.project.iris:
-                    if (self.project.existIriOccurrence(iri) or iri == self.project.ontologyIRI) and not (
-                        iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
-                        if self.occursInAtLeastOneSelectedDiagrams(iri):
-                            iriEl = self.getIriDomElement(iri)
-                            irisEl.appendChild(iriEl)
+        else:
+            for iri in self.project.iris:
+                if (self.project.existIriOccurrence(iri) or iri == self.project.ontologyIRI) and not (
+                    iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
+                    if self.occursInAtLeastOneSelectedDiagrams(iri):
+                        iriEl = self.getIriDomElement(iri)
+                        irisEl.appendChild(iriEl)
         return ontologyEl
 
     def occursInAtLeastOneSelectedDiagrams(self,iri):
