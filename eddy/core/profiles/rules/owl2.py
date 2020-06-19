@@ -991,7 +991,7 @@ class SelfConnectionRule(ProfileEdgeRule):
 
 class CardinalityRestrictionNodeRule(ProfileNodeRule):
     """
-    Make sure that the cardinality specified is consistent.
+    Make sure that the cardinality is consistent.
     """
     def __call__(self, node):
         if node.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
