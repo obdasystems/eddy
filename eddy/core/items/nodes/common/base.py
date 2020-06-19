@@ -528,14 +528,14 @@ class OntologyEntityNode(AbstractNode):
         connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
         connect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
         connect(self.project.sgnPrefixModified, self.onPrefixModified)
-        connect(self.session.sgnRenderingModified, self.onRenderingModified)
+        #connect(self.session.sgnRenderingModified, self.onRenderingModified)
         self.connectIRISignals()
 
     def disconnectSignals(self):
         disconnect(self.project.sgnPrefixAdded, self.onPrefixAdded)
         disconnect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
         disconnect(self.project.sgnPrefixModified, self.onPrefixModified)
-        disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
+        #disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
         self.disconnectIRISignals()
 
     def connectIRISignals(self):
@@ -575,12 +575,12 @@ class OntologyEntityNode(AbstractNode):
             labelPos = lambda: self.label.pos()
             self.label.diagram.removeItem(self.label)
             self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
-            self.diagram.sgnUpdated.emit()
+            #self.diagram.sgnUpdated.emit()
         elif not self.label:
             self.labelString = IRIRender.iriLabelString(self._iri)
             self.label = NodeLabel(template=self.labelString, pos=lambda: self.initialLabelPosition(), parent=self,
                                    editable=True)
-            self.diagram.sgnUpdated.emit()
+            #self.diagram.sgnUpdated.emit()
 
     '''
     def renderByFullIRI(self):
@@ -997,14 +997,14 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
         connect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
         connect(self.project.sgnPrefixModified, self.onPrefixModified)
-        connect(self.session.sgnRenderingModified, self.onRenderingModified)
+        #connect(self.session.sgnRenderingModified, self.onRenderingModified)
         self.connectIRISignals()
 
     def disconnectSignals(self):
         disconnect(self.project.sgnPrefixAdded, self.onPrefixAdded)
         disconnect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
         disconnect(self.project.sgnPrefixModified, self.onPrefixModified)
-        disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
+        #disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
         self.disconnectIRISignals()
 
     def connectIRISignals(self):
@@ -1043,11 +1043,11 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             labelPos = lambda:self.label.pos()
             self.label.diagram.removeItem(self.label)
             self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
-            self.diagram.sgnUpdated.emit()
+            #self.diagram.sgnUpdated.emit()
         elif not self.label:
             self.labelString = IRIRender.iriLabelString(self._iri)
             self.label = NodeLabel(template=self.labelString, pos=lambda:self.initialLabelPosition() , parent=self, editable=True)
-            self.diagram.sgnUpdated.emit()
+            #self.diagram.sgnUpdated.emit()
         '''
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)

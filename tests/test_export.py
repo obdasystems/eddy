@@ -39,15 +39,12 @@ import pytest
 from PyQt5 import QtPrintSupport
 
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
-from eddy.core.datatypes.system import File
-from eddy.core.exporters.graphml import GraphMLDiagramExporter
-from eddy.core.exporters.graphreferences import GraphReferencesProjectExporter
+from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.exporters.image import BmpDiagramExporter
 from eddy.core.exporters.image import JpegDiagramExporter
 from eddy.core.exporters.image import PngDiagramExporter
-from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
-from eddy.core.exporters.pdf import PdfDiagramExporter
-from eddy.core.exporters.pdf import PdfProjectExporter
+from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
+from eddy.core.exporters.pdf_iri import PdfDiagramExporter_v3, PdfProjectExporter_v3
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
 from eddy.ui.session import Session
@@ -59,7 +56,7 @@ def session(qapp, qtbot, logging_disabled):
     Provide an initialized Session instance.
     """
     with logging_disabled:
-        session = Session(qapp, expandPath('@tests/test_project_1'))
+        session = Session(qapp, expandPath('@tests/test_project_3/test_project_3_1.graphol'))
         session.show()
     qtbot.addWidget(session)
     qtbot.waitExposed(session, timeout=3000)
@@ -69,9 +66,25 @@ def session(qapp, qtbot, logging_disabled):
 
 
 #############################################
+#   PROJECT EXPORT
+#################################
+def test_export_project_as_graphol(session, qtbot, tmpdir):
+    # GIVEN
+    savePath = tmpdir.join('savedAs.graphol')
+    project = session.project
+    #WHEN
+    worker = GrapholIRIProjectExporter(project,session,str(savePath))
+    worker.run()
+    #THEN
+    assert os.path.isfile(str(savePath))
+
+
+#############################################
 #   CSV EXPORT
 #################################
 
+#Esportazione in csv disabilitata in versione 3. Ripristinare opportunamente test in caso di reimplementazione esportatore
+'''
 def test_export_project_to_csv(session, qtbot, tmpdir):
     # GIVEN
     csv = tmpdir.join('project.csv')
@@ -84,7 +97,7 @@ def test_export_project_to_csv(session, qtbot, tmpdir):
     worker.run(str(csv))
     # THEN
     assert os.path.isfile(str(csv))
-
+'''
 
 #############################################
 #   IMAGE EXPORT
@@ -128,7 +141,8 @@ def test_export_diagram_to_png(session, qtbot, tmpdir):
     # THEN
     assert os.path.isfile(str(image))
 
-
+#Esportazione in graphml disabilitata in versione 3. Ripristinare opportunamente test in caso di reimplementazione esportatore
+'''
 #############################################
 #   GRAPHML EXPORT
 #################################
@@ -144,8 +158,10 @@ def test_export_diagram_to_graphml(session, qtbot, tmpdir):
     worker.run(str(graphml))
     # THEN
     assert os.path.isfile(str(graphml))
+'''
 
-
+#Esportazione in xml disabilitata in versione 3. Ripristinare opportunamente test in caso di reimplementazione esportatore
+'''
 #############################################
 #   GRAPH REFERENCES EXPORT
 #################################
@@ -161,7 +177,7 @@ def test_export_project_to_graphreferences(session, qtbot, tmpdir):
     worker.run(str(xml))
     # THEN
     assert os.path.isfile(str(xml))
-
+'''
 
 #############################################
 #   PDF EXPORT
@@ -174,7 +190,7 @@ def test_export_diagram_to_pdf(session, qtbot, tmpdir):
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    worker = PdfDiagramExporter(session.mdi.activeDiagram(), session)
+    worker = PdfDiagramExporter_v3(session.mdi.activeDiagram(), session)
     worker.run(str(pdffile))
     # THEN
     assert os.path.isfile(str(pdffile))
@@ -187,7 +203,7 @@ def test_export_project_to_pdf(session, qtbot, tmpdir):
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    worker = PdfProjectExporter(project, session,
+    worker = PdfProjectExporter_v3(project, session,
                                 pageSize=QtPrintSupport.QPrinter.A3,
                                 diagrams=project.diagrams())
     worker.run(str(pdffile))
@@ -201,9 +217,9 @@ def test_export_project_to_pdf(session, qtbot, tmpdir):
 
 def test_export_project_to_owl_without_normalization(session, tmpdir):
     # WHEN
-    owlfile = tmpdir.join('test_project_1.owl')
+    owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
-    worker = OWLOntologyExporterWorker(project, str(owlfile),
+    worker = OWLOntologyExporterWorker_v3(project, str(owlfile),
                                        axioms={x for x in OWLAxiom},
                                        normalize=False,
                                        syntax=OWLSyntax.Functional)
@@ -218,8 +234,8 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
     assert 'Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)' in content
     assert 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)' in content
     assert 'Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)' in content
-    assert 'Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)' in content
-    assert 'Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>' in content
+    assert 'Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project/>)' in content
+    assert 'Ontology(<http://www.dis.uniroma1.it/~graphol/test_project/>' in content
     assert 'Declaration(Class(test:Vegetable))' in content
     assert 'Declaration(Class(test:Person))' in content
     assert 'Declaration(Class(test:Male))' in content
@@ -242,7 +258,7 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
     assert 'Declaration(ObjectProperty(test:drives))' in content
     assert 'Declaration(DataProperty(test:name))' in content
     assert 'Declaration(Datatype(xsd:string))' in content
-    assert 'AnnotationAssertion(rdfs:comment test:Person "A human being"^^xsd:string)' in content
+    assert 'AnnotationAssertion(rdfs:comment test:Person "A human being")' in content
     assert 'SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))' in content
     assert 'SubClassOf(test:Father test:Male)' in content
     assert 'SubClassOf(test:Mother test:Female)' in content
@@ -254,7 +270,12 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
     assert 'FunctionalObjectProperty(test:hasMother)' in content
     assert 'DataPropertyRange(test:name xsd:string)' in content
     assert 'DataPropertyDomain(test:name test:Person)' in content
-    assert 'InverseObjectProperties(test:hasAncestor test:isAncestorOf)' in content
+    assert any([line in content for line in
+                ['EquivalentObjectProperties(test:hasAncestor ObjectInverseOf(test:isAncestorOf))',
+                 'EquivalentObjectProperties(test:isAncestorOf ObjectInverseOf(test:hasAncestor))',
+                 'EquivalentObjectProperties(ObjectInverseOf(test:isAncestorOf) test:hasAncestor)',
+                 'EquivalentObjectProperties(ObjectInverseOf(test:hasAncestor) test:isAncestorOf)',
+                 'InverseObjectProperties(test:hasAncestor test:isAncestorOf)']])
     assert 'ObjectPropertyAssertion(test:isAncestorOf test:Bob test:Alice)' in content
     assert 'ObjectPropertyRange(test:hasAncestor test:Person)' in content
     assert 'ObjectPropertyRange(test:hasFather test:Father)' in content
@@ -300,15 +321,38 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
     assert any([line in content for line in
                 ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                  'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
+
+    assert 'AnnotationAssertion(rdfs:label test:drives "drives")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasAncestor "hasAncestor")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasFather "hasFather")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasMother "hasMother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasParent "hasParent")' in content
+    assert 'AnnotationAssertion(rdfs:label test:isAncestorOf "isAncestorOf")' in content
+    assert 'AnnotationAssertion(rdfs:label test:name "name")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Adult "Adult")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Father "Father")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Female "Female")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Less_than_50_cc "Less_than_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Male "Male")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Mother "Mother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Over_50_cc "Over_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Person "Person")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Underage "Underage")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vegetable "Vegetable")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vehicle "Vehicle")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Alice "Alice")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Bob "Bob")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Trudy "Trudy")' in content
+
     # AND
-    assert len(content) == 63
+    assert len(content) == 81
 
 
 def test_export_project_to_owl_with_normalization(session, tmpdir):
     # WHEN
-    owlfile = tmpdir.join('test_project_1.owl')
+    owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
-    worker = OWLOntologyExporterWorker(project, str(owlfile),
+    worker = OWLOntologyExporterWorker_v3(project, str(owlfile),
                                        axioms={x for x in OWLAxiom},
                                        normalize=True,
                                        syntax=OWLSyntax.Functional)
@@ -323,8 +367,8 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
     assert 'Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)' in content
     assert 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)' in content
     assert 'Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)' in content
-    assert 'Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project#>)' in content
-    assert 'Ontology(<http://www.dis.uniroma1.it/~graphol/test_project>' in content
+    assert 'Prefix(test:=<http://www.dis.uniroma1.it/~graphol/test_project/>)' in content
+    assert 'Ontology(<http://www.dis.uniroma1.it/~graphol/test_project/>' in content
     assert 'Declaration(Class(test:Vegetable))' in content
     assert 'Declaration(Class(test:Person))' in content
     assert 'Declaration(Class(test:Male))' in content
@@ -347,7 +391,7 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
     assert 'Declaration(ObjectProperty(test:drives))' in content
     assert 'Declaration(DataProperty(test:name))' in content
     assert 'Declaration(Datatype(xsd:string))' in content
-    assert 'AnnotationAssertion(rdfs:comment test:Person "A human being"^^xsd:string)' in content
+    assert 'AnnotationAssertion(rdfs:comment test:Person "A human being")' in content
     assert 'SubClassOf(test:Person ObjectSomeValuesFrom(test:hasAncestor owl:Thing))' in content
     assert 'SubClassOf(test:Father test:Male)' in content
     assert 'SubClassOf(test:Mother test:Female)' in content
@@ -368,7 +412,19 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
     assert 'FunctionalObjectProperty(test:hasMother)' in content
     assert 'DataPropertyRange(test:name xsd:string)' in content
     assert 'DataPropertyDomain(test:name test:Person)' in content
-    assert 'InverseObjectProperties(test:hasAncestor test:isAncestorOf)' in content
+
+    assert any([line in content for line in
+                ['SubObjectPropertyOf(test:hasAncestor ObjectInverseOf(test:isAncestorOf))',
+                 'SubObjectPropertyOf(ObjectInverseOf(test:hasAncestor) test:isAncestorOf)',
+                 'InverseObjectProperties(test:hasAncestor test:isAncestorOf)',
+                 'InverseObjectProperties(test:isAncestorOf test:hasAncestor)']])
+
+    assert any([line in content for line in
+                ['SubObjectPropertyOf(test:isAncestorOf ObjectInverseOf(test:hasAncestor))',
+                 'SubObjectPropertyOf(ObjectInverseOf(test:isAncestorOf) test:hasAncestor)',
+                 'InverseObjectProperties(test:hasAncestor test:isAncestorOf)',
+                 'InverseObjectProperties(test:isAncestorOf test:hasAncestor)']])
+
     assert 'ObjectPropertyAssertion(test:isAncestorOf test:Bob test:Alice)' in content
     assert 'ObjectPropertyRange(test:hasAncestor test:Person)' in content
     assert 'ObjectPropertyRange(test:hasFather test:Father)' in content
@@ -403,5 +459,29 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
     assert any([line in content for line in
                 ['DisjointClasses(test:Less_than_50_cc test:Over_50_cc)',
                  'DisjointClasses(test:Over_50_cc test:Less_than_50_cc)']])
+
+    assert 'AnnotationAssertion(rdfs:label test:drives "drives")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasAncestor "hasAncestor")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasFather "hasFather")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasMother "hasMother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:hasParent "hasParent")' in content
+    assert 'AnnotationAssertion(rdfs:label test:isAncestorOf "isAncestorOf")' in content
+    assert 'AnnotationAssertion(rdfs:label test:name "name")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Adult "Adult")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Father "Father")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Female "Female")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Less_than_50_cc "Less_than_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Male "Male")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Mother "Mother")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Over_50_cc "Over_50_cc")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Person "Person")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Underage "Underage")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vegetable "Vegetable")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Vehicle "Vehicle")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Alice "Alice")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Bob "Bob")' in content
+    assert 'AnnotationAssertion(rdfs:label test:Trudy "Trudy")' in content
+
     # AND
-    assert len(content) == 70
+    assert len(content) == 89
+

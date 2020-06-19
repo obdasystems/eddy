@@ -133,20 +133,21 @@ class InclusionBetweenExpressionsRule(ProfileEdgeRule):
         if edge.type() is Item.InclusionEdge:
             supported = {Identity.Concept, Identity.Role, Identity.Attribute, Identity.ValueDomain}
             shared = source.identities() & target.identities() - {Identity.Neutral, Identity.Unknown}
-            raiseError = True
-            for sharedId in shared:
-                if sharedId in supported:
-                    raiseError = False
-                    break
-            #if shared - supported:
-            if raiseError:
-                # Here we keep the ValueDomain as supported identity even though we deny the inclusion
-                # between value-domain expressions, unless we are creating a DataPropertyRange axiom.
-                # The reason for this is that if we remove the identity from the supported set the user
-                # will see the message which explains that the inclusion is denied because it does not
-                # involve two graphol expressions, while it actually does. We handle this special case
-                # in a separate rule which will highlight the error with a more specific message.
-                raise ProfileError('Type mismatch: inclusion must involve two graphol expressions')
+            if shared:
+                raiseError = True
+                for sharedId in shared:
+                    if sharedId in supported:
+                        raiseError = False
+                        break
+                #if shared - supported:
+                if raiseError:
+                    # Here we keep the ValueDomain as supported identity even though we deny the inclusion
+                    # between value-domain expressions, unless we are creating a DataPropertyRange axiom.
+                    # The reason for this is that if we remove the identity from the supported set the user
+                    # will see the message which explains that the inclusion is denied because it does not
+                    # involve two graphol expressions, while it actually does. We handle this special case
+                    # in a separate rule which will highlight the error with a more specific message.
+                    raise ProfileError('Type mismatch: inclusion must involve two graphol expressions')
 
 
 class InclusionBetweenCompatibleExpressionsRule(ProfileEdgeRule):
@@ -701,7 +702,7 @@ class InputToRangeRestrictionNodeRule(ProfileEdgeRule):
                     raise ProfileError('Too many inputs to {}'.format(target.name))
 
                 f1 = lambda x: x.type() is Item.InputEdge and x is not edge
-                f2 = lambda x: x.type() is Item.AttributeIRINodeNode
+                f2 = lambda x: x.type() is Item.AttributeIRINode
                 if len(target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)) >= 1:
                     # Range restriction node having an attribute as input can receive no other input.
                     raise ProfileError('Too many inputs to attribute {}'.format(target.shortName))

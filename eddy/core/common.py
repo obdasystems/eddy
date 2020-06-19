@@ -801,7 +801,7 @@ class HasProjectExportSystem(object):
         self._projectExporterDict.clear()
         self._projectExporterList.clear()
 
-    def createProjectExporter(self, filetype, project, session=None, exportPath=None):
+    def createProjectExporter(self, filetype, project, session=None, exportPath=None, selectDiagrams=False):
         """
         Creates an instance of a project exporter for the given filetype.
         :type filetype: File
@@ -812,7 +812,7 @@ class HasProjectExportSystem(object):
         exporter = self.projectExporter(filetype)
         if not exporter:
             raise ValueError("missing project exporter for filetype %s" % filetype.value)
-        return exporter(project, session, exportPath=exportPath)
+        return exporter(project, session, exportPath=exportPath,selectDiagrams=selectDiagrams)
 
     def insertProjectExporter(self, exporter, before):
         """

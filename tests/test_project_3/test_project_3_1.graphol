@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="3">
+  <project version="1.0" name="test_project_1">
+    <ontology addLabelFromSimpleName="0" lang="en" addLabelFromUserInput="0" iri="http://www.dis.uniroma1.it/~graphol/test_project/" prefix="test">
+      <imports/>
+      <prefixes>
+        <prefix>
+          <value>test</value>
+          <namespace>http://www.dis.uniroma1.it/~graphol/test_project/</namespace>
+        </prefix>
+        <prefix>
+          <value>xml</value>
+          <namespace>http://www.w3.org/XML/1998/namespace</namespace>
+        </prefix>
+        <prefix>
+          <value>xsd</value>
+          <namespace>http://www.w3.org/2001/XMLSchema#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdf</value>
+          <namespace>http://www.w3.org/1999/02/22-rdf-syntax-ns#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdfs</value>
+          <namespace>http://www.w3.org/2000/01/rdf-schema#</namespace>
+        </prefix>
+        <prefix>
+          <value>owl</value>
+          <namespace>http://www.w3.org/2002/07/owl#</namespace>
+        </prefix>
+      </prefixes>
+      <datatypes>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonPositiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTimeStamp</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#normalizedString</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#decimal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#positiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#double</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#short</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#float</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#rational</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#string</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#hexBinary</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#real</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#token</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#int</datatype>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedByte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedInt</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#language</datatype>
+        <datatype>http://www.w3.org/2000/01/rdf-schema#Literal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedLong</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#long</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#anyURI</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedShort</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#Name</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#base64Binary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NCName</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#boolean</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#negativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#byte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NMTOKEN</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTime</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonNegativeInteger</datatype>
+      </datatypes>
+      <languages>
+        <language>es</language>
+        <language>de</language>
+        <language>fr</language>
+        <language>it</language>
+        <language>en</language>
+      </languages>
+      <facets>
+        <facet>http://www.w3.org/2001/XMLSchema#pattern</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#length</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#langRange</facet>
+      </facets>
+      <annotationProperties>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#label</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#versionInfo</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#deprecated</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#comment</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#incompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#isDefinedBy</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#priorVersion</annotationProperty>
+      </annotationProperties>
+      <iris>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Alice</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Alice</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Alice</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Person</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Person</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Person</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Person</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#comment</property>
+              <object>
+                <lexicalForm>A human being</lexicalForm>
+                <datatype/>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/hasFather</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/hasFather</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasFather</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Bob</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Bob</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Bob</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/drives</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/drives</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>drives</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Father</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Father</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Father</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Underage</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Underage</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Underage</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Mother</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Mother</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Mother</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Over_50_cc</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Over_50_cc</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Over_50_cc</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Vehicle</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Vehicle</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Vehicle</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Less_than_50_cc</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Less_than_50_cc</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Less_than_50_cc</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/name</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/name</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>name</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasAncestor</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/hasMother</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/hasMother</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasMother</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Trudy</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Trudy</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Trudy</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/isAncestorOf</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/isAncestorOf</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>isAncestorOf</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Vegetable</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Vegetable</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Vegetable</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Adult</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Adult</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Adult</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/hasParent</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/hasParent</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasParent</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Female</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Female</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Female</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>http://www.dis.uniroma1.it/~graphol/test_project/Male</value>
+          <annotations>
+            <annotation>
+              <subject>http://www.dis.uniroma1.it/~graphol/test_project/Male</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Male</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language/>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+      </iris>
+    </ontology>
+    <diagrams>
+      <diagram height="5000" width="5000" name="diagram">
+        <node id="n31" type="role" color="#fcfcfc">
+          <geometry y="-280" height="50" x="-80" width="70"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/drives</iri>
+          <label y="-280" height="22" x="-80" width="63" size="12" customSize="0"/>
+        </node>
+        <node id="n18" type="role-inverse" color="#fcfcfc">
+          <geometry y="-80" height="30" x="120" width="50"/>
+          <label y="-80" height="22" x="120" width="24" size="12" customSize="0"/>
+        </node>
+        <node id="n8" type="role" color="#fcfcfc">
+          <geometry y="60" height="50" x="60" width="70"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/hasFather</iri>
+          <label y="35" height="22" x="108" width="86" size="12" customSize="0"/>
+        </node>
+        <node id="n13" type="range-restriction" color="#000000">
+          <geometry y="140" height="20" x="60" width="20"/>
+          <label y="140" height="22" x="90" width="39" size="12" customSize="0">exists</label>
+        </node>
+        <node id="n7" type="role" color="#fcfcfc">
+          <geometry y="0" height="50" x="-20" width="70"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/hasParent</iri>
+          <label y="-20" height="22" x="30" width="87" size="12" customSize="0"/>
+        </node>
+        <node id="n37" type="concept" color="#fcfcfc">
+          <geometry y="-460" height="50" x="200" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Over_50_cc</iri>
+          <label y="-460" height="22" x="200" width="91" size="12" customSize="0"/>
+        </node>
+        <node id="n27" type="complement" color="#fcfcfc">
+          <geometry y="-80" height="30" x="-520" width="50"/>
+          <label y="-80" height="22" x="-520" width="26" size="12" customSize="0"/>
+        </node>
+        <node id="n32" type="domain-restriction" color="#fcfcfc">
+          <geometry y="-280" height="20" x="-160" width="20"/>
+          <label y="-302" height="22" x="-160" width="36" size="12" customSize="0">forall</label>
+        </node>
+        <node id="n22" type="property-assertion" color="#fcfcfc" inputs="e35,e36">
+          <geometry y="20" height="30" x="240" width="52"/>
+        </node>
+        <node id="n34" type="concept" color="#fcfcfc">
+          <geometry y="-280" height="50" x="120" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Vehicle</iri>
+          <label y="-280" height="22" x="120" width="70" size="12" customSize="0"/>
+        </node>
+        <node id="n17" type="domain-restriction" color="#fcfcfc">
+          <geometry y="0" height="20" x="-520" width="20"/>
+          <label y="-22" height="22" x="-520" width="39" size="12" customSize="0">exists</label>
+        </node>
+        <node id="n3" type="concept" color="#fcfcfc">
+          <geometry y="-80" height="50" x="-340" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Person</iri>
+          <label y="-80" height="22" x="-340" width="69" size="12" customSize="0"/>
+        </node>
+        <node id="n35" type="disjoint-union" color="#000000">
+          <geometry y="-380" height="30" x="120" width="50"/>
+        </node>
+        <node id="n9" type="role" color="#fcfcfc">
+          <geometry y="60" height="50" x="-100" width="70"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/hasMother</iri>
+          <label y="35" height="22" x="-144" width="89" size="12" customSize="0"/>
+        </node>
+        <node id="n0" type="concept" color="#fcfcfc">
+          <geometry y="80" height="50" x="-420" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Male</iri>
+          <label y="80" height="22" x="-420" width="57" size="12" customSize="0"/>
+        </node>
+        <node id="n14" type="attribute" color="#fcfcfc">
+          <geometry y="0" height="20" x="-580" width="20"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/name</iri>
+          <label y="-22" height="22" x="-580" width="62" size="12" customSize="0"/>
+        </node>
+        <node id="n16" type="value-domain" color="#fcfcfc">
+          <geometry y="60" height="40" x="-640" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label y="60" height="22" x="-640" width="61" size="12" customSize="0"/>
+        </node>
+        <node id="n38" type="domain-restriction" color="#fcfcfc">
+          <geometry y="-360" height="20" x="-80" width="20"/>
+          <label y="-382" height="22" x="-80" width="36" size="12" customSize="0">forall</label>
+        </node>
+        <node id="n21" type="individual" color="#fcfcfc">
+          <geometry y="120" height="60" x="300" width="60"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Alice</iri>
+          <label y="120" height="22" x="300" width="57" size="12" customSize="0"/>
+        </node>
+        <node id="n1" type="concept" color="#fcfcfc">
+          <geometry y="80" height="50" x="-260" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Female</iri>
+          <label y="80" height="22" x="-260" width="71" size="12" customSize="0"/>
+        </node>
+        <node id="n24" type="property-assertion" color="#fcfcfc" inputs="e38,e39">
+          <geometry y="20" height="30" x="420" width="52"/>
+        </node>
+        <node id="n5" type="domain-restriction" color="#fcfcfc">
+          <geometry y="-80" height="20" x="-120" width="20"/>
+          <label y="-102" height="22" x="-120" width="39" size="12" customSize="0">exists</label>
+        </node>
+        <node id="n29" type="concept" color="#fcfcfc">
+          <geometry y="-300" height="50" x="-260" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Adult</iri>
+          <label y="-300" height="22" x="-260" width="60" size="12" customSize="0"/>
+        </node>
+        <node id="n36" type="concept" color="#fcfcfc">
+          <geometry y="-460" height="50" x="40" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Less_than_50_cc</iri>
+          <label y="-460" height="22" x="40" width="121" size="12" customSize="0"/>
+        </node>
+        <node id="n30" type="disjoint-union" color="#000000">
+          <geometry y="-220" height="30" x="-340" width="50"/>
+        </node>
+        <node id="n15" type="range-restriction" color="#000000">
+          <geometry y="0" height="20" x="-640" width="20"/>
+          <label y="-22" height="22" x="-640" width="39" size="12" customSize="0">exists</label>
+        </node>
+        <node id="n11" type="concept" color="#fcfcfc">
+          <geometry y="180" height="50" x="-260" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Mother</iri>
+          <label y="180" height="22" x="-260" width="69" size="12" customSize="0"/>
+        </node>
+        <node id="n20" type="individual" color="#fcfcfc">
+          <geometry y="120" height="60" x="180" width="60"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Bob</iri>
+          <label y="120" height="22" x="180" width="52" size="12" customSize="0"/>
+        </node>
+        <node id="n23" type="individual" color="#fcfcfc">
+          <geometry y="120" height="60" x="480" width="60"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Trudy</iri>
+          <label y="120" height="22" x="480" width="62" size="12" customSize="0"/>
+        </node>
+        <node id="n10" type="concept" color="#fcfcfc">
+          <geometry y="180" height="50" x="-420" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Father</iri>
+          <label y="180" height="22" x="-420" width="66" size="12" customSize="0"/>
+        </node>
+        <node id="n6" type="range-restriction" color="#000000">
+          <geometry y="-160" height="20" x="-20" width="20"/>
+          <label y="-182" height="22" x="-20" width="39" size="12" customSize="0">exists</label>
+        </node>
+        <node id="n4" type="role" color="#fcfcfc">
+          <geometry y="-80" height="50" x="-20" width="70"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/hasAncestor</iri>
+          <label y="-105" height="22" x="35" width="99" size="12" customSize="0"/>
+        </node>
+        <node id="n2" type="disjoint-union" color="#000000">
+          <geometry y="0" height="30" x="-340" width="50"/>
+        </node>
+        <node id="n28" type="concept" color="#fcfcfc">
+          <geometry y="-300" height="50" x="-420" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Underage</iri>
+          <label y="-300" height="22" x="-420" width="83" size="12" customSize="0"/>
+        </node>
+        <node id="n19" type="role" color="#fcfcfc">
+          <geometry y="-80" height="50" x="240" width="70"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/isAncestorOf</iri>
+          <label y="-105" height="22" x="295" width="100" size="12" customSize="0"/>
+        </node>
+        <node id="n26" type="concept" color="#fcfcfc">
+          <geometry y="-80" height="50" x="-640" width="110"/>
+          <iri>http://www.dis.uniroma1.it/~graphol/test_project/Vegetable</iri>
+          <label y="-80" height="22" x="-640" width="85" size="12" customSize="0"/>
+        </node>
+        <node id="n12" type="range-restriction" color="#000000">
+          <geometry y="140" height="20" x="-100" width="20"/>
+          <label y="140" height="22" x="-70" width="39" size="12" customSize="0">exists</label>
+        </node>
+        <node id="n25" type="complement" color="#fcfcfc">
+          <geometry y="-80" height="30" x="420" width="50"/>
+          <label y="-80" height="22" x="420" width="26" size="12" customSize="0"/>
+        </node>
+        <node id="n33" type="range-restriction" color="#000000">
+          <geometry y="-280" height="20" x="0" width="20"/>
+          <label y="-302" height="22" x="0" width="39" size="12" customSize="0">exists</label>
+        </node>
+        <edge id="e22" type="input" source="n14" target="n17">
+          <point y="0" x="-580"/>
+          <point y="0" x="-520"/>
+        </edge>
+        <edge id="e50" type="equivalence" source="n3" target="n32">
+          <point y="-80" x="-320"/>
+          <point y="-180" x="-320"/>
+          <point y="-180" x="-160"/>
+          <point y="-280" x="-160"/>
+        </edge>
+        <edge id="e0" type="input" source="n0" target="n2">
+          <point y="80" x="-420"/>
+          <point y="0" x="-420"/>
+          <point y="0" x="-340"/>
+        </edge>
+        <edge id="e44" type="inclusion" source="n26" target="n27">
+          <point y="-80" x="-640"/>
+          <point y="-80" x="-520"/>
+        </edge>
+        <edge id="e37" type="membership" source="n22" target="n19">
+          <point y="20" x="240"/>
+          <point y="-80" x="240"/>
+        </edge>
+        <edge id="e1" type="input" source="n1" target="n2">
+          <point y="80" x="-260"/>
+          <point y="0" x="-260"/>
+          <point y="0" x="-340"/>
+        </edge>
+        <edge id="e52" type="inclusion" source="n33" target="n34">
+          <point y="-280" x="0"/>
+          <point y="-280" x="120"/>
+        </edge>
+        <edge id="e8" type="inclusion" source="n9" target="n7">
+          <point y="60" x="-100"/>
+          <point y="0" x="-20"/>
+        </edge>
+        <edge id="e39" type="input" source="n23" target="n24">
+          <point y="120" x="480"/>
+          <point y="20" x="480"/>
+          <point y="20" x="420"/>
+        </edge>
+        <edge id="e14" type="input" source="n8" target="n13">
+          <point y="60" x="60"/>
+          <point y="140" x="60"/>
+        </edge>
+        <edge id="e12" type="inclusion" source="n11" target="n1">
+          <point y="180" x="-260"/>
+          <point y="80" x="-260"/>
+        </edge>
+        <edge id="e51" type="input" source="n31" target="n33">
+          <point y="-280" x="-80"/>
+          <point y="-280" x="0"/>
+        </edge>
+        <edge id="e10" type="inclusion" source="n10" target="n0">
+          <point y="180" x="-420"/>
+          <point y="80" x="-420"/>
+        </edge>
+        <edge id="e20" type="inclusion" source="n15" target="n16">
+          <point y="0" x="-640"/>
+          <point y="60" x="-640"/>
+        </edge>
+        <edge id="e54" type="input" source="n36" target="n35">
+          <point y="-460" x="40"/>
+          <point y="-380" x="40"/>
+          <point y="-380" x="120"/>
+        </edge>
+        <edge id="e58" type="inclusion" source="n28" target="n38">
+          <point y="-300" x="-420"/>
+          <point y="-360" x="-420"/>
+          <point y="-360" x="-80"/>
+        </edge>
+        <edge id="e42" type="membership" source="n24" target="n25">
+          <point y="20" x="420"/>
+          <point y="-80" x="420"/>
+        </edge>
+        <edge id="e19" type="input" source="n14" target="n15">
+          <point y="0" x="-580"/>
+          <point y="0" x="-640"/>
+        </edge>
+        <edge id="e9" type="inclusion" source="n8" target="n7">
+          <point y="60" x="60"/>
+          <point y="0" x="-20"/>
+        </edge>
+        <edge id="e29" type="equivalence" source="n3" target="n2">
+          <point y="-80" x="-340"/>
+          <point y="0" x="-340"/>
+        </edge>
+        <edge id="e27" type="equivalence" source="n3" target="n17">
+          <point y="-80" x="-380"/>
+          <point y="-20" x="-380"/>
+          <point y="-20" x="-460"/>
+          <point y="0" x="-460"/>
+          <point y="0" x="-520"/>
+        </edge>
+        <edge id="e7" type="inclusion" source="n7" target="n4">
+          <point y="0" x="-20"/>
+          <point y="-80" x="-20"/>
+        </edge>
+        <edge id="e41" type="input" source="n19" target="n25">
+          <point y="-80" x="240"/>
+          <point y="-80" x="420"/>
+        </edge>
+        <edge id="e18" type="inclusion" source="n13" target="n10">
+          <point y="140" x="60"/>
+          <point y="240" x="60"/>
+          <point y="240" x="-420"/>
+          <point y="180" x="-420"/>
+        </edge>
+        <edge id="e46" type="input" source="n29" target="n30">
+          <point y="-300" x="-260"/>
+          <point y="-220" x="-260"/>
+          <point y="-220" x="-340"/>
+        </edge>
+        <edge id="e43" type="input" source="n3" target="n27">
+          <point y="-80" x="-340"/>
+          <point y="-80" x="-520"/>
+        </edge>
+        <edge id="e6" type="inclusion" source="n6" target="n3">
+          <point y="-160" x="-20"/>
+          <point y="-160" x="-300"/>
+          <point y="-80" x="-300"/>
+        </edge>
+        <edge id="e53" type="equivalence" source="n35" target="n34">
+          <point y="-380" x="120"/>
+          <point y="-280" x="120"/>
+        </edge>
+        <edge id="e57" type="input" source="n36" target="n38">
+          <point y="-460" x="20"/>
+          <point y="-360" x="20"/>
+          <point y="-360" x="-80"/>
+        </edge>
+        <edge id="e17" type="inclusion" source="n12" target="n11">
+          <point y="140" x="-100"/>
+          <point y="180" x="-100"/>
+          <point y="180" x="-260"/>
+        </edge>
+        <edge id="e35" type="input" source="n20" target="n22">
+          <point y="120" x="180"/>
+          <point y="20" x="180"/>
+          <point y="20" x="240"/>
+        </edge>
+        <edge id="e47" type="equivalence" source="n30" target="n3">
+          <point y="-220" x="-340"/>
+          <point y="-80" x="-340"/>
+        </edge>
+        <edge id="e49" type="input" source="n31" target="n32">
+          <point y="-280" x="-80"/>
+          <point y="-280" x="-160"/>
+        </edge>
+        <edge id="e36" type="input" source="n21" target="n22">
+          <point y="120" x="300"/>
+          <point y="86" x="300"/>
+          <point y="20" x="300"/>
+          <point y="20" x="240"/>
+        </edge>
+        <edge id="e45" type="input" source="n28" target="n30">
+          <point y="-300" x="-420"/>
+          <point y="-220" x="-420"/>
+          <point y="-220" x="-340"/>
+        </edge>
+        <edge id="e3" type="input" source="n4" target="n5">
+          <point y="-80" x="-20"/>
+          <point y="-80" x="-120"/>
+        </edge>
+        <edge id="e31" type="equivalence" source="n4" target="n18">
+          <point y="-80" x="-20"/>
+          <point y="-80" x="120"/>
+        </edge>
+        <edge id="e30" type="input" source="n19" target="n18">
+          <point y="-80" x="240"/>
+          <point y="-80" x="120"/>
+        </edge>
+        <edge id="e56" type="input" source="n31" target="n38">
+          <point y="-280" x="-80"/>
+          <point y="-360" x="-80"/>
+        </edge>
+        <edge id="e5" type="inclusion" source="n3" target="n5">
+          <point y="-80" x="-340"/>
+          <point y="-80" x="-120"/>
+        </edge>
+        <edge id="e4" type="input" source="n4" target="n6">
+          <point y="-80" x="-20"/>
+          <point y="-160" x="-20"/>
+        </edge>
+        <edge id="e55" type="input" source="n37" target="n35">
+          <point y="-460" x="200"/>
+          <point y="-380" x="200"/>
+          <point y="-380" x="120"/>
+        </edge>
+        <edge id="e38" type="input" source="n20" target="n24">
+          <point y="120" x="180"/>
+          <point y="180" x="180"/>
+          <point y="180" x="360"/>
+          <point y="20" x="360"/>
+          <point y="20" x="420"/>
+        </edge>
+        <edge id="e13" type="input" source="n9" target="n12">
+          <point y="60" x="-100"/>
+          <point y="140" x="-100"/>
+        </edge>
+      </diagram>
+    </diagrams>
+  </project>
+</graphol>

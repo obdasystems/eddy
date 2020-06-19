@@ -396,8 +396,8 @@ if MACOS:
             if self.volume_background is None:
                 #self.volume_background = expandPath('@resources/images/macos_background_dmg.png')
                 self.volume_background = expandPath('@resources/images/new_logo/colour/logo/eddy-logo-512.png')
-            if self.volume_icon is None:
-                self.volume_icon = expandPath('@resources/images/macos_icon_dmg.icns')
+            #if self.volume_icon is None:
+                #self.volume_icon = expandPath('@resources/images/graphol.icns')
             if self.skip_build is None:
                 self.skip_build = 0
 
@@ -497,7 +497,7 @@ setuptools.setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Utilities'
     ],

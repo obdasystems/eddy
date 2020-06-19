@@ -240,11 +240,14 @@ class GrapholProjectIRILoaderMixin_2(object):
                             sube_prefix = sube_prefixes.firstChildElement('prefix')
                             if not sube_prefix.isNull():
                                 prefix_value = sube_prefix.attribute('prefix_value')
+                            else:
+                                prefix_value =''
                             return prefix_value
                     finally:
                         sube_property = sube_property.nextSiblingElement('property')
             except Exception:
-                LOGGER.exception('Failed to fetch namespace  %s', namespace)
+                iriValue = sube.attribute('iri_value')
+                LOGGER.exception('Failed to fetch namespace  %s', iriValue if iriValue else '"unknown"')
             finally:
                 sube = sube.nextSiblingElement('iri')
         return result
@@ -258,6 +261,7 @@ class GrapholProjectIRILoaderMixin_2(object):
                 QtWidgets.QApplication.processEvents()
                 namespace = sube.attribute('iri_value')
 
+                '''
                 ### Needed to fix the namespace of standard vocabularies which up to
                 ### version 1.1.2 where stored without the fragment separator (#).
                 ### See: https://github.com/obdasystems/eddy/issues/20
@@ -266,6 +270,7 @@ class GrapholProjectIRILoaderMixin_2(object):
                         # Append the missing fragment separator
                         namespace += '#'
                         break
+                '''
 
                 sube_prefixes = sube.firstChildElement('prefixes')
 
@@ -443,6 +448,9 @@ class GrapholProjectIRILoaderMixin_2(object):
     #   NODES
     #################################
     def getIriFromLabelText(self,labelText, itemType, addRdfsLabel=False, lang=None):
+        if itemType==Item.ValueDomainIRINode:
+            print()
+
         iriString = ''
         if labelText == 'TOP':
             addRdfsLabel = False
@@ -1497,7 +1505,15 @@ class GrapholProjectIRILoaderMixin_3(object):
         constrFacetIRI = self.nproject.getIRI(constrFacetEl.text())
         literalEl = facetEl.firstChildElement('literal')
         lexForm = literalEl.firstChildElement('lexicalForm').text()
-        datatypeIRI = self.nproject.getIRI(literalEl.firstChildElement('datatype').text())
+
+
+
+        datatypeStr = literalEl.firstChildElement('datatype').text()
+        if datatypeStr:
+            datatypeIRI = self.nproject.getIRI(datatypeStr)
+        else:
+            datatypeIRI = OWL2Datatype.PlainLiteral.value
+
         literal = Literal(lexForm,datatypeIRI)
         facet = Facet(constrFacetIRI, literal)
         geometryElement = nodeElement.firstChildElement('geometry')

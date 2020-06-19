@@ -149,7 +149,7 @@ from eddy.core.functions.path import (
     expandPath,
     shortPath,
 )
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
@@ -343,12 +343,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.project.sgnIRIRemovedFromAllDiagrams, self.onIRIRemovedFromAllDiagrams)
         connect(self.project.sgnSingleNodeSwitchIRI, self.onSingleNodeSwitchIRI)
         connect(self.project.sgnUpdated, self.doResetConsistencyCheck)
+        connect(self.project.sgnLanguageTagAdded, self.doAddLanguageTagToMenu)
 
 
         #############################################
         # COMPLETE SESSION SETUP
         #################################
-
+        self.loadLanguageTagActions()
         self.setAcceptDrops(False)
         self.setCentralWidget(self.mdi)
         self.setDockOptions(Session.AnimatedDocks | Session.AllowTabbedDocks)
@@ -359,6 +360,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
 
+        self.renderingBusyProgressDialog = None
+
         self.sgnReady.emit()
 
         LOGGER.info('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
@@ -366,6 +369,26 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #############################################
     #   SESSION CONFIGURATION
     #################################
+
+    def loadLanguageTagActions(self):
+        for langTag in self.project.getLanguages():
+            settings = QtCore.QSettings()
+            rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
+
+
+            actionObjName = 'render_label_{}'.format(langTag)
+            if not self.action(objectName=actionObjName):
+                labelMenu = self.menu('render_label')
+                action = QtWidgets.QAction(langTag, self, objectName=actionObjName,
+                                           triggered=self.doRenderByLabel)
+                action.setData(langTag)
+                action.setCheckable(True)
+                labelMenu.addAction(action)
+                self.addAction(action)
+                if rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
+                    lang = settings.value('ontology/iri/render/language', 'it')
+                    action.setChecked(lang==langTag)
+
 
     # noinspection PyArgumentList
     def initActions(self):
@@ -1150,7 +1173,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # renderInnerMenu.addAction(self.action('render_label'))
 
         labelMenu = QtWidgets.QMenu('Render by label',objectName='render_label')
-        self.addWidget(labelMenu)
+        self.addMenu(labelMenu)
         action = QtWidgets.QAction('it', self, objectName='render_label_it', triggered=self.doRenderByLabel)
         action.setData('it')
         action.setCheckable(True)
@@ -1726,6 +1749,18 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(command)
         self.undostack.endMacro()
 
+    @QtCore.pyqtSlot(str)
+    def doAddLanguageTagToMenu(self, lang):
+        """
+        Add an action to RenderByLabel menu to allow selecting 'lang'
+        """
+        labelMenu = self.menu('render_label')
+        action = QtWidgets.QAction(lang, self, objectName='render_label_{}'.format(lang), triggered=self.doRenderByLabel)
+        action.setData(lang)
+        action.setCheckable(True)
+        labelMenu.addAction(action)
+        self.addAction(action)
+
     @QtCore.pyqtSlot()
     def doCopy(self):
         """
@@ -1820,7 +1855,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
             dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol}) + self.diagramExporterNameFilters())
+            #dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol,File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
+            dialog.setNameFilters(self.projectExporterNameFilters({File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
             dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Pdf.value)
@@ -1835,15 +1871,23 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 try:
                     try:
                         with BusyProgressDialog('Exporting {0}...'.format(self.project.name), parent=self):
-                            worker = self.createProjectExporter(filetype, self.project, self)
-                            worker.run(expandPath(first(dialog.selectedFiles())))
-                        if fexists(expandPath(first(dialog.selectedFiles()))):
-                            self.addNotification("""
-                            Project export completed: <br><br>
-                            <b><a href=file:{0}>{1}</a></b>
-                            """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
-                    except ValueError:
+                            if filetype is File.Graphol:
+                                worker = self.createProjectExporter(filetype, self.project, self, exportPath=expandPath(first(dialog.selectedFiles())), selectDiagrams=True)
+                                worker.run()
+                                if fexists(expandPath(first(dialog.selectedFiles()))):
+                                    self.addNotification("""Project export completed""")
+                            else:
+                                worker = self.createProjectExporter(filetype, self.project, self)
+                                worker.run(expandPath(first(dialog.selectedFiles())))
+                                if fexists(expandPath(first(dialog.selectedFiles()))):
+
+                                    self.addNotification("""
+                                    Project export completed: <br><br>
+                                    <b><a href=file:{0}>{1}</a></b>
+                                    """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+                    except ValueError as e:
                         # DIAGRAM SELECTION
+                        print(str(e))
                         filterDialog = DiagramSelectionDialog(self)
                         if not filterDialog.exec_():
                             return
@@ -1953,7 +1997,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        dialog.setNameFilters(self.ontologyLoaderNameFilters())
+        dialog.setNameFilters(self.ontologyLoaderNameFilters({File.GraphML}))
         if dialog.exec_():
             filetype = File.valueOf(dialog.selectedNameFilter())
             selected = [x for x in dialog.selectedFiles() if File.forPath(x) is filetype and fexists(x)]
@@ -2858,6 +2902,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 # does this without setting this action. Tested on Qt 5.10.1
                 connect(dialog.filterSelected, lambda value: \
                     dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
+            savePath=None
             if dialog.exec_():
                 filetype = File.valueOf(dialog.selectedNameFilter())
                 savePath = expandPath(first(dialog.selectedFiles()))
@@ -2892,7 +2937,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             msgbox.setWindowTitle('Save failed!')
             msgbox.exec_()
         else:
-            if not workingPath or expandPath(savePath)==expandPath(self.project.path):
+            if not workingPath or (savePath and expandPath(savePath)==expandPath(self.project.path)):
                 self.undostack.setClean()
                 self.sgnProjectSaved.emit()
 
@@ -3537,133 +3582,115 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #self.action('reset_reasoner').setEnabled(not isProjectEmpty)
         self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
 
-    #TODO
+
     @QtCore.pyqtSlot()
     def doRenderByFullIRI(self):
         """
         Render ontology elements by full IRIs
         """
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.FULL.value)
-        self.action(objectName='render_full_iri').setChecked(True)
-        self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_simple_name').setChecked(False)
-        #self.action(objectName='render_label').setChecked(False)
-        self.action(objectName='render_label_it').setChecked(False)
-        self.action(objectName='render_label_en').setChecked(False)
-        self.action(objectName='render_label_es').setChecked(False)
-        self.action(objectName='render_label_fr').setChecked(False)
-        self.action(objectName='render_label_de').setChecked(False)
-        self.sgnRenderingModified.emit(IRIRender.FULL.value)
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.FULL.value)
+            self.action(objectName='render_full_iri').setChecked(True)
+            self.action(objectName='render_prefixed_iri').setChecked(False)
+            self.action(objectName='render_simple_name').setChecked(False)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(False)
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
-        '''
-        progressBar = self.widget('progress_bar')
-        progressBar.setToolTip('Checking for updates...')
-        progressBar.setVisible(True)
-        '''
-
-
-    #TODO
     @QtCore.pyqtSlot()
     def doRenderByPrefixedIRI(self):
         """
         Render ontology elements by prefixed IRIs
         """
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
-        self.action(objectName='render_full_iri').setChecked(False)
-        self.action(objectName='render_prefixed_iri').setChecked(True)
-        self.action(objectName='render_simple_name').setChecked(False)
-        # self.action(objectName='render_label').setChecked(False)
-        self.action(objectName='render_label_it').setChecked(False)
-        self.action(objectName='render_label_en').setChecked(False)
-        self.action(objectName='render_label_es').setChecked(False)
-        self.action(objectName='render_label_fr').setChecked(False)
-        self.action(objectName='render_label_de').setChecked(False)
-        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
-
-        '''
-        progressBar = self.widget('progress_bar')
-        progressBar.setToolTip('Checking for updates...')
-        progressBar.setVisible(True)
-        '''
-
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.PREFIX.value)
+            self.action(objectName='render_full_iri').setChecked(False)
+            self.action(objectName='render_prefixed_iri').setChecked(True)
+            self.action(objectName='render_simple_name').setChecked(False)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(False)
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
     @QtCore.pyqtSlot()
     def doRenderBySimpleName(self):
         """
         Render ontology elements by prefixed IRIs
         """
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.SIMPLE_NAME.value)
-        self.action(objectName='render_full_iri').setChecked(False)
-        self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_simple_name').setChecked(True)
-        # self.action(objectName='render_label').setChecked(False)
-        self.action(objectName='render_label_it').setChecked(False)
-        self.action(objectName='render_label_en').setChecked(False)
-        self.action(objectName='render_label_es').setChecked(False)
-        self.action(objectName='render_label_fr').setChecked(False)
-        self.action(objectName='render_label_de').setChecked(False)
-        self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
-        '''
-        progressBar = self.widget('progress_bar')
-        progressBar.setToolTip('Checking for updates...')
-        progressBar.setVisible(True)
-        '''
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.SIMPLE_NAME.value)
+            self.action(objectName='render_full_iri').setChecked(False)
+            self.action(objectName='render_prefixed_iri').setChecked(False)
+            self.action(objectName='render_simple_name').setChecked(True)
+            # self.action(objectName='render_label').setChecked(False)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(False)
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
-    #TODO
     @QtCore.pyqtSlot()
     def doRenderByLabel(self):
         """
         Render ontology elements by prefixed IRIs
         """
-        action = self.sender()
-        lang = action.data()
-
-        settings = QtCore.QSettings()
-        settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
-        settings.setValue('ontology/iri/render/language', lang)
-        self.action(objectName='render_full_iri').setChecked(False)
-        self.action(objectName='render_prefixed_iri').setChecked(False)
-        self.action(objectName='render_simple_name').setChecked(False)
-        # self.action(objectName='render_label').setChecked(True)
-        if lang == 'it':
-            self.action(objectName='render_label_it').setChecked(True)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'en':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(True)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'es':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(True)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'fr':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(True)
-            self.action(objectName='render_label_de').setChecked(False)
-        elif lang == 'de':
-            self.action(objectName='render_label_it').setChecked(False)
-            self.action(objectName='render_label_en').setChecked(False)
-            self.action(objectName='render_label_es').setChecked(False)
-            self.action(objectName='render_label_fr').setChecked(False)
-            self.action(objectName='render_label_de').setChecked(True)
-        self.sgnRenderingModified.emit(IRIRender.LABEL.value)
-        '''
-        progressBar = self.widget('progress_bar')
-        progressBar.setToolTip('Checking for updates...')
-        progressBar.setVisible(True)
-        '''
+        with BusyProgressDialog('Switching label rendering', parent=self):
+            action = self.sender()
+            lang = action.data()
+            settings = QtCore.QSettings()
+            settings.setValue('ontology/iri/render', IRIRender.LABEL.value)
+            settings.setValue('ontology/iri/render/language', lang)
+            self.action(objectName='render_full_iri').setChecked(False)
+            self.action(objectName='render_prefixed_iri').setChecked(False)
+            self.action(objectName='render_simple_name').setChecked(False)
+            # self.action(objectName='render_label').setChecked(True)
+            for langTag in self.project.getLanguages():
+                actionObjName = 'render_label_{}'.format(langTag)
+                self.action(objectName=actionObjName).setChecked(langTag==lang)
+            '''
+            if lang == 'it':
+                self.action(objectName='render_label_it').setChecked(True)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'en':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(True)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'es':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(True)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'fr':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(True)
+                self.action(objectName='render_label_de').setChecked(False)
+            elif lang == 'de':
+                self.action(objectName='render_label_it').setChecked(False)
+                self.action(objectName='render_label_en').setChecked(False)
+                self.action(objectName='render_label_es').setChecked(False)
+                self.action(objectName='render_label_fr').setChecked(False)
+                self.action(objectName='render_label_de').setChecked(True)
+            '''
+            for node in self.project.nodes():
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    node.doUpdateNodeLabel()
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):

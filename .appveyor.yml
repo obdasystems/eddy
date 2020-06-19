@@ -5,6 +5,7 @@ image: Visual Studio 2015
 branches:
   only:
     - master
+    - develop
     - /^deploy-.*$/
 
 cache:

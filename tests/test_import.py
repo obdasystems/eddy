@@ -31,17 +31,18 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
+import os
 
 import pytest
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.functions.fsystem import cpdir
+from eddy.core.functions.fsystem import cpdir, fcopy, fexists, mkdir
 from eddy.core.functions.path import expandPath
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader_v1
 from eddy.core.loaders.graphol import GrapholProjectLoader_v2
+from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v2, GrapholIRIProjectLoader_v3
 from eddy.ui.session import Session
 
 
@@ -51,7 +52,7 @@ def session(qapp, qtbot, logging_disabled):
     Provide an initialized Session instance.
     """
     with logging_disabled:
-        session = Session(qapp, expandPath('@tests/test_project_1'))
+        session = Session(qapp, expandPath('@tests/test_project_3/test_project_3_1.graphol'))
         session.show()
     qtbot.addWidget(session)
     qtbot.waitExposed(session, timeout=3000)
@@ -72,7 +73,8 @@ def no_message_box(monkeypatch):
 #############################################
 #   GRAPHOL IMPORT
 #################################
-
+#No more supported
+'''
 def test_load_project_from_graphol_v1(session, qtbot, tmpdir):
     # GIVEN
     graphol = tmpdir.join('LUBM')
@@ -92,8 +94,10 @@ def test_load_project_from_graphol_v1(session, qtbot, tmpdir):
     assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.project.diagram(diagram).nodes()))) == 9
     assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.project.diagram(diagram).nodes()))) == 5
     assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.project.diagram(diagram).nodes()))) == 0
+'''
 
-
+#No more supported
+'''
 def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
     # GIVEN
     graphol = tmpdir.join('LUBM')
@@ -113,76 +117,71 @@ def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
     assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.nproject.diagram(diagram).nodes()))) == 9
     assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.nproject.diagram(diagram).nodes()))) == 5
     assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.nproject.diagram(diagram).nodes()))) == 0
+'''
 
-
-def test_load_project_from_graphol_v2_2(session, qtbot, tmpdir):
+def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
     # GIVEN
-    graphol = tmpdir.join('MovieOntology')
-    cpdir(expandPath('@tests/test_resources/loaders/graphol/v2/MovieOntology'), str(graphol))
+    graphol = tmpdir.join('MovieOntology/MovieOntology_v2.graphol')
+    grapholDir = tmpdir.join('MovieOntology')
+    mkdir(str(grapholDir))
+    os.open(str(graphol), os.O_CREAT)
+    fcopy(expandPath('@tests/test_resources/loaders/graphol/v2/MovieOntology/MovieOntology_v2.graphol'), str(graphol))
+
     project = session.project
     diagram1 = 'movie'
     diagram2 = 'territory'
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    loader = GrapholProjectLoader_v2(str(graphol), session)
+    loader = GrapholIRIProjectLoader_v2(str(graphol), session)
     loader.run()
     # THEN
-    assert diagram1 in map(lambda d: d.name, loader.nproject.diagrams())
-    assert len(loader.nproject.diagram(diagram1).nodes()) == 347
-    assert len(loader.nproject.diagram(diagram1).edges()) == 433
-    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, loader.nproject.diagram(diagram1).nodes()))) == 65
-    assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.nproject.diagram(diagram1).nodes()))) == 60
-    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.nproject.diagram(diagram1).nodes()))) == 27
-    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.nproject.diagram(diagram1).nodes()))) == 0
-    assert diagram2 in map(lambda d: d.name, loader.nproject.diagrams())
-    assert len(loader.nproject.diagram(diagram2).nodes()) == 8
-    assert len(loader.nproject.diagram(diagram2).edges()) == 8
-    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, loader.nproject.diagram(diagram2).nodes()))) == 2
-    assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.nproject.diagram(diagram2).nodes()))) == 2
-    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.nproject.diagram(diagram2).nodes()))) == 0
-    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.nproject.diagram(diagram2).nodes()))) == 0
+    assert diagram1 in map(lambda d: d.name, loader.session.project.diagrams())
+    assert len(loader.session.project.diagram(diagram1).nodes()) == 347
+    assert len(loader.session.project.diagram(diagram1).edges()) == 433
+    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram1).nodes()))) == 65
+    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram1).nodes()))) == 60
+    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram1).nodes()))) == 27
+    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram1).nodes()))) == 0
+    assert diagram2 in map(lambda d: d.name, loader.session.project.diagrams())
+    assert len(loader.session.project.diagram(diagram2).nodes()) == 8
+    assert len(loader.session.project.diagram(diagram2).edges()) == 8
+    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
 
 
-#############################################
-#   GRAPHML IMPORT
-#################################
-
-def test_load_ontology_from_graphml_1(session, qtbot):
+def test_load_project_from_graphol_v3(session, qtbot, tmpdir):
     # GIVEN
-    graphml = expandPath('@tests/test_resources/loaders/graphml/pizza.graphml')
+    graphol = tmpdir.join('MovieOntology/MovieOntology_v3.graphol')
+    grapholDir = tmpdir.join('MovieOntology')
+    mkdir(str(grapholDir))
+    os.open(str(graphol), os.O_CREAT)
+    fcopy(expandPath('@tests/test_resources/loaders/graphol/v3/MovieOntology/MovieOntology_v3.graphol'), str(graphol))
+
     project = session.project
-    diagram = 'pizza'
+    diagram1 = 'movie'
+    diagram2 = 'territory'
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    loader = GraphMLOntologyLoader(graphml, project, session)
+    loader = GrapholIRIProjectLoader_v3(str(graphol), session)
     loader.run()
     # THEN
-    assert diagram in map(lambda d: d.name, project.diagrams())
-    assert len(project.diagram(diagram).nodes()) == 62
-    assert len(project.diagram(diagram).edges()) == 82
-    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, project.diagram(diagram).nodes()))) == 25
-    assert len(list(filter(lambda n: n.type() == Item.RoleNode, project.diagram(diagram).nodes()))) == 4
-    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, project.diagram(diagram).nodes()))) == 2
-    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, project.diagram(diagram).nodes()))) == 0
+    assert diagram1 in map(lambda d: d.name, loader.session.project.diagrams())
+    assert len(loader.session.project.diagram(diagram1).nodes()) == 347
+    assert len(loader.session.project.diagram(diagram1).edges()) == 433
+    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram1).nodes()))) == 65
+    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram1).nodes()))) == 60
+    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram1).nodes()))) == 27
+    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram1).nodes()))) == 0
+    assert diagram2 in map(lambda d: d.name, loader.session.project.diagrams())
+    assert len(loader.session.project.diagram(diagram2).nodes()) == 8
+    assert len(loader.session.project.diagram(diagram2).edges()) == 8
+    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
 
 
-def test_load_ontology_from_graphml_2(session, qtbot):
-    # GIVEN
-    graphml = expandPath('@tests/test_resources/loaders/graphml/movie.graphml')
-    project = session.project
-    diagram = 'movie'
-    with qtbot.waitSignal(session.sgnDiagramFocused):
-        session.sgnFocusDiagram.emit(project.diagram('diagram'))
-    # WHEN
-    loader = GraphMLOntologyLoader(graphml, project, session)
-    loader.run()
-    # THEN
-    assert diagram in map(lambda d: d.name, project.diagrams())
-    assert len(project.diagram(diagram).nodes()) == 347
-    assert len(project.diagram(diagram).edges()) == 433
-    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, project.diagram(diagram).nodes()))) == 65
-    assert len(list(filter(lambda n: n.type() == Item.RoleNode, project.diagram(diagram).nodes()))) == 60
-    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, project.diagram(diagram).nodes()))) == 27
-    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, project.diagram(diagram).nodes()))) == 0

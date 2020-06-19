@@ -135,6 +135,7 @@ class Project(IRIManager):
 
     sgnIRIRefactor = QtCore.pyqtSignal(IRI, IRI)
 
+
     def __init__(self, **kwargs):
         """
         Initialize the graphol project.
@@ -199,7 +200,6 @@ class Project(IRIManager):
             self.setEmptyPrefix(self.ontologyIRIString)
             self.setOntologyIRI(self.ontologyIRIString)
         '''
-
 
 
     @property
@@ -1381,6 +1381,8 @@ class Project(IRIManager):
             self.sgnIRIRemovedFromAllDiagrams.emit(oldIri)
         else:
             self.sgnSingleNodeSwitchIRI.emit(node,oldIri)
+
+
 
 
 #TODO ProjectIndex esteso da ProjectIRIIndex. Alcuni suoi metodi saranno da sostituire con opportuni metodi di ProjectIRIIndex

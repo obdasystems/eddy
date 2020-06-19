@@ -1304,10 +1304,9 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 self.node._literal = literal
                 self.sgnLiteralAccepted.emit(self.node)
-                '''
+
                 if self.node.diagram:
                     self.node.doUpdateNodeLabel()
-                '''
             super().accept()
         except IllegalLiteralError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)

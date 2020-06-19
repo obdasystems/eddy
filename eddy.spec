@@ -65,13 +65,12 @@ EXEC_NAME = None
 if LINUX:
     EXEC_ARCH = platform.machine().lower()
     #EXEC_ICON = 'resources/images/eddy.png'
-    EXEC_ICON = 'resources/images/new_logo/colour/icon/png/eddy-icon-48.png'
+    EXEC_ICON = 'resources/images/new_logo/colour/icon/png/eddy-icon-1024.png'
     EXEC_NAME = APPNAME
 
 if MACOS:
     EXEC_ARCH = platform.machine().lower()
     EXEC_ICON = 'resources/images/eddy.icns'
-    #EXEC_ICON = 'resources/images/new_logo/colour/icon/png/eddy-icon-48.png'
     EXEC_NAME = APPNAME
 
 if WIN32:
@@ -79,7 +78,7 @@ if WIN32:
     # to detect if we are running a 32-bit or 64-bit version of Python
     EXEC_ARCH = os.environ['PROCESSOR_ARCHITECTURE'].lower() if 'PROCESSOR_ARCHITECTURE' in os.environ else platform.machine().lower()
     #EXEC_ICON = 'resources/images/eddy.ico'
-    EXEC_ICON = 'resources/images/new_logo/colour/icon/ico/eddy-icon-48.ico'
+    EXEC_ICON = 'resources/images/new_logo/colour/icons/ico/eddy-icon-1024.ico'
     EXEC_NAME = APPNAME
 
 WORK_PATH = CONF['workpath']
