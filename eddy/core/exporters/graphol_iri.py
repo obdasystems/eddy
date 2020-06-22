@@ -60,6 +60,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
             Item.MembershipEdge: 'membership',
             Item.SameEdge: 'same',
             Item.DifferentEdge: 'different',
+            Item.HasKeyNode: 'has-key'
         }
 
         self.exportFuncForItem = {
@@ -87,6 +88,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
             Item.MembershipEdge: self.exportMembershipEdge,
             Item.SameEdge: self.exportSameEdge,
             Item.DifferentEdge: self.exportDifferentEdge,
+            Item.HasKeyNode: self.exportHasKeyNode
         }
 
     #############################################
@@ -569,6 +571,19 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         labelEl = self.getLabelDomElement(node)
         nodeEl.appendChild(labelEl)
         return nodeEl
+
+    def exportHasKeyNode(self, node):
+        """
+        Export the given node into a QDomElement.
+        :type node: HasKeyNode
+        :rtype: QDomElement
+        """
+        nodeEl = self.getNodeDomElement(node)
+        labelEl = self.getLabelDomElement(node)
+        nodeEl.appendChild(labelEl)
+        nodeEl.setAttribute('inputs', ','.join(node.inputs))
+        return nodeEl
+
 
     #############################################
     #   ONTOLOGY DIAGRAMS EXPORT : EDGES

@@ -231,17 +231,18 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         intensionalLayout.addWidget(self.widget(OWLAxiom.EquivalentObjectProperties.value), 0, 1)
         intensionalLayout.addWidget(self.widget(OWLAxiom.FunctionalDataProperty.value), 1, 1)
         intensionalLayout.addWidget(self.widget(OWLAxiom.FunctionalObjectProperty.value), 2, 1)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseFunctionalObjectProperty.value), 3, 1)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseObjectProperties.value), 4, 1)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.IrreflexiveObjectProperty.value), 5, 1)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyDomain.value), 6, 1)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyRange.value), 7, 1)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.ReflexiveObjectProperty.value), 0, 2)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.SubClassOf.value), 1, 2)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.SubDataPropertyOf.value), 2, 2)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.SubObjectPropertyOf.value), 3, 2)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.SymmetricObjectProperty.value), 4, 2)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.TransitiveObjectProperty.value), 5, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.HasKey.value), 3, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseFunctionalObjectProperty.value), 4, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseObjectProperties.value), 5, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.IrreflexiveObjectProperty.value), 6, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyDomain.value), 7, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyRange.value), 0, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.ReflexiveObjectProperty.value), 1, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SubClassOf.value), 2, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SubDataPropertyOf.value), 3, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SubObjectPropertyOf.value), 4, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.SymmetricObjectProperty.value), 5, 2)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.TransitiveObjectProperty.value), 6, 2)
         intensionalGroup = QtWidgets.QGroupBox('Intensional', self)
         intensionalGroup.setLayout(intensionalLayout)
         extensionalLayout = QtWidgets.QGridLayout()
@@ -867,6 +868,9 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 self._converted[node.diagram.name][node.id] = self.getDomainRestriction(node)
             elif node.type() is Item.RangeRestrictionNode:
                 self._converted[node.diagram.name][node.id] = self.getRangeRestriction(node)
+            elif node.type() is Item.HasKeyNode:
+                self.translateHasKey(node)
+                return
             else:
                 raise ValueError('no conversion available for node %s' % node)
         return self._converted[node.diagram.name][node.id]
@@ -1022,6 +1026,35 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
     #############################################
     #   NODES PROCESSING
     #################################
+    def translateHasKey(self,node):
+        """
+        Build a OWLHasKeyAxiom starting from node.
+        :type node: HasKeyNode
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Concept
+        f3 = lambda x: x.identity() is Identity.Role
+        f4 = lambda x: x.identity() is Identity.Attribute
+        classes = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        objProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
+        dtProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
+
+        if not classes:
+            raise DiagramMalformedError(node, 'missing class expression operand')
+        if len(classes) > 1:
+            raise DiagramMalformedError(node, 'too many class expression operands')
+        if not (objProps or dtProps):
+            raise DiagramMalformedError(node, 'has key nodes must be connected to at least one object (or data) property expression')
+
+        owlClExpr = self.convert(first(classes))
+        owlPropExprs = self.HashSet()
+        for prop in objProps:
+            owlPropExprs.add(self.convert(prop))
+        for prop in dtProps:
+            owlPropExprs.add(self.convert(prop))
+
+        self.addAxiom(self.df.getOWLHasKeyAxiom(owlClExpr,owlPropExprs))
+
     def getConcept(self, node):
         """
         Build and returns a OWL 2 concept using the given graphol node.

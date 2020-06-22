@@ -1074,6 +1074,7 @@ class GrapholProjectIRILoaderMixin_3(object):
             'membership': Item.MembershipEdge,
             'same': Item.SameEdge,
             'different': Item.DifferentEdge,
+            'has-key': Item.HasKeyNode
         }
 
         self.importFuncForItem = {
@@ -1101,6 +1102,7 @@ class GrapholProjectIRILoaderMixin_3(object):
             Item.MembershipEdge: self.importMembershipEdge,
             Item.SameEdge: self.importSameEdge,
             Item.DifferentEdge: self.importDifferentEdge,
+            Item.HasKeyNode:self.importHasKeyNode
         }
 
     #############################################
@@ -1631,6 +1633,17 @@ class GrapholProjectIRILoaderMixin_3(object):
         :rtype: UnionNode
         """
         return self.importGenericNode(diagram, Item.UnionNode, e)
+
+    def importHasKeyNode(self, diagram, e):
+        """
+        Build a RoleChain node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: HasKeyNode
+        """
+        inputs = e.attribute('inputs', '').strip()
+        node = self.importGenericNode(diagram, Item.HasKeyNode, e)
+        node.inputs = DistinctList(inputs.split(',') if inputs else [])
+        return node
 
     #############################################
     #   EDGES

@@ -250,6 +250,7 @@ class OWLAxiom(Enum_):
     SubObjectPropertyOf = 'SubObjectPropertyOf'
     SymmetricObjectProperty = 'SymmetricObjectProperty'
     TransitiveObjectProperty = 'TransitiveObjectProperty'
+    HasKey = 'HasKey'
 
     @classmethod
     def forProfile(cls, profile):
@@ -264,7 +265,7 @@ class OWLAxiom(Enum_):
             return {x for x in OWLAxiom} - {OWLAxiom.FunctionalDataProperty,
                 OWLAxiom.FunctionalObjectProperty, OWLAxiom.InverseFunctionalObjectProperty,
                 OWLAxiom.TransitiveObjectProperty, OWLAxiom.NegativeDataPropertyAssertion,
-                OWLAxiom.NegativeObjectPropertyAssertion, OWLAxiom.SameIndividual}
+                OWLAxiom.NegativeObjectPropertyAssertion, OWLAxiom.SameIndividual, OWLAxiom.HasKey}
         elif profile is OWLProfile.OWL2RL:
             return {x for x in OWLAxiom} - {OWLAxiom.ReflexiveObjectProperty}
         raise ValueError('unsupported profile: %s' % profile)
