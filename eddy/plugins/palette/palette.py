@@ -100,6 +100,7 @@ class PalettePlugin(AbstractPlugin):
         widget.button(Item.EnumerationNode).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.RoleChainNode).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.SameEdge).setEnabled(profile is not OWLProfile.OWL2QL)
+        widget.button(Item.HasKeyNode).setEnabled(profile is not OWLProfile.OWL2QL)
 
     @QtCore.pyqtSlot('QGraphicsScene')
     def onDiagramAdded(self, diagram):
@@ -292,6 +293,7 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.ComplementNode,
             Item.EnumerationNode,
             Item.UnionNode,
+            Item.HasKeyNode,
             Item.DisjointUnionNode,
             Item.PropertyAssertionNode,
             Item.InclusionEdge,
@@ -319,6 +321,7 @@ class PaletteWidget(QtWidgets.QWidget):
             Item.ComplementNode: '{}+n,n'.format(self.shortcutPrefix),
             Item.EnumerationNode: '{}+n,y'.format(self.shortcutPrefix),
             Item.UnionNode: '{}+o'.format(self.shortcutPrefix),
+            Item.HasKeyNode: '{}+k'.format(self.shortcutPrefix),
             Item.DisjointUnionNode: '{}+h'.format(self.shortcutPrefix),
             Item.PropertyAssertionNode: '{}+x'.format(self.shortcutPrefix),
             Item.InclusionEdge: '{}+e,i'.format(self.shortcutPrefix),
@@ -975,6 +978,32 @@ class PaletteButton(QtWidgets.QToolButton):
                 ]))
                 painter.setFont(Font(pixelSize=11, weight=Font.Light))
                 painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'or')
+                painter.end()
+
+            #############################################
+            # HASKEY NODE
+            #################################
+
+            elif item is Item.HasKeyNode:
+
+                painter = QtGui.QPainter(pixmap)
+                painter.setRenderHint(QtGui.QPainter.Antialiasing)
+                painter.setPen(
+                    QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap,
+                               QtCore.Qt.RoundJoin))
+                painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
+                painter.translate(30, 22)
+                painter.drawPolygon(QtGui.QPolygonF([
+                    QtCore.QPointF(-23, 0),
+                    QtCore.QPointF(-23 + 6, +15),
+                    QtCore.QPointF(+23 - 6, +15),
+                    QtCore.QPointF(+23, 0),
+                    QtCore.QPointF(+23 - 6, -15),
+                    QtCore.QPointF(-23 + 6, -15),
+                    QtCore.QPointF(-23, 0),
+                ]))
+                painter.setFont(Font(pixelSize=11, weight=Font.Light))
+                painter.drawText(QtCore.QRectF(-23, -15, 46, 30), QtCore.Qt.AlignCenter, 'key')
                 painter.end()
 
             #############################################

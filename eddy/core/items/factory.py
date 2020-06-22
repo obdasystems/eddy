@@ -37,7 +37,7 @@ from PyQt5 import QtCore
 
 import eddy
 from eddy.core.datatypes.graphol import Item
-
+from eddy.core.items.nodes.has_key import HasKeyNode
 
 from eddy.core.items.nodes.individual_iri import IndividualNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
@@ -101,7 +101,6 @@ class ItemFactory(QtCore.QObject):
         :rtype: class 
         """
         item = Item.valueOf(item)
-        # TODO ADDED
         if item is Item.ConceptIRINode:
             return ConceptNode
         if item is Item.RoleIRINode:
@@ -152,8 +151,8 @@ class ItemFactory(QtCore.QObject):
         if item is Item.RangeRestrictionNode:
             return RangeRestrictionNode
 
-        if item is Item.ConceptNode:
-            return eddy.core.items.nodes.concept.ConceptNode
+        if item is Item.HasKeyNode:
+            return HasKeyNode
 
         raise RuntimeError('unknown item type ({0})'.format(item))
 

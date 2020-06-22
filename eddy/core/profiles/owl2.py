@@ -36,7 +36,7 @@
 from eddy.core.datatypes.owl import OWLProfile
 from eddy.core.profiles.common import AbstractProfile
 
-from eddy.core.profiles.rules.owl2 import EquivalenceBetweenExpressionsRule
+from eddy.core.profiles.rules.owl2 import EquivalenceBetweenExpressionsRule, InputToHasKeyNodeRule
 from eddy.core.profiles.rules.owl2 import EquivalenceBetweenCompatibleExpressionsRule
 from eddy.core.profiles.rules.owl2 import EquivalenceBetweenValueDomainExpressionsRule
 from eddy.core.profiles.rules.owl2 import EquivalenceBetweenRoleExpressionAndComplementRule
@@ -114,6 +114,7 @@ class OWL2Profile(AbstractProfile):
         self.addEdgeRule(MembershipFromNeutralPropertyAssertionRule)
         self.addEdgeRule(SameFromCompatibleNodeRule)
         self.addEdgeRule(DifferentFromCompatibleNodeRule)
+        self.addEdgeRule(InputToHasKeyNodeRule)
 
     #############################################
     #   INTERFACE

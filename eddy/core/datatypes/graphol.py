@@ -92,18 +92,19 @@ class Item(IntEnum_):
     DisjointUnionNode = 65551
     PropertyAssertionNode = 65552
     FacetNode = 65553
+    HasKeyNode = 65554
 
     # EDGES
-    InclusionEdge = 65554
-    EquivalenceEdge = 65555
-    InputEdge = 65556
-    MembershipEdge = 65557
-    SameEdge = 65558
-    DifferentEdge = 65559
+    InclusionEdge = 65555
+    EquivalenceEdge = 65556
+    InputEdge = 65557
+    MembershipEdge = 65558
+    SameEdge = 65559
+    DifferentEdge = 65560
 
     # EXTRA
-    Label = 65560
-    Undefined = 65561
+    Label = 65561
+    Undefined = 65562
 
     @property
     def realName(self):

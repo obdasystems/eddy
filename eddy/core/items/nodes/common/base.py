@@ -256,7 +256,7 @@ class AbstractNode(AbstractItem):
         Returns True if this node is a contructor node, False otherwise.
         :rtype: bool
         """
-        return Item.DomainRestrictionNode <= self.type() <= Item.FacetNode
+        return Item.DomainRestrictionNode <= self.type() <= Item.HasKeyNode
 
     def isMeta(self):
         """

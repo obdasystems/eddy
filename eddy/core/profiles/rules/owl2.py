@@ -591,6 +591,33 @@ class InputToPropertyAssertionNodeRule(ProfileEdgeRule):
                             # At most one value can be given as input (2 instance | 1 instance + 1 value)
                             raise ProfileError('Too many values in input to {}'.format(target.identityName))
 
+class InputToHasKeyNodeRule(ProfileEdgeRule):
+    """
+    Perform validation procedures on input edges targeting HasKey nodes.
+    """
+    def __call__(self, source, edge, target):
+
+        if edge.type() is Item.InputEdge:
+
+            if target.type() is Item.HasKeyNode:
+
+                if not (Identity.Concept in source.identities() or Identity.Role in source.identities() or Identity.Attribute in source.identities()):
+                    raise ProfileError('Invalid input to {}: {}'.format(target.name, source.name))
+
+                if source.identity() is Identity.Concept:
+                    if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge and Identity.Concept in x.source.identities())) != 0:
+                        raise ProfileError('A key can be defined over one and only one class expression')
+
+                if source.identity() is Identity.Role or source.identity() is Identity.Attribute:
+                    if source.identity() is Identity.Role:
+                        if not (source.type() is Item.RoleIRINode or source.type() is Item.RoleInverseNode):
+                            raise ProfileError('Only object (resp. data) property expressions can be used to define a key over a class expression')
+
+                    if source.identity() is Identity.Attribute:
+                        if not (source.type() is Item.AttributeIRINode ):
+                            raise ProfileError('Only object (resp. data) property expressions can be used to define a key over a class expression')
+
+
 
 class InputToDomainRestrictionNodeRule(ProfileEdgeRule):
     """
