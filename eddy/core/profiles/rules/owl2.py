@@ -410,7 +410,7 @@ class InputToEnumerationNodeRule(ProfileEdgeRule):
 
             if target.type() is Item.EnumerationNode:
 
-                if not (source.type() is Item.IndividualIRINode or source.type() is Item.LiteralNode):
+                if not (source.type() is Item.IndividualIRINode or source.type() is Item.LiteralNode or Identity.Individual in source.identities()):
                     # Enumeration operator (oneOf) takes as inputs Individuals or Values, both
                     # represented by the Individual node, and has the job of composing a set
                     # if individuals (either Concept or ValueDomain, but not both together).
@@ -419,7 +419,7 @@ class InputToEnumerationNodeRule(ProfileEdgeRule):
 
                 if target.identity() is not Identity.Neutral:
                     # Exclude incompatible identities from being given in input to the Enumeration node.
-                    if source.identity() is Identity.Individual and target.identity() is Identity.ValueDomain:
+                    if Identity.Individual in source.identities() and target.identity() is Identity.ValueDomain:
                         raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
                     if source.identity() is Identity.Value and target.identity() is Identity.Concept:
                         raise ProfileError('Invalid input to {}: {}'.format(target.name, source.identityName))
@@ -607,15 +607,19 @@ class InputToHasKeyNodeRule(ProfileEdgeRule):
                 if source.identity() is Identity.Concept:
                     if len(target.incomingNodes(lambda x: x.type() is Item.InputEdge and x is not edge and Identity.Concept in x.source.identities())) != 0:
                         raise ProfileError('A key can be defined over one and only one class expression')
+                    else:
+                        return
 
                 if source.identity() is Identity.Role or source.identity() is Identity.Attribute:
                     if source.identity() is Identity.Role:
                         if not (source.type() is Item.RoleIRINode or source.type() is Item.RoleInverseNode):
                             raise ProfileError('Only object (resp. data) property expressions can be used to define a key over a class expression')
 
+
                     if source.identity() is Identity.Attribute:
                         if not (source.type() is Item.AttributeIRINode ):
                             raise ProfileError('Only object (resp. data) property expressions can be used to define a key over a class expression')
+
 
 
 

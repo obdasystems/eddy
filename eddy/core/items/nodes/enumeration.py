@@ -39,6 +39,7 @@ from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.items.nodes.has_key import HasKeyNode
 
 
 class EnumerationNode(OperatorNode):
@@ -102,6 +103,16 @@ class EnumerationNode(OperatorNode):
             computed = first(identities)
             if len(identities) > 1:
                 computed = Identity.Unknown
+
+        if computed is Identity.Unknown:
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.identity() is Identity.Neutral and isinstance(x, HasKeyNode)
+            outgoing = self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+            if outgoing:
+                self.setIdentity(Identity.Concept)
+                return {self}, outgoing, set()
+
+
         self.setIdentity(computed)
         strong_add = set()
         if self.identity() is not Identity.Neutral:

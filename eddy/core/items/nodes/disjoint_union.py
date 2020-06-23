@@ -95,15 +95,23 @@ class DisjointUnionNode(OperatorNode):
             self.setIdentity(computed)
             return {self}, incoming, set()
 
-
-
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.identity() is Identity.Neutral and isinstance(x,HasKeyNode)
         outgoing = self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
         if outgoing:
             self.setIdentity(Identity.Concept)
-            return {self}, outgoing,set ()
+            return {self}, outgoing, set()
+
         return None
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        if identity not in self.identities():
+            identity = Identity.Unknown
+        self._identity = identity
 
     def setText(self, text):
         """

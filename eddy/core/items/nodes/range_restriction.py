@@ -38,6 +38,7 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
 from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.restriction import RestrictionNode
+from eddy.core.items.nodes.has_key import HasKeyNode
 
 
 class RangeRestrictionNode(RestrictionNode):
@@ -84,11 +85,29 @@ class RangeRestrictionNode(RestrictionNode):
             computed = first(identities)
             if len(identities) > 1:
                 computed = Identity.Unknown
+
+        if computed is Identity.Unknown:
+            f1 = lambda x: x.type() is Item.InputEdge
+            f2 = lambda x: x.identity() is Identity.Neutral and isinstance(x, HasKeyNode)
+            outgoing = self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+            if outgoing:
+                self.setIdentity(Identity.Concept)
+                return {self}, outgoing, set()
+
         self.setIdentity(computed)
         strong_add = set()
         if self.identity() is not Identity.Neutral:
             strong_add.add(self)
         return strong_add, inputs, set()
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        if identity not in self.identities():
+            identity = Identity.Unknown
+        self._identity = identity
 
     def setText(self, text):
         """

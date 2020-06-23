@@ -39,6 +39,7 @@ from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.functions.misc import first
 from eddy.core.items.nodes.common.operator import OperatorNode
 from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.items.nodes.has_key import HasKeyNode
 
 
 class ComplementNode(OperatorNode):
@@ -108,7 +109,24 @@ class ComplementNode(OperatorNode):
                 computed = first(identities)
             self.setIdentity(computed)
             return {self}, incoming, set()
+
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Neutral and isinstance(x, HasKeyNode)
+        outgoing = self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        if outgoing:
+            self.setIdentity(Identity.Concept)
+            return {self}, outgoing, set()
+
         return None
+
+    def setIdentity(self, identity):
+        """
+        Set the identity of the current node.
+        :type identity: Identity
+        """
+        if identity not in self.identities():
+            identity = Identity.Unknown
+        self._identity = identity
 
     def setText(self, text):
         """
