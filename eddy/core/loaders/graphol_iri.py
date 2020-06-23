@@ -407,7 +407,7 @@ class GrapholProjectIRILoaderMixin_2(object):
                 value = rtfStripFontAttributes(predicateElement.firstChildElement(K_DESCRIPTION).text())
                 if value:
                     commentIRI = self.nproject.getIRI('http://www.w3.org/2000/01/rdf-schema#comment')
-                    annAss = AnnotationAssertion(predicateIRI,commentIRI,value)
+                    annAss = AnnotationAssertion(predicateIRI,commentIRI,value,OWL2Datatype.PlainLiteral.value, 'it')
                     predicateIRI.addAnnotationAssertion(annAss)
 
                 item = self.itemFromXml[predicateElement.attribute('type')]
@@ -475,8 +475,8 @@ class GrapholProjectIRILoaderMixin_2(object):
             resolvedPrefix = self.nproject.getPrefixResolution(prefix)
             if not resolvedPrefix:
                 resolvedPrefix = ''
-            namespace = iriElList[1]
-            iriString = '{}{}'.format(resolvedPrefix, namespace)
+            simpleName = iriElList[1]
+            iriString = '{}{}'.format(resolvedPrefix, simpleName)
         elif len(iriElList) == 1:
             iriString = iriElList[0]
         else:
@@ -485,7 +485,11 @@ class GrapholProjectIRILoaderMixin_2(object):
         if addRdfsLabel:
             annAss = iri.getAnnotationAssertion(AnnotationAssertionProperty.Label.value, lang=lang)
             if not annAss:
-                annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, labelText,OWL2Datatype.PlainLiteral.value, lang)
+                rdfsLabelValue = labelText
+                labelElList = labelText.split(':')
+                if len(labelElList)>1:
+                    rdfsLabelValue = labelElList[1]
+                annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, rdfsLabelValue,OWL2Datatype.PlainLiteral.value, lang)
                 iri.addAnnotationAssertion(annAss)
         return iri
 
@@ -493,7 +497,7 @@ class GrapholProjectIRILoaderMixin_2(object):
         addRdfsLabel = False if itemType is Item.ValueDomainIRINode else True
         labelElement = nodeElement.firstChildElement('label')
         labelText = labelElement.text()
-        iri = self.getIriFromLabelText(labelText,itemType,addRdfsLabel=addRdfsLabel)
+        iri = self.getIriFromLabelText(labelText,itemType,addRdfsLabel=addRdfsLabel, lang='it')
         geometryElement = nodeElement.firstChildElement('geometry')
         node = diagram.factory.create(itemType, **{
             'id': nodeElement.attribute('id'),

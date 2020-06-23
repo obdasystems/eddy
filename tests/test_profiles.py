@@ -829,9 +829,8 @@ def test_input_between_concept_node_and_enumeration_node(session, qtbot):
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C5')
     __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
     # THEN
-    assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Invalid input to enumeration node: Concept'
-    assert not session.project.profile.pvr().isValid()
+    assert len(session.project.edges()) == num_edges_in_project +1
+    assert session.project.profile.pvr().isValid()
 
 
 '''

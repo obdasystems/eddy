@@ -570,17 +570,18 @@ class OntologyEntityNode(AbstractNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        if self.label and not self.labelString == IRIRender.iriLabelString(self._iri):
+        newLabelString = IRIRender.iriLabelString(self._iri)
+        if self.label and not self.labelString == newLabelString:
             self.labelString = IRIRender.iriLabelString(self._iri)
             labelPos = lambda: self.label.pos()
             self.label.diagram.removeItem(self.label)
             self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
-            #self.diagram.sgnUpdated.emit()
+            # self.diagram.sgnUpdated.emit()
         elif not self.label:
-            self.labelString = IRIRender.iriLabelString(self._iri)
+            self.labelString = newLabelString
             self.label = NodeLabel(template=self.labelString, pos=lambda: self.initialLabelPosition(), parent=self,
                                    editable=True)
-            #self.diagram.sgnUpdated.emit()
+            # self.diagram.sgnUpdated.emit()
 
     '''
     def renderByFullIRI(self):
@@ -1038,14 +1039,15 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        if self.label and not self.labelString == IRIRender.iriLabelString(self._iri):
+        newLabelString = IRIRender.iriLabelString(self._iri)
+        if self.label and not self.labelString == newLabelString:
             self.labelString = IRIRender.iriLabelString(self._iri)
             labelPos = lambda:self.label.pos()
             self.label.diagram.removeItem(self.label)
             self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
             #self.diagram.sgnUpdated.emit()
         elif not self.label:
-            self.labelString = IRIRender.iriLabelString(self._iri)
+            self.labelString = newLabelString
             self.label = NodeLabel(template=self.labelString, pos=lambda:self.initialLabelPosition() , parent=self, editable=True)
             #self.diagram.sgnUpdated.emit()
         '''
