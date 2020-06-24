@@ -1003,23 +1003,23 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         :type facet: Facet
         :rtype: OWLFacet
         """
-        if facet is OWL2Facet.maxExclusive:
+        if facet is OWL2Facet.maxExclusive.value:
             return self.OWLFacet.valueOf('MAX_EXCLUSIVE')
-        if facet is OWL2Facet.maxInclusive:
+        if facet is OWL2Facet.maxInclusive.value:
             return self.OWLFacet.valueOf('MAX_INCLUSIVE')
-        if facet is OWL2Facet.minExclusive:
+        if facet is OWL2Facet.minExclusive.value:
             return self.OWLFacet.valueOf('MIN_EXCLUSIVE')
-        if facet is OWL2Facet.minInclusive:
+        if facet is OWL2Facet.minInclusive.value:
             return self.OWLFacet.valueOf('MIN_INCLUSIVE')
-        if facet is OWL2Facet.langRange:
+        if facet is OWL2Facet.langRange.value:
             return self.OWLFacet.valueOf('LANG_RANGE')
-        if facet is OWL2Facet.length:
+        if facet is OWL2Facet.length.value:
             return self.OWLFacet.valueOf('LENGTH')
-        if facet is OWL2Facet.maxLength:
+        if facet is OWL2Facet.maxLength.value:
             return self.OWLFacet.valueOf('MIN_LENGTH')
-        if facet is OWL2Facet.minLength:
+        if facet is OWL2Facet.minLength.value:
             return self.OWLFacet.valueOf('MIN_LENGTH')
-        if facet is OWL2Facet.pattern:
+        if facet is OWL2Facet.pattern.value:
             return self.OWLFacet.valueOf('PATTERN')
         raise ValueError('invalid facet supplied: %s' % facet)
 
@@ -1168,12 +1168,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
     def getFacet(self, node):
         """
         Build and returns a OWL 2 facet restriction using the given graphol node.
-        :type node: FacetIRINode
+        :type node: FacetNode
         :rtype: OWLFacetRestriction
         """
         nodeFacet = node.facet
-        literal = self.df.getOWLLiteral(nodeFacet.literal.lexicalForm, self.df.getOWLDatatype(str(nodeFacet.literal.datatype)))
-        facet = self.getOWLApiFacet(nodeFacet.facet)
+        literal = self.df.getOWLLiteral(nodeFacet.literal.lexicalForm, self.df.getOWLDatatype(self.IRI.create(str(nodeFacet.literal.datatype))))
+        facet = self.getOWLApiFacet(nodeFacet.constrainingFacet)
         return self.df.getOWLFacetRestriction(facet, literal)
 
     def getComplement(self, node):
