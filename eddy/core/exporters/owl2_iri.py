@@ -619,6 +619,33 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             LOGGER.debug('Pre-processed %s nodes into OWL 2 expressions', len(self.converted()))
 
             #############################################
+            # AXIOMS FROM NODES
+            #################################
+
+            # for node in self.project.nodes():
+            for diagram in self.selected_diagrams:
+                for node in diagram.nodes():
+                    if node.type() is Item.DomainRestrictionNode:
+                        self.createPropertyDomainAxiom(node)
+                    elif node.type() is Item.RangeRestrictionNode:
+                        self.createPropertyRangeAxiom(node)
+                    elif node.type() is Item.DisjointUnionNode:
+                        self.createDisjointClassesAxiom(node)
+                    elif node.type() is Item.ComplementNode:
+                        if node.identity() is Identity.Concept:
+                            self.createDisjointClassesAxiom(node)
+
+                    if node.isMeta():
+                        if self.export:
+                            self.createAnnotationAssertionAxiomRichVersion(node)
+                        else:
+                            self.createAnnotationAssertionAxiom(node)
+
+                    self.step(+1)
+
+            LOGGER.debug('Generated OWL 2 axioms from nodes (axioms = %s)', len(self.axioms()))
+
+            #############################################
             # AXIOMS FROM EDGES
             #################################
 
@@ -1026,6 +1053,92 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
     #############################################
     #   NODES PROCESSING
     #################################
+    def createDisjointClassesAxiom(self, node):
+        """
+        Generate a OWL 2 DisjointClasses axiom.
+        :type node: T <= ComplementNode|DisjointUnionNode
+        """
+        if OWLAxiom.DisjointClasses in self.axiomsList:
+            if node.type() is Item.DisjointUnionNode:
+                collection = self.HashSet()
+                for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
+                    conversion = self.convert(operand)
+                    collection.add(conversion)
+                self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
+            elif node.type() is Item.ComplementNode:
+                operand = first(node.incomingNodes(lambda x: x.type() is Item.InputEdge))
+                conversionA = self.convert(operand)
+                for included in node.adjacentNodes(lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}):
+                    conversionB = self.convert(included)
+                    collection = self.HashSet()
+                    collection.add(conversionA)
+                    collection.add(conversionB)
+                    self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
+
+    def createPropertyDomainAxiom(self, node):
+        """
+        Generate OWL 2 ObjectPropertyDomain and DataPropertyDomain axioms.
+        :type node: DomainRestrictionNode
+        """
+        if OWLAxiom.ObjectPropertyDomain in self.axiomsList:
+            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Role
+                role = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                if role:
+                    f3 = lambda x: x.type() is Item.InclusionEdge
+                    f4 = lambda x: x.type() is Item.EquivalenceEdge
+                    f5 = lambda x: x.identity() is Identity.Concept
+                    for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
+                        conversionA = self.convert(role)
+                        conversionB = self.convert(concept)
+                        self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(conversionA, conversionB))
+        if OWLAxiom.DataPropertyDomain in self.axiomsList:
+            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Attribute
+                attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                if attribute:
+                    f3 = lambda x: x.type() is Item.InclusionEdge
+                    f4 = lambda x: x.type() is Item.EquivalenceEdge
+                    f5 = lambda x: x.identity() is Identity.Concept
+                    for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
+                        conversionA = self.convert(attribute)
+                        conversionB = self.convert(concept)
+                        self.addAxiom(self.df.getOWLDataPropertyDomainAxiom(conversionA, conversionB))
+
+    def createPropertyRangeAxiom(self, node):
+        """
+        Generate OWL 2 ObjectPropertyRange and DataPropertyRange axioms.
+        :type node: RangeRestrictionNode
+        """
+        if OWLAxiom.ObjectPropertyRange in self.axiomsList:
+            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Role
+                role = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                if role:
+                    f3 = lambda x: x.type() is Item.InclusionEdge
+                    f4 = lambda x: x.type() is Item.EquivalenceEdge
+                    f5 = lambda x: x.identity() is Identity.Concept
+                    for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
+                        conversionA = self.convert(role)
+                        conversionB = self.convert(concept)
+                        self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(conversionA, conversionB))
+        if OWLAxiom.DataPropertyRange in self.axiomsList:
+            if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
+                f1 = lambda x: x.type() is Item.InputEdge
+                f2 = lambda x: x.identity() is Identity.Attribute
+                attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+                if attribute:
+                    f3 = lambda x: x.type() is Item.InclusionEdge
+                    f4 = lambda x: x.type() is Item.EquivalenceEdge
+                    f5 = lambda x: x.identity() is Identity.ValueDomain
+                    for datatype in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
+                        conversionA = self.convert(attribute)
+                        conversionB = self.convert(datatype)
+                        self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(conversionA, conversionB))
+
     def translateHasKey(self,node):
         """
         Build a OWLHasKeyAxiom starting from node.
@@ -1193,6 +1306,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             raise DiagramMalformedError(node, 'too many operands')
         operand = first(incoming)
 
+        '''
         if node.identity() is Identity.Concept:
             conversionA = self.convert(operand)
             for included in node.adjacentNodes(lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}):
@@ -1201,6 +1315,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 collection.add(conversionA)
                 collection.add(conversionB)
                 self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
+        '''
         if operand.identity() is Identity.Concept:
             conversion = self.convert(operand)
             return self.df.getOWLObjectComplementOf(conversion)
@@ -1322,6 +1437,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 ce = self.df.getOWLThing()
             else:
                 ce = self.convert(filler)
+            '''
             if OWLAxiom.ObjectPropertyDomain in self.axiomsList:
                 if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
                     if ope:
@@ -1331,6 +1447,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         for concept in node.outgoingNodes(f5, f7) | node.adjacentNodes(f6, f7):
                             conversionB = self.convert(concept)
                             self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(ope, conversionB))
+            '''
             if node.restriction() is Restriction.Self:
                 return self.df.getOWLObjectHasSelf(ope)
             if node.restriction() is Restriction.Exists:
@@ -1439,7 +1556,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             # BUILD OPERAND
             #################################
             invOPE = self.convert(operand).getInverseProperty()
-            ope = self.convert(operand)
+            #ope = self.convert(operand)
             #############################################
             # BUILD FILLER
             #################################
@@ -1448,6 +1565,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 ce = self.df.getOWLThing()
             else:
                 ce = self.convert(filler)
+            '''
             if OWLAxiom.ObjectPropertyRange in self.axiomsList:
                 if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
                     if invOPE:
@@ -1457,6 +1575,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         for concept in node.outgoingNodes(f5, f7) | node.adjacentNodes(f6, f7):
                             conversionB = self.convert(concept)
                             self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(ope, conversionB))
+            '''
             if node.restriction() is Restriction.Self:
                 return self.df.getOWLObjectHasSelf(invOPE)
             if node.restriction() is Restriction.Exists:
@@ -1477,6 +1596,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     return self.df.getOWLObjectIntersectionOf(self.vm.cast(self.Set, cardinalities))
                 return cardinalities.iterator().next()
             raise DiagramMalformedError(node, 'unsupported restriction (%s)' % node.restriction())
+        '''
         else:
             if OWLAxiom.DataPropertyRange in self.axiomsList:
                 if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
@@ -1488,6 +1608,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         for datatype in node.outgoingNodes(f5, f7) | node.adjacentNodes(f6, f7):
                             conversionB = self.convert(datatype)
                             self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(dpe, conversionB))
+        '''
 
     def getRoleChain(self, node):
         """
@@ -1536,8 +1657,10 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             collection.add(conversion)
         if collection.isEmpty():
             raise DiagramMalformedError(node, 'missing operand(s)')
+        '''
         if node.type() is Item.DisjointUnionNode:
             self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
+        '''
         if node.identity() is Identity.Concept:
             return self.df.getOWLObjectUnionOf(self.vm.cast(self.Set, collection))
         return self.df.getOWLDataUnionOf(self.vm.cast(self.Set, collection))
