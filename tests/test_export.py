@@ -216,6 +216,7 @@ def test_export_project_to_pdf(session, qtbot, tmpdir):
 #################################
 
 def test_export_project_to_owl_without_normalization(session, tmpdir):
+    #TODO ADD DATATYPE RESTRICTION WITH FACET TO TEST ONTOLOGY AND VERIFY TRANSLATION
     # WHEN
     owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
@@ -349,6 +350,7 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
 
 
 def test_export_project_to_owl_with_normalization(session, tmpdir):
+    #TODO ADD DATATYPE RESTRICTION WITH FACET TO TEST ONTOLOGY AND VERIFY TRANSLATION
     # WHEN
     owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
