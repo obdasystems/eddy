@@ -3656,38 +3656,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for langTag in self.project.getLanguages():
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(langTag==lang)
-            '''
-            if lang == 'it':
-                self.action(objectName='render_label_it').setChecked(True)
-                self.action(objectName='render_label_en').setChecked(False)
-                self.action(objectName='render_label_es').setChecked(False)
-                self.action(objectName='render_label_fr').setChecked(False)
-                self.action(objectName='render_label_de').setChecked(False)
-            elif lang == 'en':
-                self.action(objectName='render_label_it').setChecked(False)
-                self.action(objectName='render_label_en').setChecked(True)
-                self.action(objectName='render_label_es').setChecked(False)
-                self.action(objectName='render_label_fr').setChecked(False)
-                self.action(objectName='render_label_de').setChecked(False)
-            elif lang == 'es':
-                self.action(objectName='render_label_it').setChecked(False)
-                self.action(objectName='render_label_en').setChecked(False)
-                self.action(objectName='render_label_es').setChecked(True)
-                self.action(objectName='render_label_fr').setChecked(False)
-                self.action(objectName='render_label_de').setChecked(False)
-            elif lang == 'fr':
-                self.action(objectName='render_label_it').setChecked(False)
-                self.action(objectName='render_label_en').setChecked(False)
-                self.action(objectName='render_label_es').setChecked(False)
-                self.action(objectName='render_label_fr').setChecked(True)
-                self.action(objectName='render_label_de').setChecked(False)
-            elif lang == 'de':
-                self.action(objectName='render_label_it').setChecked(False)
-                self.action(objectName='render_label_en').setChecked(False)
-                self.action(objectName='render_label_es').setChecked(False)
-                self.action(objectName='render_label_fr').setChecked(False)
-                self.action(objectName='render_label_de').setChecked(True)
-            '''
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()

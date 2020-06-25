@@ -974,7 +974,8 @@ class IRIManager(QtCore.QObject):
         if ontologyIRI:
             self.setOntologyIRI(ontologyIRI)
             self._ontologyPrefix=None
-            if not ontologyPrefix is None and not ontologyPrefix=='':
+            #if not ontologyPrefix is None and not ontologyPrefix=='':
+            if not ontologyPrefix is None:
                 self.setPrefix(ontologyPrefix,ontologyIRI)
                 self._ontologyPrefix = ontologyPrefix
             else:

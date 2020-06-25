@@ -244,10 +244,7 @@ class NewProjectDialog(QtWidgets.QDialog):
         #################################
 
         if enabled:
-            if not self.prefix():
-                caption = ''
-                enabled = False
-            elif self.prefix() and not QtXmlPatterns.QXmlName.isNCName(str(self.prefix()).strip()):
+            if self.prefix() and not QtXmlPatterns.QXmlName.isNCName(str(self.prefix()).strip()):
                 caption = 'Please insert a legal prefix'
                 enabled = False
 
