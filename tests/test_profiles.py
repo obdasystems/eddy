@@ -850,7 +850,6 @@ def test_input_between_value_node_and_enumeration_node_with_individuals(session,
     assert not session.project.profile.pvr().isValid()
 '''
 
-
 def test_input_between_role_chain_node_and_role_inverse_node(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram20', qtbot)
@@ -975,17 +974,18 @@ def test_input_between_individual_node_and_property_assertion_node_with_already_
     assert not session.project.profile.pvr().isValid()
 
 
-'''
+
 #TODO SKIP
 def test_input_between_value_node_and_property_assertion_node_set_as_role_instance(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram28', qtbot)
     num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.LiteralNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"12"^^xsd:integer'), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid input to Role Instance: Value'
@@ -996,16 +996,17 @@ def test_input_between_value_node_and_property_assertion_node_with_no_subject(se
     # GIVEN
     __give_focus_to_diagram(session, 'diagram51', qtbot)
     num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.LiteralNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"12"^^xsd:integer'), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Value cannot be used as the first component of a property assertion'
     assert not session.project.profile.pvr().isValid()
-'''
+
 
 
 def test_input_between_individual_node_and_property_assertion_node_set_as_attribute_instance(session, qtbot):
@@ -1403,4 +1404,255 @@ def test_membership_between_neutral_property_assertion_node_and_neutral_chained_
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Detected unsupported operator sequence on intersection node'
     assert not session.project.profile.pvr().isValid()
+
+#TODO HASKEY
+
+def test_input_between_attribute_range_node_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram52', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Only object (resp. data) property expressions can be used to define a key over a class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_class_node_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram53', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A')
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_disjoint_union_class_node_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram54', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_domain_attribute_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram55', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_intersection_class_node_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram56', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
+    assert not session.project.profile.pvr().isValid()
+
+
+def test_input_between_domain_role_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram57', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_union_class_node_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram58', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_range_role_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram59', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_disjoint_union_node_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram60', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Only object (resp. data) property expressions can be used to define a key over a class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_range_node_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram63', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Only object (resp. data) property expressions can be used to define a key over a class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_domain_node_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram61', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project +1
+    assert session.project.profile.pvr().isValid()
+
+
+
+def test_input_between_intersection_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram62', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Only object (resp. data) property expressions can be used to define a key over a class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_union_class_node_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram64', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Only object (resp. data) property expressions can be used to define a key over a class expression'
+    assert not session.project.profile.pvr().isValid()
+
+
+def test_input_between_oneof_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram65', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.EnumerationNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Only object (resp. data) property expressions can be used to define a key over a class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_chain_node_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram66', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Only object (resp. data) property expressions can be used to define a key over a class expression'
+    assert not session.project.profile.pvr().isValid()
+
+def test_input_between_datarestr_and_haskey(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram67', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project
+    assert session.project.profile.pvr().message() == 'Invalid input to has key node: datatype restriction node'
+    assert not session.project.profile.pvr().isValid()
+
+
+
+def test_input_between_objprop_and_haskey_node_with_class_expression(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram68', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/P')
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project+1
+    assert session.project.profile.pvr().isValid()
+
+def test_input_between_dataprop_and_haskey_node_with_class_expression_and_objprop(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram69', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/U')
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project+1
+    assert session.project.profile.pvr().isValid()
+
+def test_input_between_invobjprop_and_haskey_node_with_class_expression_and_dataprop(session, qtbot):
+    # GIVEN
+    __give_focus_to_diagram(session, 'diagram70', qtbot)
+    num_edges_in_project = len(session.project.edges())
+    source = first(filter(lambda x: x.type() is Item.RoleInverseNode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
+    # WHEN
+    __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
+    # THEN
+    assert len(session.project.edges()) == num_edges_in_project+1
+    assert session.project.profile.pvr().isValid()
 

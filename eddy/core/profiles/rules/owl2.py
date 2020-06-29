@@ -609,16 +609,16 @@ class InputToHasKeyNodeRule(ProfileEdgeRule):
                         raise ProfileError('A key can be defined over one and only one class expression')
                     else:
                         return
-
-                if source.identity() is Identity.Role or source.identity() is Identity.Attribute:
+                elif source.identity() is Identity.Role or source.identity() is Identity.Attribute:
                     if source.identity() is Identity.Role:
                         if not (source.type() is Item.RoleIRINode or source.type() is Item.RoleInverseNode):
                             raise ProfileError('Only object (resp. data) property expressions can be used to define a key over a class expression')
-
-
                     if source.identity() is Identity.Attribute:
                         if not (source.type() is Item.AttributeIRINode ):
                             raise ProfileError('Only object (resp. data) property expressions can be used to define a key over a class expression')
+                else:
+                    raise ProfileError(
+                        'Only object (resp. data) property expressions can be used to define a key over a class expression')
 
 
 
