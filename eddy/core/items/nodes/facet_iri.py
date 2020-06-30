@@ -129,7 +129,7 @@ class FacetNode(AbstractNode):
         if prefixed:
             self.labelA.setText(str(prefixed))
         else:
-            self.labelA.setText('<str(iri)>')
+            self.labelA.setText('<{}>',str(iri))
 
         literal = self.facet.literal
         self.labelB.setText(str(literal))

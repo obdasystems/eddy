@@ -3657,7 +3657,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(langTag==lang)
             for node in self.project.nodes():
-                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode) or isinstance(node, FacetNode):
                     node.doUpdateNodeLabel()
 
     @QtCore.pyqtSlot()
