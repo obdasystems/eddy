@@ -1406,7 +1406,7 @@ def test_membership_between_neutral_property_assertion_node_and_neutral_chained_
     assert not session.project.profile.pvr().isValid()
 
 #TODO HASKEY
-'''
+
 def test_input_between_attribute_range_node_and_haskey(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram52', qtbot)
@@ -1655,4 +1655,4 @@ def test_input_between_invobjprop_and_haskey_node_with_class_expression_and_data
     # THEN
     assert len(session.project.edges()) == num_edges_in_project+1
     assert session.project.profile.pvr().isValid()
-'''
+
