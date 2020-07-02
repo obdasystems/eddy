@@ -637,6 +637,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.proxy.setFilterFixedString(key)
         self.proxy.sort(QtCore.Qt.AscendingOrder)
 
+
     @QtCore.pyqtSlot()
     def doFocusSearch(self):
         """
@@ -1147,21 +1148,28 @@ class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     #   INTERFACE
     #################################
 
-    def filterAcceptsRow(self, sourceRow, sourceIndex):
+    def filterAcceptsRow(self, sourceRow, parentIndex):
         """
         Overrides filterAcceptsRow to include extra filtering conditions
         :type sourceRow: int
-        :type sourceIndex: QModelIndex
+        :type parentIndex: QModelIndex
         :rtype: bool
         """
-        index = self.sourceModel().index(sourceRow, 0, sourceIndex)
+        '''
+        index = self.sourceModel().index(sourceRow, 0, parentIndex)
         item = self.sourceModel().itemFromIndex(index)
         # PARENT NODE
-        if item.hasChildren():
-            #children = [item.child(c).data(QtCore.Qt.UserRole) for c in range(item.rowCount())]
-            return super().filterAcceptsRow(sourceRow, sourceIndex)
         # LEAF NODE
-        return super().filterAcceptsRow(sourceRow, sourceIndex)
-
-
+        if item.parent():
+            parentItemIndex = self.sourceModel().indexFromItem(item.parent())
+            result = parentItemIndex.isValid()
+        # PARENT NODE
+        else:
+            result = super().filterAcceptsRow(sourceRow, parentIndex)
+        return result
+        '''
+        if parentIndex.isValid():
+            return True
+        else:
+            return super().filterAcceptsRow(sourceRow, parentIndex)
 
