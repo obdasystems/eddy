@@ -2029,7 +2029,6 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
             #self.project.addAnnotationProperty(str(annPropIRI))
 
     def importImportedOntologies(self):
-        importToBeLoaded = []
         alreadyLoadedOntIRIs = [str(x.ontologyIRI) for x in self.project.importedOntologies]
         for otherImpOnt in self.other.importedOntologies:
             if not str(otherImpOnt.ontologyIRI) in alreadyLoadedOntIRIs:
