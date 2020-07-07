@@ -3600,6 +3600,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
+            self.sgnRenderingModified.emit(IRIRender.FULL.value)
 
     @QtCore.pyqtSlot()
     def doRenderByPrefixedIRI(self):
@@ -3618,6 +3619,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
+            self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
 
     @QtCore.pyqtSlot()
     def doRenderBySimpleName(self):
@@ -3637,6 +3639,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
+
+        self.sgnRenderingModified.emit(IRIRender.SIMPLE_NAME.value)
 
     @QtCore.pyqtSlot()
     def doRenderByLabel(self):
@@ -3659,6 +3663,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode) or isinstance(node, FacetNode):
                     node.doUpdateNodeLabel()
+            self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):
