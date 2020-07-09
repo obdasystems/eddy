@@ -419,7 +419,9 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onSingleNodeIRISwitched(self,node,oldIRI):
         oldParentK = self.parentKeyForIRI(oldIRI)
         for parent in self.model.findItems(oldParentK, QtCore.Qt.MatchExactly):
-            for i in range(parent.rowCount()):
+            '''
+            rowCount = parent.rowCount()
+            for i in range(rowCount):
                 child = parent.child(i)
                 if child.data(QtCore.Qt.UserRole) is node:
                     parent.removeRow(i)
@@ -428,13 +430,17 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     self.disconnectIRISignals(parent.data(QtCore.Qt.UserRole))
                 self.model.removeRow(parent.index().row())
+            '''
+            self.model.removeRow(parent.index().row())
 
     @QtCore.pyqtSlot(IRI)
     def onIRIRemovedFromAllDiagrams(self,iri):
         parentK = self.parentKeyForIRI(iri)
         for parent in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
+            '''
             removeParent = True
-            for i in range(parent.rowCount()):
+            rowCount = parent.rowCount()
+            for i in range(rowCount):
                 childData = parent.child(i).data(QtCore.Qt.UserRole)
                 if isinstance(childData,OntologyEntityNode) or isinstance(childData, OntologyEntityResizableNode):
                     parent.removeRow(i)
@@ -442,6 +448,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                     removeParent = False
             if removeParent:
                 self.model.removeRow(parent.index().row())
+            '''
+            self.model.removeRow(parent.index().row())
 
     @QtCore.pyqtSlot(IRI)
     def onUnsatisfiableClass(self, iri):

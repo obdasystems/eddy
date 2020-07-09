@@ -187,9 +187,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            ontPrefix = self.project.ontologyPrefix
-            if not ontPrefix is None:
-                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            if not self.iri:
+                ontPrefix = self.project.ontologyPrefix
+                if not ontPrefix is None:
+                    combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+                else:
+                    combobox.setCurrentText(self.emptyString)
             else:
                 combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
@@ -325,9 +328,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            ontPrefix = self.project.ontologyPrefix
-            if not ontPrefix is None:
-                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            if not self.iri:
+                ontPrefix = self.project.ontologyPrefix
+                if not ontPrefix is None:
+                    combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+                else:
+                    combobox.setCurrentText(self.emptyString)
             else:
                 combobox.setCurrentText(self.emptyString)
 
@@ -592,11 +598,14 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix+':'+'  <'+self.project.getNamespace(shortest.prefix)+'>')
         else:
+            '''
             ontPrefix = self.project.ontologyPrefix
             if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)
+            '''
+            combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
         inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
@@ -727,11 +736,14 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
+            '''
             ontPrefix = self.project.ontologyPrefix
             if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)
+            '''
+            combobox.setCurrentText(self.emptyString)
 
         inputField = self.widget('iri_input_field')
         if shortest:
