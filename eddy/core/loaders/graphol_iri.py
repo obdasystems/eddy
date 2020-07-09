@@ -261,7 +261,6 @@ class GrapholProjectIRILoaderMixin_2(object):
                 QtWidgets.QApplication.processEvents()
                 namespace = sube.attribute('iri_value')
 
-                '''
                 ### Needed to fix the namespace of standard vocabularies which up to
                 ### version 1.1.2 where stored without the fragment separator (#).
                 ### See: https://github.com/obdasystems/eddy/issues/20
@@ -270,7 +269,6 @@ class GrapholProjectIRILoaderMixin_2(object):
                         # Append the missing fragment separator
                         namespace += '#'
                         break
-                '''
 
                 sube_prefixes = sube.firstChildElement('prefixes')
 
