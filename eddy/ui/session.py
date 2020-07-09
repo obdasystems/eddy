@@ -2465,7 +2465,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenIRIDialog(self, node):
+    def doOpenIRIDialog(self, node=None):
         """
         Executed when the IRI associated to a node might be modified by the user.
         """
