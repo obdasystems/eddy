@@ -1043,7 +1043,8 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         if self.label and not self.labelString == newLabelString:
             self.labelString = IRIRender.iriLabelString(self._iri)
             labelPos = lambda:self.label.pos()
-            self.label.diagram.removeItem(self.label)
+            if self.label.diagram:
+                self.label.diagram.removeItem(self.label)
             self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
             #self.diagram.sgnUpdated.emit()
         elif not self.label:

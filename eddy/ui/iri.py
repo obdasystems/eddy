@@ -401,7 +401,25 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.project.isValidIdentifier(inputIriString)
                 if self.iri:
                     if not str(self.iri) == inputIriString:
-                        command = CommandChangeIRIOfNode(self.project, self.node, inputIriString, str(self.iri))
+                        if len(self.project.iriOccurrences(iri=self.iri))==1:
+                            existIRI = self.project.existIRI(inputIriString)
+                            if existIRI:
+                                newIRI = self.project.getIRI(inputIriString, addLabelFromSimpleName=True,
+                                                             addLabelFromUserInput=True, userInput=userExplicitInput)
+                                if not newIRI is self.iri:
+                                    oldIRI = self.iri
+                                    self.iri = newIRI
+                                    self.redraw()
+                                    command = CommandIRIRefactor(self.project, self.iri, oldIRI)
+                                    self.session.undostack.beginMacro('IRI <{}> refactor'.format(self.iri))
+                                    if command:
+                                        self.session.undostack.push(command)
+                                    self.session.undostack.endMacro()
+                            else:
+                                oldStr = self.iri.namespace
+                                command = CommandChangeIRIIdentifier(self.project, self.iri, inputIriString, oldStr)
+                        else:
+                            command = CommandChangeIRIOfNode(self.project, self.node, inputIriString, str(self.iri))
                         self.session.undostack.beginMacro('Node {} set IRI <{}> '.format(self.node.id,inputIriString))
                         if command:
                             self.session.undostack.push(command)
@@ -464,104 +482,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixStr = prefixStr[0:prefixLimit]
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
-
-class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
-
-    def __init__(self, session, node, refactor=False):
-        """
-        Initialize the Preferences dialog.
-        :type session: Session
-        """
-        super().__init__(session)
-        self.node = node
-        self.session = session
-        self.refactor = refactor
-
-        prefix = QtWidgets.QLabel(self, objectName='font_size_prefix')
-        prefix.setText('Node font size (px)')
-        self.addWidget(prefix)
-
-        spinbox = SpinBox(self, objectName='font_size_field')
-        spinbox.setRange(node.diagram.MinFontSize, node.diagram.MaxFontSize)
-        spinbox.setSingleStep(1)
-        if not refactor:
-            spinbox.setToolTip('Font size for node label (px)')
-        else:
-            spinbox.setToolTip('Font size for IRI label (px)')
-        spinbox.setValue(node.label.font().pixelSize())
-        self.addWidget(spinbox)
-
-        formlayout = QtWidgets.QFormLayout()
-        formlayout.addRow(self.widget('font_size_prefix'), self.widget('font_size_field'))
-        groupbox = QtWidgets.QGroupBox('Editor', self, objectName='editor_widget')
-        groupbox.setLayout(formlayout)
-        self.addWidget(groupbox)
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.setAlignment(QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('editor_widget'), 0, QtCore.Qt.AlignTop)
-        widget = QtWidgets.QWidget()
-        widget.setLayout(layout)
-        widget.setObjectName('general_widget')
-        self.addWidget(widget)
-
-        #############################################
-        # CONFIRMATION BOX
-        #################################
-
-        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        confirmation.setContentsMargins(10, 0, 10, 10)
-        self.addWidget(confirmation)
-
-        #############################################
-        # MAIN WIDGET
-        #################################
-
-        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
-        widget.addTab(self.widget('general_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'), 'General')
-        self.addWidget(widget)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.widget('main_widget'))
-        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
-        self.setLayout(layout)
-        self.setMinimumSize(740, 420)
-        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        if not refactor:
-            self.setWindowTitle('Set font size of node {}'.format(node.id))
-        else:
-            self.setWindowTitle('Set font size of IRI {}'.format(str(node.iri)))
-
-        connect(confirmation.accepted, self.accept)
-        connect(confirmation.rejected, self.reject)
-
-    @QtCore.pyqtSlot()
-    def accept(self):
-        """
-        Executed when the dialog is accepted.
-        """
-        #############################################
-        # GENERAL TAB
-        #################################
-        pixelSize = self.widget('font_size_field').value()
-        nodes = None
-        if self.refactor:
-            nodes = self.session.project.iriOccurrences(self.node.type(),self.node.iri)
-        else:
-            nodes = [self.node]
-        command = CommandNodeSetFont(self.node.diagram,nodes,pixelSize)
-        self.session.undostack.beginMacro('set {} font size on {} node(s)'.format(pixelSize, len(nodes)))
-        if command:
-            self.session.undostack.push(command)
-        self.session.undostack.endMacro()
-
-        #############################################
-        # SAVE & EXIT
-        #################################
-
-        super().accept()
 
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
@@ -627,6 +547,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         saveBtn = QtWidgets.QPushButton('Save', objectName='save_iri_button')
         connect(saveBtn.clicked, self.saveIRI)
+        saveBtn.setEnabled(False)
         self.addWidget(saveBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
@@ -879,6 +800,10 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         resolvedPrefix = self.resolvePrefix(prefix)
         fullIri = '{}{}'.format(resolvedPrefix,input)
         self.widget('full_iri_field').setValue(fullIri)
+        if not fullIri==str(self.iri):
+            self.widget('save_iri_button').setEnabled(True)
+        else:
+            self.widget('save_iri_button').setEnabled(False)
 
     @QtCore.pyqtSlot(bool)
     def saveIRI(self,_):
@@ -887,7 +812,6 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             fullIRIString = self.widget('full_iri_field').value()
             existIRI = self.project.existIRI(fullIRIString)
             if existIRI:
-                print('IRI corresponding to string {} already exists'.format(fullIRIString))
                 newIRI = self.project.getIRI(fullIRIString, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=userExplicitInput)
                 if not newIRI is self.iri:
                     oldIRI = self.iri
@@ -899,7 +823,6 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                         self.session.undostack.push(command)
                     self.session.undostack.endMacro()
             else:
-                print('IRI corresponding to string {} does not exist'.format(fullIRIString))
                 if not self.iri.namespace == fullIRIString:
                     oldStr = self.iri.namespace
                     command = CommandChangeIRIIdentifier(self.project, self.iri, fullIRIString, oldStr)
@@ -914,6 +837,8 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             errorDialog.show()
             errorDialog.raise_()
             errorDialog.activateWindow()
+        finally:
+            self.widget('save_iri_button').setEnabled(False)
 
     @QtCore.pyqtSlot()
     def accept(self):
@@ -1332,6 +1257,105 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
     def reject(self):
         self.sgnLiteralRejected.emit(self.node)
         super().reject()
+
+class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
+
+    def __init__(self, session, node, refactor=False):
+        """
+        Initialize the Preferences dialog.
+        :type session: Session
+        """
+        super().__init__(session)
+        self.node = node
+        self.session = session
+        self.refactor = refactor
+
+        prefix = QtWidgets.QLabel(self, objectName='font_size_prefix')
+        prefix.setText('Node font size (px)')
+        self.addWidget(prefix)
+
+        spinbox = SpinBox(self, objectName='font_size_field')
+        spinbox.setRange(node.diagram.MinFontSize, node.diagram.MaxFontSize)
+        spinbox.setSingleStep(1)
+        if not refactor:
+            spinbox.setToolTip('Font size for node label (px)')
+        else:
+            spinbox.setToolTip('Font size for IRI label (px)')
+        spinbox.setValue(node.label.font().pixelSize())
+        self.addWidget(spinbox)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('font_size_prefix'), self.widget('font_size_field'))
+        groupbox = QtWidgets.QGroupBox('Editor', self, objectName='editor_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('editor_widget'), 0, QtCore.Qt.AlignTop)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('general_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        self.addWidget(confirmation)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+
+        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        widget.addTab(self.widget('general_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'), 'General')
+        self.addWidget(widget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(740, 420)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        if not refactor:
+            self.setWindowTitle('Set font size of node {}'.format(node.id))
+        else:
+            self.setWindowTitle('Set font size of IRI {}'.format(str(node.iri)))
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        #############################################
+        # GENERAL TAB
+        #################################
+        pixelSize = self.widget('font_size_field').value()
+        nodes = None
+        if self.refactor:
+            nodes = self.session.project.iriOccurrences(self.node.type(),self.node.iri)
+        else:
+            nodes = [self.node]
+        command = CommandNodeSetFont(self.node.diagram,nodes,pixelSize)
+        self.session.undostack.beginMacro('set {} font size on {} node(s)'.format(pixelSize, len(nodes)))
+        if command:
+            self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().accept()
+
 
 
 

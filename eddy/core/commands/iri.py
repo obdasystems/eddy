@@ -36,7 +36,7 @@ class CommandChangeIRIIdentifier(QtWidgets.QUndoCommand):
 
 class CommandIRIRefactor(QtWidgets.QUndoCommand):
     """
-    This command is used to change the IRI associated to (possibly) numerous node.
+    This command is used to change the IRI associated to (possibly) numerous nodes.
     """
 
     def __init__(self, project, iriRedo, iriUndo, name=None):

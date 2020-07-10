@@ -1130,7 +1130,7 @@ class IRIManager(QtCore.QObject):
 
     @QtCore.pyqtSlot(IRI)
     def onIRIRemovedFromAllDiagrams(self,iri):
-        if not (iri is self.ontologyIRI or iri in self.annotationProperties or iri in self.datatypes or self.isImportedIRI(iri)):
+        if not (iri is self.ontologyIRI or iri in self.annotationProperties or iri in self.datatypes or self.isImportedIRI(iri)) and iri in self.iris:
             self.deleteIRI(iri)
 
     @QtCore.pyqtSlot(IRI)
