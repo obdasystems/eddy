@@ -3,4 +3,4 @@
 #
 
 # From PyPi
-Cython==0.29.17
+Cython==0.29.21
