@@ -164,10 +164,12 @@ def findJavaHome():
         return os.getenv('JAVA_HOME')
     # JPype offers a nice utility to find Java from known locations
     if JniLib.JPYPE in _jvmLibraries:
-        from jpype import get_default_jvm_path
-        from jpype import getDefaultJVMPath
+        from jpype import (
+            getDefaultJVMPath,
+            JVMNotFoundException,
+            JVMNotSupportedException,
+        )
         try:
-            #jni_lib = get_default_jvm_path()
             jni_lib = getDefaultJVMPath()
             # Try to locate the root of the Java installation walking
             # the path backwards and checking for the existence
@@ -179,8 +181,12 @@ def findJavaHome():
                 if os.path.isfile(os.path.join(dirname, java_exe)):
                     return parent if subdir == 'jre' else dirname
                 dirname, filename = parent, subdir
-        except RuntimeError:
-            pass
+        except JVMNotFoundException as e:
+            LOGGER.error('Unable to locate JAVA_HOME', exc_info=e)
+        except JVMNotSupportedException as e:
+            LOGGER.exception('Found unsupported JVM', exc_info=e)
+        except Exception as e:
+            LOGGER.exception('Could not find JAVA_HOME', exc_info=e)
     # FALLBACK TO OTHER COMMON VARIABLES
     return os.getenv('JRE_HOME', os.getenv('JDK_HOME'))
 
