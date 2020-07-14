@@ -264,14 +264,11 @@ class GrapholProjectIRILoaderMixin_2(object):
                 ### Needed to fix the namespace of standard vocabularies which up to
                 ### version 1.1.2 where stored without the fragment separator (#).
                 ### See: https://github.com/obdasystems/eddy/issues/20
-                #TODO SCOMMENTA
-                '''
                 for ns in Namespace:
                     if postfix(namespace, '#') == ns.value:
                         # Append the missing fragment separator
                         namespace += '#'
                         break
-                '''
 
                 sube_prefixes = sube.firstChildElement('prefixes')
 
