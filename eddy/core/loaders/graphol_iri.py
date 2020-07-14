@@ -265,7 +265,7 @@ class GrapholProjectIRILoaderMixin_2(object):
                 ### version 1.1.2 where stored without the fragment separator (#).
                 ### See: https://github.com/obdasystems/eddy/issues/20
                 for ns in Namespace:
-                    if postfix(namespace, '#') == ns.value:
+                    if namespace+'#' == ns.value:
                         # Append the missing fragment separator
                         namespace += '#'
                         break
