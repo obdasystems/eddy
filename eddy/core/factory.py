@@ -160,6 +160,20 @@ class MenuFactory(QtCore.QObject):
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
 
+    def buildAxiomEdgeMenu(self, diagram, edge, pos):
+        menu = QtWidgets.QMenu()
+        breakpoint = edge.breakPointAt(pos)
+        if breakpoint is not None:
+            action = self.session.action('remove_breakpoint')
+            action.setData((edge, breakpoint))
+            menu.addAction(action)
+        else:
+            menu.addAction(self.session.action('edge_annotations_refactor'))
+            menu.addAction(self.session.action('delete'))
+            menu.addAction(self.session.action('swap_edge'))
+            self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
+        return menu
+
     def buildMembershipEdgeMenu(self, diagram, edge, pos):
         """
         Build and return a QMenu instance for InstanceOf edges.
@@ -175,6 +189,7 @@ class MenuFactory(QtCore.QObject):
             action.setData((edge, breakpoint))
             menu.addAction(action)
         else:
+            menu.addAction(self.session.action('edge_annotations_refactor'))
             menu.addAction(self.session.action('delete'))
         return menu
 
@@ -193,6 +208,7 @@ class MenuFactory(QtCore.QObject):
             action.setData((edge, breakpoint))
             menu.addAction(action)
         else:
+            menu.addAction(self.session.action('edge_annotations_refactor'))
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('switch_same_to_different'))
         return menu
@@ -212,6 +228,7 @@ class MenuFactory(QtCore.QObject):
             action.setData((edge, breakpoint))
             menu.addAction(action)
         else:
+            menu.addAction(self.session.action('edge_annotations_refactor'))
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('switch_different_to_same'))
         return menu
@@ -1063,13 +1080,13 @@ class MenuFactory(QtCore.QObject):
 
         ## EDGES
         if item.type() is Item.InclusionEdge:
-            return self.buildGenericEdgeMenu(diagram, item, pos)
+            return self.buildAxiomEdgeMenu(diagram, item, pos)
         if item.type() is Item.InputEdge:
             return self.buildGenericEdgeMenu(diagram, item, pos)
         if item.type() is Item.MembershipEdge:
             return self.buildMembershipEdgeMenu(diagram, item, pos)
         if item.type() is Item.EquivalenceEdge:
-            return self.buildGenericEdgeMenu(diagram, item, pos)
+            return self.buildAxiomEdgeMenu(diagram, item, pos)
         if item.type() is Item.SameEdge:
             return self.buildSameEdgeMenu(diagram, item, pos)
         if item.type() is Item.DifferentEdge:

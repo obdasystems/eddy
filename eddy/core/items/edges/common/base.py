@@ -519,3 +519,62 @@ class AbstractEdge(AbstractItem):
 
         self.diagram.setMode(DiagramMode.Idle)
         self.updateEdge()
+
+
+class AxiomEdge(AbstractEdge):
+    """
+    Base class for all the diagram edges representing owl axioms
+    """
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        self._annotationsMap = {}
+        self._annotations = []
+
+    @property
+    def annotations(self):
+        return self._annotations
+
+    @property
+    def annotationsMapItems(self):
+        return self._annotationsMap.items()
+
+    def getAnnotation(self, annotationProperty, lang=None):
+        if annotationProperty in self._annotationsMap:
+            currList = self._annotationsMap[annotationProperty]
+            if lang:
+                for annotation in currList:
+                    if annotation.language == lang:
+                        return annotation
+            return currList[0]
+        return None
+
+    def addAnnotation(self, annotation):
+        """
+        Add an annotation regarding self
+        :type: annotation: Annotation
+        """
+        if annotation.assertionProperty in self._annotationsMap:
+            if not annotation in self._annotationsMap[annotation.assertionProperty]:
+                self._annotationsMap[annotation.assertionProperty].append(annotation)
+        else:
+            currList = list()
+            currList.append(annotation)
+            self._annotationsMap[annotation.assertionProperty] = currList
+        self.annotations.append(annotation)
+
+    def removeAnnotation(self, annotation):
+        """
+        Remove an annotation regarding self
+        :type: annotation: Annotation
+        """
+        if annotation.assertionProperty in self._annotationsMap:
+            currList = self._annotationsMap[annotation.assertionProperty]
+            if annotation in currList:
+                currList.remove(annotation)
+                if len(currList) < 1:
+                    self._annotationsMap.pop(annotation.assertionProperty, None)
+            if annotation in self.annotations:
+                self.annotations.remove(annotation)
+        else:
+            raise KeyError('Cannot find the annotation')

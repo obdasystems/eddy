@@ -151,6 +151,7 @@ from eddy.core.functions.path import (
 )
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.common import AbstractItem
+from eddy.core.items.edges.common.base import AxiomEdge
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
@@ -175,7 +176,7 @@ from eddy.core.project import (
     K_TRANSITIVE,
     Project)
 from eddy.core.regex import RE_CAMEL_SPACE
-from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
+from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog, AnnotationBuilderDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
@@ -183,7 +184,8 @@ from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.dl import DLSyntaxValidationDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.import_ontology import ImportOntologyDialog
-from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog
+from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog, \
+    EdgeAxiomDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
     NewDiagramForm,
@@ -1002,6 +1004,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             'Annotations',
             self, objectName='iri_annotations_refactor',
             triggered=self.doOpenIRIPropsAnnotationBuilder))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_create_black'),
+            'Annotations',
+            self, objectName='edge_annotations_refactor',
+            triggered=self.doOpenEdgePropsAnnotationBuilder))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'),
@@ -2628,6 +2636,48 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.show()
                 builder.raise_()
                 builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenEdgePropsAnnotationBuilder(self):
+        """
+        Executed when annotation builder needs to be displayed.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            edge = first(diagram.selectedEdges(lambda x: isinstance(x, AxiomEdge)))
+            if edge:
+                builder = EdgeAxiomDialog(edge, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot(AxiomEdge)
+    def doOpenAnnotationBuilder(self, edge, annotation=None):
+        """
+        Executed when annotation builder needs to be displayed.
+        :type node: IRI
+        """
+        # TODO
+        if edge:
+            builder = AnnotationBuilderDialog(edge, self, annotation)
+            builder.setWindowModality(QtCore.Qt.ApplicationModal)
+            builder.show()
+            builder.raise_()
+            builder.activateWindow()
+            return builder
+        else:
+            diagram = self.mdi.activeDiagram()
+            if diagram:
+                diagram.setMode(DiagramMode.Idle)
+                edge = first(diagram.selectedEdges(lambda x: isinstance(x,AxiomEdge)))
+                if edge:
+                    builder = AnnotationBuilderDialog(edge, self, annotation)
+                    builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                    builder.show()
+                    builder.raise_()
+                    builder.activateWindow()
 
     @QtCore.pyqtSlot(ImportedOntology)
     def doOpenImportOntologyWizard(self,importedOntology=None):

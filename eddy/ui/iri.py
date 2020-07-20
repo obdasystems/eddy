@@ -1,8 +1,9 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode, CommandChangeFacetOfNode, \
-    CommandChangeLiteralOfNode, CommandIRIRefactor, CommandChangeIRIIdentifier
+from eddy.core.commands.iri import CommandIRIRemoveAnnotationAssertion, CommandChangeIRIOfNode, \
+    CommandChangeFacetOfNode, \
+    CommandChangeLiteralOfNode, CommandIRIRefactor, CommandChangeIRIIdentifier, CommandEdgeRemoveAnnotation
 from eddy.core.commands.nodes import CommandNodeSetFont
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode
@@ -15,7 +16,7 @@ from eddy.ui.notification import Notification
 from eddy.core.common import HasWidgetSystem
 
 from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal, IllegalLiteralError, \
-    OWL2Datatype
+    OWL2Datatype, Annotation
 
 from eddy.core.functions.signals import connect
 from eddy.ui.fields import ComboBox, StringField, CheckBox, SpinBox
@@ -130,6 +131,20 @@ class IRIDialogsWidgetFactory(QObject):
 
     @staticmethod
     def getAnnotationAssertionsTable(parent):
+        table = QtWidgets.QTableWidget(0, 2, parent, objectName='annotation_assertions_table_widget')
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.horizontalHeader().setMinimumSectionSize(170)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.verticalHeader().setVisible(False)
+        table.verticalHeader().setSectionsClickable(False)
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        table.setFont(Font('Roboto', 13))
+        return table
+
+    @staticmethod
+    def getAnnotationsTable(parent):
         table = QtWidgets.QTableWidget(0, 2, parent, objectName='annotations_table_widget')
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
         table.horizontalHeader().setStretchLastSection(True)
@@ -589,7 +604,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         boxlayout.addWidget(self.widget('annotations_edit_button'))
 
         formlayout = QtWidgets.QFormLayout()
-        formlayout.addRow(self.widget('annotations_table_widget'))
+        formlayout.addRow(self.widget('annotation_assertions_table_widget'))
         formlayout.addRow(boxlayout)
         widget = QtWidgets.QWidget()
         widget.setLayout(formlayout)
@@ -678,7 +693,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # ANNOTATIONS TAB
         #################################
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         annAss = self.iri.annotationAssertions
         table.clear()
         table.setRowCount(len(annAss))
@@ -714,7 +729,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
         :type assertion:AnnotationAssertion
         '''
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         rowcount = table.rowCount()
         table.setRowCount(rowcount + 1)
         propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
@@ -734,7 +749,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         Removes an annotation from the current IRI.
         :type _: bool
         """
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
         commands = []
@@ -742,7 +757,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
                 assertion = removedItem.data(Qt.UserRole)
-                command = CommandIRIRemoveAnnotation(self.project, self.iri, assertion)
+                command = CommandIRIRemoveAnnotationAssertion(self.project, self.iri, assertion)
                 commands.append(command)
                 #self.iri.removeAnnotationAssertion(assertion)
 
@@ -759,7 +774,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(bool)
     def editAnnotation(self, _):
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
@@ -774,7 +789,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
         :type assertion:AnnotationAssertion
         '''
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         rowcount = table.rowCount()
         for row in range(0,rowcount):
             propItem = table.item(row, 0)
@@ -1356,6 +1371,240 @@ class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         super().accept()
 
+class EdgeAxiomDialog(QtWidgets.QDialog, HasWidgetSystem):
+
+    noPrefixString = ''
+    emptyString = ''
+
+    def __init__(self,edge,session):
+        """
+        Initialize the edge axiom properties dialog.
+        :type edge: AxiomEdge
+        :type session: Session
+        """
+        super().__init__(session)
+        self.session = session
+        self.project = session.project
+        self.edge = edge
 
 
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+        table = IRIDialogsWidgetFactory.getAnnotationsTable(self)
+        table.clear()
+        self.addWidget(table)
+
+        addBtn = QtWidgets.QPushButton('Add', objectName='annotations_add_button')
+        delBtn = QtWidgets.QPushButton('Remove', objectName='annotations_delete_button')
+        editBtn = QtWidgets.QPushButton('Edit', objectName='annotations_edit_button')
+        connect(addBtn.clicked, self.addAnnotation)
+        connect(delBtn.clicked, self.removeAnnotation)
+        connect(editBtn.clicked, self.editAnnotation)
+        self.addWidget(addBtn)
+        self.addWidget(delBtn)
+        self.addWidget(editBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('annotations_add_button'))
+        boxlayout.addWidget(self.widget('annotations_delete_button'))
+        boxlayout.addWidget(self.widget('annotations_edit_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('annotations_table_widget'))
+        formlayout.addRow(boxlayout)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('annotation_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
+        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        confirmation.setFont(Font('Roboto', 12))
+        self.addWidget(confirmation)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        widget.addTab(self.widget('annotation_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
+                      'Annotations')
+
+        self.addWidget(widget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(740, 420)
+        self.setWindowTitle('Axiom annotation {}'.format(str(self.edge)))
+
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+        self.redraw()
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+        table = self.widget('annotations_table_widget')
+        annAss = self.edge.annotations
+        table.clear()
+        table.setRowCount(len(annAss))
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+        rowcount = 0
+        for assertion in annAss:
+            propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            propertyItem.setData(QtCore.Qt.UserRole, assertion)
+            table.setItem(rowcount, 0, propertyItem)
+            valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
+            valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
+            rowcount += 1
+        table.resizeColumnToContents(0)
+
+
+    @QtCore.pyqtSlot(bool)
+    def addAnnotation(self, _):
+        """
+        Adds an annotation to the current edge.
+        :type _: bool
+        """
+        annotationBuilder = self.session.doOpenAnnotationBuilder(self.edge)
+        connect(annotationBuilder.sgnAnnotationAccepted, self.onAnnotationAccepted)
+        annotationBuilder.exec_()
+
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onAnnotationAccepted(self, annotation):
+        '''
+        :type annotation:Annotation
+        '''
+        table = self.widget('annotations_table_widget')
+        rowcount = table.rowCount()
+        table.setRowCount(rowcount + 1)
+        propertyItem = QtWidgets.QTableWidgetItem(str(annotation.assertionProperty))
+        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        propertyItem.setData(Qt.UserRole, annotation)
+        table.setItem(rowcount, 0, propertyItem)
+        valueItem = QtWidgets.QTableWidgetItem(str(annotation.getObjectResourceString(True)))
+        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
+        table.scrollToItem(table.item(rowcount, 0))
+        table.resizeColumnToContents(0)
+
+
+    @QtCore.pyqtSlot(bool)
+    def removeAnnotation(self, _):
+        """
+        Removes an annotation from the current edge(axiom).
+        :type _: bool
+        """
+        table = self.widget('annotations_table_widget')
+        rowcount = table.rowCount()
+        selectedRanges = table.selectedRanges()
+        commands = []
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                removedItem = table.item(row, 0)
+                assertion = removedItem.data(Qt.UserRole)
+                command = CommandEdgeRemoveAnnotation(self.project, self.edge, assertion)
+                commands.append(command)
+                #self.iri.removeAnnotationAssertion(assertion)
+
+        self.session.undostack.beginMacro('Remove annotations >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                table.removeRow(row)
+        table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
+
+    @QtCore.pyqtSlot(bool)
+    def editAnnotation(self, _):
+        table = self.widget('annotations_table_widget')
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                editItem = table.item(row, 0)
+                annotation = editItem.data(Qt.UserRole)
+                annotationBuilder = self.session.doOpenAnnotationBuilder(self.edge,annotation)
+                connect(annotationBuilder.sgnAnnotationCorrectlyModified,self.onAnnotationModified)
+                annotationBuilder.exec_()
+
+    @QtCore.pyqtSlot(Annotation)
+    def onAnnotationModified(self,assertion):
+        '''
+        :type assertion:Annotation
+        '''
+        table = self.widget('annotations_table_widget')
+        rowcount = table.rowCount()
+        for row in range(0,rowcount):
+            propItem = table.item(row, 0)
+            itemAssertion = propItem.data(Qt.UserRole)
+            if itemAssertion is assertion:
+                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                newPropertyItem.setData(Qt.UserRole, assertion)
+                table.setItem(row, 0, newPropertyItem)
+                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
+                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
+                break
+
+    @QtCore.pyqtSlot(int)
+    def onPrefixChanged(self, val):
+        self.onInputChanged('')
+
+    @QtCore.pyqtSlot('QString')
+    def onInputChanged(self, val):
+        prefix = self.widget('iri_prefix_switch').currentText()
+        input = self.widget('iri_input_field').value()
+        resolvedPrefix = self.resolvePrefix(prefix)
+        fullIri = '{}{}'.format(resolvedPrefix,input)
+        self.widget('full_iri_field').setValue(fullIri)
+        if not fullIri==str(self.iri):
+            self.widget('save_iri_button').setEnabled(True)
+        else:
+            self.widget('save_iri_button').setEnabled(False)
+
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        super().accept()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        super().reject()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def resolvePrefix(self, prefixStr):
+        prefixLimit = prefixStr.find(':')
+        if prefixLimit<0:
+            return ''
+        else:
+            prefixStr = prefixStr[0:prefixLimit]
+            return self.project.getPrefixResolution(prefixStr)
+            # return self.project.getPrefixResolution(prefixStr[:-1])
 

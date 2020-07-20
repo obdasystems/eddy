@@ -40,7 +40,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QStyledItemDelegate
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandCommmonSubstringIRIsRefactor
+from eddy.core.commands.iri import CommandIRIRemoveAnnotationAssertion, CommandCommmonSubstringIRIsRefactor
 from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
     CommandProjectModifyPrefixResolution, CommandProjectModifyNamespacePrefix, CommandProjectAddAnnotationProperty, \
     CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion, \
@@ -987,7 +987,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
                 assertion = removedItem.data(Qt.UserRole)
-                command = CommandIRIRemoveAnnotation(self.project, self.project.ontologyIRI, assertion)
+                command = CommandIRIRemoveAnnotationAssertion(self.project, self.project.ontologyIRI, assertion)
                 commands.append(command)
         self.session.undostack.beginMacro('Remove annotations >>')
         for command in commands:

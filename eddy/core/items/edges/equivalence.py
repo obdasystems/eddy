@@ -41,10 +41,10 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import createArea
 from eddy.core.items.common import Polygon
-from eddy.core.items.edges.common.base import AbstractEdge
+from eddy.core.items.edges.common.base import AbstractEdge, AxiomEdge
 
 
-class EquivalenceEdge(AbstractEdge):
+class EquivalenceEdge(AxiomEdge):
     """
     This class implements the 'Equivalence' edge.
     """
