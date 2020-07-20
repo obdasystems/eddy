@@ -258,17 +258,46 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
             annotationsEl = self.getDomElement('annotations')
             iriEl.appendChild(annotationsEl)
             for annotation in iri.annotationAssertions:
-                annotationEl = self.getAnnotationDomElement(annotation)
+                annotationEl = self.getAnnotationAssertionDomElement(annotation)
                 annotationsEl.appendChild(annotationEl)
 
         return iriEl
 
-    def getAnnotationDomElement(self, annotation):
+    def getAnnotationAssertionDomElement(self, annotation):
         annotationEl = self.getDomElement('annotation')
 
         subjectEl = self.getDomElement('subject')
         subjectEl.appendChild(self.getDomTextNode(str(annotation.subject)))
         annotationEl.appendChild(subjectEl)
+
+        propertyEl = self.getDomElement('property')
+        propertyEl.appendChild(self.getDomTextNode(str(annotation.assertionProperty)))
+        annotationEl.appendChild(propertyEl)
+
+        objectEl = self.getDomElement('object')
+        if annotation.isIRIValued():
+            objecIriEl = self.getDomElement('iri')
+            objecIriEl.appendChild(self.getDomTextNode(str(annotation.value)))
+        else:
+            lexicalFormEl = self.getDomElement('lexicalForm')
+            lexicalFormEl.appendChild(self.getDomTextNode(str(annotation.value)))
+            objectEl.appendChild(lexicalFormEl)
+
+            datatypeEl = self.getDomElement('datatype')
+            if annotation.datatype:
+                datatypeEl.appendChild(self.getDomTextNode(str(annotation.datatype)))
+            objectEl.appendChild(datatypeEl)
+
+            languageEl = self.getDomElement('language')
+            if annotation.language:
+                languageEl.appendChild(self.getDomTextNode(str(annotation.language)))
+            objectEl.appendChild(languageEl)
+        annotationEl.appendChild(objectEl)
+
+        return annotationEl
+
+    def getAnnotationDomElement(self, annotation):
+        annotationEl = self.getDomElement('annotation')
 
         propertyEl = self.getDomElement('property')
         propertyEl.appendChild(self.getDomTextNode(str(annotation.assertionProperty)))
@@ -597,7 +626,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: InclusionEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportEquivalenceEdge(self, edge):
         """
@@ -605,7 +634,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: EquivalenceEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportInputEdge(self, edge):
         """
@@ -621,7 +650,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: MembershipEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportSameEdge(self, edge):
         """
@@ -629,7 +658,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: SameEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportDifferentEdge(self, edge):
         """
@@ -637,7 +666,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: DifferentEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     #############################################
     #   ONTOLOGY DIAGRAMS EXPORT : GENERICS
@@ -685,7 +714,21 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
             point.setAttribute('x', p.x())
             point.setAttribute('y', p.y())
             element.appendChild(point)
+        return element
 
+    def exportAxiomEdge(self, edge):
+        """
+        Export the given node into a QDomElement.
+        :type edge: AxiomEdge
+        :rtype: QDomElement
+        """
+        element = self.exportGenericEdge(edge)
+        if edge.annotations:
+            annSetEl = self.document.createElement('annotations')
+            element.appendChild(annSetEl)
+            for annotation in edge.annotations:
+                annotationEl = self.getAnnotationDomElement(annotation)
+                annSetEl.appendChild(annotationEl)
         return element
 
     def getNodeDomElement(self, node):
