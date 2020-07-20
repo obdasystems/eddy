@@ -1696,7 +1696,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 for operand in edge.source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                     conversionA = self._converted[operand.diagram.name][operand.id]
                     conversionB = self._converted[edge.target.diagram.name][edge.target.id]
-                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                    if edge.annotations:
+                        owlAnns = self.getAxiomAnnotationSet(edge)
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
+                                                                                  self.vm.cast(self.Set, owlAnns)))
+                    else:
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             elif edge.target.type() is Item.IntersectionNode and self.normalize:
                 # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
                 f1 = lambda x: x.type() is Item.InputEdge
@@ -1704,11 +1709,21 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 for operand in edge.target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                     conversionA = self._converted[edge.source.diagram.name][edge.source.id]
                     conversionB = self._converted[operand.diagram.name][operand.id]
-                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                    if edge.annotations:
+                        owlAnns = self.getAxiomAnnotationSet(edge)
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
+                                                                                  self.vm.cast(self.Set, owlAnns)))
+                    else:
+                        self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             else:
                 conversionA = self._converted[edge.source.diagram.name][edge.source.id]
                 conversionB = self._converted[edge.target.diagram.name][edge.target.id]
-                self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                if edge.annotations:
+                    owlAnns = self.getAxiomAnnotationSet(edge)
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
+                                                                    self.vm.cast(self.Set, owlAnns)))
+                else:
+                    self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
 
     def createSubDataPropertyOfAxiom(self, edge):
         """
@@ -1718,7 +1733,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if OWLAxiom.SubDataPropertyOf in self.axiomsList:
             conversionA = self._converted[edge.source.diagram.name][edge.source.id]
             conversionB = self._converted[edge.target.diagram.name][edge.target.id]
-            self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB,
+                                                                          self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
 
     def createDisjointDataPropertiesAxiom(self, edge):
         """
@@ -1731,7 +1751,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection),
+                                                                          self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createSubObjectPropertyOfAxiom(self, edge):
         """
@@ -1741,7 +1766,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
             conversionA = self._converted[edge.source.diagram.name][edge.source.id]
             conversionB = self._converted[edge.target.diagram.name][edge.target.id]
-            self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB,
+                                                                          self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
 
     def createDisjointObjectPropertiesAxiom(self, edge):
         """
@@ -1754,7 +1784,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             collection = self.HashSet()
             collection.add(conversionA)
             collection.add(conversionB)
-            self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection),
+                                                                          self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createSubPropertyChainOfAxiom(self, edge):
         """
@@ -1764,7 +1799,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if OWLAxiom.SubObjectPropertyOf in self.axiomsList:
             conversionA = self._converted[edge.source.diagram.name][edge.source.id]
             conversionB = self._converted[edge.target.diagram.name][edge.target.id]
-            self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB,
+                                                                          self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB))
 
     def createEquivalentClassesAxiom(self, edge):
         """
@@ -1789,7 +1829,13 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         for operand in source.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                             conversionA = self._converted[operand.diagram.name][operand.id]
                             conversionB = self._converted[target.diagram.name][target.id]
-                            self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                            if edge.annotations:
+                                owlAnns = self.getAxiomAnnotationSet(edge)
+                                self.addAxiom(
+                                    self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
+                                                                                self.vm.cast(self.Set, owlAnns)))
+                            else:
+                                self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     elif edge.target.type() is Item.IntersectionNode:
                         # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
                         f1 = lambda x: x.type() is Item.InputEdge
@@ -1797,18 +1843,35 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         for operand in target.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2):
                             conversionA = self._converted[source.diagram.name][source.id]
                             conversionB = self._converted[operand.diagram.name][operand.id]
-                            self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                            if edge.annotations:
+                                owlAnns = self.getAxiomAnnotationSet(edge)
+                                self.addAxiom(
+                                    self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
+                                                                                self.vm.cast(self.Set, owlAnns)))
+                            else:
+                                self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     else:
                         conversionA = self._converted[source.diagram.name][source.id]
                         conversionB = self._converted[target.diagram.name][target.id]
-                        self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                        if edge.annotations:
+                            owlAnns = self.getAxiomAnnotationSet(edge)
+                            self.addAxiom(
+                                self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
+                                                                            self.vm.cast(self.Set, owlAnns)))
+                        else:
+                            self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             else:
                 conversionA = self._converted[edge.source.diagram.name][edge.source.id]
                 conversionB = self._converted[edge.target.diagram.name][edge.target.id]
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                self.addAxiom(self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection)))
+                if edge.annotations:
+                    owlAnns = self.getAxiomAnnotationSet(edge)
+                    self.addAxiom(self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection),
+                                                                    self.vm.cast(self.Set, owlAnns)))
+                else:
+                    self.addAxiom(self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
         """
@@ -1820,14 +1883,24 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
                     conversionA = self._converted[source.diagram.name][source.id]
                     conversionB = self._converted[target.diagram.name][target.id]
-                    self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
+                    if edge.annotations:
+                        owlAnns = self.getAxiomAnnotationSet(edge)
+                        self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB,
+                                                                        self.vm.cast(self.Set, owlAnns)))
+                    else:
+                        self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
             else:
                 conversionA = self._converted[edge.source.diagram.name][edge.source.id]
                 conversionB = self._converted[edge.target.diagram.name][edge.target.id]
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
+                if edge.annotations:
+                    owlAnns = self.getAxiomAnnotationSet(edge)
+                    self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection),
+                                                                    self.vm.cast(self.Set, owlAnns)))
+                else:
+                    self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
         """
@@ -1839,14 +1912,24 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 for source, target in ((edge.source, edge.target), (edge.target, edge.source)):
                     conversionA = self._converted[source.diagram.name][source.id]
                     conversionB = self._converted[target.diagram.name][target.id]
-                    self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
+                    if edge.annotations:
+                        owlAnns = self.getAxiomAnnotationSet(edge)
+                        self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB,
+                                                                        self.vm.cast(self.Set, owlAnns)))
+                    else:
+                        self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
             else:
                 conversionA = self._converted[edge.source.diagram.name][edge.source.id]
                 conversionB = self._converted[edge.target.diagram.name][edge.target.id]
                 collection = self.HashSet()
                 collection.add(conversionA)
                 collection.add(conversionB)
-                self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
+                if edge.annotations:
+                    owlAnns = self.getAxiomAnnotationSet(edge)
+                    self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection),
+                                                                    self.vm.cast(self.Set, owlAnns)))
+                else:
+                    self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createClassAssertionAxiom(self, edge):
         """
@@ -1860,7 +1943,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             else:
                 ind = self._converted[edge.source.diagram.name][edge.source.id]
             cl = self._converted[edge.target.diagram.name][edge.target.id]
-            self.addAxiom(self.df.getOWLClassAssertionAxiom(cl, ind))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLClassAssertionAxiom(cl, ind, self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLClassAssertionAxiom(cl, ind))
 
     def createDataPropertyAssertionAxiom(self, edge):
         """
@@ -1871,7 +1958,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             dpe = self._converted[edge.target.diagram.name][edge.target.id]
             conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
             conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
-            self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
 
     def createNegativeDataPropertyAssertionAxiom(self, edge):
         """
@@ -1885,7 +1976,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             dpe = self._converted[dpeNode.diagram.name][dpeNode.id]
             conversionB = self.convert(edge.source)[0]
             conversionC = self.convert(edge.source)[1]
-            self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
 
     def createObjectPropertyAssertionAxiom(self, edge):
         """
@@ -1896,7 +1991,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             ope = self._converted[edge.target.diagram.name][edge.target.id]
             conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
             conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
-            self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
 
     def createNegativeObjectPropertyAssertionAxiom(self, edge):
         """
@@ -1910,7 +2009,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             ope = self._converted[opeNode.diagram.name][opeNode.id]
             conversionB = self._converted[edge.source.diagram.name][edge.source.id][0]
             conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
-            self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
 
     def createSameIndividualAxiom(self, edge):
         """
@@ -1924,7 +2027,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
                 else:
                     collection.add(self._converted[node.diagram.name][node.id])
-            self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection)))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection), self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection)))
 
     def createDifferentIndividualsAxiom(self, edge):
         """
@@ -1938,7 +2045,35 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
                 else:
                     collection.add(self._converted[node.diagram.name][node.id])
-            self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
+            if edge.annotations:
+                owlAnns = self.getAxiomAnnotationSet(edge)
+                self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection), self.vm.cast(self.Set, owlAnns)))
+            else:
+                self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
+
+    def getAxiomAnnotationSet(self,edge):
+        collection = self.HashSet()
+        for annotation in edge.annotations:
+            annProp = annotation.assertionProperty
+            owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp)))
+            owlApiObj = None
+            if annotation.isIRIValued():
+                obj = annotation.value
+                owlApiObj = self.IRI.create(str(obj))
+            else:
+                obj = annotation.value.replace('\n', ' ')
+                datatype = annotation.datatype
+                lang = annotation.language
+                if lang:
+                    owlApiObj = self.df.getOWLLiteral(obj, lang)
+                else:
+                    if datatype:
+                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
+                    else:
+                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
+                    owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
+            collection.add(self.df.getOWLAnnotation(owlApiProp, owlApiObj))
+        return collection
 
     def addAnnotationAssertions(self):
         annList = [x for iri in self.project.iris for x in iri.annotationAssertions]
