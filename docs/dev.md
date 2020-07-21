@@ -188,15 +188,15 @@ You will need to install `gcc`, `git` and a few compile dependencies:
 
 ###### On Debian, Ubuntu, and derivatives
 
-    $ sudo apt-get install build-essential libsqlite3-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev git
+    $ sudo apt-get install build-essential libsqlite3-dev libssl-dev zlib1g-dev libbz2-dev libreadline-dev libffi-dev git
 
 ###### On Fedora / CentOS 8 / RHEL 8
 
-    $ sudo dnf install gcc sqlite-devel openssl-devel zlib-devel bzip2-devel readline-devel git
+    $ sudo dnf install gcc sqlite-devel openssl-devel zlib-devel bzip2-devel readline-devel libffi-devel git
 
 ###### On ArchLinux / Manjaro
 
-    $ sudo pacman -Sy gcc git openssl zlib bzip2 readline
+    $ sudo pacman -Sy gcc git openssl zlib bzip2 readline libffi
 
 Clone [pyenv](https://github.com/pyenv/pyenv) repository:
 
