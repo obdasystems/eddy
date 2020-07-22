@@ -60,7 +60,11 @@ from eddy import (
 from eddy.core.commandline import CommandLineParser
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
-from eddy.core.datatypes.system import File
+from eddy.core.datatypes.system import (
+    File,
+    IS_WIN,
+    IS_FROZEN,
+)
 from eddy.core.functions.fsystem import (
     fexists,
     isdir,
@@ -82,20 +86,16 @@ from eddy.core.project import (
     ProjectVersionError,
 )
 from eddy.core.qt import sip
+# noinspection PyUnresolvedReferences
+from eddy.ui import fonts_rc
+# noinspection PyUnresolvedReferences
+from eddy.ui import images_rc
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
 from eddy.ui.welcome import Welcome
 from eddy.ui.workspace import WorkspaceDialog
-# noinspection PyUnresolvedReferences
-from eddy.ui import fonts_rc
-# noinspection PyUnresolvedReferences
-from eddy.ui import images_rc
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger()
 app = None
@@ -442,16 +442,16 @@ class Eddy(QtWidgets.QApplication):
         """
         Quit Eddy.
         """
-        ## SAVE SESSION STATE
+        # SAVE SESSION STATE
         session = self.sender()
         if session:
             # noinspection PyUnresolvedReferences
             session.save()
             self.sessions.remove(session)
             self.sgnSessionClosed.emit(session)
-        ## CLEANUP POSSIBLE LEFTOVERS
+        # CLEANUP POSSIBLE LEFTOVERS
         self.sessions = DistinctList(filter(None, self.sessions))
-        ## SWITCH TO AN ACTIVE WINDOW OR WELCOME PANEL
+        # SWITCH TO AN ACTIVE WINDOW OR WELCOME PANEL
         if self.sessions:
             session = self.sessions[-1]
             session.show()
@@ -570,7 +570,7 @@ def main():
     os.environ['JAVA_HOME'] = JAVA_HOME or ''
 
     # ADD THE DIRECTORY CONTAINING JVM.DLL TO THE PATH VARIABLE ON WINDOWS
-    if _WIN32:
+    if IS_WIN:
         path = os.getenv('PATH', '')
         path = path.split(os.pathsep)
         path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin'))
@@ -581,7 +581,7 @@ def main():
         os.environ['PATH'] = os.pathsep.join(path)
 
     # SET CLASSPATH AND OPTIONS
-    if hasattr(sys, 'frozen'):
+    if IS_FROZEN:
         resources = expandPath('@resources/lib/')
         if isdir(resources):
             for name in os.listdir(resources):
@@ -618,7 +618,7 @@ def main():
         if os.path.basename(sys.argv[0]) == 'eddy':
             # LAUNCHED VIA LAUNCHER SCRIPT
             nargs.append(sys.argv[0])
-        elif hasattr(sys, 'frozen'):
+        elif IS_FROZEN:
             # LAUNCHED FROM DISTRIBUTION EXECUTABLE
             nargs.append(sys.executable)
         else:

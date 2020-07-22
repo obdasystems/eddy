@@ -35,24 +35,23 @@
 """This module is a thin wrapper around JNI libraries and is intended to abstract the API related to the JVM support"""
 
 import os
-import sys
-
 from abc import ABCMeta
 from enum import unique
 
 from eddy.core.datatypes.common import Enum_
+from eddy.core.datatypes.system import (
+    IS_FROZEN,
+    IS_WIN,
+)
 from eddy.core.functions.path import expandPath
 from eddy.core.output import getLogger
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
 
 _jvmLibraries = []
 _jvmClasspath = []
 _jvmOptions = []
 
 LOGGER = getLogger()
+
 
 @unique
 class JniLib(Enum_):
@@ -176,7 +175,7 @@ def findJavaHome():
             # the path backwards and checking for the existence
             # of the `java` executable.
             dirname, filename = os.path.split(jni_lib)
-            java_exe = os.path.join('bin', 'java' if not _WIN32 else 'java.exe')
+            java_exe = os.path.join('bin', 'java' if not IS_WIN else 'java.exe')
             while dirname != os.path.dirname(dirname):
                 parent, subdir = os.path.split(dirname)
                 if os.path.isfile(os.path.join(dirname, java_exe)):
@@ -342,7 +341,7 @@ try:
     # noinspection PyUnresolvedReferences
     import jnius_config
 
-    if hasattr(sys, 'frozen'):
+    if IS_FROZEN:
         def get_classpath():
             """
             Retrieves the classpath the JVM will use.
@@ -562,7 +561,7 @@ try:
             if self.initialized:
                 return
             try:
-                sep = ';' if _WIN32 else ':'
+                sep = ';' if IS_WIN else ':'
                 classpath = sep.join([p for p in self.classpath])
                 jpype.startJVM(jpype.getDefaultJVMPath(),
                                '-Djava.class.path={0}'.format(classpath),

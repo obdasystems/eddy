@@ -35,11 +35,14 @@
 
 import os
 import pkgutil
-import sys
 
 from PyQt5 import QtWidgets
 
-from eddy.core.functions.fsystem import isdir, fread
+from eddy.core.datatypes.system import IS_FROZEN
+from eddy.core.functions.fsystem import (
+    isdir,
+    fread,
+)
 from eddy.core.functions.path import expandPath
 
 
@@ -81,7 +84,7 @@ class EddyProxyStyle(QtWidgets.QProxyStyle):
         :rtype: str
         """
         if not self._stylesheet:
-            if hasattr(sys, 'frozen'):
+            if IS_FROZEN:
                 resources = expandPath('@resources/styles/')
                 if isdir(resources):
                     self._stylesheet = fread(os.path.join(resources, 'default.qss'))

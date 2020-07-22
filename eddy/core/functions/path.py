@@ -37,13 +37,14 @@ import errno
 import os
 import sys
 
+from eddy.core.datatypes.system import (
+    IS_FROZEN,
+    IS_LINUX,
+    IS_MACOS,
+    IS_WIN,
+)
 
-__LINUX = sys.platform.startswith('linux')
-__MACOS = sys.platform.startswith('darwin')
-__WIN32 = sys.platform.startswith('win32')
-
-
-if hasattr(sys, 'frozen'):
+if IS_FROZEN:
     __MODULE_PATH = os.path.normpath(os.path.expanduser(os.path.dirname(sys.executable)))
     __ROOT_PATH = __MODULE_PATH
 else:
@@ -54,7 +55,6 @@ else:
 __EXAMPLES_PATH = os.path.join(__ROOT_PATH, 'examples')
 __HOME_PATH = os.path.normpath(os.path.expanduser('~/.eddy'))
 __PLUGINS_PATH = os.path.join(__MODULE_PATH, 'plugins')
-__REASONERS_PATH = os.path.join(__MODULE_PATH, 'reasoners')
 __RESOURCES_PATH = os.path.join(__ROOT_PATH, 'resources')
 __SUPPORT_PATH = os.path.join(__ROOT_PATH, 'support')
 __TESTS_PATH = os.path.join(__ROOT_PATH, 'tests')
@@ -91,7 +91,6 @@ def expandPath(path):
         - @resources => Eddy's resources directory
         - @examples => Eddy's examples directory
         - @plugins => Eddy's plugins directory
-        - @reasoners => Eddy's reasoners directory
         - @support => Eddy's support directory
         - @tests => Eddy's tests directory
         - ~ => will be expanded to the user home directory ($HOME)
@@ -111,8 +110,6 @@ def expandPath(path):
         path = os.path.join(__EXAMPLES_PATH, path[10:])
     elif path.startswith('@plugins/') or path.startswith('@plugins\\'):
         path = os.path.join(__PLUGINS_PATH, path[9:])
-    elif path.startswith('@reasoners/') or path.startswith('@reasoners\\'):
-        path = os.path.join(__REASONERS_PATH, path[11:])
     elif path.startswith('@support/') or path.startswith('@support\\'):
         path = os.path.join(__SUPPORT_PATH, path[9:])
     elif path.startswith('@tests/') or path.startswith('@tests\\'):
@@ -132,7 +129,7 @@ def isPathValid(path):
         path = expandPath(path)
         path = os.path.splitdrive(path)[1]
         root = os.path.sep
-        if __WIN32:
+        if IS_WIN:
             root = os.environ.get('HOMEDRIVE', 'C:')
         root = '{0}{1}'.format(root.rstrip(os.path.sep), os.path.sep)
         assert os.path.isdir(root)
@@ -168,11 +165,11 @@ def openPath(path):
     """
     path = expandPath(path)
     if os.path.isfile(path) or os.path.isdir(path):
-        if __WIN32:
+        if IS_WIN:
             os.startfile(path)
-        elif __MACOS:
+        elif IS_MACOS:
             os.system('open "{0}"'.format(path))
-        elif __LINUX:
+        elif IS_LINUX:
             os.system('xdg-open "{0}"'.format(path))
 
 

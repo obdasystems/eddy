@@ -39,7 +39,6 @@ import keyword
 import os
 import re
 import sys
-
 from abc import ABCMeta
 from configparser import (
     ConfigParser,
@@ -59,7 +58,10 @@ from eddy.core.common import (
     HasShortcutSystem,
     HasWidgetSystem,
 )
-from eddy.core.datatypes.system import File
+from eddy.core.datatypes.system import (
+    File,
+    IS_FROZEN,
+)
 from eddy.core.functions.fsystem import (
     fcopy,
     fexists,
@@ -433,7 +435,7 @@ class PluginManager(QtCore.QObject):
         :rtype: tuple
         """
         try:
-            if not hasattr(sys, 'frozen'):
+            if not IS_FROZEN:
                 # We attempt to load pkg_resources only if the application is not frozen,
                 # since no its not supported by most of the freezing tools
                 from pkg_resources import resource_exists, resource_string
@@ -565,7 +567,7 @@ class PluginManager(QtCore.QObject):
                     file_or_directory_path = os.path.join(base, file_or_directory)
                     info.append(cls.import_plugin_from_path(file_or_directory_path))
         # SCAN THEN GIVEN ENTRY POINTS
-        if not hasattr(sys, 'frozen'):
+        if not IS_FROZEN:
             from pkg_resources import iter_entry_points
             entry_point_name = kwargs.get('entry_point', None)
             if entry_point_name:
