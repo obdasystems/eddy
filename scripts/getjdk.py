@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ##########################################################################
@@ -38,11 +39,15 @@
 import argparse
 import json
 import logging
+import os
 import platform
+import shutil
 import sys
 import urllib.request
+import tarfile
+import zipfile
 
-API_ENDPOINT = 'https://api.adoptopenjdk.net/v2'
+API_ENDPOINT = 'https://api.adoptopenjdk.net/v3'
 ARCH = platform.machine()
 IS_64BIT = sys.maxsize > 2**32
 IS_CROSS = False
@@ -50,7 +55,7 @@ IS_FREEBSD = sys.platform.startswith('freebsd')
 IS_LINUX = sys.platform.startswith('linux')
 IS_MACOS = sys.platform.startswith('darwing')
 IS_WIN = sys.platform.startswith('win') or sys.platform.startswith('cygwin')
-USER_AGENT='curl/7.66.0'
+USER_AGENT = 'curl/7.69.1'
 
 LOGGER = logging.getLogger('getjdk')
 LOGGER.setLevel(logging.DEBUG)
@@ -66,17 +71,17 @@ def param_arch(sysarch):
     :rtype: str
     """
     return {
-        'i386': 'x86',
-        'i486': 'x86',
-        'i586': 'x86',
-        'i686': 'x86',
+        'i386': 'x32',
+        'i486': 'x32',
+        'i586': 'x32',
+        'i686': 'x32',
         'amd64': 'x64',
         'x86_64': 'x64',
         'armvhf': 'arm',
         'armv6l': 'arm',
         'armv7l': 'arm',
         'armv8l': 'arm',
-    }.get(sysarch, sysarch)
+    }.get(sysarch.lower(), sysarch.lower())
 
 
 def param_os(osname):
@@ -85,18 +90,32 @@ def param_os(osname):
     :type osname: str
     :rtype: str
     """
-    if osname.startswith('aix'):
+    if osname.lower().startswith('aix'):
         return 'aix'
-    elif osname.startswith('darwin'):
+    elif osname.lower().startswith('darwin'):
         return 'mac'
-    elif osname.startswith('linux'):
+    elif osname.lower().startswith('linux'):
         return 'linux'
-    elif osname.startswith('solaris'):
+    elif osname.lower().startswith('solaris'):
         return 'solaris'
-    elif osname.startswith('win'):
+    elif osname.lower().startswith('win'):
         return 'windows'
     else:
         return osname
+
+
+def progress_callback(transferred, bsize, tsize):
+    """
+    Callback to show download progress for urllib.request.urlretrieve.
+    :param transferred: the number of transferred blocks so far
+    :param bsize:  the block size in bytes
+    :param tsize:  the total file size in bytes
+    """
+    csize = transferred * bsize
+    progress = csize / tsize * 100
+    mbsize = tsize >> 20
+    print('\r{0:.1f}% / 100% ({1:.1f} MB)'.format(progress, mbsize),
+          end='' if progress < 100.0 else '\n')
 
 
 def main(args):
@@ -107,83 +126,135 @@ def main(args):
     # PARSE COMMAND LINE ARGUMENTS
     parser = argparse.ArgumentParser(
         description='Client to interact with api.adoptopenjdk.net.',
-        epilog='example {} TODO')
+        epilog='example:\n'
+               '  {prog} --binary --os linux --arch x64 --feature-version 11 --image-type jdk')
     # MAIN QUERY PARAMETERS
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
+        '--assets', action='store_true',
+        help='List all assets that match the specified parameters.')
+    group.add_argument(
         '--binary', action='store_true',
         help='Download the JDK binary that matches the specified parameters.')
+    #group.add_argument(
+    #    '--info', action='store_true',
+    #    help='Query info about available JDKs matching the specified parameters.')
     group.add_argument(
-        '--info', action='store_true',
-        help='Query info about available JDKs matching the specified parameters.')
-    group.add_argument(
-        '--assets', action='store_true',
-        help='Query for latest assets that match the specified parameters.')
+        '--latest', action='store_true',
+        help='Query for latest asset that matches the specified parameters.')
     # QUERY PARAMETERS
-    parser.add_argument('--arch', help='Query for the specified cpu architecture.')
-    parser.add_argument('--heap-size', help='Heap size.')
-    parser.add_argument('--impl', help='JVM implementation (e.g. hotspot).')
-    parser.add_argument('--jdkver', required=True, help='The JDK version to query for (e.g. openjdk11)')
-    parser.add_argument('--type', choices=('jdk', 'jre'), help='Query for binary type (default jdk).')
-    parser.add_argument('--nightly', action='store_true', help='Query for nightly builds instead of releases.')
-    parser.add_argument('--os', help='Query for the specified os (defaults to the current os).')
-    parser.add_argument('--output-file', type=argparse.FileType('w'), help='The file name to use for output.')
-    parser.add_argument('--release', help='Query for the specified release (defaults to latest).')
+    parser.add_argument('--arch', type=str,
+                        default=param_arch(platform.machine()),
+                        help='Query for the specified cpu architecture, '
+                             'defaults to current architecture.')
+    parser.add_argument('--extract-to', type=str,
+                        help='Path where to extract the downloaded asset.')
+    parser.add_argument('--feature-version', required=True, type=int,
+                        help='The JDK feature version to query for.'
+                             'Feature versions are whole numbers (e.g. 8,11,14).')
+    parser.add_argument('--heap-size', type=str, default='normal',
+                        choices=('normal', 'large'),
+                        help='Heap size, defaults to normal.')
+    parser.add_argument('--image-type', type=str, default='jdk', choices=('jdk', 'jre'),
+                        help='Query for image type, defaults to jdk.')
+    parser.add_argument('--jvm-impl', type=str, default='hotspot',
+                        choices=('hotspot', 'openj9'),
+                        help='JVM implementation, defaults to hotspot.')
+    parser.add_argument('--os', type=str, default=param_os(sys.platform),
+                        choices=('linux', 'windows', 'mac', 'solaris', 'aix'),
+                        help='Query for the specified os, defaults to the current os).')
+    parser.add_argument('--output-file', type=argparse.FileType('w'),
+                        help='The file name to save the output to.')
+    parser.add_argument('--release-type', type=str, default='ga', choices=('ga', 'ea'),
+                        help='The type of release. Either a release version, '
+                             'known as General Availability(ga) or an Early Access(ea).'
+                             'Defaults to ga.')
+    parser.add_argument('--vendor', type=str, default='adoptopenjdk',
+                        choices=('adoptopenjdk', 'openjdk'),
+                        help='The JVM vendor, defaults to adoptopenjdk.')
     options = parser.parse_args(args)
 
     # PROCESS REQUEST
-    if options.binary:
-        request_type = 'binary'
-    elif options.assets:
-        request_type = 'latestAssets'
-    elif options.info:
-        request_type = 'info'
-    else:
-        LOGGER.error('Unknown request type')
-        return 2
-
-    # BUILD REQUEST OBJECT
-    url = '{}/{}/{}/{}'.format(
-        API_ENDPOINT,
-        'latestAssets',
-        'releases' if not options.nightly else 'nightly',
-        options.jdkver
-    )
-    params = list(filter(lambda param: param, [
-        'openjdk_impl={}'.format(options.impl) if options.impl else '',
-        'os={}'.format(param_os(options.os)) if options.os else '',
-        'arch={}'.format(param_arch(options.arch)) if options.arch else '',
-        'type={}'.format(options.type) if options.type else '',
-        'release={}'.format(options.release) if options.release else '',
-    ]))
-    if len(params) > 0:
-        url = '{}?{}'.format(url, '&'.join(params))
-    request = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
-
-    # PERFORM REQUEST
     try:
-        LOGGER.info('API request: %s', url)
-        with urllib.request.urlopen(request) as response:
-            data = json.loads(response.read())
-            LOGGER.debug('Response: \n%s', json.dumps(data, indent=2))
-            if options.binary:
-                if len(data) == 0:
-                    LOGGER.error('No binaries for current selection, exiting...')
-                    return 4
-                elif len(data) > 1:
-                    LOGGER.warning('Multiple binaries for current selection, downloading latest...')
-                binary_link = data[0]['binary_link']
-                binary_name = data[0]['binary_name']
-                LOGGER.info('Downloading %s', binary_name)
-                urllib.request.urlretrieve(binary_link, binary_name)
-    except Exception as e:
+        # LIST ASSET(S)
+        if options.assets or options.latest:
+            url = '{api_endpoint}/assets/latest' \
+                  '/{feature_version}/{jvm_impl}' \
+                .format(api_endpoint=API_ENDPOINT,
+                        feature_version=options.feature_version,
+                        jvm_impl=options.jvm_impl)
+            LOGGER.info('API request: %s', url)
+            request = urllib.request.Request(url, headers={'User-Agent': USER_AGENT})
+            with urllib.request.urlopen(request) as response:
+                data = json.loads(response.read())
+                if options.latest:
+                    # APPLY ADDITIONAL FILTERS
+                    data = list(filter(
+                        lambda asset: asset['binary']['os'] == options.os and
+                                      asset['binary']['architecture'] == options.arch and
+                                      asset['binary']['heap_size'] == options.heap_size and
+                                      asset['binary']['image_type'] == options.image_type and
+                                      asset['binary']['jvm_impl'] == options.jvm_impl and
+                                      asset['version']['major'] == options.feature_version,
+                        data))
+                # DUMP ASSET(S)
+                print(json.dumps(data, indent=2))
+        # DOWNLOAD BINARY REQUEST
+        elif options.binary:
+            url = '{api_endpoint}/binary/latest' \
+                  '/{feature_version}/{release_type}' \
+                  '/{os}/{arch}/{image_type}' \
+                  '/{jvm_impl}/{heap_size}/{vendor}?project={project}' \
+                .format(api_endpoint=API_ENDPOINT,
+                        feature_version=options.feature_version,
+                        release_type=options.release_type,
+                        os=options.os,
+                        arch=options.arch,
+                        image_type=options.image_type,
+                        jvm_impl=options.jvm_impl,
+                        heap_size=options.heap_size,
+                        vendor=options.vendor,
+                        project='jdk')
+            LOGGER.info('API request: %s', url)
+            opener = urllib.request.build_opener()
+            opener.addheaders = [('User-Agent', USER_AGENT)]
+            urllib.request.install_opener(opener)
+            path, response = urllib.request.urlretrieve(url, reporthook=progress_callback)
+            # EXTRACT TO DIR IF REQUESTED
+            if options.extract_to:
+                os.makedirs(os.path.normpath(options.extract_to), exist_ok=True)
+                LOGGER.info('Extracting to: %s', options.extract_to)
+                if param_os(options.os) == 'windows':
+                    with zipfile.ZipFile(path, 'r') as archive:
+                        archive.extractall(options.extract_to)
+                else:
+                    with tarfile.open(path, 'r:gz') as archive:
+                        archive.extractall(options.extract_to)
+            # OR MOVE FROM TEMP AS IS
+            else:
+                if options.output_file:
+                    LOGGER.info('Saving to: %s', options.output_file)
+                    shutil.move(path, options.output_file)
+                elif response.get_filename():
+                    LOGGER.info('Saving to: %s', response.get_filename())
+                    shutil.move(path, response.get_filename())
+                else:
+                    LOGGER.warning('Unable to determine output file name, '
+                                   'leaving as: %s', path)
+            urllib.request.urlcleanup()
+        else:
+            LOGGER.error('Unknown request type')
+            return 2
+    except BaseException as e:
         LOGGER.exception('Error during request: %s', e)
-    else:
-        return 1
+
+    return 0
 
 
 if __name__ == '__main__':
     try:
         sys.exit(main(sys.argv[1:]))
     except KeyboardInterrupt:
+        # PERFORM ANY LAST MOMENT CLEANUP
+        urllib.request.urlcleanup()
         sys.exit(1)
