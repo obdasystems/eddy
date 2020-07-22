@@ -60,7 +60,11 @@ from eddy import (
 from eddy.core.commandline import CommandLineParser
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
-from eddy.core.datatypes.system import File, IS_MACOS, IS_WIN, IS_FROZEN
+from eddy.core.datatypes.system import (
+    File,
+    IS_WIN,
+    IS_FROZEN,
+)
 from eddy.core.functions.fsystem import (
     fexists,
     isdir,
@@ -82,20 +86,16 @@ from eddy.core.project import (
     ProjectVersionError,
 )
 from eddy.core.qt import sip
+# noinspection PyUnresolvedReferences
+from eddy.ui import fonts_rc
+# noinspection PyUnresolvedReferences
+from eddy.ui import images_rc
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
 from eddy.ui.welcome import Welcome
 from eddy.ui.workspace import WorkspaceDialog
-# noinspection PyUnresolvedReferences
-from eddy.ui import fonts_rc
-# noinspection PyUnresolvedReferences
-from eddy.ui import images_rc
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger()
 app = None
