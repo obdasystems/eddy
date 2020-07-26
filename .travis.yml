@@ -3,13 +3,16 @@ dist: bionic
 
 addons:
   apt:
+    update: true
+    sources:
+      - openjdk-r-java
     packages:
       - libxkbcommon-x11-0
-      - openjdk-8-jdk
+      - openjdk-11-jdk
   homebrew:
     update: true
-    taps: homebrew/cask-versions
-    casks: adoptopenjdk8
+    taps: AdoptOpenJDK/openjdk
+    casks: adoptopenjdk11
     packages:
       - openssl
       - pyenv

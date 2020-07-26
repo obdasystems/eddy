@@ -36,17 +36,13 @@
 PYTHON_VERSION=${PYTHON_VERSION:-"3.6.8"}
 VENV_DIR="${VENV_DIR:-$HOME/eddy-venv}"
 
-if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-    # Xenial on Travis defaults to openjdk11 even tough openjdk8 is specified
-    # as the build jdk since we are not doing a Java build.
-    # We force the install of openjdk-8-jdk via the Travis apt addon and
-    # then we set here the value of JAVA_HOME to point to the openjdk8 location.
-    export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-    # Also export JDK_HOME before building pyjnius which will otherwise not pick the JAVA_HOME
-    export JDK_HOME="$JAVA_HOME"
+if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+    # We install openjdk-11-jdk via the Travis apt addon and then
+    # set here the value of JAVA_HOME to point to the openjdk11 location.
+    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 fi
 
-if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+if [[ $TRAVIS_OS_NAME == "osx" ]]; then
     # Use Travis Homebrew Addons to perform a `brew update`
     # See: https://docs.travis-ci.com/user/installing-dependencies/#installing-packages-on-macos
 
@@ -60,16 +56,19 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     # Create virtual environment
     pyenv exec python -m venv --copies "$VENV_DIR"
 
-    # Homebrew's java8 cask no longer exists since Java 8 is no longer
-    # freely available from Oracle. The recommended solution is to use
-    # adoptopenjdk8 builds now.
-    # See: https://github.com/Homebrew/homebrew-cask-versions/issues/7253
-
-    # Fail unless we installed JDK 8 correctly.
-    export JAVA_HOME="`/usr/libexec/java_home --failfast --version 1.8`"
-    # set JDK_HOME for pyjnius
-    export JDK_HOME="$JAVA_HOME"
-
     # Activate virtualenv
     source "$VENV_DIR/bin/activate"
+fi
+
+if [[ ( "$TRAVIS_OS_NAME" == "linux" || "$TRAVIS_OS_NAME" == "osx" ) && -z "$TOXENV" ]]; then
+    # Download JRE from adoptopenjdk.net
+    travis_retry ./scripts/getjdk.py \
+                     --binary \
+                     --feature-version 11 \
+                     --image-type jre \
+                     --extract-to resources
+    mv resources/jdk* resources/java
+
+    # Point JAVA_HOME to the downloaded JRE
+    export JAVA_HOME="$(pwd)/resources/java"
 fi
