@@ -90,12 +90,12 @@ jobs:
     - os: osx
       language: generic
       osx_image: xcode9.4
-      env: OSX=high-sierra PYTHON_VERSION=3.7.7 DEPLOY=yes
+      env: OSX=high-sierra PYTHON_VERSION=3.7.8 DEPLOY=yes
 
     - os: osx
       language: generic
       osx_image: xcode11.3
-      env: OSX=mojave PYTHON_VERSION=3.7.7
+      env: OSX=mojave PYTHON_VERSION=3.7.8
 
 before_install:
   - source ./scripts/travis/before_install.sh
