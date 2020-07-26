@@ -14,25 +14,25 @@ cache:
 environment:
   matrix:
     - PYTHON: "C:\\Python37"
-      PYTHON_VERSION: "3.7.5"
-      PYTHON_ARCH: "32"
-      ARCH: "32"
+      PYTHON_VERSION: "3.7.8"
+      PYTHON_ARCH: "x32"
+      ARCH: "x32"
       JAVA_HOME: "C:\\Program Files (x86)\\Java\\jdk1.8.0"
       ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
       VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
 
     - PYTHON: "C:\\Python37-x64"
-      PYTHON_VERSION: "3.7.5"
-      PYTHON_ARCH: "64"
-      ARCH: "64"
+      PYTHON_VERSION: "3.7.8"
+      PYTHON_ARCH: "x64"
+      ARCH: "x64"
       JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
       ISCC_EXE: "C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"
       VCVARS: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\vcvarsall.bat"
 
 init:
   - echo %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%
-  - if "%ARCH%"=="32" (call "%VCVARS%" x86 8.1)
-  - if "%ARCH%"=="64" (call "%VCVARS%" amd64 8.1)
+  - if "%ARCH%"=="x32" (call "%VCVARS%" x86 8.1)
+  - if "%ARCH%"=="x64" (call "%VCVARS%" amd64 8.1)
 
 install:
   - set PATH="C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.1A\\Bin;%PATH%"
@@ -45,8 +45,8 @@ install:
   - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\tests.in"
   - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.in"
-  - md resources\java
-  - robocopy /E "%JAVA_HOME%\jre" resources\java\jre /XF classes.jsa || exit 0
+  - "%PYTHON%\\python scripts\\getjdk.py --binary --arch %ARCH% --feature-version 11 --image-type jre --extract-to resources"
+  - move resources\jdk* resources\java
 
 # Appveyor's build step is specific to .NET projects
 build: off

@@ -47,13 +47,9 @@ else
     if [[ -z "$JAVA_HOME" ]]; then
         echo "JAVA_HOME is not set"
         exit 1
+    else
+        echo "Using JAVA_HOME: $JAVA_HOME"
     fi
-
-    # Copy the jre into the application folder
-    mkdir -p resources/java
-    cp -R "$JAVA_HOME/jre" resources/java/jre
-    # Remove unneeded files from the jre
-    ./scripts/prepare_jre.sh
 
     # Additional test arguments
     args=()
@@ -72,7 +68,7 @@ else
     # We disable building the dmg on macOS 10.14+ as create-dmg times out
     # when calling osascript due to the new security restrictions in Mojave
     # requiring input from the user interface to grant permissions.
-    # See: https://github.com/andreyvit/create-dmg/issues/72
+    # See: https://github.com/create-dmg/create-dmg/issues/72
     if [[ "$OSX" != "mojave" ]]; then
       python setup.py "${args[@]}"
     else
