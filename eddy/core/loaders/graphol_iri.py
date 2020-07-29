@@ -1351,7 +1351,7 @@ class GrapholProjectIRILoaderMixin_3(object):
                 ontImp = ImportedOntology(ontIri, location, versionIri, isLocal, self.nproject)
                 result.add(ontImp)
             except Exception as e:
-                LOGGER.exception('Failed to import import element. {}'.format(str(e)))
+                LOGGER.exception('Failed to import element. {}'.format(str(e)))
             finally:
                 importEl = importEl.nextSiblingElement('import')
         return result
