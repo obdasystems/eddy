@@ -910,7 +910,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
 
     @staticmethod
     def parentKeyForIRI(iri):
-        return IRIRender.iriLabelString(iri)
+        key = IRIRender.iriLabelString(iri).replace('\n','')
+        return key
 
     @staticmethod
     def parentKey(node):
@@ -1183,7 +1184,8 @@ class OntologyExplorerModel(QtGui.QStandardItemModel):
         if role == QtCore.Qt.DisplayRole:
             dt = self.itemFromIndex(index).data(QtCore.Qt.UserRole)
             if isinstance(dt,IRI):
-                return IRIRender.iriLabelString(dt)
+                lab = IRIRender.iriLabelString(dt).replace('\n', '')
+                return lab
             else:
                 return super().data(index, role)
         else:
