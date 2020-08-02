@@ -1290,7 +1290,7 @@ class IRIManager(QtCore.QObject):
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
-    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported=False):
+    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported=False, labelExplicitChecked=False):
         """
         Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index.
         If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName.
@@ -1299,6 +1299,8 @@ class IRIManager(QtCore.QObject):
         :type addLabelFromSimpleName: bool
         :type addLabelFromUserInput: bool
         :type userInput: str
+        :type imported: bool
+        :type labelExplicitChecked: bool
         """
         if iriString in self.stringToIRI:
             iri = self.stringToIRI[iriString]
@@ -1309,9 +1311,13 @@ class IRIManager(QtCore.QObject):
             iri = IRI(iriString, parent=self)
             iri.manager = self
             self.addIRI(iri, imported)
-            if addLabelFromSimpleName and self._addLabelFromSimpleName:
+
+            simpleNameLabel = True if (labelExplicitChecked and addLabelFromSimpleName) or (addLabelFromSimpleName and self._addLabelFromSimpleName) else False
+            userInputLabel = True if userInput and ((labelExplicitChecked and addLabelFromUserInput and userInput) or (addLabelFromUserInput and self._addLabelFromUserInput)) else False
+
+            if simpleNameLabel:
                 iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri))
-            if addLabelFromUserInput and self._addLabelFromUserInput and userInput:
+            if userInputLabel:
                 annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
                                              OWL2Datatype.PlainLiteral.value, self.defaultLanguage)
                 iri.addAnnotationAssertion(annAss)

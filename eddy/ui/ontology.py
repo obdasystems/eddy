@@ -470,7 +470,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText(self.project.defaultLanguage)
         else:
             combobox.setCurrentText(self.emptyString)
-        if checkBox.isChecked():
+        if self.widget('label_simplename_checkbox').isChecked() or self.widget('label_userinput_checkbox').isChecked():
             combobox.setStyleSheet("background:#FFFFFF");
             combobox.setEnabled(True)
         else:

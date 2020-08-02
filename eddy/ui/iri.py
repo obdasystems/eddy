@@ -245,17 +245,64 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         formlayout.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
         formlayout.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
 
-        '''
-        if isinstance(node, AttributeNode):
-            functLabel = IRIDialogsWidgetFactory.getFunctionalLabel(self)
-            self.addWidget(functLabel)
-            functCheckBox = IRIDialogsWidgetFactory.getFunctionalCheckBox(self)
-            self.addWidget(functCheckBox)
-            formlayout.addRow(self.widget('functional_label'), self.widget('functional_checkbox'))
-        '''
+        #groupbox = QtWidgets.QGroupBox('', self, objectName='iri_definition_group_widget')
+        #groupbox.setLayout(formlayout)
+        #self.addWidget(groupbox)
+
+        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_simplename')
+        checkBoxLabel.setText('Derive rdfs:label from simple name')
+        self.addWidget(checkBoxLabel)
+        checked = self.project.addLabelFromSimpleName
+        checkBox = CheckBox('', self, enabled=True, checked=checked, clicked=self.onLabelSimpleNameCheckBoxClicked,
+                            objectName='label_simplename_checkbox')
+        self.addWidget(checkBox)
+
+        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_userinput')
+        checkBoxLabel.setText('Derive rdfs:label from user input')
+        self.addWidget(checkBoxLabel)
+        checked = self.project.addLabelFromUserInput
+        checkBox = CheckBox('', self, enabled=True, checked=checked, clicked=self.onLabelUserInputCheckBoxClicked,
+                            objectName='label_userinput_checkbox')
+        self.addWidget(checkBox)
+
+        comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
+        comboBoxLabel.setText('rdfs:label language')
+        self.addWidget(comboBoxLabel)
+        combobox = ComboBox(self, objectName='lang_switch')
+        combobox.setEditable(False)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if self.project.defaultLanguage:
+            combobox.setCurrentText(self.project.defaultLanguage)
+        else:
+            combobox.setCurrentText(self.emptyString)
+        if self.widget('label_simplename_checkbox').isChecked() or self.widget('label_userinput_checkbox').isChecked():
+            combobox.setStyleSheet("background:#FFFFFF");
+            combobox.setEnabled(True)
+        else:
+            combobox.setStyleSheet("background:#808080");
+            combobox.setEnabled(False)
+        connect(combobox.currentIndexChanged, self.onLanguageSwitched)
+
+        self.addWidget(combobox)
+        iriLabelLayout = QtWidgets.QFormLayout()
+        iriLabelLayout.addRow(self.widget('checkBox_label_simplename'), self.widget('label_simplename_checkbox'))
+        iriLabelLayout.addRow(self.widget('checkBox_label_userinput'), self.widget('label_userinput_checkbox'))
+        iriLabelLayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
+
+        groupbox = QtWidgets.QGroupBox('', self, objectName='iri_label_group_widget')
+        groupbox.setLayout(iriLabelLayout)
+        self.addWidget(groupbox)
+        groupbox.setEnabled(not self.iri and not isinstance(self.node, ValueDomainNode))
+
+        outerFormlayout = QtWidgets.QFormLayout()
+        outerFormlayout.addRow(formlayout)
+        outerFormlayout.addRow(groupbox)
 
         widget = QtWidgets.QWidget()
-        widget.setLayout(formlayout)
+        widget.setLayout(outerFormlayout)
         widget.setObjectName('iri_widget')
         self.addWidget(widget)
 
@@ -370,14 +417,35 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 fullIriField.setText('')
 
-        '''
-        if isinstance(self.node, AttributeNode):
-            functCheckBox = self.widget('functional_checkbox')
-            if self.node.iri and self.node.iri.functional:
-                functCheckBox.setChecked(True)
-            else:
-                functCheckBox.setChecked(False)
-        '''
+        checked = self.project.addLabelFromSimpleName
+        checkBox = self.widget('label_simplename_checkbox')
+        checkBox.setChecked(checked)
+
+        checked = self.project.addLabelFromUserInput
+        checkBox = self.widget('label_userinput_checkbox')
+        checkBox.setChecked(checked)
+
+        combobox = self.widget('lang_switch')
+        combobox.setEditable(False)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if self.project.defaultLanguage:
+            combobox.setCurrentText(self.project.defaultLanguage)
+        else:
+            combobox.setCurrentText(self.emptyString)
+        if self.widget('label_simplename_checkbox').isChecked() or self.widget('label_userinput_checkbox').isChecked():
+            combobox.setStyleSheet("background:#FFFFFF");
+            combobox.setEnabled(True)
+        else:
+            combobox.setStyleSheet("background:#808080");
+            combobox.setEnabled(False)
+        connect(combobox.currentIndexChanged, self.onLanguageSwitched)
+
+        groupbox = self.widget('iri_label_group_widget')
+        groupbox.setEnabled(not self.iri and not isinstance(self.node, ValueDomainNode))
+
 
         #############################################
         # PREDEFINED DATATYPE TAB
@@ -405,6 +473,31 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         fullIri = '{}{}'.format(resolvedPrefix,input)
         self.widget('full_iri_field').setValue(fullIri)
 
+    @QtCore.pyqtSlot()
+    def onLabelSimpleNameCheckBoxClicked(self):
+        checkBoxSimpleName = self.widget('label_simplename_checkbox')
+        checkBoxUserInput = self.widget('label_userinput_checkbox')
+        if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
+            self.widget('lang_switch').setEnabled(True)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#808080")
+            self.widget('lang_switch').setEnabled(False)
+
+    @QtCore.pyqtSlot()
+    def onLabelUserInputCheckBoxClicked(self):
+        checkBoxSimpleName = self.widget('label_simplename_checkbox')
+        checkBoxUserInput = self.widget('label_userinput_checkbox')
+        if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
+            self.widget('lang_switch').setEnabled(True)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#808080")
+            self.widget('lang_switch').setEnabled(False)
+
+    @QtCore.pyqtSlot(int)
+    def onLanguageSwitched(self, index):
+        self.widget('iri_label_button').setEnabled(True)
 
     @QtCore.pyqtSlot()
     def accept(self):
@@ -440,7 +533,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                             self.session.undostack.push(command)
                         self.session.undostack.endMacro()
                 else:
-                    inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=userExplicitInput)
+                    self.widget('label_simplename_checkbox').isChecked() or self.widget(
+                        'label_userinput_checkbox').isChecked()
+                    inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=self.widget('label_simplename_checkbox').isChecked(),
+                                                   addLabelFromUserInput=self.widget('label_userinput_checkbox').isChecked(),
+                                                   userInput=userExplicitInput,
+                                                   labelExplicitChecked=True)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
                     '''
