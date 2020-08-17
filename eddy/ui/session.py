@@ -54,6 +54,7 @@ from eddy import (
     PROJECT_HOME,
     VERSION,
     WORKSPACE,
+    MANUAL_URL
 )
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.common import (
@@ -429,6 +430,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='about', shortcut=QtGui.QKeySequence.HelpContents,
             statusTip='About {0}'.format(APPNAME), triggered=self.doOpenDialog)
         action.setData(AboutDialog)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Go to the Eddy wiki',
+            self, objectName='manual_web', statusTip='Go to the Eddy wiki',
+            triggered=self.doOpenURL)
+        action.setData(MANUAL_URL)
         self.addAction(action)
 
         action = QtWidgets.QAction(
@@ -1293,6 +1301,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             menu.addSeparator()
         menu.addAction(self.action('check_for_updates'))
         menu.addSeparator()
+        menu.addAction(self.action('manual_web'))
         menu.addAction(self.action('report_bug_web'))
         menu.addAction(self.action('github_web'))
         menu.addAction(self.action('organization_web'))

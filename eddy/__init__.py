@@ -45,6 +45,7 @@ __version__ = '3.0.0'
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
 APPNAME = __appname__
 BUG_TRACKER = 'https://github.com/obdasystems/eddy/issues'
+MANUAL_URL = 'https://github.com/obdasystems/eddy/wiki'
 COPYRIGHT = __copyright__
 APP_HOME = 'https://www.obdasystems.com/eddy'
 EMAIL = __email__
