@@ -762,7 +762,7 @@ class IRI(QtCore.QObject):
             index = self.namespace.rfind('/')
         if index > -1 and self.namespace[index+1:]:
             return self.namespace[index+1:]
-        return None
+        return self.namespace[index+1:]
 
     def isTopBottomEntity(self):
         """
