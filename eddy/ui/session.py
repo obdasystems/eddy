@@ -182,7 +182,7 @@ from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
-from eddy.ui.dl import DLSyntaxValidationDialog
+from eddy.ui.dl import OWL2DLProfileValidationDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.import_ontology import ImportOntologyDialog
 from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog, \
@@ -3359,7 +3359,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Perform OWL DL check on the ontology.
         """
         print('doDLCheck called')
-        dialog = DLSyntaxValidationDialog(self.project, self)
+        dialog = OWL2DLProfileValidationDialog(self.project, self)
         dialog.exec_()
 
     @QtCore.pyqtSlot()

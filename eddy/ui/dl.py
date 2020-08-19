@@ -40,14 +40,19 @@ from PyQt5 import QtWidgets
 
 from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.owl import OWLAxiom
 from eddy.core.datatypes.qt import Font
+from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
 from eddy.core.functions.signals import connect
 from eddy.core.items.nodes.literal import LiteralNode
+from eddy.core.jvm import getJavaVM
+from eddy.core.output import getLogger
 from eddy.core.owl import OWL2Datatype, OWL2Profiles
 from eddy.core.worker import AbstractWorker
 
+LOGGER = getLogger()
 
-class DLSyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
+class OWL2DLProfileValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     Extends QtWidgets.QDialog with facilities to perform manual DL syntax validation.
     """
@@ -64,73 +69,56 @@ class DLSyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.project = project
         self.workerThread = None
         self.worker = None
-        self.i = 0
 
-        #############################################
-        # TOP AREA
-        #################################
+        self.msgbox_busy = QtWidgets.QMessageBox(self)
+        self.msgbox_busy.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.msgbox_busy.setWindowTitle('Please Wait!')
+        self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.NoButton)
+        self.msgbox_busy.setText('Running profile check  (Please Wait!)')
+        self.msgbox_busy.setTextFormat(QtCore.Qt.RichText)
 
-        self.progressBar = QtWidgets.QProgressBar(self)
-        self.progressBar.setAlignment(QtCore.Qt.AlignHCenter)
-        self.progressBar.setRange(self.i, 6)
-        self.progressBar.setFixedSize(400, 30)
-        self.progressBar.setValue(self.i)
+        self.status_bar = QtWidgets.QStatusBar()
+        self.status_bar.setMinimumWidth(350)
 
-        self.progressBox = QtWidgets.QWidget(self)
-        self.progressBoxLayout = QtWidgets.QVBoxLayout(self.progressBox)
-        self.progressBoxLayout.setContentsMargins(10, 10, 10, 10)
-        self.progressBoxLayout.addWidget(self.progressBar)
+        ####################################################
 
-        #############################################
-        # CONTROLS AREA
-        #################################
+        self.messageBoxLayout = QtWidgets.QVBoxLayout()
+        self.messageBoxLayout.setContentsMargins(0, 6, 0, 0)
+        self.messageBoxLayout.setAlignment(QtCore.Qt.AlignCenter)
 
-        self.buttonAbort = QtWidgets.QPushButton('Abort', self)
-        self.buttonIgnore = QtWidgets.QPushButton('Ignore', self)
-        self.buttonShow = QtWidgets.QPushButton('Show', self)
+        self.messageBoxLayout.addWidget(self.msgbox_busy)
+        self.messageBoxLayout.addWidget(self.status_bar)
 
-        self.buttonBox = QtWidgets.QWidget(self)
-        self.buttonBox.setVisible(False)
-        self.buttonBoxLayout = QtWidgets.QHBoxLayout(self.buttonBox)
-        self.buttonBoxLayout.setContentsMargins(10, 0, 10, 10)
-        self.buttonBoxLayout.addWidget(self.buttonAbort, 0, QtCore.Qt.AlignRight)
-        self.buttonBoxLayout.addWidget(self.buttonIgnore, 0, QtCore.Qt.AlignRight)
-        self.buttonBoxLayout.addWidget(self.buttonShow, 0, QtCore.Qt.AlignRight)
+        self.messageBoxArea = QtWidgets.QWidget()
+        self.messageBoxArea.setLayout(self.messageBoxLayout)
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout.addWidget(self.messageBoxArea)
 
-        #############################################
-        # MESSAGE AREA
-        #################################
+        self.setLayout(self.mainLayout)
 
-        self.messageField = QtWidgets.QTextEdit(self)
-        self.messageField.setAcceptRichText(True)
-        self.messageField.setAttribute(QtCore.Qt.WA_MacShowFocusRect, 0)
-        self.messageField.setFixedSize(400, 100)
-        self.messageField.setReadOnly(True)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('Please Wait!')
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint)
+        self.setWindowModality(QtCore.Qt.NonModal)
 
-        self.messageBox = QtWidgets.QWidget(self)
-        self.messageBox.setVisible(False)
-        self.messageBoxLayout = QtWidgets.QVBoxLayout(self.messageBox)
-        self.messageBoxLayout.setContentsMargins(10, 0, 10, 10)
-        self.messageBoxLayout.addWidget(self.messageField)
+        self.adjustSize()
+        self.setFixedSize(self.width(), self.height())
+        self.show()
 
-        #############################################
-        # CONFIGURE LAYOUT
-        #################################
+        ######################################################
 
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.mainLayout.addWidget(self.progressBox)
-        self.mainLayout.addWidget(self.buttonBox, 0, QtCore.Qt.AlignRight)
-        self.mainLayout.addWidget(self.messageBox)
+        self.msgbox_done = QtWidgets.QMessageBox(self)
+        self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.msgbox_done.setWindowTitle('OWL 2 DL profile validation done')
+        self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
+        self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
 
-        connect(self.buttonAbort.clicked, self.doAbort)
-        connect(self.buttonIgnore.clicked, self.doIgnore)
-        connect(self.buttonShow.clicked, self.doShow)
         connect(self.sgnWork, self.doWork)
+        self.sgnWork.emit(0)
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.setFixedSize(self.sizeHint())
-        self.setWindowTitle('Running OWL 2 DL syntax validation...')
+        self.setWindowTitle('Running OWL 2 DL profile validation...')
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
 
     #############################################
@@ -224,18 +212,14 @@ class DLSyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         Perform on or more advancements step in the validation procedure.
         :type i: int
         """
-        # ADAPT DISPLAY
-        self.buttonBox.setVisible(False)
-        self.messageBox.setVisible(False)
-        self.messageField.setText('')
         self.setFixedSize(self.sizeHint())
         # MAKE SURE WE ARE CLEAR
         self.dispose()
         # RUN THE WORKER
-        worker = DLSyntaxWorker(self.project)
-        connect(worker.sgnStep, self.onStep)
+        worker = DLSyntaxWorker(self.status_bar, self.project, self.session)
         connect(worker.sgnCompliant, self.onCompliant)
         connect(worker.sgnNotCompliant, self.onNotCompliant)
+        connect(worker.sgnError, self.onErrorInExec)
         self.startThread('DLSyntaxCheck', worker)
 
     @QtCore.pyqtSlot(int)
@@ -256,7 +240,7 @@ class DLSyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         msgbox.setWindowTitle('Done!')
         msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-        msgbox.setText('The current alphabet can be used to define a valid OWL 2 DL Ontology')
+        msgbox.setText('The current ontology is in the OWL 2 DL profile')
         msgbox.setTextFormat(QtCore.Qt.RichText)
         msgbox.exec_()
         self.close()
@@ -271,12 +255,194 @@ class DLSyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         msgbox.setWindowTitle('Done!')
         msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-        msgbox.setText('The current alphabet cannot be used to define a valid OWL 2 DL Ontology ({} violations found)'.format(str(issueCount)))
+        msgbox.setText('The current ontology is NOT in the OWL 2 DL profile ({} violations found)'.format(str(issueCount)))
         msgbox.setTextFormat(QtCore.Qt.RichText)
         msgbox.exec_()
         self.close()
 
+    @QtCore.pyqtSlot(Exception)
+    def onErrorInExec(self, exc):
+        self.msgbox_error = QtWidgets.QMessageBox(self)
+        self.msgbox_error.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.msgbox_error.setWindowTitle('Error!')
+        self.msgbox_error.setStandardButtons(QtWidgets.QMessageBox.Close)
+        self.msgbox_error.setTextFormat(QtCore.Qt.RichText)
+        self.msgbox_error.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+        self.msgbox_error.setText('An error occured!!\n{}'.format(str(exc)))
+        self.close()
+        self.msgbox_error.exec_()
 
+class DLSyntaxWorker(AbstractWorker):
+    """
+    Extends QtCore.QObject providing a worker thread that will check if the alphabet induced by the diagram can be used to define a OWL 2 DL ontology .
+    """
+    sgnCompliant = QtCore.pyqtSignal()
+    sgnNotCompliant = QtCore.pyqtSignal(int)
+    sgnStarted = QtCore.pyqtSignal()
+    sgnError = QtCore.pyqtSignal(Exception)
+
+    def __init__(self, status_bar, project, session, includeImports=True, computeExplanations=False):
+        """
+        Initialize the syntax validation worker.
+        :type current: int
+        :type items: list
+        :type project: Project
+        """
+        super().__init__()
+        self.project = project
+        self.session = session
+        self.status_bar = status_bar
+        self.vm = getJavaVM()
+        if not self.vm.isRunning():
+            self.vm.initialize()
+        self.vm.attachThreadToJVM()
+        self.ProfileClass = self.vm.getJavaClass('org.semanticweb.owlapi.profiles.OWL2DLProfile')
+        self.IRIClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+        self.OWLManagerClass = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+        self.URIClass = self.vm.getJavaClass('java.net.URI')
+        self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
+        self.OWLProfileReport = self.vm.getJavaClass('org.semanticweb.owlapi.profiles.OWLProfileReport')
+        self.reasonerInstance = None
+        self._isOntologyConsistent = None
+        self.javaBottomClassNode=None
+        self.javaBottomObjectPropertyNode = None
+        self.javaBottomDataPropertyNode = None
+        self._unsatisfiableClasses = set()
+        self._unsatisfiableObjectProperties = set()
+        self._unsatisfiableDataProperties = set()
+        self._includeImports = includeImports
+        self._computeExplanations = computeExplanations
+
+    def loadImportedOntologiesIntoManager(self):
+        LOGGER.debug('Loading declared imports into the OWL 2 Manager')
+        for impOnt in self.project.importedOntologies:
+            try:
+                docObj = None
+                if impOnt.isLocalDocument:
+                    docObj = self.JavaFileClass(impOnt.docLocation)
+                else:
+                    docObj = self.URIClass(impOnt.docLocation)
+                docLocationIRI = self.IRIClass.create(docObj)
+                impOntIRI = self.IRIClass.create(impOnt.ontologyIRI)
+                iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
+                self.manager.getIRIMappers().add(iriMapper)
+                loaded = self.manager.loadOntology(impOntIRI)
+            except Exception as e:
+                LOGGER.exception('The imported ontology <{}> cannot be loaded.\nError:{}'.format(impOnt, str(e)))
+            else:
+                LOGGER.debug('Ontology ({}) correctly loaded.'.format(impOnt))
+
+    def initializeOWLManager(self, ontology):
+        self.manager = ontology.getOWLOntologyManager()
+        self.loadImportedOntologiesIntoManager()
+
+    def axioms(self):
+        """
+        Returns the set of axioms that needs to be exported.
+        :rtype: set
+        """
+        return {axiom for axiom in OWLAxiom}
+
+
+    def runProfileCheck(self):
+        worker = OWLOntologyExporterWorker_v3(self.project,axioms=self.axioms())
+        worker.run()
+        self.initializeOWLManager(worker.ontology)
+        '''
+        issues = []
+
+        classes = self.project.itemIRIs(Item.ConceptIRINode)
+        datatypes = self.project.itemIRIs(Item.ValueDomainIRINode)
+        objProps = self.project.itemIRIs(Item.RoleIRINode)
+        dataProps = self.project.itemIRIs(Item.AttributeIRINode)
+        individuals = self.project.itemIRIs(Item.IndividualIRINode)
+        defaultDatatypes = OWL2Datatype.forProfile(OWL2Profiles.OWL2)
+
+        for cls in classes:
+            if not (cls.isOwlThing or cls.isOwlNothing) and self.project.isFromReservedVocabulary(cls):
+                issues.append(
+                    'The iri <{}> cannot occur as class in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
+                        str(cls)))
+        self.status_bar.showMessage('Use of reserved vocabulary elements as classe ids checked')
+
+        for type in datatypes:
+            if not (type in defaultDatatypes) and self.project.isFromReservedVocabulary(type):
+                issues.append(
+                    'The iri <{}> cannot occur as datatype in a OWL 2 DL ontology (it comes from the reserved vocabulary and is not in the OWL 2 default datatype map)'.format(
+                        str(type)))
+            if type in classes:
+                issues.append(
+                    'The iri <{}> cannot occur as both datatype and class in a OWL 2 DL ontology'.format(str(type)))
+        self.status_bar.showMessage('Use of reserved vocabulary elements as datatype ids checked')
+
+        for objProp in objProps:
+            if not (
+                objProp.isTopObjectProperty or objProp.isBottomObjectProperty) and self.project.isFromReservedVocabulary(
+                objProp):
+                issues.append(
+                    'The iri <{}> cannot occur as object property in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
+                        str(objProp)))
+        self.status_bar.showMessage('Use of reserved vocabulary elements as object property ids checked')
+
+        for dataProp in dataProps:
+            if not (
+                dataProp.isTopDataProperty or dataProp.isBottomDataProperty) and self.project.isFromReservedVocabulary(
+                dataProp):
+                issues.append(
+                    'The iri <{}> cannot occur as object property in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
+                        str(dataProp)))
+            if dataProp in objProps:
+                issues.append(
+                    'The iri <{}> cannot occur as both DataProperty and ObjectProperty in a OWL 2 DL ontology'.format(
+                        str(dataProp)))
+        self.status_bar.showMessage('Use of reserved vocabulary elements as data property ids checked')
+
+        for ind in individuals:
+            if self.project.isFromReservedVocabulary(ind):
+                issues.append(
+                    'The iri <{}> cannot occur as individual in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
+                        str(ind)))
+        self.status_bar.showMessage('Use of reserved vocabulary elements as individual ids checked')
+
+        for diagram in self.project.diagrams():
+            for node in diagram.nodes():
+                if isinstance(node, LiteralNode):
+                    type = node.datatype
+                    if not type in defaultDatatypes:
+                        issues.append(
+                            'The datatype <{}> cannot be used to build literals as it has empty lexical space (literal: {})'.format(
+                                str(type), str(node.literal)))
+        self.status_bar.showMessage('Use of datatypes with empty lexical space checked')
+        
+        if issues:
+            self.sgnNotCompliant.emit(len(issues))
+        else:
+            self.sgnCompliant.emit()
+        '''
+
+        self.dlProfile = self.ProfileClass()
+        self.profileReport = self.dlProfile.checkOntology(worker.ontology)
+
+        if not self.profileReport.isInProfile() :
+            self.sgnNotCompliant.emit(self.profileReport.getViolations().size())
+        else:
+            self.sgnCompliant.emit()
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            self.sgnStarted.emit()
+            self.vm.attachThreadToJVM()
+            self.runProfileCheck()
+        except Exception as e:
+            LOGGER.exception('Fatal error while executing reasoning tasks.\nError:{}'.format(str(e)))
+            self.sgnError.emit(e)
+        finally:
+            self.vm.detachThreadFromJVM()
+            self.finished.emit()
+
+'''
 class DLSyntaxWorker(AbstractWorker):
     """
     Extends QtCore.QObject providing a worker thread that will check if the alphabet induced by the diagram can be used to define a OWL 2 DL ontology .
@@ -352,3 +518,4 @@ class DLSyntaxWorker(AbstractWorker):
             self.sgnCompliant.emit()
 
         self.finished.emit()
+'''
