@@ -284,7 +284,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             combobox.setStyleSheet("background:#808080");
             combobox.setEnabled(False)
-        connect(combobox.currentIndexChanged, self.onLanguageSwitched)
 
         self.addWidget(combobox)
         iriLabelLayout = QtWidgets.QFormLayout()
@@ -441,7 +440,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             combobox.setStyleSheet("background:#808080");
             combobox.setEnabled(False)
-        connect(combobox.currentIndexChanged, self.onLanguageSwitched)
 
         groupbox = self.widget('iri_label_group_widget')
         groupbox.setEnabled(not self.iri and not isinstance(self.node, ValueDomainNode))
@@ -495,9 +493,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
 
-    @QtCore.pyqtSlot(int)
-    def onLanguageSwitched(self, index):
-        self.widget('iri_label_button').setEnabled(True)
+
 
     @QtCore.pyqtSlot()
     def accept(self):
