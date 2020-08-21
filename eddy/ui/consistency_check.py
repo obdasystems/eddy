@@ -37,7 +37,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.common import HasThreadingSystem
-from eddy.core.datatypes.graphol import Special
+from eddy.core.datatypes.graphol import Special, Item
 from eddy.core.datatypes.owl import OWLAxiom, OWLSyntax
 from eddy.core.exporters.owl2 import OWLOntologyFetcher
 from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
@@ -449,10 +449,130 @@ class OntologyReasoningTasksWorker(AbstractWorker):
     def run(self):
         try:
             self.sgnStarted.emit()
-            self.vm.attachThreadToJVM()
+            #self.vm.attachThreadToJVM()
             self.runReasoningTasks()
         except Exception as e:
             LOGGER.exception('Fatal error while executing reasoning tasks.\nError:{}'.format(str(e)))
+            self.sgnError.emit(e)
+        finally:
+            self.vm.detachThreadFromJVM()
+            self.finished.emit()
+
+class EmptyEntityExplanationWorker(AbstractWorker):
+    """
+    Extends AbstractWorker providing a worker thread that will compute explanations for empty entities
+    """
+    sgnBusy = QtCore.pyqtSignal(bool)
+    sgnStarted = QtCore.pyqtSignal()
+    sgnError = QtCore.pyqtSignal(Exception)
+    sgnExplanationComputed = QtCore.pyqtSignal()
+
+    def __init__(self, status_bar, project, session, iri, entityType):
+        """
+        Initialize the syntax validation worker.
+        :type current: int
+        :type items: list
+        :type project: Project
+        :type iri : IRI
+        :type entityType : Item
+        """
+        super().__init__()
+        self.explanationAxioms = list()
+        self.project = project
+        self.session = session
+        self.status_bar = status_bar
+        self.iri = iri
+        self.entityType = entityType
+        self.vm = getJavaVM()
+        if not self.vm.isRunning():
+            self.vm.initialize()
+        self.vm.attachThreadToJVM()
+        self.ReasonerClass = self.vm.getJavaClass('org.semanticweb.HermiT.Reasoner')
+        self.ReasonerFactoryClass = self.vm.getJavaClass('org.semanticweb.HermiT.ReasonerFactory')
+        self.ReasonerConfigurationClass = self.vm.getJavaClass('org.semanticweb.HermiT.Configuration')
+        self.IRIClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+        self.OWLManagerClass = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+        self.URIClass = self.vm.getJavaClass('java.net.URI')
+        self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
+        self.OWLClassClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClass')
+        self.OWLImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
+        self.SilentExplanationProgressMonitor = self.vm.getJavaClass(
+            'com.clarkparsia.owlapi.explanation.util.SilentExplanationProgressMonitor')
+        self.DefaultExplanationGenerator = self.vm.getJavaClass('com.clarkparsia.owlapi.explanation.DefaultExplanationGenerator')
+
+    
+    def loadImportedOntologiesIntoManager(self):
+        LOGGER.debug('Loading declared imports into the OWL 2 Manager')
+        self.status_bar.showMessage('Loading declared imports into the OWL 2 Manager')
+        for impOnt in self.project.importedOntologies:
+            try:
+                docObj = None
+                if impOnt.isLocalDocument:
+                    docObj = self.JavaFileClass(impOnt.docLocation)
+                else:
+                    docObj = self.URIClass(impOnt.docLocation)
+                docLocationIRI = self.IRIClass.create(docObj)
+                impOntIRI = self.IRIClass.create(impOnt.ontologyIRI)
+                iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
+                self.manager.getIRIMappers().add(iriMapper)
+                loaded = self.manager.loadOntology(impOntIRI)
+            except Exception as e:
+                LOGGER.exception('The imported ontology <{}> cannot be loaded.\nError:{}'.format(impOnt, str(e)))
+            else:
+                LOGGER.debug('Ontology ({}) correctly loaded.'.format(impOnt))
+                self.status_bar.showMessage('Ontology ({}) correctly loaded.'.format(impOnt))
+
+    def initializeOWLManagerAndReasoner(self, ontology):
+        self.status_bar.showMessage('Initializing the OWL 2 Manager')
+        self.manager = ontology.getOWLOntologyManager()
+        self.loadImportedOntologiesIntoManager()
+        self.status_bar.showMessage('OWL 2 Manager initialized')
+        self.status_bar.showMessage('Initializing the OWL 2 reasoner')
+        self.reasonerInstance = self.ReasonerClass(self.ReasonerConfigurationClass(), ontology)
+        self.status_bar.showMessage('OWL 2 reasoner initialized')
+        
+    def initializeOWLOntology(self):
+        self.status_bar.showMessage('Fetching the OWL 2 ontology')
+        worker = OWLOntologyExporterWorker_v3(self.project, axioms={axiom for axiom in OWLAxiom})
+        worker.run()
+        self.status_bar.showMessage('OWL 2 ontology fetched')
+        self.ontology = worker.ontology
+        self.initializeOWLManagerAndReasoner(self.ontology)
+    
+    def getEmptyExpression(self):
+        if self.entityType is Item.ConceptIRINode:
+            return self.df.getOWLClass(self.IRI.create(str(self.iri)))
+        elif self.entityType is Item.RoleIRINode:
+            objProp = self.df.getOWLObjectProperty(self.IRI.create(str(self.iri)))
+            return self.df.getOWLObjectSomeValuesFrom(objProp, self.df.getOWLThing())
+        else:
+            dataProp = self.df.getOWLDataProperty(self.IRI.create(str(self.iri)))
+            return self.df.getOWLDataSomeValuesFrom(dataProp, self.df.getTopDatatype())
+
+    def computeExplanationAxioms(self):
+        progressMonitor = self.SilentExplanationProgressMonitor()
+        factory = self.ReasonerFactory()
+        explanationGenerator = self.DefaultExplanationGenerator(self.manager, factory, self.ontology, self.reasonerInstance, progressMonitor)
+        emptyExpression = self.getEmptyExpression()
+        self.status_bar.showMessage('Computing explanations')
+        explanationAxioms = explanationGenerator.getExplanations(emptyExpression)
+        self.status_bar.showMessage('Explanations computed')
+        for axiom in explanationAxioms:
+            self.explanationAxioms.append(axiom.toString())
+
+    def getExplanationAxioms(self):
+        return self.explanationAxioms
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            self.sgnStarted.emit()
+            #self.vm.attachThreadToJVM()
+            self.initializeOWLOntology()
+            self.computeExplanationAxioms()
+        except Exception as e:
+            LOGGER.exception('Fatal error while computing explanations.\nError:{}'.format(str(e)))
             self.sgnError.emit(e)
         finally:
             self.vm.detachThreadFromJVM()
