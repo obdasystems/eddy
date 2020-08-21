@@ -349,83 +349,19 @@ class DLSyntaxWorker(AbstractWorker):
         worker = OWLOntologyExporterWorker_v3(self.project,axioms=self.axioms())
         worker.run()
         self.initializeOWLManager(worker.ontology)
-        '''
-        issues = []
 
-        classes = self.project.itemIRIs(Item.ConceptIRINode)
-        datatypes = self.project.itemIRIs(Item.ValueDomainIRINode)
-        objProps = self.project.itemIRIs(Item.RoleIRINode)
-        dataProps = self.project.itemIRIs(Item.AttributeIRINode)
-        individuals = self.project.itemIRIs(Item.IndividualIRINode)
-        defaultDatatypes = OWL2Datatype.forProfile(OWL2Profiles.OWL2)
-
-        for cls in classes:
-            if not (cls.isOwlThing or cls.isOwlNothing) and self.project.isFromReservedVocabulary(cls):
-                issues.append(
-                    'The iri <{}> cannot occur as class in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
-                        str(cls)))
-        self.status_bar.showMessage('Use of reserved vocabulary elements as classe ids checked')
-
-        for type in datatypes:
-            if not (type in defaultDatatypes) and self.project.isFromReservedVocabulary(type):
-                issues.append(
-                    'The iri <{}> cannot occur as datatype in a OWL 2 DL ontology (it comes from the reserved vocabulary and is not in the OWL 2 default datatype map)'.format(
-                        str(type)))
-            if type in classes:
-                issues.append(
-                    'The iri <{}> cannot occur as both datatype and class in a OWL 2 DL ontology'.format(str(type)))
-        self.status_bar.showMessage('Use of reserved vocabulary elements as datatype ids checked')
-
-        for objProp in objProps:
-            if not (
-                objProp.isTopObjectProperty or objProp.isBottomObjectProperty) and self.project.isFromReservedVocabulary(
-                objProp):
-                issues.append(
-                    'The iri <{}> cannot occur as object property in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
-                        str(objProp)))
-        self.status_bar.showMessage('Use of reserved vocabulary elements as object property ids checked')
-
-        for dataProp in dataProps:
-            if not (
-                dataProp.isTopDataProperty or dataProp.isBottomDataProperty) and self.project.isFromReservedVocabulary(
-                dataProp):
-                issues.append(
-                    'The iri <{}> cannot occur as object property in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
-                        str(dataProp)))
-            if dataProp in objProps:
-                issues.append(
-                    'The iri <{}> cannot occur as both DataProperty and ObjectProperty in a OWL 2 DL ontology'.format(
-                        str(dataProp)))
-        self.status_bar.showMessage('Use of reserved vocabulary elements as data property ids checked')
-
-        for ind in individuals:
-            if self.project.isFromReservedVocabulary(ind):
-                issues.append(
-                    'The iri <{}> cannot occur as individual in a OWL 2 DL ontology (it comes from the reserved vocabulary)'.format(
-                        str(ind)))
-        self.status_bar.showMessage('Use of reserved vocabulary elements as individual ids checked')
-
-        for diagram in self.project.diagrams():
-            for node in diagram.nodes():
-                if isinstance(node, LiteralNode):
-                    type = node.datatype
-                    if not type in defaultDatatypes:
-                        issues.append(
-                            'The datatype <{}> cannot be used to build literals as it has empty lexical space (literal: {})'.format(
-                                str(type), str(node.literal)))
-        self.status_bar.showMessage('Use of datatypes with empty lexical space checked')
-        
-        if issues:
-            self.sgnNotCompliant.emit(len(issues))
-        else:
-            self.sgnCompliant.emit()
-        '''
 
         self.dlProfile = self.ProfileClass()
         self.profileReport = self.dlProfile.checkOntology(worker.ontology)
 
         if not self.profileReport.isInProfile() :
             self.sgnNotCompliant.emit(self.profileReport.getViolations().size())
+            for violation in self.profileReport.getViolations():
+                print()
+                print('######### Class= {} '.format(violation.getClass().toString()))
+                print('######### Axiom= {} '.format(violation.getAxiom().toString()))
+                for change in violation.repair():
+                    print('Change= {} '.format(change.toString()))
         else:
             self.sgnCompliant.emit()
 
