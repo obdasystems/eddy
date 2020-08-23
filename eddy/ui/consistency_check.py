@@ -41,6 +41,7 @@ from eddy.core.datatypes.graphol import Special, Item
 from eddy.core.datatypes.owl import OWLAxiom, OWLSyntax
 from eddy.core.exporters.owl2 import OWLOntologyFetcher
 from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
+from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
@@ -459,10 +460,6 @@ class OntologyReasoningTasksWorker(AbstractWorker):
             self.vm.detachThreadFromJVM()
             self.finished.emit()
 
-
-
-
-
 class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     Extends QtWidgets.QDialog with facilities to list explanations for empty entities
@@ -486,6 +483,7 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.worker = None
         self.iri = iri
         self.entityType = entityType
+        self.explanations = list()
 
         self.msgbox_busy = QtWidgets.QMessageBox(self)
         self.msgbox_busy.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -587,7 +585,7 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Perform on or more advancements step in the validation procedure.
         """
-        self.worker = EmptyEntityExplanationWorker(self.status_bar, self.project, self.session, self.iri, self.entityType)
+        self.worker = EmptyEntityExplanationWorker(self.status_bar, self.project, self.session, self, self.iri, self.entityType)
         connect(self.worker.sgnError, self.onErrorInExec)
         connect(self.worker.sgnExplanationComputed, self.onExplanationComputed)
         self.startThread('EmptyEntityExplanation', self.worker)
@@ -616,14 +614,20 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         #self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
 
         msg = ''
-        for axiom in self.worker.explanationAxioms:
-            msg += '{}\n'.format(axiom)
+        for index,explanation in enumerate(self.explanations):
+            msg += '----- Explanation nr {}'.format(index+1)
+            for axiom in explanation:
+                msg += '{}\n'.format(axiom)
+            msg += '\n'
 
         self.msgbox_done.setText(msg)
 
         self.close()
-        self.msgbox_done.exec_()
+        #self.msgbox_done.exec_()
         self.sgnExplanationComputed.emit()
+
+        self.explanationWidget = ExplanationExplorerWidget(self.project,self.session,self.iri,self.entityType,self.explanations)
+        self.explanationWidget.show()
 
 class EmptyEntityExplanationWorker(AbstractWorker):
     """
@@ -634,7 +638,7 @@ class EmptyEntityExplanationWorker(AbstractWorker):
     sgnError = QtCore.pyqtSignal(Exception)
     sgnExplanationComputed = QtCore.pyqtSignal()
 
-    def __init__(self, status_bar, project, session, iri, entityType):
+    def __init__(self, status_bar, project, session, dialog, iri, entityType):
         """
         Initialize the syntax validation worker.
         :type current: int
@@ -644,10 +648,11 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         :type entityType : Item
         """
         super().__init__()
-        self.explanationAxioms = list()
+        self.explanations = list()
         self.project = project
         self.session = session
         self.status_bar = status_bar
+        self.dialog = dialog
         self.iri = iri
         self.entityType = entityType
         self.vm = getJavaVM()
@@ -725,15 +730,18 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         explanationGenerator = self.DefaultExplanationGenerator(self.manager, factory, self.ontology, self.reasonerInstance, progressMonitor)
         emptyExpression = self.getEmptyExpression()
         self.status_bar.showMessage('Computing explanations')
-        #TODO SOSTITUISCI getExplanation con getExplanations e modifica cicli per inner set (e visualizzazione per più di una explanation)
-        explanationAxioms = explanationGenerator.getExplanation(emptyExpression)
+        explanations = explanationGenerator.getExplanations(emptyExpression)
         self.status_bar.showMessage('Explanations computed')
-        for axiom in explanationAxioms:
-            self.explanationAxioms.append(axiom.toString())
+        for explanation in explanations:
+            axiomList = list()
+            for axiom in explanation:
+                axiomList.append(axiom.toString())
+            self.explanations.append(axiomList)
+        self.dialog.explanations = self.explanations
         self.sgnExplanationComputed.emit()
 
-    def getExplanationAxioms(self):
-        return self.explanationAxioms
+    def getExplanations(self):
+        return self.explanations
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -759,16 +767,16 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
     sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnColourItem = QtCore.pyqtSignal('QStandardItem')
 
-    def __init__(self, project, session, iri, entityType):
+    def __init__(self, project, session, iri, entityType, explanations):
         """
         Initialize the Explanation explorer widget.
-        :type plugin: Session
         """
         super().__init__(session)
 
         self.project = project
         self.iri = iri
         self.entityType = entityType
+        self.explanations = explanations
 
         self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
         self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
@@ -815,6 +823,13 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         header.setStretchLastSection(False)
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
 
+        for index, explanation in enumerate(self.explanations):
+            explanationItem = self.doAddExplanation(index+1)
+            for axiom in explanation:
+                self.doAddAxiom(explanationItem, axiom)
+
+
+        '''
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
         connect(self.ontoview.pressed, self.onItemPressed)
         connect(self.search.textChanged, self.doFilterItem)
@@ -822,18 +837,12 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         connect(self.sgnItemRightClicked, self.session.doFocusItem)
 
         connect(self.sgnColourItem, self.doColorItems)
+        '''
 
     #############################################
     #   PROPERTIES
     #################################
 
-    @property
-    def project(self):
-        """
-        Returns the reference to the active project.
-        :rtype: Project
-        """
-        return self.project
 
     @property
     def session(self):
@@ -861,7 +870,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   SLOTS
     #################################
-
+    '''
     @QtCore.pyqtSlot('QStandardItem')
     def doColorItems(self, item):
         row_count = item.rowCount()
@@ -912,13 +921,15 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
                         self.project.nodes_or_edges_of_explanations_to_display_in_widget.append(node_or_edge)
 
         self.project.colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology()
+    '''
 
     @QtCore.pyqtSlot(str)
     def doAddExplanation(self, explanation_number):
-        explanation_number_to_add = QtGui.QStandardItem('Explanation - ' + explanation_number)
+        explanation_number_to_add = QtGui.QStandardItem('Explanation nr {}'.format(explanation_number))
         explanation_number_to_add.setData(explanation_number)
         self.model.appendRow(explanation_number_to_add)
         self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+        return explanation_number_to_add
 
     @QtCore.pyqtSlot('QStandardItem', str)
     def doAddAxiom(self, q_item, axiom):
@@ -927,6 +938,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         q_item.appendRow(axiom_to_add)
         self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
+    '''
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem', 'QStandardItem')
     def doAddNodeOREdge(self, diagram, node_or_edge, q_item):
         icon = None
@@ -944,7 +956,9 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
 
         node_or_edge_to_append.setData(node_or_edge)
         q_item.appendRow(node_or_edge_to_append)
+    '''
 
+    '''
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doAddNode(self, diagram, node):
         """
@@ -963,6 +977,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
             child.setData(node)
             parent.appendRow(child)
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+    '''
 
     @QtCore.pyqtSlot()
     def doClear(self):
@@ -982,6 +997,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         self.proxy.setFilterFixedString(key)
         self.proxy.sort(QtCore.Qt.AscendingOrder)
 
+    '''
     @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
     def doRemoveNode(self, diagram, node):
         """
@@ -997,7 +1013,9 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
                     parent.removeRow(child.index().row())
                 if not parent.rowCount():
                     self.model.removeRow(parent.index().row())
+    '''
 
+    '''
     @QtCore.pyqtSlot('QModelIndex')
     def onItemDoubleClicked(self, index):
         """
@@ -1013,7 +1031,9 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
                     self.sgnColourItem.emit(item)
                 else:
                     self.sgnItemDoubleClicked.emit(item.data())
+    '''
 
+    '''
     @QtCore.pyqtSlot('QModelIndex')
     def onItemPressed(self, index):
         """
@@ -1029,11 +1049,12 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
                     self.sgnColourItem.emit(item)
                 else:
                     self.sgnItemClicked.emit(item.data())
+    '''
 
     #############################################
     #   INTERFACE
     #################################
-
+    '''
     def childFor(self, parent, diagram, node):
         """
         Search the item representing this node among parent children.
@@ -1047,7 +1068,9 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
             if child.text() == key:
                 return child
         return None
+    '''
 
+    '''
     @staticmethod
     def childKey(diagram, node):
         """
@@ -1059,7 +1082,9 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         predicate = node.text().replace('\n', '')
         diagram = rstrip(diagram.name, File.Graphol.extension)
         return '{0} ({1} - {2})'.format(predicate, diagram, node.id)
+    '''
 
+    '''
     def iconFor(self, node):
         """
         Returns the icon for the given node.
@@ -1076,7 +1101,9 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
                 return self.iconValue
         if node.type() is Item.RoleNode:
             return self.iconRole
+    '''
 
+    '''
     def parentFor(self, node):
         """
         Search the parent element of the given node.
@@ -1088,7 +1115,9 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
             if node.type() is n.type():
                 return i
         return None
+    '''
 
+    '''
     @staticmethod
     def parentKey(node):
         """
@@ -1097,6 +1126,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         :rtype: str
         """
         return node.text().replace('\n', '')
+    '''
 
     def sizeHint(self):
         """
