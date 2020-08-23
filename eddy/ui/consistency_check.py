@@ -1135,7 +1135,6 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         """
         return QtCore.QSize(216, 266)
 
-
 class ExplanationExplorerView(QtWidgets.QTreeView):
     """
     This class implements the Explanation explorer tree view.
