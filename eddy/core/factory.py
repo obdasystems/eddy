@@ -1016,6 +1016,20 @@ class MenuFactory(QtCore.QObject):
             menu.insertAction(beforeAction, self.session.action('relocate_label'))
 
     #############################################
+    #   EMPTY ENTITIES
+    #################################
+
+    def buildEmptyEntityMenu(self):
+        """
+        Build and return a QMenu instance for an empty entity
+        :rtype: QMenu
+        """
+        menu = QtWidgets.QMenu()
+        menu.addAction(self.session.action('emptiness_explanation'))
+        return menu
+
+
+    #############################################
     #   FACTORY
     #################################
 

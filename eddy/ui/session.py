@@ -180,7 +180,7 @@ from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog, AnnotationBuilderDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
-from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
+from eddy.ui.consistency_check import OntologyConsistencyCheckDialog, EmptyEntityDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.dl import OWL2DLProfileValidationDialog
 from eddy.ui.fields import ComboBox
@@ -286,6 +286,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.pmanager = PluginManager(self)
         self.nmanager = NetworkManager(self)
         self.project = None
+        self.currentEmptyEntityIRI = None
+        self.currentEmptyEntityType = None
 
         #############################################
         # CONFIGURE SESSION
@@ -1071,6 +1073,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_simple_name').setChecked(True)
         '''elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
             self.action(objectName='render_label').setChecked(True)'''
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
+            'Get explanation',
+            self, objectName='emptiness_explanation',
+            triggered=self.doEmptyEntityExplanation))
 
 
     def initExporters(self):
@@ -3384,6 +3392,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(dialog.sgnUnsatisfiableDataProperty, self.onUnsatisfiableDataProperty)
         self.sgnConsistencyCheckStarted.emit()
         dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def doEmptyEntityExplanation(self):
+        """
+        Compute explanation for entity emptiness
+        """
+        if self.currentEmptyEntityIRI and self.currentEmptyEntityType:
+            dialog = EmptyEntityDialog(self.project, self, self.currentEmptyEntityIRI, self.currentEmptyEntityType)
+            dialog.exec_()
 
     @QtCore.pyqtSlot(IRI)
     def onUnsatisfiableClass(self, iri):

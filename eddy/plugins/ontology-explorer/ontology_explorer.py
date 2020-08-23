@@ -312,6 +312,9 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         connect(self.session.sgnSingleNodeSwitchIRI, self.onSingleNodeIRISwitched)
 
         self.unsatisfiableItems = list()
+        self.unsatisfiableClasses = list()
+        self.unsatisfiableObjProps = list()
+        self.unsatisfiableDataProps = list()
 
     #############################################
     #   PROPERTIES
@@ -454,6 +457,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if parent:
             parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
+            self.unsatisfiableClasses.append(parent)
 
     @QtCore.pyqtSlot(IRI)
     def onUnsatisfiableObjectProperty(self, iri):
@@ -461,6 +465,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if parent:
             parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
+            self.unsatisfiableObjProps.append(parent)
 
     @QtCore.pyqtSlot(IRI)
     def onUnsatisfiableDataProperty(self, iri):
@@ -468,12 +473,16 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         if parent:
             parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
+            self.unsatisfiableDataProps.append(parent)
 
     @QtCore.pyqtSlot()
     def doResetReasonerHighlight(self):
         for item in self.unsatisfiableItems:
             item.setData(None, QtCore.Qt.ForegroundRole)
         self.unsatisfiableItems = list()
+        self.unsatisfiableClasses = list()
+        self.unsatisfiableObjProps = list()
+        self.unsatisfiableDataProps = list()
 
     @QtCore.pyqtSlot(ImportedOntology)
     def onImportedOntologyAdded(self, impOnt):
@@ -1103,7 +1112,19 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                     if isinstance(item.data(QtCore.Qt.UserRole),IRI):
                         iri = item.data(QtCore.Qt.UserRole)
                         self.widget.sgnIRIItemRightClicked.emit(iri)
-                        #TODO gestisci creazione menu per IRI
+                        if item in self.parent().unsatisfiableItems:
+                            self.session.currentEmptyEntityIRI = iri
+                            if item in self.parent().unsatisfiableClasses:
+                                self.session.currentEmptyEntityType = Item.ConceptIRINode
+                                print("unsatisfiable class " + str(iri))
+                            elif item in self.parent().unsatisfiableObjProps:
+                                self.session.currentEmptyEntityType = Item.RoleIRINode
+                                print("unsatisfiable role " + str(iri))
+                            elif item in self.parent().unsatisfiableDataProps:
+                                self.session.currentEmptyEntityType = Item.AttributeIRINode
+                                print("unsatisfiable attribute " + str(iri))
+                            menu = self.session.mf.buildEmptyEntityMenu()
+                            menu.exec_(mouseEvent.screenPos().toPoint())
                     elif isinstance(item.data(QtCore.Qt.UserRole), AbstractNode):
                         node = item.data(QtCore.Qt.UserRole)
                         self.widget.sgnItemRightClicked.emit(node)
