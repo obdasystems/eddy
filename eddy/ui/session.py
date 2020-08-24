@@ -650,6 +650,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
 
         self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_question'), 'Show explanations',
+            self, objectName='inconsistency_explanations', triggered=self.doShowExplanations,
+            statusTip='Show explanations for inconsistent ontology', enabled=False))
+
+        self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',
             self, objectName='ontology_consistency_check', triggered=self.doOntologyConsistencyCheck,
             statusTip='Run Reasoner', enabled=False))
@@ -1272,6 +1277,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
         menu.addAction(self.action('dl_check'))
+        menu.addAction(self.action('inconsistency_explanations'))
+
         # TODO scommenta dopo corretta implementazione reasoner per consistency check
         menu.addAction(self.action('ontology_consistency_check'))
         menu.addSeparator()
@@ -1545,12 +1552,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         toolbar.addAction(self.action('syntax_check'))
         toolbar.addAction(self.action('dl_check'))
 
+
         toolbar = self.widget('reasoner_toolbar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         #TODO scommenta dopo corretta implementazione reasoner per consistency check
         #toolbar.addWidget(self.widget('select_reasoner'))
         toolbar.addAction(self.action('ontology_consistency_check'))
         toolbar.addAction(self.action('reset_reasoner'))
+        toolbar.addAction(self.action('inconsistency_explanations'))
 
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('document_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
@@ -3369,6 +3378,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         print('doDLCheck called')
         dialog = OWL2DLProfileValidationDialog(self.project, self)
         dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def doShowExplanations(self):
+        """
+        Show explanations for inconsistent ontology
+        """
+        print('doShowExplanations called')
+
+
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self):

@@ -36,7 +36,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from eddy.core.common import HasThreadingSystem
+from eddy.core.common import HasThreadingSystem, HasWidgetSystem
 from eddy.core.datatypes.graphol import Special, Item
 from eddy.core.datatypes.owl import OWLAxiom, OWLSyntax
 from eddy.core.exporters.owl2 import OWLOntologyFetcher
@@ -460,7 +460,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
             self.vm.detachThreadFromJVM()
             self.finished.emit()
 
-class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
+class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog with facilities to list explanations for empty entities
     """
@@ -489,7 +489,7 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_busy.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.msgbox_busy.setWindowTitle('Please Wait!')
         self.msgbox_busy.setStandardButtons(QtWidgets.QMessageBox.NoButton)
-        self.msgbox_busy.setText('Generationg explanations...  (Please Wait!)')
+        self.msgbox_busy.setText('Computing explanations...  (Please Wait!)')
         self.msgbox_busy.setTextFormat(QtCore.Qt.RichText)
 
         self.status_bar = QtWidgets.QStatusBar()
@@ -506,8 +506,18 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         self.messageBoxArea = QtWidgets.QWidget()
         self.messageBoxArea.setLayout(self.messageBoxLayout)
+
+        self.explanationWidget = ExplanationExplorerWidget(self.project, self.session, self.iri, self.entityType)
+
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.mainLayout.addWidget(self.messageBoxArea)
+        self.mainLayout.addWidget(self.explanationWidget)
+
+        self.closeBtn = QtWidgets.QPushButton('Close', objectName='close_button')
+        self.closeBtn.setEnabled(False)
+        connect(self.closeBtn.clicked, self.onCloseBtnClicked)
+        self.addWidget(self.closeBtn)
+        self.mainLayout.addWidget(self.closeBtn)
 
         self.setLayout(self.mainLayout)
 
@@ -517,16 +527,8 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.setWindowModality(QtCore.Qt.NonModal)
 
         self.adjustSize()
-        self.setFixedSize(self.width(), self.height())
+        #self.setFixedSize(self.width(), self.height())
         self.show()
-
-        ######################################################
-
-        self.msgbox_done = QtWidgets.QMessageBox(self)
-        self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.msgbox_done.setWindowTitle('Explanations generated')
-        self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
-        self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
 
         connect(self.sgnWork, self.doWork)
         self.sgnWork.emit()
@@ -581,6 +583,10 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
     #################################
 
     @QtCore.pyqtSlot()
+    def onCloseBtnClicked(self):
+        self.close()
+
+    @QtCore.pyqtSlot()
     def doWork(self):
         """
         Perform on or more advancements step in the validation procedure.
@@ -607,27 +613,13 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Executed when the ontology is inconsistent.
         """
-        self.msgbox_done = QtWidgets.QMessageBox(self)
-        self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.msgbox_done.setWindowTitle('Explanation computed')
-        self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
-        #self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
-
-        msg = ''
-        for index,explanation in enumerate(self.explanations):
-            msg += '----- Explanation nr {}'.format(index+1)
-            for axiom in explanation:
-                msg += '{}\n'.format(axiom)
-            msg += '\n'
-
-        self.msgbox_done.setText(msg)
-
-        self.close()
-        #self.msgbox_done.exec_()
+        self.msgbox_busy.setText('Explanations computed')
+        self.status_bar.hide()
+        self.explanationWidget.setExplanations(self.explanations)
+        self.closeBtn.setEnabled(True)
+        self.resize(self.sizeHint())
         self.sgnExplanationComputed.emit()
 
-        self.explanationWidget = ExplanationExplorerWidget(self.project,self.session,self.iri,self.entityType,self.explanations)
-        self.explanationWidget.show()
 
 class EmptyEntityExplanationWorker(AbstractWorker):
     """
@@ -767,7 +759,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
     sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnColourItem = QtCore.pyqtSignal('QStandardItem')
 
-    def __init__(self, project, session, iri, entityType, explanations):
+    def __init__(self, project, session, iri, entityType):
         """
         Initialize the Explanation explorer widget.
         """
@@ -776,7 +768,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         self.project = project
         self.iri = iri
         self.entityType = entityType
-        self.explanations = explanations
+        self.explanations = None
 
         self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
         self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
@@ -822,12 +814,6 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         header = self.ontoview.header()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
-
-        for index, explanation in enumerate(self.explanations):
-            explanationItem = self.doAddExplanation(index+1)
-            for axiom in explanation:
-                self.doAddAxiom(explanationItem, axiom)
-
 
         '''
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
@@ -1054,6 +1040,15 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   INTERFACE
     #################################
+    def setExplanations(self,explanations):
+        self.explanations = explanations
+        for index, explanation in enumerate(self.explanations):
+            explanationItem = self.doAddExplanation(index+1)
+            for axiom in explanation:
+                self.doAddAxiom(explanationItem, axiom)
+        self.proxy.invalidateFilter()
+        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+
     '''
     def childFor(self, parent, diagram, node):
         """
@@ -1212,6 +1207,7 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
     #   INTERFACE
     #################################
 
+    '''
     def sizeHintForColumn(self, column):
         """
         Returns the size hint for the given column.
@@ -1220,4 +1216,5 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
         :rtype: int
         """
         return max(super().sizeHintForColumn(column), self.viewport().width())
+    '''
 
