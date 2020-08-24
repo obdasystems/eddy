@@ -51,7 +51,9 @@ from eddy.ui.fields import StringField
 
 LOGGER = getLogger()
 
-
+#############################################
+#   CONSISTENCY CHECK
+#################################
 class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     Extends QtWidgets.QDialog with facilities to perform Ontology Consistency check
@@ -328,6 +330,9 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
         self.OWLClassClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClass')
         self.OWLImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
+        self.InconsistentOntologyExplanationGeneratorFactory = self.vm.getJavaClass(
+            'org.semanticweb.owl.explanation.impl.blackbox.checker.InconsistentOntologyExplanationGeneratorFactory')
+
         self.reasonerInstance = None
         self._isOntologyConsistent = None
         self.javaBottomClassNode=None
@@ -339,6 +344,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         self._includeImports = includeImports
         self._computeUnsatisfiableEntities = computeUnsatisfiableEntities
         self._computeExplanations = computeExplanations
+        self.explanations = list()
 
     @property
     def unsatisfiableClasses(self):
@@ -380,6 +386,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
 
     def initializeOWLManagerAndReasoner(self, ontology):
         self.manager = ontology.getOWLOntologyManager()
+        self.df = self.manager.getOWLDataFactory()
         self.loadImportedOntologiesIntoManager()
         self.reasonerInstance = self.ReasonerClass(self.ReasonerConfigurationClass(), ontology)
         #TODO se si usano metodi factory di Hermit, oggetto 'ontology' non viene riconosciuto come istanza di OWLReasoner
@@ -437,6 +444,22 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         worker.run()
         self.initializeOWLManagerAndReasoner(worker.ontology)
         if not self.isConsistent():
+            factory = self.ReasonerFactoryClass()
+            ecf = self.InconsistentOntologyExplanationGeneratorFactory(factory, 0)
+            generator = ecf.createExplanationGenerator(worker.ontology)
+
+            thingISANothing = self.df.getOWLSubClassOfAxiom(self.df.getOWLThing(),self.df.getOWLNothing())
+
+            self.status_bar.showMessage('Computing explanations')
+            explanations = generator.getExplanations(thingISANothing)
+            self.status_bar.showMessage('Explanations computed')
+            for explanation in explanations:
+                axiomList = list()
+                for axiom in explanation.getAxioms():
+                    axiomList.append(axiom.toString())
+                self.explanations.append(axiomList)
+            self.session.inconsistentOntologyExplanations = self.explanations
+
             self.sgnInconsistent.emit()
         else:
             self.sgnConsistent.emit()
@@ -460,6 +483,152 @@ class OntologyReasoningTasksWorker(AbstractWorker):
             self.vm.detachThreadFromJVM()
             self.finished.emit()
 
+class InconsistentOntologyExplanationDialog(QtWidgets.QDialog, HasWidgetSystem):
+    """
+    This class implements the 'Ontology Manager' dialog.
+    """
+
+    noPrefixString = ''
+    emptyString = ''
+
+    def __init__(self, session, explanations):
+        """
+        Initialize the Ontology Manager dialog.
+        :type session: Session
+        :type explanations: list
+        """
+        super().__init__(session)
+        self.explanations = explanations
+        self.project = session.project
+
+        #############################################
+        # EXPLANATIONS TAB
+        #################################
+
+        explanationWidget = ExplanationExplorerWidget(self.project, self.session, objectName='explanation_widget')
+        self.addWidget(explanationWidget)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('explanation_widget'))
+        groupbox = QtWidgets.QGroupBox('Explanations', self, objectName='explanation_group')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+
+        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        widget.addTab(self.widget('explanation_group'), 'Explanations')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        #confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        #confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
+        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        self.addWidget(confirmation)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(800, 520)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('Inference explanations')
+        self.redraw()
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+
+    #############################################
+    #   PROPERTIES
+    #################################
+    @property
+    def session(self):
+        """
+        Returns the reference to the main session (alias for PreferencesDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   SLOTS
+    #################################
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        ##
+        ## TODO: complete validation and settings save
+        ##
+        #############################################
+        # GENERAL TAB
+        #################################
+
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().accept()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        ##
+        ## TODO: complete validation and settings save
+        ##
+        #############################################
+        # GENERAL TAB
+        #################################
+
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().reject()
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+        """
+        Redraw the dialog components, reloading their contents.
+        """
+        explanationWidget = self.widget('explanation_widget')
+        explanationWidget.doClear()
+        explanationWidget.setExplanations(self.explanations)
+
+
+
+
+#############################################
+#   EMPTY ENTITIES
+#################################
 class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog with facilities to list explanations for empty entities
@@ -507,7 +676,7 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
         self.messageBoxArea = QtWidgets.QWidget()
         self.messageBoxArea.setLayout(self.messageBoxLayout)
 
-        self.explanationWidget = ExplanationExplorerWidget(self.project, self.session, self.iri, self.entityType)
+        self.explanationWidget = ExplanationExplorerWidget(self.project, self.session, objectName='explanation_widget')
 
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.mainLayout.addWidget(self.messageBoxArea)
@@ -619,7 +788,6 @@ class EmptyEntityDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
         self.closeBtn.setEnabled(True)
         self.resize(self.sizeHint())
         self.sgnExplanationComputed.emit()
-
 
 class EmptyEntityExplanationWorker(AbstractWorker):
     """
@@ -749,6 +917,11 @@ class EmptyEntityExplanationWorker(AbstractWorker):
             self.vm.detachThreadFromJVM()
             self.finished.emit()
 
+
+#############################################
+#   EXPLANATIONS (INCONSISTENT AND EMPTY) WIDGET
+#################################
+
 class ExplanationExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the Explanation explorer used to list Explanation predicates.
@@ -759,15 +932,13 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
     sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
     sgnColourItem = QtCore.pyqtSignal('QStandardItem')
 
-    def __init__(self, project, session, iri, entityType):
+    def __init__(self, project, session, **kwargs):
         """
         Initialize the Explanation explorer widget.
         """
-        super().__init__(session)
+        super().__init__(session,objectName=kwargs.get('objectName'))
 
         self.project = project
-        self.iri = iri
-        self.entityType = entityType
         self.explanations = None
 
         self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')

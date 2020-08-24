@@ -180,7 +180,8 @@ from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog, AnnotationBuilderDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
-from eddy.ui.consistency_check import OntologyConsistencyCheckDialog, EmptyEntityDialog
+from eddy.ui.consistency_check import OntologyConsistencyCheckDialog, EmptyEntityDialog, \
+    InconsistentOntologyExplanationDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.dl import OWL2DLProfileValidationDialog
 from eddy.ui.fields import ComboBox
@@ -288,6 +289,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.project = None
         self.currentEmptyEntityIRI = None
         self.currentEmptyEntityType = None
+        self.inconsistentOntologyExplanations = list()
 
         #############################################
         # CONFIGURE SESSION
@@ -1565,7 +1567,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('view_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('graphol_toolbar'))
-        # TODO scommenta dopo corretta implementazione reasoner per consistency check
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
 
     # noinspection PyArgumentList
@@ -3385,8 +3386,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Show explanations for inconsistent ontology
         """
         print('doShowExplanations called')
-
-
+        dialog = InconsistentOntologyExplanationDialog(self, self.inconsistentOntologyExplanations)
+        dialog.exec_()
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self):
@@ -3448,6 +3449,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when the consistency check reports that the ontology is inconsistent.
         """
         self.action('reset_reasoner').setEnabled(True)
+        self.action('inconsistency_explanations').setEnabled(True)
         self.sgnInconsistentOntology.emit()
 
     @QtCore.pyqtSlot(int)
@@ -3478,6 +3480,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type clearReasonerCache: bool
         """
         self.action('reset_reasoner').setEnabled(False)
+        self.action('inconsistency_explanations').setEnabled(False)
+        self.inconsistentOntologyExplanations = list()
+        self.currentEmptyEntityType = None
+        self.currentEmptyEntityIRI = None
         self.sgnConsistencyCheckReset.emit()
         '''
         OLD. NOT USED ANYMORE
