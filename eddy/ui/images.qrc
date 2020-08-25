@@ -182,7 +182,7 @@
   <file alias="ic_zoom_reset_black">../../resources/icons/24/ic_zoom_reset_black_24dp_1x.png</file>
   <file alias="ic_zoom_reset_black@2x">../../resources/icons/24/ic_zoom_reset_black_24dp_2x.png</file>
   <file alias="ic_owl">../../resources/icons/24/ic_Owl_24.png</file>
-  <file alias="ic_question">../../resources/icons/24/ic_question_mark_26.png</file>
+  <file alias="ic_question">../../resources/icons/24/ic_question_mark_24.png</file>
   <file alias="ic_font_size">../../resources/icons/24/ic_text_size_24dp.png</file>
 </qresource>
 <qresource prefix="/icons/48">

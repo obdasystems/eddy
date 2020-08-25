@@ -1082,8 +1082,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_label').setChecked(True)'''
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_label_outline_black'),
-            'Show explanation',
+            QtGui.QIcon(':/icons/24/ic_question'),
+            'Show explanation(s)',
             self, objectName='emptiness_explanation',
             triggered=self.doEmptyEntityExplanation))
 

@@ -3,7 +3,6 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.common import HasWidgetSystem, HasThreadingSystem
-from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.ui.consistency_check import EmptyEntityExplanationWorker
