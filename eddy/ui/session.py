@@ -150,11 +150,10 @@ from eddy.core.functions.path import (
     expandPath,
     shortPath,
 )
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.edges.common.base import AxiomEdge
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
-from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
@@ -178,12 +177,11 @@ from eddy.core.project import (
     Project)
 from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog, AnnotationBuilderDialog
-from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.about import AboutDialog
-from eddy.ui.consistency_check import OntologyConsistencyCheckDialog, EmptyEntityDialog, \
-    InconsistentOntologyExplanationDialog
+from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.dl import OWL2DLProfileValidationDialog
+from eddy.ui.explanation import ExplanationDialog, EmptyEntityDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.import_ontology import ImportOntologyDialog
 from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog, \
@@ -289,6 +287,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.project = None
         self.currentEmptyEntityIRI = None
         self.currentEmptyEntityType = None
+        self.currentEmptyEntityExplanations = list()
+        self.emptyEntityExplanations = {}
         self.inconsistentOntologyExplanations = list()
 
         #############################################
@@ -653,7 +653,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_question'), 'Show explanations',
-            self, objectName='inconsistency_explanations', triggered=self.doShowExplanations,
+            self, objectName='inconsistency_explanations', triggered=self.doShowInconsistentOntologyExplanations,
             statusTip='Show explanations for inconsistent ontology', enabled=False))
 
         self.addAction(QtWidgets.QAction(
@@ -1083,7 +1083,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'),
-            'Get explanation',
+            'Show explanation',
             self, objectName='emptiness_explanation',
             triggered=self.doEmptyEntityExplanation))
 
@@ -3381,13 +3381,25 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def doShowExplanations(self):
+    def doShowInconsistentOntologyExplanations(self):
         """
         Show explanations for inconsistent ontology
         """
-        print('doShowExplanations called')
-        dialog = InconsistentOntologyExplanationDialog(self, self.inconsistentOntologyExplanations)
-        dialog.exec_()
+        print('doShowInconsistentOntologyExplanations called')
+        dialog = ExplanationDialog(self, self.inconsistentOntologyExplanations)
+        # dialog.exec_()
+        dialog.show()
+
+    @QtCore.pyqtSlot()
+    def doShowEmptyEntityExplanations(self):
+        """
+        Show explanations for empty entity
+        """
+        print('doShowEmptyEntityExplanations called')
+        dialog = ExplanationDialog(self, self.currentEmptyEntityExplanations, entityIRI=self.currentEmptyEntityIRI, entityType=self.currentEmptyEntityType)
+        #dialog.exec_()
+        dialog.show()
+
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self):
@@ -3418,8 +3430,21 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Compute explanation for entity emptiness
         """
         if self.currentEmptyEntityIRI and self.currentEmptyEntityType:
-            dialog = EmptyEntityDialog(self.project, self, self.currentEmptyEntityIRI, self.currentEmptyEntityType)
-            dialog.exec_()
+            key = '{}-{}'.format(str(self.currentEmptyEntityIRI),self.currentEmptyEntityType)
+            if key in self.emptyEntityExplanations:
+                self.currentEmptyEntityExplanations = self.emptyEntityExplanations[key]
+                self.doShowEmptyEntityExplanations()
+            else:
+                dialog = EmptyEntityDialog(self.project, self, self.currentEmptyEntityIRI, self.currentEmptyEntityType)
+                connect(dialog.sgnExplanationComputed, self.onNewEmptyEntityExplanation)
+                dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def onNewEmptyEntityExplanation(self):
+        """
+        Executed when new explanations for emty entities are computed
+        """
+        self.doShowEmptyEntityExplanations()
 
     @QtCore.pyqtSlot(IRI)
     def onUnsatisfiableClass(self, iri):
@@ -3484,6 +3509,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.inconsistentOntologyExplanations = list()
         self.currentEmptyEntityType = None
         self.currentEmptyEntityIRI = None
+        self.currentEmptyEntityExplanations = list()
+        self.emptyEntityExplanations = {}
         self.sgnConsistencyCheckReset.emit()
         '''
         OLD. NOT USED ANYMORE
