@@ -342,7 +342,8 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         self.search.setPlaceholderText('Search...')
         self.search.setFixedHeight(30)
         self.model = QtGui.QStandardItemModel(self)
-        self.proxy = QtCore.QSortFilterProxyModel(self)
+        #self.proxy = QtCore.QSortFilterProxyModel(self)
+        self.proxy =  ExplanationExplorerFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
@@ -375,10 +376,12 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         header.setStretchLastSection(False)
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
 
+        connect(self.search.textChanged, self.doFilterItem)
+
         '''
         connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
         connect(self.ontoview.pressed, self.onItemPressed)
-        connect(self.search.textChanged, self.doFilterItem)
+        
         connect(self.sgnItemDoubleClicked, self.session.doFocusItem)
         connect(self.sgnItemRightClicked, self.session.doFocusItem)
 
@@ -711,6 +714,7 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
         self.setSelectionMode(QtWidgets.QTreeView.SingleSelection)
         self.setSortingEnabled(True)
         self.setWordWrap(True)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
     #############################################
     #   PROPERTIES
@@ -744,6 +748,7 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
         self.clearSelection()
         super().mousePressEvent(mouseEvent)
 
+    #TODO IMPLEMENTA QUI FUNZIONE CHE COPIA TESTO DEGLI ELEMENTI SELEZIONATI(SE NECESSARIO)
     def mouseReleaseEvent(self, mouseEvent):
         """
         Executed when the mouse is released from the tree view.
@@ -780,3 +785,59 @@ class ExplanationExplorerView(QtWidgets.QTreeView):
         """
         return max(super().sizeHintForColumn(column), self.viewport().width())
     '''
+
+class ExplanationExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
+    """
+    Extends QSortFilterProxyModel adding filtering functionalities for the explorer widget
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def project(self):
+        return self.parent().project
+
+    @property
+    def session(self):
+        return self.parent().session
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def filterAcceptsRow(self, sourceRow, parentIndex):
+        """
+        Overrides filterAcceptsRow to include extra filtering conditions
+        :type sourceRow: int
+        :type parentIndex: QModelIndex
+        :rtype: bool
+        """
+
+        filterRegExp = self.filterRegExp()
+        pattern = filterRegExp.pattern()
+
+        index = self.sourceModel().index(sourceRow, 0, parentIndex)
+        item = self.sourceModel().itemFromIndex(index)
+        if parentIndex.isValid():
+            return True
+        elif item.hasChildren():
+            children = [item.child(i) for i in range(item.rowCount())]
+            #TODO INSERISCI CONTROLLO NON CASE SENSITIVE
+            if any([pattern in child.text() for child in children]):
+                return True
+            else:
+                return super().filterAcceptsRow(sourceRow, parentIndex)
+        else:
+            return super().filterAcceptsRow(sourceRow, parentIndex)
+
+        '''
+        if parentIndex.isValid():
+            return True
+        else:
+            return super().filterAcceptsRow(sourceRow, parentIndex)
+        '''
+

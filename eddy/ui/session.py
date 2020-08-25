@@ -652,9 +652,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_question'), 'Show explanations',
+            QtGui.QIcon(':/icons/24/ic_question'), 'Show explanation(s)',
             self, objectName='inconsistency_explanations', triggered=self.doShowInconsistentOntologyExplanations,
-            statusTip='Show explanations for inconsistent ontology', enabled=False))
+            statusTip='Show explanation(s) for inconsistent ontology', enabled=False))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',

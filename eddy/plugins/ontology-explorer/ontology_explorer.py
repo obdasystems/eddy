@@ -205,7 +205,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
 
-
 class OntologyExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the ontology explorer used to list ontology predicates.
@@ -938,7 +937,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :rtype: QtCore.QSize
         """
         return QtCore.QSize(216, 266)
-
 
 class OntologyExplorerItemDelegate(QtWidgets.QStyledItemDelegate):
     IconRole = QtCore.Qt.UserRole + 1000
