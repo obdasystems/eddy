@@ -690,6 +690,7 @@ class ExplanationExplorerWidget(QtWidgets.QWidget):
         """
         return QtCore.QSize(216, 266)
 
+#TODO AGGIUNGI OPPORTUNA FUNZIONE DI RICERCA (implementa come in ontology explorer), CONSENTI DI COPIARE ASSIOMI TRAMITE CLICK DESTRO
 class ExplanationExplorerView(QtWidgets.QTreeView):
     """
     This class implements the Explanation explorer tree view.
