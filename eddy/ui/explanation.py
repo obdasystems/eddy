@@ -818,7 +818,7 @@ class ExplanationExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
         """
 
         filterRegExp = self.filterRegExp()
-        pattern = filterRegExp.pattern()
+        patternToLower = filterRegExp.pattern().lower()
 
         index = self.sourceModel().index(sourceRow, 0, parentIndex)
         item = self.sourceModel().itemFromIndex(index)
@@ -827,7 +827,7 @@ class ExplanationExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
         elif item.hasChildren():
             children = [item.child(i) for i in range(item.rowCount())]
             #TODO INSERISCI CONTROLLO NON CASE SENSITIVE
-            if any([pattern in child.text() for child in children]):
+            if any([patternToLower in child.text().lower() for child in children]):
                 return True
             else:
                 return super().filterAcceptsRow(sourceRow, parentIndex)
