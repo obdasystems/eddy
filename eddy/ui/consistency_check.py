@@ -238,12 +238,10 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
         self.msgbox_done.setText('<p>Ontology is inconsistent.</p>')
         #TODO al momento non calcoliamo explanations
-        """ 
         self.msgbox_done.setText('<p>Ontology is inconsistent.</p>'
-                                 '<p>You may choose to display one explanation at a time in the Explanation Explorer.</p>'
-                                 '<p>To reset the background coloring of the nodes in the diagram, '
+                                 '<p>You may choose to display Explanations by pressing the "?" button in the toolbar</p>'
+                                 '<p>To reset the reasoner '
                                  'press the Reset button in the toolbar.</p>')
-        """
         self.close()
         self.msgbox_done.exec_()
         self.sgnOntologyInconsistent.emit()
@@ -261,7 +259,8 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         if count>0:
             self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             self.msgbox_done.setText('<p>Ontology is consistent however {} entities are unsatisfiable.</p>'
-                                     '<p>See highlighted entries in the Ontology Explorer for details.</p>'
+                                     '<p>See highlighted entries in the Ontology Explorer for details: '
+                                     'you may choose to display Explanations by right-clicking on them.</p>'
                                      '<p>To reset the highlighting press the Reset button in the toolbar.</p>'.format(str(count)))
         else:
             self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
