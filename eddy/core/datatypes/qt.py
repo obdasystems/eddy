@@ -195,40 +195,61 @@ class PHCQToolButton(QtWidgets.QToolButton):
 
 class VersionNumber(QtCore.QVersionNumber):
     """
-    Extends QtCore.QVersionNumber to provide support for SemVer version numbers.
+    Extends QtCore.QVersionNumber to provide version numbers compatible with
+    a strict subset of PEP 440.
     """
-    RE_SEMVER = re.compile(r'''
-        ^(?P<major>0|[1-9]\d*)
-        \.(?P<minor>0|[1-9]\d*)
-        \.(?P<patch>0|[1-9]\d*)
-        (?:-(?P<prerelease>
-            (?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)
-            (?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*
-        ))?
-        (?:\+(?P<build>
-            [0-9a-zA-Z-]+
-            (?:\.[0-9a-zA-Z-]+)*
-        ))?
-        $
+    RE_VERSION = re.compile(r'''
+        ^\s*
+        v?
+        (?:
+            (?:(?P<epoch>[0-9]+)!)?                           # epoch
+            (?P<release>[0-9]+(?:\.[0-9]+)*)                  # release segment
+            (?P<pre>                                          # pre-release
+                [-_\.]?
+                (?P<pre_l>(a|b|rc))
+                [-_\.]?
+                (?P<pre_n>[0-9]+)?
+            )?
+            (?P<post>                                         # post release
+                [-_\.]?
+                (?P<post_l>post)
+                [-_\.]?
+                (?P<post_n>[0-9]+)?
+            )?
+            (?P<dev>                                          # dev release
+                [-_\.]?
+                (?P<dev_l>dev)
+                [-_\.]?
+                (?P<dev_n>[0-9]+)?
+            )?
+        )
+        (?:\+(?P<local>[a-z0-9]+(?:[-_\.][a-z0-9]+)*))?       # local version
+        \s*$
     ''', re.VERBOSE)
 
-    def __init__(self, major=None, minor=0, patch=0, prerelease=None, build=None):
+    def __init__(self, version=None):
         """
         Initializes the VersionNumber.
-        :type major: int
-        :type minor: int
-        :type patch: int
-        :type prerelease: str
-        :type build: str
+        :type version: str
         """
-        if major is not None:
-            # CONSTRUCT EXPLICIT VERSION
-            super().__init__(int(major), minor, patch)
-        else:
-            # CONSTRUCT A NULL VERSION NUMBER
+        # Validate the version and parse it into pieces
+        match = self.RE_VERSION.search(version)
+        if not match:
             super().__init__()
-        self._prerelease = prerelease if prerelease is None else str(prerelease)
-        self._build = build if build is None else str(build)
+
+        else:
+            # Store the parsed out pieces of the version
+            self._epoch = int(match.group('epoch')) if match.group('epoch') else 0
+            self._release = tuple(int(i) for i in match.group('release').split('.'))
+            self._pre = (match.group('pre_l'),
+                         match.group('pre_n')) if match.group('pre_l') else None
+            self._post = (match.group('post_l'),
+                          match.group('post_n')) if match.group('post_l') else None
+            self._dev = (match.group('dev_l'),
+                         match.group('dev_n')) if match.group('dev_l') else None
+            self._local = match.group('local')
+
+            super().__init__(self._release)
 
     #############################################
     #   INTERFACE
@@ -241,19 +262,72 @@ class VersionNumber(QtCore.QVersionNumber):
         """
         return self.microVersion()
 
-    def build(self):
+    def epoch(self):
         """
-        Returns the build number for this version as a string.
-        :rtype: str
+        Returns the epoch of this version number.
+        :rtype: int
         """
-        return self._build
+        return self._epoch
 
     def prerelease(self):
         """
-        Returns the prerelease identifier for this version as a string.
-        :rtype str:
+        Returns the pre-release identifier for this version as a string
+        or `None` if this is not a pre-release.
+        :rtype: str
         """
-        return self._prerelease
+        return ''.join(self._pre) if self._pre else None
+
+    def post(self):
+        """
+        Returns the post-release identifier for this version as a string
+        or `None` if this is not a post-release.
+        :rtype: str
+        """
+        return ''.join(self._post) if self._post else None
+
+    def dev(self):
+        """
+        Returns the development release identifier for this version as a string
+        or `None` if this is not a development release.
+        :rtype: str
+        """
+        return ''.join(self._dev) if self._dev else None
+
+    def local(self):
+        """
+        Returns the local release identifier for this version as a string
+        or `None` if this is not a local release.
+        :rtype: str
+        """
+        return self._local
+
+    def isPrerelease(self):
+        """
+        Returns `True` if this version is a pre-release, `False` otherwise.
+        :rtype: bool
+        """
+        return self._pre is not None
+
+    def isPost(self):
+        """
+        Returns `True` if this version is a post-release, `False` otherwise.
+        :rtype: bool
+        """
+        return self._post is not None
+
+    def isDev(self):
+        """
+        Returns `True` if this version is a development release, `False` otherwise.
+        :rtype: bool
+        """
+        return self._dev is not None
+
+    def isLocal(self):
+        """
+        Returns `True` if this version is a local release, `False` otherwise.
+        :rtype: bool
+        """
+        return self._local is not None
 
     @classmethod
     def compare(cls, v1, v2):
@@ -264,22 +338,64 @@ class VersionNumber(QtCore.QVersionNumber):
         :type v2: VersionNumber
         :rtype: int
         """
+        # COMPARE EPOCH
+        if v1.epoch() != v2.epoch():
+            return max(-1, min(v1.epoch() - v2.epoch(), 1))
+        # COMPARE RELEASE
         value = super().compare(v1.normalized(), v2.normalized())
         if value != 0:
             return value
-        # COMPARE PRERELEASE IDENTIFIERS
-        rc1 = v1.prerelease()
-        rc2 = v2.prerelease()
+        # COMPARE (PRE|POST|DEV|LOCAL)RELEASE IDENTIFIERS
+        # Implementation is mostly taken from the packaging _cmpkey function.
+        inf = 1    # Sentinel value to represent infinity
+        ninf = -1  # Sentinel value to represent negative infinity
+        pre1 = v1.prerelease()
+        pre2 = v2.prerelease()
+        post1 = v1.post()
+        post2 = v2.post()
+        dev1 = v1.dev()
+        dev2 = v2.dev()
+        local1 = v1.local()
+        local2 = v2.local()
+
+        # This is needed to sort versions like 1.0.dev1 before 1.0a0
+        # but only if there is no pre or post segments.
+        if not pre1 and not post1 and dev1:
+            pre1 = ninf
+        elif not pre1:
+            pre1 = inf
+        if not pre2 and not post2 and dev2:
+            pre2 = ninf
+        elif not pre2:
+            pre2 = inf
+
+        # No dev segment is greater than any dev segment
+        if not dev1:
+            dev1 = inf
+        if not dev2:
+            dev2 = inf
+
+        # No local segment is smaller than any local segment
+        if not local1:
+            local1 = ninf
+        if not local2:
+            local2 = ninf
+
         collator = Collator(QtCore.QLocale('en_US'))
         collator.setNumericMode(True)
-        rccmp = collator.compare(v1.prerelease(), v2.prerelease())
-        if not rccmp:
-            return 0
-        elif not rc1:
-            return 1
-        elif not rc2:
-            return -1
-        return rccmp
+        t1 = (pre1, post1, dev1, local1)
+        t2 = (pre2, post2, dev2, local2)
+        for i in range(len(t1)):
+            if t1[i] != t2[i]:
+                if isinstance(t1[i], int) and isinstance(t2[i], int):
+                    return max(-1, min(t1[i] - t2[i], 1))
+                elif isinstance(t1[i], int):
+                    return 1 if t1[i] == inf else -1
+                elif isinstance(t2[i], int):
+                    return -1 if t2[i] == inf else 1
+                else:
+                    return collator.compare(t1[i], t2[i])
+        return 0
 
     @classmethod
     def fromString(cls, versionStr):
@@ -290,25 +406,14 @@ class VersionNumber(QtCore.QVersionNumber):
         :type versionStr: str
         :rtype: VersionNumber
         """
-        match = cls.RE_SEMVER.match(versionStr)
-        if not match:
-            return VersionNumber()
-        groups = match.groupdict()
-        major = int(groups['major'])
-        minor = int(groups['minor'])
-        patch = int(groups['patch'])
-        return VersionNumber(major, minor, patch, groups['prerelease'], groups['build'])
+        return VersionNumber(versionStr)
 
     def toString(self):
         """
         Returns a string representation of this VersionNumber.
         :rtype: str
         """
-        return '{0}{1}{2}'.format(
-            '{0}.{1}.{2}'.format(self.majorVersion(), self.minorVersion(), self.patchVersion()),
-            '-{}'.format(self.prerelease()) if self.prerelease() else '',
-            '+{}'.format(self.build()) if self.build() else ''
-        ) if not self.isNull() else ''
+        return str(self)
 
     def __eq__(self, other):
         """
@@ -363,11 +468,205 @@ class VersionNumber(QtCore.QVersionNumber):
         Returns a string representation of this VersionNumber.
         :rtype: str
         """
-        return '{0}({1})'.format(self.__class__.__name__, self.toString())
+        return '<{0}({1})>'.format(self.__class__.__name__, repr(self.toString()))
 
     def __str__(self):
         """
         Returns a string representation of this VersionNumber.
+        :rtype: str
+        """
+        return '{epoch}{release}{pre}{post}{dev}{local}'.format(
+            epoch='{0}!'.format(self._epoch) if self._epoch != 0 else '',
+            release='.'.join(str(x) for x in self._release),
+            pre=''.join(self.prerelease()) if self.prerelease() else '',
+            post='.{0}'.format(self.post()) if self.post() else '',
+            dev='.{0}'.format(self.dev()) if self.dev() else '',
+            local='+{0}'.format(self.local()) if self.local() else ''
+        )
+
+
+class SemVerVersionNumber(QtCore.QVersionNumber):
+    """
+    Extends QtCore.QVersionNumber to provide support for SemVer version numbers.
+    """
+    RE_SEMVER = re.compile(r'''
+        ^(?P<major>0|[1-9]\d*)
+        \.(?P<minor>0|[1-9]\d*)
+        \.(?P<patch>0|[1-9]\d*)
+        (?:-(?P<prerelease>
+            (?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)
+            (?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*
+        ))?
+        (?:\+(?P<build>
+            [0-9a-zA-Z-]+
+            (?:\.[0-9a-zA-Z-]+)*
+        ))?
+        $
+    ''', re.VERBOSE)
+
+    def __init__(self, major=None, minor=0, patch=0, prerelease=None, build=None):
+        """
+        Initializes the SemVerVersionNumber.
+        :type major: int
+        :type minor: int
+        :type patch: int
+        :type prerelease: str
+        :type build: str
+        """
+        if major is not None:
+            # CONSTRUCT EXPLICIT VERSION
+            super().__init__(int(major), minor, patch)
+        else:
+            # CONSTRUCT A NULL VERSION NUMBER
+            super().__init__()
+        self._prerelease = prerelease if prerelease is None else str(prerelease)
+        self._build = build if build is None else str(build)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def patchVersion(self):
+        """
+        Returns the patch number for this version (alias for microVersion()).
+        :rtype: int
+        """
+        return self.microVersion()
+
+    def build(self):
+        """
+        Returns the build number for this version as a string.
+        :rtype: str
+        """
+        return self._build
+
+    def prerelease(self):
+        """
+        Returns the prerelease identifier for this version as a string.
+        :rtype: str
+        """
+        return self._prerelease
+
+    def isPrerelease(self):
+        """
+        Return `True` if this version is a prerelease, `False` otherwise.
+        :rtype: bool
+        """
+        return self._prerelease is not None
+
+    @classmethod
+    def compare(cls, v1, v2):
+        """
+        Compares v1 with v2 and returns -1, 0 or +1 if v1 is, respectively,
+        less than, equal or greater than v2.
+        :type v1: SemVerVersionNumber
+        :type v2: SemVerVersionNumber
+        :rtype: int
+        """
+        value = super().compare(v1.normalized(), v2.normalized())
+        if value != 0:
+            return value
+        # COMPARE PRERELEASE IDENTIFIERS
+        rc1 = v1.prerelease()
+        rc2 = v2.prerelease()
+        collator = Collator(QtCore.QLocale('en_US'))
+        collator.setNumericMode(True)
+        rccmp = collator.compare(v1.prerelease(), v2.prerelease())
+        if not rccmp:
+            return 0
+        elif not rc1:
+            return 1
+        elif not rc2:
+            return -1
+        return rccmp
+
+    @classmethod
+    def fromString(cls, versionStr):
+        """
+        Constructs a SemVerVersionNumber from a formatted string.
+        Differently from QtCore.QVersionNumber implementation, this method
+        does not return the suffix index after the numerical segments.
+        :type versionStr: str
+        :rtype: SemVerVersionNumber
+        """
+        match = cls.RE_SEMVER.match(versionStr)
+        if not match:
+            return SemVerVersionNumber()
+        groups = match.groupdict()
+        major = int(groups['major'])
+        minor = int(groups['minor'])
+        patch = int(groups['patch'])
+        return SemVerVersionNumber(major, minor, patch, groups['prerelease'], groups['build'])
+
+    def toString(self):
+        """
+        Returns a string representation of this SemVerVersionNumber.
+        :rtype: str
+        """
+        return '{0}{1}{2}'.format(
+            '{0}.{1}.{2}'.format(self.majorVersion(), self.minorVersion(), self.patchVersion()),
+            '-{}'.format(self.prerelease()) if self.prerelease() else '',
+            '+{}'.format(self.build()) if self.build() else ''
+        ) if not self.isNull() else ''
+
+    def __eq__(self, other):
+        """
+        Returns `True` if this version is equal to the other version.
+        :type other: SemVerVersionNumber
+        :rtype: bool
+        """
+        return SemVerVersionNumber.compare(self, other) == 0
+
+    def __ge__(self, other):
+        """
+        Returns `True` if this version is greater than or equal to the other version.
+        :type other: SemVerVersionNumber
+        :rtype: bool
+        """
+        return SemVerVersionNumber.compare(self, other) >= 0
+
+    def __gt__(self, other):
+        """
+        Returns `True` if this version is strictly greater than the other version.
+        :type other: SemVerVersionNumber
+        :rtype: bool
+        """
+        return SemVerVersionNumber.compare(self, other) > 0
+
+    def __le__(self, other):
+        """
+        Returns `True` if this version is less than or equal to the other version.
+        :type other: SemVerVersionNumber
+        :rtype: bool
+        """
+        return SemVerVersionNumber.compare(self, other) <= 0
+
+    def __lt__(self, other):
+        """
+        Returns `True` if this version is strictly less than the other version.
+        :type other: SemVerVersionNumber
+        :rtype: bool
+        """
+        return SemVerVersionNumber.compare(self, other) < 0
+
+    def __ne__(self, other):
+        """
+        Returns `True` if this version is *not* equal to the other version.
+        :type other: SemVerVersionNumber
+        :rtype: bool
+        """
+        return SemVerVersionNumber.compare(self, other) != 0
+
+    def __repr__(self):
+        """
+        Returns a string representation of this SemVerVersionNumber.
+        :rtype: str
+        """
+        return '<{0}({1})>'.format(self.__class__.__name__, repr(self.toString()))
+
+    def __str__(self):
+        """
+        Returns a string representation of this SemVerVersionNumber.
         :rtype: str
         """
         return self.toString()
