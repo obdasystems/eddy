@@ -62,11 +62,11 @@ class BoldDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         # decide here if item should be bold and set font weight to bold if needed
         #option.backgroundBrush.setColor(QtGui.QColor(255, 0, 0))
-        
+
         option.font.setWeight(QtGui.QFont.Bold)
         option.font.setItalic(True)
         option.font.setUnderline(True)
-        
+
         painter.save()
         displayText = index.data(Qt.DisplayRole)
         #painter.setBrush(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
@@ -292,22 +292,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(definedPrefixesGroupbox)
 
         prefixLabel = QtWidgets.QLabel(self, objectName='prefix_input_label')
-        prefixLabel.setFont(Font('Roboto', 13))
         prefixLabel.setText('Prefix')
         self.addWidget(prefixLabel)
 
         prefixField = StringField(self, objectName='prefix_input_field')
-        prefixField.setFont(Font('Roboto', 13))
         #prefixField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/')
         self.addWidget(prefixField)
 
         nsLabel = QtWidgets.QLabel(self, objectName='ns_input_label')
-        nsLabel.setFont(Font('Roboto', 13))
         nsLabel.setText('Namespace')
         self.addWidget(nsLabel)
 
         nsField = StringField(self, objectName='ns_input_field')
-        nsField.setFont(Font('Roboto', 13))
         #nsField.setPlaceholderText('e.g. http://example.com/ontologies/myontology/1.0')
         self.addWidget(nsField)
         inputPrefixLayout = QtWidgets.QFormLayout()
@@ -403,7 +399,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(fullIriLabel)
         fullIriField = StringField(self, objectName='full_iri_field')
         # fullIriField.setFixedWidth(300)
-        fullIriField.setFont(Font('Roboto', 12))
         fullIriField.setReadOnly(True)
         self.addWidget(fullIriField)
 

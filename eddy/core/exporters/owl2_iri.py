@@ -185,7 +185,6 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         for syntax in OWLSyntax:
             field.addItem(syntax.value, syntax)
         field.setCurrentIndex(0)
-        field.setFont(Font('Roboto', 12))
         field.setObjectName('syntax_field')
         field.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.addWidget(field)
@@ -294,20 +293,17 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
 
         normalization = CheckBox('Normalize', self)
         normalization.setChecked(False)
-        normalization.setFont(Font('Roboto', 12))
         normalization.setObjectName('normalization')
         self.addWidget(normalization)
 
         exportRichText = CheckBox('Annotation in Rich Text', self)
         exportRichText.setChecked(False)
-        exportRichText.setFont(Font('Roboto', 12))
         exportRichText.setObjectName('exportRichText')
         self.addWidget(exportRichText)
 
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        confirmation.setFont(Font('Roboto', 12))
         confirmation.setObjectName('confirmation')
         connect(confirmation.accepted, self.run)
         connect(confirmation.rejected, self.reject)
@@ -341,7 +337,6 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
 
         self.setLayout(mainLayout)
         self.setFixedSize(self.sizeHint())
-        self.setFont(Font('Roboto', 12))
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('{0} Export'.format(self.project.profile.name()))
 
@@ -2442,7 +2437,7 @@ class OWLOntologyFetcher(AbstractWorker):
     #############################################
     #   AUXILIARY METHODS
     #################################
-    
+
 
     def getOWLApiFacet(self, facet):
         """

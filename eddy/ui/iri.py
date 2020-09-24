@@ -30,7 +30,6 @@ class IRIDialogsWidgetFactory(QObject):
     @staticmethod
     def getFunctionalLabel(parent):
         label = QtWidgets.QLabel(parent, objectName='functional_label')
-        label.setFont(Font('Roboto', 12))
         label.setText('Functional')
         return label
 
@@ -42,7 +41,6 @@ class IRIDialogsWidgetFactory(QObject):
     @staticmethod
     def getPredefinedDatatypeComboBoxLabel(parent):
         comboBoxLabel = QtWidgets.QLabel(parent, objectName='datatype_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Datatype')
         return comboBoxLabel
 
@@ -50,7 +48,6 @@ class IRIDialogsWidgetFactory(QObject):
     def getPredefinedDatatypeComboBox(parent):
         combobox = ComboBox(parent, objectName='datatype_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         return combobox
@@ -58,7 +55,6 @@ class IRIDialogsWidgetFactory(QObject):
     @staticmethod
     def getPredefinedConstrainingFacetComboBoxLabel(parent):
         comboBoxLabel = QtWidgets.QLabel(parent, objectName='constraining_facet_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Constraining facet')
         return comboBoxLabel
 
@@ -66,7 +62,6 @@ class IRIDialogsWidgetFactory(QObject):
     def getPredefinedConstrainingFacetComboBox(parent):
         combobox = ComboBox(parent, objectName='constraining_facet_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         return combobox
@@ -74,20 +69,17 @@ class IRIDialogsWidgetFactory(QObject):
     @staticmethod
     def getLexicalFormLabel(parent):
         inputLabel = QtWidgets.QLabel(parent, objectName='lexical_form_label')
-        inputLabel.setFont(Font('Roboto', 12))
         inputLabel.setText('Lexical form')
         return inputLabel
 
     @staticmethod
     def getLexicalFormTextArea(parent):
         textArea = QtWidgets.QTextEdit(parent, objectName='lexical_form_area')
-        textArea.setFont(Font('Roboto', 12))
         return textArea
 
     @staticmethod
     def getIRIPrefixComboBoxLabel(parent):
         comboBoxLabel = QtWidgets.QLabel(parent, objectName='iri_prefix_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Prefix')
         return  comboBoxLabel
 
@@ -95,7 +87,6 @@ class IRIDialogsWidgetFactory(QObject):
     def getIRIPrefixComboBox(parent):
         combobox = ComboBox(parent,objectName='iri_prefix_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(False)
         return combobox
@@ -103,7 +94,6 @@ class IRIDialogsWidgetFactory(QObject):
     @staticmethod
     def getInputLabel(parent):
         inputLabel = QtWidgets.QLabel(parent, objectName='input_field_label')
-        inputLabel.setFont(Font('Roboto', 12))
         inputLabel.setText('Input')
         return inputLabel
 
@@ -111,13 +101,11 @@ class IRIDialogsWidgetFactory(QObject):
     def getInputField(parent):
         inputField = StringField(parent, objectName='iri_input_field')
         # inputField.setFixedWidth(300)
-        inputField.setFont(Font('Roboto', 12))
         return inputField
 
     @staticmethod
     def getFullIRILabel(parent):
         fullIriLabel = QtWidgets.QLabel(parent, objectName='full_iri_label')
-        fullIriLabel.setFont(Font('Roboto', 12))
         fullIriLabel.setText('Full IRI')
         return  fullIriLabel
 
@@ -125,7 +113,6 @@ class IRIDialogsWidgetFactory(QObject):
     def getFullIRIField(parent):
         fullIriField = StringField(parent, objectName='full_iri_field')
         # fullIriField.setFixedWidth(300)
-        fullIriField.setFont(Font('Roboto', 12))
         fullIriField.setReadOnly(True)
         return fullIriField
 
@@ -140,7 +127,6 @@ class IRIDialogsWidgetFactory(QObject):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setFont(Font('Roboto', 13))
         return table
 
     @staticmethod
@@ -154,7 +140,6 @@ class IRIDialogsWidgetFactory(QObject):
         table.verticalHeader().setVisible(False)
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        table.setFont(Font('Roboto', 13))
         return table
 
 #TODO DOVRAI POI PENSARE A MECCANISMO PER IMPEDIRE MODIFICA IRI DI DEFAULT (owl:Thing, rdfs:label, xsd:string ....)
@@ -313,7 +298,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
         #############################################
@@ -713,7 +697,6 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
         confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
         #############################################
@@ -1057,7 +1040,6 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
         #############################################
@@ -1215,12 +1197,10 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(lfTextArea)
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Lang')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='lang_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
@@ -1249,7 +1229,6 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
         #############################################
@@ -1521,7 +1500,6 @@ class EdgeAxiomDialog(QtWidgets.QDialog, HasWidgetSystem):
         doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
         confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
 
         #############################################

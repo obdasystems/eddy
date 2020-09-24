@@ -82,7 +82,6 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         confirmation.addButton(saveBtn, QtWidgets.QDialogButtonBox.AcceptRole)
         confirmation.addButton(cancelBtn, QtWidgets.QDialogButtonBox.RejectRole)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         self.addWidget(confirmation)
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)

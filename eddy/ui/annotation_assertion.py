@@ -46,12 +46,10 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='property_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Property')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='property_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
@@ -72,7 +70,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
 
         textArea = QtWidgets.QTextEdit(self, objectName='valueTextArea')
-        textArea.setFont(Font('Roboto', 12))
         if self.assertion:
             if self.assertion.value:
                 textArea.setText(str(self.assertion.value))
@@ -80,13 +77,11 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='type_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Type')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='type_switch')
         #combobox.palette().setColor(QtGui.QPalette.Button, QtGui.QColor(169, 169, 169))
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
@@ -112,12 +107,10 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Lang')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='lang_switch')
         combobox.setEditable(True)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
@@ -138,12 +131,12 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         boxlayout.addWidget(self.widget('lang_switch'))
         self.addWidget(boxlayout)
 
-        
+
         boxlayout = QtWidgets.QHBoxLayout(self, objectName='type_lang_layout')
         boxlayout.setAlignment(QtCore.Qt.AlignLeft)
         boxlayout.addWidget(self.widget('type_layout'))
         boxlayout.addWidget(self.widget('lang_layout'))
-        
+
 
         formlayout = QtWidgets.QFormLayout(self, objectName='type_lang_layout')
         formlayout.addRow(self.widget('type_layout'))
@@ -167,7 +160,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         if not assertion:
             confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
         self.addWidget(confirmation)
@@ -335,12 +327,10 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.annotation = annotation
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='property_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Property')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='property_switch')
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
@@ -357,20 +347,17 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
 
         textArea = QtWidgets.QTextEdit(self, objectName='valueTextArea')
-        textArea.setFont(Font('Roboto', 12))
         if self.annotation:
             if self.annotation.value:
                 textArea.setText(str(self.annotation.value))
         self.addWidget(textArea)
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='type_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Type')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='type_switch')
         # combobox.palette().setColor(QtGui.QPalette.Button, QtGui.QColor(169, 169, 169))
         combobox.setEditable(False)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
@@ -389,12 +376,10 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(combobox.currentIndexChanged, self.onTypeSwitched)
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
-        comboBoxLabel.setFont(Font('Roboto', 12))
         comboBoxLabel.setText('Lang')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='lang_switch')
         combobox.setEditable(True)
-        combobox.setFont(Font('Roboto', 12))
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
         combobox.addItem(self.emptyString)
@@ -417,7 +402,6 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        confirmation.setFont(Font('Roboto', 12))
         if not annotation:
             confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
         self.addWidget(confirmation)
@@ -625,7 +609,6 @@ class AnnotationPropertyExplorerView(QtWidgets.QTreeView):
         self.startPos = None
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.setFont(Font('Roboto', 14))
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setHeaderHidden(True)
         self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)

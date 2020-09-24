@@ -832,7 +832,7 @@ class ProjectInfo(AbstractInfo):
 
             prefixes_str_to_set = prefixes_str_to_set[0:len(prefixes_str_to_set)-2]
             self.prefixesField.setValue(prefixes_str_to_set)
-        
+
         self.prefixesField.home(True)
         self.prefixesField.clearFocus()
         self.prefixesField.deselect()
@@ -1000,24 +1000,19 @@ class IRIInfo(NodeInfo):
         #connect(self.nameField.editingFinished, self.editingFinished)
 
         self.fullIRIKey = Key('IRI', self)
-        self.fullIRIKey.setFont(Font('Roboto', 12))
         self.fullIRIField = String(self)
-        self.fullIRIField.setFont(Font('Roboto', 12))
         # self.nameField.setReadOnly(False)
         self.fullIRIField.setReadOnly(True)
         #connect(self.fullIRIField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('IRI properties', self)
         self.labelKey = Key('Label', self)
-        self.labelKey.setFont(Font('Roboto', 12))
         self.labelField = String(self)
-        self.labelField.setFont(Font('Roboto', 12))
         # self.textField.setReadOnly(False)
         self.labelField.setReadOnly(True)
         #connect(self.labelField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('IRI properties', self)
-        self.predPropHeader.setFont(Font('Roboto', 12))
         self.predPropLayout = QtWidgets.QFormLayout()
         self.predPropLayout.setSpacing(0)
         self.predPropLayout.addRow(self.fullIRIKey, self.fullIRIField)
@@ -1122,10 +1117,8 @@ class FacetIRIInfo(NodeInfo):
         super().__init__(session, parent)
 
         self.brushKey = Key('Color', self)
-        self.brushKey.setFont(Font('Roboto', 12))
         self.brushMenu = QtWidgets.QMenu(self)
         self.brushButton = Button()
-        self.brushButton.setFont(Font('Roboto', 12))
         self.brushButton.setMenu(self.brushMenu)
         self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
@@ -1133,23 +1126,18 @@ class FacetIRIInfo(NodeInfo):
         #self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.facetKey = Key('Constr. facet', self)
-        self.facetKey.setFont(Font('Roboto', 12))
         self.facetField = String(self)
-        self.facetField.setFont(Font('Roboto', 12))
         #self.nameField.setReadOnly(False)
         self.facetField.setReadOnly(True)
         connect(self.facetField.editingFinished, self.editingFinished)
 
         self.valueKey = Key('Constr. value', self)
-        self.valueKey.setFont(Font('Roboto', 12))
         self.valueField = String(self)
-        self.valueField.setFont(Font('Roboto', 12))
         # self.nameField.setReadOnly(False)
         self.valueField.setReadOnly(True)
         connect(self.valueField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('Literal properties', self)
-        self.predPropHeader.setFont(Font('Roboto', 12))
         self.predPropLayout = QtWidgets.QFormLayout()
         self.predPropLayout.setSpacing(0)
         self.predPropLayout.addRow(self.facetKey, self.facetField)
@@ -1169,7 +1157,7 @@ class FacetIRIInfo(NodeInfo):
         """
         '''
         if self.node:
-            
+
             try:
                 sender = self.sender()
                 node = self.node
@@ -1428,10 +1416,8 @@ class LiteralInfo(NodeInfo):
         super().__init__(session, parent)
 
         self.brushKey = Key('Color', self)
-        self.brushKey.setFont(Font('Roboto', 12))
         self.brushMenu = QtWidgets.QMenu(self)
         self.brushButton = Button()
-        self.brushButton.setFont(Font('Roboto', 12))
         self.brushButton.setMenu(self.brushMenu)
         self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
@@ -1439,9 +1425,7 @@ class LiteralInfo(NodeInfo):
         #self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.lexicalSpaceKey = Key('Lexical space', self)
-        self.lexicalSpaceKey.setFont(Font('Roboto', 12))
         self.lexicalFormField = String(self)
-        self.lexicalFormField.setFont(Font('Roboto', 12))
         #self.nameField.setReadOnly(False)
         self.lexicalFormField.setReadOnly(True)
         connect(self.lexicalFormField.editingFinished, self.editingFinished)
@@ -1453,15 +1437,12 @@ class LiteralInfo(NodeInfo):
         connect(self.datatypeField.editingFinished, self.editingFinished)
 
         self.langKey = Key('Language', self)
-        self.langKey.setFont(Font('Roboto', 12))
         self.langField = String(self)
-        self.langField.setFont(Font('Roboto', 12))
         # self.textField.setReadOnly(False)
         self.langField.setReadOnly(True)
         connect(self.langField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('Literal properties', self)
-        self.predPropHeader.setFont(Font('Roboto', 12))
         self.predPropLayout = QtWidgets.QFormLayout()
         self.predPropLayout.setSpacing(0)
         self.predPropLayout.addRow(self.datatypeKey, self.datatypeField)
