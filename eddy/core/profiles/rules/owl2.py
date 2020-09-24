@@ -1047,7 +1047,8 @@ class SameFromCompatibleNodeRule(ProfileEdgeRule):
             if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode,
                                      Item.AttributeIRINode}:
                 raise ProfileError('Invalid source for same assertion: {0}'.format(source.name))
-            if source.type() != target.type():
+            # if source.type() != target.type():
+            if not source.identities().intersection(target.identities()):
                 raise ProfileError('Invalid target for same assertion: {0}'.format(target.name))
 
 
@@ -1061,7 +1062,8 @@ class DifferentFromCompatibleNodeRule(ProfileEdgeRule):
             if source.type() not in {Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode,
                                      Item.AttributeIRINode}:
                 raise ProfileError('Invalid source for different assertion: {0}'.format(source.name))
-            if source.type() != target.type():
+            #if source.type() != target.type():
+            if not source.identities().intersection(target.identities()):
                 raise ProfileError('Invalid target for different assertion: {0}'.format(target.name))
 
 

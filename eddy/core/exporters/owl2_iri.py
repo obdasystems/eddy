@@ -731,8 +731,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     #################################
 
                     elif edge.type() is Item.SameEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept} and \
-                                edge.target.identity() in {Identity.Individual, Identity.Concept} and \
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
                             edge.source.identities().intersection(edge.target.identities()):
                             self.createSameIndividualAxiom(edge)
                         else:
@@ -743,8 +743,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     #################################
 
                     elif edge.type() is Item.DifferentEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept} and \
-                                edge.target.identity() in {Identity.Individual, Identity.Concept} and \
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
                                 edge.source.identities().intersection(edge.target.identities()):
                             self.createDifferentIndividualsAxiom(edge)
                         else:
@@ -2023,7 +2023,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if OWLAxiom.SameIndividual in self.axiomsList:
             collection = self.HashSet()
             for node in [edge.source, edge.target]:
-                if node.type() is Item.ConceptIRINode:
+                if node.type() is Item.ConceptIRINode or node.type() is Item.AttributeIRINode or node.type() is Item.RoleIRINode:
                     collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
                 else:
                     collection.add(self._converted[node.diagram.name][node.id])
@@ -2038,10 +2038,10 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         Generate a OWL 2 DifferentIndividuals axiom.
         :type edge: DifferentEdge
         """
-        if OWLAxiom.SameIndividual in self.axiomsList:
+        if OWLAxiom.DifferentIndividuals in self.axiomsList:
             collection = self.HashSet()
             for node in [edge.source, edge.target]:
-                if node.type() is Item.ConceptIRINode:
+                if node.type() is Item.ConceptIRINode or node.type() is Item.AttributeIRINode or node.type() is Item.RoleIRINode:
                     collection.add(self._converted_meta_individuals[node.diagram.name][node.id])
                 else:
                     collection.add(self._converted[node.diagram.name][node.id])
