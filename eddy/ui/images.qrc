@@ -95,6 +95,8 @@
   <file alias="ic_format_paint_black@2x">../../resources/icons/24/ic_format_paint_black_24dp_2x.png</file>
   <file alias="ic_format_shapes_black">../../resources/icons/24/ic_format_shapes_black_24dp_1x.png</file>
   <file alias="ic_format_shapes_black@2x">../../resources/icons/24/ic_format_shapes_black_24dp_2x.png</file>
+  <file alias="ic_format_size_black">../../resources/icons/24/ic_format_size_black_24dp_1x.png</file>
+  <file alias="ic_format_size_black@2x">../../resources/icons/24/ic_format_size_black_24dp_2x.png</file>
   <file alias="ic_grid_off_black">../../resources/icons/24/ic_grid_off_black_24dp_1x.png</file>
   <file alias="ic_grid_off_black@2x">../../resources/icons/24/ic_grid_off_black_24dp_2x.png</file>
   <file alias="ic_grid_on_black">../../resources/icons/24/ic_grid_on_black_24dp_1x.png</file>
@@ -181,9 +183,8 @@
   <file alias="ic_zoom_out_black@2x">../../resources/icons/24/ic_zoom_out_black_24dp_2x.png</file>
   <file alias="ic_zoom_reset_black">../../resources/icons/24/ic_zoom_reset_black_24dp_1x.png</file>
   <file alias="ic_zoom_reset_black@2x">../../resources/icons/24/ic_zoom_reset_black_24dp_2x.png</file>
-  <file alias="ic_owl">../../resources/icons/24/ic_Owl_24.png</file>
-  <file alias="ic_question">../../resources/icons/24/ic_question_mark_24.png</file>
-  <file alias="ic_font_size">../../resources/icons/24/ic_text_size_24dp.png</file>
+  <file alias="ic_owl">../../resources/icons/24/ic_owl_24dp_1x.png</file>
+  <file alias="ic_owl@2x">../../resources/icons/24/ic_owl_24dp_2x.png</file>
 </qresource>
 <qresource prefix="/icons/48">
   <file alias="ic_code_black">../../resources/icons/48/ic_code_black_48dp_1x.png</file>
@@ -204,8 +205,8 @@
   <file alias="ic_import_black@2x">../../resources/icons/48/ic_import_black_48dp_2x.png</file>
   <file alias="ic_info_outline_black">../../resources/icons/48/ic_info_outline_black_48dp_1x.png</file>
   <file alias="ic_info_outline_black@2x">../../resources/icons/48/ic_info_outline_black_48dp_2x.png</file>
-  <file alias="ic_question_outline_black">../../resources/icons/48/ic_question_outline_black_48dp_1x.png</file>
-  <file alias="ic_question_outline_black@2x">../../resources/icons/48/ic_question_outline_black_48dp_2x.png</file>
+  <file alias="ic_help_outline_black">../../resources/icons/48/ic_help_outline_black_48dp_1x.png</file>
+  <file alias="ic_help_outline_black@2x">../../resources/icons/48/ic_help_outline_black_48dp_2x.png</file>
   <file alias="ic_save_black">../../resources/icons/48/ic_save_black_48dp_1x.png</file>
   <file alias="ic_save_black@2x">../../resources/icons/48/ic_save_black_48dp_2x.png</file>
   <file alias="ic_warning_black">../../resources/icons/48/ic_warning_black_48dp_1x.png</file>
@@ -264,18 +265,13 @@
   <file alias="ic_subscript_black@2x">../../resources/icons/48/ic_subscript_black_48dp_2x.png</file>
   <file alias="ic_subscript_black_active">../../resources/icons/48/ic_subscript_black_active_48dp_1x.png</file>
   <file alias="ic_subscript_black_active@2x">../../resources/icons/48/ic_subscript_black_active_48dp_2x.png</file>
-  <file alias="ic_owl">../../resources/icons/48/ic_Owl_48.png</file>
 </qresource>
 <qresource prefix="/icons/128">
-  <file alias="ic_eddy_old">../../resources/icons/128/ic_eddy_128dp_1x.png</file>
-  <file alias="ic_eddy_old@2x">../../resources/icons/128/ic_eddy_128dp_2x.png</file>
-  <file alias="ic_new_eddy_black">../../resources/icons/128/ic_new_eddy_black_128.png</file>
-  <file alias="ic_eddy">../../resources/icons/128/ic_new_eddy_colour_128.png</file>
-  <file alias="ic_new_eddy_white">../../resources/icons/128/ic_new_eddy_white_128.png</file>
+  <file alias="ic_eddy">../../resources/icons/128/ic_eddy_128dp_1x.png</file>
+  <file alias="ic_eddy@2x">../../resources/icons/128/ic_eddy_128dp_2x.png</file>
 </qresource>
 <qresource prefix="/images">
-  <file alias="eddy_old">../../resources/images/eddy.png</file>
-  <file alias="eddy">../../resources/images/new_logo/colour/logo/eddy-logo-1024.png</file>
+  <file alias="eddy">../../resources/images/eddy.png</file>
   <file alias="eddy-sad">../../resources/images/eddy_sad.png</file>
   <file alias="eddy-smile">../../resources/images/eddy_smile.png</file>
   <file alias="eddy-smile-small-noframe">../../resources/images/eddy_smile_small_noframe.png</file>

@@ -317,7 +317,7 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget = QtWidgets.QWidget(objectName='plugins_widget')
         widget.setLayout(layout)
         self.addWidget(widget)
-        
+
         #############################################
         # CONFIRMATION BOX
         #################################
@@ -399,7 +399,7 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
             for p in plugins_to_uninstall:
                 plugins_to_uninstall_fmt.append('&nbsp;&nbsp;&nbsp;&nbsp;- {0} v{1}'.format(p.name(), p.version()))
             msgbox = QtWidgets.QMessageBox(self)
-            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_help_outline_black').pixmap(48))
             msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
             msgbox.setStandardButtons(QtWidgets.QMessageBox.No|QtWidgets.QMessageBox.Yes)
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))

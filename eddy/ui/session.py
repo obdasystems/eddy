@@ -652,7 +652,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_question'), 'Show explanation(s)',
+            QtGui.QIcon(':/icons/24/ic_help_outline_black'), 'Show explanation(s)',
             self, objectName='inconsistency_explanations', triggered=self.doShowInconsistentOntologyExplanations,
             statusTip='Show explanation(s) for inconsistent ontology', enabled=False))
 
@@ -1011,7 +1011,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doOpenIRIPropsBuilder))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_font_size'),
+            QtGui.QIcon(':/icons/24/ic_format_size_black'),
             'Set font',
             self, objectName='iri_set_font',
             triggered=self.doOpenIRIFontDialog))
@@ -1035,7 +1035,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doOpenIRIDialog))
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_font_size'),
+            QtGui.QIcon(':/icons/24/ic_format_size_black'),
             'Set font',
             self, objectName='node_set_font',
             triggered=self.doOpenNodeFontDialog))
@@ -1082,7 +1082,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_label').setChecked(True)'''
 
         self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_question'),
+            QtGui.QIcon(':/icons/24/ic_help_outline_black'),
             'Show explanation(s)',
             self, objectName='emptiness_explanation',
             triggered=self.doEmptyEntityExplanation))
@@ -3905,7 +3905,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         save = False
         if not self.undostack.isClean():
             msgbox = QtWidgets.QMessageBox(self)
-            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_help_outline_black').pixmap(48))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Save changes?')
             msgbox.setStandardButtons(

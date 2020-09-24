@@ -191,7 +191,7 @@ class Welcome(QtWidgets.QDialog):
         self.setFixedSize(720, 400)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Welcome to {0}'.format(APPNAME))
-        
+
         connect(self.sgnCreateSession, application.doCreateSession)
         connect(self.sgnCreateSessionFromScratch, application.doCreateSessionFromScratch)
 
@@ -234,7 +234,7 @@ class Welcome(QtWidgets.QDialog):
         :type path: str
         """
         msgbox = QtWidgets.QMessageBox(self)
-        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_question_outline_black').pixmap(48))
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_help_outline_black').pixmap(48))
         msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
         msgbox.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
         msgbox.setTextFormat(QtCore.Qt.RichText)
