@@ -589,7 +589,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             ontologyIRI = rstrip(str(self.project.ontologyIRI), '#')
             mastroIRI = rstrip('http://www.obdasystems.com/mastrostudio', '#')
             versionIRI = self.project.version
-            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI))
+            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI)) if versionIRI else self.OWLOntologyID(self.IRI.create(ontologyIRI))
             self.man = self.OWLManager.createOWLOntologyManager()
             self.df = self.OWLManager.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
