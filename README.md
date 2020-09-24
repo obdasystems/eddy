@@ -6,8 +6,8 @@ Eddy
 
 | Branch    | Status  |
 |-----------|---------------|
-| [master](https://github.com/obdasystems/eddy/tree/master)   |[![Build Status](https://img.shields.io/travis/obdasystems/eddy/master?logo=travis)](https://travis-ci.org/obdasystems/eddy) [![Build Status](https://img.shields.io/appveyor/build/obdasystems/eddy/master?logo=appveyor)](https://ci.appveyor.com/project/obdasystems/eddy/branch/master)|
-| [develop](https://github.com/obdasystems/eddy/tree/develop) |[![Build Status](https://img.shields.io/travis/obdasystems/eddy/develop?logo=travis)](https://travis-ci.org/obdasystems/eddy) [![Build Status](https://img.shields.io/appveyor/build/obdasystems/eddy/develop?logo=appveyor)](https://ci.appveyor.com/project/obdasystems/eddy/branch/develop)|
+| [master](https://github.com/obdasystems/eddy/tree/master)   |[![Build Status](https://img.shields.io/travis/obdasystems/eddy/master?logo=travis)](https://travis-ci.com/obdasystems/eddy) [![Build Status](https://img.shields.io/appveyor/build/obdasystems/eddy/master?logo=appveyor)](https://ci.appveyor.com/project/obdasystems/eddy/branch/master)|
+| [develop](https://github.com/obdasystems/eddy/tree/develop) |[![Build Status](https://img.shields.io/travis/obdasystems/eddy/develop?logo=travis)](https://travis-ci.com/obdasystems/eddy) [![Build Status](https://img.shields.io/appveyor/build/obdasystems/eddy/develop?logo=appveyor)](https://ci.appveyor.com/project/obdasystems/eddy/branch/develop)|
 
 Eddy is a graphical editor for the specification and visualization of Graphol ontologies.
 Eddy features a design environment specifically thought out for generating Graphol ontologies through
