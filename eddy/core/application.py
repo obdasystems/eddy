@@ -638,11 +638,17 @@ def main():
     if IS_WIN:
         path = os.getenv('PATH', '')
         path = path.split(os.pathsep)
-        path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin'))
-        if platform.architecture()[0] == '32bit':
-            path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'client'))
+        # FOR JAVA 8
+        if isdir(os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin')):
+            bindir = os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin')
+        # FOR JAVA 9+
         else:
-            path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'server'))
+            bindir = os.path.join(os.environ['JAVA_HOME'], 'bin')
+        path.insert(0, bindir)
+        if platform.architecture()[0] == '32bit':
+            path.insert(0, os.path.join(bindir, 'client'))
+        else:
+            path.insert(0, os.path.join(bindir, 'server'))
         os.environ['PATH'] = os.pathsep.join(path)
 
     # SET CLASSPATH AND OPTIONS
@@ -657,7 +663,8 @@ def main():
         from pkg_resources import resource_filename, resource_listdir
         for path in resource_listdir(eddy.core.jvm.__name__, 'lib'):
             if File.forPath(path) is File.Jar:
-                addJVMClasspath(resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
+                addJVMClasspath(resource_filename(eddy.core.jvm.__name__,
+                                                  os.path.join('lib', path)))
     addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC')
 
     #############################################
