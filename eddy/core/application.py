@@ -60,7 +60,11 @@ from eddy import (
 from eddy.core.commandline import CommandLineParser
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.qt import Font
-from eddy.core.datatypes.system import File, IS_MACOS, IS_WIN, IS_FROZEN
+from eddy.core.datatypes.system import (
+    File,
+    IS_WIN,
+    IS_FROZEN,
+)
 from eddy.core.functions.fsystem import (
     fexists,
     isdir,
@@ -82,20 +86,16 @@ from eddy.core.project import (
     ProjectVersionError,
 )
 from eddy.core.qt import sip
+# noinspection PyUnresolvedReferences
+from eddy.ui import fonts_rc
+# noinspection PyUnresolvedReferences
+from eddy.ui import images_rc
 from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.session import Session
 from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
 from eddy.ui.welcome import Welcome
 from eddy.ui.workspace import WorkspaceDialog
-# noinspection PyUnresolvedReferences
-from eddy.ui import fonts_rc
-# noinspection PyUnresolvedReferences
-from eddy.ui import images_rc
-
-_LINUX = sys.platform.startswith('linux')
-_MACOS = sys.platform.startswith('darwin')
-_WIN32 = sys.platform.startswith('win32')
 
 LOGGER = getLogger()
 app = None
@@ -638,11 +638,17 @@ def main():
     if IS_WIN:
         path = os.getenv('PATH', '')
         path = path.split(os.pathsep)
-        path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin'))
-        if platform.architecture()[0] == '32bit':
-            path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'client'))
+        # FOR JAVA 8
+        if isdir(os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin')):
+            bindir = os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin')
+        # FOR JAVA 9+
         else:
-            path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'server'))
+            bindir = os.path.join(os.environ['JAVA_HOME'], 'bin')
+        path.insert(0, bindir)
+        if platform.architecture()[0] == '32bit':
+            path.insert(0, os.path.join(bindir, 'client'))
+        else:
+            path.insert(0, os.path.join(bindir, 'server'))
         os.environ['PATH'] = os.pathsep.join(path)
 
     # SET CLASSPATH AND OPTIONS
@@ -657,7 +663,8 @@ def main():
         from pkg_resources import resource_filename, resource_listdir
         for path in resource_listdir(eddy.core.jvm.__name__, 'lib'):
             if File.forPath(path) is File.Jar:
-                addJVMClasspath(resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
+                addJVMClasspath(resource_filename(eddy.core.jvm.__name__,
+                                                  os.path.join('lib', path)))
     addJVMOptions('-Xmx512m', '-XX:+DisableExplicitGC')
 
     #############################################
