@@ -2,6 +2,87 @@
 from PyQt5 import QtWidgets
 from eddy.core.items.nodes.common.base import OntologyEntityNode
 from eddy.core.owl import IRI
+#############################################
+#   AXIOM ANNOTATIONS
+#################################
+class CommandEdgeAddAnnotation(QtWidgets.QUndoCommand):
+    """
+    This command is used to set axiom properties.
+    """
+    def __init__(self, project, edge, ann, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type edge: IRI
+        :type annAss: Annotation
+        :type name: str
+        """
+        super().__init__(name or 'Add annotation to {0} '.format(str(edge)))
+        self._edge = edge
+        self._project = project
+        self.ann = ann
+
+    def redo(self):
+        """redo the command"""
+        self._edge.addAnnotation(self.ann)
+
+    def undo(self):
+        """undo the command"""
+        self._edge.removeAnnotation(self.ann)
+
+class CommandEdgeRemoveAnnotation(QtWidgets.QUndoCommand):
+    """
+    This command is used to set axiom properties.
+    """
+    def __init__(self, project, edge, ann, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type edge: AxiomEdge
+        :type ann: Annotation
+        :type name: str
+        """
+        super().__init__(name or 'Remove annotation from {0} '.format(str(edge)))
+        self._edge = edge
+        self._project = project
+        self._ann = ann
+
+    def redo(self):
+        """redo the command"""
+        self._edge.removeAnnotation(self._ann)
+
+    def undo(self):
+        """undo the command"""
+        self._edge.addAnnotation(self._ann)
+
+class CommandEdgeModifyAnnotation(QtWidgets.QUndoCommand):
+    """
+    This command is used to set axiom properties.
+    """
+    def __init__(self, project, ann, undo, redo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type ann: Annotation
+        :type undo: dict
+        :type redo: dict
+        :type name: str
+        """
+        super().__init__(name or 'Modify annotation {} '.format(str(ann)))
+        self._project = project
+        self._ann = ann
+        self._undo = undo
+        self._redo = redo
+
+    def redo(self):
+        """redo the command"""
+        self._ann.refactor(self._redo)
+
+    def undo(self):
+        """undo the command"""
+        self._ann.refactor(self._undo)
+
+
 
 #############################################
 #   IRIs
@@ -36,7 +117,7 @@ class CommandChangeIRIIdentifier(QtWidgets.QUndoCommand):
 
 class CommandIRIRefactor(QtWidgets.QUndoCommand):
     """
-    This command is used to change the IRI associated to (possibly) numerous node.
+    This command is used to change the IRI associated to (possibly) numerous nodes.
     """
 
     def __init__(self, project, iriRedo, iriUndo, name=None):
@@ -102,7 +183,7 @@ class CommandCommmonSubstringIRIsRefactor(QtWidgets.QUndoCommand):
 #############################################
 #   IRI ANNOTATIONS
 #################################
-class CommandIRIAddAnnotation(QtWidgets.QUndoCommand):
+class CommandIRIAddAnnotationAssertion(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
     """
@@ -127,7 +208,7 @@ class CommandIRIAddAnnotation(QtWidgets.QUndoCommand):
         """undo the command"""
         self._iri.removeAnnotationAssertion(self._annAss)
 
-class CommandIRIRemoveAnnotation(QtWidgets.QUndoCommand):
+class CommandIRIRemoveAnnotationAssertion(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
     """
@@ -152,7 +233,7 @@ class CommandIRIRemoveAnnotation(QtWidgets.QUndoCommand):
         """undo the command"""
         self._iri.addAnnotationAssertion(self._annAss)
 
-class CommandIRIModifyAnnotation(QtWidgets.QUndoCommand):
+class CommandIRIModifyAnnotationAssertion(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
     """

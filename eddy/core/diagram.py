@@ -917,6 +917,8 @@ class Diagram(QtWidgets.QGraphicsScene):
             return QtCore.QRectF(QtCore.QPointF(min(x) - margin, min(y) - margin), QtCore.QPointF(max(x) + margin, max(y) + margin))
         return QtCore.QRectF()
 
+    def __str__(self):
+        return 'Diagram {}'.format(self.name)
 
 class DiagramMalformedError(RuntimeError):
     """

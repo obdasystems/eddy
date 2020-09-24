@@ -40,11 +40,11 @@ from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import createArea
-from eddy.core.items.edges.common.base import AbstractEdge
+from eddy.core.items.edges.common.base import AbstractEdge, AxiomEdge
 from eddy.core.items.edges.common.label import EdgeLabel
 
 
-class DifferentEdge(AbstractEdge):
+class DifferentEdge(AxiomEdge):
     """
     This class implements the 'differentIndividuals' edge.
     """

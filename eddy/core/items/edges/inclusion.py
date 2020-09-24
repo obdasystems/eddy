@@ -40,10 +40,10 @@ from PyQt5 import QtGui
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.geometry import createArea
-from eddy.core.items.edges.common.base import AbstractEdge
+from eddy.core.items.edges.common.base import AbstractEdge, AxiomEdge
 
 
-class InclusionEdge(AbstractEdge):
+class InclusionEdge(AxiomEdge):
     """
     This class implements the 'Inclusion' edge.
     """

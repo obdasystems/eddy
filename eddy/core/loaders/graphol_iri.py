@@ -34,7 +34,7 @@ from eddy.core.loaders.graphol import GrapholProjectLoader_v1
 from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker, OwlOntologyImportWorker
 from eddy.core.output import getLogger
 from eddy.core.owl import Literal, Facet, AnnotationAssertion, ImportedOntology, AnnotationAssertionProperty, \
-    OWL2Datatype
+    OWL2Datatype, Annotation
 from eddy.core.project import Project, K_DESCRIPTION, ProjectStopImportingError
 from eddy.core.project import ProjectNotFoundError
 from eddy.core.project import ProjectNotValidError
@@ -261,16 +261,14 @@ class GrapholProjectIRILoaderMixin_2(object):
                 QtWidgets.QApplication.processEvents()
                 namespace = sube.attribute('iri_value')
 
-                '''
                 ### Needed to fix the namespace of standard vocabularies which up to
                 ### version 1.1.2 where stored without the fragment separator (#).
                 ### See: https://github.com/obdasystems/eddy/issues/20
                 for ns in Namespace:
-                    if postfix(namespace, '#') == ns.value:
+                    if namespace+'#' == ns.value:
                         # Append the missing fragment separator
                         namespace += '#'
                         break
-                '''
 
                 sube_prefixes = sube.firstChildElement('prefixes')
 
@@ -1223,7 +1221,7 @@ class GrapholProjectIRILoaderMixin_3(object):
                         LOGGER.exception('Failed to import annotation element for iri {} [{}]'.format(iriString,e))
                     finally:
                         annotationEl = annotationEl.nextSiblingElement('annotation')
-                return result
+            return result
 
     def getAnnotationAssertion(self,annotationEl):
         subjectEl = annotationEl.firstChildElement('subject')
@@ -1246,6 +1244,26 @@ class GrapholProjectIRILoaderMixin_3(object):
             if languageEl.text():
                 language = languageEl.text()
         return AnnotationAssertion(subject,property,value,type,language)
+
+    def getAnnotation(self,annotationEl):
+        propertyEl = annotationEl.firstChildElement('property')
+        property = self.nproject.getIRI(propertyEl.text())
+        value = None
+        type = None
+        language = None
+        objectEl = annotationEl.firstChildElement('object')
+        iriObjEl = objectEl.firstChildElement('iri')
+        if not iriObjEl.isNull():
+            value = self.nproject.getIRI(iriObjEl.text())
+        else:
+            value = objectEl.firstChildElement('lexicalForm').text()
+            datatypeEl = objectEl.firstChildElement('datatype')
+            if datatypeEl.text():
+                type = self.nproject.getIRI(datatypeEl.text())
+            languageEl = objectEl.firstChildElement('language')
+            if languageEl.text():
+                language = languageEl.text()
+        return Annotation(property,value,type,language)
 
     def getPrefixMap(self, ontologyEl):
         prefixMap = dict()
@@ -1333,7 +1351,7 @@ class GrapholProjectIRILoaderMixin_3(object):
                 ontImp = ImportedOntology(ontIri, location, versionIri, isLocal, self.nproject)
                 result.add(ontImp)
             except Exception as e:
-                LOGGER.exception('Failed to import import element. {}'.format(str(e)))
+                LOGGER.exception('Failed to import element. {}'.format(str(e)))
             finally:
                 importEl = importEl.nextSiblingElement('import')
         return result
@@ -1660,7 +1678,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         :type e: QDomElement
         :rtype: EquivalenceEdge
         """
-        return self.importGenericEdge(d, Item.EquivalenceEdge, e)
+        return self.importAxiomEdge(d, Item.EquivalenceEdge, e)
 
     def importInclusionEdge(self, d, e):
         """
@@ -1669,7 +1687,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         :type e: QDomElement
         :rtype: InclusionEdge
         """
-        return self.importGenericEdge(d, Item.InclusionEdge, e)
+        return self.importAxiomEdge(d, Item.InclusionEdge, e)
 
     def importInputEdge(self, d, e):
         """
@@ -1687,7 +1705,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         :type e: QDomElement
         :rtype: MembershipEdge
         """
-        return self.importGenericEdge(d, Item.MembershipEdge, e)
+        return self.importAxiomEdge(d, Item.MembershipEdge, e)
 
     def importSameEdge(self, d, e):
         """
@@ -1696,7 +1714,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         :type e: QDomElement
         :rtype: SameEdge
         """
-        return self.importGenericEdge(d, Item.SameEdge, e)
+        return self.importAxiomEdge(d, Item.SameEdge, e)
 
     def importDifferentEdge(self, d, e):
         """
@@ -1705,7 +1723,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         :type e: QDomElement
         :rtype: DifferentEdge
         """
-        return self.importGenericEdge(d, Item.DifferentEdge, e)
+        return self.importAxiomEdge(d, Item.DifferentEdge, e)
 
     #############################################
     #   AUXILIARY METHODS
@@ -1757,6 +1775,21 @@ class GrapholProjectIRILoaderMixin_3(object):
 
         edge.source.addEdge(edge)
         edge.target.addEdge(edge)
+        return edge
+
+    def importAxiomEdge(self, d, i, e):
+        edge = self.importGenericEdge(d,i,e)
+
+        annSetEl = e.firstChildElement('annotations')
+        if not annSetEl.isNull():
+            annotationEl = annSetEl.firstChildElement('annotation')
+            while not annotationEl.isNull():
+                try:
+                    edge.addAnnotation(self.getAnnotation(annotationEl))
+                except Exception as e:
+                    LOGGER.exception('Failed to import annotation element for edge {} [{}]'.format(str(edge), e))
+                finally:
+                    annotationEl = annotationEl.nextSiblingElement('annotation')
         return edge
 
     def importGenericNode(self, diagram, item, e):
@@ -2029,7 +2062,6 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
             #self.project.addAnnotationProperty(str(annPropIRI))
 
     def importImportedOntologies(self):
-        importToBeLoaded = []
         alreadyLoadedOntIRIs = [str(x.ontologyIRI) for x in self.project.importedOntologies]
         for otherImpOnt in self.other.importedOntologies:
             if not str(otherImpOnt.ontologyIRI) in alreadyLoadedOntIRIs:

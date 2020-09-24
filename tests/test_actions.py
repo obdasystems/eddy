@@ -58,7 +58,7 @@ def session(qapp, qtbot, logging_disabled):
         session = Session(qapp, expandPath('@tests/test_project_3/test_project_3_1.graphol'))
         session.show()
     qtbot.addWidget(session)
-    qtbot.waitExposed(session, timeout=3000)
+    qtbot.waitExposed(session)
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(session.project.diagram('diagram'))
     yield session
@@ -68,6 +68,21 @@ def session(qapp, qtbot, logging_disabled):
 #############################################
 #   CUT / COPY / PASTE
 #################################
+def test_python_stupidity(session):
+    project = session.project
+    diagram = session.mdi.activeDiagram()
+    action = session.action('copy')
+
+    iri = project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/hasParent')
+    node = first(project.iriOccurrences(Item.RoleIRINode, iri, diagram))
+
+    diagram.clearSelection()
+    node.setSelected(True)
+    # WHEN
+    action.trigger()
+    # THEN
+    assert True
+
 def test_action_copy(session):
     # GIVEN
     project = session.project

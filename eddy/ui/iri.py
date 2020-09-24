@@ -1,8 +1,9 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import QObject, Qt
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotation, CommandChangeIRIOfNode, CommandChangeFacetOfNode, \
-    CommandChangeLiteralOfNode, CommandIRIRefactor, CommandChangeIRIIdentifier
+from eddy.core.commands.iri import CommandIRIRemoveAnnotationAssertion, CommandChangeIRIOfNode, \
+    CommandChangeFacetOfNode, \
+    CommandChangeLiteralOfNode, CommandIRIRefactor, CommandChangeIRIIdentifier, CommandEdgeRemoveAnnotation
 from eddy.core.commands.nodes import CommandNodeSetFont
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode
@@ -15,7 +16,7 @@ from eddy.ui.notification import Notification
 from eddy.core.common import HasWidgetSystem
 
 from eddy.core.owl import IRI, IllegalNamespaceError, AnnotationAssertion, Facet, Literal, IllegalLiteralError, \
-    OWL2Datatype
+    OWL2Datatype, Annotation
 
 from eddy.core.functions.signals import connect
 from eddy.ui.fields import ComboBox, StringField, CheckBox, SpinBox
@@ -130,6 +131,20 @@ class IRIDialogsWidgetFactory(QObject):
 
     @staticmethod
     def getAnnotationAssertionsTable(parent):
+        table = QtWidgets.QTableWidget(0, 2, parent, objectName='annotation_assertions_table_widget')
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.horizontalHeader().setMinimumSectionSize(170)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.verticalHeader().setVisible(False)
+        table.verticalHeader().setSectionsClickable(False)
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        table.setFont(Font('Roboto', 13))
+        return table
+
+    @staticmethod
+    def getAnnotationsTable(parent):
         table = QtWidgets.QTableWidget(0, 2, parent, objectName='annotations_table_widget')
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
         table.horizontalHeader().setStretchLastSection(True)
@@ -187,9 +202,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            ontPrefix = self.project.ontologyPrefix
-            if not ontPrefix is None:
-                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            if not self.iri:
+                ontPrefix = self.project.ontologyPrefix
+                if not ontPrefix is None:
+                    combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+                else:
+                    combobox.setCurrentText(self.emptyString)
             else:
                 combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
@@ -227,17 +245,63 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         formlayout.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
         formlayout.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
 
-        '''
-        if isinstance(node, AttributeNode):
-            functLabel = IRIDialogsWidgetFactory.getFunctionalLabel(self)
-            self.addWidget(functLabel)
-            functCheckBox = IRIDialogsWidgetFactory.getFunctionalCheckBox(self)
-            self.addWidget(functCheckBox)
-            formlayout.addRow(self.widget('functional_label'), self.widget('functional_checkbox'))
-        '''
+        #groupbox = QtWidgets.QGroupBox('', self, objectName='iri_definition_group_widget')
+        #groupbox.setLayout(formlayout)
+        #self.addWidget(groupbox)
+
+        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_simplename')
+        checkBoxLabel.setText('Derive rdfs:label from simple name')
+        self.addWidget(checkBoxLabel)
+        checked = self.project.addLabelFromSimpleName
+        checkBox = CheckBox('', self, enabled=True, checked=checked, clicked=self.onLabelSimpleNameCheckBoxClicked,
+                            objectName='label_simplename_checkbox')
+        self.addWidget(checkBox)
+
+        checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_userinput')
+        checkBoxLabel.setText('Derive rdfs:label from user input')
+        self.addWidget(checkBoxLabel)
+        checked = self.project.addLabelFromUserInput
+        checkBox = CheckBox('', self, enabled=True, checked=checked, clicked=self.onLabelUserInputCheckBoxClicked,
+                            objectName='label_userinput_checkbox')
+        self.addWidget(checkBox)
+
+        comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
+        comboBoxLabel.setText('rdfs:label language')
+        self.addWidget(comboBoxLabel)
+        combobox = ComboBox(self, objectName='lang_switch')
+        combobox.setEditable(False)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if self.project.defaultLanguage:
+            combobox.setCurrentText(self.project.defaultLanguage)
+        else:
+            combobox.setCurrentText(self.emptyString)
+        if self.widget('label_simplename_checkbox').isChecked() or self.widget('label_userinput_checkbox').isChecked():
+            combobox.setStyleSheet("background:#FFFFFF");
+            combobox.setEnabled(True)
+        else:
+            combobox.setStyleSheet("background:#808080");
+            combobox.setEnabled(False)
+
+        self.addWidget(combobox)
+        iriLabelLayout = QtWidgets.QFormLayout()
+        iriLabelLayout.addRow(self.widget('checkBox_label_simplename'), self.widget('label_simplename_checkbox'))
+        iriLabelLayout.addRow(self.widget('checkBox_label_userinput'), self.widget('label_userinput_checkbox'))
+        iriLabelLayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
+
+        groupbox = QtWidgets.QGroupBox('', self, objectName='iri_label_group_widget')
+        groupbox.setLayout(iriLabelLayout)
+        self.addWidget(groupbox)
+        groupbox.setEnabled(not self.iri and not isinstance(self.node, ValueDomainNode))
+
+        outerFormlayout = QtWidgets.QFormLayout()
+        outerFormlayout.addRow(formlayout)
+        outerFormlayout.addRow(groupbox)
 
         widget = QtWidgets.QWidget()
-        widget.setLayout(formlayout)
+        widget.setLayout(outerFormlayout)
         widget.setObjectName('iri_widget')
         self.addWidget(widget)
 
@@ -325,9 +389,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
-            ontPrefix = self.project.ontologyPrefix
-            if not ontPrefix is None:
-                combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+            if not self.iri:
+                ontPrefix = self.project.ontologyPrefix
+                if not ontPrefix is None:
+                    combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
+                else:
+                    combobox.setCurrentText(self.emptyString)
             else:
                 combobox.setCurrentText(self.emptyString)
 
@@ -349,14 +416,34 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 fullIriField.setText('')
 
-        '''
-        if isinstance(self.node, AttributeNode):
-            functCheckBox = self.widget('functional_checkbox')
-            if self.node.iri and self.node.iri.functional:
-                functCheckBox.setChecked(True)
-            else:
-                functCheckBox.setChecked(False)
-        '''
+        checked = self.project.addLabelFromSimpleName
+        checkBox = self.widget('label_simplename_checkbox')
+        checkBox.setChecked(checked)
+
+        checked = self.project.addLabelFromUserInput
+        checkBox = self.widget('label_userinput_checkbox')
+        checkBox.setChecked(checked)
+
+        combobox = self.widget('lang_switch')
+        combobox.setEditable(False)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(True)
+        combobox.addItem(self.emptyString)
+        combobox.addItems([x for x in self.project.getLanguages()])
+        if self.project.defaultLanguage:
+            combobox.setCurrentText(self.project.defaultLanguage)
+        else:
+            combobox.setCurrentText(self.emptyString)
+        if self.widget('label_simplename_checkbox').isChecked() or self.widget('label_userinput_checkbox').isChecked():
+            combobox.setStyleSheet("background:#FFFFFF");
+            combobox.setEnabled(True)
+        else:
+            combobox.setStyleSheet("background:#808080");
+            combobox.setEnabled(False)
+
+        groupbox = self.widget('iri_label_group_widget')
+        groupbox.setEnabled(not self.iri and not isinstance(self.node, ValueDomainNode))
+
 
         #############################################
         # PREDEFINED DATATYPE TAB
@@ -384,6 +471,29 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         fullIri = '{}{}'.format(resolvedPrefix,input)
         self.widget('full_iri_field').setValue(fullIri)
 
+    @QtCore.pyqtSlot()
+    def onLabelSimpleNameCheckBoxClicked(self):
+        checkBoxSimpleName = self.widget('label_simplename_checkbox')
+        checkBoxUserInput = self.widget('label_userinput_checkbox')
+        if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
+            self.widget('lang_switch').setEnabled(True)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#808080")
+            self.widget('lang_switch').setEnabled(False)
+
+    @QtCore.pyqtSlot()
+    def onLabelUserInputCheckBoxClicked(self):
+        checkBoxSimpleName = self.widget('label_simplename_checkbox')
+        checkBoxUserInput = self.widget('label_userinput_checkbox')
+        if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
+            self.widget('lang_switch').setEnabled(True)
+        else:
+            self.widget('lang_switch').setStyleSheet("background:#808080")
+            self.widget('lang_switch').setEnabled(False)
+
+
 
     @QtCore.pyqtSlot()
     def accept(self):
@@ -395,13 +505,36 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.project.isValidIdentifier(inputIriString)
                 if self.iri:
                     if not str(self.iri) == inputIriString:
-                        command = CommandChangeIRIOfNode(self.project, self.node, inputIriString, str(self.iri))
+                        if len(self.project.iriOccurrences(iri=self.iri))==1:
+                            existIRI = self.project.existIRI(inputIriString)
+                            if existIRI:
+                                newIRI = self.project.getIRI(inputIriString, addLabelFromSimpleName=True,
+                                                             addLabelFromUserInput=True, userInput=userExplicitInput)
+                                if not newIRI is self.iri:
+                                    oldIRI = self.iri
+                                    self.iri = newIRI
+                                    self.redraw()
+                                    command = CommandIRIRefactor(self.project, self.iri, oldIRI)
+                                    self.session.undostack.beginMacro('IRI <{}> refactor'.format(self.iri))
+                                    if command:
+                                        self.session.undostack.push(command)
+                                    self.session.undostack.endMacro()
+                            else:
+                                oldStr = self.iri.namespace
+                                command = CommandChangeIRIIdentifier(self.project, self.iri, inputIriString, oldStr)
+                        else:
+                            command = CommandChangeIRIOfNode(self.project, self.node, inputIriString, str(self.iri))
                         self.session.undostack.beginMacro('Node {} set IRI <{}> '.format(self.node.id,inputIriString))
                         if command:
                             self.session.undostack.push(command)
                         self.session.undostack.endMacro()
                 else:
-                    inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=userExplicitInput)
+                    self.widget('label_simplename_checkbox').isChecked() or self.widget(
+                        'label_userinput_checkbox').isChecked()
+                    inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=self.widget('label_simplename_checkbox').isChecked(),
+                                                   addLabelFromUserInput=self.widget('label_userinput_checkbox').isChecked(),
+                                                   userInput=userExplicitInput,
+                                                   labelExplicitChecked=True)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
                     '''
@@ -459,104 +592,6 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             return self.project.getPrefixResolution(prefixStr)
             # return self.project.getPrefixResolution(prefixStr[:-1])
 
-class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
-
-    def __init__(self, session, node, refactor=False):
-        """
-        Initialize the Preferences dialog.
-        :type session: Session
-        """
-        super().__init__(session)
-        self.node = node
-        self.session = session
-        self.refactor = refactor
-
-        prefix = QtWidgets.QLabel(self, objectName='font_size_prefix')
-        prefix.setText('Node font size (px)')
-        self.addWidget(prefix)
-
-        spinbox = SpinBox(self, objectName='font_size_field')
-        spinbox.setRange(node.diagram.MinFontSize, node.diagram.MaxFontSize)
-        spinbox.setSingleStep(1)
-        if not refactor:
-            spinbox.setToolTip('Font size for node label (px)')
-        else:
-            spinbox.setToolTip('Font size for IRI label (px)')
-        spinbox.setValue(node.label.font().pixelSize())
-        self.addWidget(spinbox)
-
-        formlayout = QtWidgets.QFormLayout()
-        formlayout.addRow(self.widget('font_size_prefix'), self.widget('font_size_field'))
-        groupbox = QtWidgets.QGroupBox('Editor', self, objectName='editor_widget')
-        groupbox.setLayout(formlayout)
-        self.addWidget(groupbox)
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.setAlignment(QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('editor_widget'), 0, QtCore.Qt.AlignTop)
-        widget = QtWidgets.QWidget()
-        widget.setLayout(layout)
-        widget.setObjectName('general_widget')
-        self.addWidget(widget)
-
-        #############################################
-        # CONFIRMATION BOX
-        #################################
-
-        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
-        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        confirmation.setContentsMargins(10, 0, 10, 10)
-        self.addWidget(confirmation)
-
-        #############################################
-        # MAIN WIDGET
-        #################################
-
-        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
-        widget.addTab(self.widget('general_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'), 'General')
-        self.addWidget(widget)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.widget('main_widget'))
-        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
-        self.setLayout(layout)
-        self.setMinimumSize(740, 420)
-        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        if not refactor:
-            self.setWindowTitle('Set font size of node {}'.format(node.id))
-        else:
-            self.setWindowTitle('Set font size of IRI {}'.format(str(node.iri)))
-
-        connect(confirmation.accepted, self.accept)
-        connect(confirmation.rejected, self.reject)
-
-    @QtCore.pyqtSlot()
-    def accept(self):
-        """
-        Executed when the dialog is accepted.
-        """
-        #############################################
-        # GENERAL TAB
-        #################################
-        pixelSize = self.widget('font_size_field').value()
-        nodes = None
-        if self.refactor:
-            nodes = self.session.project.iriOccurrences(self.node.type(),self.node.iri)
-        else:
-            nodes = [self.node]
-        command = CommandNodeSetFont(self.node.diagram,nodes,pixelSize)
-        self.session.undostack.beginMacro('set {} font size on {} node(s)'.format(pixelSize, len(nodes)))
-        if command:
-            self.session.undostack.push(command)
-        self.session.undostack.endMacro()
-
-        #############################################
-        # SAVE & EXIT
-        #################################
-
-        super().accept()
-
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     noPrefixString = ''
@@ -592,11 +627,14 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix+':'+'  <'+self.project.getNamespace(shortest.prefix)+'>')
         else:
+            '''
             ontPrefix = self.project.ontologyPrefix
             if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)
+            '''
+            combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
         inputLabel = IRIDialogsWidgetFactory.getInputLabel(self)
@@ -618,6 +656,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         saveBtn = QtWidgets.QPushButton('Save', objectName='save_iri_button')
         connect(saveBtn.clicked, self.saveIRI)
+        saveBtn.setEnabled(False)
         self.addWidget(saveBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
@@ -659,7 +698,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         boxlayout.addWidget(self.widget('annotations_edit_button'))
 
         formlayout = QtWidgets.QFormLayout()
-        formlayout.addRow(self.widget('annotations_table_widget'))
+        formlayout.addRow(self.widget('annotation_assertions_table_widget'))
         formlayout.addRow(boxlayout)
         widget = QtWidgets.QWidget()
         widget.setLayout(formlayout)
@@ -727,11 +766,14 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         if shortest:
             combobox.setCurrentText(shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
         else:
+            '''
             ontPrefix = self.project.ontologyPrefix
             if not ontPrefix is None:
                 combobox.setCurrentText(ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>')
             else:
                 combobox.setCurrentText(self.emptyString)
+            '''
+            combobox.setCurrentText(self.emptyString)
 
         inputField = self.widget('iri_input_field')
         if shortest:
@@ -745,7 +787,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # ANNOTATIONS TAB
         #################################
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         annAss = self.iri.annotationAssertions
         table.clear()
         table.setRowCount(len(annAss))
@@ -781,7 +823,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
         :type assertion:AnnotationAssertion
         '''
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         rowcount = table.rowCount()
         table.setRowCount(rowcount + 1)
         propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
@@ -801,7 +843,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         Removes an annotation from the current IRI.
         :type _: bool
         """
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         rowcount = table.rowCount()
         selectedRanges = table.selectedRanges()
         commands = []
@@ -809,7 +851,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
                 assertion = removedItem.data(Qt.UserRole)
-                command = CommandIRIRemoveAnnotation(self.project, self.iri, assertion)
+                command = CommandIRIRemoveAnnotationAssertion(self.project, self.iri, assertion)
                 commands.append(command)
                 #self.iri.removeAnnotationAssertion(assertion)
 
@@ -826,7 +868,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(bool)
     def editAnnotation(self, _):
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
@@ -841,7 +883,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         '''
         :type assertion:AnnotationAssertion
         '''
-        table = self.widget('annotations_table_widget')
+        table = self.widget('annotation_assertions_table_widget')
         rowcount = table.rowCount()
         for row in range(0,rowcount):
             propItem = table.item(row, 0)
@@ -867,6 +909,10 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         resolvedPrefix = self.resolvePrefix(prefix)
         fullIri = '{}{}'.format(resolvedPrefix,input)
         self.widget('full_iri_field').setValue(fullIri)
+        if not fullIri==str(self.iri):
+            self.widget('save_iri_button').setEnabled(True)
+        else:
+            self.widget('save_iri_button').setEnabled(False)
 
     @QtCore.pyqtSlot(bool)
     def saveIRI(self,_):
@@ -875,7 +921,6 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             fullIRIString = self.widget('full_iri_field').value()
             existIRI = self.project.existIRI(fullIRIString)
             if existIRI:
-                print('IRI corresponding to string {} already exists'.format(fullIRIString))
                 newIRI = self.project.getIRI(fullIRIString, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=userExplicitInput)
                 if not newIRI is self.iri:
                     oldIRI = self.iri
@@ -887,7 +932,6 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                         self.session.undostack.push(command)
                     self.session.undostack.endMacro()
             else:
-                print('IRI corresponding to string {} does not exist'.format(fullIRIString))
                 if not self.iri.namespace == fullIRIString:
                     oldStr = self.iri.namespace
                     command = CommandChangeIRIIdentifier(self.project, self.iri, fullIRIString, oldStr)
@@ -902,6 +946,8 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             errorDialog.show()
             errorDialog.raise_()
             errorDialog.activateWindow()
+        finally:
+            self.widget('save_iri_button').setEnabled(False)
 
     @QtCore.pyqtSlot()
     def accept(self):
@@ -1321,5 +1367,338 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.sgnLiteralRejected.emit(self.node)
         super().reject()
 
+class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
 
+    def __init__(self, session, node, refactor=False):
+        """
+        Initialize the Preferences dialog.
+        :type session: Session
+        """
+        super().__init__(session)
+        self.node = node
+        self.session = session
+        self.refactor = refactor
+
+        prefix = QtWidgets.QLabel(self, objectName='font_size_prefix')
+        prefix.setText('Node font size (px)')
+        self.addWidget(prefix)
+
+        spinbox = SpinBox(self, objectName='font_size_field')
+        spinbox.setRange(node.diagram.MinFontSize, node.diagram.MaxFontSize)
+        spinbox.setSingleStep(1)
+        if not refactor:
+            spinbox.setToolTip('Font size for node label (px)')
+        else:
+            spinbox.setToolTip('Font size for IRI label (px)')
+        spinbox.setValue(node.label.font().pixelSize())
+        self.addWidget(spinbox)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('font_size_prefix'), self.widget('font_size_field'))
+        groupbox = QtWidgets.QGroupBox('Editor', self, objectName='editor_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('editor_widget'), 0, QtCore.Qt.AlignTop)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('general_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        self.addWidget(confirmation)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+
+        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        widget.addTab(self.widget('general_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'), 'General')
+        self.addWidget(widget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(740, 420)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        if not refactor:
+            self.setWindowTitle('Set font size of node {}'.format(node.id))
+        else:
+            self.setWindowTitle('Set font size of IRI {}'.format(str(node.iri)))
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        #############################################
+        # GENERAL TAB
+        #################################
+        pixelSize = self.widget('font_size_field').value()
+        nodes = None
+        if self.refactor:
+            nodes = self.session.project.iriOccurrences(self.node.type(),self.node.iri)
+        else:
+            nodes = [self.node]
+        command = CommandNodeSetFont(self.node.diagram,nodes,pixelSize)
+        self.session.undostack.beginMacro('set {} font size on {} node(s)'.format(pixelSize, len(nodes)))
+        if command:
+            self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().accept()
+
+class EdgeAxiomDialog(QtWidgets.QDialog, HasWidgetSystem):
+
+    noPrefixString = ''
+    emptyString = ''
+
+    def __init__(self,edge,session):
+        """
+        Initialize the edge axiom properties dialog.
+        :type edge: AxiomEdge
+        :type session: Session
+        """
+        super().__init__(session)
+        self.session = session
+        self.project = session.project
+        self.edge = edge
+
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+        table = IRIDialogsWidgetFactory.getAnnotationsTable(self)
+        table.clear()
+        self.addWidget(table)
+
+        addBtn = QtWidgets.QPushButton('Add', objectName='annotations_add_button')
+        delBtn = QtWidgets.QPushButton('Remove', objectName='annotations_delete_button')
+        editBtn = QtWidgets.QPushButton('Edit', objectName='annotations_edit_button')
+        connect(addBtn.clicked, self.addAnnotation)
+        connect(delBtn.clicked, self.removeAnnotation)
+        connect(editBtn.clicked, self.editAnnotation)
+        self.addWidget(addBtn)
+        self.addWidget(delBtn)
+        self.addWidget(editBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('annotations_add_button'))
+        boxlayout.addWidget(self.widget('annotations_delete_button'))
+        boxlayout.addWidget(self.widget('annotations_edit_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('annotations_table_widget'))
+        formlayout.addRow(boxlayout)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('annotation_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
+        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        confirmation.setFont(Font('Roboto', 12))
+        self.addWidget(confirmation)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+        widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        widget.addTab(self.widget('annotation_widget'), QtGui.QIcon(':/icons/24/ic_settings_black'),
+                      'Annotations')
+
+        self.addWidget(widget)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(740, 420)
+        self.setWindowTitle('Axiom annotation {}'.format(str(self.edge)))
+
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+        self.redraw()
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+        table = self.widget('annotations_table_widget')
+        annAss = self.edge.annotations
+        table.clear()
+        table.setRowCount(len(annAss))
+        table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+        rowcount = 0
+        for assertion in annAss:
+            propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            propertyItem.setData(QtCore.Qt.UserRole, assertion)
+            table.setItem(rowcount, 0, propertyItem)
+            valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
+            valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
+            rowcount += 1
+        table.resizeColumnToContents(0)
+
+
+    @QtCore.pyqtSlot(bool)
+    def addAnnotation(self, _):
+        """
+        Adds an annotation to the current edge.
+        :type _: bool
+        """
+        annotationBuilder = self.session.doOpenAnnotationBuilder(self.edge)
+        connect(annotationBuilder.sgnAnnotationAccepted, self.onAnnotationAccepted)
+        annotationBuilder.exec_()
+
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onAnnotationAccepted(self, annotation):
+        '''
+        :type annotation:Annotation
+        '''
+        table = self.widget('annotations_table_widget')
+        rowcount = table.rowCount()
+        table.setRowCount(rowcount + 1)
+        propertyItem = QtWidgets.QTableWidgetItem(str(annotation.assertionProperty))
+        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        propertyItem.setData(Qt.UserRole, annotation)
+        table.setItem(rowcount, 0, propertyItem)
+        valueItem = QtWidgets.QTableWidgetItem(str(annotation.getObjectResourceString(True)))
+        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
+        table.scrollToItem(table.item(rowcount, 0))
+        table.resizeColumnToContents(0)
+
+
+    @QtCore.pyqtSlot(bool)
+    def removeAnnotation(self, _):
+        """
+        Removes an annotation from the current edge(axiom).
+        :type _: bool
+        """
+        table = self.widget('annotations_table_widget')
+        rowcount = table.rowCount()
+        selectedRanges = table.selectedRanges()
+        commands = []
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                removedItem = table.item(row, 0)
+                assertion = removedItem.data(Qt.UserRole)
+                command = CommandEdgeRemoveAnnotation(self.project, self.edge, assertion)
+                commands.append(command)
+                #self.iri.removeAnnotationAssertion(assertion)
+
+        self.session.undostack.beginMacro('Remove annotations >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                table.removeRow(row)
+        table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
+
+    @QtCore.pyqtSlot(bool)
+    def editAnnotation(self, _):
+        table = self.widget('annotations_table_widget')
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                editItem = table.item(row, 0)
+                annotation = editItem.data(Qt.UserRole)
+                annotationBuilder = self.session.doOpenAnnotationBuilder(self.edge,annotation)
+                connect(annotationBuilder.sgnAnnotationCorrectlyModified,self.onAnnotationModified)
+                annotationBuilder.exec_()
+
+    @QtCore.pyqtSlot(Annotation)
+    def onAnnotationModified(self,assertion):
+        '''
+        :type assertion:Annotation
+        '''
+        table = self.widget('annotations_table_widget')
+        rowcount = table.rowCount()
+        for row in range(0,rowcount):
+            propItem = table.item(row, 0)
+            itemAssertion = propItem.data(Qt.UserRole)
+            if itemAssertion is assertion:
+                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                newPropertyItem.setData(Qt.UserRole, assertion)
+                table.setItem(row, 0, newPropertyItem)
+                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
+                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
+                break
+
+    @QtCore.pyqtSlot(int)
+    def onPrefixChanged(self, val):
+        self.onInputChanged('')
+
+    @QtCore.pyqtSlot('QString')
+    def onInputChanged(self, val):
+        prefix = self.widget('iri_prefix_switch').currentText()
+        input = self.widget('iri_input_field').value()
+        resolvedPrefix = self.resolvePrefix(prefix)
+        fullIri = '{}{}'.format(resolvedPrefix,input)
+        self.widget('full_iri_field').setValue(fullIri)
+        if not fullIri==str(self.iri):
+            self.widget('save_iri_button').setEnabled(True)
+        else:
+            self.widget('save_iri_button').setEnabled(False)
+
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        super().accept()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        super().reject()
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def resolvePrefix(self, prefixStr):
+        prefixLimit = prefixStr.find(':')
+        if prefixLimit<0:
+            return ''
+        else:
+            prefixStr = prefixStr[0:prefixLimit]
+            return self.project.getPrefixResolution(prefixStr)
+            # return self.project.getPrefixResolution(prefixStr[:-1])
 

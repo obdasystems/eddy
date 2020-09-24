@@ -54,6 +54,7 @@ from eddy import (
     PROJECT_HOME,
     VERSION,
     WORKSPACE,
+    MANUAL_URL
 )
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.common import (
@@ -149,10 +150,10 @@ from eddy.core.functions.path import (
     expandPath,
     shortPath,
 )
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
+from eddy.core.items.edges.common.base import AxiomEdge
 from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
-from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
@@ -175,15 +176,16 @@ from eddy.core.project import (
     K_TRANSITIVE,
     Project)
 from eddy.core.regex import RE_CAMEL_SPACE
-from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
-from eddy.ui.dialogs import DiagramSelectionDialog
+from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog, AnnotationBuilderDialog
 from eddy.ui.about import AboutDialog
 from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
-from eddy.ui.dl import DLSyntaxValidationDialog
+from eddy.ui.dl import OWL2DLProfileValidationDialog
+from eddy.ui.explanation import ExplanationDialog, EmptyEntityDialog
 from eddy.ui.fields import ComboBox
 from eddy.ui.import_ontology import ImportOntologyDialog
-from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog
+from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, FontDialog, \
+    EdgeAxiomDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
     NewDiagramForm,
@@ -283,6 +285,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.pmanager = PluginManager(self)
         self.nmanager = NetworkManager(self)
         self.project = None
+        self.currentEmptyEntityIRI = None
+        self.currentEmptyEntityType = None
+        self.currentEmptyEntityExplanations = list()
+        self.emptyEntityExplanations = {}
+        self.inconsistentOntologyExplanations = list()
 
         #############################################
         # CONFIGURE SESSION
@@ -427,6 +434,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='about', shortcut=QtGui.QKeySequence.HelpContents,
             statusTip='About {0}'.format(APPNAME), triggered=self.doOpenDialog)
         action.setData(AboutDialog)
+        self.addAction(action)
+
+        action = QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_link_black'), 'Go to the Eddy wiki',
+            self, objectName='manual_web', statusTip='Go to the Eddy wiki',
+            triggered=self.doOpenURL)
+        action.setData(MANUAL_URL)
         self.addAction(action)
 
         action = QtWidgets.QAction(
@@ -636,6 +650,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             QtGui.QIcon(':/icons/24/ic_owl'), 'Check OWL 2 DL compliance',
             self, objectName='dl_check', triggered=self.doDLCheck,
             statusTip='Check if the ontology can be interpreted by the Direct Semantics', enabled=False))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_question'), 'Show explanation(s)',
+            self, objectName='inconsistency_explanations', triggered=self.doShowInconsistentOntologyExplanations,
+            statusTip='Show explanation(s) for inconsistent ontology', enabled=False))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',
@@ -1004,6 +1023,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             triggered=self.doOpenIRIPropsAnnotationBuilder))
 
         self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_create_black'),
+            'Annotations',
+            self, objectName='edge_annotations_refactor',
+            triggered=self.doOpenEdgePropsAnnotationBuilder))
+
+        self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'),
             'Node IRI',
             self, objectName='node_iri_refactor',
@@ -1055,6 +1080,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.action(objectName='render_simple_name').setChecked(True)
         '''elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
             self.action(objectName='render_label').setChecked(True)'''
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_question'),
+            'Show explanation(s)',
+            self, objectName='emptiness_explanation',
+            triggered=self.doEmptyEntityExplanation))
 
 
     def initExporters(self):
@@ -1248,6 +1279,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
         menu.addAction(self.action('dl_check'))
+        menu.addAction(self.action('inconsistency_explanations'))
+
         # TODO scommenta dopo corretta implementazione reasoner per consistency check
         menu.addAction(self.action('ontology_consistency_check'))
         menu.addSeparator()
@@ -1285,6 +1318,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             menu.addSeparator()
         menu.addAction(self.action('check_for_updates'))
         menu.addSeparator()
+        menu.addAction(self.action('manual_web'))
         menu.addAction(self.action('report_bug_web'))
         menu.addAction(self.action('github_web'))
         menu.addAction(self.action('organization_web'))
@@ -1520,18 +1554,19 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         toolbar.addAction(self.action('syntax_check'))
         toolbar.addAction(self.action('dl_check'))
 
+
         toolbar = self.widget('reasoner_toolbar')
         toolbar.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
         #TODO scommenta dopo corretta implementazione reasoner per consistency check
         #toolbar.addWidget(self.widget('select_reasoner'))
         toolbar.addAction(self.action('ontology_consistency_check'))
         toolbar.addAction(self.action('reset_reasoner'))
+        toolbar.addAction(self.action('inconsistency_explanations'))
 
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('document_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('editor_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('view_toolbar'))
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('graphol_toolbar'))
-        # TODO scommenta dopo corretta implementazione reasoner per consistency check
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
 
     # noinspection PyArgumentList
@@ -2465,7 +2500,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenIRIDialog(self, node):
+    def doOpenIRIDialog(self, node=None):
         """
         Executed when the IRI associated to a node might be modified by the user.
         """
@@ -2628,6 +2663,48 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.show()
                 builder.raise_()
                 builder.activateWindow()
+
+    @QtCore.pyqtSlot()
+    def doOpenEdgePropsAnnotationBuilder(self):
+        """
+        Executed when annotation builder needs to be displayed.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            edge = first(diagram.selectedEdges(lambda x: isinstance(x, AxiomEdge)))
+            if edge:
+                builder = EdgeAxiomDialog(edge, self)
+                builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                builder.show()
+                builder.raise_()
+                builder.activateWindow()
+
+    @QtCore.pyqtSlot(AxiomEdge)
+    def doOpenAnnotationBuilder(self, edge, annotation=None):
+        """
+        Executed when annotation builder needs to be displayed.
+        :type node: IRI
+        """
+        # TODO
+        if edge:
+            builder = AnnotationBuilderDialog(edge, self, annotation)
+            builder.setWindowModality(QtCore.Qt.ApplicationModal)
+            builder.show()
+            builder.raise_()
+            builder.activateWindow()
+            return builder
+        else:
+            diagram = self.mdi.activeDiagram()
+            if diagram:
+                diagram.setMode(DiagramMode.Idle)
+                edge = first(diagram.selectedEdges(lambda x: isinstance(x,AxiomEdge)))
+                if edge:
+                    builder = AnnotationBuilderDialog(edge, self, annotation)
+                    builder.setWindowModality(QtCore.Qt.ApplicationModal)
+                    builder.show()
+                    builder.raise_()
+                    builder.activateWindow()
 
     @QtCore.pyqtSlot(ImportedOntology)
     def doOpenImportOntologyWizard(self,importedOntology=None):
@@ -3300,8 +3377,29 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Perform OWL DL check on the ontology.
         """
         print('doDLCheck called')
-        dialog = DLSyntaxValidationDialog(self.project, self)
+        dialog = OWL2DLProfileValidationDialog(self.project, self)
         dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def doShowInconsistentOntologyExplanations(self):
+        """
+        Show explanations for inconsistent ontology
+        """
+        print('doShowInconsistentOntologyExplanations called')
+        dialog = ExplanationDialog(self, self.inconsistentOntologyExplanations)
+        # dialog.exec_()
+        dialog.show()
+
+    @QtCore.pyqtSlot()
+    def doShowEmptyEntityExplanations(self):
+        """
+        Show explanations for empty entity
+        """
+        print('doShowEmptyEntityExplanations called')
+        dialog = ExplanationDialog(self, self.currentEmptyEntityExplanations, entityIRI=self.currentEmptyEntityIRI, entityType=self.currentEmptyEntityType)
+        #dialog.exec_()
+        dialog.show()
+
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self):
@@ -3325,6 +3423,28 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(dialog.sgnUnsatisfiableDataProperty, self.onUnsatisfiableDataProperty)
         self.sgnConsistencyCheckStarted.emit()
         dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def doEmptyEntityExplanation(self):
+        """
+        Compute explanation for entity emptiness
+        """
+        if self.currentEmptyEntityIRI and self.currentEmptyEntityType:
+            key = '{}-{}'.format(str(self.currentEmptyEntityIRI),self.currentEmptyEntityType)
+            if key in self.emptyEntityExplanations:
+                self.currentEmptyEntityExplanations = self.emptyEntityExplanations[key]
+                self.doShowEmptyEntityExplanations()
+            else:
+                dialog = EmptyEntityDialog(self.project, self, self.currentEmptyEntityIRI, self.currentEmptyEntityType)
+                connect(dialog.sgnExplanationComputed, self.onNewEmptyEntityExplanation)
+                dialog.exec_()
+
+    @QtCore.pyqtSlot()
+    def onNewEmptyEntityExplanation(self):
+        """
+        Executed when new explanations for emty entities are computed
+        """
+        self.doShowEmptyEntityExplanations()
 
     @QtCore.pyqtSlot(IRI)
     def onUnsatisfiableClass(self, iri):
@@ -3354,6 +3474,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         Executed when the consistency check reports that the ontology is inconsistent.
         """
         self.action('reset_reasoner').setEnabled(True)
+        self.action('inconsistency_explanations').setEnabled(True)
         self.sgnInconsistentOntology.emit()
 
     @QtCore.pyqtSlot(int)
@@ -3384,6 +3505,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         :type clearReasonerCache: bool
         """
         self.action('reset_reasoner').setEnabled(False)
+        self.action('inconsistency_explanations').setEnabled(False)
+        self.inconsistentOntologyExplanations = list()
+        self.currentEmptyEntityType = None
+        self.currentEmptyEntityIRI = None
+        self.currentEmptyEntityExplanations = list()
+        self.emptyEntityExplanations = {}
         self.sgnConsistencyCheckReset.emit()
         '''
         OLD. NOT USED ANYMORE
@@ -3600,6 +3727,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
+            self.sgnRenderingModified.emit(IRIRender.FULL.value)
 
     @QtCore.pyqtSlot()
     def doRenderByPrefixedIRI(self):
@@ -3618,6 +3746,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
+            self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
 
     @QtCore.pyqtSlot()
     def doRenderBySimpleName(self):
@@ -3637,6 +3766,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
                     node.doUpdateNodeLabel()
+
+        self.sgnRenderingModified.emit(IRIRender.SIMPLE_NAME.value)
 
     @QtCore.pyqtSlot()
     def doRenderByLabel(self):
@@ -3659,6 +3790,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             for node in self.project.nodes():
                 if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode) or isinstance(node, FacetNode):
                     node.doUpdateNodeLabel()
+            self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 
     @QtCore.pyqtSlot()
     def onNoUpdateAvailable(self):

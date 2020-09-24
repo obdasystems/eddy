@@ -182,6 +182,148 @@ class Facet(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+class Annotation(QtCore.QObject):
+    """
+    Represents Annotations
+    """
+    sgnAnnotationModified = QtCore.pyqtSignal()
+
+    def __init__(self, property, value, type=None, language=None, parent=None):
+        """
+        :type subject:IRI
+        :type property:IRI
+        :type value:IRI|str
+        :type type:IRI
+        :type language:str
+        """
+        super().__init__(parent)
+        self._property = property
+        if not (isinstance(value, IRI) or isinstance(value, str)):
+            raise ValueError('The value of an annotation must be either an IRI or a string')
+        self._value = value
+        self._datatype = type
+        self._language = language
+
+    def isIRIValued(self):
+        if isinstance(self.value, IRI):
+            return True
+        return False
+
+    @property
+    def assertionProperty(self):
+        return self._property
+
+    @assertionProperty.setter
+    def assertionProperty(self, prop):
+        if isinstance(prop, IRI):
+            self._property = prop
+            self.sgnAnnotationModified.emit()
+
+    @property
+    def datatype(self):
+        return self._datatype
+
+    @datatype.setter
+    def datatype(self, type):
+        if isinstance(type, IRI):
+            self._datatype = type
+            self.sgnAnnotationModified.emit()
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, val):
+        self._value = val
+        self.sgnAnnotationModified.emit()
+
+    @property
+    def language(self):
+        return self._language
+
+    @language.setter
+    def language(self, lang):
+        self._language = lang
+        self.sgnAnnotationModified.emit()
+
+    def refactor(self,refDict):
+        self._property=refDict['assertionProperty']
+        self._value=refDict['value']
+        self._datatype=refDict['datatype']
+        self._language=refDict['language']
+        self.sgnAnnotationModified.emit()
+
+    def getObjectResourceString(self, prefixedForm):
+        """
+        Returns a string representing the object resource of the assertion.
+        :type prefixedForm:bool
+        :rtype: str
+        """
+        if self._value:
+            if isinstance(self._value, IRI):
+                prefixedIRI = self._value.manager.getShortestPrefixedForm(self._value)
+                if prefixedForm and prefixedIRI:
+                    return str(prefixedIRI)
+                else:
+                    return '<{}>'.format(str(self._value))
+            elif isinstance(self._value, str):
+                result = ''
+                if not self.datatype or (self.datatype and self.datatype is OWL2Datatype.PlainLiteral.value):
+                    result = '"{}"'.format(self.value)
+                    if self.language:
+                        result += '@{}'.format(self.language)
+                else:
+                    if self.language:
+                        result += '"{}@{}"'.format(self.value, self.language)
+                    else:
+                        result += '"{}"'.format(self.value)
+                    if self.datatype and not self.datatype is OWL2Datatype.PlainLiteral.value:
+                        prefixedType = self.datatype.manager.getShortestPrefixedForm(self.datatype)
+                        if prefixedType:
+                            result += '^^{}'.format(str(prefixedType))
+                        else:
+                            result += '^^<{}>'.format(self.datatype)
+                return result
+                '''
+                result = ''
+                if self._language:
+                    result += '"{}@{}"'.format(self._value,self._language)
+                else:
+                    result = '"{}"'.format(self._value)
+                if self._datatype:
+                    prefixedType = self._datatype.manager.getShortestPrefixedForm(self._datatype)
+                    if prefixedForm and prefixedType:
+                        result += '^^{}'.format(str(prefixedType))
+                    else:
+                        result += '^^<{}>'.format(self._datatype)
+                return result
+                '''
+
+    def __hash__(self):
+        result = self._property.__hash__()
+        if self._value:
+            if isinstance(self._value, IRI):
+                result+=self._value.__hash__()
+            elif isinstance(self._value, str):
+                result+=self._value.__hash__()
+                if self._datatype:
+                    result+=self._datatype.__hash__()
+                if self._language:
+                    result+=self._language.__hash__()
+        return result
+
+    def __eq__(self, other):
+        if not isinstance(other, AnnotationAssertion):
+            return False
+        return self.assertionProperty == other.assertionProperty and self.value == other.value and self.datatype == other.datatype and self.language == other.value
+
+    def __str__(self):
+        return 'Annotation(<{}> {})'.format(self.assertionProperty,self.getObjectResourceString(True))
+
+    def __repr__(self):
+        return str(self)
+
 class AnnotationAssertion(QtCore.QObject):
     """
     Represents Annotation Assertions
@@ -620,7 +762,7 @@ class IRI(QtCore.QObject):
             index = self.namespace.rfind('/')
         if index > -1 and self.namespace[index+1:]:
             return self.namespace[index+1:]
-        return None
+        return self.namespace[index+1:]
 
     def isTopBottomEntity(self):
         """
@@ -1130,7 +1272,7 @@ class IRIManager(QtCore.QObject):
 
     @QtCore.pyqtSlot(IRI)
     def onIRIRemovedFromAllDiagrams(self,iri):
-        if not (iri is self.ontologyIRI or iri in self.annotationProperties or iri in self.datatypes or self.isImportedIRI(iri)):
+        if not (iri is self.ontologyIRI or iri in self.annotationProperties or iri in self.datatypes or self.isImportedIRI(iri)) and iri in self.iris:
             self.deleteIRI(iri)
 
     @QtCore.pyqtSlot(IRI)
@@ -1148,7 +1290,7 @@ class IRIManager(QtCore.QObject):
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
-    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported=False):
+    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported=False, labelExplicitChecked=False):
         """
         Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index.
         If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName.
@@ -1157,6 +1299,8 @@ class IRIManager(QtCore.QObject):
         :type addLabelFromSimpleName: bool
         :type addLabelFromUserInput: bool
         :type userInput: str
+        :type imported: bool
+        :type labelExplicitChecked: bool
         """
         if iriString in self.stringToIRI:
             iri = self.stringToIRI[iriString]
@@ -1167,9 +1311,13 @@ class IRIManager(QtCore.QObject):
             iri = IRI(iriString, parent=self)
             iri.manager = self
             self.addIRI(iri, imported)
-            if addLabelFromSimpleName and self._addLabelFromSimpleName:
+
+            simpleNameLabel = True if (labelExplicitChecked and addLabelFromSimpleName) or (addLabelFromSimpleName and self._addLabelFromSimpleName) else False
+            userInputLabel = True if userInput and ((labelExplicitChecked and addLabelFromUserInput and userInput) or (addLabelFromUserInput and self._addLabelFromUserInput)) else False
+
+            if simpleNameLabel:
                 iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri))
-            if addLabelFromUserInput and self._addLabelFromUserInput and userInput:
+            if userInputLabel:
                 annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
                                              OWL2Datatype.PlainLiteral.value, self.defaultLanguage)
                 iri.addAnnotationAssertion(annAss)

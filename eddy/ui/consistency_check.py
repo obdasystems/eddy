@@ -37,9 +37,8 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from eddy.core.common import HasThreadingSystem
-from eddy.core.datatypes.graphol import Special
-from eddy.core.datatypes.owl import OWLAxiom, OWLSyntax
-from eddy.core.exporters.owl2 import OWLOntologyFetcher
+from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.owl import OWLAxiom
 from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
@@ -49,7 +48,9 @@ from eddy.core.worker import AbstractWorker
 
 LOGGER = getLogger()
 
-
+#############################################
+#   CONSISTENCY CHECK
+#################################
 class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     Extends QtWidgets.QDialog with facilities to perform Ontology Consistency check
@@ -108,7 +109,8 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Please Wait!')
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint)
-        self.setWindowModality(QtCore.Qt.NonModal)
+        #self.setWindowModality(QtCore.Qt.NonModal)
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
 
         self.adjustSize()
         self.setFixedSize(self.width(), self.height())
@@ -214,7 +216,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         if not self._computeUnsatisfiableEntities:
             self.msgbox_done = QtWidgets.QMessageBox(self)
             self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-            self.msgbox_done.setWindowTitle('Ontology consistency check complete')
+            self.msgbox_done.setWindowTitle('Ontology consistency check completed')
             self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
             self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
             self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
@@ -230,18 +232,16 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         self.msgbox_done = QtWidgets.QMessageBox(self)
         self.msgbox_done.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        self.msgbox_done.setWindowTitle('Ontology consistency check complete')
+        self.msgbox_done.setWindowTitle('Ontology consistency check completed')
         self.msgbox_done.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
         self.msgbox_done.setTextFormat(QtCore.Qt.RichText)
         self.msgbox_done.setText('<p>Ontology is inconsistent.</p>')
         #TODO al momento non calcoliamo explanations
-        """ 
         self.msgbox_done.setText('<p>Ontology is inconsistent.</p>'
-                                 '<p>You may choose to display one explanation at a time in the Explanation Explorer.</p>'
-                                 '<p>To reset the background coloring of the nodes in the diagram, '
+                                 '<p>You may choose to display Explanations by pressing the "?" button in the toolbar</p>'
+                                 '<p>To reset the reasoner '
                                  'press the Reset button in the toolbar.</p>')
-        """
         self.close()
         self.msgbox_done.exec_()
         self.sgnOntologyInconsistent.emit()
@@ -259,7 +259,8 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
         if count>0:
             self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             self.msgbox_done.setText('<p>Ontology is consistent however {} entities are unsatisfiable.</p>'
-                                     '<p>See highlighted entries in the Ontology Explorer for details.</p>'
+                                     '<p>See highlighted entries in the Ontology Explorer for details: '
+                                     'you may choose to display Explanations by right-clicking on them.</p>'
                                      '<p>To reset the highlighting press the Reset button in the toolbar.</p>'.format(str(count)))
         else:
             self.msgbox_done.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
@@ -326,6 +327,9 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
         self.OWLClassClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClass')
         self.OWLImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
+        self.InconsistentOntologyExplanationGeneratorFactory = self.vm.getJavaClass(
+            'org.semanticweb.owl.explanation.impl.blackbox.checker.InconsistentOntologyExplanationGeneratorFactory')
+
         self.reasonerInstance = None
         self._isOntologyConsistent = None
         self.javaBottomClassNode=None
@@ -337,6 +341,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         self._includeImports = includeImports
         self._computeUnsatisfiableEntities = computeUnsatisfiableEntities
         self._computeExplanations = computeExplanations
+        self.explanations = list()
 
     @property
     def unsatisfiableClasses(self):
@@ -378,6 +383,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
 
     def initializeOWLManagerAndReasoner(self, ontology):
         self.manager = ontology.getOWLOntologyManager()
+        self.df = self.manager.getOWLDataFactory()
         self.loadImportedOntologiesIntoManager()
         self.reasonerInstance = self.ReasonerClass(self.ReasonerConfigurationClass(), ontology)
         #TODO se si usano metodi factory di Hermit, oggetto 'ontology' non viene riconosciuto come istanza di OWLReasoner
@@ -435,6 +441,22 @@ class OntologyReasoningTasksWorker(AbstractWorker):
         worker.run()
         self.initializeOWLManagerAndReasoner(worker.ontology)
         if not self.isConsistent():
+            factory = self.ReasonerFactoryClass()
+            ecf = self.InconsistentOntologyExplanationGeneratorFactory(factory, 0)
+            generator = ecf.createExplanationGenerator(worker.ontology)
+
+            thingISANothing = self.df.getOWLSubClassOfAxiom(self.df.getOWLThing(),self.df.getOWLNothing())
+
+            self.status_bar.showMessage('Computing explanations')
+            explanations = generator.getExplanations(thingISANothing)
+            self.status_bar.showMessage('Explanations computed')
+            for explanation in explanations:
+                axiomList = list()
+                for axiom in explanation.getAxioms():
+                    axiomList.append(axiom.toString())
+                self.explanations.append(axiomList)
+            self.session.inconsistentOntologyExplanations = self.explanations
+
             self.sgnInconsistent.emit()
         else:
             self.sgnConsistent.emit()
@@ -449,7 +471,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
     def run(self):
         try:
             self.sgnStarted.emit()
-            self.vm.attachThreadToJVM()
+            #self.vm.attachThreadToJVM()
             self.runReasoningTasks()
         except Exception as e:
             LOGGER.exception('Fatal error while executing reasoning tasks.\nError:{}'.format(str(e)))
@@ -458,258 +480,137 @@ class OntologyReasoningTasksWorker(AbstractWorker):
             self.vm.detachThreadFromJVM()
             self.finished.emit()
 
-
-
-#TODO NOT TO BE USED ANYMORE BECAUSOF THE EXPLANATION COMPUTATION
-class OntologyExplanationsWorker(AbstractWorker):
+#############################################
+#   EMPTY ENTITIES
+#################################
+class EmptyEntityExplanationWorker(AbstractWorker):
     """
-    Extends QtCore.QObject providing a worker thread that will perform all reasoning tasks (unsatisfiable entities, consistency)
-    over the Ontology induced by the diagrams (NO OWL IMPORT TAKEN INTO ACCOUNT) and will compute all the possible explanations
+    Extends AbstractWorker providing a worker thread that will compute explanations for empty entities
     """
     sgnBusy = QtCore.pyqtSignal(bool)
-    sgnAllOK = QtCore.pyqtSignal()
-    sgnOntologyInconsistency = QtCore.pyqtSignal()
-    sgnUnsatisfiableEntities = QtCore.pyqtSignal()
-    sgnError = QtCore.pyqtSignal()
+    sgnStarted = QtCore.pyqtSignal()
+    sgnError = QtCore.pyqtSignal(Exception)
+    sgnExplanationComputed = QtCore.pyqtSignal()
 
-    def __init__(self, status_bar, project, session):
+    def __init__(self, status_bar, project, session, dialog, iri, entityType):
         """
         Initialize the syntax validation worker.
         :type current: int
         :type items: list
         :type project: Project
+        :type iri : IRI
+        :type entityType : Item
         """
         super().__init__()
+        self.explanations = list()
         self.project = project
         self.session = session
         self.status_bar = status_bar
+        self.dialog = dialog
+        self.iri = iri
+        self.entityType = entityType
         self.vm = getJavaVM()
         if not self.vm.isRunning():
             self.vm.initialize()
         self.vm.attachThreadToJVM()
-        self.Iterator = self.vm.getJavaClass('java.util.Iterator')
-        self.String = self.vm.getJavaClass('java.lang.String')
-        self.Object = self.vm.getJavaClass('java.lang.Object')
-        self.Configuration = self.vm.getJavaClass('org.semanticweb.HermiT.Configuration')
-        self.Reasoner = self.vm.getJavaClass('org.semanticweb.HermiT.Reasoner')
-        self.ReasonerFactory = self.vm.getJavaClass('org.semanticweb.HermiT.ReasonerFactory')
-        self.Explanation = self.vm.getJavaClass('org.semanticweb.owl.explanation.api.Explanation')
-        self.ExplanationGenerator = self.vm.getJavaClass('org.semanticweb.owl.explanation.api.ExplanationGenerator')
-        self.InconsistentOntologyExplanationGeneratorFactory = self.vm.getJavaClass(
-            'org.semanticweb.owl.explanation.impl.blackbox.checker.InconsistentOntologyExplanationGeneratorFactory')
-        # self.BlackBoxExplanation = self.vm.getJavaClass('com.clarkparsia.owlapi.explanation.BlackBoxExplanation')
+        self.ReasonerClass = self.vm.getJavaClass('org.semanticweb.HermiT.Reasoner')
+        self.ReasonerFactoryClass = self.vm.getJavaClass('org.semanticweb.HermiT.ReasonerFactory')
+        self.ReasonerConfigurationClass = self.vm.getJavaClass('org.semanticweb.HermiT.Configuration')
+        self.IRIClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+        self.OWLManagerClass = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+        self.URIClass = self.vm.getJavaClass('java.net.URI')
+        self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
+        self.OWLClassClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClass')
+        self.OWLImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
         self.SilentExplanationProgressMonitor = self.vm.getJavaClass(
             'com.clarkparsia.owlapi.explanation.util.SilentExplanationProgressMonitor')
-        self.DefaultExplanationGenerator = self.vm.getJavaClass(
-            'com.clarkparsia.owlapi.explanation.DefaultExplanationGenerator')
-        self.OWLFunctionalSyntaxFactory = self.vm.getJavaClass(
-            'org.semanticweb.owlapi.apibinding.OWLFunctionalSyntaxFactory')
-        self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
-        self.IRI = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
-        self.OWLAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAxiom')
-        self.OWLClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClass')
-        self.OWLClassExpression = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClassExpression')
-        self.OWLDataProperty = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLDataProperty')
-        self.OWLDatatype = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLDatatype')
-        self.OWLEntity = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLEntity')
-        self.OWLNamedIndividual = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLNamedIndividual')
-        self.OWLObjectProperty = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectProperty')
-        self.OWLObjectPropertyExpression = self.vm.getJavaClass(
-            'org.semanticweb.owlapi.model.OWLObjectPropertyExpression')
-        self.OWLOntology = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLOntology')
-        self.OWLOntologyCreationException = self.vm.getJavaClass(
-            'org.semanticweb.owlapi.model.OWLOntologyCreationException')
-        self.OWLOntologyManager = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLOntologyManager')
-        self.OWLSubClassOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubClassOfAxiom')
-        self.InconsistentOntologyException = self.vm.getJavaClass(
-            'org.semanticweb.owlapi.reasoner.InconsistentOntologyException')
-        self.Node = self.vm.getJavaClass('org.semanticweb.owlapi.reasoner.Node')
-        self.InconsistentOntologyException_string = 'JVM exception occurred: Inconsistent ontology'
+        self.DefaultExplanationGenerator = self.vm.getJavaClass('com.clarkparsia.owlapi.explanation.DefaultExplanationGenerator')
+        self.df = None
 
-    def axioms(self):
-        """
-        Returns the set of axioms that needs to be exported.
-        :rtype: set
-        """
-        return {axiom for axiom in OWLAxiom}
 
-    @QtCore.pyqtSlot()
-    def onCompleted(self):
-        self.accept()
-
-    def fetch_axioms_and_set_variables(self, bottom_entity_node, java_class):
-        self.status_bar.showMessage('Ontology is inconsistent; Fetching explanations for the same')
-
-        if java_class == self.OWLClass:
-            self.status_bar.showMessage('Fetching explanations for unsatisfiable class(es)')
-        elif java_class == self.OWLDataProperty:
-            self.status_bar.showMessage('Fetching explanations for unsatisfiable attribute(s)')
-        elif java_class == self.OWLObjectPropertyExpression:
-            self.status_bar.showMessage('Fetching explanations for unsatisfiable role(s)')
-        else:
-            self.status_bar.showMessage('')
-
-        entities_of_bottom_entity_node = bottom_entity_node.getEntities()
-        entities_of_bottom_entity_node_itr = entities_of_bottom_entity_node.iterator()
-        unsatisfiable_entities_string = []
-        explanations_for_all_unsatisfiable_entities = []
-
-        while entities_of_bottom_entity_node_itr.hasNext():
-            unsatisfiable_entity = entities_of_bottom_entity_node_itr.next()
-
-            if unsatisfiable_entity.toString() in Special.BottomEntities.value.values():
-                continue
-
-            unsatisfiable_entities_string.append(unsatisfiable_entity.toString())
-            explanations_for_unsatisfiable_entity = []
-            axioms_of_explanations = []
-
-            if java_class == self.OWLClass:
-                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(
-                    unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLNothing())
-            elif java_class == self.OWLDataProperty:
-                exists_for_some_values = self.OWLFunctionalSyntaxFactory.DataSomeValuesFrom(
-                    unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.TopDatatype())
-                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(
-                    exists_for_some_values, self.OWLFunctionalSyntaxFactory.OWLNothing())
-            elif java_class == self.OWLObjectPropertyExpression:
-                exists_for_some_objects = self.OWLFunctionalSyntaxFactory.ObjectSomeValuesFrom(
-                    unsatisfiable_entity, self.OWLFunctionalSyntaxFactory.OWLThing())
-                axiom_err = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(
-                    exists_for_some_objects, self.OWLFunctionalSyntaxFactory.OWLNothing())
+    def loadImportedOntologiesIntoManager(self):
+        LOGGER.debug('Loading declared imports into the OWL 2 Manager')
+        self.status_bar.showMessage('Loading declared imports into the OWL 2 Manager')
+        for impOnt in self.project.importedOntologies:
+            try:
+                docObj = None
+                if impOnt.isLocalDocument:
+                    docObj = self.JavaFileClass(impOnt.docLocation)
+                else:
+                    docObj = self.URIClass(impOnt.docLocation)
+                docLocationIRI = self.IRIClass.create(docObj)
+                impOntIRI = self.IRIClass.create(impOnt.ontologyIRI)
+                iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
+                self.manager.getIRIMappers().add(iriMapper)
+                loaded = self.manager.loadOntology(impOntIRI)
+            except Exception as e:
+                LOGGER.exception('The imported ontology <{}> cannot be loaded.\nError:{}'.format(impOnt, str(e)))
             else:
-                raise RuntimeError('Invalid unsatisfiable entity {0}'.format(java_class))
+                LOGGER.debug('Ontology ({}) correctly loaded.'.format(impOnt))
+                self.status_bar.showMessage('Ontology ({}) correctly loaded.'.format(impOnt))
 
-            axiom_err_sc = axiom_err.getSubClass()
-            explanations_raw = self.generator_unsatisfiable_entities.getExplanations(axiom_err_sc)
-            explanations_raw_itr = explanations_raw.iterator()
-
-            while explanations_raw_itr.hasNext():
-                expl_raw = explanations_raw_itr.next()
-                explanations_for_unsatisfiable_entity.append(expl_raw)
-                axioms_of_expl = []
-                axioms_itr = expl_raw.iterator()
-
-                # get axioms for the explanation
-                while axioms_itr.hasNext():
-                    axiom_raw = axioms_itr.next()
-                    axioms_of_expl.append(axiom_raw.toString())
-                axioms_of_explanations.append(axioms_of_expl)
-            explanations_for_all_unsatisfiable_entities.append(explanations_for_unsatisfiable_entity)
-
-        if java_class == self.OWLClass:
-            self.project.unsatisfiable_classes = unsatisfiable_entities_string
-            self.project.explanations_for_unsatisfiable_classes = explanations_for_all_unsatisfiable_entities
-        elif java_class == self.OWLDataProperty:
-            self.project.unsatisfiable_attributes = unsatisfiable_entities_string
-            self.project.explanations_for_unsatisfiable_attributes = explanations_for_all_unsatisfiable_entities
-        elif java_class == self.OWLObjectPropertyExpression:
-            self.project.unsatisfiable_roles = unsatisfiable_entities_string
-            self.project.explanations_for_unsatisfiable_roles = explanations_for_all_unsatisfiable_entities
-        else:
-            raise RuntimeError('invalid unsatisfiable entity {0}'.format(java_class))
-
-    def reason_over_ontology(self):
-        self.status_bar.showMessage('Fetching ontology')
-
-        worker = OWLOntologyFetcher(self.project, axioms=self.axioms(), normalize=False, syntax=OWLSyntax.Functional)
+    def initializeOWLManagerAndReasoner(self, ontology):
+        self.status_bar.showMessage('Initializing the OWL 2 Manager')
+        self.manager = ontology.getOWLOntologyManager()
+        self.df = self.manager.getOWLDataFactory()
+        self.loadImportedOntologiesIntoManager()
+        self.status_bar.showMessage('OWL 2 Manager initialized')
+        self.status_bar.showMessage('Initializing the OWL 2 reasoner')
+        self.reasonerInstance = self.ReasonerClass(self.ReasonerConfigurationClass(), ontology)
+        self.status_bar.showMessage('OWL 2 reasoner initialized')
+        
+    def initializeOWLOntology(self):
+        self.status_bar.showMessage('Fetching the OWL 2 ontology')
+        worker = OWLOntologyExporterWorker_v3(self.project, axioms={axiom for axiom in OWLAxiom})
         worker.run()
-
-        self.vm.attachThreadToJVM()
-        errored_message = worker.errored_message
-        if errored_message is not None:
-            self.status_bar.showMessage(errored_message)
-            self.project.inconsistent_ontology = None
-            LOGGER.error(errored_message)
-            return
-
-        dict = worker.refined_axiom_to_node_or_edge
-        ontology = worker.ontology
-
-        if ontology is None:
-            LOGGER.warning('ontology is None')
+        self.status_bar.showMessage('OWL 2 ontology fetched')
+        self.ontology = worker.ontology
+        self.initializeOWLManagerAndReasoner(self.ontology)
+    
+    def getEmptyExpression(self):
+        if self.entityType is Item.ConceptIRINode:
+            return self.df.getOWLClass(self.IRIClass.create(str(self.iri)))
+        elif self.entityType is Item.RoleIRINode:
+            objProp = self.df.getOWLObjectProperty(self.IRIClass.create(str(self.iri)))
+            return self.df.getOWLObjectSomeValuesFrom(objProp, self.df.getOWLThing())
         else:
-            LOGGER.info('ontology is not None')
+            dataProp = self.df.getOWLDataProperty(self.IRIClass.create(str(self.iri)))
+            return self.df.getOWLDataSomeValuesFrom(dataProp, self.df.getTopDatatype())
 
-        self.project.axioms_to_nodes_edges_mapping = dict
-        self.project.ontology_OWL = ontology
-
-        self.manager = self.OWLManager.createOWLOntologyManager()
-        configuration = self.Configuration()
-
-        try:
-            hermit = self.Reasoner(configuration, ontology)
-        except Exception as e0:
-            self.project.inconsistent_ontology = None
-            LOGGER.error(str(e0))
-            return
-
+    def computeExplanationAxioms(self):
         progressMonitor = self.SilentExplanationProgressMonitor()
-        self.status_bar.showMessage('Running reasoner over ontology')
+        factory = self.ReasonerFactoryClass()
+        explanationGenerator = self.DefaultExplanationGenerator(self.manager, factory, self.ontology, self.reasonerInstance, progressMonitor)
+        emptyExpression = self.getEmptyExpression()
+        self.status_bar.showMessage('Computing explanations')
+        explanations = explanationGenerator.getExplanations(emptyExpression)
+        self.status_bar.showMessage('Explanations computed')
+        for explanation in explanations:
+            axiomList = list()
+            for axiom in explanation:
+                axiomList.append(axiom.toString())
+            self.explanations.append(axiomList)
+        self.session.currentEmptyEntityExplanations = self.explanations
+        key = '{}-{}'.format(str(self.iri), self.entityType)
+        self.session.emptyEntityExplanations[key] = self.explanations
+        self.sgnExplanationComputed.emit()
 
-        try:
-            hermit.precomputeInferences()
-
-            if hermit.isConsistent() is True:
-                self.project.inconsistent_ontology = False
-            else:
-                raise RuntimeError('ontology is inconsistent however exception was not thrown')
-
-            factory = self.ReasonerFactory()
-
-            self.generator_unsatisfiable_entities = self.DefaultExplanationGenerator(
-                self.manager, factory, ontology, hermit, progressMonitor)
-
-            # BottomClass
-            bottom_class_node = hermit.getBottomClassNode()
-            bottom_data_property_node = hermit.getBottomDataPropertyNode()
-            bottom_object_property_node = hermit.getBottomObjectPropertyNode()
-            self.fetch_axioms_and_set_variables(bottom_class_node, self.OWLClass)
-            self.fetch_axioms_and_set_variables(bottom_data_property_node, self.OWLDataProperty)
-            self.fetch_axioms_and_set_variables(bottom_object_property_node, self.OWLObjectPropertyExpression)
-        except Exception as e:
-            if not hermit.isConsistent():
-                self.status_bar.showMessage('Ontology is inconsistent; Fetching explanations for the same')
-                self.project.inconsistent_ontology = True
-                factory = self.ReasonerFactory()
-                ecf = self.InconsistentOntologyExplanationGeneratorFactory(factory, 0)
-                generator = ecf.createExplanationGenerator(ontology)
-                axiom = self.manager.getOWLDataFactory().getOWLSubClassOfAxiom(
-                    self.OWLFunctionalSyntaxFactory.OWLThing(), self.OWLFunctionalSyntaxFactory.OWLNothing())
-
-                try:
-                    explanations = generator.getExplanations(axiom)
-                    explanations_itr = explanations.iterator()
-
-                    while explanations_itr.hasNext():
-                        explanation = explanations_itr.next()
-                        self.project.explanations_for_inconsistent_ontology.append(explanation)
-
-                except Exception as ex:
-                    ex.printStackTrace()
-            else:
-                self.project.inconsistent_ontology = None
-                LOGGER.error(str(e))
-        finally:
-            hermit.flush()
-            hermit.dispose()
+    def getExplanations(self):
+        return self.explanations
 
     @QtCore.pyqtSlot()
     def run(self):
-        """
-        Main worker.
-        """
-        self.reason_over_ontology()
-
-        if self.project.inconsistent_ontology is not None:
-            if self.project.inconsistent_ontology is True:
-                self.sgnOntologyInconsistency.emit()
-            else:
-                if len(self.project.unsatisfiable_classes) or len(self.project.unsatisfiable_attributes) or len(
-                        self.project.unsatisfiable_roles):
-                    self.sgnUnsatisfiableEntities.emit()
-                else:
-                    self.sgnAllOK.emit()
+        try:
+            self.sgnStarted.emit()
+            #self.vm.attachThreadToJVM()
+            self.initializeOWLOntology()
+            self.computeExplanationAxioms()
+        except Exception as e:
+            LOGGER.exception('Fatal error while computing explanations.\nError:{}'.format(str(e)))
+            self.sgnError.emit(e)
+        finally:
+            self.vm.detachThreadFromJVM()
             self.finished.emit()
-        else:
-            self.sgnError.emit()
+
+

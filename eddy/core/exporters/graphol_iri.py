@@ -139,14 +139,16 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         importsEl = self.getDomElement('imports')
         ontologyEl.appendChild(importsEl)
-        for impOnt in self.project.importedOntologies:
+        for impOnt in sorted(self.project.importedOntologies,key=str):
             importEl = self.getOntologyImportDomElement(impOnt)
             importsEl.appendChild(importEl)
 
 
         prefixesEl = self.getDomElement('prefixes')
         ontologyEl.appendChild(prefixesEl)
-        for prefix,ns in self.project.prefixDictItems():
+        #for prefix,ns in self.project.prefixDictItems():
+        for prefix in sorted(self.project.getManagedPrefixes(), key=str):
+            ns = self.project.getPrefixResolution(prefix)
             valueEl = self.getDomElement('value')
             valueEl.appendChild(self.getDomTextNode(prefix))
             namespaceEl = self.getDomElement('namespace')
@@ -158,28 +160,28 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         datatypesEl = self.getDomElement('datatypes')
         ontologyEl.appendChild(datatypesEl)
-        for dtIri in self.project.getDatatypeIRIs():
+        for dtIri in sorted(self.project.getDatatypeIRIs(),key=str):
             datatypeEl = self.getDomElement('datatype')
             datatypeEl.appendChild(self.getDomTextNode(str(dtIri)))
             datatypesEl.appendChild(datatypeEl)
 
         languagesEl = self.getDomElement('languages')
         ontologyEl.appendChild(languagesEl)
-        for lang in self.project.getLanguages():
+        for lang in sorted(self.project.getLanguages(),key=str):
             langEl = self.getDomElement('language')
             langEl.appendChild(self.getDomTextNode(lang))
             languagesEl.appendChild(langEl)
 
         facetsEl = self.getDomElement('facets')
         ontologyEl.appendChild(facetsEl)
-        for facetIri in self.project.constrainingFacets:
+        for facetIri in sorted(self.project.constrainingFacets,key=str):
             facetEl = self.getDomElement('facet')
             facetEl.appendChild(self.getDomTextNode(str(facetIri)))
             facetsEl.appendChild(facetEl)
 
         annotationPropertiesEl = self.getDomElement('annotationProperties')
         ontologyEl.appendChild(annotationPropertiesEl)
-        for annIri in self.project.getAnnotationPropertyIRIs():
+        for annIri in sorted(self.project.getAnnotationPropertyIRIs(),key=str):
             annotationPropertyEl = self.getDomElement('annotationProperty')
             annotationPropertyEl.appendChild(self.getDomTextNode(str(annIri)))
             annotationPropertiesEl.appendChild(annotationPropertyEl)
@@ -187,12 +189,12 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         irisEl = self.getDomElement('iris')
         ontologyEl.appendChild(irisEl)
         if not self.selectedDiagrams:
-            for iri in self.project.iris:
+            for iri in sorted(self.project.iris,key=str):
                 if (self.project.existIriOccurrence(iri) or iri==self.project.ontologyIRI) and not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
                         iriEl = self.getIriDomElement(iri)
                         irisEl.appendChild(iriEl)
         else:
-            for iri in self.project.iris:
+            for iri in sorted(self.project.iris,key=str):
                 if (self.project.existIriOccurrence(iri) or iri == self.project.ontologyIRI) and not (
                     iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
                     if self.occursInAtLeastOneSelectedDiagrams(iri):
@@ -256,17 +258,46 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
             annotationsEl = self.getDomElement('annotations')
             iriEl.appendChild(annotationsEl)
             for annotation in iri.annotationAssertions:
-                annotationEl = self.getAnnotationDomElement(annotation)
+                annotationEl = self.getAnnotationAssertionDomElement(annotation)
                 annotationsEl.appendChild(annotationEl)
 
         return iriEl
 
-    def getAnnotationDomElement(self, annotation):
+    def getAnnotationAssertionDomElement(self, annotation):
         annotationEl = self.getDomElement('annotation')
 
         subjectEl = self.getDomElement('subject')
         subjectEl.appendChild(self.getDomTextNode(str(annotation.subject)))
         annotationEl.appendChild(subjectEl)
+
+        propertyEl = self.getDomElement('property')
+        propertyEl.appendChild(self.getDomTextNode(str(annotation.assertionProperty)))
+        annotationEl.appendChild(propertyEl)
+
+        objectEl = self.getDomElement('object')
+        if annotation.isIRIValued():
+            objecIriEl = self.getDomElement('iri')
+            objecIriEl.appendChild(self.getDomTextNode(str(annotation.value)))
+        else:
+            lexicalFormEl = self.getDomElement('lexicalForm')
+            lexicalFormEl.appendChild(self.getDomTextNode(str(annotation.value)))
+            objectEl.appendChild(lexicalFormEl)
+
+            datatypeEl = self.getDomElement('datatype')
+            if annotation.datatype:
+                datatypeEl.appendChild(self.getDomTextNode(str(annotation.datatype)))
+            objectEl.appendChild(datatypeEl)
+
+            languageEl = self.getDomElement('language')
+            if annotation.language:
+                languageEl.appendChild(self.getDomTextNode(str(annotation.language)))
+            objectEl.appendChild(languageEl)
+        annotationEl.appendChild(objectEl)
+
+        return annotationEl
+
+    def getAnnotationDomElement(self, annotation):
+        annotationEl = self.getDomElement('annotation')
 
         propertyEl = self.getDomElement('property')
         propertyEl.appendChild(self.getDomTextNode(str(annotation.assertionProperty)))
@@ -327,7 +358,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
             currSet = self.selectedDiagrams
         else:
             currSet = self.project.diagrams()
-        for diagram in currSet:
+        for diagram in sorted(currSet,key=str):
             diagramsEl.appendChild(self.getDiagramDomElement(diagram))
         return diagramsEl
 
@@ -336,10 +367,10 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         diagramEl.setAttribute('name', diagram.name)
         diagramEl.setAttribute('width', diagram.width())
         diagramEl.setAttribute('height', diagram.height())
-        for node in diagram.nodes():
+        for node in sorted(diagram.nodes(), key=lambda n:n.id):
             func = self.exportFuncForItem[node.type()]
             diagramEl.appendChild(func(node))
-        for edge in diagram.edges():
+        for edge in sorted(diagram.edges(), key=lambda n:n.id):
             func = self.exportFuncForItem[edge.type()]
             diagramEl.appendChild(func(edge))
         return diagramEl
@@ -595,7 +626,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: InclusionEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportEquivalenceEdge(self, edge):
         """
@@ -603,7 +634,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: EquivalenceEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportInputEdge(self, edge):
         """
@@ -619,7 +650,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: MembershipEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportSameEdge(self, edge):
         """
@@ -627,7 +658,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: SameEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     def exportDifferentEdge(self, edge):
         """
@@ -635,7 +666,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type edge: DifferentEdge
         :rtype: QDomElement
         """
-        return self.exportGenericEdge(edge)
+        return self.exportAxiomEdge(edge)
 
     #############################################
     #   ONTOLOGY DIAGRAMS EXPORT : GENERICS
@@ -683,7 +714,21 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
             point.setAttribute('x', p.x())
             point.setAttribute('y', p.y())
             element.appendChild(point)
+        return element
 
+    def exportAxiomEdge(self, edge):
+        """
+        Export the given node into a QDomElement.
+        :type edge: AxiomEdge
+        :rtype: QDomElement
+        """
+        element = self.exportGenericEdge(edge)
+        if edge.annotations:
+            annSetEl = self.document.createElement('annotations')
+            element.appendChild(annSetEl)
+            for annotation in edge.annotations:
+                annotationEl = self.getAnnotationDomElement(annotation)
+                annSetEl.appendChild(annotationEl)
         return element
 
     def getNodeDomElement(self, node):
