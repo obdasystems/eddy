@@ -35,10 +35,9 @@
 
 import os
 import platform
-import sys
+
 import pkg_resources
 import pytest
-
 from PyQt5 import (
     QtCore,
     QtWidgets,
@@ -47,7 +46,11 @@ from PyQt5 import (
 import eddy
 from eddy import APPNAME
 from eddy.core.application import Eddy
-from eddy.core.datatypes.system import File
+from eddy.core.datatypes.system import (
+    File,
+    IS_WIN,
+)
+from eddy.core.functions.fsystem import isdir
 from eddy.core.jvm import (
     findJavaHome,
     addJVMClasspath,
@@ -83,14 +86,20 @@ def qapp(qapp_args, tmpdir_factory):
         global _qapp_instance
         os.environ['JAVA_HOME'] = findJavaHome() or ''
 
-        if sys.platform.startswith('win'):
+        if IS_WIN:
             path = os.getenv('PATH', '')
             path = path.split(os.pathsep)
-            path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin'))
-            if platform.architecture()[0] == '32bit':
-                path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'client'))
+            # FOR JAVA 8
+            if isdir(os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin')):
+                bindir = os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin')
+            # FOR JAVA 9+
             else:
-                path.insert(0, os.path.join(os.environ['JAVA_HOME'], 'jre', 'bin', 'server'))
+                bindir = os.path.join(os.environ['JAVA_HOME'], 'bin')
+            path.insert(0, bindir)
+            if platform.architecture()[0] == '32bit':
+                path.insert(0, os.path.join(bindir, 'client'))
+            else:
+                path.insert(0, os.path.join(bindir, 'server'))
             os.environ['PATH'] = os.pathsep.join(path)
 
         for path in pkg_resources.resource_listdir(eddy.core.jvm.__name__, 'lib'):
