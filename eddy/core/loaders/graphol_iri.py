@@ -194,28 +194,34 @@ class GrapholProjectIRILoaderMixin_2(object):
     def getOntologyIRI(self, ontologySection):
         result = ''
         e = ontologySection.firstChildElement('IRI_prefixes_nodes_dict')
-        sube = e.firstChildElement('iri')
-        while not sube.isNull():
-            try:
-                QtWidgets.QApplication.processEvents()
-                namespace = sube.attribute('iri_value')
-                sube_properties = sube.firstChildElement('properties')
-                sube_property = sube_properties.firstChildElement('property')
-                while not sube_property.isNull():
-                    try:
-                        QtWidgets.QApplication.processEvents()
-                        property_value = sube_property.attribute('property_value')
-                    except Exception:
-                        LOGGER.exception('Failed to fetch property %s', property_value)
-                    else:
-                        if property_value == 'Project_IRI':
-                            return namespace
-                    finally:
-                        sube_property = sube_property.nextSiblingElement('property')
-            except Exception:
-                LOGGER.exception('Failed to fetch namespace  %s', namespace)
-            finally:
-                sube = sube.nextSiblingElement('iri')
+        if not e.isNull():
+            sube = e.firstChildElement('iri')
+            while not sube.isNull():
+                try:
+                    QtWidgets.QApplication.processEvents()
+                    namespace = sube.attribute('iri_value')
+                    sube_properties = sube.firstChildElement('properties')
+                    sube_property = sube_properties.firstChildElement('property')
+                    while not sube_property.isNull():
+                        try:
+                            QtWidgets.QApplication.processEvents()
+                            property_value = sube_property.attribute('property_value')
+                        except Exception:
+                            LOGGER.exception('Failed to fetch property %s', property_value)
+                        else:
+                            if property_value == 'Project_IRI':
+                                return namespace
+                        finally:
+                            sube_property = sube_property.nextSiblingElement('property')
+                except Exception:
+                    LOGGER.exception('Failed to fetch namespace  %s', namespace)
+                finally:
+                    sube = sube.nextSiblingElement('iri')
+        else:
+            ontIriEl = ontologySection.firstChildElement('iri')
+            if not ontIriEl.isNull():
+                if ontIriEl.text():
+                    return ontIriEl.text()
         return result
 
     def getOntologyPrefix(self, ontologySection):
@@ -255,39 +261,47 @@ class GrapholProjectIRILoaderMixin_2(object):
     def getPrefixesDict(self, ontologySection):
         dictionary_to_return = dict()
         e = ontologySection.firstChildElement('IRI_prefixes_nodes_dict')
-        sube = e.firstChildElement('iri')
-        while not sube.isNull():
-            try:
-                QtWidgets.QApplication.processEvents()
-                namespace = sube.attribute('iri_value')
+        if not e.isNull():
+            sube = e.firstChildElement('iri')
+            while not sube.isNull():
+                try:
+                    QtWidgets.QApplication.processEvents()
+                    namespace = sube.attribute('iri_value')
 
-                ### Needed to fix the namespace of standard vocabularies which up to
-                ### version 1.1.2 where stored without the fragment separator (#).
-                ### See: https://github.com/obdasystems/eddy/issues/20
-                for ns in Namespace:
-                    if namespace+'#' == ns.value:
-                        # Append the missing fragment separator
-                        namespace += '#'
-                        break
+                    ### Needed to fix the namespace of standard vocabularies which up to
+                    ### version 1.1.2 where stored without the fragment separator (#).
+                    ### See: https://github.com/obdasystems/eddy/issues/20
+                    for ns in Namespace:
+                        if namespace+'#' == ns.value:
+                            # Append the missing fragment separator
+                            namespace += '#'
+                            break
 
-                sube_prefixes = sube.firstChildElement('prefixes')
+                    sube_prefixes = sube.firstChildElement('prefixes')
 
-                #PREFIX MAP
-                sube_prefix = sube_prefixes.firstChildElement('prefix')
-                while not sube_prefix.isNull():
-                    try:
-                        QtWidgets.QApplication.processEvents()
-                        prefix_value = sube_prefix.attribute('prefix_value')
-                    except Exception:
-                        LOGGER.exception('Failed to fetch prefixes %s', prefix_value)
-                    else:
-                        dictionary_to_return[prefix_value]=namespace
-                    finally:
-                        sube_prefix = sube_prefix.nextSiblingElement('prefix')
-            except Exception:
-                LOGGER.exception('Failed to fetch namespace  %s', namespace)
-            finally:
-                sube = sube.nextSiblingElement('iri')
+                    #PREFIX MAP
+                    sube_prefix = sube_prefixes.firstChildElement('prefix')
+                    while not sube_prefix.isNull():
+                        try:
+                            QtWidgets.QApplication.processEvents()
+                            prefix_value = sube_prefix.attribute('prefix_value')
+                        except Exception:
+                            LOGGER.exception('Failed to fetch prefixes %s', prefix_value)
+                        else:
+                            dictionary_to_return[prefix_value]=namespace
+                        finally:
+                            sube_prefix = sube_prefix.nextSiblingElement('prefix')
+                except Exception:
+                    LOGGER.exception('Failed to fetch namespace  %s', namespace)
+                finally:
+                    sube = sube.nextSiblingElement('iri')
+        else:
+            prefixEl = ontologySection.firstChildElement('prefix')
+            ontIriEl = ontologySection.firstChildElement('iri')
+            if not (prefixEl.isNull() or ontIriEl.isNull()):
+                if ontIriEl.text():
+                    dictionary_to_return[prefixEl.text()] = ontIriEl.text()
+
         return dictionary_to_return
 
     def projectRender(self):
@@ -1136,7 +1150,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         projectName = projectEl.attribute('name')
         ontologyEl = projectEl.firstChildElement('ontology')
         ontologyIri = ontologyEl.attribute('iri')
-        ontologyPrefix = ontologyEl.attribute('prefix',None)
+        ontologyPrefix =  ontologyEl.attribute('prefix',None) if ontologyEl.hasAttribute('prefix') else None
         labelBoolean = False
         if ontologyEl.attribute('addLabelFromSimpleName'):
             labelBoolean = bool(int(ontologyEl.attribute('addLabelFromSimpleName')))

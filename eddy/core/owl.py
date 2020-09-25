@@ -1561,7 +1561,7 @@ class IRIManager(QtCore.QObject):
     def getAllIriStartingWith(self,start):
         result = set()
         for iri in self.iris:
-            if str(iri).startswith(start):
+            if not self.isFromReservedVocabulary(iri) and str(iri).startswith(start):
                 result.add(iri)
         return result
 

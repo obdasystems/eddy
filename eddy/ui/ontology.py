@@ -1295,8 +1295,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         try:
             preField = self.widget('pre_input_field')
             preValue = preField.value()
-            if not preValue:
-                raise RuntimeError('Please insert a non-empty pre string')
+            #if not preValue:
+            #    raise RuntimeError('Please insert a non-empty pre string')
             postField = self.widget('post_input_field')
             postValue = postField.value()
             if postValue:
