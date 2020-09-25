@@ -43,7 +43,7 @@ BINTRAY_USER = os.getenv('BINTRAY_USER') or os.getenv('USER')
 BINTRAY_SUBJECT = os.getenv('BINTRAY_SUBJECT') or os.getenv('BINTRAY_USER') or os.getenv('USER')
 BINTRAY_REPO = os.getenv('BINTRAY_REPO')
 
-## Setup package descriptor
+# Setup package descriptor
 descriptor = {
     'package': {
         'name': APPNAME,
@@ -62,8 +62,8 @@ descriptor = {
     'files': [
         {
             'includePattern': 'dist/(.*)',
-            'uploadPattern': '/'.join([VERSION, BRANCH, '$1']),
-            'matrixParams': { 'override': 1 }
+            'uploadPattern': '/'.join([VERSION, '$1']),
+            'matrixParams': {'override': 1}
         },
     ],
 
