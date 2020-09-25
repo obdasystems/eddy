@@ -49,5 +49,5 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARENT_DIR="$(dirname "${SCRIPT_DIR}")"
 PYRCC5_EXEC="${PYRCC5_EXEC:-pyrcc5}"
 
-"${PYRCC5_EXEC}" "${PARENT_DIR}/eddy/ui/fonts.qrc" -o "${PARENT_DIR}/eddy/ui/fonts_rc.py"
+"${PYRCC5_EXEC}" "${PARENT_DIR}/eddy/ui/fonts.qrc" -o "${PARENT_DIR}/eddy/ui/fonts_rc.py" "$@"
 
