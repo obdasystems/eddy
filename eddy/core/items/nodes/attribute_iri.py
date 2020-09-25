@@ -62,6 +62,10 @@ class AttributeNode(OntologyEntityNode):
         for inputEdge in [x for x in self.edges if x.type() is Item.InputEdge]:
             if inputEdge.source is self and inputEdge.target.type() is Item.PropertyAssertionNode:
                 return True
+        #SameAs and Different
+        for inputEdge in [x for x in self.edges if (x.type() is Item.SameEdge or x.type() is Item.DifferentEdge)]:
+            if inputEdge.source is self or inputEdge.target is self:
+                return True
         return False
 
     def boundingRect(self):
