@@ -1,0 +1,1226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="3">
+  <project name="LUBM" version="1.0">
+    <ontology iri="None" lang="en" addLabelFromUserInput="0" addLabelFromSimpleName="0">
+      <imports/>
+      <prefixes>
+        <prefix>
+          <value>owl</value>
+          <namespace>http://www.w3.org/2002/07/owl#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdf</value>
+          <namespace>http://www.w3.org/1999/02/22-rdf-syntax-ns#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdfs</value>
+          <namespace>http://www.w3.org/2000/01/rdf-schema#</namespace>
+        </prefix>
+        <prefix>
+          <value>xml</value>
+          <namespace>http://www.w3.org/XML/1998/namespace</namespace>
+        </prefix>
+        <prefix>
+          <value>xsd</value>
+          <namespace>http://www.w3.org/2001/XMLSchema#</namespace>
+        </prefix>
+      </prefixes>
+      <datatypes>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral</datatype>
+        <datatype>http://www.w3.org/2000/01/rdf-schema#Literal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NCName</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NMTOKEN</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#Name</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#anyURI</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#base64Binary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#boolean</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#byte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTime</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTimeStamp</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#decimal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#double</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#float</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#hexBinary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#int</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#language</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#long</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#negativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonNegativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonPositiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#normalizedString</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#positiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#short</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#string</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#token</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedByte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedInt</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedLong</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedShort</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#rational</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#real</datatype>
+      </datatypes>
+      <languages>
+        <language>de</language>
+        <language>en</language>
+        <language>es</language>
+        <language>fr</language>
+        <language>it</language>
+      </languages>
+      <facets>
+        <facet>http://www.w3.org/2001/XMLSchema#langRange</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#length</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#pattern</facet>
+      </facets>
+      <annotationProperties>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#comment</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#isDefinedBy</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#label</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#deprecated</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#incompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#priorVersion</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#versionInfo</annotationProperty>
+      </annotationProperties>
+      <iris>
+        <iri>
+          <value>AdministrativeStaffWorker</value>
+          <annotations>
+            <annotation>
+              <subject>AdministrativeStaffWorker</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>AdministrativeStaffWorker</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Dean</value>
+          <annotations>
+            <annotation>
+              <subject>Dean</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Dean</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Employee</value>
+          <annotations>
+            <annotation>
+              <subject>Employee</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Employee</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>FacultyMember</value>
+          <annotations>
+            <annotation>
+              <subject>FacultyMember</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>FacultyMember</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>GraduateLevelCourse</value>
+          <annotations>
+            <annotation>
+              <subject>GraduateLevelCourse</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>GraduateLevelCourse</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>GraduateStudent</value>
+          <annotations>
+            <annotation>
+              <subject>GraduateStudent</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>GraduateStudent</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Organization</value>
+          <annotations>
+            <annotation>
+              <subject>Organization</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Organization</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Person</value>
+          <annotations>
+            <annotation>
+              <subject>Person</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Person</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>PostDoctorate</value>
+          <annotations>
+            <annotation>
+              <subject>PostDoctorate</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>PostDoctorate</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Professor</value>
+          <annotations>
+            <annotation>
+              <subject>Professor</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Professor</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Publication</value>
+          <annotations>
+            <annotation>
+              <subject>Publication</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Publication</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>ResearchAssistant</value>
+          <annotations>
+            <annotation>
+              <subject>ResearchAssistant</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>ResearchAssistant</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>ResearchGroup</value>
+          <annotations>
+            <annotation>
+              <subject>ResearchGroup</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>ResearchGroup</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>School</value>
+          <annotations>
+            <annotation>
+              <subject>School</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>School</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Student</value>
+          <annotations>
+            <annotation>
+              <subject>Student</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Student</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>TeachingCourse</value>
+          <annotations>
+            <annotation>
+              <subject>TeachingCourse</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>TeachingCourse</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>UndergraduateStudent</value>
+          <annotations>
+            <annotation>
+              <subject>UndergraduateStudent</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>UndergraduateStudent</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>University</value>
+          <annotations>
+            <annotation>
+              <subject>University</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>University</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>age</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>age</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>age</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>attends</value>
+          <annotations>
+            <annotation>
+              <subject>attends</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>attends</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>email</value>
+          <annotations>
+            <annotation>
+              <subject>email</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>email</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>hasAlumnus</value>
+          <annotations>
+            <annotation>
+              <subject>hasAlumnus</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasAlumnus</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>hasDegreeFrom</value>
+          <annotations>
+            <annotation>
+              <subject>hasDegreeFrom</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasDegreeFrom</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>isHeadOf</value>
+          <annotations>
+            <annotation>
+              <subject>isHeadOf</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>isHeadOf</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>isPartOf</value>
+          <annotations>
+            <annotation>
+              <subject>isPartOf</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>isPartOf</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>name</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>name</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>name</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>publishes</value>
+          <annotations>
+            <annotation>
+              <subject>publishes</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>publishes</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>teaches</value>
+          <inverseFunctional/>
+          <annotations>
+            <annotation>
+              <subject>teaches</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>teaches</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>telephoneNumber</value>
+          <annotations>
+            <annotation>
+              <subject>telephoneNumber</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>telephoneNumber</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>title</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>title</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>title</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>worksFor</value>
+          <annotations>
+            <annotation>
+              <subject>worksFor</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>worksFor</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>writtenBy</value>
+          <annotations>
+            <annotation>
+              <subject>writtenBy</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>writtenBy</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+      </iris>
+    </ontology>
+    <diagrams>
+      <diagram name="LUBM" height="5000" width="5000">
+        <node id="n0" type="concept" color="#fcfcfc">
+          <geometry x="160" y="-220" height="65" width="110"/>
+          <iri>Person</iri>
+          <label x="160" y="-220" size="12" height="23" width="45" customSize="0"/>
+        </node>
+        <node id="n1" type="attribute" color="#fcfcfc">
+          <geometry x="40" y="-340" height="20" width="20"/>
+          <iri>age</iri>
+          <label x="40" y="-362" size="12" height="23" width="27" customSize="0"/>
+        </node>
+        <node id="n10" type="value-domain" color="#fcfcfc">
+          <geometry x="-100" y="-460" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-100" y="-460" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n11" type="value-domain" color="#fcfcfc">
+          <geometry x="-120" y="-400" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-120" y="-400" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n12" type="value-domain" color="#fcfcfc">
+          <geometry x="-160" y="-340" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="-160" y="-340" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n13" type="role" color="#fcfcfc">
+          <geometry x="-200" y="-220" height="50" width="70"/>
+          <iri>writtenBy</iri>
+          <label x="-200" y="-220" size="12" height="23" width="57" customSize="0"/>
+        </node>
+        <node id="n14" type="range-restriction" color="#000000">
+          <geometry x="-100" y="-220" height="20" width="20"/>
+          <label x="-100" y="-242" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n15" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-300" y="-220" height="20" width="20"/>
+          <label x="-300" y="-242" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n16" type="concept" color="#fcfcfc">
+          <geometry x="-540" y="-220" height="65" width="110"/>
+          <iri>Publication</iri>
+          <label x="-540" y="-220" size="12" height="23" width="67" customSize="0"/>
+        </node>
+        <node id="n17" type="attribute" color="#fcfcfc">
+          <geometry x="-780" y="-220" height="20" width="20"/>
+          <iri>title</iri>
+          <label x="-780" y="-242" size="12" height="23" width="27" customSize="0"/>
+        </node>
+        <node id="n18" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-700" y="-220" height="20" width="20"/>
+          <label x="-700" y="-242" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n19" type="range-restriction" color="#000000">
+          <geometry x="-860" y="-220" height="20" width="20"/>
+          <label x="-860" y="-242" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n2" type="attribute" color="#fcfcfc">
+          <geometry x="120" y="-460" height="20" width="20"/>
+          <iri>email</iri>
+          <label x="120" y="-482" size="12" height="23" width="37" customSize="0"/>
+        </node>
+        <node id="n23" type="value-domain" color="#fcfcfc">
+          <geometry x="-960" y="-220" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-960" y="-220" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n24" type="disjoint-union" color="#000000">
+          <geometry x="520" y="-420" height="30" width="50"/>
+        </node>
+        <node id="n25" type="attribute" color="#fcfcfc">
+          <geometry x="440" y="-540" height="20" width="20"/>
+          <iri>name</iri>
+          <label x="440" y="-562" size="12" height="23" width="37" customSize="0"/>
+        </node>
+        <node id="n26" type="domain-restriction" color="#fcfcfc">
+          <geometry x="520" y="-540" height="20" width="20"/>
+          <label x="520" y="-562" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n27" type="range-restriction" color="#000000">
+          <geometry x="360" y="-540" height="20" width="20"/>
+          <label x="360" y="-562" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n28" type="value-domain" color="#fcfcfc">
+          <geometry x="240" y="-540" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="240" y="-540" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n29" type="role" color="#fcfcfc">
+          <geometry x="500" y="-220" height="50" width="70"/>
+          <iri>hasDegreeFrom</iri>
+          <label x="499" y="-259" size="12" height="23" width="92" customSize="0"/>
+        </node>
+        <node id="n3" type="attribute" color="#fcfcfc">
+          <geometry x="80" y="-400" height="20" width="20"/>
+          <iri>telephoneNumber</iri>
+          <label x="80" y="-422" size="12" height="23" width="103" customSize="0"/>
+        </node>
+        <node id="n30" type="range-restriction" color="#000000">
+          <geometry x="600" y="-220" height="20" width="20"/>
+          <label x="600" y="-242" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n31" type="domain-restriction" color="#fcfcfc">
+          <geometry x="400" y="-220" height="20" width="20"/>
+          <label x="400" y="-242" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n32" type="role" color="#fcfcfc">
+          <geometry x="380" y="-60" height="50" width="70"/>
+          <iri>hasAlumnus</iri>
+          <label x="377" y="-20" size="12" height="23" width="74" customSize="0"/>
+        </node>
+        <node id="n33" type="role-inverse" color="#fcfcfc">
+          <geometry x="380" y="-140" height="30" width="50"/>
+          <label x="380" y="-140" size="12" height="23" width="23" customSize="0"/>
+        </node>
+        <node id="n34" type="concept" color="#fcfcfc">
+          <geometry x="860" y="-220" height="65" width="110"/>
+          <iri>Organization</iri>
+          <label x="860" y="-220" size="12" height="23" width="75" customSize="0"/>
+        </node>
+        <node id="n35" type="role" color="#fcfcfc">
+          <geometry x="740" y="-600" height="50" width="70"/>
+          <iri>publishes</iri>
+          <label x="740" y="-600" size="12" height="23" width="59" customSize="0"/>
+        </node>
+        <node id="n36" type="domain-restriction" color="#fcfcfc">
+          <geometry x="840" y="-600" height="20" width="20"/>
+          <label x="840" y="-622" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n37" type="range-restriction" color="#000000">
+          <geometry x="640" y="-600" height="20" width="20"/>
+          <label x="640" y="-622" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n38" type="role" color="#fcfcfc">
+          <geometry x="980" y="-360" height="50" width="70"/>
+          <iri>isPartOf</iri>
+          <label x="980" y="-360" size="12" height="23" width="51" customSize="0"/>
+        </node>
+        <node id="n39" type="range-restriction" color="#000000">
+          <geometry x="1080" y="-360" height="20" width="20"/>
+          <label x="1080" y="-382" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n4" type="domain-restriction" color="#fcfcfc">
+          <geometry x="120" y="-340" height="20" width="20"/>
+          <label x="120" y="-362" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n40" type="domain-restriction" color="#fcfcfc">
+          <geometry x="880" y="-360" height="20" width="20"/>
+          <label x="880" y="-382" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n41" type="concept" color="#fcfcfc">
+          <geometry x="1020" y="-20" height="65" width="110"/>
+          <iri>University</iri>
+          <label x="1020" y="-20" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n42" type="concept" color="#fcfcfc">
+          <geometry x="700" y="-20" height="65" width="110"/>
+          <iri>School</iri>
+          <label x="700" y="-20" size="12" height="23" width="44" customSize="0"/>
+        </node>
+        <node id="n43" type="concept" color="#fcfcfc">
+          <geometry x="860" y="-20" height="65" width="110"/>
+          <iri>ResearchGroup</iri>
+          <label x="860" y="-20" size="12" height="23" width="89" customSize="0"/>
+        </node>
+        <node id="n44" type="disjoint-union" color="#000000">
+          <geometry x="860" y="-120" height="30" width="50"/>
+        </node>
+        <node id="n45" type="union" color="#fcfcfc">
+          <geometry x="-60" y="-100" height="30" width="50"/>
+          <label x="-60" y="-100" size="12" height="23" width="18" customSize="0"/>
+        </node>
+        <node id="n46" type="concept" color="#fcfcfc">
+          <geometry x="-360" y="20" height="65" width="110"/>
+          <iri>Student</iri>
+          <label x="-360" y="20" size="12" height="23" width="49" customSize="0"/>
+        </node>
+        <node id="n47" type="concept" color="#fcfcfc">
+          <geometry x="220" y="20" height="65" width="160"/>
+          <iri>Employee</iri>
+          <label x="220" y="20" size="12" height="23" width="59" customSize="0"/>
+        </node>
+        <node id="n48" type="disjoint-union" color="#000000">
+          <geometry x="-360" y="120" height="30" width="50"/>
+        </node>
+        <node id="n49" type="concept" color="#fcfcfc">
+          <geometry x="-500" y="220" height="65" width="155"/>
+          <iri>UndergraduateStudent</iri>
+          <label x="-500" y="220" size="12" height="23" width="127" customSize="0"/>
+        </node>
+        <node id="n5" type="domain-restriction" color="#fcfcfc">
+          <geometry x="160" y="-400" height="20" width="20"/>
+          <label x="160" y="-422" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n51" type="concept" color="#fcfcfc">
+          <geometry x="-220" y="220" height="65" width="155"/>
+          <iri>GraduateStudent</iri>
+          <label x="-220" y="220" size="12" height="23" width="97" customSize="0"/>
+        </node>
+        <node id="n52" type="role" color="#fcfcfc">
+          <geometry x="-760" y="-40" height="50" width="70"/>
+          <iri>attends</iri>
+          <label x="-760" y="-40" size="12" height="23" width="48" customSize="0"/>
+        </node>
+        <node id="n53" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-660" y="-40" height="20" width="20"/>
+          <label x="-660" y="-62" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n54" type="range-restriction" color="#000000">
+          <geometry x="-760" y="40" height="20" width="20"/>
+          <label x="-726" y="41" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n55" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-760" y="-120" height="20" width="20"/>
+          <label x="-760" y="-142" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n56" type="concept" color="#fcfcfc">
+          <geometry x="-760" y="220" height="65" width="160"/>
+          <iri>TeachingCourse</iri>
+          <label x="-760" y="220" size="12" height="23" width="94" customSize="0"/>
+        </node>
+        <node id="n57" type="concept" color="#fcfcfc">
+          <geometry x="-1000" y="220" height="65" width="160"/>
+          <iri>GraduateLevelCourse</iri>
+          <label x="-1000" y="220" size="12" height="23" width="122" customSize="0"/>
+        </node>
+        <node id="n58" type="role" color="#fcfcfc">
+          <geometry x="-500" y="340" height="50" width="70"/>
+          <iri>teaches</iri>
+          <label x="-500" y="340" size="12" height="23" width="50" customSize="0"/>
+        </node>
+        <node id="n59" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-400" y="340" height="20" width="20"/>
+          <label x="-400" y="318" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n6" type="domain-restriction" color="#fcfcfc">
+          <geometry x="200" y="-460" height="20" width="20"/>
+          <label x="200" y="-482" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n60" type="range-restriction" color="#000000">
+          <geometry x="-600" y="340" height="20" width="20"/>
+          <label x="-600" y="318" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n61" type="concept" color="#fcfcfc">
+          <geometry x="420" y="220" height="65" width="160"/>
+          <iri>AdministrativeStaffWorker</iri>
+          <label x="420" y="220" size="12" height="23" width="148" customSize="0"/>
+        </node>
+        <node id="n62" type="concept" color="#fcfcfc">
+          <geometry x="20" y="220" height="65" width="160"/>
+          <iri>FacultyMember</iri>
+          <label x="20" y="220" size="12" height="23" width="90" customSize="0"/>
+        </node>
+        <node id="n63" type="concept" color="#fcfcfc">
+          <geometry x="220" y="220" height="65" width="160"/>
+          <iri>ResearchAssistant</iri>
+          <label x="220" y="220" size="12" height="23" width="107" customSize="0"/>
+        </node>
+        <node id="n64" type="disjoint-union" color="#000000">
+          <geometry x="220" y="120" height="30" width="50"/>
+        </node>
+        <node id="n65" type="union" color="#fcfcfc">
+          <geometry x="20" y="340" height="30" width="50"/>
+          <label x="20" y="340" size="12" height="23" width="18" customSize="0"/>
+        </node>
+        <node id="n66" type="concept" color="#fcfcfc">
+          <geometry x="140" y="460" height="65" width="155"/>
+          <iri>PostDoctorate</iri>
+          <label x="140" y="460" size="12" height="23" width="84" customSize="0"/>
+        </node>
+        <node id="n67" type="concept" color="#fcfcfc">
+          <geometry x="-100" y="460" height="65" width="155"/>
+          <iri>Professor</iri>
+          <label x="-100" y="460" size="12" height="23" width="59" customSize="0"/>
+        </node>
+        <node id="n68" type="concept" color="#fcfcfc">
+          <geometry x="-100" y="600" height="65" width="155"/>
+          <iri>Dean</iri>
+          <label x="-100" y="600" size="12" height="23" width="35" customSize="0"/>
+        </node>
+        <node id="n69" type="role" color="#fcfcfc">
+          <geometry x="600" y="320" height="50" width="70"/>
+          <iri>worksFor</iri>
+          <label x="600" y="320" size="12" height="23" width="57" customSize="0"/>
+        </node>
+        <node id="n7" type="range-restriction" color="#000000">
+          <geometry x="40" y="-460" height="20" width="20"/>
+          <label x="40" y="-482" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n70" type="range-restriction" color="#000000">
+          <geometry x="700" y="320" height="20" width="20"/>
+          <label x="700" y="298" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n71" type="domain-restriction" color="#fcfcfc">
+          <geometry x="600" y="420" height="20" width="20"/>
+          <label x="629" y="421" size="12" height="23" width="35" customSize="0">forall</label>
+        </node>
+        <node id="n72" type="domain-restriction" color="#fcfcfc">
+          <geometry x="600" y="220" height="20" width="20"/>
+          <label x="630" y="221" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n73" type="role" color="#fcfcfc">
+          <geometry x="740" y="440" height="50" width="70"/>
+          <iri>isHeadOf</iri>
+          <label x="740" y="440" size="12" height="23" width="57" customSize="0"/>
+        </node>
+        <node id="n74" type="domain-restriction" color="#fcfcfc">
+          <geometry x="740" y="540" height="20" width="20"/>
+          <label x="706" y="542" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n8" type="range-restriction" color="#000000">
+          <geometry x="0" y="-400" height="20" width="20"/>
+          <label x="0" y="-422" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n9" type="range-restriction" color="#000000">
+          <geometry x="-40" y="-340" height="20" width="20"/>
+          <label x="-40" y="-362" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <edge id="e1" type="input" target="n4" source="n1">
+          <point x="40" y="-340"/>
+          <point x="120" y="-340"/>
+        </edge>
+        <edge id="e10" type="inclusion" target="n10" source="n7">
+          <point x="40" y="-460"/>
+          <point x="-100" y="-460"/>
+        </edge>
+        <edge id="e11" type="inclusion" target="n11" source="n8">
+          <point x="0" y="-400"/>
+          <point x="-120" y="-400"/>
+        </edge>
+        <edge id="e12" type="inclusion" target="n12" source="n9">
+          <point x="-40" y="-340"/>
+          <point x="-160" y="-340"/>
+        </edge>
+        <edge id="e13" type="input" target="n14" source="n13">
+          <point x="-200" y="-220"/>
+          <point x="-100" y="-220"/>
+        </edge>
+        <edge id="e14" type="input" target="n15" source="n13">
+          <point x="-200" y="-220"/>
+          <point x="-300" y="-220"/>
+        </edge>
+        <edge id="e15" type="inclusion" target="n0" source="n14">
+          <point x="-100" y="-220"/>
+          <point x="160" y="-220"/>
+        </edge>
+        <edge id="e16" type="inclusion" target="n16" source="n15">
+          <point x="-300" y="-220"/>
+          <point x="-540" y="-220"/>
+        </edge>
+        <edge id="e17" type="input" target="n18" source="n17">
+          <point x="-780" y="-220"/>
+          <point x="-700" y="-220"/>
+        </edge>
+        <edge id="e18" type="input" target="n19" source="n17">
+          <point x="-780" y="-220"/>
+          <point x="-860" y="-220"/>
+        </edge>
+        <edge id="e2" type="input" target="n5" source="n3">
+          <point x="80" y="-400"/>
+          <point x="160" y="-400"/>
+        </edge>
+        <edge id="e22" type="equivalence" target="n16" source="n18">
+          <point x="-700" y="-220"/>
+          <point x="-540" y="-220"/>
+        </edge>
+        <edge id="e23" type="inclusion" target="n23" source="n19">
+          <point x="-860" y="-220"/>
+          <point x="-960" y="-220"/>
+        </edge>
+        <edge id="e24" type="input" target="n24" source="n0">
+          <point x="160" y="-240"/>
+          <point x="240" y="-240"/>
+          <point x="240" y="-420"/>
+          <point x="520" y="-420"/>
+        </edge>
+        <edge id="e25" type="input" target="n26" source="n25">
+          <point x="440" y="-540"/>
+          <point x="520" y="-540"/>
+        </edge>
+        <edge id="e26" type="input" target="n27" source="n25">
+          <point x="440" y="-540"/>
+          <point x="360" y="-540"/>
+        </edge>
+        <edge id="e27" type="inclusion" target="n28" source="n27">
+          <point x="360" y="-540"/>
+          <point x="240" y="-540"/>
+        </edge>
+        <edge id="e28" type="equivalence" target="n26" source="n24">
+          <point x="520" y="-420"/>
+          <point x="520" y="-540"/>
+        </edge>
+        <edge id="e29" type="input" target="n30" source="n29">
+          <point x="500" y="-220"/>
+          <point x="600" y="-220"/>
+        </edge>
+        <edge id="e3" type="input" target="n6" source="n2">
+          <point x="120" y="-460"/>
+          <point x="200" y="-460"/>
+        </edge>
+        <edge id="e30" type="input" target="n31" source="n29">
+          <point x="500" y="-220"/>
+          <point x="400" y="-220"/>
+        </edge>
+        <edge id="e31" type="inclusion" target="n0" source="n31">
+          <point x="400" y="-220"/>
+          <point x="160" y="-220"/>
+        </edge>
+        <edge id="e32" type="input" target="n33" source="n29">
+          <point x="500" y="-220"/>
+          <point x="380" y="-140"/>
+        </edge>
+        <edge id="e33" type="inclusion" target="n33" source="n32">
+          <point x="380" y="-60"/>
+          <point x="380" y="-140"/>
+        </edge>
+        <edge id="e34" type="input" target="n24" source="n34">
+          <point x="820" y="-220"/>
+          <point x="820" y="-420"/>
+          <point x="520" y="-420"/>
+        </edge>
+        <edge id="e35" type="input" target="n36" source="n35">
+          <point x="740" y="-600"/>
+          <point x="840" y="-600"/>
+        </edge>
+        <edge id="e36" type="input" target="n37" source="n35">
+          <point x="740" y="-600"/>
+          <point x="640" y="-600"/>
+        </edge>
+        <edge id="e37" type="inclusion" target="n34" source="n36">
+          <point x="840" y="-600"/>
+          <point x="840" y="-220"/>
+        </edge>
+        <edge id="e38" type="inclusion" target="n16" source="n37">
+          <point x="640" y="-600"/>
+          <point x="-540" y="-600"/>
+          <point x="-540" y="-220"/>
+        </edge>
+        <edge id="e39" type="input" target="n39" source="n38">
+          <point x="980" y="-360"/>
+          <point x="1080" y="-360"/>
+        </edge>
+        <edge id="e4" type="equivalence" target="n4" source="n0">
+          <point x="120" y="-220"/>
+          <point x="120" y="-340"/>
+        </edge>
+        <edge id="e40" type="input" target="n40" source="n38">
+          <point x="980" y="-360"/>
+          <point x="880" y="-360"/>
+        </edge>
+        <edge id="e41" type="inclusion" target="n34" source="n40">
+          <point x="880" y="-360"/>
+          <point x="880" y="-220"/>
+        </edge>
+        <edge id="e42" type="inclusion" target="n34" source="n39">
+          <point x="1080" y="-360"/>
+          <point x="1080" y="-220"/>
+          <point x="860" y="-220"/>
+        </edge>
+        <edge id="e43" type="inclusion" target="n34" source="n44">
+          <point x="860" y="-120"/>
+          <point x="860" y="-220"/>
+        </edge>
+        <edge id="e44" type="input" target="n44" source="n42">
+          <point x="700" y="-20"/>
+          <point x="700" y="-120"/>
+          <point x="860" y="-120"/>
+        </edge>
+        <edge id="e45" type="input" target="n44" source="n43">
+          <point x="860" y="-20"/>
+          <point x="860" y="-120"/>
+        </edge>
+        <edge id="e46" type="input" target="n44" source="n41">
+          <point x="1020" y="-20"/>
+          <point x="1020" y="-120"/>
+          <point x="860" y="-120"/>
+        </edge>
+        <edge id="e47" type="inclusion" target="n41" source="n30">
+          <point x="600" y="-220"/>
+          <point x="600" y="60"/>
+          <point x="1020" y="60"/>
+          <point x="1020" y="-20"/>
+        </edge>
+        <edge id="e48" type="input" target="n45" source="n46">
+          <point x="-360" y="20"/>
+          <point x="-360" y="-100"/>
+          <point x="-60" y="-100"/>
+        </edge>
+        <edge id="e49" type="input" target="n45" source="n47">
+          <point x="220" y="20"/>
+          <point x="220" y="-100"/>
+          <point x="-60" y="-100"/>
+        </edge>
+        <edge id="e5" type="inclusion" target="n5" source="n0">
+          <point x="160" y="-220"/>
+          <point x="160" y="-400"/>
+        </edge>
+        <edge id="e50" type="inclusion" target="n0" source="n45">
+          <point x="-60" y="-100"/>
+          <point x="-60" y="-160"/>
+          <point x="160" y="-160"/>
+          <point x="160" y="-220"/>
+        </edge>
+        <edge id="e52" type="input" target="n48" source="n49">
+          <point x="-500" y="220"/>
+          <point x="-500" y="120"/>
+          <point x="-360" y="120"/>
+        </edge>
+        <edge id="e53" type="input" target="n48" source="n51">
+          <point x="-220" y="220"/>
+          <point x="-220" y="120"/>
+          <point x="-360" y="120"/>
+        </edge>
+        <edge id="e54" type="equivalence" target="n46" source="n48">
+          <point x="-360" y="120"/>
+          <point x="-360" y="20"/>
+        </edge>
+        <edge id="e55" type="input" target="n53" source="n52">
+          <point x="-760" y="-40"/>
+          <point x="-660" y="-40"/>
+        </edge>
+        <edge id="e56" type="input" target="n54" source="n52">
+          <point x="-760" y="-40"/>
+          <point x="-760" y="40"/>
+        </edge>
+        <edge id="e57" type="input" target="n55" source="n52">
+          <point x="-760" y="-40"/>
+          <point x="-760" y="-120"/>
+        </edge>
+        <edge id="e58" type="inclusion" target="n46" source="n53">
+          <point x="-660" y="-40"/>
+          <point x="-400" y="-40"/>
+          <point x="-400" y="20"/>
+        </edge>
+        <edge id="e59" type="inclusion" target="n55" source="n51">
+          <point x="-160" y="220"/>
+          <point x="-160" y="-120"/>
+          <point x="-760" y="-120"/>
+        </edge>
+        <edge id="e6" type="inclusion" target="n6" source="n0">
+          <point x="200" y="-220"/>
+          <point x="200" y="-460"/>
+        </edge>
+        <edge id="e60" type="inclusion" target="n56" source="n54">
+          <point x="-760" y="40"/>
+          <point x="-760" y="220"/>
+        </edge>
+        <edge id="e61" type="inclusion" target="n56" source="n57">
+          <point x="-1000" y="220"/>
+          <point x="-760" y="220"/>
+        </edge>
+        <edge id="e62" type="input" target="n55" source="n57">
+          <point x="-1000" y="220"/>
+          <point x="-1000" y="-120"/>
+          <point x="-760" y="-120"/>
+        </edge>
+        <edge id="e63" type="input" target="n59" source="n58">
+          <point x="-500" y="340"/>
+          <point x="-400" y="340"/>
+        </edge>
+        <edge id="e64" type="input" target="n60" source="n58">
+          <point x="-500" y="340"/>
+          <point x="-600" y="340"/>
+        </edge>
+        <edge id="e65" type="equivalence" target="n60" source="n56">
+          <point x="-760" y="220"/>
+          <point x="-760" y="340"/>
+          <point x="-600" y="340"/>
+        </edge>
+        <edge id="e66" type="input" target="n64" source="n62">
+          <point x="20" y="220"/>
+          <point x="20" y="120"/>
+          <point x="220" y="120"/>
+        </edge>
+        <edge id="e68" type="input" target="n64" source="n63">
+          <point x="220" y="220"/>
+          <point x="220" y="120"/>
+        </edge>
+        <edge id="e69" type="input" target="n64" source="n61">
+          <point x="420" y="220"/>
+          <point x="420" y="120"/>
+          <point x="220" y="120"/>
+        </edge>
+        <edge id="e7" type="input" target="n7" source="n2">
+          <point x="120" y="-460"/>
+          <point x="40" y="-460"/>
+        </edge>
+        <edge id="e70" type="inclusion" target="n47" source="n64">
+          <point x="220" y="120"/>
+          <point x="220" y="20"/>
+        </edge>
+        <edge id="e71" type="input" target="n65" source="n67">
+          <point x="-100" y="460"/>
+          <point x="-100" y="340"/>
+          <point x="20" y="340"/>
+        </edge>
+        <edge id="e72" type="input" target="n65" source="n66">
+          <point x="140" y="460"/>
+          <point x="140" y="340"/>
+          <point x="20" y="340"/>
+        </edge>
+        <edge id="e73" type="inclusion" target="n62" source="n65">
+          <point x="20" y="340"/>
+          <point x="20" y="220"/>
+        </edge>
+        <edge id="e74" type="inclusion" target="n62" source="n59">
+          <point x="-400" y="340"/>
+          <point x="-340" y="340"/>
+          <point x="-340" y="300"/>
+          <point x="-20" y="300"/>
+          <point x="-20" y="220"/>
+        </edge>
+        <edge id="e75" type="inclusion" target="n67" source="n68">
+          <point x="-100" y="600"/>
+          <point x="-100" y="460"/>
+        </edge>
+        <edge id="e76" type="input" target="n70" source="n69">
+          <point x="600" y="320"/>
+          <point x="700" y="320"/>
+        </edge>
+        <edge id="e77" type="input" target="n71" source="n69">
+          <point x="600" y="320"/>
+          <point x="600" y="420"/>
+        </edge>
+        <edge id="e78" type="input" target="n72" source="n69">
+          <point x="600" y="320"/>
+          <point x="600" y="220"/>
+        </edge>
+        <edge id="e79" type="inclusion" target="n71" source="n63">
+          <point x="260" y="220"/>
+          <point x="260" y="420"/>
+          <point x="600" y="420"/>
+        </edge>
+        <edge id="e8" type="input" target="n8" source="n3">
+          <point x="80" y="-400"/>
+          <point x="0" y="-400"/>
+        </edge>
+        <edge id="e80" type="inclusion" target="n72" source="n47">
+          <point x="220" y="20"/>
+          <point x="420" y="20"/>
+          <point x="540" y="20"/>
+          <point x="540" y="220"/>
+          <point x="600" y="220"/>
+        </edge>
+        <edge id="e81" type="equivalence" target="n70" source="n34">
+          <point x="860" y="-220"/>
+          <point x="780" y="-220"/>
+          <point x="780" y="320"/>
+          <point x="700" y="320"/>
+        </edge>
+        <edge id="e82" type="inclusion" target="n69" source="n73">
+          <point x="740" y="440"/>
+          <point x="600" y="320"/>
+        </edge>
+        <edge id="e83" type="input" target="n74" source="n73">
+          <point x="740" y="440"/>
+          <point x="740" y="540"/>
+        </edge>
+        <edge id="e84" type="input" target="n74" source="n42">
+          <point x="700" y="-20"/>
+          <point x="700" y="280"/>
+          <point x="820" y="280"/>
+          <point x="820" y="540"/>
+          <point x="740" y="540"/>
+        </edge>
+        <edge id="e85" type="inclusion" target="n74" source="n68">
+          <point x="-100" y="600"/>
+          <point x="740" y="600"/>
+          <point x="740" y="540"/>
+        </edge>
+        <edge id="e9" type="input" target="n9" source="n1">
+          <point x="40" y="-340"/>
+          <point x="-40" y="-340"/>
+        </edge>
+      </diagram>
+    </diagrams>
+  </project>
+</graphol>

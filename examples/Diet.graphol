@@ -1,0 +1,2072 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="3">
+  <project name="Diet" version="1.0">
+    <ontology iri="None" lang="en" addLabelFromUserInput="0" addLabelFromSimpleName="0">
+      <imports/>
+      <prefixes>
+        <prefix>
+          <value>owl</value>
+          <namespace>http://www.w3.org/2002/07/owl#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdf</value>
+          <namespace>http://www.w3.org/1999/02/22-rdf-syntax-ns#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdfs</value>
+          <namespace>http://www.w3.org/2000/01/rdf-schema#</namespace>
+        </prefix>
+        <prefix>
+          <value>xml</value>
+          <namespace>http://www.w3.org/XML/1998/namespace</namespace>
+        </prefix>
+        <prefix>
+          <value>xsd</value>
+          <namespace>http://www.w3.org/2001/XMLSchema#</namespace>
+        </prefix>
+      </prefixes>
+      <datatypes>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral</datatype>
+        <datatype>http://www.w3.org/2000/01/rdf-schema#Literal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NCName</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NMTOKEN</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#Name</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#anyURI</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#base64Binary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#boolean</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#byte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTime</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTimeStamp</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#decimal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#double</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#float</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#hexBinary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#int</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#language</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#long</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#negativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonNegativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonPositiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#normalizedString</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#positiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#short</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#string</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#token</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedByte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedInt</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedLong</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedShort</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#rational</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#real</datatype>
+      </datatypes>
+      <languages>
+        <language>de</language>
+        <language>en</language>
+        <language>es</language>
+        <language>fr</language>
+        <language>it</language>
+      </languages>
+      <facets>
+        <facet>http://www.w3.org/2001/XMLSchema#langRange</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#length</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#pattern</facet>
+      </facets>
+      <annotationProperties>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#comment</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#isDefinedBy</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#label</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#deprecated</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#incompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#priorVersion</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#versionInfo</annotationProperty>
+      </annotationProperties>
+      <iris>
+        <iri>
+          <value>Alcoholic_drink</value>
+          <annotations>
+            <annotation>
+              <subject>Alcoholic_drink</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Alcoholic_drink</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Athlete</value>
+          <annotations>
+            <annotation>
+              <subject>Athlete</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Athlete</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Certificate</value>
+          <annotations>
+            <annotation>
+              <subject>Certificate</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Certificate</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Concentration</value>
+          <annotations>
+            <annotation>
+              <subject>Concentration</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Concentration</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Country</value>
+          <annotations>
+            <annotation>
+              <subject>Country</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Country</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Criterion</value>
+          <annotations>
+            <annotation>
+              <subject>Criterion</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Criterion</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Drink</value>
+          <annotations>
+            <annotation>
+              <subject>Drink</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Drink</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Fatty_acid</value>
+          <annotations>
+            <annotation>
+              <subject>Fatty_acid</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Fatty_acid</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Food</value>
+          <annotations>
+            <annotation>
+              <subject>Food</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Food</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Food_group</value>
+          <annotations>
+            <annotation>
+              <subject>Food_group</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Food_group</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Milk_based_drink</value>
+          <annotations>
+            <annotation>
+              <subject>Milk_based_drink</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Milk_based_drink</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Non_alcoholic_drink</value>
+          <annotations>
+            <annotation>
+              <subject>Non_alcoholic_drink</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Non_alcoholic_drink</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Rank</value>
+          <annotations>
+            <annotation>
+              <subject>Rank</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Rank</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Rating</value>
+          <annotations>
+            <annotation>
+              <subject>Rating</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Rating</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Sport</value>
+          <annotations>
+            <annotation>
+              <subject>Sport</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Sport</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>advises</value>
+          <annotations>
+            <annotation>
+              <subject>advises</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>advises</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>alchol_percentage</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>alchol_percentage</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>alchol_percentage</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>attribute</value>
+          <annotations>
+            <annotation>
+              <subject>attribute</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>attribute</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>belongs_to</value>
+          <annotations>
+            <annotation>
+              <subject>belongs_to</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>belongs_to</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>carb_mass_per_serve</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>carb_mass_per_serve</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>carb_mass_per_serve</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>cholesterol_mass_per_server</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>cholesterol_mass_per_server</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>cholesterol_mass_per_server</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>coaches</value>
+          <annotations>
+            <annotation>
+              <subject>coaches</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>coaches</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>code</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>code</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>code</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>contains</value>
+          <inverseFunctional/>
+          <annotations>
+            <annotation>
+              <subject>contains</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>contains</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>date_of_birth</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>date_of_birth</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>date_of_birth</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>drinks</value>
+          <annotations>
+            <annotation>
+              <subject>drinks</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>drinks</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>email</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>email</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>email</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>fat_mass_per_serve</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>fat_mass_per_serve</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>fat_mass_per_serve</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>form</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>form</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>form</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>has</value>
+          <inverseFunctional/>
+          <annotations>
+            <annotation>
+              <subject>has</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>has</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>kilocalories</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>kilocalories</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>kilocalories</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>mass_per_serve</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>mass_per_serve</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>mass_per_serve</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>name</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>name</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>name</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>of</value>
+          <annotations>
+            <annotation>
+              <subject>of</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>of</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>on</value>
+          <inverseFunctional/>
+          <annotations>
+            <annotation>
+              <subject>on</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>on</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>percentage</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>percentage</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>percentage</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>plays</value>
+          <annotations>
+            <annotation>
+              <subject>plays</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>plays</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>rated</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>rated</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>rated</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>seeks</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>seeks</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>seeks</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>sex</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>sex</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>sex</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>standard_serve_size</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>standard_serve_size</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>standard_serve_size</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>standard_serve_size_unit_of_measurement</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>standard_serve_size_unit_of_measurement</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>standard_serve_size_unit_of_measurement</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>sugar_mass_per_serve</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>sugar_mass_per_serve</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>sugar_mass_per_serve</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>type</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>type</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>type</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>was_awarded</value>
+          <annotations>
+            <annotation>
+              <subject>was_awarded</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>was_awarded</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>water_mass_per_serve</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>water_mass_per_serve</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>water_mass_per_serve</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>water_percentage</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>water_percentage</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>water_percentage</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>won_by</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>won_by</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>won_by</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+      </iris>
+    </ontology>
+    <diagrams>
+      <diagram name="Diet" height="5000" width="5000">
+        <node id="n0" type="concept" color="#fcfcfc">
+          <geometry x="80" y="-630" height="80" width="135"/>
+          <iri>Athlete</iri>
+          <label x="80" y="-630" size="12" height="23" width="45" customSize="0"/>
+        </node>
+        <node id="n1" type="attribute" color="#fcfcfc">
+          <geometry x="360" y="-700" height="20" width="20"/>
+          <iri>name</iri>
+          <label x="360" y="-722" size="12" height="23" width="37" customSize="0"/>
+        </node>
+        <node id="n10" type="domain-restriction" color="#fcfcfc">
+          <geometry x="260" y="-640" height="20" width="20"/>
+          <label x="260" y="-662" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n100" type="role" color="#fcfcfc">
+          <geometry x="-200" y="-440" height="50" width="70"/>
+          <iri>plays</iri>
+          <label x="-200" y="-440" size="12" height="23" width="35" customSize="0"/>
+        </node>
+        <node id="n101" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-80" y="-440" height="20" width="20"/>
+          <label x="-80" y="-462" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n102" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-80" y="-280" height="20" width="20"/>
+          <label x="-80" y="-302" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n103" type="range-restriction" color="#000000">
+          <geometry x="-320" y="-440" height="20" width="20"/>
+          <label x="-320" y="-462" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n104" type="range-restriction" color="#000000">
+          <geometry x="-320" y="-280" height="20" width="20"/>
+          <label x="-320" y="-302" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n105" type="concept" color="#fcfcfc">
+          <geometry x="-500" y="-440" height="50" width="110"/>
+          <iri>Sport</iri>
+          <label x="-500" y="-440" size="12" height="23" width="36" customSize="0"/>
+        </node>
+        <node id="n106" type="role" color="#fcfcfc">
+          <geometry x="-720" y="-440" height="50" width="70"/>
+          <iri>has</iri>
+          <label x="-720" y="-440" size="12" height="23" width="27" customSize="0"/>
+        </node>
+        <node id="n107" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-620" y="-440" height="20" width="20"/>
+          <label x="-620" y="-462" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n108" type="range-restriction" color="#000000">
+          <geometry x="-820" y="-440" height="20" width="20"/>
+          <label x="-820" y="-462" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n109" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-620" y="-540" height="20" width="20"/>
+          <label x="-620" y="-562" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n11" type="domain-restriction" color="#fcfcfc">
+          <geometry x="260" y="-580" height="20" width="20"/>
+          <label x="260" y="-602" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n110" type="range-restriction" color="#000000">
+          <geometry x="-820" y="-540" height="20" width="20"/>
+          <label x="-820" y="-562" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n111" type="role" color="#fcfcfc">
+          <geometry x="-720" y="-540" height="50" width="70"/>
+          <iri>on</iri>
+          <label x="-720" y="-540" size="12" height="23" width="21" customSize="0"/>
+        </node>
+        <node id="n112" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-720" y="-660" height="20" width="20"/>
+          <label x="-720" y="-682" size="12" height="23" width="28" customSize="0">(-,3)</label>
+        </node>
+        <node id="n113" type="concept" color="#fcfcfc">
+          <geometry x="-980" y="-440" height="50" width="110"/>
+          <iri>Rank</iri>
+          <label x="-980" y="-440" size="12" height="23" width="34" customSize="0"/>
+        </node>
+        <node id="n114" type="concept" color="#fcfcfc">
+          <geometry x="-980" y="-540" height="50" width="110"/>
+          <iri>Criterion</iri>
+          <label x="-980" y="-540" size="12" height="23" width="53" customSize="0"/>
+        </node>
+        <node id="n115" type="role" color="#fcfcfc">
+          <geometry x="-980" y="-260" height="50" width="70"/>
+          <iri>won_by</iri>
+          <label x="-980" y="-260" size="12" height="23" width="48" customSize="0"/>
+        </node>
+        <node id="n116" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-980" y="-340" height="20" width="20"/>
+          <label x="-950" y="-339" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n117" type="range-restriction" color="#000000">
+          <geometry x="-980" y="-180" height="20" width="20"/>
+          <label x="-950" y="-179" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n118" type="concept" color="#fcfcfc">
+          <geometry x="-980" y="-80" height="50" width="110"/>
+          <iri>Country</iri>
+          <label x="-980" y="-80" size="12" height="23" width="49" customSize="0"/>
+        </node>
+        <node id="n119" type="role" color="#fcfcfc">
+          <geometry x="-980" y="-720" height="50" width="70"/>
+          <iri>rated</iri>
+          <label x="-980" y="-720" size="12" height="23" width="35" customSize="0"/>
+        </node>
+        <node id="n12" type="domain-restriction" color="#fcfcfc">
+          <geometry x="260" y="-520" height="20" width="20"/>
+          <label x="260" y="-542" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n120" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-980" y="-640" height="20" width="20"/>
+          <label x="-949" y="-641" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n121" type="range-restriction" color="#000000">
+          <geometry x="-980" y="-800" height="20" width="20"/>
+          <label x="-949" y="-799" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n122" type="concept" color="#fcfcfc">
+          <geometry x="-980" y="-880" height="50" width="110"/>
+          <iri>Rating</iri>
+          <label x="-980" y="-880" size="12" height="23" width="42" customSize="0"/>
+        </node>
+        <node id="n123" type="attribute" color="#fcfcfc">
+          <geometry x="-900" y="-960" height="20" width="20"/>
+          <iri>attribute</iri>
+          <label x="-900" y="-982" size="12" height="23" width="52" customSize="0"/>
+        </node>
+        <node id="n124" type="range-restriction" color="#000000">
+          <geometry x="-820" y="-960" height="20" width="20"/>
+          <label x="-820" y="-982" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n125" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-980" y="-960" height="20" width="20"/>
+          <label x="-980" y="-982" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n126" type="value-domain" color="#fcfcfc">
+          <geometry x="-700" y="-960" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="-700" y="-960" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n127" type="role" color="#fcfcfc">
+          <geometry x="-300" y="-720" height="50" width="70"/>
+          <iri>advises</iri>
+          <label x="-300" y="-720" size="12" height="23" width="48" customSize="0"/>
+        </node>
+        <node id="n128" type="role-inverse" color="#fcfcfc">
+          <geometry x="-420" y="-800" height="30" width="50"/>
+          <label x="-420" y="-800" size="12" height="23" width="23" customSize="0"/>
+        </node>
+        <node id="n129" type="complement" color="#fcfcfc">
+          <geometry x="-420" y="-720" height="30" width="50"/>
+          <label x="-420" y="-720" size="12" height="23" width="25" customSize="0"/>
+        </node>
+        <node id="n13" type="value-domain" color="#fcfcfc">
+          <geometry x="600" y="-700" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="600" y="-700" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n130" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-180" y="-720" height="20" width="20"/>
+          <label x="-181" y="-694" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n131" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-180" y="-640" height="20" width="20"/>
+          <label x="-180" y="-662" size="12" height="23" width="28" customSize="0">(-,3)</label>
+        </node>
+        <node id="n132" type="range-restriction" color="#000000">
+          <geometry x="-300" y="-800" height="20" width="20"/>
+          <label x="-331" y="-800" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n133" type="union" color="#fcfcfc">
+          <geometry x="-120" y="-860" height="30" width="50"/>
+          <label x="-120" y="-860" size="12" height="23" width="18" customSize="0"/>
+        </node>
+        <node id="n134" type="role" color="#fcfcfc">
+          <geometry x="-260" y="-960" height="50" width="70"/>
+          <iri>seeks</iri>
+          <label x="-260" y="-960" size="12" height="23" width="39" customSize="0"/>
+        </node>
+        <node id="n135" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-160" y="-960" height="20" width="20"/>
+          <label x="-160" y="-982" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n136" type="range-restriction" color="#000000">
+          <geometry x="-360" y="-960" height="20" width="20"/>
+          <label x="-360" y="-982" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n137" type="role" color="#fcfcfc">
+          <geometry x="-260" y="-1120" height="50" width="70"/>
+          <iri>was_awarded</iri>
+          <label x="-261" y="-1166" size="12" height="23" width="80" customSize="0"/>
+        </node>
+        <node id="n138" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-160" y="-1120" height="20" width="20"/>
+          <label x="-160" y="-1142" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n139" type="range-restriction" color="#000000">
+          <geometry x="-360" y="-1120" height="20" width="20"/>
+          <label x="-360" y="-1142" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n14" type="value-domain" color="#fcfcfc">
+          <geometry x="600" y="-640" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#dateTime</iri>
+          <label x="600" y="-640" size="12" height="23" width="80" customSize="0"/>
+        </node>
+        <node id="n140" type="complement" color="#fcfcfc">
+          <geometry x="-260" y="-1040" height="30" width="50"/>
+          <label x="-260" y="-1040" size="12" height="23" width="25" customSize="0"/>
+        </node>
+        <node id="n141" type="concept" color="#fcfcfc">
+          <geometry x="-520" y="-1040" height="50" width="110"/>
+          <iri>Certificate</iri>
+          <label x="-520" y="-1040" size="12" height="23" width="62" customSize="0"/>
+        </node>
+        <node id="n15" type="value-domain" color="#fcfcfc">
+          <geometry x="600" y="-580" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="600" y="-580" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n16" type="value-domain" color="#fcfcfc">
+          <geometry x="600" y="-520" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="600" y="-520" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n17" type="role" color="#fcfcfc">
+          <geometry x="80" y="-280" height="50" width="70"/>
+          <iri>drinks</iri>
+          <label x="80" y="-280" size="12" height="23" width="40" customSize="0"/>
+        </node>
+        <node id="n18" type="domain-restriction" color="#fcfcfc">
+          <geometry x="80" y="-360" height="20" width="20"/>
+          <label x="50" y="-360" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n19" type="range-restriction" color="#000000">
+          <geometry x="80" y="-200" height="20" width="20"/>
+          <label x="50" y="-199" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n2" type="attribute" color="#fcfcfc">
+          <geometry x="360" y="-640" height="20" width="20"/>
+          <iri>date_of_birth</iri>
+          <label x="360" y="-662" size="12" height="23" width="77" customSize="0"/>
+        </node>
+        <node id="n20" type="concept" color="#fcfcfc">
+          <geometry x="80" y="260" height="65" width="110"/>
+          <iri>Drink</iri>
+          <label x="80" y="260" size="12" height="23" width="35" customSize="0"/>
+        </node>
+        <node id="n21" type="concept" color="#fcfcfc">
+          <geometry x="280" y="-120" height="65" width="110"/>
+          <iri>Food</iri>
+          <label x="280" y="-120" size="12" height="23" width="34" customSize="0"/>
+        </node>
+        <node id="n22" type="attribute" color="#fcfcfc">
+          <geometry x="600" y="-300" height="20" width="20"/>
+          <iri>form</iri>
+          <label x="600" y="-322" size="12" height="23" width="33" customSize="0"/>
+        </node>
+        <node id="n23" type="attribute" color="#fcfcfc">
+          <geometry x="600" y="-240" height="20" width="20"/>
+          <iri>carb_mass_per_serve</iri>
+          <label x="600" y="-262" size="12" height="23" width="123" customSize="0"/>
+        </node>
+        <node id="n24" type="attribute" color="#fcfcfc">
+          <geometry x="600" y="-180" height="20" width="20"/>
+          <iri>sugar_mass_per_serve</iri>
+          <label x="600" y="-202" size="12" height="23" width="129" customSize="0"/>
+        </node>
+        <node id="n25" type="attribute" color="#fcfcfc">
+          <geometry x="600" y="-120" height="20" width="20"/>
+          <iri>fat_mass_per_serve</iri>
+          <label x="600" y="-142" size="12" height="23" width="114" customSize="0"/>
+        </node>
+        <node id="n26" type="attribute" color="#fcfcfc">
+          <geometry x="600" y="-60" height="20" width="20"/>
+          <iri>standard_serve_size</iri>
+          <label x="600" y="-82" size="12" height="23" width="116" customSize="0"/>
+        </node>
+        <node id="n27" type="domain-restriction" color="#fcfcfc">
+          <geometry x="440" y="-240" height="20" width="20"/>
+          <label x="440" y="-262" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n28" type="domain-restriction" color="#fcfcfc">
+          <geometry x="440" y="-180" height="20" width="20"/>
+          <label x="440" y="-202" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n29" type="domain-restriction" color="#fcfcfc">
+          <geometry x="440" y="-120" height="20" width="20"/>
+          <label x="440" y="-142" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n3" type="attribute" color="#fcfcfc">
+          <geometry x="360" y="-580" height="20" width="20"/>
+          <iri>email</iri>
+          <label x="360" y="-602" size="12" height="23" width="37" customSize="0"/>
+        </node>
+        <node id="n30" type="range-restriction" color="#000000">
+          <geometry x="760" y="-240" height="20" width="20"/>
+          <label x="760" y="-262" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n31" type="range-restriction" color="#000000">
+          <geometry x="760" y="-180" height="20" width="20"/>
+          <label x="760" y="-202" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n32" type="range-restriction" color="#000000">
+          <geometry x="760" y="-120" height="20" width="20"/>
+          <label x="760" y="-142" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n33" type="range-restriction" color="#000000">
+          <geometry x="760" y="-300" height="20" width="20"/>
+          <label x="760" y="-322" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n34" type="domain-restriction" color="#fcfcfc">
+          <geometry x="440" y="-300" height="20" width="20"/>
+          <label x="440" y="-322" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n35" type="attribute" color="#fcfcfc">
+          <geometry x="600" y="0" height="20" width="20"/>
+          <iri>standard_serve_size_unit_of_measurement</iri>
+          <label x="600" y="-22" size="12" height="23" width="237" customSize="0"/>
+        </node>
+        <node id="n36" type="range-restriction" color="#000000">
+          <geometry x="760" y="0" height="20" width="20"/>
+          <label x="760" y="-22" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n37" type="range-restriction" color="#000000">
+          <geometry x="760" y="-60" height="20" width="20"/>
+          <label x="760" y="-82" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n38" type="domain-restriction" color="#fcfcfc">
+          <geometry x="440" y="-60" height="20" width="20"/>
+          <label x="440" y="-82" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n39" type="domain-restriction" color="#fcfcfc">
+          <geometry x="440" y="0" height="20" width="20"/>
+          <label x="440" y="-22" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n4" type="attribute" color="#fcfcfc">
+          <geometry x="360" y="-520" height="20" width="20"/>
+          <iri>sex</iri>
+          <label x="360" y="-542" size="12" height="23" width="26" customSize="0"/>
+        </node>
+        <node id="n40" type="value-domain" color="#fcfcfc">
+          <geometry x="920" y="-300" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="920" y="-300" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n41" type="value-domain" color="#fcfcfc">
+          <geometry x="920" y="-120" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="920" y="-120" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n42" type="value-domain" color="#fcfcfc">
+          <geometry x="920" y="-180" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="920" y="-180" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n43" type="value-domain" color="#fcfcfc">
+          <geometry x="920" y="-240" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="920" y="-240" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n44" type="value-domain" color="#fcfcfc">
+          <geometry x="920" y="0" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="920" y="0" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n45" type="value-domain" color="#fcfcfc">
+          <geometry x="920" y="-60" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="920" y="-60" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n46" type="role" color="#fcfcfc">
+          <geometry x="600" y="80" height="50" width="70"/>
+          <iri>belongs_to</iri>
+          <label x="602" y="43" size="12" height="23" width="66" customSize="0"/>
+        </node>
+        <node id="n47" type="domain-restriction" color="#fcfcfc">
+          <geometry x="440" y="80" height="20" width="20"/>
+          <label x="440" y="58" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n48" type="range-restriction" color="#000000">
+          <geometry x="760" y="80" height="20" width="20"/>
+          <label x="760" y="58" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n49" type="concept" color="#fcfcfc">
+          <geometry x="920" y="80" height="50" width="110"/>
+          <iri>Food_group</iri>
+          <label x="920" y="80" size="12" height="23" width="71" customSize="0"/>
+        </node>
+        <node id="n5" type="range-restriction" color="#000000">
+          <geometry x="460" y="-700" height="20" width="20"/>
+          <label x="460" y="-722" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n50" type="attribute" color="#fcfcfc">
+          <geometry x="320" y="260" height="20" width="20"/>
+          <iri>kilocalories</iri>
+          <label x="320" y="238" size="12" height="23" width="68" customSize="0"/>
+        </node>
+        <node id="n51" type="attribute" color="#fcfcfc">
+          <geometry x="320" y="320" height="20" width="20"/>
+          <iri>mass_per_serve</iri>
+          <label x="320" y="298" size="12" height="23" width="94" customSize="0"/>
+        </node>
+        <node id="n52" type="range-restriction" color="#000000">
+          <geometry x="400" y="260" height="20" width="20"/>
+          <label x="400" y="238" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n53" type="domain-restriction" color="#fcfcfc">
+          <geometry x="240" y="320" height="20" width="20"/>
+          <label x="240" y="298" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n54" type="range-restriction" color="#000000">
+          <geometry x="400" y="320" height="20" width="20"/>
+          <label x="400" y="298" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n55" type="domain-restriction" color="#fcfcfc">
+          <geometry x="240" y="260" height="20" width="20"/>
+          <label x="240" y="238" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n56" type="value-domain" color="#fcfcfc">
+          <geometry x="540" y="260" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="540" y="260" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n57" type="value-domain" color="#fcfcfc">
+          <geometry x="540" y="320" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="540" y="320" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n58" type="attribute" color="#fcfcfc">
+          <geometry x="320" y="200" height="20" width="20"/>
+          <iri>type</iri>
+          <label x="320" y="178" size="12" height="23" width="30" customSize="0"/>
+        </node>
+        <node id="n59" type="range-restriction" color="#000000">
+          <geometry x="400" y="200" height="20" width="20"/>
+          <label x="400" y="178" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n6" type="range-restriction" color="#000000">
+          <geometry x="460" y="-640" height="20" width="20"/>
+          <label x="460" y="-662" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n60" type="domain-restriction" color="#fcfcfc">
+          <geometry x="240" y="200" height="20" width="20"/>
+          <label x="240" y="178" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n61" type="value-domain" color="#fcfcfc">
+          <geometry x="540" y="200" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="540" y="200" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n62" type="disjoint-union" color="#000000">
+          <geometry x="80" y="420" height="30" width="50"/>
+        </node>
+        <node id="n63" type="concept" color="#fcfcfc">
+          <geometry x="-80" y="540" height="50" width="135"/>
+          <iri>Alcoholic_drink</iri>
+          <label x="-80" y="540" size="12" height="23" width="89" customSize="0"/>
+        </node>
+        <node id="n64" type="concept" color="#fcfcfc">
+          <geometry x="240" y="540" height="50" width="135"/>
+          <iri>Non_alcoholic_drink</iri>
+          <label x="240" y="540" size="12" height="23" width="115" customSize="0"/>
+        </node>
+        <node id="n65" type="attribute" color="#fcfcfc">
+          <geometry x="480" y="480" height="20" width="20"/>
+          <iri>water_mass_per_serve</iri>
+          <label x="480" y="458" size="12" height="23" width="129" customSize="0"/>
+        </node>
+        <node id="n66" type="value-domain" color="#fcfcfc">
+          <geometry x="720" y="480" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="720" y="480" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n67" type="range-restriction" color="#000000">
+          <geometry x="580" y="480" height="20" width="20"/>
+          <label x="580" y="458" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n68" type="domain-restriction" color="#fcfcfc">
+          <geometry x="380" y="480" height="20" width="20"/>
+          <label x="380" y="458" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n69" type="domain-restriction" color="#fcfcfc">
+          <geometry x="380" y="540" height="20" width="20"/>
+          <label x="380" y="518" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n7" type="range-restriction" color="#000000">
+          <geometry x="460" y="-580" height="20" width="20"/>
+          <label x="460" y="-602" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n70" type="attribute" color="#fcfcfc">
+          <geometry x="480" y="540" height="20" width="20"/>
+          <iri>water_percentage</iri>
+          <label x="480" y="518" size="12" height="23" width="102" customSize="0"/>
+        </node>
+        <node id="n71" type="value-domain" color="#fcfcfc">
+          <geometry x="720" y="540" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="720" y="540" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n72" type="range-restriction" color="#000000">
+          <geometry x="580" y="540" height="20" width="20"/>
+          <label x="580" y="518" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n73" type="concept" color="#fcfcfc">
+          <geometry x="240" y="700" height="50" width="135"/>
+          <iri>Milk_based_drink</iri>
+          <label x="240" y="700" size="12" height="23" width="100" customSize="0"/>
+        </node>
+        <node id="n74" type="role" color="#fcfcfc">
+          <geometry x="480" y="700" height="50" width="70"/>
+          <iri>contains</iri>
+          <label x="480" y="700" size="12" height="23" width="53" customSize="0"/>
+        </node>
+        <node id="n75" type="range-restriction" color="#000000">
+          <geometry x="580" y="700" height="20" width="20"/>
+          <label x="580" y="678" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n76" type="domain-restriction" color="#fcfcfc">
+          <geometry x="380" y="700" height="20" width="20"/>
+          <label x="380" y="678" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n77" type="concept" color="#fcfcfc">
+          <geometry x="720" y="700" height="50" width="135"/>
+          <iri>Concentration</iri>
+          <label x="720" y="700" size="12" height="23" width="82" customSize="0"/>
+        </node>
+        <node id="n79" type="attribute" color="#fcfcfc">
+          <geometry x="840" y="620" height="20" width="20"/>
+          <iri>percentage</iri>
+          <label x="840" y="598" size="12" height="23" width="67" customSize="0"/>
+        </node>
+        <node id="n8" type="range-restriction" color="#000000">
+          <geometry x="460" y="-520" height="20" width="20"/>
+          <label x="460" y="-542" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n80" type="value-domain" color="#fcfcfc">
+          <geometry x="1000" y="620" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="1000" y="620" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n81" type="domain-restriction" color="#fcfcfc">
+          <geometry x="780" y="620" height="20" width="20"/>
+          <label x="780" y="598" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n82" type="range-restriction" color="#000000">
+          <geometry x="900" y="620" height="20" width="20"/>
+          <label x="900" y="598" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n83" type="role" color="#fcfcfc">
+          <geometry x="720" y="880" height="50" width="70"/>
+          <iri>of</iri>
+          <label x="720" y="880" size="12" height="23" width="19" customSize="0"/>
+        </node>
+        <node id="n84" type="range-restriction" color="#000000">
+          <geometry x="720" y="960" height="20" width="20"/>
+          <label x="751" y="961" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n85" type="domain-restriction" color="#fcfcfc">
+          <geometry x="720" y="800" height="20" width="20"/>
+          <label x="750" y="801" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n86" type="concept" color="#fcfcfc">
+          <geometry x="720" y="1060" height="50" width="135"/>
+          <iri>Fatty_acid</iri>
+          <label x="720" y="1060" size="12" height="23" width="62" customSize="0"/>
+        </node>
+        <node id="n87" type="domain-restriction" color="#fcfcfc">
+          <geometry x="780" y="1140" height="20" width="20"/>
+          <label x="780" y="1118" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n88" type="range-restriction" color="#000000">
+          <geometry x="900" y="1140" height="20" width="20"/>
+          <label x="900" y="1118" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n89" type="value-domain" color="#fcfcfc">
+          <geometry x="1000" y="1140" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="1000" y="1140" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n9" type="domain-restriction" color="#fcfcfc">
+          <geometry x="260" y="-700" height="20" width="20"/>
+          <label x="260" y="-722" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n90" type="attribute" color="#fcfcfc">
+          <geometry x="840" y="1140" height="20" width="20"/>
+          <iri>code</iri>
+          <label x="840" y="1118" size="12" height="23" width="34" customSize="0"/>
+        </node>
+        <node id="n91" type="range-restriction" color="#000000">
+          <geometry x="440" y="880" height="20" width="20"/>
+          <label x="439" y="906" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n92" type="value-domain" color="#fcfcfc">
+          <geometry x="540" y="880" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="540" y="880" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n93" type="attribute" color="#fcfcfc">
+          <geometry x="340" y="880" height="20" width="20"/>
+          <iri>cholesterol_mass_per_server</iri>
+          <label x="340" y="858" size="12" height="23" width="162" customSize="0"/>
+        </node>
+        <node id="n94" type="domain-restriction" color="#fcfcfc">
+          <geometry x="240" y="880" height="20" width="20"/>
+          <label x="242" y="905" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n95" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-200" y="540" height="20" width="20"/>
+          <label x="-200" y="518" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n96" type="range-restriction" color="#000000">
+          <geometry x="-360" y="540" height="20" width="20"/>
+          <label x="-360" y="518" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n97" type="value-domain" color="#fcfcfc">
+          <geometry x="-480" y="540" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#int</iri>
+          <label x="-480" y="540" size="12" height="23" width="43" customSize="0"/>
+        </node>
+        <node id="n98" type="attribute" color="#fcfcfc">
+          <geometry x="-280" y="540" height="20" width="20"/>
+          <iri>alchol_percentage</iri>
+          <label x="-280" y="518" size="12" height="23" width="105" customSize="0"/>
+        </node>
+        <node id="n99" type="role" color="#fcfcfc">
+          <geometry x="-200" y="-280" height="50" width="70"/>
+          <iri>coaches</iri>
+          <label x="-200" y="-280" size="12" height="23" width="53" customSize="0"/>
+        </node>
+        <edge id="e1" type="input" target="n5" source="n1">
+          <point x="360" y="-700"/>
+          <point x="460" y="-700"/>
+        </edge>
+        <edge id="e10" type="inclusion" target="n0" source="n11">
+          <point x="260" y="-580"/>
+          <point x="200" y="-580"/>
+          <point x="200" y="-560"/>
+          <point x="120" y="-560"/>
+          <point x="120" y="-630"/>
+        </edge>
+        <edge id="e100" type="input" target="n102" source="n99">
+          <point x="-200" y="-280"/>
+          <point x="-80" y="-280"/>
+        </edge>
+        <edge id="e101" type="inclusion" target="n0" source="n101">
+          <point x="-80" y="-440"/>
+          <point x="40" y="-440"/>
+          <point x="40" y="-600"/>
+        </edge>
+        <edge id="e102" type="inclusion" target="n0" source="n102">
+          <point x="-80" y="-280"/>
+          <point x="-40" y="-280"/>
+          <point x="-40" y="-420"/>
+          <point x="60" y="-420"/>
+          <point x="60" y="-640"/>
+        </edge>
+        <edge id="e103" type="input" target="n103" source="n100">
+          <point x="-200" y="-440"/>
+          <point x="-320" y="-440"/>
+        </edge>
+        <edge id="e104" type="input" target="n104" source="n99">
+          <point x="-200" y="-280"/>
+          <point x="-320" y="-280"/>
+        </edge>
+        <edge id="e105" type="inclusion" target="n105" source="n103">
+          <point x="-320" y="-440"/>
+          <point x="-500" y="-440"/>
+        </edge>
+        <edge id="e106" type="inclusion" target="n105" source="n104">
+          <point x="-320" y="-280"/>
+          <point x="-500" y="-280"/>
+          <point x="-500" y="-440"/>
+        </edge>
+        <edge id="e107" type="input" target="n107" source="n106">
+          <point x="-720" y="-440"/>
+          <point x="-620" y="-440"/>
+        </edge>
+        <edge id="e108" type="input" target="n108" source="n106">
+          <point x="-720" y="-440"/>
+          <point x="-820" y="-440"/>
+        </edge>
+        <edge id="e109" type="input" target="n110" source="n111">
+          <point x="-720" y="-540"/>
+          <point x="-820" y="-540"/>
+        </edge>
+        <edge id="e11" type="equivalence" target="n10" source="n0">
+          <point x="100" y="-620"/>
+          <point x="220" y="-620"/>
+          <point x="220" y="-640"/>
+          <point x="260" y="-640"/>
+        </edge>
+        <edge id="e110" type="input" target="n109" source="n111">
+          <point x="-720" y="-540"/>
+          <point x="-620" y="-540"/>
+        </edge>
+        <edge id="e111" type="inclusion" target="n105" source="n107">
+          <point x="-620" y="-440"/>
+          <point x="-500" y="-440"/>
+        </edge>
+        <edge id="e112" type="inclusion" target="n105" source="n109">
+          <point x="-620" y="-540"/>
+          <point x="-500" y="-540"/>
+          <point x="-500" y="-440"/>
+        </edge>
+        <edge id="e113" type="input" target="n112" source="n111">
+          <point x="-720" y="-540"/>
+          <point x="-720" y="-660"/>
+        </edge>
+        <edge id="e114" type="inclusion" target="n112" source="n105">
+          <point x="-480" y="-440"/>
+          <point x="-480" y="-660"/>
+          <point x="-720" y="-660"/>
+        </edge>
+        <edge id="e115" type="equivalence" target="n108" source="n113">
+          <point x="-980" y="-440"/>
+          <point x="-820" y="-440"/>
+        </edge>
+        <edge id="e117" type="equivalence" target="n110" source="n114">
+          <point x="-980" y="-540"/>
+          <point x="-820" y="-540"/>
+        </edge>
+        <edge id="e118" type="input" target="n116" source="n115">
+          <point x="-980" y="-260"/>
+          <point x="-980" y="-340"/>
+        </edge>
+        <edge id="e119" type="input" target="n117" source="n115">
+          <point x="-980" y="-260"/>
+          <point x="-980" y="-180"/>
+        </edge>
+        <edge id="e12" type="equivalence" target="n12" source="n0">
+          <point x="100" y="-630"/>
+          <point x="100" y="-520"/>
+          <point x="260" y="-520"/>
+        </edge>
+        <edge id="e120" type="equivalence" target="n113" source="n116">
+          <point x="-980" y="-340"/>
+          <point x="-980" y="-440"/>
+        </edge>
+        <edge id="e121" type="inclusion" target="n118" source="n117">
+          <point x="-980" y="-180"/>
+          <point x="-980" y="-80"/>
+        </edge>
+        <edge id="e122" type="input" target="n120" source="n119">
+          <point x="-980" y="-720"/>
+          <point x="-980" y="-640"/>
+        </edge>
+        <edge id="e123" type="input" target="n121" source="n119">
+          <point x="-980" y="-720"/>
+          <point x="-980" y="-800"/>
+        </edge>
+        <edge id="e124" type="equivalence" target="n120" source="n114">
+          <point x="-980" y="-540"/>
+          <point x="-980" y="-640"/>
+        </edge>
+        <edge id="e125" type="inclusion" target="n122" source="n121">
+          <point x="-980" y="-800"/>
+          <point x="-980" y="-880"/>
+        </edge>
+        <edge id="e126" type="input" target="n124" source="n123">
+          <point x="-900" y="-960"/>
+          <point x="-820" y="-960"/>
+        </edge>
+        <edge id="e127" type="input" target="n125" source="n123">
+          <point x="-900" y="-960"/>
+          <point x="-980" y="-960"/>
+        </edge>
+        <edge id="e128" type="inclusion" target="n125" source="n122">
+          <point x="-980" y="-880"/>
+          <point x="-980" y="-960"/>
+        </edge>
+        <edge id="e130" type="input" target="n128" source="n127">
+          <point x="-300" y="-720"/>
+          <point x="-420" y="-800"/>
+        </edge>
+        <edge id="e131" type="input" target="n129" source="n127">
+          <point x="-300" y="-720"/>
+          <point x="-420" y="-720"/>
+        </edge>
+        <edge id="e132" type="inclusion" target="n129" source="n128">
+          <point x="-420" y="-800"/>
+          <point x="-420" y="-720"/>
+        </edge>
+        <edge id="e133" type="input" target="n130" source="n127">
+          <point x="-300" y="-720"/>
+          <point x="-180" y="-720"/>
+        </edge>
+        <edge id="e134" type="inclusion" target="n0" source="n130">
+          <point x="-180" y="-720"/>
+          <point x="-40" y="-720"/>
+          <point x="-40" y="-620"/>
+          <point x="60" y="-620"/>
+        </edge>
+        <edge id="e135" type="input" target="n131" source="n127">
+          <point x="-300" y="-720"/>
+          <point x="-300" y="-640"/>
+          <point x="-180" y="-640"/>
+        </edge>
+        <edge id="e136" type="inclusion" target="n131" source="n0">
+          <point x="80" y="-600"/>
+          <point x="-180" y="-600"/>
+          <point x="-180" y="-640"/>
+        </edge>
+        <edge id="e137" type="input" target="n132" source="n127">
+          <point x="-300" y="-720"/>
+          <point x="-300" y="-800"/>
+        </edge>
+        <edge id="e138" type="inclusion" target="n0" source="n132">
+          <point x="-300" y="-800"/>
+          <point x="40" y="-800"/>
+          <point x="40" y="-640"/>
+        </edge>
+        <edge id="e139" type="input" target="n133" source="n132">
+          <point x="-300" y="-800"/>
+          <point x="-300" y="-860"/>
+          <point x="-120" y="-860"/>
+        </edge>
+        <edge id="e140" type="input" target="n133" source="n130">
+          <point x="-180" y="-720"/>
+          <point x="-180" y="-760"/>
+          <point x="-120" y="-760"/>
+          <point x="-120" y="-860"/>
+        </edge>
+        <edge id="e141" type="inclusion" target="n133" source="n0">
+          <point x="60" y="-640"/>
+          <point x="60" y="-860"/>
+          <point x="-120" y="-860"/>
+        </edge>
+        <edge id="e142" type="input" target="n135" source="n134">
+          <point x="-260" y="-960"/>
+          <point x="-160" y="-960"/>
+        </edge>
+        <edge id="e143" type="input" target="n136" source="n134">
+          <point x="-260" y="-960"/>
+          <point x="-360" y="-960"/>
+        </edge>
+        <edge id="e144" type="input" target="n138" source="n137">
+          <point x="-260" y="-1120"/>
+          <point x="-160" y="-1120"/>
+        </edge>
+        <edge id="e145" type="input" target="n139" source="n137">
+          <point x="-260" y="-1120"/>
+          <point x="-360" y="-1120"/>
+        </edge>
+        <edge id="e146" type="input" target="n140" source="n137">
+          <point x="-260" y="-1120"/>
+          <point x="-260" y="-1040"/>
+        </edge>
+        <edge id="e147" type="inclusion" target="n140" source="n134">
+          <point x="-260" y="-960"/>
+          <point x="-260" y="-1040"/>
+        </edge>
+        <edge id="e148" type="inclusion" target="n141" source="n136">
+          <point x="-360" y="-960"/>
+          <point x="-520" y="-960"/>
+          <point x="-520" y="-1040"/>
+        </edge>
+        <edge id="e149" type="inclusion" target="n141" source="n139">
+          <point x="-360" y="-1120"/>
+          <point x="-520" y="-1120"/>
+          <point x="-520" y="-1040"/>
+        </edge>
+        <edge id="e150" type="inclusion" target="n0" source="n135">
+          <point x="-160" y="-960"/>
+          <point x="80" y="-960"/>
+          <point x="80" y="-630"/>
+        </edge>
+        <edge id="e151" type="inclusion" target="n0" source="n138">
+          <point x="-160" y="-1120"/>
+          <point x="100" y="-1120"/>
+          <point x="100" y="-640"/>
+        </edge>
+        <edge id="e152" type="inclusion" target="n43" source="n30">
+          <point x="760" y="-240"/>
+          <point x="920" y="-240"/>
+        </edge>
+        <edge id="e153" type="inclusion" target="n40" source="n33">
+          <point x="760" y="-300"/>
+          <point x="920" y="-300"/>
+        </edge>
+        <edge id="e154" type="inclusion" target="n42" source="n31">
+          <point x="760" y="-180"/>
+          <point x="920" y="-180"/>
+        </edge>
+        <edge id="e155" type="inclusion" target="n41" source="n32">
+          <point x="760" y="-120"/>
+          <point x="920" y="-120"/>
+        </edge>
+        <edge id="e156" type="inclusion" target="n80" source="n82">
+          <point x="900" y="620"/>
+          <point x="1000" y="620"/>
+        </edge>
+        <edge id="e157" type="inclusion" target="n89" source="n88">
+          <point x="900" y="1140"/>
+          <point x="1000" y="1140"/>
+        </edge>
+        <edge id="e158" type="inclusion" target="n126" source="n124">
+          <point x="-820" y="-960"/>
+          <point x="-700" y="-960"/>
+        </edge>
+        <edge id="e159" type="inclusion" target="n97" source="n96">
+          <point x="-360" y="540"/>
+          <point x="-480" y="540"/>
+        </edge>
+        <edge id="e160" type="inclusion" target="n66" source="n67">
+          <point x="580" y="480"/>
+          <point x="720" y="480"/>
+        </edge>
+        <edge id="e161" type="inclusion" target="n71" source="n72">
+          <point x="580" y="540"/>
+          <point x="720" y="540"/>
+        </edge>
+        <edge id="e162" type="inclusion" target="n61" source="n59">
+          <point x="400" y="200"/>
+          <point x="540" y="200"/>
+        </edge>
+        <edge id="e163" type="inclusion" target="n56" source="n52">
+          <point x="400" y="260"/>
+          <point x="540" y="260"/>
+        </edge>
+        <edge id="e164" type="inclusion" target="n57" source="n54">
+          <point x="400" y="320"/>
+          <point x="540" y="320"/>
+        </edge>
+        <edge id="e165" type="inclusion" target="n13" source="n5">
+          <point x="460" y="-700"/>
+          <point x="600" y="-700"/>
+        </edge>
+        <edge id="e166" type="inclusion" target="n14" source="n6">
+          <point x="460" y="-640"/>
+          <point x="600" y="-640"/>
+        </edge>
+        <edge id="e167" type="inclusion" target="n15" source="n7">
+          <point x="460" y="-580"/>
+          <point x="600" y="-580"/>
+        </edge>
+        <edge id="e168" type="inclusion" target="n16" source="n8">
+          <point x="460" y="-520"/>
+          <point x="600" y="-520"/>
+        </edge>
+        <edge id="e169" type="inclusion" target="n92" source="n91">
+          <point x="440" y="880"/>
+          <point x="540" y="880"/>
+        </edge>
+        <edge id="e17" type="input" target="n18" source="n17">
+          <point x="80" y="-280"/>
+          <point x="80" y="-360"/>
+        </edge>
+        <edge id="e18" type="input" target="n19" source="n17">
+          <point x="80" y="-280"/>
+          <point x="80" y="-200"/>
+        </edge>
+        <edge id="e19" type="inclusion" target="n0" source="n18">
+          <point x="80" y="-360"/>
+          <point x="80" y="-630"/>
+        </edge>
+        <edge id="e2" type="input" target="n6" source="n2">
+          <point x="360" y="-640"/>
+          <point x="460" y="-640"/>
+        </edge>
+        <edge id="e20" type="inclusion" target="n20" source="n19">
+          <point x="80" y="-200"/>
+          <point x="80" y="260"/>
+        </edge>
+        <edge id="e21" type="inclusion" target="n21" source="n20">
+          <point x="100" y="260"/>
+          <point x="100" y="-120"/>
+          <point x="280" y="-120"/>
+        </edge>
+        <edge id="e22" type="input" target="n27" source="n23">
+          <point x="600" y="-240"/>
+          <point x="440" y="-240"/>
+        </edge>
+        <edge id="e23" type="input" target="n28" source="n24">
+          <point x="600" y="-180"/>
+          <point x="440" y="-180"/>
+        </edge>
+        <edge id="e24" type="input" target="n29" source="n25">
+          <point x="600" y="-120"/>
+          <point x="440" y="-120"/>
+        </edge>
+        <edge id="e25" type="input" target="n30" source="n23">
+          <point x="600" y="-240"/>
+          <point x="760" y="-240"/>
+        </edge>
+        <edge id="e26" type="input" target="n31" source="n24">
+          <point x="600" y="-180"/>
+          <point x="760" y="-180"/>
+        </edge>
+        <edge id="e27" type="input" target="n32" source="n25">
+          <point x="600" y="-120"/>
+          <point x="760" y="-120"/>
+        </edge>
+        <edge id="e28" type="inclusion" target="n21" source="n29">
+          <point x="440" y="-120"/>
+          <point x="280" y="-120"/>
+        </edge>
+        <edge id="e29" type="inclusion" target="n21" source="n28">
+          <point x="440" y="-180"/>
+          <point x="380" y="-180"/>
+          <point x="380" y="-140"/>
+          <point x="280" y="-140"/>
+        </edge>
+        <edge id="e3" type="input" target="n7" source="n3">
+          <point x="360" y="-580"/>
+          <point x="460" y="-580"/>
+        </edge>
+        <edge id="e30" type="inclusion" target="n21" source="n27">
+          <point x="440" y="-240"/>
+          <point x="320" y="-240"/>
+          <point x="320" y="-120"/>
+        </edge>
+        <edge id="e31" type="input" target="n33" source="n22">
+          <point x="600" y="-300"/>
+          <point x="760" y="-300"/>
+        </edge>
+        <edge id="e32" type="input" target="n34" source="n22">
+          <point x="600" y="-300"/>
+          <point x="440" y="-300"/>
+        </edge>
+        <edge id="e33" type="equivalence" target="n21" source="n34">
+          <point x="440" y="-300"/>
+          <point x="300" y="-300"/>
+          <point x="300" y="-120"/>
+        </edge>
+        <edge id="e34" type="input" target="n36" source="n35">
+          <point x="600" y="0"/>
+          <point x="760" y="0"/>
+        </edge>
+        <edge id="e35" type="input" target="n37" source="n26">
+          <point x="600" y="-60"/>
+          <point x="760" y="-60"/>
+        </edge>
+        <edge id="e36" type="input" target="n38" source="n26">
+          <point x="600" y="-60"/>
+          <point x="440" y="-60"/>
+        </edge>
+        <edge id="e37" type="input" target="n39" source="n35">
+          <point x="600" y="0"/>
+          <point x="440" y="0"/>
+        </edge>
+        <edge id="e38" type="inclusion" target="n45" source="n37">
+          <point x="760" y="-60"/>
+          <point x="920" y="-60"/>
+        </edge>
+        <edge id="e39" type="inclusion" target="n44" source="n36">
+          <point x="760" y="0"/>
+          <point x="920" y="0"/>
+        </edge>
+        <edge id="e4" type="input" target="n8" source="n4">
+          <point x="360" y="-520"/>
+          <point x="460" y="-520"/>
+        </edge>
+        <edge id="e44" type="inclusion" target="n21" source="n38">
+          <point x="440" y="-60"/>
+          <point x="320" y="-60"/>
+          <point x="320" y="-120"/>
+        </edge>
+        <edge id="e45" type="inclusion" target="n21" source="n39">
+          <point x="440" y="0"/>
+          <point x="300" y="0"/>
+          <point x="300" y="-120"/>
+        </edge>
+        <edge id="e46" type="input" target="n47" source="n46">
+          <point x="600" y="80"/>
+          <point x="440" y="80"/>
+        </edge>
+        <edge id="e47" type="input" target="n48" source="n46">
+          <point x="600" y="80"/>
+          <point x="760" y="80"/>
+        </edge>
+        <edge id="e48" type="inclusion" target="n49" source="n48">
+          <point x="760" y="80"/>
+          <point x="920" y="80"/>
+        </edge>
+        <edge id="e49" type="equivalence" target="n21" source="n47">
+          <point x="440" y="80"/>
+          <point x="280" y="80"/>
+          <point x="280" y="-120"/>
+        </edge>
+        <edge id="e5" type="input" target="n9" source="n1">
+          <point x="360" y="-700"/>
+          <point x="260" y="-700"/>
+        </edge>
+        <edge id="e50" type="input" target="n52" source="n50">
+          <point x="320" y="260"/>
+          <point x="400" y="260"/>
+        </edge>
+        <edge id="e51" type="input" target="n53" source="n51">
+          <point x="320" y="320"/>
+          <point x="240" y="320"/>
+        </edge>
+        <edge id="e52" type="input" target="n54" source="n51">
+          <point x="320" y="320"/>
+          <point x="400" y="320"/>
+        </edge>
+        <edge id="e53" type="input" target="n55" source="n50">
+          <point x="320" y="260"/>
+          <point x="240" y="260"/>
+        </edge>
+        <edge id="e54" type="equivalence" target="n55" source="n20">
+          <point x="80" y="260"/>
+          <point x="240" y="260"/>
+        </edge>
+        <edge id="e55" type="equivalence" target="n53" source="n20">
+          <point x="100" y="260"/>
+          <point x="100" y="320"/>
+          <point x="240" y="320"/>
+        </edge>
+        <edge id="e58" type="input" target="n59" source="n58">
+          <point x="320" y="200"/>
+          <point x="400" y="200"/>
+        </edge>
+        <edge id="e59" type="input" target="n60" source="n58">
+          <point x="320" y="200"/>
+          <point x="240" y="200"/>
+        </edge>
+        <edge id="e6" type="input" target="n10" source="n2">
+          <point x="360" y="-640"/>
+          <point x="260" y="-640"/>
+        </edge>
+        <edge id="e61" type="equivalence" target="n60" source="n20">
+          <point x="120" y="260"/>
+          <point x="120" y="200"/>
+          <point x="240" y="200"/>
+        </edge>
+        <edge id="e62" type="equivalence" target="n20" source="n62">
+          <point x="80" y="420"/>
+          <point x="80" y="260"/>
+        </edge>
+        <edge id="e63" type="input" target="n62" source="n63">
+          <point x="-80" y="540"/>
+          <point x="-80" y="420"/>
+          <point x="80" y="420"/>
+        </edge>
+        <edge id="e64" type="input" target="n62" source="n64">
+          <point x="240" y="540"/>
+          <point x="240" y="420"/>
+          <point x="80" y="420"/>
+        </edge>
+        <edge id="e66" type="input" target="n67" source="n65">
+          <point x="480" y="480"/>
+          <point x="580" y="480"/>
+        </edge>
+        <edge id="e67" type="input" target="n68" source="n65">
+          <point x="480" y="480"/>
+          <point x="380" y="480"/>
+        </edge>
+        <edge id="e68" type="equivalence" target="n68" source="n64">
+          <point x="280" y="540"/>
+          <point x="280" y="480"/>
+          <point x="380" y="480"/>
+        </edge>
+        <edge id="e7" type="input" target="n11" source="n3">
+          <point x="360" y="-580"/>
+          <point x="260" y="-580"/>
+        </edge>
+        <edge id="e70" type="input" target="n69" source="n70">
+          <point x="480" y="540"/>
+          <point x="380" y="540"/>
+        </edge>
+        <edge id="e71" type="input" target="n72" source="n70">
+          <point x="480" y="540"/>
+          <point x="580" y="540"/>
+        </edge>
+        <edge id="e72" type="inclusion" target="n69" source="n64">
+          <point x="240" y="540"/>
+          <point x="380" y="540"/>
+        </edge>
+        <edge id="e73" type="inclusion" target="n64" source="n73">
+          <point x="240" y="700"/>
+          <point x="240" y="540"/>
+        </edge>
+        <edge id="e74" type="input" target="n75" source="n74">
+          <point x="480" y="700"/>
+          <point x="580" y="700"/>
+        </edge>
+        <edge id="e75" type="input" target="n76" source="n74">
+          <point x="480" y="700"/>
+          <point x="380" y="700"/>
+        </edge>
+        <edge id="e76" type="inclusion" target="n73" source="n76">
+          <point x="380" y="700"/>
+          <point x="240" y="700"/>
+        </edge>
+        <edge id="e77" type="equivalence" target="n75" source="n77">
+          <point x="720" y="700"/>
+          <point x="580" y="700"/>
+        </edge>
+        <edge id="e78" type="input" target="n82" source="n79">
+          <point x="840" y="620"/>
+          <point x="900" y="620"/>
+        </edge>
+        <edge id="e8" type="input" target="n12" source="n4">
+          <point x="360" y="-520"/>
+          <point x="260" y="-520"/>
+        </edge>
+        <edge id="e80" type="input" target="n81" source="n79">
+          <point x="840" y="620"/>
+          <point x="780" y="620"/>
+        </edge>
+        <edge id="e81" type="equivalence" target="n81" source="n77">
+          <point x="720" y="700"/>
+          <point x="720" y="620"/>
+          <point x="780" y="620"/>
+        </edge>
+        <edge id="e82" type="input" target="n84" source="n83">
+          <point x="720" y="880"/>
+          <point x="720" y="960"/>
+        </edge>
+        <edge id="e83" type="input" target="n85" source="n83">
+          <point x="720" y="880"/>
+          <point x="720" y="800"/>
+        </edge>
+        <edge id="e84" type="equivalence" target="n77" source="n85">
+          <point x="720" y="800"/>
+          <point x="720" y="700"/>
+        </edge>
+        <edge id="e85" type="input" target="n88" source="n90">
+          <point x="840" y="1140"/>
+          <point x="900" y="1140"/>
+        </edge>
+        <edge id="e87" type="input" target="n87" source="n90">
+          <point x="840" y="1140"/>
+          <point x="780" y="1140"/>
+        </edge>
+        <edge id="e88" type="equivalence" target="n87" source="n86">
+          <point x="720" y="1060"/>
+          <point x="720" y="1140"/>
+          <point x="780" y="1140"/>
+        </edge>
+        <edge id="e89" type="inclusion" target="n86" source="n84">
+          <point x="720" y="960"/>
+          <point x="720" y="1060"/>
+        </edge>
+        <edge id="e9" type="equivalence" target="n9" source="n0">
+          <point x="100" y="-640"/>
+          <point x="180" y="-640"/>
+          <point x="180" y="-700"/>
+          <point x="260" y="-700"/>
+        </edge>
+        <edge id="e91" type="input" target="n91" source="n93">
+          <point x="340" y="880"/>
+          <point x="440" y="880"/>
+        </edge>
+        <edge id="e92" type="input" target="n94" source="n93">
+          <point x="340" y="880"/>
+          <point x="240" y="880"/>
+        </edge>
+        <edge id="e93" type="equivalence" target="n94" source="n73">
+          <point x="240" y="700"/>
+          <point x="240" y="880"/>
+        </edge>
+        <edge id="e94" type="input" target="n96" source="n98">
+          <point x="-280" y="540"/>
+          <point x="-360" y="540"/>
+        </edge>
+        <edge id="e96" type="input" target="n95" source="n98">
+          <point x="-280" y="540"/>
+          <point x="-200" y="540"/>
+        </edge>
+        <edge id="e97" type="equivalence" target="n95" source="n63">
+          <point x="-80" y="540"/>
+          <point x="-200" y="540"/>
+        </edge>
+        <edge id="e98" type="inclusion" target="n100" source="n99">
+          <point x="-200" y="-280"/>
+          <point x="-200" y="-440"/>
+        </edge>
+        <edge id="e99" type="input" target="n101" source="n100">
+          <point x="-200" y="-440"/>
+          <point x="-80" y="-440"/>
+        </edge>
+      </diagram>
+    </diagrams>
+  </project>
+</graphol>

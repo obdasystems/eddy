@@ -1,0 +1,1192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphol version="3">
+  <project name="Pizza" version="1.0">
+    <ontology iri="None" lang="en" addLabelFromUserInput="0" addLabelFromSimpleName="0">
+      <imports/>
+      <prefixes>
+        <prefix>
+          <value>owl</value>
+          <namespace>http://www.w3.org/2002/07/owl#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdf</value>
+          <namespace>http://www.w3.org/1999/02/22-rdf-syntax-ns#</namespace>
+        </prefix>
+        <prefix>
+          <value>rdfs</value>
+          <namespace>http://www.w3.org/2000/01/rdf-schema#</namespace>
+        </prefix>
+        <prefix>
+          <value>xml</value>
+          <namespace>http://www.w3.org/XML/1998/namespace</namespace>
+        </prefix>
+        <prefix>
+          <value>xsd</value>
+          <namespace>http://www.w3.org/2001/XMLSchema#</namespace>
+        </prefix>
+      </prefixes>
+      <datatypes>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+        <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral</datatype>
+        <datatype>http://www.w3.org/2000/01/rdf-schema#Literal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NCName</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#NMTOKEN</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#Name</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#anyURI</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#base64Binary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#boolean</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#byte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTime</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#dateTimeStamp</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#decimal</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#double</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#float</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#hexBinary</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#int</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#integer</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#language</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#long</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#negativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonNegativeInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#nonPositiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#normalizedString</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#positiveInteger</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#short</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#string</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#token</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedByte</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedInt</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedLong</datatype>
+        <datatype>http://www.w3.org/2001/XMLSchema#unsignedShort</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#rational</datatype>
+        <datatype>http://www.w3.org/2002/07/owl#real</datatype>
+      </datatypes>
+      <languages>
+        <language>de</language>
+        <language>en</language>
+        <language>es</language>
+        <language>fr</language>
+        <language>it</language>
+      </languages>
+      <facets>
+        <facet>http://www.w3.org/2001/XMLSchema#langRange</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#length</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#maxLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minExclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minInclusive</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#minLength</facet>
+        <facet>http://www.w3.org/2001/XMLSchema#pattern</facet>
+      </facets>
+      <annotationProperties>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#comment</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#isDefinedBy</annotationProperty>
+        <annotationProperty>http://www.w3.org/2000/01/rdf-schema#label</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#backwardCompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#deprecated</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#incompatibleWith</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#priorVersion</annotationProperty>
+        <annotationProperty>http://www.w3.org/2002/07/owl#versionInfo</annotationProperty>
+      </annotationProperties>
+      <iris>
+        <iri>
+          <value>American</value>
+          <annotations>
+            <annotation>
+              <subject>American</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>American</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>CheeseTopping</value>
+          <annotations>
+            <annotation>
+              <subject>CheeseTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>CheeseTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>CheesyPizza</value>
+          <annotations>
+            <annotation>
+              <subject>CheesyPizza</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>CheesyPizza</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>DeepPanBase</value>
+          <annotations>
+            <annotation>
+              <subject>DeepPanBase</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>DeepPanBase</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Food</value>
+          <annotations>
+            <annotation>
+              <subject>Food</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Food</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>FruitTopping</value>
+          <annotations>
+            <annotation>
+              <subject>FruitTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>FruitTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>HamTopping</value>
+          <annotations>
+            <annotation>
+              <subject>HamTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>HamTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>IceCream</value>
+          <annotations>
+            <annotation>
+              <subject>IceCream</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>IceCream</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>InterestingPizza</value>
+          <annotations>
+            <annotation>
+              <subject>InterestingPizza</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>InterestingPizza</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>MeatTopping</value>
+          <annotations>
+            <annotation>
+              <subject>MeatTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>MeatTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>MeatyPizza</value>
+          <annotations>
+            <annotation>
+              <subject>MeatyPizza</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>MeatyPizza</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>MozzarellaTopping</value>
+          <annotations>
+            <annotation>
+              <subject>MozzarellaTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>MozzarellaTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>NamedPizza</value>
+          <annotations>
+            <annotation>
+              <subject>NamedPizza</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>NamedPizza</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Napoletana</value>
+          <annotations>
+            <annotation>
+              <subject>Napoletana</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Napoletana</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>OliveTopping</value>
+          <annotations>
+            <annotation>
+              <subject>OliveTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>OliveTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>PepperoniSausageTopping</value>
+          <annotations>
+            <annotation>
+              <subject>PepperoniSausageTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>PepperoniSausageTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>Pizza</value>
+          <annotations>
+            <annotation>
+              <subject>Pizza</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>Pizza</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>PizzaBase</value>
+          <annotations>
+            <annotation>
+              <subject>PizzaBase</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>PizzaBase</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>PizzaTopping</value>
+          <annotations>
+            <annotation>
+              <subject>PizzaTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>PizzaTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>QuattroFormaggi</value>
+          <annotations>
+            <annotation>
+              <subject>QuattroFormaggi</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>QuattroFormaggi</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>SpicyTopping</value>
+          <annotations>
+            <annotation>
+              <subject>SpicyTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>SpicyTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>ThinAndCrispyBase</value>
+          <annotations>
+            <annotation>
+              <subject>ThinAndCrispyBase</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>ThinAndCrispyBase</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>TomatoTopping</value>
+          <annotations>
+            <annotation>
+              <subject>TomatoTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>TomatoTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>VegetableTopping</value>
+          <annotations>
+            <annotation>
+              <subject>VegetableTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>VegetableTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>VegetarianPizza</value>
+          <annotations>
+            <annotation>
+              <subject>VegetarianPizza</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>VegetarianPizza</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>calories</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>calories</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>calories</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>depth</value>
+          <functional/>
+          <annotations>
+            <annotation>
+              <subject>depth</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>depth</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>hasBase</value>
+          <functional/>
+          <inverseFunctional/>
+          <annotations>
+            <annotation>
+              <subject>hasBase</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasBase</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>hasIngredient</value>
+          <annotations>
+            <annotation>
+              <subject>hasIngredient</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasIngredient</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+        <iri>
+          <value>hasTopping</value>
+          <inverseFunctional/>
+          <annotations>
+            <annotation>
+              <subject>hasTopping</subject>
+              <property>http://www.w3.org/2000/01/rdf-schema#label</property>
+              <object>
+                <lexicalForm>hasTopping</lexicalForm>
+                <datatype>http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral</datatype>
+                <language>it</language>
+              </object>
+            </annotation>
+          </annotations>
+        </iri>
+      </iris>
+    </ontology>
+    <diagrams>
+      <diagram name="Pizza" height="5000" width="5000">
+        <node id="n0" type="concept" color="#fcfcfc">
+          <geometry x="-60" y="-100" height="65" width="135"/>
+          <iri>PizzaBase</iri>
+          <label x="-60" y="-100" size="12" height="23" width="63" customSize="0"/>
+        </node>
+        <node id="n1" type="concept" color="#fcfcfc">
+          <geometry x="-180" y="80" height="65" width="135"/>
+          <iri>DeepPanBase</iri>
+          <label x="-180" y="80" size="12" height="23" width="82" customSize="0"/>
+        </node>
+        <node id="n10" type="range-restriction" color="#000000">
+          <geometry x="220" y="-380" height="20" width="20"/>
+          <label x="220" y="-402" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n12" type="concept" color="#fcfcfc">
+          <geometry x="-940" y="-100" height="65" width="160"/>
+          <iri>Pizza</iri>
+          <label x="-940" y="-100" size="12" height="23" width="36" customSize="0"/>
+        </node>
+        <node id="n13" type="intersection" color="#fcfcfc">
+          <geometry x="-700" y="-100" height="30" width="50"/>
+          <label x="-700" y="-100" size="12" height="23" width="27" customSize="0"/>
+        </node>
+        <node id="n14" type="complement" color="#fcfcfc">
+          <geometry x="-540" y="-100" height="30" width="50"/>
+          <label x="-540" y="-100" size="12" height="23" width="25" customSize="0"/>
+        </node>
+        <node id="n15" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-400" y="-100" height="20" width="20"/>
+          <label x="-368" y="-100" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n16" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-20" y="-380" height="20" width="20"/>
+          <label x="-20" y="-402" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n17" type="concept" color="#fcfcfc">
+          <geometry x="-1420" y="180" height="65" width="135"/>
+          <iri>CheesyPizza</iri>
+          <label x="-1420" y="180" size="12" height="23" width="75" customSize="0"/>
+        </node>
+        <node id="n18" type="concept" color="#fcfcfc">
+          <geometry x="-1180" y="180" height="65" width="135"/>
+          <iri>NamedPizza</iri>
+          <label x="-1180" y="180" size="12" height="23" width="75" customSize="0"/>
+        </node>
+        <node id="n19" type="concept" color="#fcfcfc">
+          <geometry x="-940" y="180" height="65" width="135"/>
+          <iri>MeatyPizza</iri>
+          <label x="-940" y="180" size="12" height="23" width="69" customSize="0"/>
+        </node>
+        <node id="n2" type="concept" color="#fcfcfc">
+          <geometry x="60" y="80" height="65" width="135"/>
+          <iri>ThinAndCrispyBase</iri>
+          <label x="60" y="80" size="12" height="23" width="112" customSize="0"/>
+        </node>
+        <node id="n20" type="concept" color="#fcfcfc">
+          <geometry x="-700" y="180" height="65" width="135"/>
+          <iri>VegetarianPizza</iri>
+          <label x="-700" y="180" size="12" height="23" width="94" customSize="0"/>
+        </node>
+        <node id="n21" type="union" color="#fcfcfc">
+          <geometry x="-940" y="40" height="30" width="50"/>
+          <label x="-940" y="40" size="12" height="23" width="18" customSize="0"/>
+        </node>
+        <node id="n22" type="complement" color="#fcfcfc">
+          <geometry x="-820" y="300" height="30" width="50"/>
+          <label x="-820" y="300" size="12" height="23" width="25" customSize="0"/>
+        </node>
+        <node id="n23" type="concept" color="#fcfcfc">
+          <geometry x="-1340" y="460" height="65" width="135"/>
+          <iri>QuattroFormaggi</iri>
+          <label x="-1340" y="460" size="12" height="23" width="98" customSize="0"/>
+        </node>
+        <node id="n24" type="concept" color="#fcfcfc">
+          <geometry x="-1180" y="460" height="65" width="135"/>
+          <iri>Napoletana</iri>
+          <label x="-1180" y="460" size="12" height="23" width="69" customSize="0"/>
+        </node>
+        <node id="n25" type="concept" color="#fcfcfc">
+          <geometry x="-1020" y="460" height="60" width="135"/>
+          <iri>American</iri>
+          <label x="-1020" y="460" size="12" height="23" width="59" customSize="0"/>
+        </node>
+        <node id="n26" type="disjoint-union" color="#000000">
+          <geometry x="-1180" y="320" height="30" width="50"/>
+        </node>
+        <node id="n27" type="concept" color="#fcfcfc">
+          <geometry x="760" y="-100" height="65" width="135"/>
+          <iri>PizzaTopping</iri>
+          <label x="760" y="-100" size="12" height="23" width="79" customSize="0"/>
+        </node>
+        <node id="n28" type="concept" color="#fcfcfc">
+          <geometry x="560" y="360" height="65" width="135"/>
+          <iri>MozzarellaTopping</iri>
+          <label x="560" y="360" size="12" height="23" width="109" customSize="0"/>
+        </node>
+        <node id="n29" type="concept" color="#fcfcfc">
+          <geometry x="360" y="160" height="65" width="135"/>
+          <iri>SpicyTopping</iri>
+          <label x="360" y="160" size="12" height="23" width="79" customSize="0"/>
+        </node>
+        <node id="n3" type="disjoint-union" color="#000000">
+          <geometry x="-60" y="0" height="30" width="50"/>
+        </node>
+        <node id="n30" type="concept" color="#fcfcfc">
+          <geometry x="560" y="160" height="65" width="135"/>
+          <iri>CheeseTopping</iri>
+          <label x="560" y="160" size="12" height="23" width="90" customSize="0"/>
+        </node>
+        <node id="n31" type="concept" color="#fcfcfc">
+          <geometry x="760" y="160" height="65" width="135"/>
+          <iri>FruitTopping</iri>
+          <label x="760" y="160" size="12" height="23" width="75" customSize="0"/>
+        </node>
+        <node id="n32" type="concept" color="#fcfcfc">
+          <geometry x="960" y="160" height="65" width="135"/>
+          <iri>MeatTopping</iri>
+          <label x="960" y="160" size="12" height="23" width="78" customSize="0"/>
+        </node>
+        <node id="n33" type="disjoint-union" color="#000000">
+          <geometry x="760" y="20" height="30" width="50"/>
+        </node>
+        <node id="n34" type="concept" color="#fcfcfc">
+          <geometry x="1380" y="160" height="65" width="135"/>
+          <iri>VegetableTopping</iri>
+          <label x="1380" y="160" size="12" height="23" width="104" customSize="0"/>
+        </node>
+        <node id="n35" type="concept" color="#fcfcfc">
+          <geometry x="1300" y="360" height="65" width="135"/>
+          <iri>OliveTopping</iri>
+          <label x="1300" y="360" size="12" height="23" width="77" customSize="0"/>
+        </node>
+        <node id="n37" type="concept" color="#fcfcfc">
+          <geometry x="1460" y="360" height="65" width="135"/>
+          <iri>TomatoTopping</iri>
+          <label x="1460" y="360" size="12" height="23" width="92" customSize="0"/>
+        </node>
+        <node id="n38" type="concept" color="#fcfcfc">
+          <geometry x="840" y="360" height="65" width="187"/>
+          <iri>HamTopping</iri>
+          <label x="840" y="360" size="12" height="23" width="76" customSize="0"/>
+        </node>
+        <node id="n39" type="concept" color="#fcfcfc">
+          <geometry x="1080" y="360" height="65" width="213"/>
+          <iri>PepperoniSausageTopping</iri>
+          <label x="1080" y="360" size="12" height="23" width="150" customSize="0"/>
+        </node>
+        <node id="n4" type="attribute" color="#fcfcfc">
+          <geometry x="220" y="-40" height="20" width="20"/>
+          <iri>depth</iri>
+          <label x="220" y="-62" size="12" height="23" width="38" customSize="0"/>
+        </node>
+        <node id="n40" type="disjoint-union" color="#000000">
+          <geometry x="960" y="260" height="30" width="50"/>
+        </node>
+        <node id="n41" type="disjoint-union" color="#000000">
+          <geometry x="1380" y="260" height="30" width="50"/>
+        </node>
+        <node id="n42" type="union" color="#fcfcfc">
+          <geometry x="1320" y="520" height="30" width="50"/>
+          <label x="1320" y="520" size="12" height="23" width="18" customSize="0"/>
+        </node>
+        <node id="n43" type="role" color="#fcfcfc">
+          <geometry x="-180" y="460" height="50" width="70"/>
+          <iri>hasTopping</iri>
+          <label x="-183" y="420" size="12" height="23" width="70" customSize="0"/>
+        </node>
+        <node id="n44" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-280" y="460" height="20" width="20"/>
+          <label x="-311" y="460" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n45" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-180" y="560" height="20" width="20"/>
+          <label x="-178" y="582" size="12" height="23" width="28" customSize="0">(-,1)</label>
+        </node>
+        <node id="n46" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-60" y="660" height="20" width="20"/>
+          <label x="-59" y="683" size="12" height="23" width="35" customSize="0">forall</label>
+        </node>
+        <node id="n47" type="role" color="#fcfcfc">
+          <geometry x="100" y="-560" height="65" width="95"/>
+          <iri>hasIngredient</iri>
+          <label x="187" y="-582" size="12" height="23" width="80" customSize="0"/>
+        </node>
+        <node id="n49" type="role" color="#fcfcfc">
+          <geometry x="760" y="-620" height="65" width="95"/>
+          <iri>hasTopping</iri>
+          <label x="760" y="-620" size="12" height="23" width="70" customSize="0"/>
+        </node>
+        <node id="n5" type="domain-restriction" color="#fcfcfc">
+          <geometry x="140" y="-40" height="20" width="20"/>
+          <label x="140" y="-62" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n50" type="range-restriction" color="#000000">
+          <geometry x="760" y="-500" height="20" width="20"/>
+          <label x="792" y="-500" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n51" type="concept" color="#fcfcfc">
+          <geometry x="-940" y="-560" height="65" width="135"/>
+          <iri>Food</iri>
+          <label x="-940" y="-560" size="12" height="23" width="34" customSize="0"/>
+        </node>
+        <node id="n52" type="disjoint-union" color="#000000">
+          <geometry x="-940" y="-240" height="30" width="50"/>
+        </node>
+        <node id="n6" type="value-domain" color="#fcfcfc">
+          <geometry x="420" y="-40" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="420" y="-40" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n65" type="concept" color="#fcfcfc">
+          <geometry x="-1220" y="-100" height="65" width="135"/>
+          <iri>InterestingPizza</iri>
+          <label x="-1220" y="-100" size="12" height="23" width="93" customSize="0"/>
+        </node>
+        <node id="n67" type="concept" color="#fcfcfc">
+          <geometry x="-1480" y="-100" height="65" width="135"/>
+          <iri>IceCream</iri>
+          <label x="-1480" y="-100" size="12" height="23" width="58" customSize="0"/>
+        </node>
+        <node id="n68" type="domain-restriction" color="#fcfcfc">
+          <geometry x="840" y="-540" height="20" width="20"/>
+          <label x="865" y="-540" size="12" height="23" width="28" customSize="0">(3,-)</label>
+        </node>
+        <node id="n69" type="domain-restriction" color="#fcfcfc">
+          <geometry x="520" y="-280" height="20" width="20"/>
+          <label x="550" y="-280" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n7" type="range-restriction" color="#000000">
+          <geometry x="300" y="-40" height="20" width="20"/>
+          <label x="300" y="-62" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n70" type="intersection" color="#fcfcfc">
+          <geometry x="-1580" y="180" height="30" width="50"/>
+          <label x="-1580" y="180" size="12" height="23" width="27" customSize="0"/>
+        </node>
+        <node id="n71" type="range-restriction" color="#000000">
+          <geometry x="100" y="-680" height="20" width="20"/>
+          <label x="100" y="-702" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n72" type="domain-restriction" color="#fcfcfc">
+          <geometry x="760" y="-740" height="20" width="20"/>
+          <label x="760" y="-762" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n73" type="domain-restriction" color="#fcfcfc">
+          <geometry x="940" y="-460" height="20" width="20"/>
+          <label x="908" y="-461" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n74" type="domain-restriction" color="#fcfcfc">
+          <geometry x="1060" y="-380" height="20" width="20"/>
+          <label x="1028" y="-380" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n75" type="domain-restriction" color="#fcfcfc">
+          <geometry x="-780" y="-560" height="20" width="20"/>
+          <label x="-780" y="-582" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n76" type="attribute" color="#fcfcfc">
+          <geometry x="-680" y="-560" height="20" width="20"/>
+          <iri>calories</iri>
+          <label x="-680" y="-582" size="12" height="23" width="50" customSize="0"/>
+        </node>
+        <node id="n77" type="range-restriction" color="#000000">
+          <geometry x="-580" y="-560" height="20" width="20"/>
+          <label x="-580" y="-582" size="12" height="23" width="39" customSize="0">exists</label>
+        </node>
+        <node id="n78" type="value-domain" color="#fcfcfc">
+          <geometry x="-440" y="-560" height="40" width="90"/>
+          <iri>http://www.w3.org/2001/XMLSchema#string</iri>
+          <label x="-440" y="-560" size="12" height="23" width="60" customSize="0"/>
+        </node>
+        <node id="n9" type="role" color="#fcfcfc">
+          <geometry x="100" y="-380" height="65" width="95"/>
+          <iri>hasBase</iri>
+          <label x="100" y="-380" size="12" height="23" width="53" customSize="0"/>
+        </node>
+        <edge id="e0" type="input" target="n3" source="n1">
+          <point x="-180" y="80"/>
+          <point x="-180" y="0"/>
+          <point x="-60" y="0"/>
+        </edge>
+        <edge id="e1" type="input" target="n3" source="n2">
+          <point x="60" y="80"/>
+          <point x="60" y="0"/>
+          <point x="-60" y="0"/>
+        </edge>
+        <edge id="e10" type="input" target="n13" source="n14">
+          <point x="-540" y="-100"/>
+          <point x="-700" y="-100"/>
+        </edge>
+        <edge id="e11" type="input" target="n14" source="n15">
+          <point x="-400" y="-100"/>
+          <point x="-540" y="-100"/>
+        </edge>
+        <edge id="e12" type="input" target="n16" source="n9">
+          <point x="100" y="-380"/>
+          <point x="-20" y="-380"/>
+        </edge>
+        <edge id="e13" type="equivalence" target="n16" source="n12">
+          <point x="-880" y="-100"/>
+          <point x="-880" y="-380"/>
+          <point x="-20" y="-380"/>
+        </edge>
+        <edge id="e14" type="inclusion" target="n12" source="n21">
+          <point x="-940" y="40"/>
+          <point x="-940" y="-100"/>
+        </edge>
+        <edge id="e15" type="input" target="n21" source="n19">
+          <point x="-940" y="180"/>
+          <point x="-940" y="40"/>
+        </edge>
+        <edge id="e16" type="input" target="n21" source="n20">
+          <point x="-740" y="180"/>
+          <point x="-740" y="40"/>
+          <point x="-940" y="40"/>
+        </edge>
+        <edge id="e17" type="input" target="n21" source="n18">
+          <point x="-1180" y="180"/>
+          <point x="-1180" y="100"/>
+          <point x="-940" y="40"/>
+        </edge>
+        <edge id="e18" type="input" target="n21" source="n17">
+          <point x="-1420" y="180"/>
+          <point x="-1420" y="40"/>
+          <point x="-940" y="40"/>
+        </edge>
+        <edge id="e19" type="equivalence" target="n20" source="n13">
+          <point x="-700" y="-100"/>
+          <point x="-700" y="180"/>
+        </edge>
+        <edge id="e2" type="equivalence" target="n0" source="n3">
+          <point x="-60" y="0"/>
+          <point x="-60" y="-100"/>
+        </edge>
+        <edge id="e20" type="inclusion" target="n22" source="n19">
+          <point x="-940" y="180"/>
+          <point x="-940" y="300"/>
+          <point x="-820" y="300"/>
+        </edge>
+        <edge id="e21" type="input" target="n22" source="n20">
+          <point x="-700" y="180"/>
+          <point x="-700" y="300"/>
+          <point x="-820" y="300"/>
+        </edge>
+        <edge id="e22" type="equivalence" target="n18" source="n26">
+          <point x="-1180" y="320"/>
+          <point x="-1180" y="180"/>
+        </edge>
+        <edge id="e23" type="input" target="n26" source="n23">
+          <point x="-1340" y="460"/>
+          <point x="-1340" y="320"/>
+          <point x="-1180" y="320"/>
+        </edge>
+        <edge id="e24" type="input" target="n26" source="n24">
+          <point x="-1180" y="460"/>
+          <point x="-1180" y="320"/>
+        </edge>
+        <edge id="e25" type="input" target="n26" source="n25">
+          <point x="-1020" y="460"/>
+          <point x="-1020" y="320"/>
+          <point x="-1180" y="320"/>
+        </edge>
+        <edge id="e26" type="inclusion" target="n30" source="n28">
+          <point x="560" y="360"/>
+          <point x="560" y="160"/>
+        </edge>
+        <edge id="e27" type="input" target="n33" source="n29">
+          <point x="360" y="160"/>
+          <point x="360" y="20"/>
+          <point x="760" y="20"/>
+        </edge>
+        <edge id="e28" type="input" target="n33" source="n30">
+          <point x="560" y="160"/>
+          <point x="560" y="60"/>
+          <point x="760" y="20"/>
+        </edge>
+        <edge id="e29" type="input" target="n33" source="n31">
+          <point x="760" y="160"/>
+          <point x="760" y="20"/>
+        </edge>
+        <edge id="e3" type="equivalence" target="n5" source="n0">
+          <point x="-20" y="-80"/>
+          <point x="80" y="-80"/>
+          <point x="80" y="-40"/>
+          <point x="140" y="-40"/>
+        </edge>
+        <edge id="e30" type="input" target="n33" source="n32">
+          <point x="960" y="160"/>
+          <point x="960" y="60"/>
+          <point x="760" y="20"/>
+        </edge>
+        <edge id="e31" type="inclusion" target="n27" source="n33">
+          <point x="760" y="20"/>
+          <point x="760" y="-100"/>
+        </edge>
+        <edge id="e32" type="inclusion" target="n32" source="n40">
+          <point x="960" y="260"/>
+          <point x="960" y="160"/>
+        </edge>
+        <edge id="e33" type="input" target="n40" source="n38">
+          <point x="840" y="360"/>
+          <point x="840" y="260"/>
+          <point x="960" y="260"/>
+        </edge>
+        <edge id="e34" type="input" target="n40" source="n39">
+          <point x="1080" y="360"/>
+          <point x="1080" y="260"/>
+          <point x="960" y="260"/>
+        </edge>
+        <edge id="e35" type="input" target="n41" source="n35">
+          <point x="1300" y="360"/>
+          <point x="1300" y="260"/>
+          <point x="1380" y="260"/>
+        </edge>
+        <edge id="e36" type="input" target="n41" source="n37">
+          <point x="1460" y="360"/>
+          <point x="1460" y="260"/>
+          <point x="1380" y="260"/>
+        </edge>
+        <edge id="e37" type="inclusion" target="n34" source="n41">
+          <point x="1380" y="260"/>
+          <point x="1380" y="160"/>
+        </edge>
+        <edge id="e38" type="input" target="n42" source="n39">
+          <point x="1080" y="360"/>
+          <point x="1080" y="520"/>
+          <point x="1320" y="520"/>
+        </edge>
+        <edge id="e39" type="input" target="n42" source="n34">
+          <point x="1380" y="160"/>
+          <point x="1560" y="160"/>
+          <point x="1560" y="520"/>
+          <point x="1320" y="520"/>
+        </edge>
+        <edge id="e4" type="input" target="n5" source="n4">
+          <point x="220" y="-40"/>
+          <point x="140" y="-40"/>
+        </edge>
+        <edge id="e41" type="input" target="n45" source="n43">
+          <point x="-180" y="460"/>
+          <point x="-180" y="560"/>
+        </edge>
+        <edge id="e42" type="input" target="n44" source="n43">
+          <point x="-180" y="460"/>
+          <point x="-280" y="460"/>
+        </edge>
+        <edge id="e43" type="input" target="n46" source="n43">
+          <point x="-180" y="460"/>
+          <point x="-60" y="460"/>
+          <point x="-60" y="660"/>
+        </edge>
+        <edge id="e44" type="inclusion" target="n45" source="n24">
+          <point x="-1180" y="460"/>
+          <point x="-1180" y="560"/>
+          <point x="-180" y="560"/>
+        </edge>
+        <edge id="e45" type="inclusion" target="n44" source="n23">
+          <point x="-1340" y="460"/>
+          <point x="-1340" y="780"/>
+          <point x="-280" y="780"/>
+          <point x="-280" y="460"/>
+        </edge>
+        <edge id="e47" type="inclusion" target="n46" source="n25">
+          <point x="-1060" y="460"/>
+          <point x="-1060" y="660"/>
+          <point x="-60" y="660"/>
+        </edge>
+        <edge id="e48" type="input" target="n46" source="n42">
+          <point x="1320" y="520"/>
+          <point x="1320" y="660"/>
+          <point x="-60" y="660"/>
+        </edge>
+        <edge id="e49" type="inclusion" target="n47" source="n9">
+          <point x="100" y="-380"/>
+          <point x="100" y="-560"/>
+        </edge>
+        <edge id="e5" type="input" target="n7" source="n4">
+          <point x="220" y="-40"/>
+          <point x="300" y="-40"/>
+        </edge>
+        <edge id="e50" type="inclusion" target="n47" source="n49">
+          <point x="760" y="-620"/>
+          <point x="180" y="-620"/>
+          <point x="100" y="-560"/>
+        </edge>
+        <edge id="e51" type="input" target="n50" source="n49">
+          <point x="760" y="-620"/>
+          <point x="760" y="-500"/>
+        </edge>
+        <edge id="e52" type="inclusion" target="n27" source="n50">
+          <point x="760" y="-500"/>
+          <point x="760" y="-100"/>
+        </edge>
+        <edge id="e53" type="inclusion" target="n51" source="n52">
+          <point x="-940" y="-240"/>
+          <point x="-940" y="-560"/>
+        </edge>
+        <edge id="e54" type="input" target="n52" source="n12">
+          <point x="-940" y="-100"/>
+          <point x="-940" y="-240"/>
+        </edge>
+        <edge id="e55" type="input" target="n52" source="n27">
+          <point x="720" y="-100"/>
+          <point x="720" y="-240"/>
+          <point x="-940" y="-240"/>
+        </edge>
+        <edge id="e56" type="input" target="n52" source="n0">
+          <point x="-60" y="-100"/>
+          <point x="-60" y="-200"/>
+          <point x="-840" y="-200"/>
+          <point x="-940" y="-240"/>
+        </edge>
+        <edge id="e57" type="inclusion" target="n12" source="n65">
+          <point x="-1220" y="-100"/>
+          <point x="-940" y="-100"/>
+        </edge>
+        <edge id="e58" type="input" target="n52" source="n67">
+          <point x="-1480" y="-100"/>
+          <point x="-1480" y="-240"/>
+          <point x="-940" y="-240"/>
+        </edge>
+        <edge id="e59" type="input" target="n68" source="n49">
+          <point x="760" y="-620"/>
+          <point x="840" y="-540"/>
+        </edge>
+        <edge id="e6" type="inclusion" target="n6" source="n7">
+          <point x="300" y="-40"/>
+          <point x="420" y="-40"/>
+        </edge>
+        <edge id="e60" type="inclusion" target="n68" source="n65">
+          <point x="-1220" y="-100"/>
+          <point x="-1220" y="-320"/>
+          <point x="840" y="-320"/>
+          <point x="840" y="-540"/>
+        </edge>
+        <edge id="e61" type="input" target="n69" source="n30">
+          <point x="520" y="160"/>
+          <point x="520" y="-280"/>
+        </edge>
+        <edge id="e62" type="input" target="n69" source="n49">
+          <point x="760" y="-620"/>
+          <point x="520" y="-480"/>
+          <point x="520" y="-280"/>
+        </edge>
+        <edge id="e63" type="equivalence" target="n17" source="n70">
+          <point x="-1580" y="180"/>
+          <point x="-1420" y="180"/>
+        </edge>
+        <edge id="e64" type="input" target="n70" source="n12">
+          <point x="-980" y="-100"/>
+          <point x="-980" y="0"/>
+          <point x="-1580" y="0"/>
+          <point x="-1580" y="180"/>
+        </edge>
+        <edge id="e65" type="input" target="n70" source="n69">
+          <point x="520" y="-280"/>
+          <point x="-1640" y="-280"/>
+          <point x="-1640" y="180"/>
+          <point x="-1580" y="180"/>
+        </edge>
+        <edge id="e66" type="input" target="n71" source="n47">
+          <point x="100" y="-560"/>
+          <point x="100" y="-680"/>
+        </edge>
+        <edge id="e67" type="inclusion" target="n51" source="n71">
+          <point x="100" y="-680"/>
+          <point x="-920" y="-680"/>
+          <point x="-920" y="-560"/>
+        </edge>
+        <edge id="e68" type="input" target="n72" source="n49">
+          <point x="760" y="-620"/>
+          <point x="760" y="-740"/>
+        </edge>
+        <edge id="e69" type="inclusion" target="n51" source="n72">
+          <point x="760" y="-740"/>
+          <point x="-960" y="-740"/>
+          <point x="-960" y="-560"/>
+        </edge>
+        <edge id="e7" type="input" target="n10" source="n9">
+          <point x="100" y="-380"/>
+          <point x="220" y="-380"/>
+        </edge>
+        <edge id="e70" type="input" target="n33" source="n34">
+          <point x="1380" y="160"/>
+          <point x="1380" y="20"/>
+          <point x="760" y="20"/>
+        </edge>
+        <edge id="e71" type="input" target="n73" source="n49">
+          <point x="760" y="-620"/>
+          <point x="940" y="-560"/>
+          <point x="940" y="-460"/>
+        </edge>
+        <edge id="e74" type="input" target="n74" source="n49">
+          <point x="760" y="-620"/>
+          <point x="1060" y="-560"/>
+          <point x="1060" y="-380"/>
+        </edge>
+        <edge id="e75" type="input" target="n74" source="n37">
+          <point x="1500" y="360"/>
+          <point x="1500" y="-300"/>
+          <point x="1060" y="-300"/>
+          <point x="1060" y="-380"/>
+        </edge>
+        <edge id="e76" type="input" target="n73" source="n39">
+          <point x="1140" y="360"/>
+          <point x="1140" y="-260"/>
+          <point x="940" y="-260"/>
+          <point x="940" y="-460"/>
+        </edge>
+        <edge id="e77" type="inclusion" target="n74" source="n25">
+          <point x="-980" y="460"/>
+          <point x="-980" y="700"/>
+          <point x="1620" y="700"/>
+          <point x="1620" y="-380"/>
+          <point x="1060" y="-380"/>
+        </edge>
+        <edge id="e78" type="inclusion" target="n73" source="n25">
+          <point x="-1000" y="460"/>
+          <point x="-1000" y="740"/>
+          <point x="1660" y="740"/>
+          <point x="1660" y="-460"/>
+          <point x="940" y="-460"/>
+        </edge>
+        <edge id="e79" type="input" target="n15" source="n49">
+          <point x="760" y="-620"/>
+          <point x="460" y="-480"/>
+          <point x="460" y="-160"/>
+          <point x="-400" y="-160"/>
+          <point x="-400" y="-100"/>
+        </edge>
+        <edge id="e8" type="inclusion" target="n0" source="n10">
+          <point x="220" y="-380"/>
+          <point x="220" y="-120"/>
+          <point x="-20" y="-120"/>
+        </edge>
+        <edge id="e80" type="input" target="n15" source="n32">
+          <point x="920" y="160"/>
+          <point x="920" y="220"/>
+          <point x="-400" y="220"/>
+          <point x="-400" y="-100"/>
+        </edge>
+        <edge id="e81" type="input" target="n44" source="n30">
+          <point x="520" y="160"/>
+          <point x="520" y="300"/>
+          <point x="-280" y="300"/>
+          <point x="-280" y="460"/>
+        </edge>
+        <edge id="e82" type="inclusion" target="n78" source="n77">
+          <point x="-580" y="-560"/>
+          <point x="-440" y="-560"/>
+        </edge>
+        <edge id="e83" type="equivalence" target="n75" source="n51">
+          <point x="-940" y="-560"/>
+          <point x="-780" y="-560"/>
+        </edge>
+        <edge id="e84" type="input" target="n75" source="n76">
+          <point x="-680" y="-560"/>
+          <point x="-780" y="-560"/>
+        </edge>
+        <edge id="e85" type="input" target="n77" source="n76">
+          <point x="-680" y="-560"/>
+          <point x="-580" y="-560"/>
+        </edge>
+        <edge id="e9" type="input" target="n13" source="n12">
+          <point x="-940" y="-100"/>
+          <point x="-700" y="-100"/>
+        </edge>
+      </diagram>
+    </diagrams>
+  </project>
+</graphol>
