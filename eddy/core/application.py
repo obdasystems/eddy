@@ -67,8 +67,9 @@ from eddy.core.datatypes.system import (
 )
 from eddy.core.functions.fsystem import (
     fexists,
+    faccess,
     isdir,
-    fwrite)
+)
 from eddy.core.functions.misc import format_exception
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
@@ -131,14 +132,6 @@ class Eddy(QtWidgets.QApplication):
         self.setApplicationName(APPNAME)
         self.setApplicationDisplayName(APPNAME)
         self.setApplicationVersion(VERSION)
-
-        '''
-        argStr = 'argv size={}  -- '.format(len(argv))
-        for arg in argv:
-            argStr += 'arg: "{}" -- '.format(arg)
-
-        fwrite(argStr, '/Users/lorenzo/Desktop/test_args.txt')
-        '''
 
         # PARSE COMMAND LINE ARGUMENTS
         self.options = CommandLineParser()
@@ -236,12 +229,12 @@ class Eddy(QtWidgets.QApplication):
             # contents of the container. So we can't use an empty list as default value because
             # PyQt5 needs to know the type of the contents added to the collection: we avoid
             # this problem by placing the list of example projects as recent project list.
-            examples = list(filter(lambda path: isdir(path), [
-                expandPath('@examples/Animals'),
-                expandPath('@examples/Diet'),
-                expandPath('@examples/Family'),
-                expandPath('@examples/LUBM'),
-                expandPath('@examples/Pizza'),
+            examples = list(filter(lambda path: fexists(path) and faccess(path), [
+                expandPath('@examples/Animals{}'.format(File.Graphol.extension)),
+                expandPath('@examples/Diet{}'.format(File.Graphol.extension)),
+                expandPath('@examples/Family{}'.format(File.Graphol.extension)),
+                expandPath('@examples/LUBM{}'.format(File.Graphol.extension)),
+                expandPath('@examples/Pizza{}'.format(File.Graphol.extension)),
             ]))
             settings.setValue('project/recent', examples)
         else:
