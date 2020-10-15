@@ -144,7 +144,7 @@ class AbstractNode(AbstractItem):
         """
         return self.boundingRect().center()
 
-    
+
     def copy(self, diagram):
         """
         Create a copy of the current item.
@@ -166,7 +166,7 @@ class AbstractNode(AbstractItem):
         """
         return self.polygon.geometry()
 
-    
+
     def height(self):
         """
         Returns the height of the shape.
@@ -298,7 +298,7 @@ class AbstractNode(AbstractItem):
                     if (e.source is self or e.type() is Item.EquivalenceEdge) \
                         and filter_on_edges(e)] if filter_on_nodes(x)}
 
-    
+
     def painterPath(self):
         """
         Returns the current shape as QPainterPath (used for collision detection).
@@ -415,14 +415,14 @@ class AbstractNode(AbstractItem):
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
-    
+
     def updateTextPos(self, *args, **kwargs):
         """
         Update the label position.
         """
         pass
 
-    
+
     def width(self):
         """
         Returns the width of the shape.
@@ -574,7 +574,11 @@ class OntologyEntityNode(AbstractNode):
         if self.label and not self.labelString == newLabelString:
             self.labelString = newLabelString
             labelPos = lambda: self.label.pos()
-            self.label.diagram.removeItem(self.label)
+            try:
+                if self.label.diagram:
+                    self.label.diagram.removeItem(self.label)
+            except AttributeError:
+                print("label.diagram is not defined!!")
             self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
             # self.diagram.sgnUpdated.emit()
         elif not self.label:
@@ -754,7 +758,7 @@ class AbstractResizableNode(AbstractNode):
                 return i
         return None
 
-    
+
     def resize(self, mousePos):
         """
         Perform interactive resize of the node.
@@ -1043,8 +1047,11 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         if self.label and not self.labelString == newLabelString:
             self.labelString = newLabelString
             labelPos = lambda:self.label.pos()
-            if self.label.diagram:
-                self.label.diagram.removeItem(self.label)
+            try:
+                if self.label.diagram:
+                    self.label.diagram.removeItem(self.label)
+            except AttributeError:
+                print("label.diagram is not defined!!")
             self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
             #self.diagram.sgnUpdated.emit()self.label
         elif not self.label:
