@@ -89,7 +89,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         # CONTROLS AREA
         #################################
 
-        self.buttonAbort = QtWidgets.QPushButton('Abort', self)
+        #self.buttonAbort = QtWidgets.QPushButton('Abort', self)
         self.buttonIgnore = QtWidgets.QPushButton('Ignore', self)
         self.buttonShow = QtWidgets.QPushButton('Show', self)
 
@@ -127,7 +127,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.mainLayout.addWidget(self.buttonBox, 0, QtCore.Qt.AlignRight)
         self.mainLayout.addWidget(self.messageBox)
 
-        connect(self.buttonAbort.clicked, self.doAbort)
+        #connect(self.buttonAbort.clicked, self.doAbort)
         connect(self.buttonIgnore.clicked, self.doIgnore)
         connect(self.buttonShow.clicked, self.doShow)
         connect(self.sgnWork, self.doWork)
