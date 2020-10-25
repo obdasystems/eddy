@@ -97,7 +97,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.buttonBox.setVisible(False)
         self.buttonBoxLayout = QtWidgets.QHBoxLayout(self.buttonBox)
         self.buttonBoxLayout.setContentsMargins(10, 0, 10, 10)
-        self.buttonBoxLayout.addWidget(self.buttonAbort, 0, QtCore.Qt.AlignRight)
+        #self.buttonBoxLayout.addWidget(self.buttonAbort, 0, QtCore.Qt.AlignRight)
         self.buttonBoxLayout.addWidget(self.buttonIgnore, 0, QtCore.Qt.AlignRight)
         self.buttonBoxLayout.addWidget(self.buttonShow, 0, QtCore.Qt.AlignRight)
 
@@ -191,7 +191,7 @@ class SyntaxValidationDialog(QtWidgets.QDialog, HasThreadingSystem):
         Executed when the abort button is pressed.
         :type _: bool
         """
-        self.sgnWork.emit(self.i + 1)  #previous dialog pops up if this command is not executed.
+        #self.sgnWork.emit(self.i + 1)  #previous dialog pops up if this command is not executed.
         self.close()
 
     @QtCore.pyqtSlot(bool)
