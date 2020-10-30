@@ -789,6 +789,24 @@ class IRI(QtCore.QObject):
     def isBottomDataProperty(self):
         return TopBottomProperty.isBottomAttribute(self)
 
+    def hasLabelMatchingSimpleName(self):
+        lowerSimpleName = self.getSimpleName().replace('-','').replace('_','').replace('?','').lower()
+        annotations = self.getAllLabelAnnotationAssertions()
+        if annotations:
+            for annotation in annotations:
+                comparable = str(annotation.value).replace('-','').replace('_','').replace('?','').replace('\n', ' ').replace('\r', '').replace(" ",'').lower()
+                if comparable==lowerSimpleName:
+                    return True
+            return False
+        #If no annotations ==> no problem!
+        return True
+
+    def getAllLabelAnnotationAssertions(self):
+        if AnnotationAssertionProperty.Label.value in self._annotationAssertionsMap:
+            currList = self._annotationAssertionsMap[AnnotationAssertionProperty.Label.value]
+            return currList
+        return None
+
     def getLabelAnnotationAssertion(self, lang=None):
         '''
         :type lang:str
@@ -1617,6 +1635,14 @@ class IRIManager(QtCore.QObject):
         elif isinstance(iri,str):
             return iri.startswith(Namespace.OWL.value) or iri.startswith(Namespace.RDF.value) or iri.startswith(Namespace.RDFS.value) or iri.startswith(Namespace.XSD.value)
         return False
+
+    def getAllIRIsWithNoMatchingLabel(self):
+        #result = [x for x in self.iris if not (self.isFromReservedVocabulary(x) or x==self.ontologyIRI) and not x.hasLabelMatchingSimpleName()]
+        result = list()
+        for iri in [x for x in self.iris if not (self.isFromReservedVocabulary(x) or x==self.ontologyIRI)]:
+            if not iri.hasLabelMatchingSimpleName():
+                result.append(iri)
+        return result
 
     ##Prefixes
     @property

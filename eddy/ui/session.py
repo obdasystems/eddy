@@ -193,6 +193,7 @@ from eddy.ui.forms import (
     RenameDiagramForm,
     ValueForm,
 )
+from eddy.ui.label import LabelDialog
 from eddy.ui.log import LogDialog
 from eddy.ui.mdi import (
     MdiArea,
@@ -655,6 +656,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             QtGui.QIcon(':/icons/24/ic_help_outline_black'), 'Show explanation(s)',
             self, objectName='inconsistency_explanations', triggered=self.doShowInconsistentOntologyExplanations,
             statusTip='Show explanation(s) for inconsistent ontology', enabled=False))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_close_black'), 'Check labels',
+            self, objectName='label_check',
+            triggered=self.doShowNoMatchingLabelIRIs,
+            statusTip='Show IRIs with no matching labels', enabled=True))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'), 'Run consistency check on active ontology',
@@ -1278,6 +1285,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('&Ontology', objectName='ontology')
         menu.addAction(self.action('syntax_check'))
+        menu.addAction(self.action('label_check'))
         menu.addAction(self.action('dl_check'))
         menu.addAction(self.action('inconsistency_explanations'))
 
@@ -3400,6 +3408,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #dialog.exec_()
         dialog.show()
 
+
+    @QtCore.pyqtSlot()
+    def doShowNoMatchingLabelIRIs(self):
+        print('doShowNoMatchingLabelIRIs called')
+        iris = self.project.getAllIRIsWithNoMatchingLabel()
+        dialog = LabelDialog(self,iris)
+        #dialog.exec_()
+        dialog.show()
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self):
