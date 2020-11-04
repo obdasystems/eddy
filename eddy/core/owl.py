@@ -1838,6 +1838,8 @@ class IRIManager(QtCore.QObject):
         :rtype: str
         """
         ns = self.prefix2namespaceMap.pop(prefix, None)
+        if self.ontologyPrefix==prefix:
+            self.ontologyPrefix = None
         if ns:
             self.sgnPrefixRemoved.emit(prefix)
         return ns
