@@ -486,6 +486,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             if activeTab is self.widget('iri_widget'):
                 userExplicitInput = self.widget('iri_input_field').value()
                 inputIriString = self.widget('full_iri_field').value()
+                labelLang = self.widget('lang_switch').currentText()
                 self.project.isValidIdentifier(inputIriString)
                 if self.iri:
                     if not str(self.iri) == inputIriString:
@@ -493,7 +494,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                             existIRI = self.project.existIRI(inputIriString)
                             if existIRI:
                                 newIRI = self.project.getIRI(inputIriString, addLabelFromSimpleName=True,
-                                                             addLabelFromUserInput=True, userInput=userExplicitInput)
+                                                             addLabelFromUserInput=True, userInput=userExplicitInput, labelLang=labelLang)
                                 if not newIRI is self.iri:
                                     oldIRI = self.iri
                                     self.iri = newIRI
@@ -518,7 +519,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                     inputIri = self.project.getIRI(inputIriString, addLabelFromSimpleName=self.widget('label_simplename_checkbox').isChecked(),
                                                    addLabelFromUserInput=self.widget('label_userinput_checkbox').isChecked(),
                                                    userInput=userExplicitInput,
-                                                   labelExplicitChecked=True)
+                                                   labelExplicitChecked=True, labelLang=labelLang)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
                     '''
