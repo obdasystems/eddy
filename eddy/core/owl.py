@@ -1135,11 +1135,12 @@ class IRIManager(QtCore.QObject):
             self.setOntologyIRI(ontologyIRI)
             self._ontologyPrefix=None
             if not ontologyPrefix is None:
-                self.setPrefix(ontologyPrefix,ontologyIRI)
+                if not ontologyPrefix in self.prefix2namespaceMap:
+                    self.setPrefix(ontologyPrefix,ontologyIRI)
                 self._ontologyPrefix = ontologyPrefix
             else:
-                if prefixMap:
-                    for pr,ns in prefixMap.items():
+                if self.prefix2namespaceMap:
+                    for pr,ns in self.prefix2namespaceMap.items():
                         if ns==ontologyIRI:
                             self._ontologyPrefix = pr
         else:
