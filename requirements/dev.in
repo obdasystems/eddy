@@ -12,4 +12,3 @@
 flake8==3.8.4
 objgraph==3.5.0
 pip-tools==5.4.0
-PyQt5-stubs==5.14.2.2
