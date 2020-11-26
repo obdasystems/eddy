@@ -43,9 +43,9 @@ PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 
 cd "$PROJECT_DIR"
 echo "Recompiling requirements.txt"
-pip-compile --output-file=requirements.txt requirements/base.in
+pip-compile --output-file=requirements.txt requirements/base.in "$@"
 
 echo "Recompiling requirements-dev.txt"
-pip-compile --output-file=requirements-dev.txt requirements/dev.in
+pip-compile --output-file=requirements-dev.txt requirements/dev.in "$@"
 
 exit 0
