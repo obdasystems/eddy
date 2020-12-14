@@ -17,7 +17,7 @@ flake8==3.8.4             # via -r requirements/dev.in
 graphviz==0.15            # via objgraph
 importlib-metadata==2.1.0  # via flake8, pluggy, pytest, tox, virtualenv
 iniconfig==1.1.1          # via pytest
-jpype1==1.1.2             # via -r requirements/base.in
+jpype1==1.2.0             # via -r requirements/base.in
 macholib ; sys_platform == 'darwin'  # via pyinstaller
 mccabe==0.6.1             # via flake8
 objgraph==3.5.0           # via -r requirements/dev.in
