@@ -1,0 +1,73 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  run-tests:
+    name: Run unit tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: 3.7
+            pyqt-version: 511
+          - os: ubuntu-latest
+            python-version: 3.7
+            pyqt-version: 512
+          - os: ubuntu-latest
+            python-version: 3.7
+            pyqt-version: 513
+          - os: ubuntu-latest
+            python-version: 3.7
+            pyqt-version: 514
+
+          - os: ubuntu-latest
+            python-version: 3.8
+            pyqt-version: 512
+          - os: ubuntu-latest
+            python-version: 3.8
+            pyqt-version: 513
+          - os: ubuntu-latest
+            python-version: 3.8
+            pyqt-version: 514
+          - os: ubuntu-latest
+            python-version: 3.8
+            pyqt-version: 515
+            continue-on-error: true
+
+          - os: macos-latest
+            python-version: 3.8
+            pyqt-version: 514
+          - os: macos-latest
+            python-version: 3.8
+            pyqt-version: 515
+            continue-on-error: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install os dependencies
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          # Required to run tests in headless mode
+          sudo apt-get install xvfb x11-utils libxkbcommon-x11-0
+          # Install openjdk 11 from ubuntu repos
+          sudo apt-get install openjdk-11-jdk
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install -U pip setuptools wheel
+          python -m pip install -U -r requirements/tox.in
+
+      - name: Run unit tests
+        continue-on-error: ${{ matrix.continue-on-error == true }}
+        run: |
+          tox -e py-pyqt${{ matrix.pyqt-version }}
