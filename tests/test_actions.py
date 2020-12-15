@@ -690,6 +690,7 @@ def test_action_open_properties_dialog(session, qtbot: QtBot):
             qtbot.wait(250)
             attempts += 1
         QtWidgets.QApplication.activeModalWidget().close()
+        qtbot.wait(250)
         node.setSelected(False)
 
 
@@ -717,8 +718,5 @@ def test_action_open_description_dialog(session, qtbot):
                 qtbot.wait(250)
                 attempts += 1
             QtWidgets.QApplication.activeModalWidget().close()
+            qtbot.wait(250)
             node.setSelected(False)
-
-
-
-
