@@ -179,5 +179,5 @@ def test_owl_text():
 
 def test_natsorted():
     assert [] == natsorted([])
-    assert ['diagram1', 'diagram9', 'diagram10'] == natsorted(['diagram1', 'diagram10', 'diagram9'])
-    assert [1, 10, 'diagram9', 'diagram10'] == natsorted([1, 'diagram10', 'diagram9', 10])
+    assert ['diagram1', 'diagram9', 'diagram10'] == natsorted(['diagram1', 'diagram10', 'diagram9'], locale=QtCore.QLocale('en_US'))
+    assert [1, 10, 'diagram9', 'diagram10'] == natsorted([1, 'diagram10', 'diagram9', 10], locale=QtCore.QLocale('en_US'))
