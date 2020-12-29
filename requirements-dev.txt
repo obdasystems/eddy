@@ -4,13 +4,15 @@
 #
 #    pip-compile --output-file=requirements-dev.txt requirements/dev.in
 #
-altgraph==0.17            # via pyinstaller
+altgraph==0.17            # via macholib, pyinstaller
 appdirs==1.4.4            # via virtualenv
 attrs==20.3.0             # via pytest
 click==7.1.2              # via pip-tools
 coverage==5.3             # via pytest-cov
 cython==0.29.21           # via -r requirements/cython.in
 distlib==0.3.1            # via virtualenv
+dmgbuild==1.4.2 ; sys_platform == "darwin"  # via -r requirements/packaging.in
+ds-store==1.3.0           # via dmgbuild
 easyprocess==0.3          # via pyvirtualdisplay
 filelock==3.0.12          # via tox, virtualenv
 flake8==3.8.4             # via -r requirements/dev.in
@@ -18,7 +20,8 @@ graphviz==0.15            # via objgraph
 importlib-metadata==2.1.1  # via flake8, pluggy, pytest, tox, virtualenv
 iniconfig==1.1.1          # via pytest
 jpype1==1.2.0             # via -r requirements/base.in
-macholib ; sys_platform == 'darwin'  # via pyinstaller
+mac-alias==2.2.0          # via dmgbuild, ds-store
+macholib==1.14 ; sys_platform == "darwin"  # via pyinstaller
 mccabe==0.6.1             # via flake8
 objgraph==3.5.0           # via -r requirements/dev.in
 packaging==20.8           # via pytest, tox

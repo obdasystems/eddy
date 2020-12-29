@@ -402,51 +402,48 @@ if MACOS:
 
         def buildDmg(self):
             """Build the DMG image."""
-            if not isdir('@support/createdmg') or not fexists('@support/createdmg/create-dmg'):
-                raise OSError('unable to find create-dmg utility: please clone Eddy with all its submodules' )
+            try:
+                import dmgbuild
+            except ImportError:
+                raise OSError('Unable to import dmgbuild: please install the dmgbuild package.')
 
             if fexists(self.dmgName):
                 os.unlink(self.dmgName)
 
-            stagingDir = os.path.join(self.workpath, 'tmp')
-            if isdir(stagingDir):
-                rmdir(stagingDir)
-
-            self.mkpath(stagingDir)
-
-            # Move the app bundle into a separate folder that will be used as source folder for the DMG image
-            if subprocess.call(['cp', '-R', self.bundleDir, stagingDir]) != 0:
-                raise OSError('could not move app bundle in staging directory')
-
-            # We create the DMG disk image using the create-dmg submodule.
-            params = [expandPath('@support/createdmg/create-dmg')]
-            params.extend(['--volname', self.volume_label])
-            params.extend(['--text-size', '12'])
-            params.extend(['--icon-size', '48'])
-            params.extend(['--icon', '{0}.app'.format(self.bundleName), '60', '50'])
-            params.extend(['--hide-extension', '{0}.app'.format(self.bundleName)])
+            defines = {
+                'appname': APPNAME,
+                'files': [self.bundleDir],
+                'license_file': expandPath('@root/LICENSE'),
+                'icon_locations': {'{}.app'.format(APPNAME): (60, 50)},
+            }
 
             if self.applications_shortcut:
-                params.extend(['--app-drop-link', '60', '130'])
+                defines['symlinks'] = {'Applications': '/Applications'}
+                defines['icon_locations']['Applications'] = (60, 130)
 
             if self.volume_background:
                 if not fexists(self.volume_background):
-                    raise OSError('DMG volume background image not found at {0}'.format(self.volume_background))
+                    raise OSError('DMG volume background image not found at {0}'
+                                  .format(self.volume_background))
                 print('Using DMG volume background: {0}'.format(self.volume_background))
                 from PIL import Image
                 w, h = Image.open(self.volume_background).size
-                params.extend(['--background', self.volume_background, '--window-size', str(w), str(h)])
+                defines['background'] = self.volume_background
+                defines['window_rect'] = ((100, 500), (str(w), (str(h))))
 
             if self.volume_icon:
                 if not fexists(self.volume_icon):
                     raise OSError('DMG volume icon not found at {0}'.format(self.volume_icon))
                 print('Using DMG volume icon: {0}'.format(self.volume_icon))
-                params.extend(['--volicon', self.volume_icon])
+                defines['icon'] = self.volume_icon
 
-            params.extend([self.dmgName, stagingDir])
-
-            subprocess.call(params)
-            rmdir(stagingDir)
+            # Create the disk image using dmgbuild package.
+            dmgbuild.build_dmg(
+                self.dmgName,
+                self.volume_label,
+                settings_file=expandPath('@support/dmgbuild/settings.py'),
+                defines=defines,
+            )
 
         def run(self):
             """Command execution."""
