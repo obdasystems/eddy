@@ -55,7 +55,8 @@ class MembershipEdge(AxiomEdge):
         Initialize the edge.
         """
         super().__init__(**kwargs)
-        self.label = EdgeLabel('instanceOf', centered=True, parent=self)
+        #self.label = EdgeLabel('instanceOf', centered=True, parent=self)
+        self.label = EdgeLabel('', centered=True, parent=self)
 
     #############################################
     #   INTERFACE
@@ -275,9 +276,11 @@ class MembershipEdge(AxiomEdge):
         pathPen = QtGui.QPen(QtCore.Qt.NoPen)
 
         if visible:
-            headBrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
+            #headBrush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
+            headBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
             headPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-            pathPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            pathPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.DotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+            #pathPen.setDashPattern([2, 5])
 
         self.head.setBrush(headBrush)
         self.head.setPen(headPen)

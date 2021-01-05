@@ -1136,13 +1136,14 @@ class PaletteButton(QtWidgets.QToolButton):
                 S1 = 0
                 painter = QtGui.QPainter(pixmap)
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
-                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
+                painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.DotLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
                 painter.drawLine(L1)
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
-                painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
+                #painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
+                painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
                 painter.drawPolygon(H1)
                 painter.setFont(Font(pixelSize=9, weight=Font.Light))
-                painter.drawText(PP1.x() + S1, 18, 'instanceOf')
+                #painter.drawText(PP1.x() + S1, 18, 'instanceOf')
                 painter.end()
 
             #############################################
