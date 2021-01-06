@@ -11,4 +11,4 @@
 # From PyPi
 flake8==3.8.4
 objgraph==3.5.0
-pip-tools==5.4.0
+pip-tools==5.5.0
