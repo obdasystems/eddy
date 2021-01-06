@@ -65,6 +65,7 @@ jobs:
             --repo ${{ secrets.BINTRAY_REPO}} \
             --package Eddy \
             --version ${{ env.EDDY_VERSION }} \
+            --prefix-path ${{ env.EDDY_VERSION }} \
             --publish \
             --override \
             dist/*
