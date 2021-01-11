@@ -23,7 +23,7 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
     """
     sgnWork = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal()
-    sgnExplanationComputed = QtCore.pyqtSignal()
+    sgnAxiomsComputed = QtCore.pyqtSignal()
 
     def __init__(self, project, session, iri):
         """
@@ -134,11 +134,11 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         """
         Perform on or more advancements step in the explanation computation
         """
-        self.worker = EmptyEntityExplanationWorker(self.status_bar, self.project, self.session,
-                                                   self, self.iri, self.entityType)
+        self.worker = AxiomsByEntityWorker(self.status_bar, self.project, self.session,
+                                                   self, self.iri)
         connect(self.worker.sgnError, self.onErrorInExec)
-        connect(self.worker.sgnExplanationComputed, self.onAxiomsComputed)
-        self.startThread('EmptyEntityExplanation', self.worker)
+        connect(self.worker.sgnAxiomsComputed, self.onAxiomsComputed)
+        self.startThread('AxiomsByEntity', self.worker)
 
     @QtCore.pyqtSlot(Exception)
     def onErrorInExec(self, exc):
@@ -161,7 +161,7 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.status_bar.hide()
         self.resize(self.sizeHint())
         self.close()
-        self.sgnExplanationComputed.emit()
+        self.sgnAxiomsComputed.emit()
 
 
 #############################################
@@ -200,12 +200,12 @@ class AxiomsByEntityExplorerWidget(QtWidgets.QWidget):
         self.search.setFixedHeight(30)
         self.model = QtGui.QStandardItemModel(self)
         # self.proxy = QtCore.QSortFilterProxyModel(self)
-        self.proxy = ExplanationExplorerFilterProxyModel(self)
+        self.proxy = AxiomsByEntityExplorerFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
         self.proxy.setSourceModel(self.model)
-        self.ontoview = ExplanationExplorerView(self)
+        self.ontoview = AxiomsByEntityExplorerView(self)
         self.ontoview.setModel(self.proxy)
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -329,13 +329,13 @@ class AxiomsByEntityExplorerWidget(QtWidgets.QWidget):
     '''
 
     @QtCore.pyqtSlot(str)
-    def doAddExplanation(self, explanation_number):
-        explanation_number_to_add = QtGui.QStandardItem(
-            'Explanation nr {}'.format(explanation_number))
-        explanation_number_to_add.setData(explanation_number)
-        self.model.appendRow(explanation_number_to_add)
+    def doAddEntityType(self, type):
+        type_to_add = QtGui.QStandardItem(
+            '{}'.format(type))
+        type_to_add.setData(type)
+        self.model.appendRow(type_to_add)
         self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-        return explanation_number_to_add
+        return type_to_add
 
     @QtCore.pyqtSlot('QStandardItem', str)
     def doAddAxiom(self, q_item, axiom):
@@ -460,12 +460,13 @@ class AxiomsByEntityExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   INTERFACE
     #################################
-    def setExplanations(self, explanations):
-        self.explanations = explanations
-        for index, explanation in enumerate(self.explanations):
-            explanationItem = self.doAddExplanation(index + 1)
-            for axiom in explanation:
-                self.doAddAxiom(explanationItem, axiom)
+    def setAxioms(self, axioms):
+        self.axioms = axioms
+        for type, axioms in self.axioms.items:
+            if axioms:
+                type_item = self.doAddEntityType(type)
+                for axiom in axioms:
+                    self.doAddAxiom(type_item, axiom)
         self.proxy.invalidateFilter()
         self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
@@ -704,7 +705,7 @@ class AxiomsByEntityExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
 #############################################
 #   WORKER
 #################################
-class EmptyEntityExplanationWorker(AbstractWorker):
+class AxiomsByEntityWorker(AbstractWorker):
     """
     Extends AbstractWorker providing a worker thread that will compute the set of axioms involving the given entity
     """
@@ -732,15 +733,11 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         if not self.vm.isRunning():
             self.vm.initialize()
         self.vm.attachThreadToJVM()
-
         self.IRIClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
         self.OWLManagerClass = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
         self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
         self.OWLClassClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLClass')
-
-        self.OWLImportsEnum = self.vm.getJavaClass(
-            'org.semanticweb.owlapi.model.parameters.Imports')
-
+        self.OWLImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
         self.df = None
 
     def loadImportedOntologiesIntoManager(self):
@@ -769,7 +766,7 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         self.status_bar.showMessage('Initializing the OWL 2 Manager')
         self.manager = ontology.getOWLOntologyManager()
         self.df = self.manager.getOWLDataFactory()
-        self.loadImportedOntologiesIntoManager()
+        #self.loadImportedOntologiesIntoManager()
         self.status_bar.showMessage('OWL 2 Manager initialized')
 
     def initializeOWLOntology(self):
@@ -783,6 +780,13 @@ class EmptyEntityExplanationWorker(AbstractWorker):
     def getAxiomsAsClass(self):
         result = list()
         cl = self.df.getOWLClass(self.IRIClass.create(str(self.iri)))
+        ##GENERALE
+        referencing_axioms = self.ontology.getReferencingAxioms(cl)
+        for axiom in referencing_axioms:
+            result.append(axiom.toString())
+        return result
+        ##PER TIPO DI ASSIOMA
+        '''
         sub_set = self.ontology.getSubClassAxiomsForSubClass(cl)
         for axiom in sub_set:
             result.append(axiom.toString())
@@ -805,28 +809,31 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         for axiom in assertion_set:
             result.append(axiom.toString())
         return result
+        '''
 
-
-    def getAxiomsAsObjectProperty(self):
-        #TODO Mancano general axioms per classExpressions [e.g, Delta(U)--> Exists(R)] e HasKey che coinvolge U
-        #TODO Lo devi fare solo per direct (dovrebbe beccare anche quelle con INV)
+    def getAxiomsAsObjectProperty(self, gen_cl_axioms):
         result = list()
         obj_prop = self.df.getOWLObjectProperty(self.IRIClass.create(str(self.iri)))
+        ##GENERALE
+        referencing_axioms = self.ontology.getReferencingAxioms(obj_prop)
+        for axiom in referencing_axioms:
+            result.append(axiom.toString())
+        return result
+        ##PER TIPO DI ASSIOMA
         ##DIRECT
+        '''
         sub_set = self.ontology.getObjectSubPropertyAxiomsForSubProperty(obj_prop)
         for axiom in sub_set:
             result.append(axiom.toString())
         super_set = self.ontology.getObjectSubPropertyAxiomsForSuperProperty(obj_prop)
         for axiom in super_set:
             result.append(axiom.toString())
-
         dom_set = self.ontology.getObjectPropertyDomainAxioms(obj_prop)
         for axiom in dom_set:
             result.append(axiom.toString())
         ran_set = self.ontology.getObjectPropertyRangeAxioms(obj_prop)
         for axiom in ran_set:
             result.append(axiom.toString())
-
         inv_set = self.ontology.getInverseObjectPropertyAxioms(obj_prop)
         for axiom in inv_set:
             result.append(axiom.toString())
@@ -863,7 +870,6 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         assertion_set = self.ontology.getObjectPropertyAssertionAxioms(obj_prop)
         for axiom in assertion_set:
             result.append(axiom.toString())
-
         ##INVERSE
         sub_set = self.ontology.getObjectSubPropertyAxiomsForSubProperty(obj_prop.getInverseProperty())
         for axiom in sub_set:
@@ -913,13 +919,24 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         assertion_set = self.ontology.getObjectPropertyAssertionAxioms(obj_prop.getInverseProperty())
         for axiom in assertion_set:
             result.append(axiom.toString())
+        #General class axioms
+        for axiom in gen_cl_axioms:
+            if axiom.containsEntityInSignature(obj_prop):
+                result.append(axiom.toString())
+        '''
+
         return result
 
-
-    def getAxiomsAsDataProperty(self):
-        #TODO Mancano general axioms per classExpressions [e.g, Delta(U)--> Exists(R)] e HasKey che coinvolge U
+    def getAxiomsAsDataProperty(self, gen_cl_axioms):
         result = list()
         dt_prop = self.df.getOWLDataProperty(self.IRIClass.create(str(self.iri)))
+        ##GENERALE
+        referencing_axioms = self.ontology.getReferencingAxioms(dt_prop)
+        for axiom in referencing_axioms:
+            result.append(axiom.toString())
+        return result
+        ##PER TIPO DI ASSIOMA
+        '''
         sub_set = self.ontology.getDataSubPropertyAxiomsForSubProperty(dt_prop)
         for axiom in sub_set:
             result.append(axiom.toString())
@@ -944,15 +961,59 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         assertion_set = self.ontology.getDataPropertyAssertionAxioms(dt_prop)
         for axiom in assertion_set:
             result.append(axiom.toString())
+        #General class axioms
+        for axiom in gen_cl_axioms:
+            if axiom.containsEntityInSignature(dt_prop):
+                result.append(axiom.toString())
         return result
+        '''
 
-    def getAxiomsAsIndividual(self):
+    def getAxiomsAsIndividual(self, gen_cl_axioms):
         # TODO Mancano general axioms per classExpressions [e.g, C--> OneOf(Ind1,Ind2)]
         result = list()
         ind = self.df.OWLNamedIndividualself(self.IRIClass.create(str(self.iri)))
+        ##GENERALE
+        referencing_axioms = self.ontology.getReferencingAxioms(ind)
+        for axiom in referencing_axioms:
+            result.append(axiom.toString())
+        return result
+        ##PER TIPO DI ASSIOMA
+        '''
+        assertion_cl_set = self.ontology.getClassAssertionAxioms(ind)
+        for axiom in assertion_cl_set:
+            result.append(axiom.toString())
+        assertion_obj_set = self.ontology.getObjectPropertyAssertionAxioms(ind)
+        for axiom in assertion_obj_set:
+            result.append(axiom.toString())
+        neg_assertion_obj_set = self.ontology.getNegativeObjectPropertyAssertionAxioms(ind)
+        for axiom in neg_assertion_obj_set:
+            result.append(axiom.toString())
+        assertion_dt_set = self.ontology.getDataPropertyAssertionAxioms(ind)
+        for axiom in assertion_dt_set:
+            result.append(axiom.toString())
+        neg_assertion_dt_set = self.ontology.getNegativeDataPropertyAssertionAxioms(ind)
+        for axiom in neg_assertion_dt_set:
+            result.append(axiom.toString())
+        same_set = self.ontology.getSameIndividualAxioms(ind)
+        for axiom in same_set:
+            result.append(axiom.toString())
+        diff_set = self.ontology.getDifferentIndividualAxioms(ind)
+        for axiom in diff_set:
+            result.append(axiom.toString())
+        #General class axioms
+        for axiom in gen_cl_axioms:
+            if axiom.containsEntityInSignature(ind):
+                result.append(axiom.toString())
+        return result
+        '''
 
     def computeAxioms(self):
         self.status_bar.showMessage('Computing axioms')
+        gen_cl_axioms = self.ontology.getGeneralClassAxioms()
+        self.axioms_by_type['Class'] = self.getAxiomsAsClass()
+        self.axioms_by_type['ObjectProperty'] = self.getAxiomsAsObjectProperty(gen_cl_axioms)
+        self.axioms_by_type['DataProperty'] = self.getAxiomsAsDataProperty(gen_cl_axioms)
+        self.axioms_by_type['Individual'] = self.getAxiomsAsIndividual(gen_cl_axioms)
         #TODO AGGIUNGI ASSIOMI
         self.status_bar.showMessage('Axioms computed')
         self.sgnAxiomsComputed.emit()
