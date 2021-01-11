@@ -3397,6 +3397,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = ExplanationDialog(self, self.inconsistentOntologyExplanations)
         # dialog.exec_()
         dialog.show()
+        dialog.activateWindow()
 
     @QtCore.pyqtSlot()
     def doShowEmptyEntityExplanations(self):
@@ -3407,6 +3408,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = ExplanationDialog(self, self.currentEmptyEntityExplanations, entityIRI=self.currentEmptyEntityIRI, entityType=self.currentEmptyEntityType)
         #dialog.exec_()
         dialog.show()
+        dialog.activateWindow()
+
 
 
     @QtCore.pyqtSlot()
@@ -3416,6 +3419,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = LabelDialog(self,iris)
         #dialog.exec_()
         dialog.show()
+        dialog.activateWindow()
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self):
@@ -3458,7 +3462,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     @QtCore.pyqtSlot()
     def onNewEmptyEntityExplanation(self):
         """
-        Executed when new explanations for emty entities are computed
+        Executed when new explanations for empty entities are computed
         """
         self.doShowEmptyEntityExplanations()
 
