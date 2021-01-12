@@ -31,7 +31,6 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         :type project: Project
         :type session: Session
         :type iri : IRI
-        :type entityType : Item
         """
         super().__init__(session)
 
@@ -94,6 +93,10 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
             if not self.workerThread.wait(2000):
                 self.workerThread.terminate()
                 self.workerThread.wait()
+        axioms_dialog = AxiomsByTypeDialog(self.session, self.worker.getAxioms(), self.iri)
+        axioms_dialog.show()
+        axioms_dialog.raise_()
+        axioms_dialog.activateWindow()
 
     #############################################
     #   PROPERTIES
@@ -148,7 +151,7 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_error.setStandardButtons(QtWidgets.QMessageBox.Close)
         self.msgbox_error.setTextFormat(QtCore.Qt.RichText)
         self.msgbox_error.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
-        self.msgbox_error.setText('An error occured!!\n{}'.format(str(exc)))
+        self.msgbox_error.setText('An error occurred!!\n{}'.format(str(exc)))
         self.close()
         self.msgbox_error.exec_()
 
@@ -160,15 +163,142 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
         self.msgbox_busy.setText('Explanations computed')
         self.status_bar.hide()
         self.resize(self.sizeHint())
-        self.close()
         self.sgnAxiomsComputed.emit()
+        self.close()
 
 
 #############################################
-#   AXIOMS BY ENTITY WIDGET
+#   AXIOMS BY TYPE WIDGET
 #################################
+class AxiomsByTypeDialog(QtWidgets.QDialog, HasWidgetSystem):
+    """
+    This class implements the axioms by type dialog for a given IRI.
+    """
 
-class AxiomsByEntityExplorerWidget(QtWidgets.QWidget):
+    def __init__(self, session, axioms_by_type, entityIRI):
+        """
+        Initialize the Ontology Manager dialog.
+        :type session: Session
+        :type axioms_by_type: dict
+        """
+        super().__init__(session)
+        self.axioms_by_type = axioms_by_type
+        self.project = session.project
+        self.entityIRI = entityIRI
+
+        #############################################
+        # EXPLANATIONS TAB
+        #################################
+
+        axiomsWidget = AxiomsByTypeExplorerWidget(self.project, self.session, objectName='axioms_widget')
+        self.addWidget(axiomsWidget)
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
+        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        self.addWidget(confirmation)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.widget('axioms_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+        self.setMinimumSize(800, 520)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        title = 'Explanations for inconsistent ontology'
+        if self.entityIRI:
+            title = 'Axioms referencing <{}>'.format(str(self.entityIRI))
+        self.setWindowTitle(title)
+        self.setWindowModality(QtCore.Qt.NonModal)
+        self.redraw()
+
+        connect(confirmation.accepted, self.accept)
+
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the reference to the main session (alias for PreferencesDialog.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    #############################################
+    #   SLOTS
+    #################################
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        ##
+        ## TODO: complete validation and settings save
+        ##
+        #############################################
+        # GENERAL TAB
+        #################################
+
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().accept()
+
+    @QtCore.pyqtSlot()
+    def reject(self):
+        """
+        Executed when the dialog is accepted.
+        """
+        ##
+        ## TODO: complete validation and settings save
+        ##
+        #############################################
+        # GENERAL TAB
+        #################################
+
+        #############################################
+        # PREFIXES TAB
+        #################################
+
+        #############################################
+        # ANNOTATIONS TAB
+        #################################
+
+        #############################################
+        # SAVE & EXIT
+        #################################
+
+        super().reject()
+
+    @QtCore.pyqtSlot()
+    def redraw(self):
+        """
+        Redraw the dialog components, reloading their contents.
+        """
+        axiomsWidget = self.widget('axioms_widget')
+        axiomsWidget.doClear()
+        axiomsWidget.setAxioms(self.axioms_by_type)
+        self.setWindowModality(QtCore.Qt.NonModal)
+
+
+class AxiomsByTypeExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the Explanation explorer used to list Explanation predicates.
     """
@@ -200,12 +330,12 @@ class AxiomsByEntityExplorerWidget(QtWidgets.QWidget):
         self.search.setFixedHeight(30)
         self.model = QtGui.QStandardItemModel(self)
         # self.proxy = QtCore.QSortFilterProxyModel(self)
-        self.proxy = AxiomsByEntityExplorerFilterProxyModel(self)
+        self.proxy = AxiomsByTypeExplorerFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
         self.proxy.setSourceModel(self.model)
-        self.ontoview = AxiomsByEntityExplorerView(self)
+        self.ontoview = AxiomsByTypeExplorerView(self)
         self.ontoview.setModel(self.proxy)
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -461,10 +591,10 @@ class AxiomsByEntityExplorerWidget(QtWidgets.QWidget):
     #   INTERFACE
     #################################
     def setAxioms(self, axioms):
-        self.axioms = axioms
-        for type, axioms in self.axioms.items:
+        self.axioms_by_type = axioms
+        for entity_type, axioms in self.axioms_by_type.items():
             if axioms:
-                type_item = self.doAddEntityType(type)
+                type_item = self.doAddEntityType(entity_type)
                 for axiom in axioms:
                     self.doAddAxiom(type_item, axiom)
         self.proxy.invalidateFilter()
@@ -553,7 +683,7 @@ class AxiomsByEntityExplorerWidget(QtWidgets.QWidget):
 
 
 # TODO AGGIUNGI OPPORTUNA FUNZIONE DI RICERCA (implementa come in ontology explorer), CONSENTI DI COPIARE ASSIOMI TRAMITE CLICK DESTRO
-class AxiomsByEntityExplorerView(QtWidgets.QTreeView):
+class AxiomsByTypeExplorerView(QtWidgets.QTreeView):
     """
     This class implements the Explanation explorer tree view.
     """
@@ -561,7 +691,7 @@ class AxiomsByEntityExplorerView(QtWidgets.QTreeView):
     def __init__(self, widget):
         """
         Initialize the Explanation explorer view.
-        :type widget: AxiomsByEntityExplorerWidget
+        :type widget: AxiomsByTypeExplorerWidget
         """
         super().__init__(widget)
         self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
@@ -591,7 +721,7 @@ class AxiomsByEntityExplorerView(QtWidgets.QTreeView):
     def widget(self):
         """
         Returns the reference to the ExplanationExplorer widget.
-        :rtype: AxiomsByEntityExplorerWidget
+        :rtype: AxiomsByTypeExplorerWidget
         """
         return self.parent()
 
@@ -646,7 +776,7 @@ class AxiomsByEntityExplorerView(QtWidgets.QTreeView):
     '''
 
 
-class AxiomsByEntityExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
+class AxiomsByTypeExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     """
     Extends QSortFilterProxyModel adding filtering functionalities for the explorer widget
     """
@@ -684,7 +814,13 @@ class AxiomsByEntityExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
         index = self.sourceModel().index(sourceRow, 0, parentIndex)
         item = self.sourceModel().itemFromIndex(index)
         if parentIndex.isValid():
-            return True
+            if item.text():
+                if patternToLower in item.text().lower():
+                    return True
+                else:
+                    return False
+            else:
+                return True
         elif item.hasChildren():
             children = [item.child(i) for i in range(item.rowCount())]
             # TODO INSERISCI CONTROLLO NON CASE SENSITIVE
@@ -969,9 +1105,8 @@ class AxiomsByEntityWorker(AbstractWorker):
         '''
 
     def getAxiomsAsIndividual(self, gen_cl_axioms):
-        # TODO Mancano general axioms per classExpressions [e.g, C--> OneOf(Ind1,Ind2)]
         result = list()
-        ind = self.df.OWLNamedIndividualself(self.IRIClass.create(str(self.iri)))
+        ind = self.df.getOWLNamedIndividual(self.IRIClass.create(str(self.iri)))
         ##GENERALE
         referencing_axioms = self.ontology.getReferencingAxioms(ind)
         for axiom in referencing_axioms:
@@ -1007,13 +1142,23 @@ class AxiomsByEntityWorker(AbstractWorker):
         return result
         '''
 
+    def getAxiomsAsDatatype(self, gen_cl_axioms):
+        result = list()
+        datatype = self.df.getOWLDatatype(self.IRIClass.create(str(self.iri)))
+        ##GENERALE
+        referencing_axioms = self.ontology.getReferencingAxioms(datatype)
+        for axiom in referencing_axioms:
+            result.append(axiom.toString())
+        return result
+
     def computeAxioms(self):
         self.status_bar.showMessage('Computing axioms')
         gen_cl_axioms = self.ontology.getGeneralClassAxioms()
-        self.axioms_by_type['Class'] = self.getAxiomsAsClass()
-        self.axioms_by_type['ObjectProperty'] = self.getAxiomsAsObjectProperty(gen_cl_axioms)
-        self.axioms_by_type['DataProperty'] = self.getAxiomsAsDataProperty(gen_cl_axioms)
-        self.axioms_by_type['Individual'] = self.getAxiomsAsIndividual(gen_cl_axioms)
+        self.axioms_by_type['Axioms involving {} as a Class'.format(str(self.iri))] = self.getAxiomsAsClass()
+        self.axioms_by_type['Axioms involving {} as an ObjectProperty'.format(str(self.iri))] = self.getAxiomsAsObjectProperty(gen_cl_axioms)
+        self.axioms_by_type['Axioms involving {} as a DataProperty'.format(str(self.iri))] = self.getAxiomsAsDataProperty(gen_cl_axioms)
+        self.axioms_by_type['Axioms involving {} as an Individual'.format(str(self.iri))] = self.getAxiomsAsIndividual(gen_cl_axioms)
+        self.axioms_by_type['Axioms involving {} as a Datatype'.format(str(self.iri))] = self.getAxiomsAsDatatype(gen_cl_axioms)
         #TODO AGGIUNGI ASSIOMI
         self.status_bar.showMessage('Axioms computed')
         self.sgnAxiomsComputed.emit()

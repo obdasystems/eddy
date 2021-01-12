@@ -872,7 +872,8 @@ class MenuFactory(QtCore.QObject):
         for action in sorted(self.customAction['occurrences'], key=lambda x: x.text()):
             self.customMenu['occurrences'].addAction(action)
         menu.insertMenu(self.session.action('node_properties'), self.customMenu['occurrences'])
-        menu.insertAction(self.session.action('node_properties'),self.session.action('iri_annotations_refactor'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('iri_involving_axioms'))
+        menu.insertAction(self.session.action('node_properties'), self.session.action('iri_annotations_refactor'))
         menu.addAction(self.session.action('node_iri_refactor'))
 
         if not node.iri.isTopBottomEntity():
