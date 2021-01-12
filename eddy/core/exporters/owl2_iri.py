@@ -1227,8 +1227,9 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             return self.df.getOWLBottomDataProperty()
         owlProp = self.df.getOWLDataProperty(self.IRI.create(str(iri)))
         self.addAxiom(self.df.getOWLDeclarationAxiom(owlProp))
-        if iri.functional:
-            self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(owlProp))
+        if OWLAxiom.FunctionalDataProperty in self.axiomsList:
+            if iri.functional:
+                self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(owlProp))
         return owlProp
 
     def getIndividual(self, node):
