@@ -1756,17 +1756,17 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 edge = scene.factory.create(Item.InputEdge, source=source, target=restriction)
                 size = Diagram.GridSize
                 offsets = (
-                    QtCore.QPointF(snapF(+source.width() / 2 + 70, size), 0),
                     QtCore.QPointF(snapF(-source.width() / 2 - 70, size), 0),
+                    QtCore.QPointF(snapF(+source.width() / 2 + 70, size), 0),
                     QtCore.QPointF(0, snapF(-source.height() / 2 - 70, size)),
                     QtCore.QPointF(0, snapF(+source.height() / 2 + 70, size)),
-                    QtCore.QPointF(snapF(+source.width() / 2 + 70, size),
-                                   snapF(-source.height() / 2 - 70, size)),
                     QtCore.QPointF(snapF(-source.width() / 2 - 70, size),
                                    snapF(-source.height() / 2 - 70, size)),
                     QtCore.QPointF(snapF(+source.width() / 2 + 70, size),
+                                   snapF(-source.height() / 2 - 70, size)),
+                    QtCore.QPointF(snapF(-source.width() / 2 - 70, size),
                                    snapF(+source.height() / 2 + 70, size)),
-                    QtCore.QPointF(snapF(-source.width() / 2 - 70, size),
+                    QtCore.QPointF(snapF(+source.width() / 2 + 70, size),
                                    snapF(+source.height() / 2 + 70, size)),
                 )
                 pos = source.pos() + offsets[0]
