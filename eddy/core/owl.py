@@ -753,16 +753,13 @@ class IRI(QtCore.QObject):
         result[K_TRANSITIVE] = self.transitive
         return result
 
-
     def getSimpleName(self):
         if self._suffix:
             return self._suffix
         index = self.namespace.rfind('#')
-        if not index > -1:
+        if index < 0:
             index = self.namespace.rfind('/')
-        if index > -1 and self.namespace[index+1:]:
-            return self.namespace[index+1:]
-        return self.namespace[index+1:]
+        return self.namespace[index + 1:]
 
     def isTopBottomEntity(self):
         """
@@ -1924,7 +1921,7 @@ class IRIRender(Enum_):
     FULL = 'full_iri'
     PREFIX = 'prefix_iri'
     LABEL = 'label'
-    SIMPLE_NAME ='simple_name'
+    SIMPLE_NAME = 'simple_name'
 
     @staticmethod
     def iriLabelString(iri):
@@ -1941,7 +1938,7 @@ class IRIRender(Enum_):
 
     @staticmethod
     def renderByFullIRI(iri):
-        return  str(iri)
+        return str(iri)
 
     @staticmethod
     def renderByPrefixedIRI(iri):
@@ -1967,10 +1964,9 @@ class IRIRender(Enum_):
 
     @staticmethod
     def renderBySimpleName(iri):
-        if iri.getSimpleName():
-            return iri.getSimpleName()
-        else:
-            return IRIRender.renderByPrefixedIRI(iri)
+        simple = iri.getSimpleName()
+        return simple if simple else IRIRender.renderByPrefixedIRI(iri)
+
 
 @unique
 class OWL2Profiles(Enum_):
