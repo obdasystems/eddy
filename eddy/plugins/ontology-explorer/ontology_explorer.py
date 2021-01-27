@@ -39,7 +39,6 @@ from PyQt5 import (
     QtWidgets,
 )
 
-from eddy.core.datatypes.annotation import Status
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first, rstrip
@@ -145,50 +144,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
         widget.setObjectName('ontology_explorer')
         self.addWidget(widget)
 
-        # CREATE TOGGLE ACTIONS
-        self.debug('Creating explorer toggle actions')
-        group = QtWidgets.QActionGroup(self, objectName='explorer_item_toggle')
-        group.setExclusive(False)
-        for item in widget.items:
-            action = QtWidgets.QAction(item.realName.title(), group,
-                                       objectName=item.name, checkable=True)
-            action.setChecked(True)
-            action.setData(item)
-            connect(action.triggered, widget.onMenuButtonClicked)
-            group.addAction(action)
-        self.addAction(group)
-
-        group = QtWidgets.QActionGroup(self, objectName='explorer_status_toggle')
-        group.setExclusive(False)
-        for status in widget.status:
-            action = QtWidgets.QAction(status.value if status.value else 'Default',
-                                       group, objectName=status.name, checkable=True)
-            action.setChecked(True)
-            action.setData(status)
-            connect(action.triggered, widget.onMenuButtonClicked)
-            group.addAction(action)
-        self.addAction(group)
-
-        # CREATE TOGGLE MENU
-        self.debug('Creating explorer toggle menu')
-        menu = QtWidgets.QMenu(objectName='explorer_toggle')
-        menu.addSection('Items')
-        menu.addActions(self.action('explorer_item_toggle').actions())
-        menu.addSection('Description')
-        menu.addActions(self.action('explorer_status_toggle').actions())
-        self.addMenu(menu)
-
-        # CREATE CONTROL WIDGET
-        self.debug('Creating explorer toggle control widget')
-        button = QtWidgets.QToolButton(objectName='explorer_toggle')
-        button.setIcon(QtGui.QIcon(':/icons/18/ic_settings_black'))
-        button.setContentsMargins(0, 0, 0, 0)
-        button.setFixedSize(18, 18)
-        button.setFocusPolicy(QtCore.Qt.NoFocus)
-        button.setMenu(self.menu('explorer_toggle'))
-        button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.addWidget(button)
-
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
         widget = DockWidget('Ontology Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
@@ -246,11 +201,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             Item.AttributeIRINode,
             Item.IndividualIRINode,
             Item.ValueDomainIRINode
-        ]
-        self.status = [
-            Status.DEFAULT,
-            Status.DRAFT,
-            Status.FINAL
         ]
         self.unsatisfiableItems = list()
         self.unsatisfiableClasses = list()
@@ -744,18 +694,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 elif isinstance(item.data(OntologyExplorerView.IRIRole), AbstractNode):
                     self.sgnItemClicked.emit(item.data(OntologyExplorerView.IRIRole))
 
-    @QtCore.pyqtSlot(bool)
-    def onMenuButtonClicked(self, checked=False):
-        """
-        Executed when a button in the widget menu is clicked.
-        """
-        # UPDATE THE PALETTE LAYOUT
-        data = self.sender().data()
-        elems = self.proxy.items if isinstance(data, Item) else self.proxy.status
-        elems.add(data) if checked else elems.discard(data)
-        self.proxy.invalidateFilter()
-        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-
     @QtCore.pyqtSlot()
     def onReturnPressed(self):
         """
@@ -1134,8 +1072,6 @@ class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.items = {Item.ConceptIRINode, Item.IndividualIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.ValueDomainIRINode}
-        self.status = {Status.DEFAULT, Status.DRAFT, Status.FINAL}
 
     #############################################
     #   PROPERTIES
@@ -1153,27 +1089,11 @@ class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     #   INTERFACE
     #################################
 
-    def filterAcceptsRow(self, sourceRow, parentIndex):
+    def filterAcceptsRow(self, sourceRow: int, sourceParent: QtCore.QModelIndex) -> bool:
         """
         Overrides filterAcceptsRow to include extra filtering conditions
         :type sourceRow: int
-        :type parentIndex: QModelIndex
+        :type sourceParent: QModelIndex
         :rtype: bool
         """
-        '''
-        index = self.sourceModel().index(sourceRow, 0, parentIndex)
-        item = self.sourceModel().itemFromIndex(index)
-        # PARENT NODE
-        # LEAF NODE
-        if item.parent():
-            parentItemIndex = self.sourceModel().indexFromItem(item.parent())
-            result = parentItemIndex.isValid()
-        # PARENT NODE
-        else:
-            result = super().filterAcceptsRow(sourceRow, parentIndex)
-        return result
-        '''
-        if parentIndex.isValid():
-            return True
-        else:
-            return super().filterAcceptsRow(sourceRow, parentIndex)
+        return sourceParent.isValid() or super().filterAcceptsRow(sourceRow, sourceParent)
