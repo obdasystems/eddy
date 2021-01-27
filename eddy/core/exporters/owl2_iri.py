@@ -749,8 +749,9 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
 
             LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
 
-            self.addAnnotationAssertions()
-            LOGGER.debug('Generated OWL 2 annotation assertion axioms from edges (axioms = %s)', len(self.axioms()))
+            if OWLAxiom.Annotation in self.axiomsList:
+                self.addAnnotationAssertions()
+                LOGGER.debug('Generated OWL 2 annotation assertion axioms from edges (axioms = %s)', len(self.axioms()))
 
             #############################################
             # APPLY GENERATED AXIOMS
