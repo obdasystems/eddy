@@ -31,21 +31,30 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-import typing
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
-from eddy.core.datatypes.annotation import Status
 from eddy.core.functions.misc import first, rstrip
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
-from eddy.core.owl import IRIRender, AnnotationAssertion, IRI, ImportedOntology
+from eddy.core.items.nodes.common.base import (
+    AbstractNode,
+    OntologyEntityNode,
+    OntologyEntityResizableNode,
+)
+from eddy.core.owl import (
+    AnnotationAssertion,
+    ImportedOntology,
+    IRI,
+    IRIRender,
+)
 from eddy.core.plugin import AbstractPlugin
-
 from eddy.ui.dock import DockWidget
 from eddy.ui.fields import StringField
 
@@ -135,48 +144,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
         widget.setObjectName('ontology_explorer')
         self.addWidget(widget)
 
-        # CREATE TOGGLE ACTIONS
-        self.debug('Creating explorer toggle actions')
-        group = QtWidgets.QActionGroup(self, objectName='explorer_item_toggle')
-        group.setExclusive(False)
-        for item in widget.items:
-            action = QtWidgets.QAction(item.realName.title(), group, objectName=item.name, checkable=True)
-            action.setChecked(True)
-            action.setData(item)
-            connect(action.triggered, widget.onMenuButtonClicked)
-            group.addAction(action)
-        self.addAction(group)
-
-        group = QtWidgets.QActionGroup(self, objectName='explorer_status_toggle')
-        group.setExclusive(False)
-        for status in widget.status:
-            action = QtWidgets.QAction(status.value if status.value else 'Default', group, objectName=status.name, checkable=True)
-            action.setChecked(True)
-            action.setData(status)
-            connect(action.triggered, widget.onMenuButtonClicked)
-            group.addAction(action)
-        self.addAction(group)
-
-        # CREATE TOGGLE MENU
-        self.debug('Creating explorer toggle menu')
-        menu = QtWidgets.QMenu(objectName='explorer_toggle')
-        menu.addSection('Items')
-        menu.addActions(self.action('explorer_item_toggle').actions())
-        menu.addSection('Description')
-        menu.addActions(self.action('explorer_status_toggle').actions())
-        self.addMenu(menu)
-
-        # CREATE CONTROL WIDGET
-        self.debug('Creating explorer toggle control widget')
-        button = QtWidgets.QToolButton(objectName='explorer_toggle')
-        button.setIcon(QtGui.QIcon(':/icons/18/ic_settings_black'))
-        button.setContentsMargins(0, 0, 0, 0)
-        button.setFixedSize(18, 18)
-        button.setFocusPolicy(QtCore.Qt.NoFocus)
-        button.setMenu(self.menu('explorer_toggle'))
-        button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.addWidget(button)
-
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
         widget = DockWidget('Ontology Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
@@ -204,6 +171,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
         self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('ontology_explorer_dock'))
+
 
 class OntologyExplorerWidget(QtWidgets.QWidget):
     """
@@ -234,11 +202,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             Item.IndividualIRINode,
             Item.ValueDomainIRINode
         ]
-        self.status = [
-            Status.DEFAULT,
-            Status.DRAFT,
-            Status.FINAL
-        ]
+        self.unsatisfiableItems = list()
+        self.unsatisfiableClasses = list()
+        self.unsatisfiableObjProps = list()
+        self.unsatisfiableDataProps = list()
 
         self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
         self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
@@ -253,10 +220,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.search.setPlaceholderText('Search...')
         self.search.setToolTip('Search ({})'.format(self.searchShortcut.key().toString(QtGui.QKeySequence.NativeText)))
         self.search.setFixedHeight(30)
-        #TODO VALUTA SCOMMENTO
-        #self.model = QtGui.QStandardItemModel(self)
-        self.model =  OntologyExplorerModel(self)
-
+        self.model = QtGui.QStandardItemModel(self)
         self.proxy = OntologyExplorerFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
@@ -271,8 +235,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.setTabOrder(self.search, self.ontoview)
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
-
-
         self.setStyleSheet("""
             QLineEdit,
             QLineEdit:editable,
@@ -286,8 +248,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
               padding: 4px 4px 4px 4px;
             }
         """)
-
-
         header = self.ontoview.header()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
@@ -310,14 +270,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         connect(self.session.sgnIRIRemovedFromAllDiagrams,self.onIRIRemovedFromAllDiagrams)
         connect(self.session.sgnSingleNodeSwitchIRI, self.onSingleNodeIRISwitched)
 
-        self.unsatisfiableItems = list()
-        self.unsatisfiableClasses = list()
-        self.unsatisfiableObjProps = list()
-        self.unsatisfiableDataProps = list()
-
     #############################################
     #   PROPERTIES
     #################################
+
     @property
     def project(self):
         """
@@ -337,6 +293,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   EVENTS
     #################################
+
     def paintEvent(self, paintEvent):
         """
         This is needed for the widget to pick the stylesheet.
@@ -351,45 +308,55 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot(str)
-    def onRenderingModified(self,rendering):
-        # self.redrawIRIItem()
-        if self.sender() != self.plugin:
-            self.proxy.invalidateFilter()
-        self.model.dataChanged.emit(self.model.index(0,0),self.model.index(self.model.rowCount()-1,0))
-        if self.sender() != self.plugin:
-            self.proxy.invalidateFilter()
-            self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+    def onRenderingModified(self, rendering):
+        # RESET MODEL DISPLAY DATA
+        # Here we force te explorer view to become invisible while we update
+        # its model in order to avoid unnecessary UI updates that could
+        # otherwise cause the entire application to become unresponsive.
+        # This is kind of a hack but it works for the moment.
+        self.ontoview.setVisible(False)
+        for index in range(self.model.rowCount()):
+            item = self.model.item(index)
+            data = item.data(OntologyExplorerView.IRIRole)
+            if isinstance(data, IRI):
+                item.setText(self.parentKeyForIRI(data))
+        self.model.dataChanged.emit(self.model.index(0, 0),
+                                    self.model.index(self.model.rowCount() - 1, 0))
+        self.ontoview.setVisible(True)
+        # APPLY FILTERS AND SORT
+        self.proxy.invalidateFilter()
+        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
     @QtCore.pyqtSlot(str, str)
-    def onPrefixAdded(self, pref, ns):
+    def onPrefixAdded(self, _prefix: str, _ns: str):
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
             self.redrawIRIItem()
 
     @QtCore.pyqtSlot(str)
-    def onPrefixRemoved(self, pref):
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
-            self.redrawIRIItem()
-
-
-    @QtCore.pyqtSlot(str)
-    def onPrefixModified(self, pref):
+    def onPrefixRemoved(self, _: str):
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
             self.redrawIRIItem()
 
     @QtCore.pyqtSlot(str)
-    def onIRIModified(self,str):
+    def onPrefixModified(self, _: str):
+        settings = QtCore.QSettings()
+        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
+        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
+            self.redrawIRIItem()
+
+    @QtCore.pyqtSlot(str)
+    def onIRIModified(self, _: str):
         iri = self.sender()
         self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot(AnnotationAssertion)
-    def onIRIAnnotationAssertionAdded(self, ann):
+    def onIRIAnnotationAssertionAdded(self, _):
         iri = self.sender()
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
@@ -397,7 +364,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot(AnnotationAssertion)
-    def onIRIAnnotationAssertionRemoved(self, ann):
+    def onIRIAnnotationAssertionRemoved(self, _):
         iri = self.sender()
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
@@ -405,7 +372,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot(AnnotationAssertion)
-    def onIRIAnnotationAssertionModified(self, ann):
+    def onIRIAnnotationAssertionModified(self, _):
         iri = self.sender()
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
@@ -415,25 +382,25 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()
     def onNodeIRISwitched(self):
         node = self.sender()
-        self.doAddNode(node.diagram,node)
+        self.doAddNode(node.diagram, node)
 
-    @QtCore.pyqtSlot(AbstractNode,IRI)
-    def onSingleNodeIRISwitched(self,node,oldIRI):
+    @QtCore.pyqtSlot(AbstractNode, IRI)
+    def onSingleNodeIRISwitched(self, node, oldIRI):
         oldParentK = self.parentKeyForIRI(oldIRI)
         for parent in self.model.findItems(oldParentK, QtCore.Qt.MatchExactly):
             rowCount = parent.rowCount()
             for i in range(rowCount):
                 child = parent.child(i)
-                if child.data(QtCore.Qt.UserRole) is node:
+                if child.data(OntologyExplorerView.IRIRole) is node:
                     parent.removeRow(i)
                     break
             if not parent.rowCount():
-                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
-                    self.disconnectIRISignals(parent.data(QtCore.Qt.UserRole))
+                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode,)):
+                    self.disconnectIRISignals(parent.data(OntologyExplorerView.IRIRole))
                 self.model.removeRow(parent.index().row())
 
     @QtCore.pyqtSlot(IRI)
-    def onIRIRemovedFromAllDiagrams(self,iri):
+    def onIRIRemovedFromAllDiagrams(self, iri):
         parentK = self.parentKeyForIRI(iri)
         for parent in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
             '''
@@ -454,7 +421,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onUnsatisfiableClass(self, iri):
         parent = self.parentForIRI(iri)
         if parent:
-            parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
+            parent.setData(OntologyExplorerView.UnsatisfiableBrush, QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
             self.unsatisfiableClasses.append(parent)
 
@@ -462,7 +429,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onUnsatisfiableObjectProperty(self, iri):
         parent = self.parentForIRI(iri)
         if parent:
-            parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
+            parent.setData(OntologyExplorerView.UnsatisfiableBrush, QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
             self.unsatisfiableObjProps.append(parent)
 
@@ -470,7 +437,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onUnsatisfiableDataProperty(self, iri):
         parent = self.parentForIRI(iri)
         if parent:
-            parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
+            parent.setData(OntologyExplorerView.UnsatisfiableBrush, QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
             self.unsatisfiableDataProps.append(parent)
 
@@ -493,7 +460,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             parent = self.parentForIRI(classIRI)
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(classIRI))
-                parent.setData(classIRI,QtCore.Qt.UserRole)
+                parent.setData(classIRI, OntologyExplorerView.IRIRole)
                 self.connectIRISignals(classIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,classIRI))
@@ -502,15 +469,13 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not any([(child.text() == c.text() and c.icon() is self.iconConcept) for c in children]):
                 child.setIcon(self.iconConcept)
                 childData = [classIRI, Item.ConceptIRINode.value]
-                child.setData(childData,QtCore.Qt.UserRole)
-                child.setData(self.iconConcept, OntologyExplorerItemDelegate.IconRole)
+                child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
-                
         for objPropIRI in impOnt.objectProperties:
             parent = self.parentForIRI(objPropIRI)
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(objPropIRI))
-                parent.setData(objPropIRI,QtCore.Qt.UserRole)
+                parent.setData(objPropIRI, OntologyExplorerView.IRIRole)
                 self.connectIRISignals(objPropIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,objPropIRI))
@@ -519,15 +484,13 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not any([(child.text() == c.text() and c.icon() is self.iconRole) for c in children]):
                 child.setIcon(self.iconRole)
                 childData = [objPropIRI, Item.RoleIRINode.value]
-                child.setData(childData,QtCore.Qt.UserRole)
-                child.setData(self.iconRole, OntologyExplorerItemDelegate.IconRole)
+                child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
-        
         for dataPropIRI in impOnt.dataProperties:
             parent = self.parentForIRI(dataPropIRI)
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(dataPropIRI))
-                parent.setData(dataPropIRI,QtCore.Qt.UserRole)
+                parent.setData(dataPropIRI, OntologyExplorerView.IRIRole)
                 self.connectIRISignals(dataPropIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,dataPropIRI))
@@ -536,15 +499,13 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not any([(child.text() == c.text() and c.icon() is self.iconAttribute) for c in children]):
                 child.setIcon(self.iconAttribute)
                 childData = [dataPropIRI, Item.AttributeIRINode.value]
-                child.setData(childData,QtCore.Qt.UserRole)
-                child.setData(self.iconAttribute, OntologyExplorerItemDelegate.IconRole)
+                child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
-                
         for indIRI in impOnt.individuals:
             parent = self.parentForIRI(indIRI)
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(indIRI))
-                parent.setData(indIRI,QtCore.Qt.UserRole)
+                parent.setData(indIRI, OntologyExplorerView.IRIRole)
                 self.connectIRISignals(indIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,indIRI))
@@ -553,15 +514,13 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not any([(child.text() == c.text() and c.icon() is self.iconInstance) for c in children]):
                 child.setIcon(self.iconInstance)
                 childData = [indIRI, Item.IndividualIRINode.value]
-                child.setData(childData,QtCore.Qt.UserRole)
-                child.setData(self.iconInstance, OntologyExplorerItemDelegate.IconRole)
+                child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
-                
-        #APPLY FILTERS AND SORT
+        # APPLY FILTERS AND SORT
         if self.sender() != self.plugin:
             self.proxy.invalidateFilter()
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)
-    
+
     @QtCore.pyqtSlot(ImportedOntology)
     def onImportedOntologyRemoved(self, impOnt):
         """
@@ -604,7 +563,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 if not parent.rowCount():
                     self.disconnectIRISignals(indIRI)
                     self.model.removeRow(parent.index().row())
-        #APPLY FILTERS AND SORT
+        # APPLY FILTERS AND SORT
         if self.sender() != self.plugin:
             self.proxy.invalidateFilter()
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)
@@ -616,32 +575,24 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :type diagram: QGraphicsScene
         :type node: AbstractItem
         """
-        #TODO REIMPLEMENTA TUTTO USANDO SOLO GLI INDICI E NON LE ITEM
         if node.type() in self.items:
             parent = self.parentFor(node)
             if not parent:
-                if not (isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode)):
+                if not isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode,)):
                     parent = QtGui.QStandardItem(self.parentKey(node))
                     parent.setIcon(self.iconFor(node))
                 else:
                     parent = QtGui.QStandardItem(self.parentKeyForIRI(node.iri))
-                    parent.setData(node.iri,QtCore.Qt.UserRole)
+                    parent.setData(node.iri, OntologyExplorerView.IRIRole)
                     self.connectIRISignals(node.iri)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKey(diagram, node))
-            if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+            if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode,)):
                 child.setIcon(self.iconFor(node))
-                child.setData(self.iconFor(node), OntologyExplorerItemDelegate.IconRole)
                 connect(node.sgnIRISwitched,self.onNodeIRISwitched)
-            child.setData(node, QtCore.Qt.UserRole)
-            # CHECK FOR DUPLICATE NODES
-            children = [parent.child(i) for i in range(parent.rowCount())]
-            if not any([child.text() == c.text() for c in children]):
-                parent.appendRow(child)
+            child.setData(node, OntologyExplorerView.IRIRole)
+            parent.appendRow(child)
             # APPLY FILTERS AND SORT
-            #TODO questa operazione al momento del caricamento del progetto è particolarmente onerosa.
-            # Quando ci sarà il tempo, valutare funzione apposita per bulk insert come su onImportedOntologyAdded
-            # lasciando che questa funzione sia chiamata solo dopo l'aggiunta di singoli nodi sul diagramma
             if self.sender() != self.plugin:
                 self.proxy.invalidateFilter()
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
@@ -660,8 +611,8 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 if child:
                     parent.removeRow(child.index().row())
                 if not parent.rowCount():
-                    if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
-                        self.disconnectIRISignals(parent.data(QtCore.Qt.UserRole))
+                    if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode,)):
+                        self.disconnectIRISignals(parent.data(OntologyExplorerView.IRIRole))
                     self.model.removeRow(parent.index().row())
 
     @QtCore.pyqtSlot(str)
@@ -672,7 +623,6 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         self.proxy.setFilterFixedString(key)
         self.proxy.sort(QtCore.Qt.AscendingOrder)
-
 
     @QtCore.pyqtSlot()
     def doFocusSearch(self):
@@ -698,11 +648,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data(QtCore.Qt.UserRole):
-                if isinstance(item.data(QtCore.Qt.UserRole),IRI):
-                    self.sgnIRIItemActivated.emit(item.data(QtCore.Qt.UserRole))
+            if item and item.data(OntologyExplorerView.IRIRole):
+                if isinstance(item.data(OntologyExplorerView.IRIRole),IRI):
+                    self.sgnIRIItemActivated.emit(item.data(OntologyExplorerView.IRIRole))
                 else:
-                    self.sgnItemActivated.emit(item.data(QtCore.Qt.UserRole))
+                    self.sgnItemActivated.emit(item.data(OntologyExplorerView.IRIRole))
                 # KEEP FOCUS ON THE TREE VIEW UNLESS SHIFT IS PRESSED
                 if QtWidgets.QApplication.queryKeyboardModifiers() & QtCore.Qt.SHIFT:
                     return
@@ -723,11 +673,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data(QtCore.Qt.UserRole):
-                if isinstance(item.data(QtCore.Qt.UserRole),IRI):
-                    self.sgnIRIItemDoubleClicked.emit(item.data(QtCore.Qt.UserRole))
-                elif isinstance(item.data(QtCore.Qt.UserRole), AbstractNode):
-                    self.sgnItemDoubleClicked.emit(item.data(QtCore.Qt.UserRole))
+            if item and item.data(OntologyExplorerView.IRIRole):
+                if isinstance(item.data(OntologyExplorerView.IRIRole), IRI):
+                    self.sgnIRIItemDoubleClicked.emit(item.data(OntologyExplorerView.IRIRole))
+                elif isinstance(item.data(OntologyExplorerView.IRIRole), AbstractNode):
+                    self.sgnItemDoubleClicked.emit(item.data(OntologyExplorerView.IRIRole))
 
     @QtCore.pyqtSlot('QModelIndex')
     def onItemPressed(self, index):
@@ -738,26 +688,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data(QtCore.Qt.UserRole):
-                if isinstance(item.data(QtCore.Qt.UserRole),IRI):
-                    self.sgnIRIItemClicked.emit(item.data(QtCore.Qt.UserRole))
-                elif isinstance(item.data(QtCore.Qt.UserRole), AbstractNode):
-                    self.sgnItemClicked.emit(item.data(QtCore.Qt.UserRole))
-
-    @QtCore.pyqtSlot(bool)
-    def onMenuButtonClicked(self, checked=False):
-        """
-        Executed when a button in the widget menu is clicked.
-        """
-        # UPDATE THE PALETTE LAYOUT
-        data = self.sender().data()
-        elems = self.proxy.items if isinstance(data, Item) else self.proxy.status
-        if checked:
-            elems.add(data)
-        else:
-            elems.discard(data)
-        self.proxy.invalidateFilter()
-        self.proxy.sort(0, QtCore.Qt.AscendingOrder)
+            if item and item.data(OntologyExplorerView.IRIRole):
+                if isinstance(item.data(OntologyExplorerView.IRIRole), IRI):
+                    self.sgnIRIItemClicked.emit(item.data(OntologyExplorerView.IRIRole))
+                elif isinstance(item.data(OntologyExplorerView.IRIRole), AbstractNode):
+                    self.sgnItemClicked.emit(item.data(OntologyExplorerView.IRIRole))
 
     @QtCore.pyqtSlot()
     def onReturnPressed(self):
@@ -769,6 +704,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     #############################################
     #   INTERFACE
     #################################
+
     def connectNodeSignals(self, node):
         """
         :type node: OntologyEntityNode | OntologyEntityResizableNode
@@ -794,19 +730,17 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         disconnect(iri.sgnIRIModified, self.onIRIModified)
 
     def redrawIRIItem(self, iri=None):
-        if self.sender() != self.plugin:
-            self.proxy.invalidateFilter()
         self.ontoview.setSortingEnabled(False)
-        for row in range(0, self.model.rowCount()):
+        for row in range(self.model.rowCount()):
             currItem = self.model.item(row)
             if iri:
-                currIRI = currItem.data(QtCore.Qt.UserRole)
+                currIRI = currItem.data(OntologyExplorerView.IRIRole)
                 if currIRI is iri:
                     currItem.setText(self.parentKeyForIRI(iri))
                     break
             else:
-                if isinstance(currItem.data(QtCore.Qt.UserRole),IRI):
-                    currItem.setText(self.parentKeyForIRI(currItem.data(QtCore.Qt.UserRole)))
+                if isinstance(currItem.data(OntologyExplorerView.IRIRole), IRI):
+                    currItem.setText(self.parentKeyForIRI(currItem.data(OntologyExplorerView.IRIRole)))
         self.ontoview.setSortingEnabled(True)
         if self.sender() != self.plugin:
             self.proxy.invalidateFilter()
@@ -850,7 +784,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         diagram = rstrip(diagram.name, File.Graphol.extension)
 
-        if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+        if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
             return '{0} - {1}'.format(diagram, node.id)
         else:
             predicate = node.text().replace('\n', '')
@@ -888,17 +822,16 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         :type node: AbstractNode
         :rtype: QtGui.QStandardItem
         """
-        parentK = None
-        if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+        if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode,)):
             parentK = self.parentKeyForIRI(node.iri)
             for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
-                parentIRI = i.data(QtCore.Qt.UserRole)
+                parentIRI = i.data(OntologyExplorerView.IRIRole)
                 if node.iri is parentIRI:
                     return i
         else:
             parentK = self.parentKey(node)
             for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
-                n = i.child(0).data(QtCore.Qt.UserRole)
+                n = i.child(0).data(OntologyExplorerView.IRIRole)
                 if node.type() is n.type():
                     return i
         return None
@@ -911,15 +844,14 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         parentK = self.parentKeyForIRI(iri)
         for i in self.model.findItems(parentK, QtCore.Qt.MatchExactly):
-            parentIRI = i.data(QtCore.Qt.UserRole)
+            parentIRI = i.data(OntologyExplorerView.IRIRole)
             if iri is parentIRI:
                 return i
         return None
 
     @staticmethod
     def parentKeyForIRI(iri):
-        key = IRIRender.iriLabelString(iri).replace('\n','')
-        return key
+        return IRIRender.iriLabelString(iri).replace('\n', '')
 
     @staticmethod
     def parentKey(node):
@@ -938,50 +870,42 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         """
         return QtCore.QSize(216, 266)
 
+
 class OntologyExplorerItemDelegate(QtWidgets.QStyledItemDelegate):
-    IconRole = QtCore.Qt.UserRole + 1000
+    """
+    Subclass of QStyledItemDelegate that renders items in the OntologyExplorerView.
+    """
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
     def paint(self, painter, option, index):
-        '''
-        option.font.setWeight(QtGui.QFont.Bold)
-        option.font.setItalic(True)
-        option.font.setUnderline(True)
-        '''
-        painter.save()
-        itemText = index.data(QtCore.Qt.DisplayRole)
-        itemForeBrush = index.data(QtCore.Qt.ForegroundRole)
-        itemIcon = index.data(OntologyExplorerItemDelegate.IconRole)
+        """
+        Paint the item using the foreground role data as the pen brush
+        for unsatisfiable entities in the ontology.
+        :type painter: QtGui.QPainter
+        :type option: QtWidgets.QStyleOptionViewItem
+        :type index: QtCore.QModelIndex
+        """
+        super().initStyleOption(option, index)
+        # SET COLOR FOR UNSATISFIABLE ITEMS
+        brush = index.data(QtCore.Qt.ForegroundRole)
+        if brush:
+            option.palette.setColor(QtGui.QPalette.Text, brush.color())
+            option.palette.setColor(QtGui.QPalette.HighlightedText, brush.color())
+        # PAINT THE ITEM USING PREFERRED STYLE
+        widget = option.widget
+        style = widget.style() if widget else QtWidgets.QApplication.style()
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, option, painter)
 
-        if itemForeBrush:
-            painter.setPen(itemForeBrush.color())
-
-        iconRect = None
-        if itemIcon:
-            margin = 3
-            mode = QtGui.QIcon.Normal
-            state = QtGui.QIcon.On if option.state & QtWidgets.QStyle.State_Open else QtGui.QIcon.Off
-            iconRect = QtCore.QRect(QtCore.QPoint(), option.decorationSize)
-            iconRect.moveCenter(option.rect.center())
-            iconRect.setLeft(option.rect.left())
-            #r.moveLeft(option.rect.center())
-            itemIcon.paint(painter, iconRect, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, mode, state)
-        if (option.state & QtWidgets.QStyle.State_Selected):
-            painter.fillRect(option.rect, option.palette.highlight())
-        textRect = None
-        if iconRect:
-            textRect = QtCore.QRect(QtCore.QPoint(), option.rect.size())
-            textRect.moveCenter(option.rect.center())
-            textRect.setLeft(option.rect.left() + option.decorationSize.width() + margin)
-        else:
-            textRect = option.rect
-        
-        painter.drawText(textRect, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, itemText)
-        painter.restore()
 
 class OntologyExplorerView(QtWidgets.QTreeView):
     """
     This class implements the ontology explorer tree view.
     """
+    UnsatisfiableBrush = QtGui.QBrush(QtGui.QColor(255, 0, 0, 255))
+
+    IRIRole = QtCore.Qt.UserRole + 1
+
     def __init__(self, widget):
         """
         Initialize the ontology explorer view.
@@ -1040,58 +964,40 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         :type mouseEvent: QMouseEvent
         """
         if mouseEvent.buttons() & QtCore.Qt.LeftButton:
-            #if Item.ConceptNode <= self.item < Item.InclusionEdge:
-                distance = (mouseEvent.pos() - self.startPos).manhattanLength()
-                if distance >= QtWidgets.QApplication.startDragDistance():
-
-                    index = first(self.selectedIndexes())
-                    if index:
-                        model = self.model().sourceModel()
-                        index = self.model().mapToSource(index)
-                        item = model.itemFromIndex(index)
-                        itemData = item.data(QtCore.Qt.UserRole)
-                        if itemData and isinstance(itemData,AbstractNode):
-                            pass
-                        else:
-                            if item.hasChildren():
-                                itemData = item.child(0).data(QtCore.Qt.UserRole)
-                        if itemData:
-                            if isinstance(itemData,OntologyEntityNode) or isinstance(itemData, OntologyEntityResizableNode):
-                                mimeData = QtCore.QMimeData()
-                                mimeData.setText(str(itemData.Type.value))
-                                node_iri = itemData.iri
-                                byte_array = QtCore.QByteArray()
-                                byte_array.append(str(node_iri))
-                                mimeData.setData(str(itemData.Type.value), byte_array)
-                                drag = QtGui.QDrag(self)
-                                drag.setMimeData(mimeData)
-                                drag.exec_(QtCore.Qt.CopyAction)
-                            elif isinstance(itemData,list):
-                                iri = itemData[0]
-                                itemValue = itemData[1]
-                                mimeData = QtCore.QMimeData()
-                                mimeData.setText(str(itemValue))
-                                byte_array = QtCore.QByteArray()
-                                byte_array.append(str(iri))
-                                mimeData.setData(str(itemValue), byte_array)
-                                drag = QtGui.QDrag(self)
-                                drag.setMimeData(mimeData)
-                                drag.exec_(QtCore.Qt.CopyAction)
-                            else:
-                                #OLD ELEMENTS should not be used
-                                mimeData = QtCore.QMimeData()
-                                mimeData.setText(str(itemData.Type.value))
-                                node_iri = self.session.project.get_iri_of_node(itemData)
-                                node_remaining_characters = itemData.remaining_characters
-                                comma_seperated_text = str(node_iri + ',' + node_remaining_characters + ',' + itemData.text())
-                                byte_array = QtCore.QByteArray()
-                                byte_array.append(comma_seperated_text)
-                                mimeData.setData(str(itemData.Type.value), byte_array)
-                                drag = QtGui.QDrag(self)
-                                drag.setMimeData(mimeData)
-                                # drag.setPixmap(self.icon().pixmap(60, 40))
-                                # drag.setHotSpot(self.startPos - self.rect().topLeft())
-                                drag.exec_(QtCore.Qt.CopyAction)
+            distance = (mouseEvent.pos() - self.startPos).manhattanLength()
+            if distance >= QtWidgets.QApplication.startDragDistance():
+                index = first(self.selectedIndexes())
+                if index:
+                    model = self.model().sourceModel()
+                    index = self.model().mapToSource(index)
+                    item = model.itemFromIndex(index)
+                    data = item.data(OntologyExplorerView.IRIRole)
+                    # Pick the first child when dragging an IRI from the explorer
+                    if not isinstance(data, AbstractNode) and item.hasChildren():
+                        data = item.child(0).data(OntologyExplorerView.IRIRole)
+                    if data:
+                        if isinstance(data, (OntologyEntityNode, OntologyEntityResizableNode,)):
+                            mimeData = QtCore.QMimeData()
+                            mimeData.setText(str(data.Type.value))
+                            node_iri = data.iri
+                            buf = QtCore.QByteArray()
+                            buf.append(str(node_iri))
+                            mimeData.setData(str(data.Type.value), buf)
+                            drag = QtGui.QDrag(self)
+                            drag.setMimeData(mimeData)
+                            drag.exec_(QtCore.Qt.CopyAction)
+                        # Placeholder for an imported ontology IRI
+                        elif isinstance(data, list):
+                            iri = data[0]
+                            value = data[1]
+                            mimeData = QtCore.QMimeData()
+                            mimeData.setText(str(value))
+                            buf = QtCore.QByteArray()
+                            buf.append(str(iri))
+                            mimeData.setData(str(value), buf)
+                            drag = QtGui.QDrag(self)
+                            drag.setMimeData(mimeData)
+                            drag.exec_(QtCore.Qt.CopyAction)
 
         super().mouseMoveEvent(mouseEvent)
 
@@ -1106,28 +1012,24 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                 model = self.model().sourceModel()
                 index = self.model().mapToSource(index)
                 item = model.itemFromIndex(index)
-                if item.data(QtCore.Qt.UserRole):
-                    if isinstance(item.data(QtCore.Qt.UserRole),IRI):
-                        iri = item.data(QtCore.Qt.UserRole)
-                        self.widget.sgnIRIItemRightClicked.emit(iri)
-                        if item in self.parent().unsatisfiableItems:
-                            self.session.currentEmptyEntityIRI = iri
-                            if item in self.parent().unsatisfiableClasses:
-                                self.session.currentEmptyEntityType = Item.ConceptIRINode
-                                print("unsatisfiable class " + str(iri))
-                            elif item in self.parent().unsatisfiableObjProps:
-                                self.session.currentEmptyEntityType = Item.RoleIRINode
-                                print("unsatisfiable role " + str(iri))
-                            elif item in self.parent().unsatisfiableDataProps:
-                                self.session.currentEmptyEntityType = Item.AttributeIRINode
-                                print("unsatisfiable attribute " + str(iri))
-                            menu = self.session.mf.buildEmptyEntityMenu()
-                            menu.exec_(mouseEvent.screenPos().toPoint())
-                    elif isinstance(item.data(QtCore.Qt.UserRole), AbstractNode):
-                        node = item.data(QtCore.Qt.UserRole)
-                        self.widget.sgnItemRightClicked.emit(node)
-                        menu = self.session.mf.create(node.diagram, [node])
+                data = item.data(OntologyExplorerView.IRIRole)
+                if isinstance(data, IRI):
+                    self.widget.sgnIRIItemRightClicked.emit(data)
+                    if item in self.parent().unsatisfiableItems:
+                        self.session.currentEmptyEntityIRI = data
+                        if item in self.parent().unsatisfiableClasses:
+                            self.session.currentEmptyEntityType = Item.ConceptIRINode
+                        elif item in self.parent().unsatisfiableObjProps:
+                            self.session.currentEmptyEntityType = Item.RoleIRINode
+                        elif item in self.parent().unsatisfiableDataProps:
+                            self.session.currentEmptyEntityType = Item.AttributeIRINode
+                        menu = self.session.mf.buildEmptyEntityMenu()
                         menu.exec_(mouseEvent.screenPos().toPoint())
+                elif isinstance(data, AbstractNode):
+                    node = item.data(OntologyExplorerView.IRIRole)
+                    self.widget.sgnItemRightClicked.emit(node)
+                    menu = self.session.mf.create(node.diagram, [node])
+                    menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)
 
@@ -1144,14 +1046,13 @@ class OntologyExplorerView(QtWidgets.QTreeView):
         """
         return max(super().sizeHintForColumn(column), self.viewport().width())
 
+
 class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     """
     Extends QSortFilterProxyModel adding filtering functionalities for the explorer widget
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.items = {Item.ConceptIRINode, Item.IndividualIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.ValueDomainIRINode}
-        self.status = {Status.DEFAULT, Status.DRAFT, Status.FINAL}
 
     #############################################
     #   PROPERTIES
@@ -1169,43 +1070,11 @@ class OntologyExplorerFilterProxyModel(QtCore.QSortFilterProxyModel):
     #   INTERFACE
     #################################
 
-    def filterAcceptsRow(self, sourceRow, parentIndex):
+    def filterAcceptsRow(self, sourceRow: int, sourceParent: QtCore.QModelIndex) -> bool:
         """
         Overrides filterAcceptsRow to include extra filtering conditions
         :type sourceRow: int
-        :type parentIndex: QModelIndex
+        :type sourceParent: QModelIndex
         :rtype: bool
         """
-        '''
-        index = self.sourceModel().index(sourceRow, 0, parentIndex)
-        item = self.sourceModel().itemFromIndex(index)
-        # PARENT NODE
-        # LEAF NODE
-        if item.parent():
-            parentItemIndex = self.sourceModel().indexFromItem(item.parent())
-            result = parentItemIndex.isValid()
-        # PARENT NODE
-        else:
-            result = super().filterAcceptsRow(sourceRow, parentIndex)
-        return result
-        '''
-        if parentIndex.isValid():
-            return True
-        else:
-            return super().filterAcceptsRow(sourceRow, parentIndex)
-
-class OntologyExplorerModel(QtGui.QStandardItemModel):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-
-    def data(self,index,role):
-        if role == QtCore.Qt.DisplayRole:
-            dt = self.itemFromIndex(index).data(QtCore.Qt.UserRole)
-            if isinstance(dt,IRI):
-                lab = IRIRender.iriLabelString(dt).replace('\n', '')
-                return lab
-            else:
-                return super().data(index, role)
-        else:
-            return super().data(index,role)
+        return sourceParent.isValid() or super().filterAcceptsRow(sourceRow, sourceParent)
