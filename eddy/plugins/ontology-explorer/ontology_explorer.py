@@ -421,7 +421,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onUnsatisfiableClass(self, iri):
         parent = self.parentForIRI(iri)
         if parent:
-            parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
+            parent.setData(OntologyExplorerView.UnsatisfiableBrush, QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
             self.unsatisfiableClasses.append(parent)
 
@@ -429,7 +429,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onUnsatisfiableObjectProperty(self, iri):
         parent = self.parentForIRI(iri)
         if parent:
-            parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
+            parent.setData(OntologyExplorerView.UnsatisfiableBrush, QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
             self.unsatisfiableObjProps.append(parent)
 
@@ -437,7 +437,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     def onUnsatisfiableDataProperty(self, iri):
         parent = self.parentForIRI(iri)
         if parent:
-            parent.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)), QtCore.Qt.ForegroundRole)
+            parent.setData(OntologyExplorerView.UnsatisfiableBrush, QtCore.Qt.ForegroundRole)
             self.unsatisfiableItems.append(parent)
             self.unsatisfiableDataProps.append(parent)
 
@@ -882,46 +882,27 @@ class OntologyExplorerItemDelegate(QtWidgets.QStyledItemDelegate):
         """
         Paint the item using the foreground role data as the pen brush
         for unsatisfiable entities in the ontology.
-        :type painter: QPainter
-        :type option: QStyleOptionItemView
-        :type index: QModelIndex
+        :type painter: QtGui.QPainter
+        :type option: QtWidgets.QStyleOptionViewItem
+        :type index: QtCore.QModelIndex
         """
-        painter.save()
-        itemText = index.data(QtCore.Qt.DisplayRole)
-        itemForeBrush = index.data(QtCore.Qt.ForegroundRole)
-        itemIcon = index.data(QtCore.Qt.DecorationRole)
-
-        if itemForeBrush:
-            painter.setPen(itemForeBrush.color())
-
-        iconRect = None
-        if itemIcon:
-            margin = 3
-            mode = QtGui.QIcon.Normal
-            state = QtGui.QIcon.On if option.state & QtWidgets.QStyle.State_Open else QtGui.QIcon.Off
-            iconRect = QtCore.QRect(QtCore.QPoint(), option.decorationSize)
-            iconRect.moveCenter(option.rect.center())
-            iconRect.setLeft(option.rect.left())
-            #r.moveLeft(option.rect.center())
-            itemIcon.paint(painter, iconRect, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, mode, state)
-        if (option.state & QtWidgets.QStyle.State_Selected):
-            painter.fillRect(option.rect, option.palette.highlight())
-        textRect = None
-        if iconRect:
-            textRect = QtCore.QRect(QtCore.QPoint(), option.rect.size())
-            textRect.moveCenter(option.rect.center())
-            textRect.setLeft(option.rect.left() + option.decorationSize.width() + margin)
-        else:
-            textRect = option.rect
-
-        painter.drawText(textRect, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter, itemText)
-        painter.restore()
+        super().initStyleOption(option, index)
+        # SET COLOR FOR UNSATISFIABLE ITEMS
+        brush = index.data(QtCore.Qt.ForegroundRole)
+        if brush:
+            option.palette.setColor(QtGui.QPalette.Text, brush.color())
+            option.palette.setColor(QtGui.QPalette.HighlightedText, brush.color())
+        # PAINT THE ITEM USING PREFERRED STYLE
+        widget = option.widget
+        style = widget.style() if widget else QtWidgets.QApplication.style()
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, option, painter)
 
 
 class OntologyExplorerView(QtWidgets.QTreeView):
     """
     This class implements the ontology explorer tree view.
     """
+    UnsatisfiableBrush = QtGui.QBrush(QtGui.QColor(255, 0, 0, 255))
 
     IRIRole = QtCore.Qt.UserRole + 1
 
