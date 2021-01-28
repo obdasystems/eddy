@@ -42,7 +42,7 @@ from PyQt5 import QtWidgets
 from eddy import BUG_TRACKER
 from eddy.core.common import HasThreadingSystem, HasWidgetSystem
 from eddy.core.datatypes.graphol import Item, Identity, Restriction
-from eddy.core.datatypes.owl import  OWLAxiom, OWLSyntax
+from eddy.core.datatypes.owl import OWLAxiom, OWLSyntax
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import DiagramMalformedError
@@ -65,6 +65,7 @@ from eddy.ui.fields import ComboBox, CheckBox
 
 LOGGER = getLogger()
 
+
 class OWLOntologyExporter_v3(AbstractOntologyExporter, HasThreadingSystem):
     """
     Extends AbstractProjectExporter with facilities to export a Graphol project into a valid OWL 2 ontology.
@@ -77,7 +78,8 @@ class OWLOntologyExporter_v3(AbstractOntologyExporter, HasThreadingSystem):
         :type session: Session
         """
         super().__init__(project, session)
-        self.items = list(project.edges()) + list(filter(lambda n: not n.adjacentNodes(), project.nodes()))
+        self.items = list(project.edges()) + list(
+            filter(lambda n: not n.adjacentNodes(), project.nodes()))
         self.path = None
         self.progress = None
 
@@ -96,7 +98,8 @@ class OWLOntologyExporter_v3(AbstractOntologyExporter, HasThreadingSystem):
         self.progress.sleep()
         self.progress.close()
         '''
-        dialog = OWLOntologyExporterDialog_v3(self.project, self.path, self.session, self.selected_diagrams)
+        dialog = OWLOntologyExporterDialog_v3(self.project, self.path, self.session,
+                                              self.selected_diagrams)
         dialog.exec_()
 
     @QtCore.pyqtSlot(str)
@@ -155,6 +158,7 @@ class OWLOntologyExporter_v3(AbstractOntologyExporter, HasThreadingSystem):
             '''
             self.onSyntaxCheckCompleted()
 
+
 class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
     """
     Extends QtWidgets.QDialog providing the form used to perform Graphol -> OWL ontology translation.
@@ -202,16 +206,17 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
                                              clicked=self.doCheckAxiomMarks,
                                              objectName='btn_clear_all'))
         for axiom in OWLAxiom:
-            self.addWidget(CheckBox(axiom.value, self,
-                                    enabled=False, objectName=axiom.value,
-                                    checked=False, clicked=self.onAxiomCheckClicked))
+            if axiom is not OWLAxiom.Declaration:
+                self.addWidget(CheckBox(axiom.value, self,
+                                        enabled=False, objectName=axiom.value,
+                                        checked=False, clicked=self.onAxiomCheckClicked))
 
         nonLogicalLayout = QtWidgets.QGridLayout()
         nonLogicalLayout.setColumnMinimumWidth(0, 230)
         nonLogicalLayout.setColumnMinimumWidth(1, 230)
         nonLogicalLayout.setColumnMinimumWidth(2, 230)
         nonLogicalLayout.addWidget(self.widget(OWLAxiom.Annotation.value), 0, 0)
-        nonLogicalLayout.addWidget(self.widget(OWLAxiom.Declaration.value), 0, 1)
+        # nonLogicalLayout.addWidget(self.widget(OWLAxiom.Declaration.value), 0, 1)
         nonLogicalLayout.addWidget(QtWidgets.QWidget(self), 0, 2)
         nonLogicalGroup = QtWidgets.QGroupBox('Non-Logical', self)
         nonLogicalGroup.setLayout(nonLogicalLayout)
@@ -231,7 +236,8 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         intensionalLayout.addWidget(self.widget(OWLAxiom.FunctionalDataProperty.value), 1, 1)
         intensionalLayout.addWidget(self.widget(OWLAxiom.FunctionalObjectProperty.value), 2, 1)
         intensionalLayout.addWidget(self.widget(OWLAxiom.HasKey.value), 3, 1)
-        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseFunctionalObjectProperty.value), 4, 1)
+        intensionalLayout.addWidget(self.widget(OWLAxiom.InverseFunctionalObjectProperty.value), 4,
+                                    1)
         intensionalLayout.addWidget(self.widget(OWLAxiom.InverseObjectProperties.value), 5, 1)
         intensionalLayout.addWidget(self.widget(OWLAxiom.IrreflexiveObjectProperty.value), 6, 1)
         intensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyDomain.value), 7, 1)
@@ -252,7 +258,8 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         extensionalLayout.addWidget(self.widget(OWLAxiom.DataPropertyAssertion.value), 1, 0)
         extensionalLayout.addWidget(self.widget(OWLAxiom.DifferentIndividuals.value), 2, 0)
         extensionalLayout.addWidget(self.widget(OWLAxiom.NegativeDataPropertyAssertion.value), 0, 1)
-        extensionalLayout.addWidget(self.widget(OWLAxiom.NegativeObjectPropertyAssertion.value), 1, 1)
+        extensionalLayout.addWidget(self.widget(OWLAxiom.NegativeObjectPropertyAssertion.value), 1,
+                                    1)
         extensionalLayout.addWidget(self.widget(OWLAxiom.ObjectPropertyAssertion.value), 2, 1)
         extensionalLayout.addWidget(self.widget(OWLAxiom.SameIndividual.value), 0, 2)
         extensionalGroup = QtWidgets.QGroupBox('Extensional', self)
@@ -321,11 +328,12 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         # CONFIGURE LAYOUT
         #################################
 
-        #for axiom in OWLAxiom.forProfile(self.project.profile.type()):
+        # for axiom in OWLAxiom.forProfile(self.project.profile.type()):
         for axiom in OWLAxiom:
-            checkbox = self.widget(axiom.value)
-            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
-            checkbox.setEnabled(True)
+            if axiom is not OWLAxiom.Declaration:
+                checkbox = self.widget(axiom.value)
+                checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
+                checkbox.setEnabled(True)
 
         mainLayout = QtWidgets.QVBoxLayout()
         mainLayout.setContentsMargins(10, 10, 10, 10)
@@ -349,7 +357,7 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         Returns the set of axioms that needs to be exported.
         :rtype: set
         """
-        return {axiom for axiom in OWLAxiom if self.widget(axiom.value).isChecked()}
+        return {axiom for axiom in OWLAxiom if axiom is not OWLAxiom.Declaration and self.widget(axiom.value).isChecked()}
 
     def normalize(self):
         """
@@ -393,7 +401,8 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         """
         Executed when an axiom checkbox is clicked.
         """
-        self.widget('confirmation').setEnabled(any(x.isChecked() for x in (self.widget(k.value) for k in OWLAxiom)))
+        self.widget('confirmation').setEnabled(
+            any(x.isChecked() for x in (self.widget(k.value) for k in OWLAxiom)))
 
     @QtCore.pyqtSlot()
     def doCheckAxiomMarks(self):
@@ -402,8 +411,9 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         """
         checked = self.sender() is self.widget('btn_check_all')
         for axiom in OWLAxiom.forProfile(self.project.profile.type()):
-            checkbox = self.widget(axiom.value)
-            checkbox.setChecked(checked)
+            if axiom is not OWLAxiom.Declaration:
+                checkbox = self.widget(axiom.value)
+                checkbox.setChecked(checked)
         self.widget('confirmation').setEnabled(checked)
 
     @QtCore.pyqtSlot(Exception)
@@ -417,7 +427,8 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setInformativeText('Do you want to see the error in the diagram?')
-            msgbox.setText('Malformed expression detected on {0}: {1}'.format(exception.item, exception))
+            msgbox.setText(
+                'Malformed expression detected on {0}: {1}'.format(exception.item, exception))
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Malformed expression')
@@ -429,7 +440,8 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(exception))
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-            msgbox.setInformativeText('Please <a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
+            msgbox.setInformativeText(
+                'Please <a href="{0}">submit a bug report</a>.'.format(BUG_TRACKER))
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
             msgbox.setText('Diagram translation could not be completed!')
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -472,8 +484,9 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         self.widget('btn_clear_all').setEnabled(False)
         self.widget('btn_check_all').setEnabled(False)
         for axiom in OWLAxiom:
-            checkbox = self.widget(axiom.value)
-            checkbox.setEnabled(False)
+            if axiom is not OWLAxiom.Declaration:
+                checkbox = self.widget(axiom.value)
+                checkbox.setEnabled(False)
         self.widget('normalization').setEnabled(False)
         self.widget('exportRichText').setEnabled(False)
 
@@ -493,6 +506,7 @@ class OWLOntologyExporterDialog_v3(QtWidgets.QDialog, HasThreadingSystem, HasWid
         connect(worker.sgnErrored, self.onErrored)
         connect(worker.sgnProgress, self.onProgress)
         self.startThread('OWL2Export', worker)
+
 
 class OWLOntologyExporterWorker_v3(AbstractWorker):
     """
@@ -515,7 +529,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if not self.vm.isRunning():
             self.vm.initialize()
         self.vm.attachThreadToJVM()
-        self.DefaultPrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.util.DefaultPrefixManager')
+        self.DefaultPrefixManager = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.util.DefaultPrefixManager')
         self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass(
             'org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
         self.HashSet = self.vm.getJavaClass('java.util.HashSet')
@@ -524,22 +539,28 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         self.List = self.vm.getJavaClass('java.util.List')
         self.ManchesterSyntaxDocumentFormat = self.vm.getJavaClass(
             'org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat')
-        self.OWLAnnotationValue = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationValue')
+        self.OWLAnnotationValue = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.model.OWLAnnotationValue')
         self.OWLFacet = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWLFacet')
         self.OWL2Datatype = self.vm.getJavaClass('org.semanticweb.owlapi.vocab.OWL2Datatype')
         self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
         self.OWLOntologyID = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLOntologyID')
-        self.OWLOntologyDocumentTarget = self.vm.getJavaClass('org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
-        self.RDFXMLDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
+        self.OWLOntologyDocumentTarget = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.io.OWLOntologyDocumentTarget')
+        self.RDFXMLDocumentFormat = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.formats.RDFXMLDocumentFormat')
         self.PrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.model.PrefixManager')
         self.Set = self.vm.getJavaClass('java.util.Set')
-        self.StringDocumentTarget = self.vm.getJavaClass('org.semanticweb.owlapi.io.StringDocumentTarget')
-        self.TurtleDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.TurtleDocumentFormat')
+        self.StringDocumentTarget = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.io.StringDocumentTarget')
+        self.TurtleDocumentFormat = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.formats.TurtleDocumentFormat')
 
         self.JavaFileClass = self.vm.getJavaClass('java.io.File')
         self.URIClass = self.vm.getJavaClass('java.net.URI')
         self.IRIMapperClass = self.vm.getJavaClass('org.semanticweb.owlapi.util.SimpleIRIMapper')
-        self.ImportsDeclarationClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLImportsDeclaration')
+        self.ImportsDeclarationClass = self.vm.getJavaClass(
+            'org.semanticweb.owlapi.model.OWLImportsDeclaration')
         self.ImportsEnum = self.vm.getJavaClass('org.semanticweb.owlapi.model.parameters.Imports')
         self.AddImportClass = self.vm.getJavaClass('org.semanticweb.owlapi.model.AddImport')
 
@@ -560,7 +581,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         self.man = None
         self.num = 0
         # self.max = len(self.project.nodes()) * 2 + len(self.project.edges())
-        self.max = sum([len(diagram.nodes()) * 2 + len(diagram.edges()) for diagram in self.selected_diagrams])
+        self.max = sum(
+            [len(diagram.nodes()) * 2 + len(diagram.edges()) for diagram in self.selected_diagrams])
         self.ontology = None
         self.pm = None
 
@@ -584,7 +606,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             ontologyIRI = rstrip(str(self.project.ontologyIRI), '#')
             mastroIRI = rstrip('http://www.obdasystems.com/mastrostudio', '#')
             versionIRI = self.project.version
-            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(versionIRI)) if versionIRI else self.OWLOntologyID(self.IRI.create(ontologyIRI))
+            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(
+                versionIRI)) if versionIRI else self.OWLOntologyID(self.IRI.create(ontologyIRI))
             self.man = self.OWLManager.createOWLOntologyManager()
             self.df = self.OWLManager.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
@@ -726,8 +749,10 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     #################################
 
                     elif edge.type() is Item.SameEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept,
+                                                      Identity.Role, Identity.Attribute} and \
+                            edge.target.identity() in {Identity.Individual, Identity.Concept,
+                                                       Identity.Role, Identity.Attribute} and \
                             edge.source.identities().intersection(edge.target.identities()):
                             self.createSameIndividualAxiom(edge)
                         else:
@@ -738,12 +763,15 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     #################################
 
                     elif edge.type() is Item.DifferentEdge:
-                        if edge.source.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                                edge.target.identity() in {Identity.Individual, Identity.Concept, Identity.Role, Identity.Attribute} and \
-                                edge.source.identities().intersection(edge.target.identities()):
+                        if edge.source.identity() in {Identity.Individual, Identity.Concept,
+                                                      Identity.Role, Identity.Attribute} and \
+                            edge.target.identity() in {Identity.Individual, Identity.Concept,
+                                                       Identity.Role, Identity.Attribute} and \
+                            edge.source.identities().intersection(edge.target.identities()):
                             self.createDifferentIndividualsAxiom(edge)
                         else:
-                            raise DiagramMalformedError(edge, 'invalid differentIndividuals assertion')
+                            raise DiagramMalformedError(edge,
+                                                        'invalid differentIndividuals assertion')
 
                     self.step(+1)
 
@@ -751,7 +779,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
 
             if OWLAxiom.Annotation in self.axiomsList:
                 self.addAnnotationAssertions()
-                LOGGER.debug('Generated OWL 2 annotation assertion axioms from edges (axioms = %s)', len(self.axioms()))
+                LOGGER.debug('Generated OWL 2 annotation assertion axioms from edges (axioms = %s)',
+                             len(self.axioms()))
 
             #############################################
             # APPLY GENERATED AXIOMS
@@ -776,13 +805,15 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                         docObj = self.URIClass(impOnt.docLocation)
                     docLocationIRI = self.IRI.create(docObj)
                     impOntIRI = self.IRI.create(impOnt.ontologyIRI)
-                    #iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
-                    #self.man.getIRIMappers().add(iriMapper)
+                    # iriMapper = self.IRIMapperClass(impOntIRI, docLocationIRI)
+                    # self.man.getIRIMappers().add(iriMapper)
                     impDecl = self.df.getOWLImportsDeclaration(impOntIRI)
-                    addImp = self.AddImportClass(self.ontology,impDecl)
+                    addImp = self.AddImportClass(self.ontology, impDecl)
                     self.man.applyChange(addImp)
                 except Exception as e:
-                    LOGGER.exception('The import declaration <{}> cannot be added.\nError:{}'.format(impOnt,str(e)))
+                    LOGGER.exception(
+                        'The import declaration <{}> cannot be added.\nError:{}'.format(impOnt,
+                                                                                        str(e)))
                 else:
                     LOGGER.debug('Ontology declaration ({}) correctly added.'.format(impOnt))
 
@@ -823,7 +854,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 # REMOVE RANDOM FILES GENERATED BY OWL API
                 fremove(os.path.join(os.path.dirname(self.path), 'catalog-v001.xml'))
         except DiagramMalformedError as e:
-            LOGGER.warning('Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
+            LOGGER.warning(
+                'Malformed expression detected on {0}: {1} ... aborting!'.format(e.item, e))
             self.sgnErrored.emit(e)
             if not self.path:
                 raise e
@@ -854,15 +886,18 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             if node.type() is Item.ConceptIRINode:
                 self._converted[node.diagram.name][node.id] = self.getConcept(node)
                 if node.occursAsIndividual():
-                    self._converted_meta_individuals[node.diagram.name][node.id] = self.getIndividual(node)
+                    self._converted_meta_individuals[node.diagram.name][
+                        node.id] = self.getIndividual(node)
             elif node.type() is Item.AttributeIRINode:
                 self._converted[node.diagram.name][node.id] = self.getAttribute(node)
                 if node.occursAsIndividual():
-                    self._converted_meta_individuals[node.diagram.name][node.id] = self.getIndividual(node)
+                    self._converted_meta_individuals[node.diagram.name][
+                        node.id] = self.getIndividual(node)
             elif node.type() is Item.RoleIRINode:
                 self._converted[node.diagram.name][node.id] = self.getRole(node)
                 if node.occursAsIndividual():
-                    self._converted_meta_individuals[node.diagram.name][node.id] = self.getIndividual(node)
+                    self._converted_meta_individuals[node.diagram.name][
+                        node.id] = self.getIndividual(node)
             elif node.type() is Item.ValueDomainIRINode:
                 self._converted[node.diagram.name][node.id] = self.getValueDomain(node)
             elif node.type() is Item.IndividualIRINode:
@@ -898,14 +933,13 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 raise ValueError('no conversion available for node %s' % node)
         return self._converted[node.diagram.name][node.id]
 
-    #NEEDED FOR TRANSLATION OF PropertyAssertion nodes (i.e., getPropertyAssertion)
+    # NEEDED FOR TRANSLATION OF PropertyAssertion nodes (i.e., getPropertyAssertion)
 
-    def convertPredicateNodeOccurringAsIndividual(self,node):
-        #Per ora considero solo nodi di concetto
+    def convertPredicateNodeOccurringAsIndividual(self, node):
+        # Per ora considero solo nodi di concetto
         owlInd = self.getIndividual(node)
         self._converted_meta_individuals[node.diagram.name][node.id] = owlInd
         return owlInd
-
 
     def addAxiom(self, axiom):
         """
@@ -1060,16 +1094,19 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 for operand in node.incomingNodes(lambda x: x.type() is Item.InputEdge):
                     conversion = self.convert(operand)
                     collection.add(conversion)
-                self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
+                self.addAxiom(
+                    self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
             elif node.type() is Item.ComplementNode:
                 operand = first(node.incomingNodes(lambda x: x.type() is Item.InputEdge))
                 conversionA = self.convert(operand)
-                for included in node.adjacentNodes(lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}):
+                for included in node.adjacentNodes(
+                    lambda x: x.type() in {Item.InclusionEdge, Item.EquivalenceEdge}):
                     conversionB = self.convert(included)
                     collection = self.HashSet()
                     collection.add(conversionA)
                     collection.add(conversionB)
-                    self.addAxiom(self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
+                    self.addAxiom(
+                        self.df.getOWLDisjointClassesAxiom(self.vm.cast(self.Set, collection)))
 
     def createPropertyDomainAxiom(self, node):
         """
@@ -1088,7 +1125,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
                         conversionA = self.convert(role)
                         conversionB = self.convert(concept)
-                        self.addAxiom(self.df.getOWLObjectPropertyDomainAxiom(conversionA, conversionB))
+                        self.addAxiom(
+                            self.df.getOWLObjectPropertyDomainAxiom(conversionA, conversionB))
         if OWLAxiom.DataPropertyDomain in self.axiomsList:
             if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
                 f1 = lambda x: x.type() is Item.InputEdge
@@ -1101,7 +1139,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
                         conversionA = self.convert(attribute)
                         conversionB = self.convert(concept)
-                        self.addAxiom(self.df.getOWLDataPropertyDomainAxiom(conversionA, conversionB))
+                        self.addAxiom(
+                            self.df.getOWLDataPropertyDomainAxiom(conversionA, conversionB))
 
     def createPropertyRangeAxiom(self, node):
         """
@@ -1120,7 +1159,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     for concept in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
                         conversionA = self.convert(role)
                         conversionB = self.convert(concept)
-                        self.addAxiom(self.df.getOWLObjectPropertyRangeAxiom(conversionA, conversionB))
+                        self.addAxiom(
+                            self.df.getOWLObjectPropertyRangeAxiom(conversionA, conversionB))
         if OWLAxiom.DataPropertyRange in self.axiomsList:
             if not node.isRestrictionQualified() and node.restriction() is Restriction.Exists:
                 f1 = lambda x: x.type() is Item.InputEdge
@@ -1133,9 +1173,10 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     for datatype in node.outgoingNodes(f3, f5) | node.adjacentNodes(f4, f5):
                         conversionA = self.convert(attribute)
                         conversionB = self.convert(datatype)
-                        self.addAxiom(self.df.getOWLDataPropertyRangeAxiom(conversionA, conversionB))
+                        self.addAxiom(
+                            self.df.getOWLDataPropertyRangeAxiom(conversionA, conversionB))
 
-    def translateHasKey(self,node):
+    def translateHasKey(self, node):
         """
         Build a OWLHasKeyAxiom starting from node.
         :type node: HasKeyNode
@@ -1153,7 +1194,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if len(classes) > 1:
             raise DiagramMalformedError(node, 'too many class expression operands')
         if not (objProps or dtProps):
-            raise DiagramMalformedError(node, 'has key nodes must be connected to at least one object (or data) property expression')
+            raise DiagramMalformedError(node,
+                                        'has key nodes must be connected to at least one object (or data) property expression')
 
         owlClExpr = self.convert(first(classes))
         owlPropExprs = self.HashSet()
@@ -1162,7 +1204,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         for prop in dtProps:
             owlPropExprs.add(self.convert(prop))
 
-        self.addAxiom(self.df.getOWLHasKeyAxiom(owlClExpr,owlPropExprs))
+        self.addAxiom(self.df.getOWLHasKeyAxiom(owlClExpr, owlPropExprs))
 
     def getConcept(self, node):
         """
@@ -1176,7 +1218,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if iri.isOwlNothing():
             return self.df.getOWLNothing()
         owlCl = self.df.getOWLClass(self.IRI.create(str(iri)))
-        self.addAxiom(self.df.getOWLDeclarationAxiom(owlCl))
+        if OWLAxiom.Declaration in self.axiomsList:
+            self.addAxiom(self.df.getOWLDeclarationAxiom(owlCl))
         return owlCl
 
     def getRole(self, node):
@@ -1191,7 +1234,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if iri.isBottomObjectProperty():
             return self.df.getOWLBottomObjectProperty()
         owlProp = self.df.getOWLObjectProperty(self.IRI.create(str(iri)))
-        self.addAxiom(self.df.getOWLDeclarationAxiom(owlProp))
+        if OWLAxiom.Declaration in self.axiomsList:
+            self.addAxiom(self.df.getOWLDeclarationAxiom(owlProp))
         if OWLAxiom.FunctionalObjectProperty in self.axiomsList:
             if iri.functional:
                 self.addAxiom(self.df.getOWLFunctionalObjectPropertyAxiom(owlProp))
@@ -1227,7 +1271,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if iri.isBottomDataProperty():
             return self.df.getOWLBottomDataProperty()
         owlProp = self.df.getOWLDataProperty(self.IRI.create(str(iri)))
-        self.addAxiom(self.df.getOWLDeclarationAxiom(owlProp))
+        if OWLAxiom.Declaration in self.axiomsList:
+            self.addAxiom(self.df.getOWLDeclarationAxiom(owlProp))
         if OWLAxiom.FunctionalDataProperty in self.axiomsList:
             if iri.functional:
                 self.addAxiom(self.df.getOWLFunctionalDataPropertyAxiom(owlProp))
@@ -1242,7 +1287,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         """
         iri = node.iri
         owlInd = self.df.getOWLNamedIndividual(self.IRI.create(str(iri)))
-        self.addAxiom(self.df.getOWLDeclarationAxiom(owlInd))
+        if OWLAxiom.Declaration in self.axiomsList:
+            self.addAxiom(self.df.getOWLDeclarationAxiom(owlInd))
         return owlInd
 
     def getLiteral(self, node):
@@ -1254,7 +1300,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         """
         literal = node.literal
         lexForm = literal.lexicalForm
-        lang = literal .language
+        lang = literal.language
         datatype = literal.datatype
         if lang:
             return self.df.getOWLLiteral(lexForm, lang)
@@ -1262,7 +1308,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             if datatype:
                 owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
             else:
-                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
+                owlApiDatatype = self.df.getOWLDatatype(
+                    self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
             return self.df.getOWLLiteral(lexForm, owlApiDatatype)
 
     def getValueDomain(self, node):
@@ -1272,7 +1319,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         :rtype: OWLDatatype
         """
         owlDt = self.df.getOWLDatatype(self.IRI.create(str(node.iri)))
-        self.addAxiom(self.df.getOWLDeclarationAxiom(owlDt))
+        if (OWLAxiom.Declaration in self.axiomsList):
+            self.addAxiom(self.df.getOWLDeclarationAxiom(owlDt))
         return owlDt
 
     def getFacet(self, node):
@@ -1282,7 +1330,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         :rtype: OWLFacetRestriction
         """
         nodeFacet = node.facet
-        literal = self.df.getOWLLiteral(nodeFacet.literal.lexicalForm, self.df.getOWLDatatype(self.IRI.create(str(nodeFacet.literal.datatype))))
+        literal = self.df.getOWLLiteral(nodeFacet.literal.lexicalForm, self.df.getOWLDatatype(
+            self.IRI.create(str(nodeFacet.literal.datatype))))
         facet = self.getOWLApiFacet(nodeFacet.constrainingFacet)
         return self.df.getOWLFacetRestriction(facet, literal)
 
@@ -1295,7 +1344,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         if node.identity() is Identity.Unknown:
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity() in {Identity.Attribute, Identity.Concept, Identity.ValueDomain, Identity.Role}
+        f2 = lambda x: x.identity() in {Identity.Attribute, Identity.Concept, Identity.ValueDomain,
+                                        Identity.Role}
         incoming = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
         if not incoming:
             raise DiagramMalformedError(node, 'missing operand(s)')
@@ -1514,8 +1564,9 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             raise DiagramMalformedError(node, 'unsupported operand(s)')
         collection = list()
         for operand in [node.diagram.edge(i).other(node) for i in node.inputs]:
-            #if not (operand.type() is Item.IndividualIRINode or operand.type() is Item.ConceptIRINode):
-            if not operand.type() in [Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode, Item.LiteralNode]:
+            # if not (operand.type() is Item.IndividualIRINode or operand.type() is Item.ConceptIRINode):
+            if not operand.type() in [Item.IndividualIRINode, Item.ConceptIRINode, Item.RoleIRINode,
+                                      Item.AttributeIRINode, Item.LiteralNode]:
                 raise DiagramMalformedError(node, 'unsupported operand (%s)' % operand)
             if operand.type() in [Item.IndividualIRINode, Item.LiteralNode]:
                 conversion = self.convert(operand)
@@ -1553,7 +1604,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             # BUILD OPERAND
             #################################
             invOPE = self.convert(operand).getInverseProperty()
-            #ope = self.convert(operand)
+            # ope = self.convert(operand)
             #############################################
             # BUILD FILLER
             #################################
@@ -1584,9 +1635,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 min_cardinality = node.cardinality('min')
                 max_cardinality = node.cardinality('max')
                 if min_cardinality:
-                    cardinalities.add(self.df.getOWLObjectMinCardinality(min_cardinality, invOPE, ce))
+                    cardinalities.add(
+                        self.df.getOWLObjectMinCardinality(min_cardinality, invOPE, ce))
                 if max_cardinality is not None:
-                    cardinalities.add(self.df.getOWLObjectMaxCardinality(max_cardinality, invOPE, ce))
+                    cardinalities.add(
+                        self.df.getOWLObjectMaxCardinality(max_cardinality, invOPE, ce))
                 if cardinalities.isEmpty():
                     raise DiagramMalformedError(node, 'missing cardinality')
                 if cardinalities.size() > 1:
@@ -1696,7 +1749,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     if edge.annotations:
                         owlAnns = self.getAxiomAnnotationSet(edge)
                         self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
-                                                                                  self.vm.cast(self.Set, owlAnns)))
+                                                                    self.vm.cast(self.Set,
+                                                                                 owlAnns)))
                     else:
                         self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             elif edge.target.type() is Item.IntersectionNode and self.normalize:
@@ -1709,7 +1763,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     if edge.annotations:
                         owlAnns = self.getAxiomAnnotationSet(edge)
                         self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
-                                                                                  self.vm.cast(self.Set, owlAnns)))
+                                                                    self.vm.cast(self.Set,
+                                                                                 owlAnns)))
                     else:
                         self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             else:
@@ -1718,7 +1773,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 if edge.annotations:
                     owlAnns = self.getAxiomAnnotationSet(edge)
                     self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
-                                                                    self.vm.cast(self.Set, owlAnns)))
+                                                                self.vm.cast(self.Set, owlAnns)))
                 else:
                     self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
 
@@ -1733,7 +1788,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
                 self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB,
-                                                                          self.vm.cast(self.Set, owlAnns)))
+                                                                   self.vm.cast(self.Set, owlAnns)))
             else:
                 self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
 
@@ -1750,10 +1805,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             collection.add(conversionB)
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection),
-                                                                          self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(
+                    self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection),
+                                                              self.vm.cast(self.Set, owlAnns)))
             else:
-                self.addAxiom(self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
+                self.addAxiom(
+                    self.df.getOWLDisjointDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createSubObjectPropertyOfAxiom(self, edge):
         """
@@ -1766,7 +1823,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
                 self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB,
-                                                                          self.vm.cast(self.Set, owlAnns)))
+                                                                     self.vm.cast(self.Set,
+                                                                                  owlAnns)))
             else:
                 self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
 
@@ -1783,10 +1841,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             collection.add(conversionB)
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection),
-                                                                          self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(
+                    self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection),
+                                                                self.vm.cast(self.Set, owlAnns)))
             else:
-                self.addAxiom(self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
+                self.addAxiom(
+                    self.df.getOWLDisjointObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
 
     def createSubPropertyChainOfAxiom(self, edge):
         """
@@ -1799,7 +1859,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
                 self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB,
-                                                                          self.vm.cast(self.Set, owlAnns)))
+                                                                    self.vm.cast(self.Set,
+                                                                                 owlAnns)))
             else:
                 self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB))
 
@@ -1830,9 +1891,10 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                                 owlAnns = self.getAxiomAnnotationSet(edge)
                                 self.addAxiom(
                                     self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
-                                                                                self.vm.cast(self.Set, owlAnns)))
+                                                                  self.vm.cast(self.Set, owlAnns)))
                             else:
-                                self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                                self.addAxiom(
+                                    self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     elif edge.target.type() is Item.IntersectionNode:
                         # A ISA (B AND C) needs to be normalized to A ISA B && A ISA C
                         f1 = lambda x: x.type() is Item.InputEdge
@@ -1844,9 +1906,10 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                                 owlAnns = self.getAxiomAnnotationSet(edge)
                                 self.addAxiom(
                                     self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
-                                                                                self.vm.cast(self.Set, owlAnns)))
+                                                                  self.vm.cast(self.Set, owlAnns)))
                             else:
-                                self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
+                                self.addAxiom(
+                                    self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
                     else:
                         conversionA = self._converted[source.diagram.name][source.id]
                         conversionB = self._converted[target.diagram.name][target.id]
@@ -1854,7 +1917,7 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                             owlAnns = self.getAxiomAnnotationSet(edge)
                             self.addAxiom(
                                 self.df.getOWLSubClassOfAxiom(conversionA, conversionB,
-                                                                            self.vm.cast(self.Set, owlAnns)))
+                                                              self.vm.cast(self.Set, owlAnns)))
                         else:
                             self.addAxiom(self.df.getOWLSubClassOfAxiom(conversionA, conversionB))
             else:
@@ -1865,10 +1928,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 collection.add(conversionB)
                 if edge.annotations:
                     owlAnns = self.getAxiomAnnotationSet(edge)
-                    self.addAxiom(self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection),
-                                                                    self.vm.cast(self.Set, owlAnns)))
+                    self.addAxiom(
+                        self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection),
+                                                             self.vm.cast(self.Set, owlAnns)))
                 else:
-                    self.addAxiom(self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection)))
+                    self.addAxiom(
+                        self.df.getOWLEquivalentClassesAxiom(self.vm.cast(self.Set, collection)))
 
     def createEquivalentDataPropertiesAxiom(self, edge):
         """
@@ -1883,9 +1948,11 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     if edge.annotations:
                         owlAnns = self.getAxiomAnnotationSet(edge)
                         self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB,
-                                                                        self.vm.cast(self.Set, owlAnns)))
+                                                                           self.vm.cast(self.Set,
+                                                                                        owlAnns)))
                     else:
-                        self.addAxiom(self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
+                        self.addAxiom(
+                            self.df.getOWLSubDataPropertyOfAxiom(conversionA, conversionB))
             else:
                 conversionA = self._converted[edge.source.diagram.name][edge.source.id]
                 conversionB = self._converted[edge.target.diagram.name][edge.target.id]
@@ -1894,10 +1961,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 collection.add(conversionB)
                 if edge.annotations:
                     owlAnns = self.getAxiomAnnotationSet(edge)
-                    self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection),
-                                                                    self.vm.cast(self.Set, owlAnns)))
+                    self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(
+                        self.vm.cast(self.Set, collection),
+                        self.vm.cast(self.Set, owlAnns)))
                 else:
-                    self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(self.vm.cast(self.Set, collection)))
+                    self.addAxiom(self.df.getOWLEquivalentDataPropertiesAxiom(
+                        self.vm.cast(self.Set, collection)))
 
     def createEquivalentObjectPropertiesAxiom(self, edge):
         """
@@ -1911,10 +1980,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     conversionB = self._converted[target.diagram.name][target.id]
                     if edge.annotations:
                         owlAnns = self.getAxiomAnnotationSet(edge)
-                        self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB,
-                                                                        self.vm.cast(self.Set, owlAnns)))
+                        self.addAxiom(
+                            self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB,
+                                                                   self.vm.cast(self.Set, owlAnns)))
                     else:
-                        self.addAxiom(self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
+                        self.addAxiom(
+                            self.df.getOWLSubObjectPropertyOfAxiom(conversionA, conversionB))
             else:
                 conversionA = self._converted[edge.source.diagram.name][edge.source.id]
                 conversionB = self._converted[edge.target.diagram.name][edge.target.id]
@@ -1923,10 +1994,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 collection.add(conversionB)
                 if edge.annotations:
                     owlAnns = self.getAxiomAnnotationSet(edge)
-                    self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection),
-                                                                    self.vm.cast(self.Set, owlAnns)))
+                    self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(
+                        self.vm.cast(self.Set, collection),
+                        self.vm.cast(self.Set, owlAnns)))
                 else:
-                    self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(self.vm.cast(self.Set, collection)))
+                    self.addAxiom(self.df.getOWLEquivalentObjectPropertiesAxiom(
+                        self.vm.cast(self.Set, collection)))
 
     def createClassAssertionAxiom(self, edge):
         """
@@ -1935,14 +2008,15 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
         """
         if OWLAxiom.ClassAssertion in self.axiomsList:
             ind = None
-            if not edge.source.type() is Item.IndividualIRINode :
+            if not edge.source.type() is Item.IndividualIRINode:
                 ind = self._converted_meta_individuals[edge.source.diagram.name][edge.source.id]
             else:
                 ind = self._converted[edge.source.diagram.name][edge.source.id]
             cl = self._converted[edge.target.diagram.name][edge.target.id]
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLClassAssertionAxiom(cl, ind, self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(
+                    self.df.getOWLClassAssertionAxiom(cl, ind, self.vm.cast(self.Set, owlAnns)))
             else:
                 self.addAxiom(self.df.getOWLClassAssertionAxiom(cl, ind))
 
@@ -1957,9 +2031,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(
+                    self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC,
+                                                             self.vm.cast(self.Set, owlAnns)))
             else:
-                self.addAxiom(self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
+                self.addAxiom(
+                    self.df.getOWLDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
 
     def createNegativeDataPropertyAssertionAxiom(self, edge):
         """
@@ -1975,9 +2052,13 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             conversionC = self.convert(edge.source)[1]
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(
+                    self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC,
+                                                                     self.vm.cast(self.Set,
+                                                                                  owlAnns)))
             else:
-                self.addAxiom(self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
+                self.addAxiom(
+                    self.df.getOWLNegativeDataPropertyAssertionAxiom(dpe, conversionB, conversionC))
 
     def createObjectPropertyAssertionAxiom(self, edge):
         """
@@ -1990,9 +2071,12 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(
+                    self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC,
+                                                               self.vm.cast(self.Set, owlAnns)))
             else:
-                self.addAxiom(self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
+                self.addAxiom(
+                    self.df.getOWLObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
 
     def createNegativeObjectPropertyAssertionAxiom(self, edge):
         """
@@ -2008,9 +2092,14 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
             conversionC = self._converted[edge.source.diagram.name][edge.source.id][1]
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB, conversionC, self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB,
+                                                                                 conversionC,
+                                                                                 self.vm.cast(
+                                                                                     self.Set,
+                                                                                     owlAnns)))
             else:
-                self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB, conversionC))
+                self.addAxiom(self.df.getOWLNegativeObjectPropertyAssertionAxiom(ope, conversionB,
+                                                                                 conversionC))
 
     def createSameIndividualAxiom(self, edge):
         """
@@ -2026,7 +2115,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     collection.add(self._converted[node.diagram.name][node.id])
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection), self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection),
+                                                                self.vm.cast(self.Set, owlAnns)))
             else:
                 self.addAxiom(self.df.getOWLSameIndividualAxiom(self.vm.cast(self.Set, collection)))
 
@@ -2044,11 +2134,14 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     collection.add(self._converted[node.diagram.name][node.id])
             if edge.annotations:
                 owlAnns = self.getAxiomAnnotationSet(edge)
-                self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection), self.vm.cast(self.Set, owlAnns)))
+                self.addAxiom(
+                    self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection),
+                                                            self.vm.cast(self.Set, owlAnns)))
             else:
-                self.addAxiom(self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
+                self.addAxiom(
+                    self.df.getOWLDifferentIndividualsAxiom(self.vm.cast(self.Set, collection)))
 
-    def getAxiomAnnotationSet(self,edge):
+    def getAxiomAnnotationSet(self, edge):
         collection = self.HashSet()
         for annotation in edge.annotations:
             annProp = annotation.assertionProperty
@@ -2067,7 +2160,8 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                     if datatype:
                         owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
                     else:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
+                        owlApiDatatype = self.df.getOWLDatatype(
+                            self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
                     owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
             collection.add(self.df.getOWLAnnotation(owlApiProp, owlApiObj))
         return collection
@@ -2085,18 +2179,20 @@ class OWLOntologyExporterWorker_v3(AbstractWorker):
                 obj = ann.value
                 owlApiObj = self.IRI.create(str(obj))
             else:
-                obj = ann.value.replace('\n',' ')
+                obj = ann.value.replace('\n', ' ')
                 datatype = ann.datatype
                 lang = ann.language
                 if lang:
-                    owlApiObj = self.df.getOWLLiteral(obj,lang)
+                    owlApiObj = self.df.getOWLLiteral(obj, lang)
                 else:
                     if datatype:
                         owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
                     else:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
+                        owlApiDatatype = self.df.getOWLDatatype(
+                            self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
                     owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
             self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
+
 
 '''
 #TODO Da implementare per consistency check (consistency check ora è disabilitato a causa dei noti problemi discussi con Valerio)

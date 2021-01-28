@@ -695,6 +695,11 @@ class ProjectInfo(AbstractInfo):
         self.attributesField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.attributesField.setReadOnly(True)
 
+        self.individualsKey = Key('Individuals', self)
+        self.individualsField = Integer(self)
+        self.individualsField.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.individualsField.setReadOnly(True)
+
         self.inclusionsKey = Key('Inclusion', self)
         self.inclusionsField = Integer(self)
         self.inclusionsField.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -705,13 +710,14 @@ class ProjectInfo(AbstractInfo):
         self.membershipField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.membershipField.setReadOnly(True)
 
-        self.atomicPredHeader = Header('Atomic predicates', self)
+        self.atomicPredHeader = Header('Entity Nodes', self)
 
         self.atomicPredLayout = QtWidgets.QFormLayout()
         self.atomicPredLayout.setSpacing(0)
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
+        self.atomicPredLayout.addRow(self.individualsKey, self.individualsField)
         '''
         self.assertionsHeader = Header('Assertions', self)
 
@@ -857,6 +863,7 @@ class ProjectInfo(AbstractInfo):
         self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeIRINode))
         self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptIRINode))
         self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleIRINode))
+        self.individualsField.setValue(project.itemDistinctIRICount(Item.IndividualIRINode))
         #self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
         #self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
 
