@@ -575,7 +575,7 @@ class OntologyEntityNode(AbstractNode):
             self.labelString = newLabelString
             labelPos = lambda: self.label.pos()
             try:
-                if self.label.diagram:
+                if hasattr(self.label, 'diagram') and self.label.diagram:
                     self.label.diagram.removeItem(self.label)
             except AttributeError:
                 print("label.diagram is not defined!!")
