@@ -10,9 +10,11 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.owl2 import OwlOntologyImportWorker
+from eddy.core.output import getLogger
 from eddy.core.owl import ImportedOntology
 from eddy.ui.fields import StringField
 
+LOGGER = getLogger()
 
 class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSystem):
     sgnOntologyImportAccepted = QtCore.pyqtSignal(ImportedOntology)
@@ -36,6 +38,7 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         self.objectProperties = set()
         self.dataProperties = set()
         self.individuals = set()
+        self.missingImports = dict()
         self.step = 0
 
         self.stacked = QtWidgets.QStackedWidget(self)
@@ -159,6 +162,7 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         connect(self.worker.sgnObjectPropertyFetched, self.onObjectPropertyFetched)
         connect(self.worker.sgnDataPropertyFetched, self.onDataPropertyFetched)
         connect(self.worker.sgnIndividualFetched, self.onIndividualFetched)
+        connect(self.worker.sgnMissingOntologyImportFound, self.onMissingOntologyImportFound)
         self.redraw()
         self.startThread(self.IMPORT_THREAD_NAME, self.worker)
 
@@ -271,6 +275,11 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
         if widget is self.widgetRemoteImport:
             self.widget('continue_button').setEnabled(True)
 
+    @QtCore.pyqtSlot(str, str)
+    def onMissingOntologyImportFound(self, ontIri, excMsg):
+        self.missingImports[ontIri] = excMsg
+        LOGGER.exception('Failed to load imported ontology at {}'.format(ontIri))
+
     @QtCore.pyqtSlot()
     def onImportCompleted(self):
         for iri in self.classes:
@@ -283,6 +292,8 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
             self.importedOntology.addIndividual(iri)
         self.importedOntology.correctlyLoaded=True
         self.widgetVerify.progressStep(0)
+        if self.missingImports:
+            self.widgetConfirm.msgLabel.setText('The following ontology will be imported:\n(With errors, check the log for more details)')
         self.widgetConfirm.locationText.setValue('{}'.format(self.importedOntology.docLocation))
         self.widgetConfirm.iriText.setValue('{}'.format(self.importedOntology.ontologyIRI))
         self.widgetConfirm.versionText.setValue('{}'.format(self.importedOntology.versionIRI))
@@ -501,8 +512,8 @@ class ConfirmWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self.session = session
 
-        msgLabel = QtWidgets.QLabel(self)
-        msgLabel.setText('The following ontology will be imported:')
+        self.msgLabel = QtWidgets.QLabel(self)
+        self.msgLabel.setText('The following ontology will be imported:')
 
         self.locationLabel = QtWidgets.QLabel(self)
         self.locationLabel.setText('Location: '.format(location))
@@ -531,7 +542,7 @@ class ConfirmWidget(QtWidgets.QWidget):
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
-        boxlayout.addWidget(msgLabel)
+        boxlayout.addWidget(self.msgLabel)
         boxlayout.addWidget(groupbox)
 
         groupbox = QtWidgets.QGroupBox('Finalize import', self)
@@ -539,6 +550,7 @@ class ConfirmWidget(QtWidgets.QWidget):
         outerFormLayout = QtWidgets.QFormLayout()
         outerFormLayout.addRow(groupbox)
         self.setLayout(outerFormLayout)
+
 
 class ErrorWidget(QtWidgets.QWidget):
 
