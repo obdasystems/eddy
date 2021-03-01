@@ -278,7 +278,7 @@ class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSyste
     @QtCore.pyqtSlot(str, str)
     def onMissingOntologyImportFound(self, ontIri, excMsg):
         self.missingImports[ontIri] = excMsg
-        LOGGER.exception('Failed to load imported ontology at {}'.format(ontIri))
+        LOGGER.exception('Failed to load imported ontology at {}\n{}'.format(ontIri, excMsg))
 
     @QtCore.pyqtSlot()
     def onImportCompleted(self):
