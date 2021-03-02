@@ -65,7 +65,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install -U pip setuptools wheel
-          python -m pip install -U -r requirements/tox.in
+          python -m pip install -U -r requirements/in/tox.in
 
       - name: Run unit tests
         continue-on-error: ${{ matrix.continue-on-error == true }}
