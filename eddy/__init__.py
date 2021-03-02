@@ -34,7 +34,7 @@
 
 
 __appname__ = 'Eddy'
-__copyright__ = 'Copyright © 2020 OBDA Systems'
+__copyright__ = 'Copyright © 2021 OBDA Systems'
 __email__ = 'info@obdasystems.com'
 __license__ = 'GPL'
 __organization__ = 'OBDA Systems'
