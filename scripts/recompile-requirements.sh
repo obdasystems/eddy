@@ -42,10 +42,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 
 cd "$PROJECT_DIR"
-echo "Recompiling requirements.txt"
-pip-compile --output-file=requirements.txt requirements/base.in "$@"
-
-echo "Recompiling requirements-dev.txt"
-pip-compile --output-file=requirements-dev.txt requirements/dev.in "$@"
+if [[ $OSTYPE =~ linux* ]]; then
+  echo "Recompiling linux requirements..."
+  tox -p -f pipcompile-linux "$@"
+elif [[ $OSTYPE =~ darwin* ]]; then
+  echo "Recompiling macos requirements..."
+  tox -p -f pipcompile-macos "$@"
+elif [[ $OSTYPE =~ msys* ]]; then
+  echo "Recompiling windows requirements..."
+  tox -p -f pipcompile-macos "$@"
+else
+  echo "Unable to determine platform"
+  exit 1
+fi
 
 exit 0
