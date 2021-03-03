@@ -41,10 +41,10 @@ install:
   - gem install dpl
   - "%PYTHON%\\python -m ensurepip"
   - "%PYTHON%\\python -m pip install -U wheel pip setuptools"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\base.in"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\pyqt5.in"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\tests.in"
-  - "%PYTHON%\\python -m pip install -U -r requirements\\packaging.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\in\\base.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\in\\pyqt5.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\in\\tests.in"
+  - "%PYTHON%\\python -m pip install -U -r requirements\\in\\packaging.in"
   - "%PYTHON%\\python scripts\\getjdk.py --binary --arch %ARCH% --feature-version 11 --image-type jre --extract-to resources"
   - move resources\jdk* resources\java
 

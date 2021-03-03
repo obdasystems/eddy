@@ -33,7 +33,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install -U pip setuptools wheel
-          python -m pip install -U -r requirements/dev.in
+          python -m pip install -U -r requirements/in/dev.in
 
       - name: Package application (archive)
         if: ${{ startsWith(matrix.os, 'ubuntu') }}

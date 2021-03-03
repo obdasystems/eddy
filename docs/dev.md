@@ -65,7 +65,9 @@ Update `pip` and synchronize the required Python dependencies from PyPI:
 
     C:\> cd eddy
     C:\> pip install -U pip setuptools wheel pip-tools
-    C:\> pip-sync requirements-dev.txt
+    C:\> pip-sync requirements\out\requirements-<python_version>-winnt.txt
+
+where `<python_version>` corresponds to the venv python version (e.g. `py37` for Python 3.7.x).
 
 If you wish to work on the latest development snapshot, you can switch to
 the `develop` branch:
@@ -147,7 +149,9 @@ Update `pip` and install required Python dependencies from PyPI:
 
     $ cd eddy
     $ pip install -U pip setuptools wheel pip-tools
-    $ pip install -U -r requirements-dev.txt
+    $ pip-sync requirements/out/requirements-<python_version>-macos.txt
+
+where `<python_version>` corresponds to the venv python version (e.g. `py37` for Python 3.7.x).
 
 If you prefer to use a local copy of the JDK, simply download one and and unpack it
 inside the `eddy/resources/java` folder (you will have to create it).
@@ -229,7 +233,9 @@ Update `pip` and install required Python dependencies from PyPI:
 
     $ cd eddy
     $ pip install -U pip setuptools wheel pip-tools
-    $ pip install -U -r requirements-dev.txt
+    $ pip-sync requirements/out/requirements-<python_version>-linux.txt
+
+where `<python_version>` corresponds to the venv python version (e.g. `py37` for Python 3.7.x).
 
 Install a JDK 1.8 or later. You can download a prebuilt one from [AdoptOpenJDK](https://adoptopenjdk.net),
 or use your distribution package manager to install it. We recommend installing either

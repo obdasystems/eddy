@@ -33,11 +33,11 @@
 
 
 if [[ ! -z "$TOXENV" ]]; then
-    travis_retry pip install -U -r requirements/tox.in
+    travis_retry pip install -U -r requirements/in/tox.in
 else
     travis_retry pip install -U pip setuptools wheel
-    travis_retry pip install -U -r requirements/base.in
-    travis_retry pip install -U -r requirements/pyqt5.in
-    travis_retry pip install -U -r requirements/tests.in
-    travis_retry pip install -U -r requirements/packaging.in
+    travis_retry pip install -U -r requirements/in/base.in
+    travis_retry pip install -U -r requirements/in/pyqt5.in
+    travis_retry pip install -U -r requirements/in/tests.in
+    travis_retry pip install -U -r requirements/in/packaging.in
 fi
