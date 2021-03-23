@@ -432,20 +432,24 @@ class MenuFactory(QtCore.QObject):
         :type node: DomainRestrictionNode
         :rtype: QMenu
         """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Attribute
+        f3 = lambda x: x.type() in [Item.InclusionEdge, Item.EquivalenceEdge]
+        f4 = lambda x: x.identity() is Identity.Concept
+        qualified = node.isRestrictionQualified()
+        attribute_in_input = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
+        concept_in_isa = first(node.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4) |
+                               node.outgoingNodes(filter_on_edges=f3, filter_on_nodes=f4))
         menu = self.buildGenericNodeMenu(diagram, node)
         menu.addSeparator()
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_restriction'))
         for action in self.session.action('switch_restriction').actions():
             action.setChecked(node.type() is action.data())
-            action.setVisible(True)
+            action.setVisible(node.type() is action.data() or not attribute_in_input or not concept_in_isa)
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity() is Identity.Attribute
-        qualified = node.isRestrictionQualified()
-        attribute = first(node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2))
         for action in self.session.action('restriction').actions():
             action.setChecked(node.restriction() is action.data())
-            action.setVisible(action.data() is not Restriction.Self or not qualified and not attribute)
+            action.setVisible(action.data() is not Restriction.Self or not qualified and not attribute_in_input)
         menu.insertSeparator(self.session.action('node_properties'))
         self.insertLabelActions(menu, node, self.session.action('node_properties'))
         menu.insertSeparator(self.session.action('node_properties'))
@@ -712,7 +716,7 @@ class MenuFactory(QtCore.QObject):
         menu.insertMenu(self.session.action('node_properties'), self.session.menu('switch_restriction'))
         for action in self.session.action('switch_restriction').actions():
             action.setChecked(node.type() is action.data())
-            action.setVisible(node.type() is action.data() or not attribute_in_input and not valuedomain_in_isa)
+            action.setVisible(node.type() is action.data() or not valuedomain_in_isa)
         if not attribute_in_input and not valuedomain_in_isa:
             qualified = node.isRestrictionQualified()
             menu.insertMenu(self.session.action('node_properties'), self.session.menu('property_restriction'))
