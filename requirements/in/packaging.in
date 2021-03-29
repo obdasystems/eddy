@@ -4,6 +4,7 @@
 -r base.in
 
 # From PyPi
+appimage-builder==0.8.7; sys_platform == 'linux'
 dmgbuild==1.4.2; sys_platform == 'darwin'
 Pillow==8.1.1
 PyInstaller==4.2
