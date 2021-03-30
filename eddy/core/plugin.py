@@ -472,7 +472,7 @@ class PluginManager(QtCore.QObject):
             plugin_id = spec.get('plugin', 'id')
             plugin_name = spec.get('plugin', 'name')
             plugin_version = spec.get('plugin', 'version')
-            if not (plugin_id=='explanation_explorer' or  plugin_id=='unsatisfiable_entity_explorer') and plugin_id not in pluginsLoadedSet:
+            if plugin_id not in pluginsLoadedSet:
                 try:
                     LOGGER.info('Loading plugin: %s v%s', plugin_name, plugin_version)
                     if not plugin_class:
