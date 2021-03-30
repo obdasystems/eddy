@@ -24,10 +24,10 @@ or the latest JDK 11 from Oracle. Make sure the corresponding executables can be
 Make sure to set the `JAVA_HOME` environment variable to point to the location where the JDK is installed.
 
 #### Install a C compiler (optional)
-If you wish to build all dependencies from source distribution, you will need to install a C compiler.
+If you wish to build all dependencies from source, you will need to install a C compiler.
 
-Download and install [Visual C++ Build Tools v14.0](https://visualstudio.microsoft.com/visual-cpp-build-tools/).  Make sure to select
-`VC++ 2015.3 v14.00 toolset for Desktop` from the individual components tab in the installer menu.
+Download and install [Visual C++ Build Tools v14.0](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
+Make sure to select `VC++ 2015.3 v14.00 toolset for Desktop` from the individual components tab in the installer menu.
 
 Once the installation is complete, you can easily access a command prompt that has
 everything configured to use the C compiler by using the Visual Studio 2015 Native
@@ -116,7 +116,7 @@ Install `pyenv` formula via Homebrew or by cloning the [repository](https://gith
     $ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.7.7
 
 **NOTE**: Make sure to to add the `PYTHON_CONFIGURE_OPTS="--enable-framework"` to the `pyenv` command
-if you intend to use PyInstaller to built standalone packages.
+if you intend to use PyInstaller to build standalone releases.
 
 Install a JDK 1.8 or later. We recommend installing either the latest OpenJDK 11
 or OpenJDK 1.8 from [AdoptOpenJDK](https://adoptopenjdk.net) using Homebrew cask:
@@ -214,7 +214,7 @@ Compile and install a Python interpreter, e.g. 3.7.7:
     $ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.7
 
 **NOTE**: Make sure to add the `PYTHON_CONFIGURE_OPTS="--enable-shared""` environment variable
- to the `pyenv` command if you intend to use PyInstaller to create standalone distribution packages.
+ to the `pyenv` command if you intend to use PyInstaller to build standalone releases.
 
 Choose a location for the virtualenv and create it. In what follows we show how to create it
 it a directory named `eddy-venv` inside the user's home folder:
@@ -267,9 +267,9 @@ To start Eddy, *cd* into the repository, and run the command:
 
     $ python run.py
 
-### Creating standalone distribution packages
+## Creating standalone releases
 
-Standalone packages are built for every Eddy release and published to [GitHub releases].
+Standalone releases are built for every Eddy release and published to [GitHub releases].
 They are the simplest form of distribution, that includes the application
 with all the required dependencies (including the Python interpreter and JVM).
 
@@ -279,24 +279,25 @@ Eddy is currently distributed in the following forms:
 * `Windows amd64` standalone package (.zip archive)
 * `Windows x86` standalone package (.zip archive)
 * `macOS x86_64` app bundle (distributed as .dmg)
-* `Linux x86_64` standalone package (.tar.gz archive) (**DEPRECATED**)
+* `Linux x86_64` AppImage (.AppImage file)
+* `Linux x86_64` standalone package (.tar.gz archive)
 * source package (.tar.gz or .zip archive)
 
-#### On Windows
+### On Windows
 To build a Windows binary installer, setup a development environment
 as described in the previous section, then run the following command
 from the root of the repository:
 
     $ python setup.py innosetup
 
-To build a Windows standalone (.zip) distribution, run the command:
+To build a Windows standalone (.zip) release, run the command:
 
     $ python setup.py standalone
 
 Once the building process is completed you will find the built
 package(s) inside the *dist* directory.
 
-##### On macOS
+### On macOS
 To build a macOS disk image (.dmg) containing the app bundle,
 setup a development environment as described in the previous section,
 then run the following command from the root of the repository:
@@ -306,15 +307,16 @@ then run the following command from the root of the repository:
 Once the building process is completed you will find the built
 package(s) inside the *dist* directory.
 
-##### On GNU/Linux
-**DEPRECATED**: Starting from version 3.0, the preferred method of install
-for Linux is via a prebuilt Python wheel from [GitHub releases],
-or from the a source package.
-Standalone tarballs may still be provided for some time but they
-are not the recommended method of installing Eddy.
+### On GNU/Linux
 
-To build Linux distribution packages, setup a development environment
-as described in the previous section, then run the following command:
+To build a Linux AppImage (.AppImage) release, you will need to setup
+a development environment as described in the previous section,
+download the [appimagetool] executable, then run the following
+command from the root of the repository:
+
+    $ python setup.py appimage
+
+To build Linux standalone tarball (.tar.gz), run the following command:
 
     $ python setup.py standalone
 
@@ -324,3 +326,4 @@ package(s) inside the *dist* directory.
 
 [AdoptOpenJDK]: https://adoptopenjdk.net
 [GitHub releases]: https://github.com/obdasystems/eddy/releases
+[appimagetool]: https://appimage.github.io/appimagetool
