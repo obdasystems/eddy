@@ -463,6 +463,104 @@ if MACOS:
 
     cmdclass['createdmg'] = CreateDmgCommand
 
+if LINUX:
+    # noinspection PyAttributeOutsideInit
+    class AppImageCommand(setuptools.Command):
+        """
+        Generate a Linux AppImage using appimage-builder.
+        """
+        description = 'create a Linux AppImage using appimage-builder'
+        user_options = PyInstallerCommand.user_options
+        user_options.extend([
+            ('dist-dir=', None,
+             'where to store the generated AppImage (default: %s)' % os.path.relpath(DIST_DIR)),
+            ('skip-build', None,
+             'skip rebuilding the AppDir'),
+            ('skip-appimage', None,
+             'skip building the final AppImage'),
+            ('skip-tests', None,
+             'skip testing the AppImage'),
+        ])
+        boolean_options = ['skip-build', 'skip-tests', 'skip-appimage']
+
+        def initialize_options(self):
+            """Set default values for options."""
+            self.workpath = None
+            self.distpath = None
+            self.dist_dir = None
+            self.skip_appimage = None
+            self.skip_build = None
+            self.skip_tests = None
+
+        def finalize_options(self):
+            """Finalize values for options."""
+            if self.workpath is None:
+                self.workpath = WORK_PATH
+            if self.distpath is None:
+                self.distpath = DIST_PATH
+            if self.dist_dir is None:
+                self.dist_dir = DIST_DIR
+            if self.skip_build is None:
+                self.skip_build = 0
+            if self.skip_appimage is None:
+                self.skip_appimage = 0
+            if self.skip_tests is None:
+                self.skip_tests = 0
+
+        def run(self):
+            """Command execution."""
+            self.appImageName = '{}-{}-{}.AppImage'.format(APPNAME, VERSION, EXEC_ARCH)
+            self.mkpath(self.dist_dir)
+            self.execute(self.build_appimage, (), msg='Creating AppImage...')
+            if fexists(self.appImageName):
+                self.move_file(self.appImageName,
+                               os.path.join(self.dist_dir, DIST_NAME + '.AppImage'))
+
+        def build_appimage(self):
+            """Create a Linux AppImage using appimage-builder."""
+            import shutil
+
+            # Check that appimage-builder is installed
+            if not shutil.which('appimage-builder'):
+                print("ERROR: unable to locate appimage-builder executable in PATH.\n"
+                      "  please install packaging requirements.")
+                sys.exit(1)
+            # Check that appimagetool is installed
+            if not shutil.which('appimagetool'):
+                print("ERROR: unable to locate appimagetool executable in PATH.\n"
+                      "  refer to https://appimage.github.io/appimagetool for instructions\n"
+                      "  on how to install it.")
+                sys.exit(1)
+            # Check that apt-get is available, appimage-builder needs it
+            if not shutil.which('apt-get'):
+                print("ERROR: unable to locate apt-get executable in PATH.\n"
+                      "  appimage-builder currently needs to be run on a Debian-based distro\n"
+                      "  in order to build the AppDir folder.")
+                sys.exit(1)
+
+            # Run appimage-builder with appropriate variables
+            cmd = [
+                shutil.which('appimage-builder'),
+                '--recipe', os.path.join('support', 'appimage', 'AppImageBuilder.yml'),
+            ]
+            if self.skip_appimage:
+                cmd.append('--skip-appimage')
+            if self.skip_build:
+                cmd.extend(['--skip-script', '--skip-build'])
+            if self.skip_tests:
+                cmd.append('--skip-tests')
+            try:
+                subprocess.call(cmd, env={**os.environ, **{
+                    'EDDY_APPIMAGE_ID': APPNAME,
+                    'EDDY_APPIMAGE_ICON': APPNAME.lower(),
+                    'EDDY_APPIMAGE_NAME': APPNAME,
+                    'EDDY_APPIMAGE_VERSION': VERSION,
+                }})
+            except Exception as e:
+                distutils.log.error('Failed to build AppImage: {}'.format(e))
+
+    cmdclass['appimage'] = AppImageCommand
+
 #############################################
 # SETUP
 #################################
