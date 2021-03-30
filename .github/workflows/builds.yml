@@ -45,6 +45,7 @@ jobs:
       - name: Package application (archive)
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
+          find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
           python setup.py standalone
 
       - name: Package application (dmg)
