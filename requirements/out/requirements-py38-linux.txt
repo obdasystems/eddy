@@ -145,7 +145,7 @@ tox==3.22.0
     # via
     #   -r requirements/in/tox.in
     #   tox-factor
-urllib3==1.26.4
+urllib3==1.26.5
     # via requests
 virtualenv==20.4.2
     # via tox

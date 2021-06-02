@@ -155,7 +155,7 @@ tox==3.22.0
     #   tox-factor
 typing-extensions==3.7.4.3
     # via jpype1
-urllib3==1.26.4
+urllib3==1.26.5
     # via requests
 virtualenv==20.4.2
     # via tox
