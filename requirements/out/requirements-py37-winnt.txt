@@ -50,7 +50,7 @@ packaging==20.9
     #   tox
 pefile==2019.4.18
     # via pyinstaller
-pillow==8.1.1
+pillow==8.2.0
     # via -r requirements/in\packaging.in
 pip-tools==5.5.0
     # via -r requirements/in/dev.in
