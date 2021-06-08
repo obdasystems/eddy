@@ -54,7 +54,7 @@ packaging==20.9
     # via
     #   pytest
     #   tox
-pillow==8.1.1
+pillow==8.2.0
     # via -r requirements/in/packaging.in
 pip-tools==5.5.0
     # via -r requirements/in/dev.in
