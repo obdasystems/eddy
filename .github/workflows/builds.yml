@@ -58,22 +58,3 @@ jobs:
         with:
           name: Eddy-${{ runner.os }}
           path: dist/*
-
-      - run: |
-          echo EDDY_VERSION="$(python -c 'import eddy; print(eddy.VERSION)')" >> $GITHUB_ENV
-
-      - name: Upload artifact (Bintray)
-        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          python -m pip install bintray-python==0.8.0
-          python ./scripts/bintray_upload.py \
-            --username ${{ secrets.BINTRAY_API_USER }} \
-            --api-key ${{ secrets.BINTRAY_API_KEY }} \
-            --subject ${{ secrets.BINTRAY_REPO_USER }} \
-            --repo ${{ secrets.BINTRAY_REPO}} \
-            --package Eddy \
-            --version ${{ env.EDDY_VERSION }} \
-            --prefix-path ${{ env.EDDY_VERSION }} \
-            --publish \
-            --override \
-            dist/*
