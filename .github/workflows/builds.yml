@@ -88,32 +88,19 @@ jobs:
           fi
           python setup.py standalone
 
-      - name: Upload artifact (appimage)
-        uses: actions/upload-artifact@v2
-        with:
-          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-AppImage
-          path: dist/*.AppImage
-        if: ${{ matrix.appimage }}
+      - name: Prepare artifact metadata
+        id: artifact-metadata
+        shell: bash
+        run: |
+          SHA="$(git rev-parse --short "$GITHUB_SHA")"
+          PLATFORM="${{ runner.os }}"
+          ARCH="${{ matrix.architecture }}"
+          TYPE="${{ matrix.type }}"
+          NAME="Eddy-$PLATFORM-$ARCH-$TYPE-$SHA"
+          echo "::set-output name=name::$(echo "$NAME")"
 
-      - name: Upload artifact (innosetup)
+      - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-Installer
-          path: dist/*.exe
-        if: ${{ matrix.innosetup }}
-
-      - name: Upload artifact (dmg)
-        uses: actions/upload-artifact@v2
-        with:
-          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-DMG
-          path: dist/*.dmg
-        if: ${{ matrix.dmg }}
-
-      - name: Upload artifact (archive)
-        uses: actions/upload-artifact@v2
-        with:
-          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-Archive
-          path: |
-            dist/*.tar.*
-            dist/*.zip
-        if: ${{ matrix.archive }}
+          name: ${{ steps.artifact-metadata.outputs.name }}
+          path: dist/*
