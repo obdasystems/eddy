@@ -12,9 +12,15 @@ jobs:
         include:
           - os: ubuntu-20.04
             python-version: 3.8
+            appimage: true
+
+          - os: ubuntu-20.04
+            python-version: 3.8
+            archive: true
 
           - os: macos-10.15
             python-version: 3.8
+            dmg: true
 
     steps:
       - name: Checkout code
@@ -35,26 +41,43 @@ jobs:
           python -m pip install -U pip setuptools wheel
           python -m pip install -U -r requirements/in/dev.in
 
-      - name: Package application (AppImage)
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      - name: Package application (appimage)
+        if: ${{ startsWith(runner.os, 'Linux') && matrix.appimage }}
         run: |
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
           python setup.py appimage --skip-tests
 
       - name: Package application (archive)
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        if: ${{ matrix.archive }}
         run: |
           find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
           python setup.py standalone
 
       - name: Package application (dmg)
-        if: ${{ startsWith(matrix.os, 'macos') }}
+        if: ${{ startsWith(runner.os, 'macOS') && matrix.dmg }}
         run: |
           python setup.py createdmg
 
-      - name: Upload artifact (GitHub)
+      - name: Upload artifact (appimage)
         uses: actions/upload-artifact@v2
         with:
-          name: Eddy-${{ runner.os }}
-          path: dist/*
+          name: Eddy-${{ runner.os }}-${{ matrix.platform }}-AppImage
+          path: dist/*.AppImage
+        if: ${{ matrix.appimage }}
+
+      - name: Upload artifact (archive)
+        uses: actions/upload-artifact@v2
+        with:
+          name: Eddy-${{ runner.os }}-${{ matrix.platform }}-Archive
+          path: |
+            dist/*.tar.*
+            dist/*.zip
+        if: ${{ matrix.archive }}
+
+      - name: Upload artifact (dmg)
+        uses: actions/upload-artifact@v2
+        with:
+          name: Eddy-${{ runner.os }}-${{ matrix.platform }}-DMG
+          path: dist/*.dmg
+        if: ${{ matrix.dmg }}
