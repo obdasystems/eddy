@@ -3,8 +3,8 @@ name: builds
 on: push
 
 jobs:
-  create-builds:
-    name: ${{ runner.os }} | ${{ matrix.architecture }} | ${{ matrix.type }}
+  builds:
+    name: ${{ matrix.platform }} | ${{ matrix.architecture }} | ${{ matrix.type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -13,38 +13,45 @@ jobs:
           - os: ubuntu-20.04
             python-version: 3.8
             architecture: x64
-            appimage: true
+            platform: Linux
             type: AppImage
+            appimage: true
           - os: ubuntu-20.04
             python-version: 3.8
             architecture: x64
-            archive: true
+            platform: Linux
             type: Standalone
+            archive: true
           - os: macos-10.15
             python-version: 3.8
             architecture: x64
-            dmg: true
+            platform: macOS
             type: DMG
+            dmg: true
           - os: windows-2019
             python-version: 3.8
             architecture: x86
-            innosetup: true
+            platform: Windows
             type: Installer
+            innosetup: true
           - os: windows-2019
             python-version: 3.8
             architecture: x86
-            archive: true
+            platform: Windows
             type: Standalone
+            archive: true
           - os: windows-2019
             python-version: 3.8
             architecture: x64
-            innosetup: true
+            platform: Windows
             type: Installer
+            innosetup: true
           - os: windows-2019
             python-version: 3.8
             architecture: x64
-            archive: true
+            platform: Windows
             type: Standalone
+            archive: true
 
     steps:
       - name: Checkout code
@@ -71,7 +78,7 @@ jobs:
         shell: bash
         run: |
           if [[ ${{ matrix.archive }} == 'true' ]]; then
-            if [[ ${{ runner.os }} == 'Linux' ]]; then
+            if [[ ${{ matrix.platform }} == 'Linux' ]]; then
               # Remove GTK3 Platform theme on linux before freezing as it mostly causes
               # ABI incompatibility issues when run on other distributions.
               find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
@@ -93,7 +100,7 @@ jobs:
         shell: bash
         run: |
           SHA="$(git rev-parse --short "$GITHUB_SHA")"
-          PLATFORM="${{ runner.os }}"
+          PLATFORM="${{ matrix.platform }}"
           ARCH="${{ matrix.architecture }}"
           TYPE="${{ matrix.type }}"
           NAME="Eddy-$PLATFORM-$ARCH-$TYPE-$SHA"
