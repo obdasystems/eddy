@@ -50,7 +50,7 @@ elif [[ $OSTYPE =~ darwin* ]]; then
   tox -p -f pipcompile-macos "$@"
 elif [[ $OSTYPE =~ msys* ]]; then
   echo "Recompiling windows requirements..."
-  tox -p -f pipcompile-macos "$@"
+  tox -p -f pipcompile-winnt "$@"
 else
   echo "Unable to determine platform"
   exit 1
