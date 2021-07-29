@@ -1,10 +1,10 @@
 name: builds
 
-on: push
+on: [push, pull_request]
 
 jobs:
-  create-builds:
-    name: Create distributable builds
+  builds:
+    name: ${{ matrix.platform }} | ${{ matrix.architecture }} | ${{ matrix.type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -12,9 +12,46 @@ jobs:
         include:
           - os: ubuntu-20.04
             python-version: 3.8
-
+            architecture: x64
+            platform: Linux
+            type: AppImage
+            appimage: true
+          - os: ubuntu-20.04
+            python-version: 3.8
+            architecture: x64
+            platform: Linux
+            type: Standalone
+            archive: true
           - os: macos-10.15
             python-version: 3.8
+            architecture: x64
+            platform: macOS
+            type: DMG
+            dmg: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x86
+            platform: Windows
+            type: Installer
+            innosetup: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x86
+            platform: Windows
+            type: Standalone
+            archive: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x64
+            platform: Windows
+            type: Installer
+            innosetup: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x64
+            platform: Windows
+            type: Standalone
+            archive: true
 
     steps:
       - name: Checkout code
@@ -24,10 +61,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
 
       - name: Bundle JRE
+        shell: bash
         run: |
-          python ./scripts/getjdk.py --binary --feature-version 11 --image-type jre --extract-to resources
+          python ./scripts/getjdk.py --binary --arch ${{ matrix.architecture }} --feature-version 11 --image-type jre --extract-to resources
           mv resources/jdk* resources/java
 
       - name: Install python dependencies
@@ -35,45 +74,47 @@ jobs:
           python -m pip install -U pip setuptools wheel
           python -m pip install -U -r requirements/in/dev.in
 
-      - name: Package application (AppImage)
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      - name: Package application
+        shell: bash
         run: |
-          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
-          sudo chmod +x /usr/local/bin/appimagetool
-          python setup.py appimage --skip-tests
+          if [[ x${{ matrix.archive }} == 'xtrue' ]]; then
+            if [[ ${{ matrix.platform }} == 'Linux' ]]; then
+              # Remove GTK3 Platform theme on linux before freezing as it mostly causes
+              # ABI incompatibility issues when run on other distributions.
+              find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
+            fi
+            python setup.py standalone
+          elif [[ x${{ matrix.appimage }} == 'xtrue' ]]; then
+            sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+            sudo chmod +x /usr/local/bin/appimagetool
+            python setup.py appimage --skip-tests
+          elif [[ x${{ matrix.dmg }} == 'xtrue' ]]; then
+            python setup.py createdmg
+          elif [[ x${{ matrix.innosetup }} == 'xtrue' ]]; then
+            export ISCC_EXE="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+            python setup.py innosetup
+          fi
 
-      - name: Package application (archive)
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      - name: Prepare artifact metadata
+        id: artifact-metadata
+        shell: bash
         run: |
-          find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
-          python setup.py standalone
+          SHA="$(git rev-parse --short "$GITHUB_SHA")"
+          PLATFORM="${{ matrix.platform }}"
+          ARCH="${{ matrix.architecture }}"
+          TYPE="${{ matrix.type }}"
+          NAME="Eddy-$PLATFORM-$ARCH-$TYPE-$SHA"
+          echo "::set-output name=name::$(echo "$NAME")"
 
-      - name: Package application (dmg)
-        if: ${{ startsWith(matrix.os, 'macos') }}
-        run: |
-          python setup.py createdmg
-
-      - name: Upload artifact (GitHub)
+      - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: Eddy-${{ runner.os }}
+          name: ${{ steps.artifact-metadata.outputs.name }}
           path: dist/*
 
-      - run: |
-          echo EDDY_VERSION="$(python -c 'import eddy; print(eddy.VERSION)')" >> $GITHUB_ENV
-
-      - name: Upload artifact (Bintray)
-        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          python -m pip install bintray-python==0.8.0
-          python ./scripts/bintray_upload.py \
-            --username ${{ secrets.BINTRAY_API_USER }} \
-            --api-key ${{ secrets.BINTRAY_API_KEY }} \
-            --subject ${{ secrets.BINTRAY_REPO_USER }} \
-            --repo ${{ secrets.BINTRAY_REPO}} \
-            --package Eddy \
-            --version ${{ env.EDDY_VERSION }} \
-            --prefix-path ${{ env.EDDY_VERSION }} \
-            --publish \
-            --override \
-            dist/*
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: dist/*
