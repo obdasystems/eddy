@@ -9,6 +9,6 @@
 -r tox.in
 
 # From PyPi
-flake8==3.8.4
+flake8==3.9.2
 objgraph==3.5.0
-pip-tools==5.5.0
+pip-tools==6.2.0
