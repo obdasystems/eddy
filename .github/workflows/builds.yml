@@ -14,16 +14,30 @@ jobs:
             python-version: 3.8
             architecture: x64
             appimage: true
-
           - os: ubuntu-20.04
             python-version: 3.8
             architecture: x64
             archive: true
-
           - os: macos-10.15
             python-version: 3.8
             architecture: x64
             dmg: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x86
+            innosetup: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x86
+            archive: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x64
+            innosetup: true
+          - os: windows-2019
+            python-version: 3.8
+            architecture: x64
+            archive: true
 
     steps:
       - name: Checkout code
@@ -36,6 +50,7 @@ jobs:
           architecture: ${{ matrix.architecture }}
 
       - name: Bundle JRE
+        shell: bash
         run: |
           python ./scripts/getjdk.py --binary --arch ${{ matrix.architecture }} --feature-version 11 --image-type jre --extract-to resources
           mv resources/jdk* resources/java
@@ -52,36 +67,53 @@ jobs:
           sudo chmod +x /usr/local/bin/appimagetool
           python setup.py appimage --skip-tests
 
-      - name: Package application (archive)
-        if: ${{ matrix.archive }}
+      - name: Package application (innosetup)
+        if: ${{ startsWith(runner.os, 'Win') && matrix.innosetup }}
+        shell: bash
         run: |
-          find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
-          python setup.py standalone
+          export ISCC_EXE="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          python setup.py innosetup
 
       - name: Package application (dmg)
         if: ${{ startsWith(runner.os, 'macOS') && matrix.dmg }}
         run: |
           python setup.py createdmg
 
+      - name: Package application (archive)
+        if: ${{ matrix.archive }}
+        shell: bash
+        run: |
+          if [[ ${{ runner.os }} == 'Linux' ]]; then
+            find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
+          fi
+          python setup.py standalone
+
       - name: Upload artifact (appimage)
         uses: actions/upload-artifact@v2
         with:
-          name: Eddy-${{ runner.os }}-${{ matrix.platform }}-${{ matrix.architecture }}-AppImage
+          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-AppImage
           path: dist/*.AppImage
         if: ${{ matrix.appimage }}
 
-      - name: Upload artifact (archive)
+      - name: Upload artifact (innosetup)
         uses: actions/upload-artifact@v2
         with:
-          name: Eddy-${{ runner.os }}-${{ matrix.platform }}-${{ matrix.architecture }}-Archive
-          path: |
-            dist/*.tar.*
-            dist/*.zip
-        if: ${{ matrix.archive }}
+          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-Installer
+          path: dist/*.exe
+        if: ${{ matrix.innosetup }}
 
       - name: Upload artifact (dmg)
         uses: actions/upload-artifact@v2
         with:
-          name: Eddy-${{ runner.os }}-${{ matrix.platform }}-${{ matrix.architecture }}-DMG
+          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-DMG
           path: dist/*.dmg
         if: ${{ matrix.dmg }}
+
+      - name: Upload artifact (archive)
+        uses: actions/upload-artifact@v2
+        with:
+          name: Eddy-${{ runner.os }}-${{ matrix.architecture }}-Archive
+          path: |
+            dist/*.tar.*
+            dist/*.zip
+        if: ${{ matrix.archive }}
