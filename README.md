@@ -6,8 +6,8 @@ Eddy
 
 | Branch    | Status        |
 |-----------|---------------|
-| [master](https://github.com/obdasystems/eddy/tree/master)   |[![Tests Status](https://github.com/obdasystems/eddy/workflows/tests/badge.svg?branch=master)](https://github.com/obdasystems/eddy/actions)  [![Build Status](https://github.com/obdasystems/eddy/workflows/builds/badge.svg?branch=master)](https://github.com/obdasystems/eddy/actions)  [![Build Status](https://img.shields.io/appveyor/build/obdasystems/eddy/master?logo=appveyor)](https://ci.appveyor.com/project/obdasystems/eddy/branch/master)  |
-| [develop](https://github.com/obdasystems/eddy/tree/develop) |[![Tests Status](https://github.com/obdasystems/eddy/workflows/tests/badge.svg?branch=develop)](https://github.com/obdasystems/eddy/actions) [![Build Status](https://github.com/obdasystems/eddy/workflows/builds/badge.svg?branch=develop)](https://github.com/obdasystems/eddy/actions) [![Build Status](https://img.shields.io/appveyor/build/obdasystems/eddy/develop?logo=appveyor)](https://ci.appveyor.com/project/obdasystems/eddy/branch/develop)|
+| [master](https://github.com/obdasystems/eddy/tree/master)   |[![Tests Status](https://github.com/obdasystems/eddy/workflows/tests/badge.svg?branch=master)](https://github.com/obdasystems/eddy/actions)  [![Build Status](https://github.com/obdasystems/eddy/workflows/builds/badge.svg?branch=master)](https://github.com/obdasystems/eddy/actions) |
+| [develop](https://github.com/obdasystems/eddy/tree/develop) |[![Tests Status](https://github.com/obdasystems/eddy/workflows/tests/badge.svg?branch=develop)](https://github.com/obdasystems/eddy/actions) [![Build Status](https://github.com/obdasystems/eddy/workflows/builds/badge.svg?branch=develop)](https://github.com/obdasystems/eddy/actions)|
 
 Eddy is a graphical editor for the specification and visualization of Graphol ontologies.
 Eddy features a design environment specifically thought out for generating Graphol ontologies through
