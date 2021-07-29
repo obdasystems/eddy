@@ -4,7 +4,7 @@ on: push
 
 jobs:
   create-builds:
-    name: Create distributable builds
+    name: ${{ runner.os }} | ${{ matrix.architecture }} | ${{ matrix.type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -14,30 +14,37 @@ jobs:
             python-version: 3.8
             architecture: x64
             appimage: true
+            type: AppImage
           - os: ubuntu-20.04
             python-version: 3.8
             architecture: x64
             archive: true
+            type: Standalone
           - os: macos-10.15
             python-version: 3.8
             architecture: x64
             dmg: true
+            type: DMG
           - os: windows-2019
             python-version: 3.8
             architecture: x86
             innosetup: true
+            type: Installer
           - os: windows-2019
             python-version: 3.8
             architecture: x86
             archive: true
+            type: Standalone
           - os: windows-2019
             python-version: 3.8
             architecture: x64
             innosetup: true
+            type: Installer
           - os: windows-2019
             python-version: 3.8
             architecture: x64
             archive: true
+            type: Standalone
 
     steps:
       - name: Checkout code
@@ -60,33 +67,26 @@ jobs:
           python -m pip install -U pip setuptools wheel
           python -m pip install -U -r requirements/in/dev.in
 
-      - name: Package application (appimage)
-        if: ${{ startsWith(runner.os, 'Linux') && matrix.appimage }}
-        run: |
-          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
-          sudo chmod +x /usr/local/bin/appimagetool
-          python setup.py appimage --skip-tests
-
-      - name: Package application (innosetup)
-        if: ${{ startsWith(runner.os, 'Win') && matrix.innosetup }}
+      - name: Package application
         shell: bash
         run: |
-          export ISCC_EXE="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          python setup.py innosetup
-
-      - name: Package application (dmg)
-        if: ${{ startsWith(runner.os, 'macOS') && matrix.dmg }}
-        run: |
-          python setup.py createdmg
-
-      - name: Package application (archive)
-        if: ${{ matrix.archive }}
-        shell: bash
-        run: |
-          if [[ ${{ runner.os }} == 'Linux' ]]; then
-            find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
+          if [[ ${{ matrix.archive }} == 'true' ]]; then
+            if [[ ${{ runner.os }} == 'Linux' ]]; then
+              # Remove GTK3 Platform theme on linux before freezing as it mostly causes
+              # ABI incompatibility issues when run on other distributions.
+              find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
+            fi
+            python setup.py standalone
+          elif [[ ${{ matrix.appimage }} == 'true' ]]; then
+            sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+            sudo chmod +x /usr/local/bin/appimagetool
+            python setup.py appimage --skip-tests
+          elif [[ ${{ matrix.dmg }} == 'true' ]]; then
+            python setup.py createdmg
+          elif [[ ${{ matrix.innosetup }} == 'true' ]]; then
+            export ISCC_EXE="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+            python setup.py innosetup
           fi
-          python setup.py standalone
 
       - name: Prepare artifact metadata
         id: artifact-metadata
