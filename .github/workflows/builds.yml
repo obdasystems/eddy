@@ -77,20 +77,20 @@ jobs:
       - name: Package application
         shell: bash
         run: |
-          if [[ ${{ matrix.archive }} == 'true' ]]; then
+          if [[ x${{ matrix.archive }} == 'xtrue' ]]; then
             if [[ ${{ matrix.platform }} == 'Linux' ]]; then
               # Remove GTK3 Platform theme on linux before freezing as it mostly causes
               # ABI incompatibility issues when run on other distributions.
               find "$RUNNER_TOOL_CACHE/Python" -type f -name libqgtk3.so -delete
             fi
             python setup.py standalone
-          elif [[ ${{ matrix.appimage }} == 'true' ]]; then
+          elif [[ x${{ matrix.appimage }} == 'xtrue' ]]; then
             sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
             sudo chmod +x /usr/local/bin/appimagetool
             python setup.py appimage --skip-tests
-          elif [[ ${{ matrix.dmg }} == 'true' ]]; then
+          elif [[ x${{ matrix.dmg }} == 'xtrue' ]]; then
             python setup.py createdmg
-          elif [[ ${{ matrix.innosetup }} == 'true' ]]; then
+          elif [[ x${{ matrix.innosetup }} == 'xtrue' ]]; then
             export ISCC_EXE="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
             python setup.py innosetup
           fi
