@@ -82,14 +82,14 @@ class InfoPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def onDiagramAdded(self, diagram):
         """
         Executed whenever a diagram is added to the active project.
         """
         self.widget('info').stack()
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def onDiagramRemoved(self, diagram):
         """
         Executed whenever a diagram is removed from the active project.
@@ -110,14 +110,14 @@ class InfoPlugin(AbstractPlugin):
         """
         self.widget('info').stack()
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     def onProjectItemAdded(self, diagram, item):
         """
         Executed whenever a new element is added to the active project.
         """
         self.widget('info').stack()
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     def onProjectItemRemoved(self, diagram, item):
         """
         Executed whenever a new element is removed from the active project.

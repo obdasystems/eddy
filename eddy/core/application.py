@@ -37,6 +37,14 @@ import os
 import platform
 import subprocess
 import sys
+from types import TracebackType
+from typing import (
+    cast,
+    Any,
+    List,
+    Optional,
+    Type,
+)
 
 from PyQt5 import (
     QtCore,
@@ -55,7 +63,6 @@ from eddy import (
     ORGANIZATION_DOMAIN,
     ORGANIZATION_REVERSE_DOMAIN,
     VERSION,
-    WORKSPACE,
 )
 from eddy.core.commandline import CommandLineParser
 from eddy.core.datatypes.collections import DistinctList
@@ -96,7 +103,10 @@ from eddy.ui.session import Session
 from eddy.ui.splash import Splash
 from eddy.ui.style import EddyProxyStyle
 from eddy.ui.welcome import Welcome
-from eddy.ui.workspace import WorkspaceDialog
+
+#############################################
+#   GLOBALS
+#################################
 
 LOGGER = getLogger()
 app = None
@@ -109,13 +119,14 @@ class Eddy(QtWidgets.QApplication):
     """
     RestartCode = 8
     sgnCreateSession = QtCore.pyqtSignal(str)
-    sgnSessionCreated = QtCore.pyqtSignal('QMainWindow')
-    sgnSessionClosed = QtCore.pyqtSignal('QMainWindow')
+    sgnSessionCreated = QtCore.pyqtSignal(QtWidgets.QMainWindow)
+    sgnSessionClosed = QtCore.pyqtSignal(QtWidgets.QMainWindow)
 
-    def __init__(self, argv):
+    def __init__(self, argv: List[str]) -> None:
         """
         Initialize Eddy.
-        :type argv: list
+
+        :param argv: Command line arguments
         """
         super().__init__(argv)
 
@@ -154,25 +165,20 @@ class Eddy(QtWidgets.QApplication):
     #   EVENTS
     #################################
 
-    def event(self, event):
+    def event(self, event: QtCore.QEvent) -> bool:
         """
         Executed when an event is received.
-        :type event: T <= QEvent | QFileOpenEvent
-        :rtype: bool
         """
         # HANDLE FILEOPEN EVENT (TRIGGERED BY MACOS WHEN DOUBLE CLICKING A FILE)
-        #if event.type() == QtCore.QEvent.FileOpen and not __debug__:
         if event.type() == QtCore.QEvent.FileOpen:
-            path = expandPath(event.file())
-            #fileName,fileExtension = os.path.splitext(path)
+            path = expandPath(cast(QtGui.QFileOpenEvent, event).file())
             type = File.forPath(path)
-            if type and type is File.Graphol:
-                if fexists(path):
-                    if self.started:
-                        self.sgnCreateSession.emit(path)
-                    else:
-                        # CACHE PATH UNTIL APPLICATION STARTUP HAS COMPLETED
-                        self.openFilePath = path
+            if fexists(path) and type is File.Graphol:
+                if self.started:
+                    self.sgnCreateSession.emit(path)
+                else:
+                    # CACHE PATH UNTIL APPLICATION STARTUP HAS COMPLETED
+                    self.openFilePath = path
 
         return super().event(event)
 
@@ -180,7 +186,7 @@ class Eddy(QtWidgets.QApplication):
     #   INTERFACE
     #################################
 
-    def configure(self):
+    def configure(self) -> None:
         """
         Perform initial configuration tasks for Eddy to work properly.
         """
@@ -261,27 +267,17 @@ class Eddy(QtWidgets.QApplication):
             splash.sleep()
             splash.close()
 
-    def isRunning(self):
+    def isRunning(self) -> bool:
         """
-        Returns True if there is already another instance of Eddy which is running, False otherwise.
-        :rtype: bool
+        Returns `True` if there is already another instance
+        of Eddy which is running, `False` otherwise.
         """
         return self.running
 
-    def start(self):
+    def start(self) -> None:
         """
         Run the application by showing the welcome dialog.
         """
-        # CONFIGURE THE WORKSPACE
-        #settings = QtCore.QSettings()
-        #workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
-        '''
-        if not isdir(workspace):
-            window = WorkspaceDialog()
-            if window.exec_() == WorkspaceDialog.Rejected:
-                raise SystemExit
-        '''
-
         # PROCESS COMMAND LINE ARGUMENTS
         args = self.options.positionalArguments()
 
@@ -292,23 +288,16 @@ class Eddy(QtWidgets.QApplication):
         self.welcome = Welcome(self)
         self.welcome.show()
         # PROCESS ADDITIONAL COMMAND LINE OPTIONS
-        if self.options.isSet(CommandLineParser.OPEN):
-            value = self.options.value(CommandLineParser.OPEN)
-            if value:
-                project = os.path.join(workspace, value)
-                if project and isdir(os.path.join(workspace, project)):
+        # NONE FOR NOW
+        # POSITIONAL ARGUMENTS
+        if args:
+            for arg in args:
+                fname = expandPath(arg)
+                if fexists(fname):
+                    project = fname
                     self.sgnCreateSession.emit(project)
                 else:
-                    LOGGER.warning('Unable to open project: %s', project)
-        # POSITIONAL ARGUMENTS
-        elif args:
-            fname = expandPath(args[0])
-            if fexists(fname):
-                #project = os.path.dirname(fname)
-                project = fname
-                self.sgnCreateSession.emit(project)
-            else:
-                LOGGER.warning('Unable to open file: %s', fname)
+                    LOGGER.warning('Unable to open file: %s', fname)
         # COMPLETE STARTUP
         self.started = True
 
@@ -317,10 +306,21 @@ class Eddy(QtWidgets.QApplication):
     #################################
 
     @QtCore.pyqtSlot(str)
-    def doCreateSession(self, path):
+    @QtCore.pyqtSlot(str, str, str, str)
+    def doCreateSession(
+        self,
+        path: Optional[str] = None,
+        name: Optional[str] = None,
+        iri: Optional[str] = None,
+        prefix: Optional[str] = None,
+    ) -> None:
         """
         Create a session using the given project path.
-        :type path: str
+
+        :param path: Path to the project file, if opening an existing project
+        :param name: Name, only when creating a new project
+        :param iri: Ontology IRI, only when creating a new project
+        :param prefix: IRI prefix, when creating a new project
         """
         for session in self.sessions:
             # Look among the active sessions and see if we already have
@@ -332,7 +332,7 @@ class Eddy(QtWidgets.QApplication):
             # If we do not have a session for the given project we'll create one.
             with BusyProgressDialog('Loading project: {0}'.format(path)):
                 try:
-                    session = Session(self, path)
+                    session = Session(self, path, name=name, iri=iri, prefix=prefix)
                 except ProjectStopLoadingError:
                     pass
                 except (ProjectNotFoundError, ProjectNotValidError, ProjectVersionError) as e:
@@ -371,60 +371,9 @@ class Eddy(QtWidgets.QApplication):
                     # CLOSE THE WELCOME SCREEN IF NECESSARY
                     #################################
 
-                    try:
+                    if self.welcome:
                         self.welcome.close()
-                    except (AttributeError, RuntimeError):
-                        pass
-
-                    #############################################
-                    # STARTUP THE SESSION
-                    #################################
-
-                    connect(session.sgnQuit, self.doQuit)
-                    connect(session.sgnClosed, self.onSessionClosed)
-                    self.sessions.append(session)
-                    self.sgnSessionCreated.emit(session)
-                    session.show()
-
-    @QtCore.pyqtSlot(str, str, str)
-    def doCreateSessionFromScratch(self, projName, ontIri, ontPrefix):
-        """
-        Create a session for a new brand project.
-        """
-        for session in self.sessions:
-            # Look among the active sessions and see if we already have
-            # a session loaded for the given project: if so, focus it.
-            if not session.project.path and session.project.name == projName and session.project.ontologyIRI == ontIri:
-                session.show()
-                break
-        else:
-            # If we do not have a session for the given project we'll create one.
-            with BusyProgressDialog('Creating new project with name: {0}'.format(projName)):
-                try:
-                    session = Session(self, path=None, projName=projName, ontIri=ontIri, ontPrefix=ontPrefix)
-                except ProjectStopLoadingError:
-                    pass
-                except Exception as e:
-                    LOGGER.warning('Failed to create session for new project : %s',  e)
-                    msgbox = QtWidgets.QMessageBox()
-                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setText('Failed to create session for new project')
-                    msgbox.setTextFormat(QtCore.Qt.RichText)
-                    msgbox.setDetailedText(format_exception(e))
-                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                    msgbox.setWindowTitle('Project Error!')
-                    msgbox.exec_()
-                else:
-
-                    #############################################
-                    # CLOSE THE WELCOME SCREEN IF NECESSARY
-                    #################################
-
-                    try:
-                        self.welcome.close()
-                    except (AttributeError, RuntimeError):
-                        pass
+                        self.welcome = None
 
                     #############################################
                     # STARTUP THE SESSION
@@ -437,7 +386,7 @@ class Eddy(QtWidgets.QApplication):
                     session.show()
 
     @QtCore.pyqtSlot()
-    def doQuit(self):
+    def doQuit(self) -> None:
         """
         Quit Eddy.
         """
@@ -447,7 +396,7 @@ class Eddy(QtWidgets.QApplication):
         self.quit()
 
     @QtCore.pyqtSlot()
-    def doRestart(self):
+    def doRestart(self) -> None:
         """
         Restart Eddy.
         """
@@ -457,7 +406,7 @@ class Eddy(QtWidgets.QApplication):
         self.exit(Eddy.RestartCode)
 
     @QtCore.pyqtSlot()
-    def doFocusSession(self):
+    def doFocusSession(self) -> None:
         """
         Make the session specified in the action data the application active window.
         """
@@ -468,7 +417,7 @@ class Eddy(QtWidgets.QApplication):
                 self.setActiveWindow(session)
 
     @QtCore.pyqtSlot()
-    def doFocusNextSession(self):
+    def doFocusNextSession(self) -> None:
         """
         Make the next session the application active window.
         """
@@ -478,7 +427,7 @@ class Eddy(QtWidgets.QApplication):
             self.setActiveWindow(nextSession)
 
     @QtCore.pyqtSlot()
-    def doFocusPreviousSession(self):
+    def doFocusPreviousSession(self) -> None:
         """
         Make the previous session the application active window.
         """
@@ -488,7 +437,7 @@ class Eddy(QtWidgets.QApplication):
             self.setActiveWindow(prevSession)
 
     @QtCore.pyqtSlot()
-    def onAboutToQuit(self):
+    def onAboutToQuit(self) -> None:
         """
         Executed when the application is about to quit.
         """
@@ -496,7 +445,7 @@ class Eddy(QtWidgets.QApplication):
             self.server.close()
 
     @QtCore.pyqtSlot()
-    def onSessionClosed(self):
+    def onSessionClosed(self) -> None:
         """
         Quit Eddy.
         """
@@ -518,14 +467,18 @@ class Eddy(QtWidgets.QApplication):
             self.welcome.show()
 
 
-# noinspection PyArgumentList,PyUnusedLocal
-def base_except_hook(exc_type, exc_value, exc_traceback):
+# noinspection PyUnusedLocal
+def base_except_hook(
+    exc_type: Type[BaseException],
+    exc_value: BaseException,
+    exc_traceback: TracebackType,
+) -> Any:
     """
     Used to handle all uncaught exceptions.
 
-    :type exc_type: class
-    :type exc_value: Exception
-    :type exc_traceback: Traceback
+    :param exc_type: The exception type
+    :param exc_value: The exception instance
+    :param exc_traceback: The exception traceback
     """
     if issubclass(exc_type, KeyboardInterrupt):
         app.quit()
@@ -534,7 +487,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
         if not msgbox:
             LOGGER.critical(format_exception(exc_value))
             msgbox = QtWidgets.QMessageBox()
-            #msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
+            msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Fatal error!')
             msgbox.setText('This is embarrassing ...\n\n'
@@ -556,7 +509,7 @@ def base_except_hook(exc_type, exc_value, exc_traceback):
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
-def main():
+def main() -> int:
     """
     Application entry point.
     """
@@ -577,7 +530,7 @@ def main():
     global app
     app = Eddy(sys.argv)
     if app.isRunning():
-        sys.exit(0)
+        return 0
 
     #############################################
     # JVM SETUP
@@ -593,10 +546,10 @@ def main():
             def checkboxStateChanged(state):
                 settings.setValue('dialogs/noJVM', state == QtCore.Qt.Checked)
                 settings.sync()
-
+            global msgbox
             chkbox = QtWidgets.QCheckBox("Don't show this warning again.")
             msgbox = QtWidgets.QMessageBox()
-            #msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
+            msgbox.setIconPixmap(QtGui.QPixmap(':/images/eddy-sad'))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Missing Java Runtime Environment')
             msgbox.setText('Unable to locate a valid Java installation on your system.')
@@ -614,7 +567,6 @@ def main():
             buttonOk.setText('Continue without JRE')
             buttonQuit = msgbox.button(QtWidgets.QMessageBox.Abort)
             buttonQuit.setText('Quit {0}'.format(APPNAME))
-            # noinspection PyArgumentList
             buttonQuit.clicked.connect(app.doQuit, QtCore.Qt.QueuedConnection)
             connect(chkbox.stateChanged, checkboxStateChanged)
             ret = msgbox.exec_()
@@ -691,4 +643,4 @@ def main():
             nargs.extend([sys.executable, sys.argv[0]])
         nargs.extend(sys.argv[1:])
         subprocess.Popen(nargs)
-    sys.exit(ret)
+    return ret

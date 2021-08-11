@@ -63,7 +63,7 @@ class OntologyExplorerPlugin(AbstractPlugin):
     """
     This plugin provides the Ontology Explorer widget.
     """
-    sgnFakeItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnFakeItemAdded = QtCore.pyqtSignal(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     sgnFakeImportedOntologyAdded = QtCore.pyqtSignal(ImportedOntology)
 
     #############################################
@@ -177,10 +177,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the ontology explorer used to list ontology predicates.
     """
-    sgnItemActivated = QtCore.pyqtSignal('QGraphicsItem')
-    sgnItemClicked = QtCore.pyqtSignal('QGraphicsItem')
-    sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsItem')
-    sgnItemRightClicked = QtCore.pyqtSignal('QGraphicsItem')
+    sgnItemActivated = QtCore.pyqtSignal(QtWidgets.QGraphicsItem)
+    sgnItemClicked = QtCore.pyqtSignal(QtWidgets.QGraphicsItem)
+    sgnItemDoubleClicked = QtCore.pyqtSignal(QtWidgets.QGraphicsItem)
+    sgnItemRightClicked = QtCore.pyqtSignal(QtWidgets.QGraphicsItem)
 
     sgnIRIItemActivated = QtCore.pyqtSignal(IRI)
     sgnIRIItemClicked = QtCore.pyqtSignal(IRI)
@@ -568,7 +568,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             self.proxy.invalidateFilter()
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     def doAddNode(self, diagram, node):
         """
         Add a node in the tree view.
@@ -597,7 +597,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 self.proxy.invalidateFilter()
                 self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     def doRemoveNode(self, diagram, node):
         """
         Remove a node from the tree view.
@@ -639,7 +639,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         self.search.setFocus()
         self.search.selectAll()
 
-    @QtCore.pyqtSlot('QModelIndex')
+    @QtCore.pyqtSlot(QtCore.QModelIndex)
     def onItemActivated(self, index):
         """
         Executed when an item in the treeview is activated (e.g. by pressing Return or Enter key).
@@ -664,7 +664,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 else:
                     self.ontoview.expand(index)
 
-    @QtCore.pyqtSlot('QModelIndex')
+    @QtCore.pyqtSlot(QtCore.QModelIndex)
     def onItemDoubleClicked(self, index):
         """
         Executed when an item in the treeview is double clicked.
@@ -679,7 +679,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 elif isinstance(item.data(OntologyExplorerView.IRIRole), AbstractNode):
                     self.sgnItemDoubleClicked.emit(item.data(OntologyExplorerView.IRIRole))
 
-    @QtCore.pyqtSlot('QModelIndex')
+    @QtCore.pyqtSlot(QtCore.QModelIndex)
     def onItemPressed(self, index):
         """
         Executed when an item in the treeview is clicked.

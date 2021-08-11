@@ -33,9 +33,11 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.signals import connect
@@ -84,7 +86,7 @@ class MdiArea(QtWidgets.QMdiArea):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def onDiagramRemoved(self, diagram):
         """
         Executed when a diagram is renamed.
@@ -194,7 +196,7 @@ class MdiSubWindow(QtWidgets.QMdiSubWindow):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWidget(view)
         self.setWindowTitle(self.diagram.name)
-    
+
     #############################################
     #   PROPERTIES
     #################################

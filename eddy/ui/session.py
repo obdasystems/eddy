@@ -37,6 +37,7 @@ import os
 import sys
 import textwrap
 from collections import OrderedDict
+from typing import Optional
 
 from PyQt5 import (
     QtCore,
@@ -53,7 +54,6 @@ from eddy import (
     ORGANIZATION_URL,
     PROJECT_HOME,
     VERSION,
-    WORKSPACE,
     MANUAL_URL
 )
 from eddy.core.clipboard import Clipboard
@@ -153,16 +153,28 @@ from eddy.core.functions.path import (
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.edges.common.base import AxiomEdge
-from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, \
-    OntologyEntityResizableNode
+from eddy.core.items.nodes.common.base import (
+    AbstractNode,
+    OntologyEntityNode,
+    OntologyEntityResizableNode,
+)
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
-from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v3, GrapholOntologyIRILoader_v3
+from eddy.core.loaders.graphol_iri import (
+    GrapholIRIProjectLoader_v3,
+    GrapholOntologyIRILoader_v3,
+)
 from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
-from eddy.core.owl import IRIRender, IRI, OWL2Profiles, ImportedOntology
+from eddy.core.owl import (
+    IRIRender,
+    IRI,
+    OWL2Profiles,
+    ImportedOntology,
+    AnnotationAssertion,
+)
 from eddy.core.plugin import PluginManager
 from eddy.core.profiles.owl2 import OWL2Profile
 from eddy.core.profiles.owl2ql import OWL2QLProfile
@@ -175,26 +187,38 @@ from eddy.core.project import (
     K_REFLEXIVE,
     K_SYMMETRIC,
     K_TRANSITIVE,
-    Project)
+    Project,
+)
 from eddy.core.regex import RE_CAMEL_SPACE
-from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog, AnnotationBuilderDialog
 from eddy.ui.about import AboutDialog
+from eddy.ui.annotation_assertion import (
+    AnnotationAssertionBuilderDialog,
+    AnnotationBuilderDialog,
+)
 from eddy.ui.axioms_by_iri import AxiomsByEntityDialog
 from eddy.ui.consistency_check import OntologyConsistencyCheckDialog
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.dl import OWL2DLProfileValidationDialog
-from eddy.ui.explanation import ExplanationDialog, EmptyEntityDialog
+from eddy.ui.explanation import (
+    ExplanationDialog,
+    EmptyEntityDialog,
+)
 from eddy.ui.fields import ComboBox
-from eddy.ui.import_ontology import ImportOntologyDialog
-from eddy.ui.iri import IriBuilderDialog, IriPropsDialog, ConstrainingFacetDialog, LiteralDialog, \
-    FontDialog, \
-    EdgeAxiomDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
     NewDiagramForm,
     RefactorNameForm,
     RenameDiagramForm,
     ValueForm,
+)
+from eddy.ui.import_ontology import ImportOntologyDialog
+from eddy.ui.iri import (
+    ConstrainingFacetDialog,
+    EdgeAxiomDialog,
+    FontDialog,
+    IriBuilderDialog,
+    IriPropsDialog,
+    LiteralDialog,
 )
 from eddy.ui.label import LabelDialog
 from eddy.ui.log import LogDialog
@@ -208,13 +232,29 @@ from eddy.ui.progress import BusyProgressDialog
 from eddy.ui.syntax import SyntaxValidationDialog
 from eddy.ui.view import DiagramView
 
+#############################################
+#   GLOBALS
+#################################
+
 LOGGER = getLogger()
 
 
-class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
-              HasDiagramExportSystem, HasOntologyExportSystem, HasProjectExportSystem,
-              HasDiagramLoadSystem, HasOntologyLoadSystem, HasProjectLoadSystem,
-              HasProfileSystem, HasThreadingSystem, HasNotificationSystem, QtWidgets.QMainWindow):
+class Session(
+    HasActionSystem,
+    HasMenuSystem,
+    HasPluginSystem,
+    HasWidgetSystem,
+    HasDiagramExportSystem,
+    HasOntologyExportSystem,
+    HasProjectExportSystem,
+    HasDiagramLoadSystem,
+    HasOntologyLoadSystem,
+    HasProjectLoadSystem,
+    HasProfileSystem,
+    HasThreadingSystem,
+    HasNotificationSystem,
+    QtWidgets.QMainWindow,
+):
     """
     Extends QtWidgets.QMainWindow and implements Eddy main working session.
     Additionally to built-in signals, this class emits:
@@ -234,9 +274,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     """
     sgnClosed = QtCore.pyqtSignal()
     sgnCheckForUpdate = QtCore.pyqtSignal()
-    sgnDiagramFocused = QtCore.pyqtSignal('QGraphicsScene')
-    sgnFocusDiagram = QtCore.pyqtSignal('QGraphicsScene')
-    sgnFocusItem = QtCore.pyqtSignal('QGraphicsItem')
+    sgnDiagramFocused = QtCore.pyqtSignal(QtWidgets.QGraphicsScene)
+    sgnFocusDiagram = QtCore.pyqtSignal(QtWidgets.QGraphicsScene)
+    sgnFocusItem = QtCore.pyqtSignal(QtWidgets.QGraphicsItem)
     sgnPluginDisposed = QtCore.pyqtSignal(str)
     sgnPluginStarted = QtCore.pyqtSignal(str)
     sgnProjectSaved = QtCore.pyqtSignal()
@@ -265,13 +305,24 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     sgnUnsatisfiableObjectProperty = QtCore.pyqtSignal(IRI)
     sgnUnsatisfiableDataProperty = QtCore.pyqtSignal(IRI)
 
-    def __init__(self, application, path=None, projName=None, ontIri=None, ontPrefix=None,
-                 **kwargs):
+    def __init__(
+        self,
+        application: QtWidgets.QApplication,
+        path: Optional[str] = None,
+        name: Optional[str] = None,
+        iri: Optional[str] = None,
+        prefix: Optional[str] = None,
+        **kwargs: str,
+    ) -> None:
         """
         Initialize the application main working session.
-        :type application: QApplication
-        :type path: str
-        :type kwargs: dict
+
+        :param application: Application instance
+        :param path: The project file path
+        :param name: The project name, for new projects
+        :param iri: The ontology IRI, for new projects
+        :param prefix: The IRI prefix, for new projects
+        :param kwargs: Keyword arguments
         """
         super().__init__(**kwargs)
 
@@ -289,6 +340,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.pmanager = PluginManager(self)
         self.nmanager = NetworkManager(self)
         self.project = None
+
+        #############################################
+        # INITIALIZE REASONER STATE VARIABLES
+        #################################
+
         self.currentEmptyEntityIRI = None
         self.currentEmptyEntityType = None
         self.currentEmptyEntityExplanations = list()
@@ -315,6 +371,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #############################################
         # LOAD THE PROJECT IF ONE GIVEN, OTHERWISE CREATE NEW PROJECT FROM SCRATCH
         #################################
+
         self.projectFromFile = False
         self.owlOntologyImportSize = None
         self.owlOntologyImportLoadedCount = None
@@ -327,27 +384,35 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             worker.run()
             self.owlOntologyImportSize = worker.importSize
             self.owlOntologyImportLoadedCount = worker.loadCount
-            if self.owlOntologyImportSize > 0 and not self.owlOntologyImportSize == self.owlOntologyImportLoadedCount:
+            if (
+                self.owlOntologyImportSize > 0
+                and self.owlOntologyImportSize != self.owlOntologyImportLoadedCount
+            ):
                 self.owlOntologyImportErrors = worker.owlOntologyImportErrors
         else:
             self.project = Project(
-                name=projName,
+                name=name,
                 path=None,
                 version=None,
                 profile=OWL2Profile(),
                 prefixMap=None,
-                ontologyIRI=ontIri,
+                ontologyIRI=iri,
                 datatypes=None,
                 constrFacets=None,
                 languages=None,
                 annotationProperties=set(),
                 session=self,
-                ontologyPrefix=ontPrefix,
+                ontologyPrefix=prefix,
                 defaultLanguage="en",
                 addLabelFromSimpleName=False,
                 addLabelFromUserInput=False,
                 ontologies=set()
             )
+
+        #############################################
+        # CONNECT PROJECT SIGNALS
+        #################################
+
         connect(self.project.sgnPrefixAdded, self.onPrefixAddedToProject)
         connect(self.project.sgnPrefixRemoved, self.onPrefixRemovedFromProject)
         connect(self.project.sgnPrefixModified, self.onPrefixModifiedInProject)
@@ -359,6 +424,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         #############################################
         # COMPLETE SESSION SETUP
         #################################
+
         self.loadLanguageTagActions()
         self.setAcceptDrops(False)
         self.setCentralWidget(self.mdi)
@@ -370,8 +436,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle(self.project)
 
-        self.renderingBusyProgressDialog = None
-
         self.sgnReady.emit()
 
         LOGGER.info('Session startup completed: %s v%s [%s]', APPNAME, VERSION, self.project.name)
@@ -380,7 +444,8 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #   SESSION CONFIGURATION
     #################################
 
-    def loadLanguageTagActions(self):
+    # noinspection PyArgumentList
+    def loadLanguageTagActions(self) -> None:
         for langTag in self.project.getLanguages():
             settings = QtCore.QSettings()
             rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
@@ -399,7 +464,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     action.setChecked(lang == langTag)
 
     # noinspection PyArgumentList
-    def initActions(self):
+    def initActions(self) -> None:
         """
         Configure application built-in actions.
         """
@@ -1021,7 +1086,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         # IRI SPECIFIC
         #################################
 
-        # TODO doOpenIRIPropsBuilder
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'),
             'IRI refactor',
@@ -1046,7 +1110,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='edge_annotations_refactor',
             triggered=self.doOpenEdgePropsAnnotationBuilder))
 
-        # TODO NEW
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_owl'),
             'OWL Axioms',
@@ -1077,7 +1140,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='node_literal_refactor',
             triggered=self.doOpenLiteralDialog))
 
-        # TODO
         action = QtWidgets.QAction('Render by full IRI', self, objectName='render_full_iri',
                                    triggered=self.doRenderByFullIRI)
         action.setCheckable(True)
@@ -1112,7 +1174,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self, objectName='emptiness_explanation',
             triggered=self.doEmptyEntityExplanation))
 
-    def initExporters(self):
+    def initExporters(self) -> None:
         """
         Initialize diagram and project exporters.
         """
@@ -1126,7 +1188,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addDiagramExporter(JpegDiagramExporter)
         self.addDiagramExporter(PngDiagramExporter)
 
-    def initLoaders(self):
+    def initLoaders(self) -> None:
         """
         Initialize diagram and project loaders.
         """
@@ -1135,7 +1197,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addProjectLoader(GrapholIRIProjectLoader_v3)
 
     # noinspection PyArgumentList
-    def initMenus(self):
+    def initMenus(self) -> None:
         """
         Configure application built-in menus.
         """
@@ -1220,7 +1282,6 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
         menu = QtWidgets.QMenu('\u200C&View', objectName='view')
         # RENDER BY IRI,PREFIX,LABEL .... Menu
-        # TODO
         renderInnerMenu = menu.addMenu('Render by...')
         renderInnerMenu.addAction(self.action('render_full_iri'))
         renderInnerMenu.addAction(self.action('render_prefixed_iri'))
@@ -1482,7 +1543,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         menuBar.addMenu(self.menu('help'))
 
     # noinspection PyArgumentList,PyTypeChecker
-    def initPre(self):
+    def initPre(self) -> None:
         """
         Initialize stuff that are shared by actions, menus, widgets etc.
         """
@@ -1492,13 +1553,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addWidget(QtWidgets.QToolBar('Graphol', objectName='graphol_toolbar'))
         self.addWidget(QtWidgets.QToolBar('Reasoner', objectName='reasoner_toolbar'))
 
-    def initPlugins(self):
+    def initPlugins(self) -> None:
         """
         Load and initialize application plugins.
         """
         self.addPlugins(self.pmanager.init())
 
-    def initProfiles(self):
+    def initProfiles(self) -> None:
         """
         Initialize the ontology profiles.
         """
@@ -1506,7 +1567,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addProfile(OWL2QLProfile)
         self.addProfile(OWL2RLProfile)
 
-    def initSignals(self):
+    def initSignals(self) -> None:
         """
         Connect session specific signals to their slots.
         """
@@ -1524,7 +1585,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         connect(self.sgnSaveProject, self.doSave)
         connect(self.sgnUpdateState, self.doUpdateState)
 
-    def initState(self):
+    def initState(self) -> None:
         """
         Configure application state by reading the preferences file.
         """
@@ -1534,7 +1595,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.restoreState(settings.value('session/state', QtCore.QByteArray(), QtCore.QByteArray))
         self.action('toggle_grid').setChecked(settings.value('diagram/grid', False, bool))
 
-    def initStatusBar(self):
+    def initStatusBar(self) -> None:
         """
         Configure the status bar.
         """
@@ -1544,7 +1605,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         statusbar.setSizeGripEnabled(False)
         self.setStatusBar(statusbar)
 
-    def initToolBars(self):
+    def initToolBars(self) -> None:
         """
         Configure application built-in toolbars.
         """
@@ -1599,7 +1660,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addToolBar(QtCore.Qt.TopToolBarArea, self.widget('reasoner_toolbar'))
 
     # noinspection PyArgumentList
-    def initWidgets(self):
+    def initWidgets(self) -> None:
         """
         Configure application built-in widgets.
         """
@@ -1641,28 +1702,29 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot(str, str)
-    def onPrefixAddedToProject(self, pref, ns):
+    def onPrefixAddedToProject(self, pref: str, ns: str) -> None:
         self.sgnPrefixAdded.emit(pref, ns)
 
     @QtCore.pyqtSlot(str)
-    def onPrefixRemovedFromProject(self, pref):
+    def onPrefixRemovedFromProject(self, pref: str) -> None:
         self.sgnPrefixRemoved.emit(pref)
 
     @QtCore.pyqtSlot(str, str)
-    def onPrefixModifiedInProject(self, pref, ns):
+    def onPrefixModifiedInProject(self, pref: str, ns: str) -> None:
         self.sgnPrefixModified.emit(pref, ns)
 
     @QtCore.pyqtSlot(IRI)
-    def onIRIRemovedFromAllDiagrams(self, iri):
+    def onIRIRemovedFromAllDiagrams(self, iri: IRI) -> None:
         self.sgnIRIRemovedFromAllDiagrams.emit(iri)
 
     @QtCore.pyqtSlot(OntologyEntityNode, IRI)
-    def onSingleNodeSwitchIRI(self, node, iri):
+    def onSingleNodeSwitchIRI(self, node: OntologyEntityNode, iri: IRI) -> None:
         self.sgnSingleNodeSwitchIRI.emit(node, iri)
 
     @QtCore.pyqtSlot()
-    def doBringToFront(self):
+    def doBringToFront(self) -> None:
         """
         Bring the selected item to the top of the diagram.
         """
@@ -1687,7 +1749,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(first(commands))
 
     @QtCore.pyqtSlot()
-    def doCenterDiagram(self):
+    def doCenterDiagram(self) -> None:
         """
         Center the active diagram.
         """
@@ -1709,7 +1771,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.mdi.activeView().centerOn(0, 0)
 
     @QtCore.pyqtSlot()
-    def doCheckForUpdate(self):
+    def doCheckForUpdate(self) -> None:
         """
         Execute the update check routine.
         """
@@ -1728,7 +1790,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.nmanager.checkForUpdate(channel)
 
     @QtCore.pyqtSlot()
-    def doClose(self):
+    def doClose(self) -> None:
         """
         Close the currently active subwindow.
         """
@@ -1736,7 +1798,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.sgnClosed.emit()
 
     @QtCore.pyqtSlot()
-    def doComposePropertyExpression(self):
+    def doComposePropertyExpression(self) -> None:
         """
         Compose a property domain using the selected role/attribute node.
         """
@@ -1806,23 +1868,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 else:
                     self.undostack.push(first(commands))
 
-    def common_commands_for_cut_delete_purge(self, diagram, items):
-        # TODO CONTROLLA BENE SE SET DEI COMANDI è COMPLETO (GESTIONE IRI RIMOSSE)
-        commands = []
-        for item in items:
-            if isinstance(item, OntologyEntityNode) or isinstance(item,
-                                                                  OntologyEntityResizableNode):
-                print('Removing OntologyPredicateNode {}'.format(item))
-                # TODO aggiungi comandi per rimozione IRI da indice
-        commands.append(CommandItemsRemove(diagram, items))
-        self.undostack.beginMacro('>>')
-        for command in commands:
-            if command:
-                self.undostack.push(command)
-        self.undostack.endMacro()
-
+    # noinspection PyArgumentList
     @QtCore.pyqtSlot(str)
-    def doAddLanguageTagToMenu(self, lang):
+    def doAddLanguageTagToMenu(self, lang: str) -> None:
         """
         Add an action to RenderByLabel menu to allow selecting 'lang'
         """
@@ -1835,12 +1883,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addAction(action)
 
     @QtCore.pyqtSlot()
-    def doCopy(self):
+    def doCopy(self) -> None:
         """
         Make a copy of selected items.
         """
-        self.project.iri_of_cut_nodes[:] = []
-
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1850,12 +1896,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnUpdateState.emit()
 
     @QtCore.pyqtSlot()
-    def doCut(self):
+    def doCut(self) -> None:
         """
         Cut selected items from the active diagram.
         """
-        self.project.iri_of_cut_nodes[:] = []
-
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -1865,13 +1909,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnUpdateState.emit()
             items = diagram.selectedItems()
             if items:
-                items.extend(
-                    [x for item in items if item.isNode() for x in item.edges if x not in items])
-
-                self.common_commands_for_cut_delete_purge(diagram, items)
+                items.extend([x for item in items if item.isNode()
+                              for x in item.edges if x not in items])
+                self.undostack.push(CommandItemsRemove(diagram, items))
 
     @QtCore.pyqtSlot()
-    def doDelete(self):
+    def doDelete(self) -> None:
         """
         Delete the currently selected items from the active diagram.
         """
@@ -1880,13 +1923,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             diagram.setMode(DiagramMode.Idle)
             items = diagram.selectedItems()
             if items:
-                items.extend(
-                    [x for item in items if item.isNode() for x in item.edges if x not in items])
-
-                self.common_commands_for_cut_delete_purge(diagram, items)
+                items.extend([x for item in items if item.isNode()
+                              for x in item.edges if x not in items])
+                self.undostack.push(CommandItemsRemove(diagram, items))
 
     @QtCore.pyqtSlot()
-    def doExport(self):
+    def doExport(self) -> None:
         """
         Export the current project.
         """
@@ -1922,7 +1964,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 worker.run(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
-    def doExportDiagram(self):
+    def doExportDiagram(self) -> None:
         """
         Export the current project diagrams.
         """
@@ -2004,7 +2046,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.exec_()
 
     @QtCore.pyqtSlot()
-    def doExportOntology(self):
+    def doExportOntology(self) -> None:
         """
         Export the current project.
         """
@@ -2036,7 +2078,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     """)
 
     @QtCore.pyqtSlot()
-    def doFocusMdiArea(self):
+    def doFocusMdiArea(self) -> None:
         """
         Focus the active MDI area subwindow, if any.
         """
@@ -2044,11 +2086,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if subwindow:
             subwindow.setFocus()
 
-    @QtCore.pyqtSlot('QGraphicsScene')
-    def doFocusDiagram(self, diagram):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
+    def doFocusDiagram(self, diagram: Diagram) -> None:
         """
         Focus the given diagram in the MDI area.
-        :type diagram: Diagram
+
+        :param diagram: The diagram to focus
         """
         subwindow = self.mdi.subWindowForDiagram(diagram)
         if not subwindow:
@@ -2059,11 +2102,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.mdi.update()
         self.sgnDiagramFocused.emit(diagram)
 
-    @QtCore.pyqtSlot('QGraphicsItem')
-    def doFocusItem(self, item):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsItem)
+    def doFocusItem(self, item: AbstractItem) -> None:
         """
         Focus an item in its diagram.
-        :type item: AbstractItem
+
+        :param item: The item to focus
         """
         self.sgnFocusDiagram.emit(item.diagram)
         self.mdi.activeDiagram().clearSelection()
@@ -2071,7 +2115,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         item.setSelected(True)
 
     @QtCore.pyqtSlot()
-    def doImport(self):
+    def doImport(self) -> None:
         """
         Import an ontology into the currently active Project.
         """
@@ -2120,7 +2164,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     msgbox.exec_()
 
     @QtCore.pyqtSlot()
-    def doInvertRole(self):
+    def doInvertRole(self) -> None:
         """
         Swap the direction of all the occurrences of the selected role.
         """
@@ -2175,225 +2219,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.endMacro()
 
     @QtCore.pyqtSlot()
-    def doLookupOccurrence(self):
+    def doLookupOccurrence(self) -> None:
         """
         Focus the item which is being held by the supplying QAction.
         """
         self.sgnFocusItem.emit(self.sender().data())
 
-    # TODO TO BE REMOVED
     @QtCore.pyqtSlot()
-    def refactorsetprefix(self):
-
-        node = self.sender().data()
-        to_prefix = self.sender().text()
-        if to_prefix == ':':
-            to_iri = None
-            for iri_itr in self.project.IRI_prefixes_nodes_dict.keys():
-                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri_itr][2]:
-                    to_iri = iri_itr
-                    break
-            if to_iri is None:
-                self.statusBar().showMessage(
-                    ': prefix does not correspond to any IRI in the widget. please contact developer.')
-        else:
-            to_iri = self.project.get_iri_for_prefix(to_prefix)
-        from_prefix = self.project.get_prefix_of_node(node)
-        from_iri = self.project.get_iri_of_node(node)
-
-        # print('from_prefix', from_prefix)
-        # print('to_prefix',to_prefix)
-        # print('from_iri', from_iri)
-        # print('to_iri',to_iri)
-        # print('node',node)
-
-        # case 1
-        if from_prefix == to_prefix:
-            # print('from_prefix == to_prefix')
-            return
-
-        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-
-        commands = []
-
-        # case 2
-        if from_iri == to_iri:
-
-            if to_prefix != ':':
-                Duplicate_dict_1[from_iri][0].remove(to_prefix)
-                Duplicate_dict_1[from_iri][0].append(to_prefix)
-
-
-        # case 3
-        else:
-
-            metaDataChanged_ADD_OK_var = set()
-            metaDataChanged_REMOVE_OK_var = set()
-            metaDataChanged_IGNORE_var = set()
-
-            @QtCore.pyqtSlot(str, str, str)
-            def metaDataChanged_REMOVE_OK(iri, node, message):
-                # print('metaDataChanged_REMOVE_OK -', iri, ',', node, ',', message)
-                metaDataChanged_REMOVE_OK_var.add(True)
-
-            @QtCore.pyqtSlot(str, str, str)
-            def metaDataChanged_ADD_OK(iri, node, message):
-                # print('metaDataChanged_ADD_OK -', iri, ',', node, ',', message)
-                metaDataChanged_ADD_OK_var.add(True)
-
-            @QtCore.pyqtSlot(str, str, str)
-            def metaDataChanged_IGNORE(iri, node, message):
-                # if node.id is None:
-                # print('metaDataChanged_IGNORE >', iri, '-', 'None', '-', message)
-                # else:
-                # print('metaDataChanged_IGNORE >', iri, '-', node, '-', message)
-                metaDataChanged_IGNORE_var.add(True)
-
-            connect(self.project.sgnIRINodeEntryAdded, metaDataChanged_ADD_OK)
-            connect(self.project.sgnIRINodeEntryRemoved, metaDataChanged_REMOVE_OK)
-            connect(self.project.sgnIRINodeEntryIgnored, metaDataChanged_IGNORE)
-
-            list_of_nodes_to_process = []
-
-            for n in self.project.nodes():
-                if (('AttributeNode' in str(type(n))) or ('ConceptNode' in str(type(n))) or (
-                    'IndividualNode' in str(type(n))) or ('RoleNode' in str(type(n)))):
-
-                    if (self.project.get_iri_of_node(n) == from_iri) and (
-                        n.remaining_characters == node.remaining_characters):
-                        list_of_nodes_to_process.append(n)
-
-            for n in list_of_nodes_to_process:
-
-                self.project.removeIRINodeEntry(Duplicate_dict_1, from_iri, n)
-                self.project.addIRINodeEntry(Duplicate_dict_1, to_iri, n)
-
-                if ((False not in metaDataChanged_REMOVE_OK_var) and (
-                    False not in metaDataChanged_ADD_OK_var)) \
-                    and (True not in metaDataChanged_IGNORE_var):
-                    pass
-                else:
-                    LOGGER.warning('redo != undo but transaction was not executed correctly')
-                    self.statusBar().showMessage(
-                        'transaction was not executed correctly for node' + str(n), 15000)
-                    return
-
-            # part 2
-            if to_prefix != ':':
-                Duplicate_dict_1[to_iri][0].remove(to_prefix)
-                Duplicate_dict_1[to_iri][0].append(to_prefix)
-
-        if any(commands):
-            self.undostack.beginMacro('edit {0} refactorsetprefix'.format(node.name))
-            for command in commands:
-                if command:
-                    self.undostack.push(command)
-            self.undostack.endMacro()
-
-    @QtCore.pyqtSlot()
-    def setprefix(self):
-
-        node = self.sender().data()
-        to_prefix = self.sender().text()
-        if to_prefix == ':':
-            to_iri = None
-            for iri_itr in self.project.IRI_prefixes_nodes_dict.keys():
-                if 'display_in_widget' in self.project.IRI_prefixes_nodes_dict[iri_itr][2]:
-                    to_iri = iri_itr
-                    break
-            if to_iri is None:
-                self.statusBar().showMessage(
-                    ': prefix does not correspond to any IRI in the widget. please contact developer.')
-        else:
-            to_iri = self.project.get_iri_for_prefix(to_prefix)
-        from_prefix = self.project.get_prefix_of_node(node)
-        from_iri = self.project.get_iri_of_node(node)
-
-        # print('from_prefix', from_prefix)
-        # print('to_prefix',to_prefix)
-        # print('from_iri', from_iri)
-        # print('to_iri',to_iri)
-        # print('node',node)
-
-        # case 1
-        if from_prefix == to_prefix:
-            # print('from_prefix == to_prefix')
-            return
-
-        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-            self.project.IRI_prefixes_nodes_dict, dict())
-
-        commands = []
-
-        # case 2
-        if from_iri == to_iri:
-
-            if to_prefix != ':':
-                Duplicate_dict_1[from_iri][0].remove(to_prefix)
-                Duplicate_dict_1[from_iri][0].append(to_prefix)
-
-
-        # case 3
-        else:
-
-            metaDataChanged_ADD_OK_var = set()
-            metaDataChanged_REMOVE_OK_var = set()
-            metaDataChanged_IGNORE_var = set()
-
-            @QtCore.pyqtSlot(str, str, str)
-            def metaDataChanged_REMOVE_OK(iri, node, message):
-                # print('metaDataChanged_REMOVE_OK -', iri, ',', node, ',', message)
-                metaDataChanged_REMOVE_OK_var.add(True)
-
-            @QtCore.pyqtSlot(str, str, str)
-            def metaDataChanged_ADD_OK(iri, node, message):
-                # print('metaDataChanged_ADD_OK -', iri, ',', node, ',', message)
-                metaDataChanged_ADD_OK_var.add(True)
-
-            @QtCore.pyqtSlot(str, str, str)
-            def metaDataChanged_IGNORE(iri, node, message):
-                # if node.id is None:
-                # print('metaDataChanged_IGNORE >', iri, '-', 'None', '-', message)
-                # else:
-                # print('metaDataChanged_IGNORE >', iri, '-', node, '-', message)
-                metaDataChanged_IGNORE_var.add(True)
-
-            connect(self.project.sgnIRINodeEntryAdded, metaDataChanged_ADD_OK)
-            connect(self.project.sgnIRINodeEntryRemoved, metaDataChanged_REMOVE_OK)
-            connect(self.project.sgnIRINodeEntryIgnored, metaDataChanged_IGNORE)
-
-            self.project.removeIRINodeEntry(Duplicate_dict_1, from_iri, node)
-            self.project.addIRINodeEntry(Duplicate_dict_1, to_iri, node)
-
-            if ((False not in metaDataChanged_REMOVE_OK_var) and (
-                False not in metaDataChanged_ADD_OK_var)) \
-                and (True not in metaDataChanged_IGNORE_var):
-                pass
-            else:
-                LOGGER.warning('redo != undo but transaction was not executed correctly')
-                self.statusBar().showMessage(
-                    'transaction was not executed correctly for node' + str(node), 15000)
-                return
-
-            # part 2
-            if to_prefix != ':':
-                Duplicate_dict_1[to_iri][0].remove(to_prefix)
-                Duplicate_dict_1[to_iri][0].append(to_prefix)
-
-        if any(commands):
-            self.undostack.beginMacro('edit {0} setprefix'.format(node.name))
-            for command in commands:
-                if command:
-                    self.undostack.push(command)
-            self.undostack.endMacro()
-
-    @QtCore.pyqtSlot()
-    def doNewDiagram(self):
+    def doNewDiagram(self) -> None:
         """
         Create a new diagram.
         """
@@ -2410,20 +2243,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnFocusDiagram.emit(diagram)
 
     @QtCore.pyqtSlot()
-    def doOpen(self):
+    def doOpen(self) -> None:
         """
         Open a project in a new session.
         """
-        '''
-        settings = QtCore.QSettings()
-        workspace = settings.value('workspace/home', WORKSPACE, str)
-        dialog = QtWidgets.QFileDialog(self)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath(workspace))
-        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        '''
         dialog = QtWidgets.QFileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(expandPath('~'))
@@ -2434,7 +2257,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.app.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
 
     @QtCore.pyqtSlot()
-    def doOpenRecent(self):
+    def doOpenRecent(self) -> None:
         """
         Open a recent project in a new session.
         """
@@ -2444,11 +2267,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.app.sgnCreateSession.emit(expandPath(action.data()))
 
     @QtCore.pyqtSlot()
-    def doOpenDialog(self):
+    def doOpenDialog(self) -> None:
         """
         Open a dialog window by initializing it using the class stored in action data.
         """
-
         action = self.sender()
         dialog = action.data()
         window = dialog(self)
@@ -2458,7 +2280,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         window.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenURL(self):
+    def doOpenURL(self) -> None:
         """
         Open a URL using the operating system default browser.
         """
@@ -2469,7 +2291,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             QtGui.QDesktopServices.openUrl(QtCore.QUrl(weburl))
 
     @QtCore.pyqtSlot()
-    def doOpenDiagramProperties(self):
+    def doOpenDiagramProperties(self) -> None:
         """
         Executed when scene properties needs to be displayed.
         """
@@ -2483,16 +2305,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             properties.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenNodeProperties(self):
+    def doOpenNodeProperties(self) -> None:
         """
         Executed when node properties needs to be displayed.
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            selected = diagram.selectedNodes()
-            if len(selected) == 1:
-                node = first(selected)
+            node = first(diagram.selectedNodes())
             if node:
                 properties = self.pf.create(diagram, node)
                 properties.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2501,18 +2321,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 properties.activateWindow()
 
     @QtCore.pyqtSlot(AbstractNode)
-    def doOpenIRIBuilder(self, node):
+    def doOpenIRIBuilder(self, node: AbstractNode) -> None:
         """
         Executed when an IRI must be associated to an empty node.
-        :type node: OntologyEntityNode | OntologyEntityResizableNode
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not node:
-                selected = diagram.selectedNodes()
-                if len(selected) == 1:
-                    node = first(selected)
+                node = first(diagram.selectedNodes())
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2521,18 +2338,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot(FacetNode)
-    def doOpenConstrainingFacetBuilder(self, node):
+    def doOpenConstrainingFacetBuilder(self, node: FacetNode) -> None:
         """
         Executed when a facet must be associated to a node.
-        :type node: FacetNode
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not node:
-                selected = diagram.selectedNodes()
-                if len(selected) == 1:
-                    node = first(selected)
+                node = first(diagram.selectedNodes())
             if node:
                 builder = ConstrainingFacetDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2541,18 +2355,15 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot(LiteralNode)
-    def doOpenLiteralBuilder(self, node):
+    def doOpenLiteralBuilder(self, node: LiteralNode) -> None:
         """
         Executed when a literal must be associated to a node.
-        :type node: LiteralNode
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             if not node:
-                selected = diagram.selectedNodes()
-                if len(selected) == 1:
-                    node = first(selected)
+                node = first(diagram.selectedNodes())
             if node:
                 builder = LiteralDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2565,6 +2376,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         """
         Executed when the IRI associated to a node might be modified by the user.
         """
+        # TODO: Merge with doOpenIRIBuilder
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
@@ -2582,14 +2394,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenIRIFontDialog(self):
+    def doOpenIRIFontDialog(self) -> None:
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            selected = diagram.selectedNodes()
-            node = None
-            if len(selected) == 1:
-                node = first(selected)
+            node = first(diagram.selectedNodes())
             if node:
                 dialog = FontDialog(self, node, refactor=True)
                 dialog.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2598,14 +2407,11 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dialog.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenNodeFontDialog(self):
+    def doOpenNodeFontDialog(self) -> None:
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            selected = diagram.selectedNodes()
-            node = None
-            if len(selected) == 1:
-                node = first(selected)
+            node = first(diagram.selectedNodes())
             if node:
                 dialog = FontDialog(self, node)
                 dialog.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2614,17 +2420,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dialog.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenFacetDialog(self):
+    def doOpenFacetDialog(self) -> None:
         """
         Executed when the Facet associated to a node might be modified by the user.
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            selected = diagram.selectedNodes()
-            node = None
-            if len(selected) == 1:
-                node = first(selected)
+            node = first(diagram.selectedNodes())
             if node:
                 builder = ConstrainingFacetDialog(node, diagram, self)
                 builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2633,10 +2436,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenLiteralDialog(self, node):
+    def doOpenLiteralDialog(self, node: LiteralNode) -> None:
         """
         Executed when the Literal associated to a node might be modified by the user.
-        :type node: LiteralNode
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
@@ -2653,7 +2455,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenIRIPropsBuilder(self):
+    def doOpenIRIPropsBuilder(self) -> None:
         """
         Executed when IRI props builder needs to be displayed.
         """
@@ -2665,8 +2467,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if node and (isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                            OntologyEntityResizableNode)):
+            if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self)
@@ -2678,7 +2479,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenIRIPropsAnnotationBuilder(self):
+    def doOpenIRIPropsAnnotationBuilder(self) -> None:
         """
         Executed when IRI props builder needs to be displayed with focus on annotation assertions.
         """
@@ -2690,8 +2491,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if node and (isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                            OntologyEntityResizableNode)):
+            if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self, True)
@@ -2703,12 +2503,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot(IRI)
-    def doOpenAnnotationAssertionBuilder(self, iri, assertion=None):
+    def doOpenAnnotationAssertionBuilder(self, iri: IRI, assertion: AnnotationAssertion = None,):
         """
         Executed when annotation assertion builder needs to be displayed.
-        :type node: IRI
         """
-        # TODO
         if iri:
             builder = AnnotationAssertionBuilderDialog(iri, self, assertion)
             builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2728,7 +2526,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doOpenEdgePropsAnnotationBuilder(self):
+    def doOpenEdgePropsAnnotationBuilder(self) -> None:
         """
         Executed when annotation builder needs to be displayed.
         """
@@ -2744,12 +2542,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 builder.activateWindow()
 
     @QtCore.pyqtSlot(AxiomEdge)
-    def doOpenAnnotationBuilder(self, edge, annotation=None):
+    def doOpenAnnotationBuilder(self, edge: AxiomEdge, annotation: AnnotationAssertion = None):
         """
         Executed when annotation builder needs to be displayed.
-        :type node: IRI
         """
-        # TODO
         if edge:
             builder = AnnotationBuilderDialog(edge, self, annotation)
             builder.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -2770,7 +2566,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     builder.activateWindow()
 
     @QtCore.pyqtSlot(ImportedOntology)
-    def doOpenImportOntologyWizard(self, importedOntology=None):
+    def doOpenImportOntologyWizard(self, importedOntology: ImportedOntology = None):
         """
         Executed when annotation assertion builder needs to be displayed.
         :type node: IRI
@@ -2802,7 +2598,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 description.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doPaste(self):
+    def doPaste(self) -> None:
         """
         Paste previously copied items.
         """
@@ -2813,7 +2609,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.clipboard.paste(diagram, diagram.mp_Pos)
 
     @QtCore.pyqtSlot()
-    def doPrint(self):
+    def doPrint(self) -> None:
         """
         Print the active diagram.
         """
@@ -2823,7 +2619,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             worker.run()
 
     @QtCore.pyqtSlot()
-    def doPurge(self):
+    def doPurge(self) -> None:
         """
         Delete the currently selected items by also removing no more necessary elements.
         """
@@ -2847,16 +2643,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         purge.add(node)
             collection = list(items | purge)
             if collection:
-                collection.extend(
-                    [x for item in collection if item.isNode() for x in item.edges if
-                     x not in collection])
-
-                self.common_commands_for_cut_delete_purge(diagram, collection)
-
-                # self.undostack.push(CommandItemsRemove(diagram, collection))
+                collection.extend([x for item in collection if item.isNode()
+                                   for x in item.edges if x not in collection])
+                self.undostack.push(CommandItemsRemove(diagram, collection))
 
     @QtCore.pyqtSlot()
-    def doQuit(self):
+    def doQuit(self) -> None:
         """
         Quit Eddy.
         """
@@ -2864,7 +2656,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.sgnQuit.emit()
 
     @QtCore.pyqtSlot()
-    def doRefactorBrush(self):
+    def doRefactorBrush(self) -> None:
         """
         Change the node brush for all the predicate nodes matching the selected predicate.
         """
@@ -2879,14 +2671,13 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             if node:
                 action = self.sender()
                 color = action.data()
-                nodes = []
-                if isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                      OntologyEntityResizableNode):
+                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
                     nodes = self.project.iriOccurrences(node.type(), node.iri)
                 else:
                     nodes = self.project.predicates(node.type(), node.text())
                 self.undostack.push(
-                    CommandNodeSetBrush(diagram, nodes, QtGui.QBrush(QtGui.QColor(color.value))))
+                    CommandNodeSetBrush(diagram, nodes, QtGui.QBrush(QtGui.QColor(color.value)))
+                )
 
     # TODO TO BE REMOVED
     @QtCore.pyqtSlot()
@@ -2905,7 +2696,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def doRelocateLabel(self):
+    def doRelocateLabel(self) -> None:
         """
         Reset the selected node label to its default position.
         """
@@ -2920,7 +2711,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandLabelMove(diagram, node, undo, redo))
 
     @QtCore.pyqtSlot()
-    def doRemoveBreakpoint(self):
+    def doRemoveBreakpoint(self) -> None:
         """
         Remove the edge breakpoint specified in the action triggering this slot.
         """
@@ -2933,7 +2724,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
 
     @QtCore.pyqtSlot()
-    def doRemoveDiagram(self):
+    def doRemoveDiagram(self) -> None:
         """
         Removes a diagram from the current project.
         """
@@ -2943,7 +2734,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.undostack.push(CommandDiagramRemove(diagram, self.project))
 
     @QtCore.pyqtSlot()
-    def doRenameDiagram(self):
+    def doRenameDiagram(self) -> None:
         """
         Renames a diagram.
         """
@@ -2956,7 +2747,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandDiagramRename(diagram.name, name, diagram, self.project))
 
     @QtCore.pyqtSlot()
-    def doSave(self):
+    def doSave(self) -> None:
         """
         Save the current project.
         """
@@ -3026,7 +2817,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnProjectSaved.emit()
 
     @QtCore.pyqtSlot()
-    def doSaveAs(self):
+    def doSaveAs(self) -> None:
         """
         Save the current project as...
         """
@@ -3091,7 +2882,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.sgnProjectSaved.emit()
 
     @QtCore.pyqtSlot()
-    def doSelectAll(self):
+    def doSelectAll(self) -> None:
         """
         Select all the items in the active diagrsm.
         """
@@ -3103,7 +2894,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             diagram.setMode(DiagramMode.Idle)
 
     @QtCore.pyqtSlot()
-    def doSendToBack(self):
+    def doSendToBack(self) -> None:
         """
         Send the selected item to the back of the diagram.
         """
@@ -3128,7 +2919,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(first(commands))
 
     @QtCore.pyqtSlot()
-    def doSetNodeBrush(self):
+    def doSetNodeBrush(self) -> None:
         """
         Set the brush of selected nodes.
         """
@@ -3146,7 +2937,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandNodeSetBrush(diagram, selected, brush))
 
     @QtCore.pyqtSlot()
-    def doSetNodeMeta(self):
+    def doSetNodeMeta(self) -> None:
         """
         Set meta values of selected nodes
         """
@@ -3174,7 +2965,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     # self.undostack.push(CommandNodeSetMeta(self.project, node.type(), node.text(), undo, redo, name))
 
     @QtCore.pyqtSlot()
-    def doSetPropertyRestriction(self):
+    def doSetPropertyRestriction(self) -> None:
         """
         Set a property domain / range restriction.
         """
@@ -3199,7 +2990,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         CommandLabelChange(diagram, node, node.text(), data, name=name))
 
     @QtCore.pyqtSlot()
-    def doSetIndividualAs(self):
+    def doSetIndividualAs(self) -> None:
         """
         Set an invididual node either to Individual or Value.
         Will bring up the Value Form if needed.
@@ -3250,7 +3041,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
 
     # TODO TO BE REMOVED
     @QtCore.pyqtSlot()
-    def doSetNodeSpecial(self):
+    def doSetNodeSpecial(self) -> None:
         """
         Set the special type of the selected node.
         """
@@ -3299,7 +3090,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         self.undostack.endMacro()
 
     @QtCore.pyqtSlot()
-    def doSetDatatype(self):
+    def doSetDatatype(self) -> None:
         """
         Set the datatype of the selected value-domain node.
         """
@@ -3318,7 +3109,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         CommandLabelChange(diagram, node, node.text(), data, name=name))
 
     @QtCore.pyqtSlot()
-    def doSetFacet(self):
+    def doSetFacet(self) -> None:
         """
         Set the facet of a Facet node.
         """
@@ -3337,7 +3128,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                         CommandLabelChange(diagram, node, node.text(), data, name=name))
 
     @QtCore.pyqtSlot()
-    def doSetProfile(self):
+    def doSetProfile(self) -> None:
         """
         Set the currently used project profile.
         """
@@ -3349,7 +3140,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         widget.clearFocus()
 
     @QtCore.pyqtSlot()
-    def doSnapTopGrid(self):
+    def doSnapTopGrid(self) -> None:
         """
         Snap all the element in the active diagram to the grid.
         """
@@ -3381,7 +3172,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandSnapItemsToGrid(diagram, data))
 
     @QtCore.pyqtSlot()
-    def doSwapEdge(self):
+    def doSwapEdge(self) -> None:
         """
         Swap the selected edges by inverting source/target points.
         """
@@ -3394,7 +3185,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandEdgeSwap(diagram, selected))
 
     @QtCore.pyqtSlot()
-    def doSwitchSameDifferentEdge(self):
+    def doSwitchSameDifferentEdge(self) -> None:
         """
         Switch selected same/different edges to different/same respectively.
         """
@@ -3407,7 +3198,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 self.undostack.push(CommandSwitchSameDifferentEdge(diagram, selected))
 
     @QtCore.pyqtSlot()
-    def doSwitchOperatorNode(self):
+    def doSwitchOperatorNode(self) -> None:
         """
         Switch the selected operator node to a different type.
         """
@@ -3424,7 +3215,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(CommandNodeSwitchTo(diagram, node, xnode))
 
     @QtCore.pyqtSlot()
-    def doSwitchRestrictionNode(self):
+    def doSwitchRestrictionNode(self) -> None:
         """
         Switch the selected restriction node to a different type.
         """
@@ -3443,7 +3234,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                     self.undostack.push(CommandNodeSwitchTo(diagram, node, xnode))
 
     @QtCore.pyqtSlot()
-    def doProfileSyntaxCheck(self):
+    def doProfileSyntaxCheck(self) -> None:
         """
         Perform syntax checking on the active diagram.
         """
@@ -3451,40 +3242,35 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def doDLCheck(self):
+    def doDLCheck(self) -> None:
         """
         Perform OWL DL check on the ontology.
         """
-        print('doDLCheck called')
         dialog = OWL2DLProfileValidationDialog(self.project, self)
         dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def doShowInconsistentOntologyExplanations(self):
+    def doShowInconsistentOntologyExplanations(self) -> None:
         """
         Show explanations for inconsistent ontology
         """
-        print('doShowInconsistentOntologyExplanations called')
         dialog = ExplanationDialog(self, self.inconsistentOntologyExplanations)
-        # dialog.exec_()
         dialog.show()
         dialog.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doShowEmptyEntityExplanations(self):
+    def doShowEmptyEntityExplanations(self) -> None:
         """
         Show explanations for empty entity
         """
-        print('doShowEmptyEntityExplanations called')
         dialog = ExplanationDialog(self, self.currentEmptyEntityExplanations,
                                    entityIRI=self.currentEmptyEntityIRI,
                                    entityType=self.currentEmptyEntityType)
-        # dialog.exec_()
         dialog.show()
         dialog.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doShowInvolvingAxioms(self):
+    def doShowInvolvingAxioms(self) -> None:
         """
         Executed when user need to visualize the OWL Axioms involving a given IRI
         """
@@ -3496,8 +3282,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if node and (isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                            OntologyEntityResizableNode)):
+            if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
                 iri = node.iri
             if iri:
                 dialog = AxiomsByEntityDialog(self.project, self, iri)
@@ -3506,16 +3291,14 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dialog.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doShowNoMatchingLabelIRIs(self):
-        print('doShowNoMatchingLabelIRIs called')
+    def doShowNoMatchingLabelIRIs(self) -> None:
         iris = self.project.getAllIRIsWithNoMatchingLabel()
         dialog = LabelDialog(self, iris)
-        # dialog.exec_()
         dialog.show()
         dialog.activateWindow()
 
     @QtCore.pyqtSlot()
-    def doSelectReasoner(self):
+    def doSelectReasoner(self) -> None:
         """
         Set the currently used project profile.
         """
@@ -3524,7 +3307,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         widget.clearFocus()
 
     @QtCore.pyqtSlot()
-    def doOntologyConsistencyCheck(self):
+    def doOntologyConsistencyCheck(self) -> None:
         """
         Perform Ontology Consistency checking on the active ontology/diagram.
         """
@@ -3538,7 +3321,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def doEmptyEntityExplanation(self):
+    def doEmptyEntityExplanation(self) -> None:
         """
         Compute explanation for entity emptiness
         """
@@ -3554,36 +3337,26 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 dialog.exec_()
 
     @QtCore.pyqtSlot()
-    def onNewEmptyEntityExplanation(self):
+    def onNewEmptyEntityExplanation(self) -> None:
         """
         Executed when new explanations for empty entities are computed
         """
         self.doShowEmptyEntityExplanations()
 
     @QtCore.pyqtSlot(IRI)
-    def onUnsatisfiableClass(self, iri):
+    def onUnsatisfiableClass(self, iri: IRI) -> None:
         self.sgnUnsatisfiableClass.emit(iri)
 
     @QtCore.pyqtSlot(IRI)
-    def onUnsatisfiableObjectProperty(self, iri):
+    def onUnsatisfiableObjectProperty(self, iri: IRI) -> None:
         self.sgnUnsatisfiableObjectProperty.emit(iri)
 
     @QtCore.pyqtSlot(IRI)
-    def onUnsatisfiableDataProperty(self, iri):
+    def onUnsatisfiableDataProperty(self, iri: IRI) -> None:
         self.sgnUnsatisfiableDataProperty.emit(iri)
 
-    # TODO NOT NEEDED ANYMORE. DEPRECATED, USE onUnsatisfiableEntities INSTEAD
     @QtCore.pyqtSlot()
-    def onPerfectOntology(self):
-        """
-        Executed when the consistency check reports that the ontology is consistent and all classes
-        are satisfiable.
-        """
-        self.action('reset_reasoner').setEnabled(True)
-        self.sgnPerfectOntology.emit()
-
-    @QtCore.pyqtSlot()
-    def onInconsistentOntology(self):
+    def onInconsistentOntology(self) -> None:
         """
         Executed when the consistency check reports that the ontology is inconsistent.
         """
@@ -3592,7 +3365,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.sgnInconsistentOntology.emit()
 
     @QtCore.pyqtSlot(int)
-    def onUnsatisfiableEntities(self, unsatCount):
+    def onUnsatisfiableEntities(self, unsatCount: int) -> None:
         """
         Executed when the consistency check reports that the ontology is consistent.
         """
@@ -3600,7 +3373,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.sgnUnsatisfiableEntities.emit(unsatCount)
 
     @QtCore.pyqtSlot()
-    def doOpenOntologyExplorer(self):
+    def doOpenOntologyExplorer(self) -> None:
         """
         Perform Ontology Consistency checking on the active ontology/diagram.
         """
@@ -3609,14 +3382,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         dialog = OntologyManagerDialog(self)
         dialog.exec_()
 
-    # TODO. ONCE NEEDED TO REMOVE HIGHLIGHT FROM NODES PREVIOUSLY COMPUTED AS UNSATISFIABLE. NOW REMOVE HIGHLIGHT FROM ENTRIES OF ONTOLOGY EXPLORER WIDGET
     @QtCore.pyqtSlot()
-    def doResetConsistencyCheck(self, updateNodes=True, clearReasonerCache=True):
+    def doResetConsistencyCheck(self) -> None:
         """
-        Resets the background highlighting of nodes used for the consistency check.
-
-        :type updateNodes: bool
-        :type clearReasonerCache: bool
+        Signals to reset the status of the project after the consistency check.
         """
         self.action('reset_reasoner').setEnabled(False)
         self.action('inconsistency_explanations').setEnabled(False)
@@ -3626,65 +3395,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.currentEmptyEntityExplanations = list()
         self.emptyEntityExplanations = {}
         self.sgnConsistencyCheckReset.emit()
-        '''
-        OLD. NOT USED ANYMORE
-        brush = QtGui.QBrush(QtCore.Qt.NoBrush)
-
-        # RESET NODE HIGHLIGHT
-        for node in self.project.nodes():
-            node.selection.setBrush(brush)
-            node.setCacheMode(AbstractItem.NoCache)
-            node.setCacheMode(AbstractItem.DeviceCoordinateCache)
-            node.update(node.boundingRect())
-
-            if updateNodes:
-                node.updateNode()
-
-        # RESET NODE HIGHLIGHT
-        for edge in self.project.edges():
-            edge.selection.setBrush(brush)
-            edge.setCacheMode(AbstractItem.NoCache)
-            edge.setCacheMode(AbstractItem.DeviceCoordinateCache)
-            edge.update(edge.boundingRect())
-
-        # RESET REASONER CACHE
-        if clearReasonerCache:
-            self.doClearReasonerCache()
-
-        # UPDATE DIAGRAMS
-        for d in self.project.diagrams():
-            d.sgnUpdated.emit()
-
-        if updateNodes and clearReasonerCache:
-            self.sgnConsistencyCheckReset.emit()
-        '''
-
-    # ONCE NEEDED FOR EXPLANATIONS
-    '''
-    @QtCore.pyqtSlot()
-    def doClearReasonerCache(self):
-        """
-        Clears the reasoner cache from the project.
-        """
-        self.project.ontology_OWL = None
-        self.project.axioms_to_nodes_edges_mapping = None
-        self.project.unsatisfiable_classes = []
-        self.project.explanations_for_unsatisfiable_classes = []
-        self.project.unsatisfiable_attributes = []
-        self.project.explanations_for_unsatisfiable_attributes = []
-        self.project.unsatisfiable_roles = []
-        self.project.explanations_for_unsatisfiable_roles = []
-        self.project.inconsistent_ontology = None
-        self.project.explanations_for_inconsistent_ontology = []
-        self.project.uc_as_input_for_explanation_explorer = None
-        self.project.nodes_of_unsatisfiable_entities = []
-        self.project.nodes_or_edges_of_axioms_to_display_in_widget = []
-        self.project.nodes_or_edges_of_explanations_to_display_in_widget = []
-        self.project.converted_nodes = dict()
-    '''
 
     @QtCore.pyqtSlot()
-    def doToggleGrid(self):
+    def doToggleGrid(self) -> None:
         """
         Toggle snap to grid setting and viewport display.
         """
@@ -3697,7 +3410,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             viewport.update()
 
     @QtCore.pyqtSlot()
-    def doUpdateState(self):
+    def doUpdateState(self) -> None:
         """
         Update built-in actions according to the application state.
         """
@@ -3825,7 +3538,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
 
     @QtCore.pyqtSlot()
-    def doRenderByFullIRI(self):
+    def doRenderByFullIRI(self) -> None:
         """
         Render ontology elements by full IRIs
         """
@@ -3845,7 +3558,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnRenderingModified.emit(IRIRender.FULL.value)
 
     @QtCore.pyqtSlot()
-    def doRenderByPrefixedIRI(self):
+    def doRenderByPrefixedIRI(self) -> None:
         """
         Render ontology elements by prefixed IRIs
         """
@@ -3859,13 +3572,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
-                if isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                      OntologyEntityResizableNode):
+                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
                     node.doUpdateNodeLabel()
             self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
 
     @QtCore.pyqtSlot()
-    def doRenderBySimpleName(self):
+    def doRenderBySimpleName(self) -> None:
         """
         Render ontology elements by prefixed IRIs
         """
@@ -3880,14 +3592,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
-                if isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                      OntologyEntityResizableNode):
+                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
                     node.doUpdateNodeLabel()
-
         self.sgnRenderingModified.emit(IRIRender.SIMPLE_NAME.value)
 
     @QtCore.pyqtSlot()
-    def doRenderByLabel(self):
+    def doRenderByLabel(self) -> None:
         """
         Render ontology elements by prefixed IRIs
         """
@@ -3905,14 +3615,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(langTag == lang)
             for node in self.project.nodes():
-                if isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                      OntologyEntityResizableNode) or isinstance(
-                    node, FacetNode):
+                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode, FacetNode)):
                     node.doUpdateNodeLabel()
             self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 
     @QtCore.pyqtSlot()
-    def onNoUpdateAvailable(self):
+    def onNoUpdateAvailable(self) -> None:
         """
         Executed when the update worker thread terminates and no software update is available.
         """
@@ -3922,7 +3630,7 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         self.addNotification('No update available.')
 
     @QtCore.pyqtSlot()
-    def onNoUpdateDataAvailable(self):
+    def onNoUpdateDataAvailable(self) -> None:
         """
         Executed when the update worker thread terminates abnormally.
         """
@@ -3935,40 +3643,42 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             """))
 
     @QtCore.pyqtSlot()
-    def onSessionReady(self):
+    def onSessionReady(self) -> None:
         """
         Executed when the session is initialized.
         """
         # CREATE SESSION SWITCH ACTIONS
         for session in self.app.sessions:
             self.onSessionCreated(session)
-        ## CONNECT PROJECT SPECIFIC SIGNALS
+        # CONNECT PROJECT SPECIFIC SIGNALS
         connect(self.project.sgnDiagramRemoved, self.mdi.onDiagramRemoved)
         connect(self.project.sgnUpdated, self.doUpdateState)
-        ## CHECK FOR UPDATES ON STARTUP
+        # CHECK FOR UPDATES ON STARTUP
         settings = QtCore.QSettings()
         if settings.value('update/check_on_startup', True, bool):
             action = self.action('check_for_updates')
             action.trigger()
-        if self.projectFromFile and self.owlOntologyImportSize > 0 and not self.owlOntologyImportSize == self.owlOntologyImportLoadedCount:
+        if (
+            self.projectFromFile
+            and self.owlOntologyImportSize > 0
+            and self.owlOntologyImportSize != self.owlOntologyImportLoadedCount
+        ):
             msgbox = QtWidgets.QMessageBox(self)
-            msgbox.setDetailedText(
-                '{} OWL 2 ontologies declared as imports have not been loaded. Please open the ontology manager for more details '
-                ' and to retry loading'.format(
-                    self.owlOntologyImportSize - self.owlOntologyImportLoadedCount))
+            msgbox.setDetailedText('{} OWL 2 ontologies declared as imports have not been loaded. '
+                                   'Please open the ontology manager for more details '
+                                   'and to retry loading'.format(
+                self.owlOntologyImportSize - self.owlOntologyImportLoadedCount))
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-            msgbox.setText(
-                'Eddy could not correctly load some of the declared OWL ontology imports')
+            msgbox.setText('Eddy could not correctly load some of the declared OWL ontology imports')
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Problem managing OWL ontology import declaration(s)')
             msgbox.exec_()
 
-    @QtCore.pyqtSlot('QMainWindow')
-    def onSessionCreated(self, session):
+    @QtCore.pyqtSlot(QtWidgets.QMainWindow)
+    def onSessionCreated(self, session: QtWidgets.QMainWindow) -> None:
         """
         Executed when a new session is created.
-        :type session: Session
         """
         if session:
             # noinspection PyArgumentList
@@ -3989,11 +3699,10 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.menu('window').addAction(action)
             self.sgnUpdateState.emit()
 
-    @QtCore.pyqtSlot('QMainWindow')
-    def onSessionClosed(self, session):
+    @QtCore.pyqtSlot(QtWidgets.QMainWindow)
+    def onSessionClosed(self, session: QtWidgets.QMainWindow) -> None:
         """
         Executed when a session is closed.
-        :type session: Session
         """
         if session:
             # REMOVE THE CORRESPONDING ACTION FROM THE MENU BAR
@@ -4004,11 +3713,12 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
             self.sgnUpdateState.emit()
 
     @QtCore.pyqtSlot(str, str)
-    def onUpdateAvailable(self, name, url):
+    def onUpdateAvailable(self, name: str, url: str):
         """
         Executed when the update worker thread terminates and a new software update is available.
-        :type name: str
-        :type url: str
+
+        :param name: Name of the update version
+        :param url: URL of the update download
         """
         progressBar = self.widget('progress_bar')
         progressBar.setToolTip('')
@@ -4021,10 +3731,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #   EVENTS
     #################################
 
-    def closeEvent(self, closeEvent):
+    def closeEvent(self, closeEvent: QtGui.QCloseEvent) -> None:
         """
         Executed when the main window is closed.
-        :type closeEvent: QCloseEvent
         """
         close = True
         save = False
@@ -4047,28 +3756,27 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         if not close:
             closeEvent.ignore()
         else:
-            ## SAVE THE CURRENT PROJECT IF NEEDED
+            # SAVE THE CURRENT PROJECT IF NEEDED
             if save:
                 self.sgnSaveProject.emit()
-            ## DISPOSE ALL THE PLUGINS
+            # DISPOSE ALL THE PLUGINS
             for plugin in self.plugins():
                 self.pmanager.dispose(plugin)
             self.pmanager.clear()
-            ## DISPOSE ALL THE RUNNING THREADS
+            # DISPOSE ALL THE RUNNING THREADS
             self.stopRunningThreads()
-            ## HIDE ALL THE NOTIFICATION POPUPS
+            # HIDE ALL THE NOTIFICATION POPUPS
             self.hideNotifications()
-            ## SHUTDOWN THE ACTIVE SESSION
+            # SHUTDOWN THE ACTIVE SESSION
             self.sgnClosed.emit()
             closeEvent.accept()
 
             LOGGER.info('Session shutdown completed: %s v%s [%s]', APPNAME, VERSION,
                         self.project.name)
 
-    def keyPressEvent(self, keyEvent):
+    def keyPressEvent(self, keyEvent: QtGui.QKeyEvent) -> None:
         """
         Executed when a keyboard button is pressed
-        :type keyEvent: QKeyEvent
         """
         if IS_MACOS:
             if keyEvent.key() == QtCore.Qt.Key_Backspace:
@@ -4076,10 +3784,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 action.trigger()
         super().keyPressEvent(keyEvent)
 
-    def keyReleaseEvent(self, keyEvent):
+    def keyReleaseEvent(self, keyEvent: QtGui.QKeyEvent) -> None:
         """
         Executed when a keyboard button is released.
-        :type keyEvent: QKeyEvent
         """
         if keyEvent.key() == QtCore.Qt.Key_Control:
             diagram = self.mdi.activeDiagram()
@@ -4087,10 +3794,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
                 diagram.setMode(DiagramMode.Idle)
         super().keyReleaseEvent(keyEvent)
 
-    def showEvent(self, showEvent):
+    def showEvent(self, showEvent: QtGui.QShowEvent) -> None:
         """
         Executed when the window is shown.
-        :type showEvent: QShowEvent
         """
         self.setWindowState(
             (self.windowState() & ~QtCore.Qt.WindowMinimized) | QtCore.Qt.WindowActive)
@@ -4101,28 +3807,24 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
     #   INTERFACE
     #################################
 
-    def createDiagramView(self, diagram):
+    def createDiagramView(self, diagram: Diagram) -> DiagramView:
         """
         Create a new diagram view displaying the given diagram.
-        :type diagram: Diagram
-        :rtype: DigramView
         """
         view = DiagramView(diagram, self)
         view.centerOn(0, 0)
         return view
 
-    def createMdiSubWindow(self, widget):
+    def createMdiSubWindow(self, widget: QtWidgets.QWidget) -> MdiSubWindow:
         """
         Create a subwindow in the MDI area that displays the given widget.
-        :type widget: QWidget
-        :rtype: MdiSubWindow
         """
         subwindow = MdiSubWindow(widget)
         subwindow = self.mdi.addSubWindow(subwindow)
         subwindow.showMaximized()
         return subwindow
 
-    def save(self):
+    def save(self) -> None:
         """
         Save the current session state.
         """
@@ -4131,11 +3833,9 @@ class Session(HasActionSystem, HasMenuSystem, HasPluginSystem, HasWidgetSystem,
         settings.setValue('session/state', self.saveState())
         settings.sync()
 
-    def setWindowTitle(self, project, diagram=None):
+    def setWindowTitle(self, project: Project, diagram: Diagram = None) -> None:
         """
         Set the main window title.
-        :type project: Project
-        :type diagram: Diagram
         """
         title = project.name if not project.path else '{0} - [{1}]'.format(project.name,
                                                                            shortPath(project.path))

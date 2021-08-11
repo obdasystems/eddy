@@ -126,11 +126,7 @@ class OntologyConsistencyCheckDialog(QtWidgets.QDialog, HasThreadingSystem):
 
         connect(self.sgnWork, self.doWork)
         self.sgnWork.emit()
-        self.session.doResetConsistencyCheck(updateNodes=True, clearReasonerCache=True)
-
-        #TODO DEVI CONNETTERE APPOSITI SEGNALI CON ONTOLOGY EXPLORER: Quando viene modificata l'ontologia (INCLUSI GLI IMPORT)
-        connect(self.project.sgnItemAdded, self.project.reset_changes_made_after_reasoning_task)
-        connect(self.project.sgnItemRemoved, self.project.reset_changes_made_after_reasoning_task)
+        self.session.doResetConsistencyCheck()
 
     #############################################
     #   INTERFACE
@@ -559,7 +555,7 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         self.status_bar.showMessage('Initializing the OWL 2 reasoner')
         self.reasonerInstance = self.ReasonerClass(self.ReasonerConfigurationClass(), ontology)
         self.status_bar.showMessage('OWL 2 reasoner initialized')
-        
+
     def initializeOWLOntology(self):
         self.status_bar.showMessage('Fetching the OWL 2 ontology')
         worker = OWLOntologyExporterWorker_v3(self.project, axioms={axiom for axiom in OWLAxiom})
@@ -567,7 +563,7 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         self.status_bar.showMessage('OWL 2 ontology fetched')
         self.ontology = worker.ontology
         self.initializeOWLManagerAndReasoner(self.ontology)
-    
+
     def getEmptyExpression(self):
         if self.entityType is Item.ConceptIRINode:
             return self.df.getOWLClass(self.IRIClass.create(str(self.iri)))

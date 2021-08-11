@@ -131,10 +131,10 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
     """
     This class implements the project explorer used to display the project structure.
     """
-    sgnFakeDiagramAdded = QtCore.pyqtSignal('QGraphicsScene')
-    sgnItemActivated = QtCore.pyqtSignal('QGraphicsScene')
-    sgnItemClicked = QtCore.pyqtSignal('QGraphicsScene')
-    sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsScene')
+    sgnFakeDiagramAdded = QtCore.pyqtSignal(QtWidgets.QGraphicsScene)
+    sgnItemActivated = QtCore.pyqtSignal(QtWidgets.QGraphicsScene)
+    sgnItemClicked = QtCore.pyqtSignal(QtWidgets.QGraphicsScene)
+    sgnItemDoubleClicked = QtCore.pyqtSignal(QtWidgets.QGraphicsScene)
 
     def __init__(self, plugin):
         """
@@ -199,7 +199,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
     #   WIDGET INTERNAL SLOTS
     #################################
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def doAddDiagram(self, diagram):
         """
         Add a diagram in the treeview.
@@ -213,7 +213,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
             self.root.appendRow(item)
             self.proxy.sort(0, QtCore.Qt.AscendingOrder)
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def doRemoveDiagram(self, diagram):
         """
         Remove a diagram from the treeview.

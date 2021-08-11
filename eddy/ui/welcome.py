@@ -34,20 +34,41 @@
 
 
 import os
+from typing import cast
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
-from eddy import APPNAME, VERSION
-from eddy import GRAPHOL_HOME, WORKSPACE
-from eddy import PROJECT_HOME, BUG_TRACKER
-from eddy.core.datatypes.qt import Font, PHCQPushButton, PHCQToolButton
+from eddy import (
+    APPNAME,
+    BUG_TRACKER,
+    GRAPHOL_HOME,
+    PROJECT_HOME,
+    VERSION,
+)
+from eddy.core.datatypes.qt import (
+    Font,
+    PHCQPushButton,
+    PHCQToolButton,
+)
 from eddy.core.datatypes.system import File
-from eddy.core.functions.fsystem import faccess, fexists, fremove
-from eddy.core.functions.misc import first, format_exception
-from eddy.core.functions.path import compressPath
-from eddy.core.functions.path import expandPath, shortPath
+from eddy.core.functions.fsystem import (
+    faccess,
+    fexists,
+    fremove
+)
+from eddy.core.functions.misc import (
+    first,
+    format_exception,
+)
+from eddy.core.functions.path import (
+    compressPath,
+    expandPath,
+    shortPath,
+)
 from eddy.core.functions.signals import connect
 from eddy.ui.project import NewProjectDialog
 
@@ -56,23 +77,24 @@ class Welcome(QtWidgets.QDialog):
     """
     This class is used to display the welcome screen of Eddy.
     """
-    sgnCreateSession = QtCore.pyqtSignal(str)
+    sgnCreateSession = QtCore.pyqtSignal([str], [str, str, str, str])
     sgnOpenProject = QtCore.pyqtSignal(str)
-    sgnCreateSessionFromScratch = QtCore.pyqtSignal(str,str,str)
     sgnUpdateRecentProjects = QtCore.pyqtSignal()
 
-    def __init__(self, application, parent=None):
+    def __init__(
+        self,
+        application: QtWidgets.QApplication,
+        parent: QtWidgets.QWidget = None,
+    ) -> None:
         """
-        Initialize the workspace dialog.
-        :type application: QApplication
-        :type parent: QtWidgets.QWidget
+        Initialize the welcome dialog.
+
+        :param application: The application instance
+        :param parent: The parent widget
         """
         super().__init__(parent)
 
-        settings = QtCore.QSettings()
-
         self.pending = False
-        self.workspace = settings.value('workspace/home', WORKSPACE, str)
 
         #############################################
         # LEFT AREA
@@ -192,8 +214,8 @@ class Welcome(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Welcome to {0}'.format(APPNAME))
 
-        connect(self.sgnCreateSession, application.doCreateSession)
-        connect(self.sgnCreateSessionFromScratch, application.doCreateSessionFromScratch)
+        connect(self.sgnCreateSession[str], application.doCreateSession)
+        connect(self.sgnCreateSession[str, str, str, str], application.doCreateSession)
 
         connect(self.sgnOpenProject, self.doOpenProject)
         connect(self.sgnUpdateRecentProjects, self.doUpdateRecentProjects)
@@ -212,10 +234,9 @@ class Welcome(QtWidgets.QDialog):
     #   EVENTS
     #################################
 
-    def paintEvent(self, paintEvent):
+    def paintEvent(self, paintEvent: QtGui.QPaintEvent) -> None:
         """
         This is needed for the widget to pick the stylesheet.
-        :type paintEvent: QPaintEvent
         """
         option = QtWidgets.QStyleOption()
         option.initFrom(self)
@@ -228,10 +249,11 @@ class Welcome(QtWidgets.QDialog):
     #################################
 
     @QtCore.pyqtSlot(str)
-    def doDeleteProject(self, path):
+    def doDeleteProject(self, path: str) -> None:
         """
         Delete the given project.
-        :type path: str
+
+        :param path: The path of the project file
         """
         msgbox = QtWidgets.QMessageBox(self)
         msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_help_outline_black').pixmap(48))
@@ -239,15 +261,12 @@ class Welcome(QtWidgets.QDialog):
         msgbox.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
         msgbox.setTextFormat(QtCore.Qt.RichText)
         msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        #msgbox.setWindowTitle('Remove project: {0}?'.format(os.path.basename(path)))
         msgbox.setWindowTitle('Remove project: {0}?'.format(path))
-        #msgbox.setText('Are you sure you want to remove project: <b>{0}</b>'.format(os.path.basename(path)))
         msgbox.setText('Are you sure you want to remove project: <b>{0}</b>'.format(path))
         msgbox.exec_()
         if msgbox.result() == QtWidgets.QMessageBox.Yes:
             try:
                 # REMOVE THE PROJECT FROM DISK
-                #rmdir(path)
                 fremove(path)
             except Exception as e:
                 msgbox = QtWidgets.QMessageBox(self)
@@ -263,30 +282,20 @@ class Welcome(QtWidgets.QDialog):
                 self.sgnUpdateRecentProjects.emit()
 
     @QtCore.pyqtSlot()
-    def doNewProject(self):
+    def doNewProject(self) -> None:
         """
         Bring up a modal window used to create a new project.
         """
         form = NewProjectDialog(self)
         if form.exec_() == NewProjectDialog.Accepted:
-            self.sgnCreateSessionFromScratch.emit(form.name(),form.iri(),form.prefix())
-            #self.sgnCreateSession.emit(expandPath(form.pathField.value()))
+            self.sgnCreateSession[str, str, str, str].emit(
+                None, form.name(), form.iri(), form.prefix())
 
     @QtCore.pyqtSlot()
-    def doOpen(self):
+    def doOpen(self) -> None:
         """
         Bring up a modal window used to open a project.
         """
-        '''
-        dialog = QtWidgets.QFileDialog(self)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath(self.workspace))
-        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
-            self.sgnOpenProject.emit(first(dialog.selectedFiles()))
-        '''
         dialog = QtWidgets.QFileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(expandPath('~'))
@@ -296,34 +305,34 @@ class Welcome(QtWidgets.QDialog):
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.sgnOpenProject.emit(first(dialog.selectedFiles()))
 
-
     @QtCore.pyqtSlot(str)
-    def doOpenProject(self, path):
+    def doOpenProject(self, path: str) -> None:
         """
         Open a recent project in a new session of Eddy.
-        :type path: str
+
+        :param path: Path of the project to open
         """
         if not self.pending:
             self.pending = True
-            self.sgnCreateSession.emit(expandPath(path))
+            self.sgnCreateSession[str].emit(expandPath(path))
             self.pending = False
 
     @QtCore.pyqtSlot()
-    def doOpenURL(self):
+    def doOpenURL(self) -> None:
         """
         Open a URL using the operating system default browser.
         """
         action = self.sender()
         weburl = action.data()
         if weburl:
-            # noinspection PyTypeChecker,PyCallByClass,PyCallByClass
             QtGui.QDesktopServices.openUrl(QtCore.QUrl(weburl))
 
     @QtCore.pyqtSlot(str)
-    def doRemoveProject(self, path):
+    def doRemoveProject(self, path: str) -> None:
         """
         Remove the given project from the recent list.
-        :type path: str
+
+        :param path: Path of the project to remove from the recent list
         """
         recentList = []
         path = expandPath(path)
@@ -336,7 +345,7 @@ class Welcome(QtWidgets.QDialog):
         self.sgnUpdateRecentProjects.emit()
 
     @QtCore.pyqtSlot()
-    def doUpdateRecentProjects(self):
+    def doUpdateRecentProjects(self) -> None:
         """
         Update the list of recent projects.
         """
@@ -373,11 +382,12 @@ class ProjectBlock(QtWidgets.QWidget):
     sgnOpenProject = QtCore.pyqtSignal(str)
     sgnRemoveProject = QtCore.pyqtSignal(str)
 
-    def __init__(self, project, parent=None):
+    def __init__(self, project: str, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the project block.
-        :type project: str
-        :type parent: QtWidgets.QWidget
+
+        :param project: The project path
+        :param parent: The parent widget
         """
         super().__init__(parent)
 
@@ -429,14 +439,14 @@ class ProjectBlock(QtWidgets.QWidget):
     #################################
 
     @QtCore.pyqtSlot()
-    def onDeleteButtonClicked(self):
+    def onDeleteButtonClicked(self) -> None:
         """
         Executed when the delete button is clicked.
         """
         self.sgnDeleteProject.emit(self.path)
 
     @QtCore.pyqtSlot()
-    def onRemoveButtonClicked(self):
+    def onRemoveButtonClicked(self) -> None:
         """
         Executed when the remove button is clicked.
         """
@@ -446,12 +456,9 @@ class ProjectBlock(QtWidgets.QWidget):
     #   EVENTS
     #################################
 
-    def eventFilter(self, source, event):
+    def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """
         Filters events to show remove and delete buttons only when hovered.
-        :type source: QObject
-        :type event: QtCore.QEvent
-        :rtype: bool
         """
         if event.type() == QtCore.QEvent.HoverEnter:
             self.removeBtn.setVisible(True)
@@ -462,22 +469,24 @@ class ProjectBlock(QtWidgets.QWidget):
             self.deleteBtn.setVisible(False)
             self.clearFocus()
         elif event.type() == QtCore.QEvent.KeyPress:
-            if event.key() in {QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return, QtCore.Qt.Key_Space}:
+            if cast(QtGui.QKeyEvent, event).key() in {
+                QtCore.Qt.Key_Enter,
+                QtCore.Qt.Key_Return,
+                QtCore.Qt.Key_Space,
+            }:
                 self.sgnOpenProject.emit(self.path)
         return super().eventFilter(source, event)
 
-    def mouseReleaseEvent(self, mouseEvent):
+    def mouseReleaseEvent(self, mouseEvent: QtGui.QMouseEvent) -> None:
         """
         Executed when a mouse button is released from this widget.
-        :type mouseEvent: QMouseEvent
         """
         if mouseEvent.button() == QtCore.Qt.LeftButton:
             self.sgnOpenProject.emit(self.path)
 
-    def paintEvent(self, paintEvent):
+    def paintEvent(self, paintEvent: QtGui.QPaintEvent) -> None:
         """
         This is needed for the widget to pick the stylesheet.
-        :type paintEvent: QPaintEvent
         """
         option = QtWidgets.QStyleOption()
         option.initFrom(self)

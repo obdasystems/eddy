@@ -102,7 +102,7 @@ class PalettePlugin(AbstractPlugin):
         widget.button(Item.SameEdge).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.HasKeyNode).setEnabled(profile is not OWLProfile.OWL2QL)
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def onDiagramAdded(self, diagram):
         """
         Executed when a diagram is added to the project.
@@ -112,7 +112,7 @@ class PalettePlugin(AbstractPlugin):
         connect(diagram.sgnItemInsertionCompleted, self.onDiagramItemInsertionCompleted)
         connect(diagram.sgnModeChanged, self.onDiagramModeChanged)
 
-    @QtCore.pyqtSlot('QGraphicsItem', int)
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsItem, int)
     def onDiagramItemInsertionCompleted(self, _, modifiers):
         """
         Executed after an item MANUAL insertion process ends (not triggered for item added programmatically).
@@ -134,7 +134,7 @@ class PalettePlugin(AbstractPlugin):
         if mode not in (DiagramMode.NodeAdd, DiagramMode.EdgeAdd):
             self.widget('palette').reset()
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def onDiagramRemoved(self, diagram):
         """
         Executed when a diagram is removed to the project.
