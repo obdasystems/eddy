@@ -147,8 +147,6 @@ class OntologyExplorerPlugin(AbstractPlugin):
         # CREATE DOCKING AREA WIDGET
         self.debug('Creating docking area widget')
         widget = DockWidget('Ontology Explorer', QtGui.QIcon(':icons/18/ic_explore_black'), self.session)
-        widget.addTitleBarButton(self.widget('explorer_toggle'))
-        widget.installEventFilter(self)
         widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
         widget.setObjectName('ontology_explorer_dock')
         widget.setWidget(self.widget('ontology_explorer'))
