@@ -236,16 +236,12 @@ class Diagram(QtWidgets.QGraphicsScene):
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain') and Item.valueOf(dropEvent.mimeData().text()):
             snapToGrid = self.session.action('toggle_grid').isChecked()
-            #TODO
-            nodeType = dropEvent.mimeData().text()
+            node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
+            node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
+            data = dropEvent.mimeData().data(dropEvent.mimeData().text())
             if Item.ConceptIRINode <= int(dropEvent.mimeData().text()) <= Item.IndividualIRINode:
-                #New node associated with IRI object
-                #node = ConceptNode(diagram=self)
-                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
-                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
                 if not data:
-                    #new element
+                    # For new nodes (e.g. drag and drop from palette)
                     if isinstance(node, FacetNode):
                         self.session.doOpenConstrainingFacetBuilder(node)
                     elif isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
@@ -253,52 +249,14 @@ class Diagram(QtWidgets.QGraphicsScene):
                     elif isinstance(node, LiteralNode):
                         self.session.doOpenLiteralBuilder(node)
                 else:
-                    #copy of existing element (e.g. drag and drop from ontology explorer)
+                    # Copy of existing element (e.g. drag and drop from ontology explorer)
                     data_str = str(data, encoding='utf-8')
                     iri = self.project.getIRI(data_str)
                     node.iri = iri
-                    self.doAddOntologyEntityNode(node)
+                    self.session.undostack.push(CommandNodeAdd(self, node))
                     node.doUpdateNodeLabel()
             else:
-                #Old node type
-                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
-                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
-                iri = None
-
-                if data is not None:
-                    data_str = str(data, encoding='utf-8')
-                    if data_str is not '':
-                        data_comma_seperated = data_str.split(',')
-                        iri = data_comma_seperated[0]
-                        rc = data_comma_seperated[1]
-                        txt = data_comma_seperated[2]
-                        node.setText(txt)
-                        node.remaining_characters = rc
-
-                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-                commands = []
-                #node.emptyMethod()
-
-                if iri is not None:
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_1 = self.project.addIRINodeEntry(Duplicate_dict_1, iri, node)
-
-                    if Duplicate_dict_1 is not None:
-                        pass
-
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
-                commands.append(CommandNodeAdd(self, node))
-
-
-
-                if any(commands):
-                    self.session.undostack.beginMacro('node Add - {0}'.format(node.name))
-                    for command in commands:
-                        if command:
-                            self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
-
+                self.session.undostack.push(CommandNodeAdd(self, node))
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(QtCore.Qt.CopyAction)
             dropEvent.accept()
@@ -628,43 +586,6 @@ class Diagram(QtWidgets.QGraphicsScene):
     #############################################
     #   SLOTS
     #################################
-
-    # FIXME: Merge the next three methods into one since they are identical
-    @QtCore.pyqtSlot(AbstractNode)
-    def doAddOntologyEntityNode(self, node: AbstractNode) -> None:
-        """
-        Add to this diagram a node identified by an IRI
-        """
-        if node:
-            command = CommandNodeAdd(self,node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.iri))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-
-    @QtCore.pyqtSlot(FacetNode)
-    def doAddOntologyFacetNode(self, node: FacetNode) -> None:
-        """
-        Add to this diagram a node representing a Facet
-        """
-        if node:
-            command = CommandNodeAdd(self, node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.facet))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-
-    @QtCore.pyqtSlot(LiteralNode)
-    def doAddOntologyLiteralNode(self, node: LiteralNode) -> None:
-        """
-        Add to this diagram a node representing a Literal
-        """
-        if node:
-            command = CommandNodeAdd(self, node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.literal))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
 
     @QtCore.pyqtSlot(QtWidgets.QGraphicsItem)
     def doNodeIdentification(self, node: AbstractNode) -> None:
