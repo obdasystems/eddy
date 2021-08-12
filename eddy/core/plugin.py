@@ -102,11 +102,11 @@ LOGGER = getLogger()
 
 
 class AbstractPlugin(
-    QtCore.QObject,
     HasActionSystem,
     HasMenuSystem,
     HasShortcutSystem,
     HasWidgetSystem,
+    QtCore.QObject,
 ):
     """
     Extension QtCore.QObject which implements a plugin.
@@ -117,7 +117,7 @@ class AbstractPlugin(
         """
         Initialize the plugin.
         """
-        super().__init__(session)
+        super().__init__(parent=session)
         self.spec = spec
 
     #############################################
