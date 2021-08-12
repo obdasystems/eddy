@@ -33,18 +33,27 @@
 ##########################################################################
 
 
-import importlib
-import inspect
-import keyword
-import os
-import re
-import sys
 from abc import ABCMeta
 from configparser import (
     ConfigParser,
     NoOptionError,
 )
+import importlib
 from importlib.machinery import PathFinder
+import inspect
+import keyword
+import os
+import re
+import sys
+from typing import (
+    cast,
+    Any,
+    Dict,
+    List,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+)
 from zipfile import (
     is_zipfile,
     ZipFile,
@@ -83,20 +92,30 @@ from eddy.core.functions.path import (
 )
 from eddy.core.output import getLogger
 
+if TYPE_CHECKING:
+    from types import ModuleType
+    from pkg_resources import EntryPoint
+    from eddy.core.project import Project
+    from eddy.ui.session import Session
+
 LOGGER = getLogger()
 
 
-class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasShortcutSystem, HasWidgetSystem):
+class AbstractPlugin(
+    QtCore.QObject,
+    HasActionSystem,
+    HasMenuSystem,
+    HasShortcutSystem,
+    HasWidgetSystem,
+):
     """
     Extension QtCore.QObject which implements a plugin.
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, spec, session):
+    def __init__(self, spec: 'PluginSpec', session: 'Session') -> None:
         """
         Initialize the plugin.
-        :type spec: PluginSpec
-        :type session: session
         """
         super().__init__(session)
         self.spec = spec
@@ -106,71 +125,62 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasShortcut
     #################################
 
     @property
-    def project(self):
+    def project(self) -> 'Project':
         """
         Returns the reference to the active project.
-        :rtype: Project
         """
         return self.session.project
 
     @property
-    def session(self):
+    def session(self) -> 'Session':
         """
-        Returns the reference to the main session (alias for AbstractPlugin.parent()).
-        :rtype: Session
+        Returns the reference to the plugin session.
         """
-        return self.parent()
+        return cast('Session', self.parent())
 
     #############################################
     #   INTERFACE
     #################################
 
-    def author(self):
+    def author(self) -> str:
         """
         Returns the author of the plugin.
-        :rtype: str
         """
         return self.spec.get('plugin', 'author', fallback='<unknown>')
 
-    def contact(self):
+    def contact(self) -> str:
         """
         Returns the contact address for this plugin.
-        :rtype: str
         """
         return self.spec.get('plugin', 'contact', fallback='<unknown>')
 
-    def id(self):
+    def id(self) -> str:
         """
         Returns the plugin identifier.
-        :rtype: str
         """
         return self.spec.get('plugin', 'id')
 
-    def isBuiltIn(self):
+    def isBuiltIn(self) -> bool:
         """
-        Returns True if this plugin is a built-in one, False otherwise.
-        :rtype: bool
+        Returns `True` if this plugin is a built-in one, `False` otherwise.
         """
         return isSubPath('@plugins/', inspect.getfile(self.__class__))
 
-    def name(self):
+    def name(self) -> str:
         """
         Returns the name of the plugin.
-        :rtype: str
         """
         return self.spec.get('plugin', 'name')
 
-    def objectName(self):
+    def objectName(self) -> str:
         """
         Returns the system name of the plugin.
-        :rtype: str
         """
         return self.spec.get('plugin', 'id')
 
-    def path(self):
+    def path(self) -> str:
         """
         Returns the path to the the plugin (either a directory of a ZIP file).
-        :rtype: str
         """
         path = lstrip(inspect.getfile(self.__class__), expandPath('@plugins/'), expandPath('@home/plugins/'))
         home = first(filter(None, path.split(os.path.sep)))
@@ -178,17 +188,15 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasShortcut
         return os.path.join(root, home)
 
     @classmethod
-    def subclasses(cls):
+    def subclasses(cls) -> List[Type['AbstractPlugin']]:
         """
         Returns the list of subclasses subclassing this very class.
-        :rtype: list
         """
         return cls.__subclasses__() + [c for i in cls.__subclasses__() for c in i.subclasses()]
 
-    def version(self):
+    def version(self) -> str:
         """
         Returns the version of the plugin.
-        :rtype: str
         """
         return self.spec.get('plugin', 'version')
 
@@ -196,13 +204,13 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasShortcut
     #   HOOKS
     #################################
 
-    def dispose(self):
+    def dispose(self) -> None:
         """
         Executed whenever the plugin is going to be destroyed.
         """
         pass
 
-    def start(self):
+    def start(self) -> None:
         """
         Executed whenever the plugin is to be started, after all the plugins have been loaded.
         NOTE: this method is executed before the project is loaded in the main session, so any
@@ -216,43 +224,38 @@ class AbstractPlugin(QtCore.QObject, HasActionSystem, HasMenuSystem, HasShortcut
     #   LOGGING UTILITIES
     #################################
 
-    def critical(self, message, *args, **kwargs):
+    def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         """
         Log a 'CRITICAL' message.
         To pass exception information, use the keyword argument 'exc_info=True'.
-        :type message: str
         """
         LOGGER.critical('{0}: {1}'.format(self.name(), message), *args, **kwargs)
 
-    def debug(self, message, *args, **kwargs):
+    def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
         """
         Log a 'DEBUG' message.
         To pass exception information, use the keyword argument 'exc_info=True'.
-        :type message: str
         """
         LOGGER.debug('{0}: {1}'.format(self.name(), message), *args, **kwargs)
 
-    def error(self, message, *args, **kwargs):
+    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
         """
         Log a 'ERROR' message.
         To pass exception information, use the keyword argument 'exc_info=True'.
-        :type message: str
         """
         LOGGER.error('{0}: {1}'.format(self.name(), message), *args, **kwargs)
 
-    def info(self, message, *args, **kwargs):
+    def info(self, message: str, *args: Any, **kwargs: Any) -> None:
         """
         Log a 'INFO' message.
         To pass exception information, use the keyword argument 'exc_info=True'.
-        :type message: str
         """
         LOGGER.info('{0}: {1}'.format(self.name(), message), *args, **kwargs)
 
-    def warning(self, message, *args, **kwargs):
+    def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
         """
         Log a 'WARNING' message.
         To pass exception information, use the keyword argument 'exc_info=True'.
-        :type message: str
         """
         LOGGER.warning('{0}: {1}'.format(self.name(), message), *args, **kwargs)
 
@@ -261,7 +264,7 @@ class PluginSpec(ConfigParser):
     """
     Plugin .spec configuration file instance.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
         Initialize the plugin .spec configuration.
         """
@@ -271,21 +274,15 @@ class PluginSpec(ConfigParser):
     #   INTERFACE
     #################################
 
-    def getList(self, section, option):
+    def getList(self, section: str, option: str) -> List[str]:
         """
         Get the content of the given section/option combination returning it as a list.
-        :type section: str
-        :type option: str
-        :rtype: list
         """
         return list(filter(None, re.split(r'[,\s\-]+', self.get(section, option))))
 
-    def getPath(self, section, option):
+    def getPath(self, section: str, option: str) -> str:
         """
         Get the content of the given section/option performing path expansion.
-        :type section: str
-        :type option: str
-        :rtype: str
         """
         return expandPath(self.get(section, option))
 
@@ -294,12 +291,11 @@ class PluginManager(QtCore.QObject):
     """
     Plugin manager class which takes case of performing some specific operations on plugins.
     """
-    info = {}
+    info = {}  # type: Dict[str, Tuple]
 
-    def __init__(self, session):
+    def __init__(self, session: 'Session') -> None:
         """
         Initialize the plugin manager.
-        :type session: Session
         """
         super().__init__(session)
 
@@ -308,38 +304,32 @@ class PluginManager(QtCore.QObject):
     #################################
 
     @property
-    def session(self):
+    def session(self) -> 'Session':
         """
-        Returns the reference to the main session (alias for PluginManager.parent()).
-        :rtype: Session
+        Returns the reference to the plugin manager session.
         """
-        return self.parent()
+        return cast('Session', self.parent())
 
     #############################################
     #   INTERFACE
     #################################
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Remove all the plugins from the active Session.
         """
         self.session.clearPlugins()
 
-    def create(self, clazz, spec):
+    def create(self, clazz: Type[AbstractPlugin], spec: PluginSpec) -> AbstractPlugin:
         """
         Create an instance of the given plugin.
-        :type clazz: class
-        :type spec: PluginSpec
-        :rtype: AbstractPlugin
         """
         return clazz(spec, self.session)
 
-    def dispose(self, plugin):
+    def dispose(self, plugin: AbstractPlugin) -> bool:
         """
         Dispose the given plugin.
-        Will return True if the plugin has been disposed successfully, False otherwise.
-        :type plugin: AbstractPlugin
-        :rtype: bool
+        Will return `True` if the plugin has been disposed successfully, `False` otherwise.
         """
         LOGGER.info('Disposing plugin: %s v%s', plugin.name(), plugin.version())
         try:
@@ -352,12 +342,9 @@ class PluginManager(QtCore.QObject):
             return True
 
     @classmethod
-    def find_class(cls, mod, name):
+    def find_class(cls, mod: 'ModuleType', name: str) -> Type[AbstractPlugin]:
         """
         Find and returns the reference to the plugin class in the given module.
-        :type mod: module
-        :type name: str
-        :rtype: class
         """
         plugin_classes = []
         for obj in mod.__dict__.values():
@@ -370,13 +357,10 @@ class PluginManager(QtCore.QObject):
         return plugin_classes[0]
 
     @classmethod
-    def find_spec(cls, file_or_directory):
+    def find_spec(cls, file_or_directory: str) -> PluginSpec:
         """
         Searches the given file or directory for a 'plugin.spec' file and tries to load it,
         or returns 'None' if no such file exists.
-
-        :type file_or_directory: str
-        :rtype: PluginSpec
         """
         file_or_directory = expandPath(file_or_directory)
         try:
@@ -397,7 +381,7 @@ class PluginManager(QtCore.QObject):
             LOGGER.exception('Failed to load plugin spec: %s', e)
 
     @classmethod
-    def import_plugin_from_path(cls, path):
+    def import_plugin_from_path(cls, path: str) -> Tuple:
         """
         Import a plugin from the given path by lookup for the plugin .spec
         configuration file in the given file or directory. Allowed values for 'path'
@@ -409,9 +393,6 @@ class PluginManager(QtCore.QObject):
         This method will not try to load the plugin module since we wait until the
         initialization time to perform plugin imports. This allows the scan for plugins
         to be completed before attempting any import.
-
-        :type path: str
-        :rtype: tuple
         """
         try:
             plugin_path = expandPath(path)
@@ -422,7 +403,7 @@ class PluginManager(QtCore.QObject):
             LOGGER.exception('Failed to import plugin: %s', e)
 
     @classmethod
-    def import_plugin_from_entry_point(cls, entry_point):
+    def import_plugin_from_entry_point(cls, entry_point: 'EntryPoint') -> Tuple:
         """
         Import a plugin from the given entry point:
         * Lookup for the plugin .spec configuration file from the entry point distribution.
@@ -430,9 +411,6 @@ class PluginManager(QtCore.QObject):
 
         This method always returns 'None' for the plugin path since the plugin class
         can be located by looking at entries in sys.path.
-
-        :type entry_point: EntryPoint
-        :rtype: tuple
         """
         try:
             if not IS_FROZEN:
@@ -449,10 +427,10 @@ class PluginManager(QtCore.QObject):
         except Exception as e:
             LOGGER.exception('Failed to import plugin: %s', e)
 
-    def init(self):
+    def init(self) -> List[AbstractPlugin]:
         """
-        Initialize previously looked up plugins returning the list of successfully initialized plugins.
-        :rtype: list
+        Initialize previously looked up plugins returning the list
+        of successfully initialized plugins.
         """
         if not PluginManager.info:
             LOGGER.info('No plugin to be initialized')
@@ -494,15 +472,12 @@ class PluginManager(QtCore.QObject):
 
         return started
 
-    def install(self, archive):
+    def install(self, archive: str) -> PluginSpec:
         """
         Install the given plugin archive.
         During the installation process we'll check for a correct plugin structure,
         i.e. for the .spec file and the plugin module to be available. We won't check if
         the plugin actually runs since this will be handle by the application start sequence.
-
-        :type archive: str
-        :rtype: PluginSpec
         """
         try:
             # CHECK FOR CORRECT PLUGIN ARCHIVE
@@ -552,7 +527,7 @@ class PluginManager(QtCore.QObject):
             return plugin_spec
 
     @classmethod
-    def scan(cls, *args, **kwargs):
+    def scan(cls, *args: Any, **kwargs: Any) -> None:
         """
         Scan the given paths looking for plugins.
         This method can also scan setuptools entry points when called with
@@ -581,7 +556,7 @@ class PluginManager(QtCore.QObject):
                 cls.info[plugin_id] = entry
 
     @classmethod
-    def spec(cls, content):
+    def spec(cls, content: str) -> PluginSpec:
         """
         Parse and validate a plugin configuration file (.spec) content.
         A valid configuration file must have a 'plugin' section, with
@@ -594,8 +569,6 @@ class PluginManager(QtCore.QObject):
         name = My Plugin Name
         version = 0.1
 
-        :type content: str
-        :rtype: PluginSpec
         """
         spec = PluginSpec()
         spec.read_string(content)
@@ -607,12 +580,10 @@ class PluginManager(QtCore.QObject):
                 raise ValueError('plugin id is not a valid identifier: %s' % plugin_id)
         return spec
 
-    def start(self, plugin):
+    def start(self, plugin: AbstractPlugin) -> bool:
         """
         Start the given plugin.
-        Will return True if the plugin has been started successfully, False otherwise.
-        :type plugin: AbstractPlugin
-        :rtype: bool
+        Will return `True` if the plugin has been started successfully, `False` otherwise.
         """
         LOGGER.info('Starting plugin: %s v%s', plugin.name(), plugin.version())
         try:
@@ -624,10 +595,9 @@ class PluginManager(QtCore.QObject):
             self.session.sgnPluginStarted.emit(plugin.id())
             return True
 
-    def uninstall(self, plugin):
+    def uninstall(self, plugin: AbstractPlugin) -> None:
         """
         Uninstall the given plugin.
-        :type plugin: AbstractPlugin
         """
         if self.dispose(plugin):
             self.session.removePlugin(plugin)
