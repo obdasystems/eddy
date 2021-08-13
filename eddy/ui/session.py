@@ -102,10 +102,8 @@ from eddy.core.common import (
     HasWidgetSystem,
 )
 from eddy.core.datatypes.graphol import (
-    Identity,
     Item,
     Restriction,
-    Special,
 )
 from eddy.core.datatypes.misc import (
     Color,
@@ -208,7 +206,6 @@ from eddy.ui.forms import (
     NewDiagramForm,
     RefactorNameForm,
     RenameDiagramForm,
-    ValueForm,
 )
 from eddy.ui.import_ontology import ImportOntologyDialog
 from eddy.ui.iri import (
@@ -872,31 +869,10 @@ class Session(
             self, objectName='refactor_name',
             triggered=self.doRefactorName))
 
-        """
-        self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_label_outline_black'), 'Change prefix...',
-            self, objectName='refactor_change_prefix',
-            triggered=self.doRefactorChangeprefix))
-        """
-
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_refresh_black'), 'Relocate label',
             self, objectName='relocate_label',
             triggered=self.doRelocateLabel))
-
-        action = QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_top_black'), Special.Top.value,
-            self, objectName='special_top', iconVisibleInMenu=True,
-            triggered=self.doSetNodeSpecial)
-        action.setData(Special.Top)
-        self.addAction(action)
-
-        action = QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_bottom_black'), Special.Bottom.value,
-            self, objectName='special_bottom', iconVisibleInMenu=True,
-            triggered=self.doSetNodeSpecial)
-        action.setData(Special.Bottom)
-        self.addAction(action)
 
         style = self.style()
         isize = style.pixelMetric(QtWidgets.QStyle.PM_ToolBarIconSize)
@@ -1023,19 +999,6 @@ class Session(
                                        objectName=datatype.name, checkable=True,
                                        triggered=self.doSetDatatype)
             action.setData(datatype)
-            group.addAction(action)
-        self.addAction(group)
-
-        #############################################
-        # INDIVIDUAL SPECIFIC
-        #################################
-
-        group = QtWidgets.QActionGroup(self, objectName='switch_individual')
-        for identity in (Identity.Individual, Identity.Value):
-            action = QtWidgets.QAction(identity.value, group,
-                                       objectName=identity.name, checkable=True,
-                                       triggered=self.doSetIndividualAs)
-            action.setData(identity)
             group.addAction(action)
         self.addAction(group)
 
@@ -1418,18 +1381,6 @@ class Session(
         menu.addActions(self.action('brush').actions())
         self.addMenu(menu)
 
-        menu = QtWidgets.QMenu('Special type', objectName='special')
-        menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
-        menu.addAction(self.action('special_top'))
-        menu.addAction(self.action('special_bottom'))
-        self.addMenu(menu)
-
-        # menu = QtWidgets.QMenu('Change Prefix', objectName='Change Prefix')
-        # menu.setIcon(QtGui.QIcon(':/icons/24/ic_star_black'))
-        # menu.addAction(self.action('special_top'))
-        # menu.addAction(self.action('special_bottom'))
-        # self.addMenu(menu)
-
         menu = QtWidgets.QMenu('Select color', objectName='refactor_brush')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_format_color_fill_black'))
         menu.addActions(self.action('refactor_brush').actions())
@@ -1502,15 +1453,6 @@ class Session(
         menu = QtWidgets.QMenu('Switch to', objectName='switch_restriction')
         menu.setIcon(QtGui.QIcon(':/icons/24/ic_transform_black'))
         menu.addActions(self.action('switch_restriction').actions())
-        self.addMenu(menu)
-
-        #############################################
-        # INDIVIDUAL SPECIFIC
-        #################################
-
-        menu = QtWidgets.QMenu('Switch to', objectName='switch_individual')
-        menu.setIcon(QtGui.QIcon(':/icons/24/ic_transform_black'))
-        menu.addActions(self.action('switch_individual').actions())
         self.addMenu(menu)
 
         #############################################
@@ -2962,106 +2904,6 @@ class Session(
                     name = 'change {0} to {1}'.format(node.shortName, data)
                     self.undostack.push(
                         CommandLabelChange(diagram, node, node.text(), data, name=name))
-
-    @QtCore.pyqtSlot()
-    def doSetIndividualAs(self) -> None:
-        """
-        Set an invididual node either to Individual or Value.
-        Will bring up the Value Form if needed.
-        """
-        diagram = self.mdi.activeDiagram()
-        if diagram:
-            diagram.setMode(DiagramMode.Idle)
-            fn = lambda x: x.type() is Item.IndividualNode
-            node = first(diagram.selectedNodes(filter_on_nodes=fn))
-            if node:
-                action = self.sender()
-                if action.data() is Identity.Individual:
-                    if node.identity() is Identity.Value:
-                        data = node.label.template
-
-                        name = 'change {0} to {1}'.format(node.text(), data)
-
-                        Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries \
-                            (self.project.IRI_prefixes_nodes_dict, dict())
-                        Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries \
-                            (self.project.IRI_prefixes_nodes_dict, dict())
-
-                        old_iri = self.project.get_iri_of_node(node)
-                        new_iri = self.project.ontologyIRIString
-
-                        if self.project.prefix is None:
-                            new_label = self.project.get_full_IRI(new_iri, None, data)
-                        else:
-                            new_label = str(self.project.prefix + ':' + data)
-
-                        Duplicate_dict_1[old_iri][1].remove(node)
-                        Duplicate_dict_1[new_iri][1].add(node)
-
-                        commands = [
-                            CommandLabelChange(diagram, node, node.text(), new_label),
-                            CommandLabelChange(diagram, node, node.text(), new_label)]
-
-                        if any(commands):
-                            self.undostack.beginMacro('edit Forms >> accept() {0}'.format(node))
-                            for command in commands:
-                                if command:
-                                    self.undostack.push(command)
-                            self.undostack.endMacro()
-
-                elif action.data() is Identity.Value:
-                    form = ValueForm(node, self)
-                    form.exec_()
-
-    # TODO TO BE REMOVED
-    @QtCore.pyqtSlot()
-    def doSetNodeSpecial(self) -> None:
-        """
-        Set the special type of the selected node.
-        """
-        diagram = self.mdi.activeDiagram()
-        if diagram:
-            diagram.setMode(DiagramMode.Idle)
-            action = self.sender()
-            fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode}
-            node = first(diagram.selectedNodes(filter_on_nodes=fn))
-            if node:
-                special = action.data()
-                data = special.value
-                if node.text() != data:
-                    name = 'change {0} to {1}'.format(node.shortName, data)
-
-                    old_iri = self.project.get_iri_of_node(node)
-                    new_iri = Namespace.OWL.value
-
-                    if node.type() is Item.ConceptNode:
-                        new_rc_lst = ['Nothing', 'Thing']
-                    if node.type() is Item.RoleNode:
-                        new_rc_lst = ['BottomObjectProperty', 'TopObjectProperty']
-                    if node.type() is Item.AttributeNode:
-                        new_rc_lst = ['BottomDataProperty', 'TopDataProperty']
-
-                    if data == 'TOP':
-                        new_rc = new_rc_lst[1]
-                    elif data == 'BOTTOM':
-                        new_rc = new_rc_lst[0]
-
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries \
-                        (self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries \
-                        (self.project.IRI_prefixes_nodes_dict, dict())
-
-                    Duplicate_dict_1[old_iri][1].remove(node)
-                    Duplicate_dict_1[new_iri][1].add(node)
-
-                    commands = []
-
-                    if any(commands):
-                        self.undostack.beginMacro('edit {0} doSetNodeSpecial'.format(node))
-                        for command in commands:
-                            if command:
-                                self.undostack.push(command)
-                        self.undostack.endMacro()
 
     @QtCore.pyqtSlot()
     def doSetDatatype(self) -> None:
