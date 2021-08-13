@@ -135,7 +135,6 @@ from eddy.core.exporters.owl2_iri import OWLOntologyExporter_v3
 from eddy.core.exporters.pdf_iri import PdfProjectExporter_v3
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import (
-    DescriptionFactory,
     MenuFactory,
     PropertyFactory,
 )
@@ -336,7 +335,6 @@ class Session(
         self.mdi = MdiArea(self)
         self.mf = MenuFactory(self)
         self.pf = PropertyFactory(self)
-        self.df = DescriptionFactory(self)
         self.pmanager = PluginManager(self)
         self.nmanager = NetworkManager(self)
         self.project = None
@@ -868,11 +866,6 @@ class Session(
             QtGui.QIcon(':/icons/24/ic_settings_black'), 'Properties...',
             self, objectName='node_properties',
             triggered=self.doOpenNodeProperties))
-
-        self.addAction(QtWidgets.QAction(
-            QtGui.QIcon(':/icons/24/ic_node_description'), 'Description',
-            self, objectName='node_description',
-            triggered=self.doOpenNodeDescription))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
@@ -2577,25 +2570,6 @@ class Session(
         builder.raise_()
         builder.activateWindow()
         return builder
-
-    # TODO TO BE REMOVED
-    @QtCore.pyqtSlot()
-    def doOpenNodeDescription(self):
-        """
-        Executed when node description needs to be displayed.
-        """
-        diagram = self.mdi.activeDiagram()
-        if diagram:
-            diagram.setMode(DiagramMode.Idle)
-            node = first(diagram.selectedNodes())
-            if node and node.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode,
-                                        Item.IndividualNode \
-                                        }:
-                description = self.df.create(diagram, node)
-                description.setWindowModality(QtCore.Qt.ApplicationModal)
-                description.show()
-                description.raise_()
-                description.activateWindow()
 
     @QtCore.pyqtSlot()
     def doPaste(self) -> None:
