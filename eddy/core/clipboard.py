@@ -108,19 +108,14 @@ class Clipboard(QtCore.QObject):
             Create a copy of the given node generating a new id.
             :type node: AbstractNode
             """
-            #print('ncopy >>> node',node)
             copy = node.copy(diagram)
             copy.id = diagram.guid.next('n')
-            #print('copy.id',copy.id)
             return copy
 
         # Create a copy of all the nodes in the clipboard and store them in a dict using the old
         # node id: this is needed so we can attach copied edges to the copy of the nodes in the
         # clipboard and to do so we need a mapping between the old node id and the new node id.
         nodes = {x:ncopy(n) for x, n in self.nodes.items()}
-
-        #print('nodes',nodes)
-        #print('self.nodes.items()',self.nodes.items())
 
         def ecopy(edge):
             """
@@ -150,6 +145,7 @@ class Clipboard(QtCore.QObject):
             zValue = 0  # Diagram is empty
 
         if pos:
+
             # Paste position has been given manually => figure out which node to use as anchor item and
             # adjust the paste position so that the anchor item is pasted right after the given position
             item = min(nodes, key=lambda x: x.boundingRect().top())
@@ -181,19 +177,7 @@ class Clipboard(QtCore.QObject):
             diagram.pasteX += self.PasteOffsetX
             diagram.pasteY += self.PasteOffsetY
 
-        commands = []
-
-        #commands.append(CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, diagram.project))
-        #commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated, nodes_to_be_updated))
-        commands.append(CommandItemsAdd(diagram, items))
-        #commands.append(CommandProjetSetIRIPrefixesNodesDict(diagram.project, Duplicate_dict_2, Duplicate_dict_1, iris_to_be_updated, nodes_to_be_updated))
-        #commands.append(CommandProjetSetIRIofCutNodes(Dup_2B, Dup_1B, self.project))
-
-        self.session.undostack.beginMacro('edit paste >>')
-        for command in commands:
-            if command:
-                self.session.undostack.push(command)
-        self.session.undostack.endMacro()
+        self.session.undostack.push(CommandItemsAdd(diagram, items))
 
     def size(self):
         """
