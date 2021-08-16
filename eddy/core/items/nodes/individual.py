@@ -35,19 +35,24 @@
 
 import math
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
 
-from eddy.core.datatypes.graphol import Identity, Item
-from eddy.core.datatypes.owl import Datatype
+from eddy.core.datatypes.graphol import (
+    Identity,
+    Item,
+)
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode
-from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.regex import RE_VALUE
+from eddy.core.items.nodes.common.base import (
+    AbstractResizableNode,
+    PredicateNodeMixin,
+)
 
 
-class IndividualNode(AbstractResizableNode):
+class IndividualNode(PredicateNodeMixin, AbstractResizableNode):
     """
     This class implements the 'Individual' node.
     """
@@ -63,10 +68,10 @@ class IndividualNode(AbstractResizableNode):
 
     DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-    Identities = {Identity.Individual, Identity.Value}
+    Identities = {Identity.Individual}
     Type = Item.IndividualNode
 
-    def __init__(self, width=60, height=60, brush=None, remaining_characters='individual', **kwargs):
+    def __init__(self, width=60, height=60, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -96,39 +101,14 @@ class IndividualNode(AbstractResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-        self.remaining_characters = remaining_characters
-
-        self.label = NodeLabel(template='individual', pos=self.center, parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        self.updateTextPos()
-
-
-    @property
-    def datatype(self):
-        """
-        Returns the datatype associated with this node.
-        :rtype: Datatype
-        """
-        match = RE_VALUE.match(self.text())
-        if match:
-            return Datatype.valueOf(match.group('datatype'))
-        return None
-
-    @property
-    def value(self):
-        """
-        Returns the value value associated with this node.
-        :rtype: str
-        """
-        match = RE_VALUE.match(self.text())
-        if match:
-            return match.group('value')
-        return None
 
     #############################################
     #   INTERFACE
     #################################
+
+    def initialLabelPosition(self):
+        return self.center()
 
     def boundingRect(self):
         """
@@ -139,16 +119,6 @@ class IndividualNode(AbstractResizableNode):
         path.addPolygon(self.selection.geometry())
         return path.boundingRect()
 
-    @staticmethod
-    def compose(value, datatype):
-        """
-        Compose the value string.
-        :type value: str
-        :type datatype: Datatype
-        :return: str
-        """
-        return '"{0}"^^{1}'.format(value.strip('"'), datatype.value)
-
     def copy(self, diagram):
         """
         Create a copy of the current item.
@@ -156,13 +126,14 @@ class IndividualNode(AbstractResizableNode):
         """
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
+            'iri': None,
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'remaining_characters': self.remaining_characters,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        # node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -173,7 +144,6 @@ class IndividualNode(AbstractResizableNode):
         """
         polygon = self.polygon.geometry()
 
-        #return polygon[self.IndexTR].y() - polygon[self.IndexBR].y()
         return polygon[self.IndexBR].y() - polygon[self.IndexTR].y()
 
     def identity(self):
@@ -181,9 +151,6 @@ class IndividualNode(AbstractResizableNode):
         Returns the identity of the current node.
         :rtype: Identity
         """
-        match = RE_VALUE.match(self.text())
-        if match:
-            return Identity.Value
         return Identity.Individual
 
     def paint(self, painter, option, widget=None):
@@ -236,7 +203,7 @@ class IndividualNode(AbstractResizableNode):
         background = self.background.geometry()
         selection = self.selection.geometry()
         polygon = self.polygon.geometry()
-        
+
         R = QtCore.QRectF(self.boundingRect())
         D = QtCore.QPointF(0, 0)
 
@@ -282,7 +249,7 @@ class IndividualNode(AbstractResizableNode):
             selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
             selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
             selection[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
-            
+
             background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
             background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
             background[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
@@ -319,7 +286,7 @@ class IndividualNode(AbstractResizableNode):
             newSide = (R.height() - 4 * 2) / (1 + math.sqrt(2))
             newLeftRightBottomY = (R.y() + R.height() / 2) + newSide / 2
             newLeftRightTopY = (R.y() + R.height() / 2) - newSide / 2
-            
+
             selection[self.IndexTL] = QtCore.QPointF(background[self.IndexTL].x(), R.top())
             selection[self.IndexTR] = QtCore.QPointF(background[self.IndexTR].x(), R.top())
             selection[self.IndexLB] = QtCore.QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
@@ -327,7 +294,7 @@ class IndividualNode(AbstractResizableNode):
             selection[self.IndexLT] = QtCore.QPointF(background[self.IndexLT].x(), newLeftRightTopY)
             selection[self.IndexRT] = QtCore.QPointF(background[self.IndexRT].x(), newLeftRightTopY)
             selection[self.IndexEE] = QtCore.QPointF(background[self.IndexEE].x(), newLeftRightTopY)
-            
+
             background[self.IndexTL] = QtCore.QPointF(background[self.IndexTL].x(), R.top())
             background[self.IndexTR] = QtCore.QPointF(background[self.IndexTR].x(), R.top())
             background[self.IndexLB] = QtCore.QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
@@ -335,7 +302,7 @@ class IndividualNode(AbstractResizableNode):
             background[self.IndexLT] = QtCore.QPointF(background[self.IndexLT].x(), newLeftRightTopY)
             background[self.IndexRT] = QtCore.QPointF(background[self.IndexRT].x(), newLeftRightTopY)
             background[self.IndexEE] = QtCore.QPointF(background[self.IndexEE].x(), newLeftRightTopY)
-            
+
             polygon[self.IndexTL] = QtCore.QPointF(polygon[self.IndexTL].x(), R.top() + 4)
             polygon[self.IndexTR] = QtCore.QPointF(polygon[self.IndexTR].x(), R.top() + 4)
             polygon[self.IndexLB] = QtCore.QPointF(polygon[self.IndexLB].x(), newLeftRightBottomY)
@@ -371,7 +338,7 @@ class IndividualNode(AbstractResizableNode):
             newLeftRightTopY = (R.y() + R.height() / 2) - newSideY / 2
             newTopBottomLeftX = (R.x() + R.width() / 2) - newSideX / 2
             newTopBottomRightX = (R.x() + R.width() / 2) + newSideX / 2
-            
+
             selection[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
             selection[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
             selection[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
@@ -381,7 +348,7 @@ class IndividualNode(AbstractResizableNode):
             selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
             selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
             selection[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
-            
+
             background[self.IndexLT] = QtCore.QPointF(R.left(), newLeftRightTopY)
             background[self.IndexLB] = QtCore.QPointF(R.left(), newLeftRightBottomY)
             background[self.IndexRT] = QtCore.QPointF(R.right(), newLeftRightTopY)
@@ -391,7 +358,7 @@ class IndividualNode(AbstractResizableNode):
             background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
             background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
             background[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
-            
+
             polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
             polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, newLeftRightBottomY)
             polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, newLeftRightTopY)
@@ -426,7 +393,7 @@ class IndividualNode(AbstractResizableNode):
             selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexTR].y())
             selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, selection[self.IndexBL].y())
             selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexBR].y())
-            
+
             background[self.IndexLT] = QtCore.QPointF(R.left(), background[self.IndexLT].y())
             background[self.IndexLB] = QtCore.QPointF(R.left(), background[self.IndexLB].y())
             background[self.IndexEE] = QtCore.QPointF(R.left(), background[self.IndexEE].y())
@@ -434,7 +401,7 @@ class IndividualNode(AbstractResizableNode):
             background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexTR].y())
             background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, background[self.IndexBL].y())
             background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexBR].y())
-            
+
             polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, polygon[self.IndexLT].y())
             polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, polygon[self.IndexLB].y())
             polygon[self.IndexEE] = QtCore.QPointF(R.left() + 4, polygon[self.IndexEE].y())
@@ -466,14 +433,14 @@ class IndividualNode(AbstractResizableNode):
             selection[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexTR].y())
             selection[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, selection[self.IndexBL].y())
             selection[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, selection[self.IndexBR].y())
-            
+
             background[self.IndexRT] = QtCore.QPointF(R.right(), background[self.IndexRT].y())
             background[self.IndexRB] = QtCore.QPointF(R.right(), background[self.IndexRB].y())
             background[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, background[self.IndexTL].y())
             background[self.IndexTR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexTR].y())
             background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, background[self.IndexBL].y())
             background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, background[self.IndexBR].y())
-            
+
             polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, polygon[self.IndexRT].y())
             polygon[self.IndexRB] = QtCore.QPointF(R.right() - 4, polygon[self.IndexRB].y())
             polygon[self.IndexTL] = QtCore.QPointF(newTopBottomLeftX, polygon[self.IndexTL].y())
@@ -528,7 +495,7 @@ class IndividualNode(AbstractResizableNode):
             background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
             background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
             background[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
-            
+
             polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
             polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, newLeftRightBottomY)
             polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, newLeftRightTopY)
@@ -563,7 +530,7 @@ class IndividualNode(AbstractResizableNode):
             selection[self.IndexLT] = QtCore.QPointF(selection[self.IndexLT].x(), newLeftRightTopY)
             selection[self.IndexRT] = QtCore.QPointF(selection[self.IndexRT].x(), newLeftRightTopY)
             selection[self.IndexEE] = QtCore.QPointF(selection[self.IndexEE].x(), newLeftRightTopY)
-            
+
             background[self.IndexBL] = QtCore.QPointF(background[self.IndexBL].x(), R.bottom())
             background[self.IndexBR] = QtCore.QPointF(background[self.IndexBR].x(), R.bottom())
             background[self.IndexLB] = QtCore.QPointF(background[self.IndexLB].x(), newLeftRightBottomY)
@@ -571,7 +538,7 @@ class IndividualNode(AbstractResizableNode):
             background[self.IndexLT] = QtCore.QPointF(background[self.IndexLT].x(), newLeftRightTopY)
             background[self.IndexRT] = QtCore.QPointF(background[self.IndexRT].x(), newLeftRightTopY)
             background[self.IndexEE] = QtCore.QPointF(background[self.IndexEE].x(), newLeftRightTopY)
-            
+
             polygon[self.IndexBL] = QtCore.QPointF(polygon[self.IndexBL].x(), R.bottom() - 4)
             polygon[self.IndexBR] = QtCore.QPointF(polygon[self.IndexBR].x(), R.bottom() - 4)
             polygon[self.IndexLB] = QtCore.QPointF(polygon[self.IndexLB].x(), newLeftRightBottomY)
@@ -627,7 +594,7 @@ class IndividualNode(AbstractResizableNode):
             background[self.IndexBL] = QtCore.QPointF(newTopBottomLeftX, R.bottom())
             background[self.IndexBR] = QtCore.QPointF(newTopBottomRightX, R.bottom())
             background[self.IndexEE] = QtCore.QPointF(R.left(), newLeftRightTopY)
-            
+
             polygon[self.IndexLT] = QtCore.QPointF(R.left() + 4, newLeftRightTopY)
             polygon[self.IndexLB] = QtCore.QPointF(R.left() + 4, newLeftRightBottomY)
             polygon[self.IndexRT] = QtCore.QPointF(R.right() - 4, newLeftRightTopY)
@@ -654,13 +621,9 @@ class IndividualNode(AbstractResizableNode):
 
     def setText(self, text):
         """
-        Set the label text: will additionally block label editing if a literal is being.
+        Set the label text.
         :type text: str
         """
-        #print('Individial >> def setText >> ')
-        #print('text',text)
-        #print('RE_VALUE.match(text)',RE_VALUE.match(text))
-        self.label.setEditable(RE_VALUE.match(text) is None)
         self.label.setText(text)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
 

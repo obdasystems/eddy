@@ -136,12 +136,12 @@ class PropertyAssertionNode(AbstractNode):
         :rtype: tuple
         """
         f1 = lambda x: x.type() is Item.MembershipEdge
-        f2 = lambda x: x.type() in {Item.RoleIRINode, Item.RoleInverseNode, Item.AttributeIRINode}
+        f2 = lambda x: x.type() in {Item.RoleNode, Item.RoleInverseNode, Item.AttributeNode}
         f3 = lambda x: x.type() is Item.InputEdge
-        f4 = lambda x: x.type() is Item.IndividualIRINode
+        f4 = lambda x: x.type() is Item.IndividualNode
         f5 = lambda x: Identity.RoleInstance if x.identity() is Identity.Role else Identity.AttributeInstance
         f6 = lambda x: x.identity() is Identity.Value
-        #TODO MODIFIED TO MANAGE SEPARATION OF INDIVIDUALS AND VALUES
+        # MODIFIED TO MANAGE SEPARATION OF INDIVIDUALS AND VALUES
         f7 = lambda x: x.type() is Item.LiteralNode
         outgoing = self.outgoingNodes(filter_on_edges=f1, filter_on_nodes=f2)
         incomingIndividuals = self.incomingNodes(filter_on_edges=f3, filter_on_nodes=f4)

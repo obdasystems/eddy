@@ -33,27 +33,37 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
 
-from eddy.core.datatypes.graphol import Identity, Item, Special
-from eddy.core.datatypes.owl import OWLProfile
+from eddy.core.datatypes.graphol import (
+    Identity,
+    Item,
+    Special,
+)
+from eddy.core.functions.signals import (
+    connect,
+    disconnect,
+)
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.project import K_FUNCTIONAL
+from eddy.core.items.nodes.common.base import (
+    AbstractNode,
+    PredicateNodeMixin,
+)
 
 
-class AttributeNode(AbstractNode):
+class AttributeNode(PredicateNodeMixin, AbstractNode):
     """
     This class implements the 'Attribute' node.
     """
     DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-    Identities = {Identity.Attribute}
+    Identities = {Identity.Attribute, Identity.Individual}
     Type = Item.AttributeNode
 
-    def __init__(self, width=20, height=20, brush=None, remaining_characters='attribute', **kwargs):
+    def __init__(self, width=20, height=20, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -68,16 +78,37 @@ class AttributeNode(AbstractNode):
         self.selection = Polygon(QtCore.QRectF(-14, -14, 28, 28))
         self.polygon = Polygon(QtCore.QRectF(-10, -10, 20, 20), brush, pen)
 
-        self.remaining_characters = remaining_characters
-
-        self.label = NodeLabel(template='attribute', pos=lambda: self.center() - QtCore.QPointF(0, 22), parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-
-
-
     #############################################
     #   INTERFACE
     #################################
+
+    def connectIRIMetaSignals(self):
+        connect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
+
+    def disconnectIRIMetaSignals(self):
+        disconnect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
+
+    def initialLabelPosition(self):
+        return self.center() - QtCore.QPointF(0, 22)
+
+    def occursAsIndividual(self):
+        #Class Assertion
+        for instEdge in [x for x in self.edges if x.type() is Item.MembershipEdge]:
+            if instEdge.source is self:
+                return True
+        #Object[Data] Property Assertion
+        for inputEdge in [x for x in self.edges if x.type() is Item.InputEdge]:
+            if inputEdge.source is self and inputEdge.target.type() is Item.PropertyAssertionNode:
+                return True
+        #SameAs and Different
+        for inputEdge in [x for x in self.edges if (x.type() is Item.SameEdge or x.type() is Item.DifferentEdge)]:
+            if inputEdge.source is self or inputEdge.target is self:
+                return True
+        return False
+
+    @QtCore.pyqtSlot()
+    def onFunctionalModified(self):
+        self.updateNode()
 
     def boundingRect(self):
         """
@@ -93,13 +124,14 @@ class AttributeNode(AbstractNode):
         """
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
+            'iri': None,
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'remaining_characters': self.remaining_characters,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        # node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -131,13 +163,7 @@ class AttributeNode(AbstractNode):
         Returns True if the predicate represented by this node is functional, else False.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_FUNCTIONAL] #\
-                   #and \
-                   #self.project.profile.type() is not OWLProfile.OWL2QL
-
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.functional or False
 
     def paint(self, painter, option, widget=None):
         """
@@ -180,11 +206,7 @@ class AttributeNode(AbstractNode):
         Set the functional property of the predicate represented by this node.
         :type functional: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_FUNCTIONAL] = bool(functional)
-        self.project.setMeta(self.type(), self.text(), meta)
-        for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(functional=functional, selected=node.isSelected())
+        self.iri.functional = functional
 
     def setIdentity(self, identity):
         """
@@ -244,7 +266,8 @@ class AttributeNode(AbstractNode):
         :type functional: bool
         """
         if functional is None:
-            functional = self.isFunctional()
+            if self.iri:
+                functional = self.isFunctional()
 
         # FUNCTIONAL POLYGON (SHAPE)
         path1 = QtGui.QPainterPath()
