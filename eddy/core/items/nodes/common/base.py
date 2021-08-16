@@ -470,182 +470,6 @@ class AbstractNode(AbstractItem):
         pass
 
 
-class OntologyEntityNode(AbstractNode):
-    """
-    Base abstract class for all the nodes representing ontology elements
-    (i.e. Nodes having an associated IRI).
-    """
-    __metaclass__ = ABCMeta
-
-    sgnIRISwitched = QtCore.pyqtSignal()
-
-    def __init__(self, iri, **kwargs):
-        super().__init__(**kwargs)
-        self._iri = iri
-        self.labelString = None
-        self.label = None
-
-    @property
-    def iri(self):
-        """
-        :rtype: IRI
-        """
-        return self._iri
-
-    @iri.setter
-    def iri(self, iriObj):
-        """
-        :type iriObj:IRI
-        """
-        switch = False
-        if self.iri:
-            switch = True
-            self.disconnectIRISignals()
-        self._iri = iriObj
-        self.connectIRISignals()
-        if switch:
-            self.sgnIRISwitched.emit()
-        self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
-
-    def initialLabelPosition(self):
-        pass
-
-    #############################################
-    #   INTERFACE
-    #################################
-
-    def mouseDoubleClickEvent(self, mouseEvent):
-        """
-        Executed when the mouse is double clicked on the text item.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        self.session.doOpenIRIDialog(self)
-        mouseEvent.accept()
-
-    def connectSignals(self):
-        connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
-        connect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
-        connect(self.project.sgnPrefixModified, self.onPrefixModified)
-        #connect(self.session.sgnRenderingModified, self.onRenderingModified)
-        self.connectIRISignals()
-
-    def disconnectSignals(self):
-        disconnect(self.project.sgnPrefixAdded, self.onPrefixAdded)
-        disconnect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
-        disconnect(self.project.sgnPrefixModified, self.onPrefixModified)
-        #disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
-        self.disconnectIRISignals()
-
-    def connectIRISignals(self):
-        connect(self.iri.sgnIRIModified, self.onIRIModified)
-        connect(self.iri.sgnIRIPropModified, self.onIRIPropModified)
-        connect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
-        connect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
-        connect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
-        self.connectIRIMetaSignals()
-
-    def disconnectIRISignals(self):
-        disconnect(self.iri.sgnIRIModified, self.onIRIModified)
-        disconnect(self.iri.sgnIRIPropModified, self.onIRIPropModified)
-        disconnect(self.iri.sgnAnnotationAdded, self.onAnnotationAdded)
-        disconnect(self.iri.sgnAnnotationRemoved, self.onAnnotationRemoved)
-        disconnect(self.iri.sgnAnnotationModified, self.onAnnotationModified)
-        self.disconnectIRIMetaSignals()
-
-    def connectIRIMetaSignals(self):
-        pass
-
-    def disconnectIRIMetaSignals(self):
-        pass
-
-    #############################################
-    #   SLOTS
-    #################################
-
-    @QtCore.pyqtSlot()
-    def onIRIPropModified(self):
-        self.sgnNodeModified.emit()
-
-    @QtCore.pyqtSlot()
-    def doUpdateNodeLabel(self):
-        newLabelString = IRIRender.iriLabelString(self._iri)
-        if self.label and not self.labelString == newLabelString:
-            self.labelString = newLabelString
-            labelPos = lambda: self.label.pos()
-            try:
-                if hasattr(self.label, 'diagram') and self.label.diagram:
-                    self.label.diagram.removeItem(self.label)
-            except AttributeError:
-                print("label.diagram is not defined!!")
-            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
-            # self.diagram.sgnUpdated.emit()
-        elif not self.label:
-            self.labelString = newLabelString
-            self.label = NodeLabel(template=self.labelString, pos=lambda: self.initialLabelPosition(), parent=self,
-                                   editable=True)
-            # self.diagram.sgnUpdated.emit()
-
-    #@QtCore.pyqtSlot(AnnotationAssertion)
-    def onAnnotationAdded(self, annotation):
-        '''
-        :type annotation: AnnotationAssertion
-        '''
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
-        if rendering == IRIRender.LABEL.value:
-            self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
-
-    #@QtCore.pyqtSlot(AnnotationAssertion)
-    def onAnnotationRemoved(self, annotation):
-        '''
-        :type annotation: AnnotationAssertion
-        '''
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
-        if rendering == IRIRender.LABEL.value:
-            self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
-
-    #@QtCore.pyqtSlot(AnnotationAssertion)
-    def onAnnotationModified(self, annotation):
-        '''
-        :type annotation: AnnotationAssertion
-        '''
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.LABEL.value:
-            self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
-
-    #@QtCore.pyqtSlot()
-    def onIRIModified(self):
-        self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
-
-    #@QtCore.pyqtSlot('QString','QString')
-    def onPrefixAdded(self,pref,ns):
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
-            self.doUpdateNodeLabel()
-
-    #@QtCore.pyqtSlot(str)
-    def onPrefixRemoved(self,pref):
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
-            self.doUpdateNodeLabel()
-
-    #@QtCore.pyqtSlot(str)
-    def onPrefixModified(self,pref):
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
-            self.doUpdateNodeLabel()
-
-
 class AbstractResizableNode(AbstractNode):
     """
     Base class for all the diagram resizable nodes.
@@ -906,16 +730,15 @@ class AbstractResizableNode(AbstractNode):
         self.update()
 
 
-class OntologyEntityResizableNode(AbstractResizableNode):
+class PredicateNodeMixin:
     """
-    Base abstract class for all the nodes representing ontology elements
-    (i.e. Nodes having an associated IRI).
+    Mixin for nodes representing ontology elements (i.e. nodes having an associated IRI).
     """
     __metaclass__ = ABCMeta
 
     sgnIRISwitched = QtCore.pyqtSignal()
 
-    def __init__(self, iri,**kwargs):
+    def __init__(self, iri, **kwargs):
         super().__init__(**kwargs)
         self._iri = iri
         self.labelString = None
@@ -1015,18 +838,18 @@ class OntologyEntityResizableNode(AbstractResizableNode):
                     self.label.diagram.removeItem(self.label)
             except AttributeError:
                 print("label.diagram is not defined!!")
-            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
+            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=False)
             #self.diagram.sgnUpdated.emit()self.label
         elif not self.label:
             self.labelString = newLabelString
-            self.label = NodeLabel(template=self.labelString, pos=lambda:self.initialLabelPosition() , parent=self, editable=True)
+            self.label = NodeLabel(template=self.labelString, pos=lambda:self.initialLabelPosition() , parent=self, editable=False)
             #self.diagram.sgnUpdated.emit()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationAdded(self, annotation):
-        '''
+        """
         :type annotation: AnnotationAssertion
-        '''
+        """
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.LABEL.value:
@@ -1035,9 +858,9 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationRemoved(self, annotation):
-        '''
+        """
         :type annotation: AnnotationAssertion
-        '''
+        """
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
         if rendering == IRIRender.LABEL.value:
@@ -1046,9 +869,9 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationModified(self, annotation):
-        '''
+        """
         :type annotation: AnnotationAssertion
-        '''
+        """
         settings = QtCore.QSettings()
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.LABEL.value:

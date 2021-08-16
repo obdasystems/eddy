@@ -26,7 +26,7 @@ from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir, make_archi
 from eddy.core.functions.misc import rstrip, postfix, rtfStripFontAttributes
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
-from eddy.core.items.nodes.common.base import OntologyEntityResizableNode
+from eddy.core.items.nodes.common.base import PredicateNodeMixin
 from eddy.core.loaders.common import AbstractDiagramLoader
 from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.loaders.common import AbstractProjectLoader
@@ -2167,7 +2167,7 @@ class ProjectIRIMergeWorker_v3(QtCore.QObject):
 
     def replaceIRIs(self,diagram,alreadyAdded):
         for node in diagram.nodes():
-            if isinstance(node,OntologyEntityResizableNode) or isinstance(node, OntologyEntityResizableNode):
+            if isinstance(node, PredicateNodeMixin):
                 otherIRI = node.iri
                 projIRI = None
                 if not str(otherIRI) in alreadyAdded and self.project.existIRI(str(otherIRI)):

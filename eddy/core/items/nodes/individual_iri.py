@@ -7,14 +7,14 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Identity, Item
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode, OntologyEntityResizableNode
+from eddy.core.items.nodes.common.base import AbstractResizableNode, PredicateNodeMixin
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.functions.signals import connect, disconnect
 from eddy import ORGANIZATION, APPNAME
 from eddy.core.owl import IRIRender, AnnotationAssertion, IRI
 
 
-class IndividualNode(OntologyEntityResizableNode):
+class IndividualNode(PredicateNodeMixin, AbstractResizableNode):
     """
     This class implements the 'Individual' node.
     """

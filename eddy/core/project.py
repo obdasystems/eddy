@@ -59,8 +59,7 @@ from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.nodes.attribute_iri import AttributeNode
 from eddy.core.items.nodes.common.base import (
     AbstractNode,
-    OntologyEntityNode,
-    OntologyEntityResizableNode,
+    PredicateNodeMixin,
 )
 from eddy.core.items.nodes.concept_iri import ConceptNode
 from eddy.core.items.nodes.individual_iri import IndividualNode
@@ -152,8 +151,8 @@ class Project(IRIManager):
     sgnIRIVersionEntryRemoved = QtCore.pyqtSignal(str, str, str)
     sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str, str, str)
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
-    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(AbstractNode,IRI)
-    sgnIRIChanged = QtCore.pyqtSignal(AbstractNode, IRI)
+    sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(QtWidgets.QGraphicsItem,IRI)
+    sgnIRIChanged = QtCore.pyqtSignal(QtWidgets.QGraphicsItem, IRI)
     sgnIRIRefactor = QtCore.pyqtSignal(IRI, IRI)
 
     def __init__(self, **kwargs: Any) -> None:
@@ -339,7 +338,7 @@ class Project(IRIManager):
         Executed whenever an item is added to a diagram belonging to this Project.
         """
         if self.index.addItem(diagram, item):
-            if isinstance(item, (OntologyEntityNode, OntologyEntityResizableNode)):
+            if isinstance(item, PredicateNodeMixin):
                 self.addIRI(item.iri)
                 self.index.addIRIOccurenceToDiagram(diagram, item)
             self.sgnItemAdded.emit(diagram, item)
@@ -352,7 +351,7 @@ class Project(IRIManager):
         This slot will remove the given element from the project index.
         """
         if self.index.removeItem(diagram, item):
-            if isinstance(item, (OntologyEntityNode, OntologyEntityResizableNode)):
+            if isinstance(item, PredicateNodeMixin):
                 if self.index.removeIRIOccurenceFromDiagram(diagram, item):
                     self.sgnIRIRemovedFromAllDiagrams.emit(item.iri)
             self.sgnItemRemoved.emit(diagram, item)
@@ -366,8 +365,8 @@ class Project(IRIManager):
         self.index.switchIRI(sub,master)
         self.sgnIRIRemovedFromAllDiagrams.emit(sub)
 
-    @QtCore.pyqtSlot(OntologyEntityNode, IRI)
-    def doSingleSwitchIRI(self, node: OntologyEntityNode, oldIri: IRI) -> None:
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsItem, IRI)
+    def doSingleSwitchIRI(self, node: QtWidgets.QGraphicsItem, oldIri: IRI) -> None:
         """
         Executed whenever the iri associated to node change
         """
@@ -628,7 +627,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Make all occurrences of sub become occurrences of master
         :type oldIRI: IRI
-        :type node: OntologyEntityNode | OntologyEntityResizableNode
+        :type node: PredicateNodeMixin
         """
 
         if isinstance(node, ConceptNode):
@@ -729,7 +728,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Set node as occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode | OntologyEntityResizableNode
+        :type node: PredicateNodeMixin
         """
         iri = node.iri
         if iri in self[K_OCCURRENCES]:
@@ -778,7 +777,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Set node as typed occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode | OntologyEntityResizableNode
+        :type node: PredicateNodeMixin
         :type k_metatype: str
         """
         iri = node.iri
@@ -807,7 +806,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Remove node as occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode | OntologyEntityResizableNode
+        :type node: PredicateNodeMixin
         """
         '''
         if diagram.name in self[K_NODE]:
@@ -849,7 +848,7 @@ class ProjectIRIIndex(ProjectIndex):
         """
         Remove node as typed occurrence of node.iri in diagram
         :type diagram: Diagram
-        :type node: OntologyEntityNode | OntologyEntityResizableNode
+        :type node: PredicateNodeMixin
         :type k_metatype: str
         """
         iri = node.iri

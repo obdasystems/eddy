@@ -43,10 +43,10 @@ from eddy.core.functions.misc import snapF
 
 from eddy.core.datatypes.graphol import Item, Identity, Special
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import OntologyEntityResizableNode
+from eddy.core.items.nodes.common.base import PredicateNodeMixin, AbstractResizableNode
 
 
-class RoleNode(OntologyEntityResizableNode):
+class RoleNode(PredicateNodeMixin, AbstractResizableNode):
     """
     This class implements the 'Role' node.
     """

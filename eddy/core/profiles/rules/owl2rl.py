@@ -33,7 +33,7 @@
 ##########################################################################
 
 from eddy.core.datatypes.graphol import Item, Identity, Restriction, Special
-from eddy.core.items.nodes.common.base import OntologyEntityNode, OntologyEntityResizableNode
+from eddy.core.items.nodes.common.base import PredicateNodeMixin
 from eddy.core.owl import OWL2Datatype, OWL2Profiles
 from eddy.core.profiles.common import ProfileError
 from eddy.core.profiles.rules.common import ProfileNodeRule
@@ -49,7 +49,7 @@ class ReflexivityUnsupported(ProfileNodeRule):
             if node.isReflexive():
                 raise ProfileError('Reflexivity of roles is forbidden in OWL 2 RL')
         '''
-        if isinstance(node,OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+        if isinstance(node, PredicateNodeMixin):
             if node.iri:
                 if node.iri.reflexive:
                     raise ProfileError('({}) Reflexivity of roles is forbidden in OWL 2 RL'.format(str(node.iri)))

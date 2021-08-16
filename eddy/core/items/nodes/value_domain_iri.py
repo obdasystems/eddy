@@ -39,11 +39,11 @@ from PyQt5 import QtGui
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Datatype
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractNode, OntologyEntityNode
+from eddy.core.items.nodes.common.base import AbstractNode, PredicateNodeMixin
 from eddy.core.items.nodes.common.label import NodeLabel
 
 
-class ValueDomainNode(OntologyEntityNode):
+class ValueDomainNode(PredicateNodeMixin, AbstractNode):
     """
     This class implements the 'Value-Domain' node.
     """

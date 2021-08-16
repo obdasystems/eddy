@@ -5,13 +5,13 @@ from eddy.core.datatypes.graphol import Identity, Item, Special
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode, OntologyEntityNode, OntologyEntityResizableNode
+from eddy.core.items.nodes.common.base import AbstractResizableNode, PredicateNodeMixin
 from eddy.core.items.nodes.common.label import NodeLabel
 
 from eddy.core.owl import IRI, IRIRender
 
 
-class ConceptNode(OntologyEntityResizableNode):
+class ConceptNode(PredicateNodeMixin, AbstractResizableNode):
     """
     This class implements the 'Concept' node.
     """

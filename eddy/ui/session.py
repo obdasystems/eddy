@@ -152,8 +152,7 @@ from eddy.core.items.common import AbstractItem
 from eddy.core.items.edges.common.base import AxiomEdge
 from eddy.core.items.nodes.common.base import (
     AbstractNode,
-    OntologyEntityNode,
-    OntologyEntityResizableNode,
+    PredicateNodeMixin,
 )
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
@@ -1654,8 +1653,8 @@ class Session(
     def onIRIRemovedFromAllDiagrams(self, iri: IRI) -> None:
         self.sgnIRIRemovedFromAllDiagrams.emit(iri)
 
-    @QtCore.pyqtSlot(OntologyEntityNode, IRI)
-    def onSingleNodeSwitchIRI(self, node: OntologyEntityNode, iri: IRI) -> None:
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsItem, IRI)
+    def onSingleNodeSwitchIRI(self, node: QtWidgets.QGraphicsItem, iri: IRI) -> None:
         self.sgnSingleNodeSwitchIRI.emit(node, iri)
 
     @QtCore.pyqtSlot()
@@ -2402,7 +2401,7 @@ class Session(
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+            if isinstance(node, PredicateNodeMixin):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self)
@@ -2426,7 +2425,7 @@ class Session(
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+            if isinstance(node, PredicateNodeMixin):
                 iri = node.iri
             if iri:
                 builder = IriPropsDialog(iri, self, True)
@@ -2587,7 +2586,7 @@ class Session(
             if node:
                 action = self.sender()
                 color = action.data()
-                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+                if isinstance(node, PredicateNodeMixin):
                     nodes = self.project.iriOccurrences(node.type(), node.iri)
                 else:
                     nodes = self.project.predicates(node.type(), node.text())
@@ -3098,7 +3097,7 @@ class Session(
             iri = None
             if len(selected) == 1:
                 node = first(selected)
-            if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+            if isinstance(node, PredicateNodeMixin):
                 iri = node.iri
             if iri:
                 dialog = AxiomsByEntityDialog(self.project, self, iri)
@@ -3368,8 +3367,7 @@ class Session(
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
-                if isinstance(node, OntologyEntityNode) or isinstance(node,
-                                                                      OntologyEntityResizableNode):
+                if isinstance(node, PredicateNodeMixin):
                     node.doUpdateNodeLabel()
             self.sgnRenderingModified.emit(IRIRender.FULL.value)
 
@@ -3388,7 +3386,7 @@ class Session(
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
-                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+                if isinstance(node, PredicateNodeMixin):
                     node.doUpdateNodeLabel()
             self.sgnRenderingModified.emit(IRIRender.PREFIX.value)
 
@@ -3408,7 +3406,7 @@ class Session(
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(False)
             for node in self.project.nodes():
-                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+                if isinstance(node, PredicateNodeMixin):
                     node.doUpdateNodeLabel()
         self.sgnRenderingModified.emit(IRIRender.SIMPLE_NAME.value)
 
@@ -3431,7 +3429,7 @@ class Session(
                 actionObjName = 'render_label_{}'.format(langTag)
                 self.action(objectName=actionObjName).setChecked(langTag == lang)
             for node in self.project.nodes():
-                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode, FacetNode)):
+                if isinstance(node, (PredicateNodeMixin, FacetNode)):
                     node.doUpdateNodeLabel()
             self.sgnRenderingModified.emit(IRIRender.LABEL.value)
 

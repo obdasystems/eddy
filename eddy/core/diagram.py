@@ -72,8 +72,7 @@ from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.factory import ItemFactory
 from eddy.core.items.nodes.common.base import (
     AbstractNode,
-    OntologyEntityNode,
-    OntologyEntityResizableNode,
+    PredicateNodeMixin,
 )
 from eddy.core.items.nodes.facet_iri import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
@@ -244,7 +243,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                     # For new nodes (e.g. drag and drop from palette)
                     if isinstance(node, FacetNode):
                         self.session.doOpenConstrainingFacetBuilder(node)
-                    elif isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+                    elif isinstance(node, PredicateNodeMixin):
                         self.session.doOpenIRIBuilder(node)
                     elif isinstance(node, LiteralNode):
                         self.session.doOpenLiteralBuilder(node)
@@ -283,7 +282,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 snapToGrid = self.session.action('toggle_grid').isChecked()
                 node = self.factory.create(Item.valueOf(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
-                if isinstance(node, (OntologyEntityNode, OntologyEntityResizableNode)):
+                if isinstance(node, PredicateNodeMixin):
                     self.session.doOpenIRIBuilder(node)
                 elif isinstance(node, FacetNode):
                     self.session.doOpenConstrainingFacetBuilder(node)
