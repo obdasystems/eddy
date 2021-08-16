@@ -58,8 +58,6 @@ class AbstractNode(AbstractItem):
     Identities = {}
     Prefix = 'n'
 
-    sgnNodeModified = QtCore.pyqtSignal()
-
     def __init__(self, **kwargs):
         """
         Initialize the node.
@@ -276,7 +274,7 @@ class AbstractNode(AbstractItem):
         Returns True if this node is a predicate node, False otherwise.
         :rtype: bool
         """
-        return  Item.ConceptIRINode <= self.type() <= Item.IndividualIRINode
+        return  Item.ConceptIRINode <= self.type() <= Item.IndividualIRINode and self.type() is not Item.FacetIRINode
 
     def moveBy(self, x, y):
         """
@@ -734,11 +732,9 @@ class PredicateNodeMixin:
     """
     Mixin for nodes representing ontology elements (i.e. nodes having an associated IRI).
     """
-    __metaclass__ = ABCMeta
-
     sgnIRISwitched = QtCore.pyqtSignal()
 
-    def __init__(self, iri, **kwargs):
+    def __init__(self, iri=None, **kwargs):
         super().__init__(**kwargs)
         self._iri = iri
         self.labelString = None
@@ -765,7 +761,8 @@ class PredicateNodeMixin:
         if switch:
             self.sgnIRISwitched.emit()
         self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
+        if self.diagram:
+            self.diagram.project.sgnUpdated.emit()
 
     @abstractmethod
     def initialLabelPosition(self):
@@ -784,18 +781,20 @@ class PredicateNodeMixin:
         mouseEvent.accept()
 
     def connectSignals(self):
-        connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
-        connect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
-        connect(self.project.sgnPrefixModified, self.onPrefixModified)
-        #connect(self.session.sgnRenderingModified, self.onRenderingModified)
-        self.connectIRISignals()
+        if self.diagram:
+            connect(self.project.sgnPrefixAdded, self.onPrefixAdded)
+            connect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
+            connect(self.project.sgnPrefixModified, self.onPrefixModified)
+            #connect(self.session.sgnRenderingModified, self.onRenderingModified)
+            self.connectIRISignals()
 
     def disconnectSignals(self):
-        disconnect(self.project.sgnPrefixAdded, self.onPrefixAdded)
-        disconnect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
-        disconnect(self.project.sgnPrefixModified, self.onPrefixModified)
-        #disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
-        self.disconnectIRISignals()
+        if self.diagram:
+            disconnect(self.project.sgnPrefixAdded, self.onPrefixAdded)
+            disconnect(self.project.sgnPrefixRemoved, self.onPrefixRemoved)
+            disconnect(self.project.sgnPrefixModified, self.onPrefixModified)
+            #disconnect(self.session.sgnRenderingModified, self.onRenderingModified)
+            self.disconnectIRISignals()
 
     def connectIRISignals(self):
         connect(self.iri.sgnIRIModified, self.onIRIModified)
@@ -825,7 +824,8 @@ class PredicateNodeMixin:
 
     @QtCore.pyqtSlot()
     def onIRIPropModified(self):
-        self.sgnNodeModified.emit()
+        if self.diagram:
+            self.diagram.project.sgnUpdated.emit()
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
@@ -854,7 +854,8 @@ class PredicateNodeMixin:
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
+        if self.diagram:
+            self.diagram.project.sgnUpdated.emit()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationRemoved(self, annotation):
@@ -865,7 +866,8 @@ class PredicateNodeMixin:
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, )
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
+        if self.diagram:
+            self.diagram.project.sgnUpdated.emit()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationModified(self, annotation):
@@ -876,12 +878,14 @@ class PredicateNodeMixin:
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering == IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
+        if self.diagram:
+            self.diagram.project.sgnUpdated.emit()
 
     #@QtCore.pyqtSlot()
     def onIRIModified(self):
         self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
+        if self.diagram:
+            self.diagram.project.sgnUpdated.emit()
 
     #@QtCore.pyqtSlot('QString','QString')
     def onPrefixAdded(self,pref,ns):
