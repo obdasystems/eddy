@@ -652,9 +652,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         Add an item to the Diagram (will redraw the item to reflect its status).
         """
         super().addItem(item)
-        if item.isIRINode():
-            item.connectSignals()
         if item.isNode():
+            if item.isPredicate():
+                item.connectSignals()
             item.updateNode()
 
     @staticmethod

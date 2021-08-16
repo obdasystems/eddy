@@ -38,20 +38,13 @@ from abc import ABCMeta, abstractmethod
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QPointF
 
-from eddy.core.commands.labels import CommandLabelChange,Compute_RC_with_spaces
+from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
-from eddy.core.output import getLogger
-from eddy.core.regex import RE_VALUE
-from eddy.core.datatypes.owl import Namespace
-
-
-LOGGER = getLogger()
 
 
 class DiagramItemMixin:
@@ -68,11 +61,7 @@ class DiagramItemMixin:
         Returns the diagram holding this item (alias for DiagramItemMixin.scene()).
         :rtype: Diagram
         """
-        #return self.scene()
-        if self.scene():
-            return self.scene()
-        else:
-            return self._diagram_
+        return self.scene()
 
     @property
     def project(self):
@@ -122,15 +111,6 @@ class DiagramItemMixin:
         """
         return Item.ConceptNode <= self.type() < Item.InclusionEdge or Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
 
-    def isIRINode(self):
-        """
-        Returns True if this element is a node that is associated to an IRI, False otherwise.
-        :rtype: bool
-        """
-        return Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
-
-    def connectSignals(self):
-        pass
 
 class AbstractItem(QtWidgets.QGraphicsObject, DiagramItemMixin):
     """
@@ -148,7 +128,6 @@ class AbstractItem(QtWidgets.QGraphicsObject, DiagramItemMixin):
         :type id: str
         """
         super().__init__(**kwargs)
-        self._diagram_ = diagram
         self.id = id or diagram.guid.next(self.Prefix)
 
     #############################################
@@ -308,7 +287,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self._alignment = QtCore.Qt.AlignCenter
         self._editable = bool(editable)
         self._movable = bool(movable)
-        self._parent = parent
 
         super().__init__(parent)
         self.focusInData = None
@@ -323,8 +301,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
         document = self.document()
         connect(document.contentsChange[int, int, int], self.onContentsChanged)
-
-        self.old_text = None
 
     def setCustomFont(self, font):
         if not font==self.font():
@@ -378,19 +354,13 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         Executed when the text item loses the focus.
         :type focusEvent: QFocusEvent
         """
-        '''
         if self.diagram.mode is DiagramMode.LabelEdit:
 
             if isEmpty(self.text()):
                 self.setText(self.template)
 
             focusInData = self.focusInData
-            #currentData = self.text()
-            currentData = self.toPlainText()
-
-            #print('self.text()',self.text())
-            #print('self.toHtml()',self.toHtml())
-            #print('self.toPlainText()',self.toPlainText())
+            currentData = self.text()
 
             ###########################################################
             # IMPORTANT!                                              #
@@ -405,71 +375,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
             if focusInData and focusInData != currentData:
                 node = self.parentItem()
-                match = RE_VALUE.match(currentData)
-
-                commands = []
-
-                if match:
-                    new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
-                    new_remaining_characters = match.group('datatype')[match.group('datatype').index(':') + 1:len(match.group('datatype'))]
-
-                    new_iri = None
-
-                    for namespace in Namespace:
-                        if namespace.name.lower() == new_prefix:
-                            new_iri = namespace.value
-
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-
-                    old_iri = self.project.get_iri_of_node(node)
-
-                    Duplicate_dict_1[old_iri][1].remove(node)
-                    Duplicate_dict_1[new_iri][1].add(node)
-
-                    self.setText(self.old_text)
-
-                    commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
-
-                    commands.append(CommandLabelChange(self.diagram, node, self.old_text, currentData))
-
-                else:
-                    self.setText(self.old_text)
-
-                    exception_list = ['-', '_', '.', '~', '\n']
-                    currentData_processed = ''
-
-                    flag = False
-
-                    for i,c in enumerate(currentData):
-
-                        if c == '':
-                            pass
-                        elif i < (len(currentData) - 1) and (c == '\\' and currentData[i + 1] == 'n'):
-                            currentData_processed = currentData_processed + '\n'
-                        elif i > 0 and (c == 'n' and currentData[i - 1] == '\\'):
-                            pass
-                        elif (not c.isalnum()) and (c not in exception_list):
-                            currentData_processed = currentData_processed + '_'
-                            flag = True
-                        else:
-                            currentData_processed = currentData_processed + c
-
-                    if flag is True:
-                        self.session.statusBar().showMessage('Spaces in between alphanumeric characters and special characters were replaced by an underscore character.', 15000)
-
-
-                if any(commands):
-                    self.session.undostack.beginMacro('edit {0} AbstractLabel >> focusOutEvent'.format(node.name))
-                    for command in commands:
-                        if command:
-                            self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
-            else:
-                self.setText(self.old_text)
-                self.old_text = None
+                command = CommandLabelChange(self.diagram, node, focusInData, currentData)
+                self.session.undostack.push(command)
 
             self.focusInData = None
             self.setSelectedText(False)
@@ -477,7 +384,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
-        '''
+
         self.setAlignment(self.alignment())
         self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         super().focusOutEvent(focusEvent)
@@ -518,20 +425,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
         if self.isEditable():
-
-            if self._parent:
-                self._parent.mouseDoubleClickEvent(mouseEvent)
-                return
-
             super().mouseDoubleClickEvent(mouseEvent)
-
-            self.old_text = self.text()
-            self.setText(self.old_text)
-            #prev_rc_without_whitespace = self._parent.remaining_characters
-
-            #prev_rc = Compute_RC_with_spaces(prev_rc_without_whitespace, self.old_text).return_result()
-
-            #self.setText(prev_rc)
             self.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
             self.setFocus()
 
@@ -662,7 +556,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
             pos = QtCore.QPointF(__args[0], __args[1])
         else:
             raise TypeError('too many arguments; expected {0}, got {1}'.format(2, len(__args)))
-        #super().setPos(pos)
         super().setPos(pos - QtCore.QPointF(self.width() / 2, self.height() / 2))
 
     def setText(self, text):
@@ -787,4 +680,3 @@ class Polygon(object):
         :type pen: QPen
         """
         self._pen = pen
-
