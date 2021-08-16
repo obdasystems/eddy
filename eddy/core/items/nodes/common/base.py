@@ -31,11 +31,12 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-from abc import ABCMeta
+
+
+from abc import ABCMeta, abstractmethod
 
 from PyQt5 import QtCore
 from PyQt5 import QtGui
-from PyQt5.QtGui import QFocusEvent
 
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect, disconnect
@@ -144,7 +145,7 @@ class AbstractNode(AbstractItem):
         """
         return self.boundingRect().center()
 
-
+    @abstractmethod
     def copy(self, diagram):
         """
         Create a copy of the current item.
@@ -166,7 +167,7 @@ class AbstractNode(AbstractItem):
         """
         return self.polygon.geometry()
 
-
+    @abstractmethod
     def height(self):
         """
         Returns the height of the shape.
@@ -298,7 +299,7 @@ class AbstractNode(AbstractItem):
                     if (e.source is self or e.type() is Item.EquivalenceEdge) \
                         and filter_on_edges(e)] if filter_on_nodes(x)}
 
-
+    @abstractmethod
     def painterPath(self):
         """
         Returns the current shape as QPainterPath (used for collision detection).
@@ -392,7 +393,6 @@ class AbstractNode(AbstractItem):
         :type selected: bool
         :type valid: bool
         """
-
         # ITEM SELECTION (BRUSH)
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if selected:
@@ -405,7 +405,6 @@ class AbstractNode(AbstractItem):
             brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
             if valid:
                 brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160))
-
         self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION
@@ -415,14 +414,14 @@ class AbstractNode(AbstractItem):
         # SCHEDULE REPAINT
         self.update(self.boundingRect())
 
-
+    @abstractmethod
     def updateTextPos(self, *args, **kwargs):
         """
         Update the label position.
         """
         pass
 
-
+    @abstractmethod
     def width(self):
         """
         Returns the width of the shape.
@@ -433,7 +432,6 @@ class AbstractNode(AbstractItem):
     def setFontSize(self,size):
         if self.label:
             self.label.setCustomFont(Font(font=self.diagram.font(), pixelSize=size, weight=Font.Light))
-
 
     #############################################
     #   EVENTS
@@ -471,14 +469,14 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    def mapToScene(self, point) :
-        #print('Called mapToScene(self, point) with id={}'.format(self.id))
-        return super().mapToScene(point)
 
 class OntologyEntityNode(AbstractNode):
     """
-    Base abstract class for all the nodes representing ontology elements (i.e. Nodes having an associated IRI).
+    Base abstract class for all the nodes representing ontology elements
+    (i.e. Nodes having an associated IRI).
     """
+    __metaclass__ = ABCMeta
+
     sgnIRISwitched = QtCore.pyqtSignal()
 
     def __init__(self, iri, **kwargs):
@@ -489,16 +487,16 @@ class OntologyEntityNode(AbstractNode):
 
     @property
     def iri(self):
-        '''
+        """
         :rtype: IRI
-        '''
+        """
         return self._iri
 
     @iri.setter
     def iri(self, iriObj):
-        '''
+        """
         :type iriObj:IRI
-        '''
+        """
         switch = False
         if self.iri:
             switch = True
@@ -516,6 +514,7 @@ class OntologyEntityNode(AbstractNode):
     #############################################
     #   INTERFACE
     #################################
+
     def mouseDoubleClickEvent(self, mouseEvent):
         """
         Executed when the mouse is double clicked on the text item.
@@ -563,10 +562,10 @@ class OntologyEntityNode(AbstractNode):
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot()
     def onIRIPropModified(self):
         self.sgnNodeModified.emit()
-
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
@@ -586,47 +585,6 @@ class OntologyEntityNode(AbstractNode):
             self.label = NodeLabel(template=self.labelString, pos=lambda: self.initialLabelPosition(), parent=self,
                                    editable=True)
             # self.diagram.sgnUpdated.emit()
-
-    '''
-    def renderByFullIRI(self):
-        self.setText(str(self.iri))
-        self.nodeLabelObject = self.iri
-
-    def renderByPrefixedIRI(self):
-        project = None
-        if self._diagram_.project:
-            project = self._diagram_.project
-        if project:
-            prefixed = project.getShortestPrefixedForm(self.iri)
-            if prefixed:
-                self.setText(str(prefixed))
-                self.nodeLabelObject = prefixed
-            else:
-                self.renderByFullIRI()
-        else:
-            self.renderByFullIRI()
-
-    def renderBySimpleName(self):
-        if self.iri.getSimpleName():
-            self.setText(self.iri.getSimpleName())
-            self.nodeLabelObject = self.iri.getSimpleName()
-        else:
-            self.renderByPrefixedIRI()
-
-    def renderByLabel(self):
-        settings = QtCore.QSettings()
-        lang = settings.value('ontology/iri/render/language', 'it')
-        labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
-        if labelAssertion:
-            self.setText(str(labelAssertion.value))
-            self.nodeLabelObject = labelAssertion
-        else:
-            self.renderByPrefixedIRI()
-    '''
-
-    #@QtCore.pyqtSlot(str)
-    def onRenderingModified(self,rendering):
-        self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationAdded(self, annotation):
@@ -758,7 +716,7 @@ class AbstractResizableNode(AbstractNode):
                 return i
         return None
 
-
+    @abstractmethod
     def resize(self, mousePos):
         """
         Perform interactive resize of the node.
@@ -811,7 +769,6 @@ class AbstractResizableNode(AbstractNode):
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if valid is not None:
             brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160)) if valid else QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
-
         self.background.setBrush(brush)
 
         # ANCHOR POINTS (POSITION) -> NB: SHAPE IS IN THE EDGES
@@ -948,10 +905,14 @@ class AbstractResizableNode(AbstractNode):
         self.updateEdges()
         self.update()
 
+
 class OntologyEntityResizableNode(AbstractResizableNode):
     """
-    Base abstract class for all the nodes representing ontology elements (i.e. Nodes having an associated IRI).
+    Base abstract class for all the nodes representing ontology elements
+    (i.e. Nodes having an associated IRI).
     """
+    __metaclass__ = ABCMeta
+
     sgnIRISwitched = QtCore.pyqtSignal()
 
     def __init__(self, iri,**kwargs):
@@ -962,16 +923,16 @@ class OntologyEntityResizableNode(AbstractResizableNode):
 
     @property
     def iri(self):
-        '''
+        """
         :rtype: IRI
-        '''
+        """
         return self._iri
 
     @iri.setter
     def iri(self, iriObj):
-        '''
+        """
         :type iriObj:IRI
-        '''
+        """
         switch = False
         if self.iri:
             switch = True
@@ -983,13 +944,14 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         self.doUpdateNodeLabel()
         self.sgnNodeModified.emit()
 
-
+    @abstractmethod
     def initialLabelPosition(self):
         pass
 
     #############################################
     #   INTERFACE
     #################################
+
     def mouseDoubleClickEvent(self, mouseEvent):
         """
         Executed when the mouse is double clicked on the text item.
@@ -1037,6 +999,7 @@ class OntologyEntityResizableNode(AbstractResizableNode):
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot()
     def onIRIPropModified(self):
         self.sgnNodeModified.emit()
@@ -1058,60 +1021,6 @@ class OntologyEntityResizableNode(AbstractResizableNode):
             self.labelString = newLabelString
             self.label = NodeLabel(template=self.labelString, pos=lambda:self.initialLabelPosition() , parent=self, editable=True)
             #self.diagram.sgnUpdated.emit()
-        '''
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value)
-        if rendering == IRIRender.FULL.value or rendering == IRIRender.FULL:
-            self.renderByFullIRI()
-        elif rendering == IRIRender.PREFIX.value or rendering == IRIRender.PREFIX:
-            self.renderByPrefixedIRI()
-        elif rendering == IRIRender.LABEL.value or rendering == IRIRender.LABEL:
-            self.renderByLabel()
-        elif rendering == IRIRender.SIMPLE_NAME.value or rendering == IRIRender.SIMPLE_NAME:
-            self.renderBySimpleName()
-        self.diagram.sgnUpdated.emit()
-        '''
-
-    '''
-    def renderByFullIRI(self):
-        self.setText(str(self.iri))
-        self.nodeLabelObject = self.iri
-
-    def renderByPrefixedIRI(self):
-        project = None
-        if self._diagram_.project:
-            project = self._diagram_.project
-        if project:
-            prefixed = project.getShortestPrefixedForm(self.iri)
-            if prefixed:
-                self.setText(str(prefixed))
-                self.nodeLabelObject = prefixed
-            else:
-                self.renderByFullIRI()
-        else:
-            self.renderByFullIRI()
-
-    def renderBySimpleName(self):
-        if self.iri.getSimpleName():
-            self.setText(self.iri.getSimpleName())
-            self.nodeLabelObject = self.iri.getSimpleName()
-        else:
-            self.renderByPrefixedIRI()
-
-    def renderByLabel(self):
-        settings = QtCore.QSettings()
-        lang = settings.value('ontology/iri/render/language', 'it')
-        labelAssertion = self.iri.getLabelAnnotationAssertion(lang)
-        if labelAssertion:
-            self.setText(str(labelAssertion.value))
-            self.nodeLabelObject = labelAssertion
-        else:
-            self.renderByPrefixedIRI()
-    '''
-
-    #@QtCore.pyqtSlot(str)
-    def onRenderingModified(self,rendering):
-        self.doUpdateNodeLabel()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onAnnotationAdded(self, annotation):
@@ -1171,4 +1080,3 @@ class OntologyEntityResizableNode(AbstractResizableNode):
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
-
