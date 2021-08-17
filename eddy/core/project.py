@@ -144,12 +144,6 @@ class Project(IRIManager):
     sgnItemRemoved = QtCore.pyqtSignal(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     sgnUpdated = QtCore.pyqtSignal()
 
-    sgnIRINodeEntryAdded = QtCore.pyqtSignal(str, str, str)
-    sgnIRINodeEntryRemoved = QtCore.pyqtSignal(str, str, str)
-    sgnIRINodeEntryIgnored = QtCore.pyqtSignal(str, str, str)
-    sgnIRIVersionEntryAdded = QtCore.pyqtSignal(str, str, str)
-    sgnIRIVersionEntryRemoved = QtCore.pyqtSignal(str, str, str)
-    sgnIRIVersionEntryIgnored = QtCore.pyqtSignal(str, str, str)
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
     sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(QtWidgets.QGraphicsItem,IRI)
     sgnIRIChanged = QtCore.pyqtSignal(QtWidgets.QGraphicsItem, IRI)
