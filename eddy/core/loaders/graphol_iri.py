@@ -69,23 +69,23 @@ class GrapholProjectIRILoaderMixin_2(object):
         self.nproject = None
 
         self.itemFromXml = {
-            'attribute': Item.AttributeIRINode,
+            'attribute': Item.AttributeNode,
             'complement': Item.ComplementNode,
-            'concept': Item.ConceptIRINode,
+            'concept': Item.ConceptNode,
             'datatype-restriction': Item.DatatypeRestrictionNode,
             'disjoint-union': Item.DisjointUnionNode,
             'domain-restriction': Item.DomainRestrictionNode,
             'enumeration': Item.EnumerationNode,
-            'facet': Item.FacetIRINode,
-            'individual': Item.IndividualIRINode,
+            'facet': Item.FacetNode,
+            'individual': Item.IndividualNode,
             'intersection': Item.IntersectionNode,
             'property-assertion': Item.PropertyAssertionNode,
             'range-restriction': Item.RangeRestrictionNode,
-            'role': Item.RoleIRINode,
+            'role': Item.RoleNode,
             'role-chain': Item.RoleChainNode,
             'role-inverse': Item.RoleInverseNode,
             'union': Item.UnionNode,
-            'value-domain': Item.ValueDomainIRINode,
+            'value-domain': Item.ValueDomainNode,
             'inclusion': Item.InclusionEdge,
             'equivalence': Item.EquivalenceEdge,
             'input': Item.InputEdge,
@@ -95,23 +95,23 @@ class GrapholProjectIRILoaderMixin_2(object):
         }
 
         self.importFuncForItem = {
-            Item.AttributeIRINode: self.importAttributeNode,
+            Item.AttributeNode: self.importAttributeNode,
             Item.ComplementNode: self.importComplementNode,
-            Item.ConceptIRINode: self.importConceptNode,
+            Item.ConceptNode: self.importConceptNode,
             Item.DatatypeRestrictionNode: self.importDatatypeRestrictionNode,
             Item.DisjointUnionNode: self.importDisjointUnionNode,
             Item.DomainRestrictionNode: self.importDomainRestrictionNode,
             Item.EnumerationNode: self.importEnumerationNode,
-            Item.FacetIRINode: self.importFacetNode,
-            Item.IndividualIRINode: self.importIndividualNode,
+            Item.FacetNode: self.importFacetNode,
+            Item.IndividualNode: self.importIndividualNode,
             Item.IntersectionNode: self.importIntersectionNode,
             Item.PropertyAssertionNode: self.importPropertyAssertionNode,
             Item.RangeRestrictionNode: self.importRangeRestrictionNode,
-            Item.RoleIRINode: self.importRoleNode,
+            Item.RoleNode: self.importRoleNode,
             Item.RoleChainNode: self.importRoleChainNode,
             Item.RoleInverseNode: self.importRoleInverseNode,
             Item.UnionNode: self.importUnionNode,
-            Item.ValueDomainIRINode: self.importValueDomainNode,
+            Item.ValueDomainNode: self.importValueDomainNode,
             Item.InclusionEdge: self.importInclusionEdge,
             Item.EquivalenceEdge: self.importEquivalenceEdge,
             Item.InputEdge: self.importInputEdge,
@@ -121,10 +121,10 @@ class GrapholProjectIRILoaderMixin_2(object):
         }
 
         self.importMetaFuncForItem = {
-            Item.AttributeIRINode: self.importAttributeMeta,
-            Item.ConceptIRINode: self.importConceptMeta,
-            Item.IndividualIRINode: self.importIndividualMeta,
-            Item.RoleIRINode: self.importRoleMeta,
+            Item.AttributeNode: self.importAttributeMeta,
+            Item.ConceptNode: self.importConceptMeta,
+            Item.IndividualNode: self.importIndividualMeta,
+            Item.RoleNode: self.importRoleMeta,
         }
 
     #############################################
@@ -460,25 +460,25 @@ class GrapholProjectIRILoaderMixin_2(object):
     #   NODES
     #################################
     def getIriFromLabelText(self,labelText, itemType, addRdfsLabel=False, lang=None):
-        if itemType==Item.ValueDomainIRINode:
+        if itemType==Item.ValueDomainNode:
             print()
 
         iriString = ''
         if labelText == 'TOP':
             addRdfsLabel = False
-            if itemType is Item.AttributeIRINode:
+            if itemType is Item.AttributeNode:
                 iriString = 'http://www.w3.org/2002/07/owl#topDataProperty'
-            if itemType is Item.RoleIRINode:
+            if itemType is Item.RoleNode:
                 iriString = 'http://www.w3.org/2002/07/owl#topObjectProperty'
-            if itemType is Item.ConceptIRINode:
+            if itemType is Item.ConceptNode:
                 iriString = 'http://www.w3.org/2002/07/owl#Thing'
         elif labelText == 'BOTTOM':
             addRdfsLabel = False
-            if itemType is Item.AttributeIRINode:
+            if itemType is Item.AttributeNode:
                 iriString = 'http://www.w3.org/2002/07/owl#bottomDataProperty'
-            if itemType is Item.RoleIRINode:
+            if itemType is Item.RoleNode:
                 iriString = 'http://www.w3.org/2002/07/owl#bottomObjectProperty'
-            if itemType is Item.ConceptIRINode:
+            if itemType is Item.ConceptNode:
                 iriString = 'http://www.w3.org/2002/07/owl#Nothing'
         labelTextForIRI = labelText.replace('\n','')
         iriElList = labelTextForIRI.split(':')
@@ -506,7 +506,7 @@ class GrapholProjectIRILoaderMixin_2(object):
         return iri
 
     def getIriPredicateNode(self, diagram, nodeElement, itemType):
-        addRdfsLabel = False if itemType is Item.ValueDomainIRINode else True
+        addRdfsLabel = False if itemType is Item.ValueDomainNode else True
         labelElement = nodeElement.firstChildElement('label')
         labelText = labelElement.text()
         iri = self.getIriFromLabelText(labelText,itemType,addRdfsLabel=addRdfsLabel, lang='it')
@@ -525,13 +525,13 @@ class GrapholProjectIRILoaderMixin_2(object):
         return node
 
     def importAttributeNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.AttributeIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.AttributeNode)
 
     def importRoleNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.RoleIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.RoleNode)
 
     def importConceptNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.ConceptIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.ConceptNode)
 
     def importIndividualNode(self, diagram, nodeElement):
         labelElement = nodeElement.firstChildElement('label')
@@ -539,10 +539,10 @@ class GrapholProjectIRILoaderMixin_2(object):
         doubleQuote = '"'
         if doubleQuote in labelText:
             return self.importLiteralNode(diagram, nodeElement)
-        return self.getIriPredicateNode(diagram, nodeElement, Item.IndividualIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.IndividualNode)
 
     def importValueDomainNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.ValueDomainIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.ValueDomainNode)
 
     def importLiteralNode(self, diagram, nodeElement):
         labelElement = nodeElement.firstChildElement('label')
@@ -586,7 +586,7 @@ class GrapholProjectIRILoaderMixin_2(object):
         conFacetIRI = self.nproject.getIRI(iriString)
         facet = Facet(conFacetIRI,literal)
         geometryElement = nodeElement.firstChildElement('geometry')
-        node = diagram.factory.create(Item.FacetIRINode, **{
+        node = diagram.factory.create(Item.FacetNode, **{
             'id': nodeElement.attribute('id'),
             'height': int(geometryElement.attribute('height')),
             'width': int(geometryElement.attribute('width')),
@@ -1066,24 +1066,24 @@ class GrapholProjectIRILoaderMixin_3(object):
         self.nproject = None
 
         self.itemFromXml = {
-            'attribute': Item.AttributeIRINode,
+            'attribute': Item.AttributeNode,
             'complement': Item.ComplementNode,
-            'concept': Item.ConceptIRINode,
+            'concept': Item.ConceptNode,
             'datatype-restriction': Item.DatatypeRestrictionNode,
             'disjoint-union': Item.DisjointUnionNode,
             'domain-restriction': Item.DomainRestrictionNode,
             'enumeration': Item.EnumerationNode,
-            'facet': Item.FacetIRINode,
-            'individual': Item.IndividualIRINode,
+            'facet': Item.FacetNode,
+            'individual': Item.IndividualNode,
             'literal': Item.LiteralNode,
             'intersection': Item.IntersectionNode,
             'property-assertion': Item.PropertyAssertionNode,
             'range-restriction': Item.RangeRestrictionNode,
-            'role': Item.RoleIRINode,
+            'role': Item.RoleNode,
             'role-chain': Item.RoleChainNode,
             'role-inverse': Item.RoleInverseNode,
             'union': Item.UnionNode,
-            'value-domain': Item.ValueDomainIRINode,
+            'value-domain': Item.ValueDomainNode,
             'inclusion': Item.InclusionEdge,
             'equivalence': Item.EquivalenceEdge,
             'input': Item.InputEdge,
@@ -1094,24 +1094,24 @@ class GrapholProjectIRILoaderMixin_3(object):
         }
 
         self.importFuncForItem = {
-            Item.AttributeIRINode: self.importAttributeNode,
+            Item.AttributeNode: self.importAttributeNode,
             Item.ComplementNode: self.importComplementNode,
-            Item.ConceptIRINode: self.importConceptNode,
+            Item.ConceptNode: self.importConceptNode,
             Item.DatatypeRestrictionNode: self.importDatatypeRestrictionNode,
             Item.DisjointUnionNode: self.importDisjointUnionNode,
             Item.DomainRestrictionNode: self.importDomainRestrictionNode,
             Item.EnumerationNode: self.importEnumerationNode,
-            Item.FacetIRINode: self.importFacetNode,
-            Item.IndividualIRINode: self.importIndividualNode,
+            Item.FacetNode: self.importFacetNode,
+            Item.IndividualNode: self.importIndividualNode,
             Item.LiteralNode: self.importLiteralNode,
             Item.IntersectionNode: self.importIntersectionNode,
             Item.PropertyAssertionNode: self.importPropertyAssertionNode,
             Item.RangeRestrictionNode: self.importRangeRestrictionNode,
-            Item.RoleIRINode: self.importRoleNode,
+            Item.RoleNode: self.importRoleNode,
             Item.RoleChainNode: self.importRoleChainNode,
             Item.RoleInverseNode: self.importRoleInverseNode,
             Item.UnionNode: self.importUnionNode,
-            Item.ValueDomainIRINode: self.importValueDomainNode,
+            Item.ValueDomainNode: self.importValueDomainNode,
             Item.InclusionEdge: self.importInclusionEdge,
             Item.EquivalenceEdge: self.importEquivalenceEdge,
             Item.InputEdge: self.importInputEdge,
@@ -1460,13 +1460,13 @@ class GrapholProjectIRILoaderMixin_3(object):
 
 
     def importAttributeNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.AttributeIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.AttributeNode)
 
     def importRoleNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.RoleIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.RoleNode)
 
     def importConceptNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.ConceptIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.ConceptNode)
 
     def importIndividualNode(self, diagram, nodeElement):
         labelElement = nodeElement.firstChildElement('label')
@@ -1474,10 +1474,10 @@ class GrapholProjectIRILoaderMixin_3(object):
         doubleQuote = '"'
         if doubleQuote in labelText:
             return self.importLiteralNode(diagram, nodeElement)
-        return self.getIriPredicateNode(diagram, nodeElement, Item.IndividualIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.IndividualNode)
 
     def importValueDomainNode(self, diagram, nodeElement):
-        return self.getIriPredicateNode(diagram, nodeElement, Item.ValueDomainIRINode)
+        return self.getIriPredicateNode(diagram, nodeElement, Item.ValueDomainNode)
 
     def getIriPredicateNode(self, diagram, nodeElement, itemType):
         labelElement = nodeElement.firstChildElement('label')
@@ -1555,7 +1555,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         literal = Literal(lexForm,datatypeIRI)
         facet = Facet(constrFacetIRI, literal)
         geometryElement = nodeElement.firstChildElement('geometry')
-        node = diagram.factory.create(Item.FacetIRINode, **{
+        node = diagram.factory.create(Item.FacetNode, **{
             'id': nodeElement.attribute('id'),
             'height': int(geometryElement.attribute('height')),
             'width': int(geometryElement.attribute('width')),

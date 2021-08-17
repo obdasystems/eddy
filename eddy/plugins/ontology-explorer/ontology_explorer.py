@@ -193,11 +193,11 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
 
         self.plugin = plugin
         self.items = [
-            Item.ConceptIRINode,
-            Item.RoleIRINode,
-            Item.AttributeIRINode,
-            Item.IndividualIRINode,
-            Item.ValueDomainIRINode
+            Item.ConceptNode,
+            Item.RoleNode,
+            Item.AttributeNode,
+            Item.IndividualNode,
+            Item.ValueDomainNode
         ]
         self.unsatisfiableItems = list()
         self.unsatisfiableClasses = list()
@@ -453,7 +453,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             children = [parent.child(i) for i in range(parent.rowCount())]
             if not any([(child.text() == c.text() and c.icon() is self.iconConcept) for c in children]):
                 child.setIcon(self.iconConcept)
-                childData = [classIRI, Item.ConceptIRINode.value]
+                childData = [classIRI, Item.ConceptNode.value]
                 child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
         for objPropIRI in impOnt.objectProperties:
@@ -468,7 +468,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             children = [parent.child(i) for i in range(parent.rowCount())]
             if not any([(child.text() == c.text() and c.icon() is self.iconRole) for c in children]):
                 child.setIcon(self.iconRole)
-                childData = [objPropIRI, Item.RoleIRINode.value]
+                childData = [objPropIRI, Item.RoleNode.value]
                 child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
         for dataPropIRI in impOnt.dataProperties:
@@ -483,7 +483,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             children = [parent.child(i) for i in range(parent.rowCount())]
             if not any([(child.text() == c.text() and c.icon() is self.iconAttribute) for c in children]):
                 child.setIcon(self.iconAttribute)
-                childData = [dataPropIRI, Item.AttributeIRINode.value]
+                childData = [dataPropIRI, Item.AttributeNode.value]
                 child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
         for indIRI in impOnt.individuals:
@@ -498,7 +498,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             children = [parent.child(i) for i in range(parent.rowCount())]
             if not any([(child.text() == c.text() and c.icon() is self.iconInstance) for c in children]):
                 child.setIcon(self.iconInstance)
-                childData = [indIRI, Item.IndividualIRINode.value]
+                childData = [indIRI, Item.IndividualNode.value]
                 child.setData(childData, OntologyExplorerView.IRIRole)
                 parent.appendRow(child)
         # APPLY FILTERS AND SORT
@@ -790,15 +790,15 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
         Returns the icon for the given node.
         :type node:
         """
-        if node.type() is Item.AttributeIRINode:
+        if node.type() is Item.AttributeNode:
             return self.iconAttribute
-        if node.type() is Item.ConceptIRINode:
+        if node.type() is Item.ConceptNode:
             return self.iconConcept
-        if node.type() is Item.IndividualIRINode:
+        if node.type() is Item.IndividualNode:
             return self.iconInstance
-        if node.type() is Item.RoleIRINode:
+        if node.type() is Item.RoleNode:
             return self.iconRole
-        if node.type() is Item.ValueDomainIRINode:
+        if node.type() is Item.ValueDomainNode:
             return self.iconValue
 
     def parentFor(self, node):
@@ -1003,11 +1003,11 @@ class OntologyExplorerView(QtWidgets.QTreeView):
                     if item in self.parent().unsatisfiableItems:
                         self.session.currentEmptyEntityIRI = data
                         if item in self.parent().unsatisfiableClasses:
-                            self.session.currentEmptyEntityType = Item.ConceptIRINode
+                            self.session.currentEmptyEntityType = Item.ConceptNode
                         elif item in self.parent().unsatisfiableObjProps:
-                            self.session.currentEmptyEntityType = Item.RoleIRINode
+                            self.session.currentEmptyEntityType = Item.RoleNode
                         elif item in self.parent().unsatisfiableDataProps:
-                            self.session.currentEmptyEntityType = Item.AttributeIRINode
+                            self.session.currentEmptyEntityType = Item.AttributeNode
                         menu = self.session.mf.buildEmptyEntityMenu()
                         menu.exec_(mouseEvent.screenPos().toPoint())
                 elif isinstance(data, AbstractNode):

@@ -39,13 +39,13 @@ import eddy
 from eddy.core.datatypes.graphol import Item
 from eddy.core.items.nodes.has_key import HasKeyNode
 
-from eddy.core.items.nodes.individual_iri import IndividualNode
-from eddy.core.items.nodes.concept_iri import ConceptNode
-from eddy.core.items.nodes.attribute_iri import AttributeNode
-from eddy.core.items.nodes.role_iri import RoleNode
-from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.individual import IndividualNode
+from eddy.core.items.nodes.concept import ConceptNode
+from eddy.core.items.nodes.attribute import AttributeNode
+from eddy.core.items.nodes.role import RoleNode
+from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
-from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
+from eddy.core.items.nodes.value_domain import ValueDomainNode
 
 from eddy.core.items.edges.equivalence import EquivalenceEdge
 from eddy.core.items.edges.inclusion import InclusionEdge
@@ -98,20 +98,20 @@ class ItemFactory(QtCore.QObject):
         """
         Returns the class implementing the given item.
         :type item: Item
-        :rtype: class 
+        :rtype: class
         """
         item = Item.valueOf(item)
-        if item is Item.ConceptIRINode:
+        if item is Item.ConceptNode:
             return ConceptNode
-        if item is Item.RoleIRINode:
+        if item is Item.RoleNode:
             return RoleNode
-        if item is Item.AttributeIRINode:
+        if item is Item.AttributeNode:
             return AttributeNode
-        if item is Item.FacetIRINode:
+        if item is Item.FacetNode:
             return FacetNode
-        if item is Item.ValueDomainIRINode:
+        if item is Item.ValueDomainNode:
             return ValueDomainNode
-        if item is Item.IndividualIRINode:
+        if item is Item.IndividualNode:
             return IndividualNode
         if item is Item.LiteralNode:
             return LiteralNode

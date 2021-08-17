@@ -209,7 +209,7 @@ class PdfProjectExporter_v3(AbstractProjectExporter):
 
         predicateRows = []
         predicateIRIs = set()
-        for item in {Item.RoleIRINode, Item.AttributeIRINode}:
+        for item in {Item.RoleNode, Item.AttributeNode}:
             for node in self.project.iriOccurrences(item=item):
                 if not node.iri.isTopBottomEntity():
                     predicateIRIs.add(node.iri)

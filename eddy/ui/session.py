@@ -154,7 +154,7 @@ from eddy.core.items.nodes.common.base import (
     AbstractNode,
     PredicateNodeMixin,
 )
-from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol_iri import (
@@ -1786,7 +1786,7 @@ class Session(
             action = self.sender()
             elements = action.data()
             diagram.setMode(DiagramMode.Idle)
-            supported = {Item.RoleIRINode, Item.AttributeIRINode}
+            supported = {Item.RoleNode, Item.AttributeNode}
             for node in diagram.selectedNodes(lambda x: x.type() in supported):
                 name = 'compose {0} restriction(s)'.format(node.shortName)
                 addons = compose(diagram, node, elements)
@@ -2113,7 +2113,7 @@ class Session(
                 return Item.RangeRestrictionNode
             return Item.DomainRestrictionNode
 
-        f0 = lambda x: x.type() is Item.RoleIRINode
+        f0 = lambda x: x.type() is Item.RoleNode
         f1 = lambda x: x.type() is Item.InputEdge
         f2 = lambda x: x.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}
         f3 = lambda x: x.type() is Item.RoleInverseNode
@@ -2580,8 +2580,8 @@ class Session(
             diagram.setMode(DiagramMode.Idle)
             fn = lambda x: x.type() in {Item.ConceptNode, Item.RoleNode, Item.AttributeNode,
                                         Item.IndividualNode,
-                                        Item.ConceptIRINode, Item.IndividualIRINode,
-                                        Item.RoleIRINode, Item.AttributeIRINode}
+                                        Item.ConceptNode, Item.IndividualNode,
+                                        Item.RoleNode, Item.AttributeNode}
             node = first(diagram.selectedNodes(filter_on_nodes=fn))
             if node:
                 action = self.sender()
@@ -2844,8 +2844,8 @@ class Session(
             action = self.sender()
             color = action.data()
             brush = QtGui.QBrush(QtGui.QColor(color.value))
-            supported = {Item.ConceptIRINode, Item.RoleIRINode, Item.AttributeIRINode,
-                         Item.IndividualIRINode, Item.LiteralNode}
+            supported = {Item.ConceptNode, Item.RoleNode, Item.AttributeNode,
+                         Item.IndividualNode, Item.LiteralNode}
             fn = lambda x: x.type() in supported and x.brush() != brush
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected:
@@ -2862,7 +2862,7 @@ class Session(
             action = self.sender()
             key = action.data()
             checked = action.isChecked()
-            supported = {Item.RoleIRINode, Item.AttributeIRINode}
+            supported = {Item.RoleNode, Item.AttributeNode}
             fn = lambda x: x.type() in supported
             selected = diagram.selectedNodes(filter_on_nodes=fn)
             if selected and len(selected) == 1:
@@ -3261,9 +3261,9 @@ class Session(
 
         if self.mdi.subWindowList():
             diagram = self.mdi.activeDiagram()
-            restrictables = {Item.AttributeIRINode, Item.RoleIRINode}
-            predicates = {Item.ConceptIRINode, Item.AttributeIRINode, Item.RoleIRINode,
-                          Item.IndividualIRINode}
+            restrictables = {Item.AttributeNode, Item.RoleNode}
+            predicates = {Item.ConceptNode, Item.AttributeNode, Item.RoleNode,
+                          Item.IndividualNode}
             if diagram:
                 nodes = diagram.selectedNodes()
                 edges = diagram.selectedEdges()
@@ -3275,7 +3275,7 @@ class Session(
                 isDomainRangeUsable = any([x.type() in restrictables for x in nodes])
                 isPredicateSelected = any([x.type() in predicates for x in nodes])
                 isRestrictable = len(nodes) == 1 and first(nodes).type() in restrictables
-                isRoleSelected = isRestrictable and first(nodes).type() is Item.RoleIRINode
+                isRoleSelected = isRestrictable and first(nodes).type() is Item.RoleNode
                 if isRestrictable:
                     # meta = self.project.meta(first(nodes).type(), first(nodes).text())
                     firstNode = first(nodes)

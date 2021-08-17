@@ -74,7 +74,7 @@ from eddy.core.items.nodes.common.base import (
     AbstractNode,
     PredicateNodeMixin,
 )
-from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.output import getLogger
 
@@ -238,7 +238,10 @@ class Diagram(QtWidgets.QGraphicsScene):
             node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             data = dropEvent.mimeData().data(dropEvent.mimeData().text())
-            if Item.ConceptIRINode <= int(dropEvent.mimeData().text()) <= Item.IndividualIRINode:
+            if int(dropEvent.mimeData().text()) in {Item.ConceptNode, Item.AttributeNode,
+                                                    Item.RoleNode, Item.IndividualNode,
+                                                    Item.ValueDomainNode, Item.LiteralNode,
+                                                    Item.FacetNode}:
                 if not data:
                     # For new nodes (e.g. drag and drop from palette)
                     if isinstance(node, FacetNode):

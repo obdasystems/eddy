@@ -44,6 +44,7 @@ from eddy.core.profiles.rules.owl2rl import InputValueDomainToUnionNodeRule
 
 from eddy.core.profiles.rules.owl2rl import ReflexivityUnsupported
 
+
 class OWL2RLProfile(OWL2Profile):
     """
     Extends OWL2Profile implementing the OWL 2 RL profile.

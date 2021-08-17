@@ -47,14 +47,10 @@ class FunctionalityUnsupported(ProfileNodeRule):
     Prevents from using functionality in attributes or roles which is outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        '''
-        if (('AttributeIRINode' in str(type(node))) or ('RoleIRINode' in str(type(node)))):
-            if node.isFunctional():
-                raise ProfileError('Functionality of roles and attributes is forbidden in OWL 2 QL')
-        '''
         if isinstance(node, PredicateNodeMixin):
             if node.iri and node.iri.functional:
                 raise ProfileError('({}) Functionality of roles and attributes is forbidden in OWL 2 QL'.format(str(node.iri)))
+
 
 class InverseFunctionalityUnsupported(ProfileNodeRule):
     """
@@ -82,7 +78,7 @@ class UnsupportedDatatypeRule(ProfileNodeRule):
     Prevents from using datatypes which are outside of the OWL 2 QL profile.
     """
     def __call__(self, node):
-        if node.type() is Item.ValueDomainIRINode:
+        if node.type() is Item.ValueDomainNode:
             if node.iri and not OWL2Datatype.forProfile(OWL2Profiles.OWL2RL):
                 raise ProfileError('Use of datatype {} is forbidden in OWL 2 QL'.format(str(node.iri)))
 
@@ -93,7 +89,7 @@ class UnsupportedOperatorRule(ProfileNodeRule):
     """
     def __call__(self, node):
         if node.type() in {Item.UnionNode, Item.DisjointUnionNode,
-            Item.DatatypeRestrictionNode, Item.FacetIRINode,
+            Item.DatatypeRestrictionNode, Item.FacetNode,
             Item.EnumerationNode, Item.RoleChainNode}:
             raise ProfileError('Usage of {} operator is forbidden in OWL 2 QL'.format(node.shortName))
 
@@ -157,7 +153,7 @@ class InputConceptToRestrictionNodeRule(ProfileEdgeRule):
             if target.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                 # OWL 2 QL admits only atomic concepts for role qualified restriction.
                 if source.identity() is Identity.Concept:
-                    if source.type() is not Item.ConceptIRINode:
+                    if source.type() is not Item.ConceptNode:
                         raise ProfileError('OWL 2 QL admits only an atomic concept as filler for a qualified {}'.format(target.shortName))
                     # Given the fact that we are connecting an atomic concept in input to this
                     # restriction node, we need to see if the node is currently being used

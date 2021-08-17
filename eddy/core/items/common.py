@@ -109,7 +109,7 @@ class DiagramItemMixin:
         Returns True if this element is a node, False otherwise.
         :rtype: bool
         """
-        return Item.ConceptNode <= self.type() < Item.InclusionEdge or Item.ConceptIRINode <= self.type() <=Item.IndividualIRINode
+        return Item.ConceptNode <= self.type() < Item.InclusionEdge
 
 
 class AbstractItem(QtWidgets.QGraphicsObject, DiagramItemMixin):

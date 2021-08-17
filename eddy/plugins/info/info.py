@@ -470,13 +470,13 @@ class InfoWidget(QtWidgets.QScrollArea):
                 item = first(selected)
                 if item.isNode():
                     if item.isPredicate():
-                        if item.type() is Item.AttributeIRINode:
+                        if item.type() is Item.AttributeNode:
                             show = self.infoAttributeNode
-                        elif item.type() is Item.RoleIRINode:
+                        elif item.type() is Item.RoleNode:
                             show = self.infoRoleNode
                         elif item.type() is Item.LiteralNode:
                             show = self.infoLiteral
-                        elif item.type() is Item.FacetIRINode:
+                        elif item.type() is Item.FacetNode:
                             show = self.infoFacet
                         else:
                             show = self.infoPredicateNode
@@ -803,10 +803,10 @@ class ProjectInfo(AbstractInfo):
         #         self.profileField.setCurrentIndex(i)
         #         break
 
-        self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeIRINode))
-        self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptIRINode))
-        self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleIRINode))
-        self.individualsField.setValue(project.itemDistinctIRICount(Item.IndividualIRINode))
+        self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeNode))
+        self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptNode))
+        self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleNode))
+        self.individualsField.setValue(project.itemDistinctIRICount(Item.IndividualNode))
         # self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
         # self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
 

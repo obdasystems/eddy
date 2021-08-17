@@ -565,9 +565,9 @@ class EmptyEntityExplanationWorker(AbstractWorker):
         self.initializeOWLManagerAndReasoner(self.ontology)
 
     def getEmptyExpression(self):
-        if self.entityType is Item.ConceptIRINode:
+        if self.entityType is Item.ConceptNode:
             return self.df.getOWLClass(self.IRIClass.create(str(self.iri)))
-        elif self.entityType is Item.RoleIRINode:
+        elif self.entityType is Item.RoleNode:
             objProp = self.df.getOWLObjectProperty(self.IRIClass.create(str(self.iri)))
             return self.df.getOWLObjectSomeValuesFrom(objProp, self.df.getOWLThing())
         else:

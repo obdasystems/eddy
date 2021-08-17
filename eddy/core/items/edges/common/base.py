@@ -109,7 +109,7 @@ class AbstractEdge(AbstractItem):
         :type mousePos: QtCore.QPointF
         """
         # Only allow anchor movement for concept nodes
-        if node.type() != Item.ConceptIRINode:
+        if node.type() != Item.ConceptNode:
             node.setAnchor(self, node.pos())
             return
 

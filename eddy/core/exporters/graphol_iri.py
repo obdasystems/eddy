@@ -7,7 +7,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.exporters.common import AbstractProjectExporter
 from eddy.core.functions.fsystem import mkdir, fwrite, fexists, isdir
 from eddy.core.functions.misc import postfix
-from eddy.core.items.nodes.concept_iri import ConceptNode
+from eddy.core.items.nodes.concept import ConceptNode
 from eddy.core.output import getLogger
 from eddy.ui.dialogs import DiagramSelectionDialog
 
@@ -35,24 +35,24 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         self.selectedDiagrams = None
 
         self.itemToXml = {
-            Item.AttributeIRINode: 'attribute',
+            Item.AttributeNode: 'attribute',
             Item.ComplementNode: 'complement',
-            Item.ConceptIRINode: 'concept',
+            Item.ConceptNode: 'concept',
             Item.DatatypeRestrictionNode: 'datatype-restriction',
             Item.DisjointUnionNode: 'disjoint-union',
             Item.DomainRestrictionNode: 'domain-restriction',
             Item.EnumerationNode: 'enumeration',
-            Item.FacetIRINode: 'facet',
-            Item.IndividualIRINode: 'individual',
+            Item.FacetNode: 'facet',
+            Item.IndividualNode: 'individual',
             Item.LiteralNode: 'literal',
             Item.IntersectionNode: 'intersection',
             Item.PropertyAssertionNode: 'property-assertion',
             Item.RangeRestrictionNode: 'range-restriction',
-            Item.RoleIRINode: 'role',
+            Item.RoleNode: 'role',
             Item.RoleChainNode: 'role-chain',
             Item.RoleInverseNode: 'role-inverse',
             Item.UnionNode: 'union',
-            Item.ValueDomainIRINode: 'value-domain',
+            Item.ValueDomainNode: 'value-domain',
             Item.InclusionEdge: 'inclusion',
             Item.EquivalenceEdge: 'equivalence',
             Item.InputEdge: 'input',
@@ -63,24 +63,24 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         }
 
         self.exportFuncForItem = {
-            Item.AttributeIRINode: self.exportAttributeNode,
+            Item.AttributeNode: self.exportAttributeNode,
             Item.ComplementNode: self.exportComplementNode,
-            Item.ConceptIRINode: self.exportConceptNode,
+            Item.ConceptNode: self.exportConceptNode,
             Item.DatatypeRestrictionNode: self.exportDatatypeRestrictionNode,
             Item.DisjointUnionNode: self.exportDisjointUnionNode,
             Item.DomainRestrictionNode: self.exportDomainRestrictionNode,
             Item.EnumerationNode: self.exportEnumerationNode,
-            Item.FacetIRINode: self.exportFacetNode,
-            Item.IndividualIRINode: self.exportIndividualNode,
+            Item.FacetNode: self.exportFacetNode,
+            Item.IndividualNode: self.exportIndividualNode,
             Item.LiteralNode: self.exportLiteralNode,
             Item.IntersectionNode: self.exportIntersectionNode,
             Item.PropertyAssertionNode: self.exportPropertyAssertionNode,
             Item.RangeRestrictionNode: self.exportRangeRestrictionNode,
-            Item.RoleIRINode: self.exportRoleNode,
+            Item.RoleNode: self.exportRoleNode,
             Item.RoleChainNode: self.exportRoleChainNode,
             Item.RoleInverseNode: self.exportRoleInverseNode,
             Item.UnionNode: self.exportUnionNode,
-            Item.ValueDomainIRINode: self.exportValueDomainNode,
+            Item.ValueDomainNode: self.exportValueDomainNode,
             Item.InclusionEdge: self.exportInclusionEdge,
             Item.EquivalenceEdge: self.exportEquivalenceEdge,
             Item.InputEdge: self.exportInputEdge,

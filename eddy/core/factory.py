@@ -86,10 +86,10 @@ class MenuFactory(QtCore.QObject):
         self.customAction = {}  # type: Dict[str, List[QtWidgets.QAction]]
         self.customMenu = {}  # type: Dict[str, QtWidgets.QMenu]
         self.customIcons = {  # type: Dict[Item, QtGui.QIcon]
-            Item.AttributeIRINode: QtGui.QIcon(':/icons/18/ic_treeview_attribute'),
-            Item.ConceptIRINode: QtGui.QIcon(':/icons/18/ic_treeview_concept'),
-            Item.IndividualIRINode: QtGui.QIcon(':/icons/18/ic_treeview_instance'),
-            Item.RoleIRINode: QtGui.QIcon(':/icons/18/ic_treeview_role'),
+            Item.AttributeNode: QtGui.QIcon(':/icons/18/ic_treeview_attribute'),
+            Item.ConceptNode: QtGui.QIcon(':/icons/18/ic_treeview_concept'),
+            Item.IndividualNode: QtGui.QIcon(':/icons/18/ic_treeview_instance'),
+            Item.RoleNode: QtGui.QIcon(':/icons/18/ic_treeview_role'),
             Item.LiteralNode: QtGui.QIcon(':/icons/18/ic_treeview_value'),
             Item.ValueDomainNode: QtGui.QIcon(':/icons/18/ic_treeview_value'),
         }
@@ -789,11 +789,11 @@ class MenuFactory(QtCore.QObject):
         item = first(items)
 
         # NODES
-        if item.type() is Item.AttributeIRINode:
+        if item.type() is Item.AttributeNode:
             return self.buildAttributeNodeMenu(diagram, item)
         if item.type() is Item.ComplementNode:
             return self.buildComplementNodeMenu(diagram, item)
-        if item.type() is Item.ConceptIRINode:
+        if item.type() is Item.ConceptNode:
             return self.buildConceptNodeMenu(diagram, item)
         if item.type() is Item.DatatypeRestrictionNode:
             return self.buildDatatypeRestrictionNodeMenu(diagram, item)
@@ -803,9 +803,9 @@ class MenuFactory(QtCore.QObject):
             return self.buildDomainRestrictionNodeMenu(diagram, item)
         if item.type() is Item.EnumerationNode:
             return self.buildEnumerationNodeMenu(diagram, item)
-        if item.type() is Item.FacetIRINode:
+        if item.type() is Item.FacetNode:
             return self.buildFacetNodeMenu(diagram, item)
-        if item.type() is Item.IndividualIRINode:
+        if item.type() is Item.IndividualNode:
             return self.buildIndividualNodeMenu(diagram, item)
         if item.type() is Item.IntersectionNode:
             return self.buildIntersectionNodeMenu(diagram, item)
@@ -819,11 +819,11 @@ class MenuFactory(QtCore.QObject):
             return self.buildRoleInverseNodeMenu(diagram, item)
         if item.type() is Item.RoleChainNode:
             return self.buildRoleChainNodeMenu(diagram, item)
-        if item.type() is Item.RoleIRINode:
+        if item.type() is Item.RoleNode:
             return self.buildRoleNodeMenu(diagram, item)
         if item.type() is Item.UnionNode:
             return self.buildUnionNodeMenu(diagram, item)
-        if item.type() is Item.ValueDomainIRINode:
+        if item.type() is Item.ValueDomainNode:
             return self.buildValueDomainNodeMenu(diagram, item)
 
         # EDGES

@@ -63,15 +63,6 @@ class Item(IntEnum_):
     """
     This class defines all the available elements for graphol diagrams.
     """
-    # PREDICATES IRI BASED
-    ConceptIRINode = 95531
-    AttributeIRINode = 95532
-    RoleIRINode = 95533
-    ValueDomainIRINode = 95534
-    LiteralNode = 95535
-    FacetIRINode = 95536
-    IndividualIRINode = 95537
-
     # PREDICATES
     ConceptNode = 65537
     AttributeNode = 65538
@@ -92,19 +83,20 @@ class Item(IntEnum_):
     DisjointUnionNode = 65551
     PropertyAssertionNode = 65552
     FacetNode = 65553
-    HasKeyNode = 65554
+    LiteralNode = 65554
+    HasKeyNode = 65555
 
     # EDGES
-    InclusionEdge = 65555
-    EquivalenceEdge = 65556
-    InputEdge = 65557
-    MembershipEdge = 65558
-    SameEdge = 65559
-    DifferentEdge = 65560
+    InclusionEdge = 65556
+    EquivalenceEdge = 65557
+    InputEdge = 65558
+    MembershipEdge = 65559
+    SameEdge = 65560
+    DifferentEdge = 65561
 
     # EXTRA
-    Label = 65561
-    Undefined = 65562
+    Label = 65562
+    Undefined = 65563
 
     @property
     def realName(self):
@@ -176,90 +168,4 @@ class Special(Enum_):
     This class defines special nodes types.
     """
     Top = 'TOP'
-
-    #TopConcept = 'owl:Thing | owl:thing'
-    TopConcept = {}
-    TopConcept[1] = 'owl:Thing'
-    TopConcept[2] = 'owl:thing'
-
-    #TopAttribute = 'owl:TopDataProperty | owl:topDataProperty | owl:topdataproperty'
-    TopAttribute = {}
-    TopAttribute[1] = 'owl:TopDataProperty'
-    TopAttribute[2] = 'owl:topDataProperty'
-    TopAttribute[3] = 'owl:topdataproperty'
-
-    #TopRole = 'owl:TopObjectProperty | owl:topObjectProperty | owl:topobjectproperty'
-    TopRole = {}
-    TopRole[1] = 'owl:TopObjectProperty'
-    TopRole[2] = 'owl:topObjectProperty'
-    TopRole[3] = 'owl:topobjectproperty'
-
-    TopEntities = {}
-
-    TopEntities[1] = 'owl:Thing'
-    TopEntities[2] = 'owl:thing'
-    TopEntities[3] = 'owl:TopDataProperty'
-    TopEntities[4] = 'owl:topDataProperty'
-    TopEntities[5] = 'owl:topdataproperty'
-    TopEntities[6] = 'owl:TopObjectProperty'
-    TopEntities[7] = 'owl:topObjectProperty'
-    TopEntities[8] = 'owl:topobjectproperty'
-
-    AllTopEntities = 'TOP | owl:Thing | owl:thing | owl:TopDataProperty | owl:topDataProperty | owl:topdataproperty | \
-    #                 owl:TopObjectProperty | owl:topObjectProperty | owl:topobjectproperty'
-
     Bottom = 'BOTTOM'
-
-    BottomConcept = {}
-    #BottomConcept = 'owl:Nothing | owl:nothing'
-    BottomConcept[1] = 'owl:Nothing'
-    BottomConcept[2] = 'owl:nothing'
-
-
-    #BottomAttribute = 'owl:BottomDataProperty | owl:bottomDataProperty | owl:bottomdataproperty'
-    BottomAttribute = {}
-    BottomAttribute[1] = 'owl:BottomDataProperty'
-    BottomAttribute[2] = 'owl:bottomDataProperty'
-    BottomAttribute[3] = 'owl:bottomdataproperty'
-
-    #BottomRole = 'owl:BottomObjectProperty | owl:bottomObjectProperty | owl:bottomobjectproperty'
-    BottomRole = {}
-    BottomRole[1] = 'owl:BottomObjectProperty'
-    BottomRole[2] = 'owl:bottomObjectProperty'
-    BottomRole[3] = 'owl:bottomobjectproperty'
-
-    BottomEntities = {}
-
-    BottomEntities[1] = 'owl:Nothing'
-    BottomEntities[2] = 'owl:nothing'
-    BottomEntities[3] = 'owl:BottomDataProperty'
-    BottomEntities[4] = 'owl:bottomDataProperty'
-    BottomEntities[5] = 'owl:bottomdataproperty'
-    BottomEntities[6] = 'owl:BottomObjectProperty'
-    BottomEntities[7] = 'owl:bottomObjectProperty'
-    BottomEntities[8] = 'owl:bottomobjectproperty'
-
-    AllBottomEntities = 'BOTTOM | owl:Nothing | owl:nothing | owl:BottomDataProperty | owl:bottomDataProperty | \
-    #                   owl:bottomdataproperty | owl:BottomObjectProperty | owl:bottomObjectProperty | owl:bottomobjectproperty'
-
-    def return_group(input):
-
-        if (input is Special.TopConcept):
-            return ['owl:Thing','owl:thing']
-        if (input is Special.TopAttribute):
-            return ['owl:TopDataProperty', 'owl:topDataProperty', 'owl:topdataproperty']
-        if (input is Special.TopRole):
-            return ['owl:TopObjectProperty','owl:topObjectProperty','owl:topobjectproperty']
-        if (input is Special.AllTopEntities):
-            return ['TOP','owl:Thing','owl:thing','owl:TopDataProperty','owl:topDataProperty','owl:topdataproperty', \
-                      'owl:TopObjectProperty', 'owl:topObjectProperty', 'owl:topobjectproperty']
-
-        if (input is Special.BottomConcept):
-            return ['owl:Nothing','owl:nothing']
-        if (input is Special.BottomAttribute):
-            return ['owl:BottomDataProperty','owl:bottomDataProperty','owl:bottomdataproperty']
-        if (input is Special.BottomRole):
-            return ['owl:BottomObjectProperty','owl:bottomObjectProperty','owl:bottomobjectproperty']
-        if (input is Special.AllBottomEntities):
-            return ['BOTTOM','owl:Nothing','owl:nothing','owl:BottomDataProperty','owl:bottomDataProperty',\
-                 'owl:bottomdataproperty','owl:BottomObjectProperty','owl:bottomObjectProperty','owl:bottomobjectproperty']

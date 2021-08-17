@@ -56,15 +56,15 @@ from eddy.core.functions.signals import (
 )
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.edges.common.base import AbstractEdge
-from eddy.core.items.nodes.attribute_iri import AttributeNode
+from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.common.base import (
     AbstractNode,
     PredicateNodeMixin,
 )
-from eddy.core.items.nodes.concept_iri import ConceptNode
-from eddy.core.items.nodes.individual_iri import IndividualNode
-from eddy.core.items.nodes.role_iri import RoleNode
-from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
+from eddy.core.items.nodes.concept import ConceptNode
+from eddy.core.items.nodes.individual import IndividualNode
+from eddy.core.items.nodes.role import RoleNode
+from eddy.core.items.nodes.value_domain import ValueDomainNode
 from eddy.core.output import getLogger
 # noinspection PyUnresolvedReferences
 # FIXME: Many modules still expect K_ constants to be defined in project,
@@ -874,15 +874,15 @@ class ProjectIRIIndex(ProjectIndex):
         """
         try:
             k_metatype = None
-            if item is Item.ConceptIRINode:
+            if item is Item.ConceptNode:
                 k_metatype = K_IRI_CLASS
-            elif item is Item.RoleIRINode:
+            elif item is Item.RoleNode:
                 k_metatype = K_IRI_OBJ_PROP
-            elif item is Item.AttributeIRINode:
+            elif item is Item.AttributeNode:
                 k_metatype = K_IRI_DATA_PROP
-            elif item is Item.IndividualIRINode:
+            elif item is Item.IndividualNode:
                 k_metatype = K_IRI_INDIVIDUAL
-            elif item is Item.ValueDomainIRINode:
+            elif item is Item.ValueDomainNode:
                 k_metatype = K_IRI_DATATYPE
             if not diagram:
                 result = 0
@@ -904,15 +904,15 @@ class ProjectIRIIndex(ProjectIndex):
         """
         try:
             k_metatype = None
-            if item is Item.ConceptIRINode:
+            if item is Item.ConceptNode:
                 k_metatype = K_IRI_CLASS
-            elif item is Item.RoleIRINode:
+            elif item is Item.RoleNode:
                 k_metatype = K_IRI_OBJ_PROP
-            elif item is Item.AttributeIRINode:
+            elif item is Item.AttributeNode:
                 k_metatype = K_IRI_DATA_PROP
-            elif item is Item.IndividualIRINode:
+            elif item is Item.IndividualNode:
                 k_metatype = K_IRI_INDIVIDUAL
-            elif item is Item.ValueDomainIRINode:
+            elif item is Item.ValueDomainNode:
                 k_metatype = K_IRI_DATATYPE
             if not diagram:
                 result = set()
@@ -938,13 +938,13 @@ class ProjectIRIIndex(ProjectIndex):
         try:
             k_metatype = None
             if item:
-                if item is Item.ConceptIRINode:
+                if item is Item.ConceptNode:
                     k_metatype = K_CLASS_OCCURRENCES
-                elif item is Item.RoleIRINode:
+                elif item is Item.RoleNode:
                     k_metatype = K_OBJ_PROP_OCCURRENCES
-                elif item is Item.AttributeIRINode:
+                elif item is Item.AttributeNode:
                     k_metatype = K_DATA_PROP_OCCURRENCES
-                elif item is Item.IndividualIRINode:
+                elif item is Item.IndividualNode:
                     k_metatype = K_INDIVIDUAL_OCCURRENCES
             if not k_metatype:
                 k_metatype = K_OCCURRENCES
@@ -984,13 +984,13 @@ class ProjectIRIIndex(ProjectIndex):
         try:
             k_metatype = None
             if item:
-                if item is Item.ConceptIRINode:
+                if item is Item.ConceptNode:
                     k_metatype = K_CLASS_OCCURRENCES
-                elif item is Item.RoleIRINode:
+                elif item is Item.RoleNode:
                     k_metatype = K_OBJ_PROP_OCCURRENCES
-                elif item is Item.AttributeIRINode:
+                elif item is Item.AttributeNode:
                     k_metatype = K_DATA_PROP_OCCURRENCES
-                elif item is Item.IndividualIRINode:
+                elif item is Item.IndividualNode:
                     k_metatype = K_INDIVIDUAL_OCCURRENCES
             if not k_metatype:
                 k_metatype = K_OCCURRENCES
@@ -1007,8 +1007,8 @@ class ProjectIRIIndex(ProjectIndex):
             return False
 
     def isDLCompliant(self):
-        objPropNodes = self.iriOccurrences(item=Item.RoleIRINode)
-        dataPropNodes = self.iriOccurrences(item=Item.AttributeIRINode)
+        objPropNodes = self.iriOccurrences(item=Item.RoleNode)
+        dataPropNodes = self.iriOccurrences(item=Item.AttributeNode)
         for objPropNode in objPropNodes:
             objPropIri = objPropNode.iri
             if not (objPropIri.isTopObjectProperty or objPropIri.isBottomObjectProperty) and self.project.isFromReservedVocabulary(objPropIri):
@@ -1020,8 +1020,8 @@ class ProjectIRIIndex(ProjectIndex):
                 if dataPropIri==objPropIri:
                     return False
 
-        classNodes = self.iriOccurrences(item=Item.ConceptIRINode)
-        datatypeNodes = self.iriOccurrences(item=Item.ValueDomainIRINode)
+        classNodes = self.iriOccurrences(item=Item.ConceptNode)
+        datatypeNodes = self.iriOccurrences(item=Item.ValueDomainNode)
         for classNode in classNodes:
             classIri = classNode.iri
             if not (classIri.isOwlThing or classIri.isOwlNothing) and self.project.isFromReservedVocabulary(classIri):

@@ -57,11 +57,11 @@ from eddy.core.commands.nodes import (
 from eddy.core.common import HasWidgetSystem
 from eddy.core.diagram import Diagram
 from eddy.core.functions.signals import connect
-from eddy.core.items.nodes.attribute_iri import AttributeNode
+from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
-from eddy.core.items.nodes.value_domain_iri import ValueDomainNode
+from eddy.core.items.nodes.value_domain import ValueDomainNode
 from eddy.core.owl import (
     Annotation,
     AnnotationAssertion,
