@@ -31,13 +31,13 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-import os
+
 
 import pytest
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
-from eddy.core.functions.fsystem import cpdir, fcopy, fexists, mkdir
+from eddy.core.functions.fsystem import cpdir, fcopy
 from eddy.core.functions.path import expandPath
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol import GrapholProjectLoader_v1
@@ -73,8 +73,8 @@ def no_message_box(monkeypatch):
 #############################################
 #   GRAPHOL IMPORT
 #################################
-#No more supported
-'''
+
+@pytest.mark.skip(reason='graphol v1 import is currently broken')
 def test_load_project_from_graphol_v1(session, qtbot, tmpdir):
     # GIVEN
     graphol = tmpdir.join('LUBM')
@@ -94,20 +94,18 @@ def test_load_project_from_graphol_v1(session, qtbot, tmpdir):
     assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.project.diagram(diagram).nodes()))) == 9
     assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.project.diagram(diagram).nodes()))) == 5
     assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.project.diagram(diagram).nodes()))) == 0
-'''
 
-#No more supported
-'''
+
 def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
     # GIVEN
-    graphol = tmpdir.join('LUBM')
-    cpdir(expandPath('@tests/test_resources/loaders/graphol/v2/LUBM'), str(graphol))
+    graphol = tmpdir.mkdir('LUBM').join('LUBM.graphol')
+    fcopy(expandPath('@tests/test_resources/loaders/graphol/v2/LUBM/LUBM.graphol'), str(graphol))
     project = session.project
     diagram = 'LUBM'
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    loader = GrapholProjectLoader_v2(str(graphol), session)
+    loader = GrapholIRIProjectLoader_v2(str(graphol), session)
     loader.run()
     # THEN
     assert diagram in map(lambda d: d.name, loader.nproject.diagrams())
@@ -117,16 +115,12 @@ def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
     assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.nproject.diagram(diagram).nodes()))) == 9
     assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.nproject.diagram(diagram).nodes()))) == 5
     assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.nproject.diagram(diagram).nodes()))) == 0
-'''
 
-def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
+
+def test_load_project_from_graphol_v2_2(session, qtbot, tmpdir):
     # GIVEN
-    graphol = tmpdir.join('MovieOntology/MovieOntology_v2.graphol')
-    grapholDir = tmpdir.join('MovieOntology')
-    mkdir(str(grapholDir))
-    os.open(str(graphol), os.O_CREAT)
+    graphol = tmpdir.mkdir('MovieOntology').join('MovieOntology_v2.graphol')
     fcopy(expandPath('@tests/test_resources/loaders/graphol/v2/MovieOntology/MovieOntology_v2.graphol'), str(graphol))
-
     project = session.project
     diagram1 = 'movie'
     diagram2 = 'territory'
@@ -139,27 +133,23 @@ def test_load_project_from_graphol_v2(session, qtbot, tmpdir):
     assert diagram1 in map(lambda d: d.name, loader.session.project.diagrams())
     assert len(loader.session.project.diagram(diagram1).nodes()) == 347
     assert len(loader.session.project.diagram(diagram1).edges()) == 433
-    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram1).nodes()))) == 65
-    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram1).nodes()))) == 60
-    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram1).nodes()))) == 27
-    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram1).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, loader.session.project.diagram(diagram1).nodes()))) == 65
+    assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.session.project.diagram(diagram1).nodes()))) == 60
+    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.session.project.diagram(diagram1).nodes()))) == 27
+    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.session.project.diagram(diagram1).nodes()))) == 0
     assert diagram2 in map(lambda d: d.name, loader.session.project.diagrams())
     assert len(loader.session.project.diagram(diagram2).nodes()) == 8
     assert len(loader.session.project.diagram(diagram2).edges()) == 8
-    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
-    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
-    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
-    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.session.project.diagram(diagram2).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.session.project.diagram(diagram2).nodes()))) == 0
 
 
 def test_load_project_from_graphol_v3(session, qtbot, tmpdir):
     # GIVEN
-    graphol = tmpdir.join('MovieOntology/MovieOntology_v3.graphol')
-    grapholDir = tmpdir.join('MovieOntology')
-    mkdir(str(grapholDir))
-    os.open(str(graphol), os.O_CREAT)
+    graphol = tmpdir.mkdir('MovieOntology').join('MovieOntology_v3.graphol')
     fcopy(expandPath('@tests/test_resources/loaders/graphol/v3/MovieOntology/MovieOntology_v3.graphol'), str(graphol))
-
     project = session.project
     diagram1 = 'movie'
     diagram2 = 'territory'
@@ -172,16 +162,60 @@ def test_load_project_from_graphol_v3(session, qtbot, tmpdir):
     assert diagram1 in map(lambda d: d.name, loader.session.project.diagrams())
     assert len(loader.session.project.diagram(diagram1).nodes()) == 347
     assert len(loader.session.project.diagram(diagram1).edges()) == 433
-    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram1).nodes()))) == 65
-    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram1).nodes()))) == 60
-    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram1).nodes()))) == 27
-    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram1).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, loader.session.project.diagram(diagram1).nodes()))) == 65
+    assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.session.project.diagram(diagram1).nodes()))) == 60
+    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.session.project.diagram(diagram1).nodes()))) == 27
+    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.session.project.diagram(diagram1).nodes()))) == 0
     assert diagram2 in map(lambda d: d.name, loader.session.project.diagrams())
     assert len(loader.session.project.diagram(diagram2).nodes()) == 8
     assert len(loader.session.project.diagram(diagram2).edges()) == 8
-    assert len(list(filter(lambda n: n.type() == Item.ConceptIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
-    assert len(list(filter(lambda n: n.type() == Item.RoleIRINode, loader.session.project.diagram(diagram2).nodes()))) == 2
-    assert len(list(filter(lambda n: n.type() == Item.AttributeIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
-    assert len(list(filter(lambda n: n.type() == Item.IndividualIRINode, loader.session.project.diagram(diagram2).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.RoleNode, loader.session.project.diagram(diagram2).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, loader.session.project.diagram(diagram2).nodes()))) == 0
+    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, loader.session.project.diagram(diagram2).nodes()))) == 0
 
 
+#############################################
+#   GRAPHML IMPORT
+#################################
+
+@pytest.mark.skip(reason='graphml import is currently broken')
+def test_load_ontology_from_graphml_1(session, qtbot):
+    # GIVEN
+    graphml = expandPath('@tests/test_resources/loaders/graphml/pizza.graphml')
+    project = session.project
+    diagram = 'pizza'
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    loader = GraphMLOntologyLoader(graphml, project, session)
+    loader.run()
+    # THEN
+    assert diagram in map(lambda d: d.name, project.diagrams())
+    assert len(project.diagram(diagram).nodes()) == 62
+    assert len(project.diagram(diagram).edges()) == 82
+    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, project.diagram(diagram).nodes()))) == 25
+    assert len(list(filter(lambda n: n.type() == Item.RoleNode, project.diagram(diagram).nodes()))) == 4
+    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, project.diagram(diagram).nodes()))) == 2
+    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, project.diagram(diagram).nodes()))) == 0
+
+
+@pytest.mark.skip(reason='graphml import is currently broken')
+def test_load_ontology_from_graphml_2(session, qtbot):
+    # GIVEN
+    graphml = expandPath('@tests/test_resources/loaders/graphml/movie.graphml')
+    project = session.project
+    diagram = 'movie'
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    loader = GraphMLOntologyLoader(graphml, project, session)
+    loader.run()
+    # THEN
+    assert diagram in map(lambda d: d.name, project.diagrams())
+    assert len(project.diagram(diagram).nodes()) == 347
+    assert len(project.diagram(diagram).edges()) == 433
+    assert len(list(filter(lambda n: n.type() == Item.ConceptNode, project.diagram(diagram).nodes()))) == 65
+    assert len(list(filter(lambda n: n.type() == Item.RoleNode, project.diagram(diagram).nodes()))) == 60
+    assert len(list(filter(lambda n: n.type() == Item.AttributeNode, project.diagram(diagram).nodes()))) == 27
+    assert len(list(filter(lambda n: n.type() == Item.IndividualNode, project.diagram(diagram).nodes()))) == 0
