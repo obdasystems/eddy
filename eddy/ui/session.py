@@ -130,7 +130,7 @@ from eddy.core.exporters.image import (
     PngDiagramExporter,
 )
 from eddy.core.exporters.owl2_iri import OWLOntologyExporter_v3
-from eddy.core.exporters.pdf_iri import PdfProjectExporter_v3
+from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
 from eddy.core.factory import (
     MenuFactory,
@@ -1135,8 +1135,7 @@ class Session(
         """
         self.addOntologyExporter(OWLOntologyExporter_v3)
         self.addProjectExporter(GrapholIRIProjectExporter)
-        # self.addProjectExporter(PdfProjectExporter)
-        self.addProjectExporter(PdfProjectExporter_v3)
+        self.addProjectExporter(PdfProjectExporter)
         self.addProjectExporter(GraphReferencesProjectExporter)
         self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(BmpDiagramExporter)
