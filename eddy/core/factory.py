@@ -889,25 +889,10 @@ class PropertyFactory(QtCore.QObject):
         if not node:
             properties = DiagramProperty(diagram, self.session)
         else:
-            if node.type() is Item.AttributeNode:
-                properties = PredicateNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.ConceptNode:
-                properties = PredicateNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.RoleNode:
-                properties = PredicateNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.ValueDomainNode:
-                properties = ValueDomainNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.IndividualNode:
-                if node.identity() is Identity.Individual:
-                    properties = PredicateNodeProperty(diagram, node, self.session)
-                else:
-                    properties = ValueNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.PropertyAssertionNode:
+            if node.type() is Item.PropertyAssertionNode:
                 properties = OrderedInputNodeProperty(diagram, node, self.session)
             elif node.type() is Item.RoleChainNode:
                 properties = OrderedInputNodeProperty(diagram, node, self.session)
-            elif node.type() is Item.FacetNode:
-                properties = FacetNodeProperty(diagram, node, self.session)
             else:
                 properties = NodeProperty(diagram, node, self.session)
         properties.setFixedSize(properties.sizeHint())
