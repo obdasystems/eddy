@@ -63,16 +63,6 @@ class NodeLabel(AbstractLabel):
     #   EVENTS
     #################################
 
-    '''
-    def paint(self, painter, option, widget):
-        painter.save()
-
-        painter.drawEllipse(option.fontMetrics.boundingRect(self.text()))
-        painter.drawEllipse(option.rect)
-        #painter.drawText(option.rect, QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter, option.t)
-        painter.restore()
-    '''
-
     def keyPressEvent(self, keyEvent):
         """
         Executed when a key is pressed.
@@ -81,15 +71,6 @@ class NodeLabel(AbstractLabel):
         moved = self.isMoved()
         super().keyPressEvent(keyEvent)
         self.updatePos(moved)
-
-    def mousePressEvent(self, mouseEvent):
-        """
-        Executed when the mouse is pressed on the text item.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        if self.diagram.mode is DiagramMode.LabelEdit:
-            super().mousePressEvent(mouseEvent)
-        super().mousePressEvent(mouseEvent)
 
     #############################################
     #   INTERFACE
@@ -109,10 +90,7 @@ class NodeLabel(AbstractLabel):
         """
         moved = self.isMoved()
         super().setText(text)
-        #se commento riga sotto, label viene spostato alla creazione rispetto al centro
         self.updatePos(moved)
-
-    
 
     def updatePos(self, moved=False):
         """
@@ -121,8 +99,6 @@ class NodeLabel(AbstractLabel):
         """
         if not moved:
             self.setPos(self.defaultPos())
-
-
 
 
 class FacetQuotedLabel(NodeLabel):
