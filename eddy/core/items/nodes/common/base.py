@@ -45,7 +45,7 @@ from eddy.core.commands.nodes import CommandNodeRezize
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.items.common import AbstractItem, Polygon
-from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.items.nodes.common.label import PredicateLabel
 from eddy.core.owl import IRIRender
 
 
@@ -838,11 +838,11 @@ class PredicateNodeMixin:
                     self.label.diagram.removeItem(self.label)
             except AttributeError:
                 print("label.diagram is not defined!!")
-            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=False)
+            self.label = PredicateLabel(template=self.labelString, pos=labelPos, parent=self)
             #self.diagram.sgnUpdated.emit()self.label
         elif not self.label:
             self.labelString = newLabelString
-            self.label = NodeLabel(template=self.labelString, pos=lambda:self.initialLabelPosition() , parent=self, editable=False)
+            self.label = PredicateLabel(template=self.labelString, pos=self.initialLabelPosition, parent=self)
             #self.diagram.sgnUpdated.emit()
 
     #@QtCore.pyqtSlot(AnnotationAssertion)

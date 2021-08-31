@@ -101,6 +101,34 @@ class NodeLabel(AbstractLabel):
             self.setPos(self.defaultPos())
 
 
+class PredicateLabel(NodeLabel):
+    """
+    This class implements the label for predicate nodes.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the label.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self.setEditable(False)  # FORCE READ-ONLY BEHAVIOUR
+
+    #############################################
+    #   EVENTS
+    #################################
+
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        if self.parentItem():
+            # PASS EVENT TO PARENT ITEM
+            self.parentItem().mouseDoubleClickEvent(mouseEvent)
+        else:
+            super().mouseDoubleClickEvent(mouseEvent)
+
+
 class FacetQuotedLabel(NodeLabel):
     """
     This class implements the quoted label of Facet nodes.
