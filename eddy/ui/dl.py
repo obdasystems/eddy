@@ -42,7 +42,7 @@ from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import OWLAxiom
 from eddy.core.datatypes.qt import Font
-from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
+from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
 from eddy.core.functions.signals import connect
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.jvm import getJavaVM
@@ -346,7 +346,7 @@ class DLSyntaxWorker(AbstractWorker):
 
 
     def runProfileCheck(self):
-        worker = OWLOntologyExporterWorker_v3(self.project,axioms=self.axioms())
+        worker = OWLOntologyExporterWorker(self.project,axioms=self.axioms())
         worker.run()
         self.initializeOWLManager(worker.ontology)
 

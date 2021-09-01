@@ -39,7 +39,7 @@ from PyQt5 import QtWidgets
 from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import OWLAxiom
-from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
+from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
 from eddy.core.output import getLogger
@@ -433,7 +433,7 @@ class OntologyReasoningTasksWorker(AbstractWorker):
 
     def runReasoningTasks(self):
         #TODO VALUTA REINSERIMENTO EXPLANATIONS TRAMITE BOOLEANO self.computeExplanations
-        worker = OWLOntologyExporterWorker_v3(self.project,axioms=self.axioms())
+        worker = OWLOntologyExporterWorker(self.project,axioms=self.axioms())
         worker.run()
         self.initializeOWLManagerAndReasoner(worker.ontology)
         if not self.isConsistent():
@@ -558,7 +558,7 @@ class EmptyEntityExplanationWorker(AbstractWorker):
 
     def initializeOWLOntology(self):
         self.status_bar.showMessage('Fetching the OWL 2 ontology')
-        worker = OWLOntologyExporterWorker_v3(self.project, axioms={axiom for axiom in OWLAxiom})
+        worker = OWLOntologyExporterWorker(self.project, axioms={axiom for axiom in OWLAxiom})
         worker.run()
         self.status_bar.showMessage('OWL 2 ontology fetched')
         self.ontology = worker.ontology

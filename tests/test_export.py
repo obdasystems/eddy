@@ -46,7 +46,7 @@ from eddy.core.exporters.graphreferences import GraphReferencesProjectExporter
 from eddy.core.exporters.image import BmpDiagramExporter
 from eddy.core.exporters.image import JpegDiagramExporter
 from eddy.core.exporters.image import PngDiagramExporter
-from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
+from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
 from eddy.core.exporters.pdf import PdfDiagramExporter, PdfProjectExporter
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
@@ -222,7 +222,7 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
     # WHEN
     owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
-    worker = OWLOntologyExporterWorker_v3(project, str(owlfile),
+    worker = OWLOntologyExporterWorker(project, str(owlfile),
                                        axioms={x for x in OWLAxiom},
                                        normalize=False,
                                        syntax=OWLSyntax.Functional)
@@ -356,7 +356,7 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
     # WHEN
     owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
-    worker = OWLOntologyExporterWorker_v3(project, str(owlfile),
+    worker = OWLOntologyExporterWorker(project, str(owlfile),
                                        axioms={x for x in OWLAxiom},
                                        normalize=True,
                                        syntax=OWLSyntax.Functional)
