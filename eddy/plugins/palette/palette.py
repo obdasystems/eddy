@@ -727,8 +727,8 @@ class PaletteButton(QtWidgets.QToolButton):
                     QtCore.QPointF(-((40 / (1 + sqrt(2))) / 2), -20),
                     QtCore.QPointF(-20, -((40 / (1 + sqrt(2))) / 2)),
                 ]))
-                painter.setFont(Font(pixelSize=9, weight=Font.Light))
-                painter.drawText(-14, 4, 'literal')
+                painter.setFont(Font(pixelSize=11, weight=Font.Light))
+                painter.drawText(-12, 4, 'literal')
                 painter.end()
 
             #############################################
