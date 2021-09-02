@@ -45,12 +45,11 @@ from eddy.core.items.common import Polygon
 from eddy.core.items.nodes.common.base import AbstractResizableNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.owl import OWL2Datatype
-from eddy.core.regex import RE_VALUE
 
 
 class LiteralNode(AbstractResizableNode):
     """
-    This class implements the 'Individual' node.
+    This class implements the 'Literal' node.
     """
     IndexLT = 0
     IndexLB = 1
@@ -99,11 +98,12 @@ class LiteralNode(AbstractResizableNode):
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
         self._literal = literal
+        self.labelString = str(literal)
 
-        #self.label = NodeLabel(template='Empty', pos=self.center, parent=self, editable=True)
-        #self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label = NodeLabel(template='Empty', pos=self.center, editable=False, parent=self)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        #self.updateTextPos()
+        self.updateTextPos()
 
     @property
     def datatype(self):
@@ -134,46 +134,45 @@ class LiteralNode(AbstractResizableNode):
 
     @property
     def literal(self):
-        '''
+        """
         :rtype: Literal
-        '''
+        """
         return self._literal
 
     @literal.setter
     def literal(self, literal):
-        '''
+        """
         :type literal:Literal
-        '''
+        """
         self._literal = literal
         if self.diagram:
             self.doUpdateNodeLabel()
-        self.sgnNodeModified.emit()
+            self.diagram.project.sgnUpdated.emit()
 
     def initialLabelPosition(self):
         return self.center()
 
-
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
         if self.label and not self.labelString == str(self.literal):
             self.labelString = str(self.literal)
             labelPos = lambda: self.label.pos()
             self.label.diagram.removeItem(self.label)
-            self.label = NodeLabel(template=self.labelString, pos=labelPos, parent=self, editable=True)
+            self.label = NodeLabel(template=self.labelString, pos=labelPos, editable=False, parent=self)
             self.diagram.sgnUpdated.emit()
         else:
             self.labelString = str(self.literal)
-            self.label = NodeLabel(template=self.labelString, pos=lambda: self.initialLabelPosition(), parent=self,
-                                   editable=True)
+            self.label = NodeLabel(template=self.labelString, pos=self.initialLabelPosition, editable=False, parent=self)
             self.diagram.sgnUpdated.emit()
-
 
     #############################################
     #   INTERFACE
     #################################
+
     def mouseDoubleClickEvent(self, mouseEvent):
         """
         Executed when the mouse is double clicked on the text item.
@@ -234,7 +233,6 @@ class LiteralNode(AbstractResizableNode):
         :rtype: Identity
         """
         return Identity.Value
-
 
     def paint(self, painter, option, widget=None):
         """

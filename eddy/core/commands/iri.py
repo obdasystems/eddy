@@ -1,10 +1,46 @@
+# -*- coding: utf-8 -*-
+
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
 
 from PyQt5 import QtWidgets
-from eddy.core.items.nodes.common.base import OntologyEntityNode
+
 from eddy.core.owl import IRI
+
+
 #############################################
 #   AXIOM ANNOTATIONS
 #################################
+
 class CommandEdgeAddAnnotation(QtWidgets.QUndoCommand):
     """
     This command is used to set axiom properties.
@@ -30,6 +66,7 @@ class CommandEdgeAddAnnotation(QtWidgets.QUndoCommand):
         """undo the command"""
         self._edge.removeAnnotation(self.ann)
 
+
 class CommandEdgeRemoveAnnotation(QtWidgets.QUndoCommand):
     """
     This command is used to set axiom properties.
@@ -54,6 +91,7 @@ class CommandEdgeRemoveAnnotation(QtWidgets.QUndoCommand):
     def undo(self):
         """undo the command"""
         self._edge.addAnnotation(self._ann)
+
 
 class CommandEdgeModifyAnnotation(QtWidgets.QUndoCommand):
     """
@@ -83,10 +121,10 @@ class CommandEdgeModifyAnnotation(QtWidgets.QUndoCommand):
         self._ann.refactor(self._undo)
 
 
-
 #############################################
 #   IRIs
 #################################
+
 class CommandChangeIRIIdentifier(QtWidgets.QUndoCommand):
     """
     This command is used to change the namespace identifying an IRI .
@@ -115,6 +153,7 @@ class CommandChangeIRIIdentifier(QtWidgets.QUndoCommand):
         """undo the command"""
         self._iri.namespace = self._iriUndo
 
+
 class CommandIRIRefactor(QtWidgets.QUndoCommand):
     """
     This command is used to change the IRI associated to (possibly) numerous nodes.
@@ -140,6 +179,7 @@ class CommandIRIRefactor(QtWidgets.QUndoCommand):
     def undo(self):
         """undo the command"""
         self._project.sgnIRIRefactor.emit(self._iriRedo, self._iriUndo )
+
 
 class CommandCommmonSubstringIRIsRefactor(QtWidgets.QUndoCommand):
     """
@@ -180,9 +220,11 @@ class CommandCommmonSubstringIRIsRefactor(QtWidgets.QUndoCommand):
             else:
                 postIRI.namespace = pre
 
+
 #############################################
 #   IRI ANNOTATIONS
 #################################
+
 class CommandIRIAddAnnotationAssertion(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
@@ -208,6 +250,7 @@ class CommandIRIAddAnnotationAssertion(QtWidgets.QUndoCommand):
         """undo the command"""
         self._iri.removeAnnotationAssertion(self._annAss)
 
+
 class CommandIRIRemoveAnnotationAssertion(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
@@ -232,6 +275,7 @@ class CommandIRIRemoveAnnotationAssertion(QtWidgets.QUndoCommand):
     def undo(self):
         """undo the command"""
         self._iri.addAnnotationAssertion(self._annAss)
+
 
 class CommandIRIModifyAnnotationAssertion(QtWidgets.QUndoCommand):
     """
@@ -260,9 +304,11 @@ class CommandIRIModifyAnnotationAssertion(QtWidgets.QUndoCommand):
         """undo the command"""
         self._annAss.refactor(self._undo)
 
+
 #############################################
 #   IRI METAPROPERTIES
 #################################
+
 class CommandIRISetMeta(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
@@ -288,7 +334,7 @@ class CommandIRISetMeta(QtWidgets.QUndoCommand):
         """redo the command"""
         self._iri.setMetaProperties(self._redo)
         # TODO l'aggiornamento dei nodi di cui sotto, non dovrebbe essere necessaria (ci dovrebbero pensare direttamente i segnali della classe IRI)
-        ''' 
+        '''
         for node in self._project.predicates(self._item, self._predicate):
             node.updateNode(selected=node.isSelected())
         '''
@@ -297,14 +343,16 @@ class CommandIRISetMeta(QtWidgets.QUndoCommand):
         """undo the command"""
         self._iri.setMetaProperties(self._undo)
         # TODO l'aggiornamento dei nodi di cui sotto, non dovrebbe essere necessaria (ci dovrebbero pensare direttamente i segnali della classe IRI)
-        ''' 
+        '''
         for node in self._project.predicates(self._item, self._predicate):
             node.updateNode(selected=node.isSelected())
         '''
 
+
 #############################################
 #   IRI NODES
 #################################
+
 class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
     """
     This command is used to change the IRI associated to a single node.
@@ -314,7 +362,7 @@ class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
         """
         Initialize the command.
         :type project: Project
-        :type node: OntologyEntityNode | OntologyEntityResizableNode
+        :type node: PredicateNodeMixin
         :type iriStringRedo: str
         :type iriStringUndo: str
         :type userExplicitInput: str
@@ -341,9 +389,11 @@ class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
         self._node.iri = oldIri
         self._project.sgnIRIChanged.emit(self._node, iri)
 
+
 #############################################
 #   FACET NODES
 #################################
+
 class CommandChangeFacetOfNode(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.
@@ -374,9 +424,11 @@ class CommandChangeFacetOfNode(QtWidgets.QUndoCommand):
         self._node.facet = self._facetUndo
         #self._project.sgnIRIChanged.emit(self._node, iri)
 
+
 #############################################
 #   LITERAL NODES
 #################################
+
 class CommandChangeLiteralOfNode(QtWidgets.QUndoCommand):
     """
     This command is used to set IRI properties.

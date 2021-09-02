@@ -39,12 +39,15 @@ import pytest
 from PyQt5 import QtPrintSupport
 
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
+from eddy.core.datatypes.system import File
+from eddy.core.exporters.graphml import GraphMLDiagramExporter
 from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
+from eddy.core.exporters.graphreferences import GraphReferencesProjectExporter
 from eddy.core.exporters.image import BmpDiagramExporter
 from eddy.core.exporters.image import JpegDiagramExporter
 from eddy.core.exporters.image import PngDiagramExporter
-from eddy.core.exporters.owl2_iri import OWLOntologyExporterWorker_v3
-from eddy.core.exporters.pdf_iri import PdfDiagramExporter_v3, PdfProjectExporter_v3
+from eddy.core.exporters.owl2 import OWLOntologyExporterWorker
+from eddy.core.exporters.pdf import PdfDiagramExporter, PdfProjectExporter
 from eddy.core.functions.fsystem import fread
 from eddy.core.functions.path import expandPath
 from eddy.ui.session import Session
@@ -68,6 +71,7 @@ def session(qapp, qtbot, logging_disabled):
 #############################################
 #   PROJECT EXPORT
 #################################
+
 def test_export_project_as_graphol(session, qtbot, tmpdir):
     # GIVEN
     savePath = tmpdir.join('savedAs.graphol')
@@ -83,8 +87,7 @@ def test_export_project_as_graphol(session, qtbot, tmpdir):
 #   CSV EXPORT
 #################################
 
-#Esportazione in csv disabilitata in versione 3. Ripristinare opportunamente test in caso di reimplementazione esportatore
-'''
+@pytest.mark.skip(reason='csv export is currently broken')
 def test_export_project_to_csv(session, qtbot, tmpdir):
     # GIVEN
     csv = tmpdir.join('project.csv')
@@ -97,7 +100,7 @@ def test_export_project_to_csv(session, qtbot, tmpdir):
     worker.run(str(csv))
     # THEN
     assert os.path.isfile(str(csv))
-'''
+
 
 #############################################
 #   IMAGE EXPORT
@@ -141,12 +144,12 @@ def test_export_diagram_to_png(session, qtbot, tmpdir):
     # THEN
     assert os.path.isfile(str(image))
 
-#Esportazione in graphml disabilitata in versione 3. Ripristinare opportunamente test in caso di reimplementazione esportatore
-'''
+
 #############################################
 #   GRAPHML EXPORT
 #################################
 
+@pytest.mark.skip(reason='graphml export is currently broken')
 def test_export_diagram_to_graphml(session, qtbot, tmpdir):
     # GIVEN
     graphml = tmpdir.join('diagram.graphml')
@@ -158,14 +161,13 @@ def test_export_diagram_to_graphml(session, qtbot, tmpdir):
     worker.run(str(graphml))
     # THEN
     assert os.path.isfile(str(graphml))
-'''
 
-#Esportazione in xml disabilitata in versione 3. Ripristinare opportunamente test in caso di reimplementazione esportatore
-'''
+
 #############################################
 #   GRAPH REFERENCES EXPORT
 #################################
 
+@pytest.mark.skip(reason='graphreferences export is currently broken')
 def test_export_project_to_graphreferences(session, qtbot, tmpdir):
     # GIVEN
     xml = tmpdir.join('project.xml')
@@ -177,7 +179,7 @@ def test_export_project_to_graphreferences(session, qtbot, tmpdir):
     worker.run(str(xml))
     # THEN
     assert os.path.isfile(str(xml))
-'''
+
 
 #############################################
 #   PDF EXPORT
@@ -190,7 +192,7 @@ def test_export_diagram_to_pdf(session, qtbot, tmpdir):
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    worker = PdfDiagramExporter_v3(session.mdi.activeDiagram(), session)
+    worker = PdfDiagramExporter(session.mdi.activeDiagram(), session)
     worker.run(str(pdffile))
     # THEN
     assert os.path.isfile(str(pdffile))
@@ -203,7 +205,7 @@ def test_export_project_to_pdf(session, qtbot, tmpdir):
     with qtbot.waitSignal(session.sgnDiagramFocused):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
-    worker = PdfProjectExporter_v3(project, session,
+    worker = PdfProjectExporter(project, session,
                                 pageSize=QtPrintSupport.QPrinter.A3,
                                 diagrams=project.diagrams())
     worker.run(str(pdffile))
@@ -216,11 +218,11 @@ def test_export_project_to_pdf(session, qtbot, tmpdir):
 #################################
 
 def test_export_project_to_owl_without_normalization(session, tmpdir):
-    #TODO ADD DATATYPE RESTRICTION WITH FACET TO TEST ONTOLOGY AND VERIFY TRANSLATION
+    # TODO ADD DATATYPE RESTRICTION WITH FACET TO TEST ONTOLOGY AND VERIFY TRANSLATION
     # WHEN
     owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
-    worker = OWLOntologyExporterWorker_v3(project, str(owlfile),
+    worker = OWLOntologyExporterWorker(project, str(owlfile),
                                        axioms={x for x in OWLAxiom},
                                        normalize=False,
                                        syntax=OWLSyntax.Functional)
@@ -350,11 +352,11 @@ def test_export_project_to_owl_without_normalization(session, tmpdir):
 
 
 def test_export_project_to_owl_with_normalization(session, tmpdir):
-    #TODO ADD DATATYPE RESTRICTION WITH FACET TO TEST ONTOLOGY AND VERIFY TRANSLATION
+    # TODO ADD DATATYPE RESTRICTION WITH FACET TO TEST ONTOLOGY AND VERIFY TRANSLATION
     # WHEN
     owlfile = tmpdir.join('test_project_3_1.owl')
     project = session.project
-    worker = OWLOntologyExporterWorker_v3(project, str(owlfile),
+    worker = OWLOntologyExporterWorker(project, str(owlfile),
                                        axioms={x for x in OWLAxiom},
                                        normalize=True,
                                        syntax=OWLSyntax.Functional)
@@ -486,4 +488,3 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
 
     # AND
     assert len(content) == 89
-

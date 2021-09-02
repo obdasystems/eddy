@@ -32,30 +32,59 @@
 #                                                                        #
 ##########################################################################
 
-from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+
+from typing import (
+    cast,
+    Dict,
+    Optional,
+    Set,
+    TYPE_CHECKING,
+)
+
+from PyQt5 import (
+    QtCore,
+    QtWidgets,
+)
 
 from eddy.core.clipboard import Clipboard
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.labels import CommandLabelMove
-from eddy.core.commands.nodes import CommandNodeAdd
-from eddy.core.commands.nodes import CommandNodeMove
-from eddy.core.datatypes.graphol import Item, Identity
+from eddy.core.commands.nodes import (
+    CommandNodeAdd,
+    CommandNodeMove,
+)
+from eddy.core.datatypes.graphol import (
+    Identity,
+    Item,
+)
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.graph import bfs
-from eddy.core.functions.misc import snap, partition, first
+from eddy.core.functions.misc import (
+    first,
+    partition,
+    snap,
+)
 from eddy.core.functions.signals import connect
 from eddy.core.generators import GUID
 from eddy.core.items.common import AbstractItem
+from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.factory import ItemFactory
-from eddy.core.items.nodes.common.base import OntologyEntityNode, AbstractNode, OntologyEntityResizableNode
-from eddy.core.items.nodes.concept_iri import ConceptNode
-from eddy.core.items.nodes.facet_iri import FacetNode
+from eddy.core.items.nodes.common.base import (
+    AbstractNode,
+    PredicateNodeMixin,
+)
+from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.output import getLogger
 
+if TYPE_CHECKING:
+    from eddy.core.project import Project
+    from eddy.ui.session import Session
+
+#############################################
+#   GLOBALS
+#################################
 
 LOGGER = getLogger()
 
@@ -79,18 +108,17 @@ class Diagram(QtWidgets.QGraphicsScene):
     MaxFontSize = 40
     SelectionRadius = 4
 
-    sgnItemAdded = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
-    sgnItemInsertionCompleted = QtCore.pyqtSignal('QGraphicsItem', int)
-    sgnItemRemoved = QtCore.pyqtSignal('QGraphicsScene', 'QGraphicsItem')
+    sgnItemAdded = QtCore.pyqtSignal(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
+    sgnItemInsertionCompleted = QtCore.pyqtSignal(QtWidgets.QGraphicsItem, int)
+    sgnItemRemoved = QtCore.pyqtSignal(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     sgnModeChanged = QtCore.pyqtSignal(DiagramMode)
-    sgnNodeIdentification = QtCore.pyqtSignal('QGraphicsItem')
+    sgnNodeIdentification = QtCore.pyqtSignal(QtWidgets.QGraphicsItem)
     sgnUpdated = QtCore.pyqtSignal()
 
-    def __init__(self, name, parent):
+    # noinspection PyUnresolvedReferences
+    def __init__(self, name: str, parent: 'Project') -> None:
         """
         Initialize the diagram.
-        :type name: str
-        :type parent: Project
         """
         super().__init__(parent)
 
@@ -112,7 +140,12 @@ class Diagram(QtWidgets.QGraphicsScene):
         self.mp_Pos = None
 
         settings = QtCore.QSettings()
-        self.setFont(Font(font=self.font(), pixelSize=settings.value('diagram/fontsize', self.font().pixelSize(), int)))
+        self.setFont(
+            Font(
+                font=self.font(),
+                pixelSize=settings.value('diagram/fontsize', self.font().pixelSize(), int)
+            )
+        )
 
         connect(self.sgnItemAdded, self.onItemAdded)
         connect(self.sgnItemRemoved, self.onItemRemoved)
@@ -122,14 +155,11 @@ class Diagram(QtWidgets.QGraphicsScene):
     #   FACTORY
     #################################
 
+    # noinspection PyUnresolvedReferences
     @classmethod
-    def create(cls, name, size, project):
+    def create(cls, name: str, size: int, project: 'Project') -> 'Diagram':
         """
         Build and returns a new Diagram instance, using the given parameters.
-        :type name: str
-        :type size: int
-        :type project: Project
-        :rtype: Diagram
         """
         diagram = Diagram(name, project)
         diagram.setBackgroundBrush(QtCore.Qt.white)
@@ -141,21 +171,21 @@ class Diagram(QtWidgets.QGraphicsScene):
     #   PROPERTIES
     #################################
 
+    # noinspection PyUnresolvedReferences
     @property
-    def project(self):
+    def project(self) -> 'Project':
         """
-        Returns the project this diagram belongs to (alias for Diagram.parent()).
-        :rtype: Project
+        Returns the project this diagram belongs to.
         """
-        return self.parent()
+        return cast('Project', self.parent())
 
+    # noinspection PyUnresolvedReferences
     @property
-    def session(self):
+    def session(self) -> 'Session':
         """
-        Returns the session this diagram belongs to (alias for Diagram.project.parent()).
-        :rtype: Session
+        Returns the session this diagram belongs to.
         """
-        return self.project.parent()
+        return cast('Session', self.project.parent())
 
     #############################################
     #   EVENTS
@@ -164,8 +194,6 @@ class Diagram(QtWidgets.QGraphicsScene):
     def event(self, event: QtCore.QEvent) -> bool:
         """
         Executed when an event happens in the scene, before any specialized handler executes.
-        :type event: QtCore.QEvent
-        :rtype: bool
         """
         # This event is sent to itself by the scene every time the scene font property changes,
         # either directly (via setFont()) or indirectly (via QApplication::setFont()).
@@ -177,10 +205,9 @@ class Diagram(QtWidgets.QGraphicsScene):
                 self.sendEvent(item, event)
         return super().event(event)
 
-    def dragEnterEvent(self, dragEvent):
+    def dragEnterEvent(self, dragEvent: QtWidgets.QGraphicsSceneDragDropEvent) -> None:
         """
         Executed when a dragged element enters the scene area.
-        :type dragEvent: QGraphicsSceneDragDropEvent
         """
         super().dragEnterEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
@@ -189,10 +216,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         else:
             dragEvent.ignore()
 
-    def dragMoveEvent(self, dragEvent):
+    def dragMoveEvent(self, dragEvent: QtWidgets.QGraphicsSceneDragDropEvent) -> None:
         """
         Executed when an element is dragged over the scene.
-        :type dragEvent: QGraphicsSceneDragDropEvent
         """
         super().dragMoveEvent(dragEvent)
         if dragEvent.mimeData().hasFormat('text/plain'):
@@ -202,77 +228,37 @@ class Diagram(QtWidgets.QGraphicsScene):
             dragEvent.ignore()
 
     # noinspection PyTypeChecker
-    def dropEvent(self, dropEvent):
+    def dropEvent(self, dropEvent: QtWidgets.QGraphicsSceneDragDropEvent) -> None:
         """
         Executed when a dragged element is dropped on the diagram.
-        :type dropEvent: QGraphicsSceneDragDropEvent
         """
         super().dropEvent(dropEvent)
         if dropEvent.mimeData().hasFormat('text/plain') and Item.valueOf(dropEvent.mimeData().text()):
             snapToGrid = self.session.action('toggle_grid').isChecked()
-            #TODO
-            nodeType = dropEvent.mimeData().text()
-            if Item.ConceptIRINode <= int(dropEvent.mimeData().text()) <= Item.IndividualIRINode:
-                #New node associated with IRI object
-                #node = ConceptNode(diagram=self)
-                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
-                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
+            node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
+            node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
+            data = dropEvent.mimeData().data(dropEvent.mimeData().text())
+            if int(dropEvent.mimeData().text()) in {Item.ConceptNode, Item.AttributeNode,
+                                                    Item.RoleNode, Item.IndividualNode,
+                                                    Item.ValueDomainNode, Item.LiteralNode,
+                                                    Item.FacetNode}:
                 if not data:
-                    #new element
+                    # For new nodes (e.g. drag and drop from palette)
                     if isinstance(node, FacetNode):
                         self.session.doOpenConstrainingFacetBuilder(node)
-                    elif isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                    elif isinstance(node, PredicateNodeMixin):
                         self.session.doOpenIRIBuilder(node)
                     elif isinstance(node, LiteralNode):
                         self.session.doOpenLiteralBuilder(node)
                 else:
-                    #copy of existing element (e.g. drag and drop from ontology explorer)
+                    # Copy of existing element (e.g. drag and drop from ontology explorer)
                     data_str = str(data, encoding='utf-8')
                     iri = self.project.getIRI(data_str)
                     node.iri = iri
-                    self.doAddOntologyEntityNode(node)
+                    self.session.undostack.push(CommandNodeAdd(self, node))
                     node.doUpdateNodeLabel()
             else:
-                #Old node type
-                node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
-                data = dropEvent.mimeData().data(dropEvent.mimeData().text())
-                iri = None
-
-                if data is not None:
-                    data_str = str(data, encoding='utf-8')
-                    if data_str is not '':
-                        data_comma_seperated = data_str.split(',')
-                        iri = data_comma_seperated[0]
-                        rc = data_comma_seperated[1]
-                        txt = data_comma_seperated[2]
-                        node.setText(txt)
-                        node.remaining_characters = rc
-
-                node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
-                commands = []
-                #node.emptyMethod()
-
-                if iri is not None:
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_1 = self.project.addIRINodeEntry(Duplicate_dict_1, iri, node)
-
-                    if Duplicate_dict_1 is not None:
-                        pass
-
-                    #commands.append(CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2, Duplicate_dict_1, [iri], None))
-                commands.append(CommandNodeAdd(self, node))
-
-
-
-                if any(commands):
-                    self.session.undostack.beginMacro('node Add - {0}'.format(node.name))
-                    for command in commands:
-                        if command:
-                            self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
-
+                self.session.undostack.push(CommandNodeAdd(self, node))
             self.sgnItemInsertionCompleted.emit(node, dropEvent.modifiers())
             dropEvent.setDropAction(QtCore.Qt.CopyAction)
             dropEvent.accept()
@@ -280,13 +266,10 @@ class Diagram(QtWidgets.QGraphicsScene):
             dropEvent.ignore()
 
     # noinspection PyTypeChecker
-    def mousePressEvent(self, mouseEvent):
+    def mousePressEvent(self, mouseEvent: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         """
         Executed when a mouse button is clicked on the scene.
-        :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.project.colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology()
-
         mouseModifiers = mouseEvent.modifiers()
         mouseButtons = mouseEvent.buttons()
         mousePos = mouseEvent.scenePos()
@@ -302,7 +285,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 snapToGrid = self.session.action('toggle_grid').isChecked()
                 node = self.factory.create(Item.valueOf(self.modeParam))
                 node.setPos(snap(mousePos, Diagram.GridSize, snapToGrid))
-                if isinstance(node, OntologyEntityNode) or isinstance(node, OntologyEntityResizableNode):
+                if isinstance(node, PredicateNodeMixin):
                     self.session.doOpenIRIBuilder(node)
                 elif isinstance(node, FacetNode):
                     self.session.doOpenConstrainingFacetBuilder(node)
@@ -403,10 +386,9 @@ class Diagram(QtWidgets.QGraphicsScene):
                                         self.mp_Pos = mousePos
                                         self.mp_Data = self.setupMove(selected)
 
-    def mouseMoveEvent(self, mouseEvent):
+    def mouseMoveEvent(self, mouseEvent: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         """
         Executed when then mouse is moved on the scene.
-        :type mouseEvent: QGraphicsSceneMouseEvent
         """
         mouseButtons = mouseEvent.buttons()
         mousePos = mouseEvent.scenePos()
@@ -492,13 +474,10 @@ class Diagram(QtWidgets.QGraphicsScene):
 
         super().mouseMoveEvent(mouseEvent)
 
-    def mouseReleaseEvent(self, mouseEvent):
+    def mouseReleaseEvent(self, mouseEvent: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         """
         Executed when the mouse is released from the scene.
-        :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.project.colour_items_in_case_of_unsatisfiability_or_inconsistent_ontology()
-
         mouseModifiers = mouseEvent.modifiers()
         mouseButton = mouseEvent.button()
         mousePos = mouseEvent.scenePos()
@@ -524,7 +503,6 @@ class Diagram(QtWidgets.QGraphicsScene):
                         if pvr.isValid():
                             edge.target = currentNode
                             insertEdge = True
-
 
                     # We temporarily remove the item from the diagram and we perform the
                     # insertion using the undo command that will also emit the sgnItemAdded
@@ -611,51 +589,10 @@ class Diagram(QtWidgets.QGraphicsScene):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot(AbstractNode)
-    def doAddOntologyEntityNode(self,node):
-        """
-        Add to this diagram a node identified by an IRI
-        :type node: AbstractNode
-        """
-        if node:
-            command = CommandNodeAdd(self,node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.iri))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-        #self.addItem(node)
-
-    @QtCore.pyqtSlot(FacetNode)
-    def doAddOntologyFacetNode(self, node):
-        """
-        Add to this diagram a node representing a Facet
-        :type node: FacetNode
-        """
-        if node:
-            command = CommandNodeAdd(self, node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.facet))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-
-    @QtCore.pyqtSlot(LiteralNode)
-    def doAddOntologyLiteralNode(self, node):
-        """
-        Add to this diagram a node representing a Literal
-        :type node: FacetNode
-        """
-        if node:
-            command = CommandNodeAdd(self, node)
-            self.session.undostack.beginMacro('node Add - {0}'.format(node.literal))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-
-    @QtCore.pyqtSlot('QGraphicsItem')
-    def doNodeIdentification(self, node):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsItem)
+    def doNodeIdentification(self, node: AbstractNode) -> None:
         """
         Perform node identification.
-        :type node: AbstractNode
         """
         if Identity.Neutral in node.identities():
 
@@ -683,12 +620,10 @@ class Diagram(QtWidgets.QGraphicsScene):
             for node in weak - strong - excluded:
                 node.setIdentity(computed)
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
-    def onItemAdded(self, _, item):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
+    def onItemAdded(self, _: 'Diagram', item: AbstractItem) -> None:
         """
         Executed whenever a connection is created/removed.
-        :type _: Diagram
-        :type item: AbstractItem
         """
         # Send a font change event to the item to update its font
         self.sendEvent(item, QtCore.QEvent(QtCore.QEvent.FontChange))
@@ -699,12 +634,10 @@ class Diagram(QtWidgets.QGraphicsScene):
                 for node in (item.source, item.target):
                     self.sgnNodeIdentification.emit(node)
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
-    def onItemRemoved(self, _, item):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
+    def onItemRemoved(self, _: 'Diagram', item: AbstractItem) -> None:
         """
         Executed whenever a connection is created/removed.
-        :type _: Diagram
-        :type item: AbstractItem
         """
         if item.isEdge():
             # When an edge is removed we may be in the case where
@@ -717,24 +650,23 @@ class Diagram(QtWidgets.QGraphicsScene):
     #   INTERFACE
     #################################
 
-    def addItem(self, item):
+    def addItem(self, item: AbstractItem) -> None:
         """
         Add an item to the Diagram (will redraw the item to reflect its status).
-        :type item: AbstractItem
         """
-        super().addItem(item)#TODO a partire da questo momento item.diagram restituisce risultato diverso da None
-        if item.isIRINode():
-            item.connectSignals()
+        super().addItem(item)
         if item.isNode():
+            if item.isPredicate():
+                item.connectSignals()
             item.updateNode()
 
     @staticmethod
-    def completeMove(moveData, offset=QtCore.QPointF(0, 0)):
+    def completeMove(
+        moveData: Dict,
+        offset: QtCore.QPointF = QtCore.QPointF(0, 0)
+    ) -> Dict:
         """
-        Complete item movement, given initializated data for a collection of selected nodes.
-        :type moveData: dict
-        :type offset: QPointF
-        :rtype: dict
+        Complete item movement, given initialized data for a collection of selected nodes.
         """
         return {
             'nodes': {
@@ -745,42 +677,36 @@ class Diagram(QtWidgets.QGraphicsScene):
             'edges': {x: [p + offset for p in x.breakpoints[:]] for x in moveData['edges']}
         }
 
-    def edge(self, eid):
+    def edge(self, eid: str) -> Optional[AbstractEdge]:
         """
         Returns the edge matching the given id or None if no edge is found.
-        :type eid: str
-        :rtype: AbstractEdge
         """
         return self.project.edge(self, eid)
 
-    def edges(self):
+    def edges(self) -> Set[AbstractEdge]:
         """
         Returns a collection with all the edges in the diagram.
-        :rtype: set
         """
         return self.project.edges(self)
 
-    def isEdgeAdd(self):
+    def isEdgeAdd(self) ->  bool:
         """
-        Returns True if an edge insertion is currently in progress, False otherwise.
-        :rtype: bool
+        Returns `True` if an edge insertion is currently in progress, `False` otherwise.
         """
         return self.mode is DiagramMode.EdgeAdd and self.mp_Edge is not None
 
-    def isLabelMove(self):
+    def isLabelMove(self) -> bool:
         """
-        Returns True if a label is currently being moved, False otherwise.
-        :rtype: bool
+        Returns `True` if a label is currently being moved, `False` otherwise.
         """
         return self.mode is DiagramMode.LabelMove and \
            self.mp_Label is not None and \
            self.mp_LabelPos is not None and \
            self.mp_Pos is not None
 
-    def isNodeMove(self):
+    def isNodeMove(self) -> bool:
         """
-        Returns True if a node(s) is currently being moved, False otherwise.
-        :rtype: bool
+        Returns `True` if a node(s) is currently being moved, `False` otherwise.
         """
         return self.mode is DiagramMode.NodeMove and \
            self.mp_Data is not None and \
@@ -788,10 +714,9 @@ class Diagram(QtWidgets.QGraphicsScene):
            self.mp_NodePos is not None and \
            self.mp_Pos is not None
 
-    def isEmpty(self):
+    def isEmpty(self) -> bool:
         """
-        Returns True if this diagram containts no element, False otherwise.
-        :rtype: bool
+        Returns `True` if this diagram contains no element, `False` otherwise.
         """
         return len(self.project.items(self)) == 0
 
@@ -799,9 +724,6 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         Returns a collection of items ordered from TOP to BOTTOM.
         If no argument is supplied, an unordered list containing all the elements in the diagram is returned.
-        :type mixed: T <= QPointF | QRectF | QPolygonF | QPainterPath
-        :type mode: ItemSelectionMode
-        :rtype: list
         """
         if mixed is None:
             items = super().items()
@@ -821,18 +743,15 @@ class Diagram(QtWidgets.QGraphicsScene):
                     x not in kwargs.get('skip', set())
         ], key=lambda i: i.zValue(), reverse=True)
 
-    def nodes(self):
+    def nodes(self) -> Set[AbstractNode]:
         """
         Returns a collection with all the nodes in the diagram.
-        :rtype: set
         """
         return self.project.nodes(self)
 
-    def node(self, nid):
+    def node(self, nid: str) -> Optional[AbstractNode]:
         """
         Returns the node matching the given id or None if no node is found.
-        :type nid: str
-        :rtype: AbstractNode
         """
         return self.project.node(self, nid)
 
@@ -860,11 +779,9 @@ class Diagram(QtWidgets.QGraphicsScene):
         """
         return [x for x in super().selectedItems() if x.isNode() and filter_on_nodes(x)]
 
-    def setMode(self, mode, param=None):
+    def setMode(self, mode: DiagramMode, param: Item = None) -> None:
         """
         Set the operational mode.
-        :type mode: DiagramMode
-        :type param: Item
         """
         if self.mode != mode or self.modeParam != param:
             #LOGGER.debug('Diagram mode changed: mode=%s, param=%s', mode, param)
@@ -899,12 +816,9 @@ class Diagram(QtWidgets.QGraphicsScene):
                         moveData['edges'][edge] = edge.breakpoints[:]
         return moveData
 
-    # noinspection PyTypeChecker
-    def visibleRect(self, margin=0):
+    def visibleRect(self, margin: float = 0) -> QtCore.QRectF:
         """
         Returns a rectangle matching the area of visible items.
-        :type margin: float
-        :rtype: QtCore.QRectF
         """
         items = self.items()
         if items:
@@ -914,11 +828,15 @@ class Diagram(QtWidgets.QGraphicsScene):
                 b = item.mapRectToScene(item.boundingRect())
                 x.update({b.left(), b.right()})
                 y.update({b.top(), b.bottom()})
-            return QtCore.QRectF(QtCore.QPointF(min(x) - margin, min(y) - margin), QtCore.QPointF(max(x) + margin, max(y) + margin))
+            return QtCore.QRectF(
+                QtCore.QPointF(min(x) - margin, min(y) - margin),
+                QtCore.QPointF(max(x) + margin, max(y) + margin)
+            )
         return QtCore.QRectF()
 
     def __str__(self):
         return 'Diagram {}'.format(self.name)
+
 
 class DiagramMalformedError(RuntimeError):
     """

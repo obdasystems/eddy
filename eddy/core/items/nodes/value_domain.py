@@ -33,17 +33,23 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
 
-from eddy.core.datatypes.graphol import Item, Identity
-from eddy.core.datatypes.owl import Datatype
+from eddy.core.datatypes.graphol import (
+    Item,
+    Identity,
+)
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractNode
-from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.items.nodes.common.base import (
+    AbstractNode,
+    PredicateNodeMixin,
+)
 
 
-class ValueDomainNode(AbstractNode):
+class ValueDomainNode(PredicateNodeMixin, AbstractNode):
     """
     This class implements the 'Value-Domain' node.
     """
@@ -52,7 +58,7 @@ class ValueDomainNode(AbstractNode):
     Identities = {Identity.ValueDomain}
     Type = Item.ValueDomainNode
 
-    def __init__(self, width=90, height=40, brush=None, remaining_characters='valuedomain', **kwargs):
+    def __init__(self, width=90, height=40, brush=None, **kwargs):
         """
         Initialize the ValueDomain node.
         :type width: int
@@ -66,11 +72,7 @@ class ValueDomainNode(AbstractNode):
         self.selection = Polygon(QtCore.QRectF(-49, -24, 98, 48))
         self.polygon = Polygon(QtCore.QRectF(-45, -20, 90, 40), brush, pen)
 
-        self.remaining_characters = remaining_characters
-
-        self.label = NodeLabel(Datatype.string.value, pos=self.center, editable=False, movable=False, parent=self)
         self.updateNode()
-        self.updateTextPos()
 
     #############################################
     #   PROPERTIES
@@ -80,13 +82,16 @@ class ValueDomainNode(AbstractNode):
     def datatype(self):
         """
         Returns the datatype associated with this node.
-        :rtype: Datatype
+        :rtype: IRI
         """
-        return Datatype.valueOf(self.text())
+        return self.iri
 
     #############################################
     #   INTERFACE
     #################################
+
+    def initialLabelPosition(self):
+        return self.center()
 
     def boundingRect(self):
         """
@@ -102,12 +107,14 @@ class ValueDomainNode(AbstractNode):
         """
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
+            'iri': None,
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width()
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        # node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -169,9 +176,8 @@ class ValueDomainNode(AbstractNode):
         Set the label text.
         :type text: str
         """
-        datatype = Datatype.valueOf(text) or Datatype.string
-        self.label.setText(datatype.value)
-        self.updateNode()
+        self.label.setText(text)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
 
     def setTextPos(self, pos):
         """
@@ -214,11 +220,12 @@ class ValueDomainNode(AbstractNode):
         Update the current node.
         """
         # POLYGON + BACKGROUND + SELECTION (GEOMETRY)
-        width = max(self.label.width() + 16, 90)
+        # width = max(self.label.width() + 16, 90)
+        width = self.width()
         self.polygon.setGeometry(QtCore.QRectF(-width / 2, -20, width, 40))
         self.background.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
         self.selection.setGeometry(QtCore.QRectF(-(width + 8) / 2, -24, width + 8, 48))
-        self.updateTextPos()
+        # self.updateTextPos()
         self.updateEdges()
 
         # SELECTION + BACKGROUND + CACHE REFRESH

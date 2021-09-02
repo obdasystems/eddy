@@ -63,16 +63,6 @@ class NodeLabel(AbstractLabel):
     #   EVENTS
     #################################
 
-    '''
-    def paint(self, painter, option, widget):
-        painter.save()
-
-        painter.drawEllipse(option.fontMetrics.boundingRect(self.text()))
-        painter.drawEllipse(option.rect)
-        #painter.drawText(option.rect, QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter, option.t)
-        painter.restore()
-    '''
-
     def keyPressEvent(self, keyEvent):
         """
         Executed when a key is pressed.
@@ -81,15 +71,6 @@ class NodeLabel(AbstractLabel):
         moved = self.isMoved()
         super().keyPressEvent(keyEvent)
         self.updatePos(moved)
-
-    def mousePressEvent(self, mouseEvent):
-        """
-        Executed when the mouse is pressed on the text item.
-        :type mouseEvent: QGraphicsSceneMouseEvent
-        """
-        if self.diagram.mode is DiagramMode.LabelEdit:
-            super().mousePressEvent(mouseEvent)
-        super().mousePressEvent(mouseEvent)
 
     #############################################
     #   INTERFACE
@@ -109,10 +90,7 @@ class NodeLabel(AbstractLabel):
         """
         moved = self.isMoved()
         super().setText(text)
-        #se commento riga sotto, label viene spostato alla creazione rispetto al centro
         self.updatePos(moved)
-
-    
 
     def updatePos(self, moved=False):
         """
@@ -123,6 +101,32 @@ class NodeLabel(AbstractLabel):
             self.setPos(self.defaultPos())
 
 
+class PredicateLabel(NodeLabel):
+    """
+    This class implements the label for predicate nodes.
+    """
+    def __init__(self, **kwargs):
+        """
+        Initialize the label.
+        :type kwargs: dict
+        """
+        super().__init__(**kwargs)
+        self.setEditable(False)  # FORCE READ-ONLY BEHAVIOUR
+
+    #############################################
+    #   EVENTS
+    #################################
+
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Executed when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        if self.parentItem():
+            # PASS EVENT TO PARENT ITEM
+            self.parentItem().mouseDoubleClickEvent(mouseEvent)
+        else:
+            super().mouseDoubleClickEvent(mouseEvent)
 
 
 class FacetQuotedLabel(NodeLabel):

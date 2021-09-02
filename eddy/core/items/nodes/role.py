@@ -33,21 +33,29 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
 
-from eddy.core.datatypes.graphol import Item, Special, Identity
-from eddy.core.datatypes.owl import OWLProfile
+from eddy.core.datatypes.graphol import (
+    Item,
+    Identity,
+    Special,
+)
 from eddy.core.functions.misc import snapF
+from eddy.core.functions.signals import (
+    connect,
+    disconnect,
+)
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode
-from eddy.core.items.nodes.common.label import NodeLabel
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
-from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
+from eddy.core.items.nodes.common.base import (
+    AbstractResizableNode,
+    PredicateNodeMixin,
+)
 
 
-class RoleNode(AbstractResizableNode):
+class RoleNode(PredicateNodeMixin, AbstractResizableNode):
     """
     This class implements the 'Role' node.
     """
@@ -59,10 +67,10 @@ class RoleNode(AbstractResizableNode):
 
     DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-    Identities = {Identity.Role}
+    Identities = {Identity.Role, Identity.Individual}
     Type = Item.RoleNode
 
-    def __init__(self, width=70, height=50, brush=None, remaining_characters='role', **kwargs):
+    def __init__(self, width=70, height=50, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -70,7 +78,7 @@ class RoleNode(AbstractResizableNode):
         :type brush: QBrush
         """
         super().__init__(**kwargs)
-        
+
         w = max(width, 70)
         h = max(height, 50)
         brush = brush or RoleNode.DefaultBrush
@@ -90,16 +98,41 @@ class RoleNode(AbstractResizableNode):
         self.selection = Polygon(createPolygon(w + 8, h + 8))
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
-        self.remaining_characters = remaining_characters
-
-        self.label = NodeLabel(template='role', pos=self.center, parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        self.updateTextPos()
 
     #############################################
     #   INTERFACE
     #################################
+
+    def connectIRIMetaSignals(self):
+        connect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
+        connect(self.iri.sgnInverseFunctionalModified, self.onFunctionalModified)
+
+    def disconnectIRIMetaSignals(self):
+        disconnect(self.iri.sgnFunctionalModified,self.onFunctionalModified)
+        disconnect(self.iri.sgnInverseFunctionalModified, self.onFunctionalModified)
+
+    def initialLabelPosition(self):
+        return self.center() - QtCore.QPointF(0, 30)
+
+    def occursAsIndividual(self):
+        # Class Assertion
+        for instEdge in [x for x in self.edges if x.type() is Item.MembershipEdge]:
+            if instEdge.source is self:
+                return True
+        # Object[Data] Property Assertion
+        for inputEdge in [x for x in self.edges if x.type() is Item.InputEdge]:
+            if inputEdge.source is self and inputEdge.target.type() is Item.PropertyAssertionNode:
+                return True
+        # SameAs and Different
+        for inputEdge in [x for x in self.edges if (x.type() is Item.SameEdge or x.type() is Item.DifferentEdge)]:
+            if inputEdge.source is self or inputEdge.target is self:
+                return True
+        return False
+
+    @QtCore.pyqtSlot()
+    def onFunctionalModified(self):
+        self.updateNode()
 
     def boundingRect(self):
         """
@@ -117,13 +150,14 @@ class RoleNode(AbstractResizableNode):
         """
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
+            'iri': None,
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'remaining_characters': self.remaining_characters,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        # node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
         return node
 
@@ -156,74 +190,49 @@ class RoleNode(AbstractResizableNode):
         Returns True if the predicate represented by this node is asymmetric, False otherwise.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_ASYMMETRIC]
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.asymmetric or False
 
     def isFunctional(self):
         """
         Returns True if the predicate represented by this node is functional, else False.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_FUNCTIONAL] #and \
-                   #self.project.profile.type() is not OWLProfile.OWL2QL
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.functional or False
 
     def isInverseFunctional(self):
         """
         Returns True if the predicate represented by this node is inverse functional, else False.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_INVERSE_FUNCTIONAL] #and \
-                   #self.project.profile.type() is not OWLProfile.OWL2QL
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.inverseFunctional or False
 
     def isIrreflexive(self):
         """
         Returns True if the predicate represented by this node is irreflexive, False otherwise.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_IRREFLEXIVE]
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.irreflexive or False
 
     def isReflexive(self):
         """
         Returns True if the predicate represented by this node is reflexive, False otherwise.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_REFLEXIVE] #and \
-                   #self.project.profile.type() is not OWLProfile.OWL2RL
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.reflexive or False
 
     def isSymmetric(self):
         """
         Returns True if the predicate represented by this node is symmetric, False otherwise.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_SYMMETRIC]
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.symmetric or False
 
     def isTransitive(self):
         """
         Returns True if the transitive represented by this node is symmetric, False otherwise.
         :rtype: bool
         """
-        try:
-            return self.project.meta(self.type(), self.text())[K_TRANSITIVE] #and \
-                   #self.project.profile.type() is not OWLProfile.OWL2QL
-        except (AttributeError, KeyError):
-            return False
+        return self.iri.transitive or False
 
     def paint(self, painter, option, widget=None):
         """
@@ -283,7 +292,7 @@ class RoleNode(AbstractResizableNode):
         background = self.background.geometry()
         selection = self.selection.geometry()
         polygon = self.polygon.geometry()
-        
+
         R = QtCore.QRectF(self.boundingRect())
         D = QtCore.QPointF(0, 0)
 
@@ -324,7 +333,7 @@ class RoleNode(AbstractResizableNode):
             background[self.IndexL] = QtCore.QPointF(R.left(), R.top() + R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(R.left(), R.top() + R.height() / 2)
             background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
-            
+
             polygon[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, R.top() + 4)
             polygon[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, polygon[self.IndexB].y())
             polygon[self.IndexL] = QtCore.QPointF(R.left() + 4, R.top() + R.height() / 2)
@@ -353,7 +362,7 @@ class RoleNode(AbstractResizableNode):
             background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
             background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
-            
+
             polygon[self.IndexT] = QtCore.QPointF(polygon[self.IndexT].x(), R.top() + 4)
             polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
             polygon[self.IndexE] = QtCore.QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
@@ -391,7 +400,7 @@ class RoleNode(AbstractResizableNode):
             background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
             background[self.IndexR] = QtCore.QPointF(R.right(), R.top() + R.height() / 2)
-            
+
             polygon[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, R.top() + 4)
             polygon[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexB].y())
             polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
@@ -415,12 +424,12 @@ class RoleNode(AbstractResizableNode):
             selection[self.IndexE] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
             selection[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, selection[self.IndexT].y())
             selection[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, selection[self.IndexB].y())
-            
+
             background[self.IndexL] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
             background[self.IndexE] = QtCore.QPointF(R.left(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
             background[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexT].y())
             background[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexB].y())
-            
+
             polygon[self.IndexL] = QtCore.QPointF(R.left() + 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
             polygon[self.IndexE] = QtCore.QPointF(R.left() + 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
             polygon[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, polygon[self.IndexT].y())
@@ -442,11 +451,11 @@ class RoleNode(AbstractResizableNode):
             selection[self.IndexR] = QtCore.QPointF(R.right(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
             selection[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, selection[self.IndexT].y())
             selection[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, selection[self.IndexB].y())
-            
+
             background[self.IndexR] = QtCore.QPointF(R.right(), self.mp_Bound.top() + self.mp_Bound.height() / 2)
             background[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexT].y())
             background[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, background[self.IndexB].y())
-            
+
             polygon[self.IndexR] = QtCore.QPointF(R.right() - 4, self.mp_Bound.top() + self.mp_Bound.height() / 2)
             polygon[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexT].y())
             polygon[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexB].y())
@@ -477,13 +486,13 @@ class RoleNode(AbstractResizableNode):
             selection[self.IndexL] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
             selection[self.IndexE] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
             selection[self.IndexR] = QtCore.QPointF(selection[self.IndexR].x(), R.bottom() - R.height() / 2)
-            
+
             background[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, background[self.IndexT].y())
             background[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, R.bottom())
             background[self.IndexL] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(R.left(), R.bottom() - R.height() / 2)
             background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.bottom() - R.height() / 2)
-            
+
             polygon[self.IndexT] = QtCore.QPointF(R.left() + R.width() / 2, polygon[self.IndexT].y())
             polygon[self.IndexB] = QtCore.QPointF(R.left() + R.width() / 2, R.bottom() - 4)
             polygon[self.IndexL] = QtCore.QPointF(R.left() + 4, R.bottom() - R.height() / 2)
@@ -512,7 +521,7 @@ class RoleNode(AbstractResizableNode):
             background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.top() + R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.top() + R.height() / 2)
             background[self.IndexR] = QtCore.QPointF(background[self.IndexR].x(), R.top() + R.height() / 2)
-            
+
             polygon[self.IndexB] = QtCore.QPointF(polygon[self.IndexB].x(), R.bottom() - 4)
             polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.top() + R.height() / 2)
             polygon[self.IndexE] = QtCore.QPointF(polygon[self.IndexE].x(), R.top() + R.height() / 2)
@@ -550,7 +559,7 @@ class RoleNode(AbstractResizableNode):
             background[self.IndexL] = QtCore.QPointF(background[self.IndexL].x(), R.bottom() - R.height() / 2)
             background[self.IndexE] = QtCore.QPointF(background[self.IndexE].x(), R.bottom() - R.height() / 2)
             background[self.IndexR] = QtCore.QPointF(R.right(), R.bottom() - R.height() / 2)
-            
+
             polygon[self.IndexT] = QtCore.QPointF(R.right() - R.width() / 2, polygon[self.IndexT].y())
             polygon[self.IndexB] = QtCore.QPointF(R.right() - R.width() / 2, R.bottom() - 4)
             polygon[self.IndexL] = QtCore.QPointF(polygon[self.IndexL].x(), R.bottom() - R.height() / 2)
@@ -569,20 +578,14 @@ class RoleNode(AbstractResizableNode):
         Set the asymmetric property for the predicate represented by this node.
         :type asymmetric: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_ASYMMETRIC] = bool(asymmetric)
-        self.project.setMeta(self.type(), self.text(), meta)
+        self.iri.asymmetric = asymmetric
 
     def setFunctional(self, functional):
         """
         Set the functional property of the predicate represented by this node.
         :type functional: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_FUNCTIONAL] = bool(functional)
-        self.project.setMeta(self.type(), self.text(), meta)
-        for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(functional=functional, selected=node.isSelected())
+        self.iri.functional = functional
 
     def setIdentity(self, identity):
         """
@@ -596,47 +599,35 @@ class RoleNode(AbstractResizableNode):
         Set the inverse functional property of the predicate represented by this node.
         :type inverseFunctional: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_INVERSE_FUNCTIONAL] = bool(inverseFunctional)
-        self.project.setMeta(self.type(), self.text(), meta)
-        for node in self.project.predicates(self.type(), self.text()):
-            node.updateNode(inverseFunctional=inverseFunctional, selected=node.isSelected())
+        self.iri.inverseFunctional = inverseFunctional
 
     def setIrreflexive(self, irreflexive):
         """
         Set the irreflexive property for the predicate represented by this node.
         :type irreflexive: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_IRREFLEXIVE] = bool(irreflexive)
-        self.project.setMeta(self.type(), self.text(), meta)
+        self.iri.irreflexive = irreflexive
 
     def setReflexive(self, reflexive):
         """
         Set the reflexive property for the predicate represented by this node.
         :type reflexive: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_REFLEXIVE] = bool(reflexive)
-        self.project.setMeta(self.type(), self.text(), meta)
+        self.iri.reflexive = reflexive
 
     def setSymmetric(self, symmetric):
         """
         Set the symmetric property for the predicate represented by this node.
         :type symmetric: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_SYMMETRIC] = bool(symmetric)
-        self.project.setMeta(self.type(), self.text(), meta)
+        self.iri.symmetric = symmetric
 
     def setTransitive(self, transitive):
         """
         Set the transitive property for the predicate represented by this node.
         :type transitive: bool
         """
-        meta = self.project.meta(self.type(), self.text())
-        meta[K_TRANSITIVE] = bool(transitive)
-        self.project.setMeta(self.type(), self.text(), meta)
+        self.iri.transitive = transitive
 
     def setText(self, text):
         """
@@ -692,9 +683,11 @@ class RoleNode(AbstractResizableNode):
         :type inverseFunctional: bool
         """
         if functional is None:
-            functional = self.isFunctional()
+            if self.iri:
+                functional = self.isFunctional()
         if inverseFunctional is None:
-            inverseFunctional = self.isInverseFunctional()
+            if self.iri:
+                inverseFunctional = self.isInverseFunctional()
 
         polygon = self.polygon.geometry()
 

@@ -33,29 +33,67 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from typing import (
+    cast,
+    Any,
+    Optional,
+)
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
 from eddy.core.commands.iri import CommandIRISetMeta
 from eddy.core.commands.labels import CommandLabelChange
-from eddy.core.commands.project import CommandProjectSetProfile, CommandProjectSetOntologyIRIAndVersion
+from eddy.core.commands.project import (
+    CommandProjectSetOntologyIRIAndVersion,
+    CommandProjectSetProfile,
+)
 from eddy.core.datatypes.graphol import Item
-from eddy.core.datatypes.qt import BrushIcon, Font
-from eddy.core.functions.misc import first, clamp, isEmpty
-from eddy.core.functions.signals import connect, disconnect
+from eddy.core.datatypes.qt import BrushIcon
+from eddy.core.diagram import Diagram
+from eddy.core.functions.misc import (
+    clamp,
+    first,
+    isEmpty,
+)
+from eddy.core.functions.signals import (
+    connect,
+    disconnect,
+)
+from eddy.core.items.common import AbstractItem
+from eddy.core.items.edges.common.base import AbstractEdge
+from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.owl import OWL2Profiles
 from eddy.core.plugin import AbstractPlugin
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
-from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
+from eddy.core.project import (
+    K_ASYMMETRIC,
+    K_FUNCTIONAL,
+    K_INVERSE_FUNCTIONAL,
+    K_IRREFLEXIVE,
+    K_REFLEXIVE,
+    K_SYMMETRIC,
+    K_TRANSITIVE,
+)
+from eddy.core.project import Project
 from eddy.core.regex import RE_CAMEL_SPACE
-
 from eddy.ui.dock import DockWidget
-from eddy.ui.fields import IntegerField, StringField
-from eddy.ui.fields import CheckBox, ComboBox
+from eddy.ui.fields import (
+    CheckBox,
+    ComboBox,
+)
+from eddy.ui.fields import (
+    IntegerField,
+    StringField,
+)
+from eddy.ui.mdi import MdiSubWindow
+from eddy.ui.session import Session
 
 
 class InfoPlugin(AbstractPlugin):
@@ -66,12 +104,9 @@ class InfoPlugin(AbstractPlugin):
     #   EVENTS
     #################################
 
-    def eventFilter(self, source, event):
+    def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """
         Filters events if this object has been installed as an event filter for the watched object.
-        :type source: QObject
-        :type event: QtCore.QEvent
-        :rtype: bool
         """
         if event.type() == QtCore.QEvent.Resize:
             widget = source.widget()
@@ -82,57 +117,57 @@ class InfoPlugin(AbstractPlugin):
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot('QGraphicsScene')
-    def onDiagramAdded(self, diagram):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
+    def onDiagramAdded(self, _diagram: Diagram) -> None:
         """
         Executed whenever a diagram is added to the active project.
         """
         self.widget('info').stack()
 
-    @QtCore.pyqtSlot('QGraphicsScene')
-    def onDiagramRemoved(self, diagram):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
+    def onDiagramRemoved(self, _diagram: Diagram) -> None:
         """
         Executed whenever a diagram is removed from the active project.
         """
         self.widget('info').stack()
 
     @QtCore.pyqtSlot()
-    def onDiagramSelectionChanged(self):
+    def onDiagramSelectionChanged(self) -> None:
         """
         Executed whenever the selection of the active diagram changes.
         """
         self.widget('info').stack()
 
     @QtCore.pyqtSlot()
-    def onDiagramUpdated(self):
+    def onDiagramUpdated(self) -> None:
         """
         Executed whenever the active diagram is updated.
         """
         self.widget('info').stack()
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
-    def onProjectItemAdded(self, diagram, item):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
+    def onProjectItemAdded(self, _diagram: Diagram, _item: AbstractItem) -> None:
         """
         Executed whenever a new element is added to the active project.
         """
         self.widget('info').stack()
 
-    @QtCore.pyqtSlot('QGraphicsScene', 'QGraphicsItem')
-    def onProjectItemRemoved(self, diagram, item):
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
+    def onProjectItemRemoved(self, _diagram: Diagram, _item: AbstractItem) -> None:
         """
         Executed whenever a new element is removed from the active project.
         """
         self.widget('info').stack()
 
     @QtCore.pyqtSlot()
-    def onProjectUpdated(self):
+    def onProjectUpdated(self) -> None:
         """
         Executed whenever the current project is updated.
         """
         self.widget('info').stack()
 
     @QtCore.pyqtSlot()
-    def onSessionReady(self):
+    def onSessionReady(self) -> None:
         """
         Executed whenever the main session completes the startup sequence.
         """
@@ -146,10 +181,9 @@ class InfoPlugin(AbstractPlugin):
         self.widget('info').stack()
 
     @QtCore.pyqtSlot(QtWidgets.QMdiSubWindow)
-    def onSubWindowActivated(self, subwindow):
+    def onSubWindowActivated(self, subwindow: MdiSubWindow) -> None:
         """
         Executed when the active subwindow changes.
-        :type subwindow: MdiSubWindow
         """
         if subwindow:
             # If we have an active subwindow, we change the info
@@ -185,7 +219,7 @@ class InfoPlugin(AbstractPlugin):
     #   HOOKS
     #################################
 
-    def dispose(self):
+    def dispose(self) -> None:
         """
         Executed whenever the plugin is going to be destroyed.
         """
@@ -209,9 +243,9 @@ class InfoPlugin(AbstractPlugin):
 
         # UNINSTALL THE PALETTE DOCK WIDGET
         self.debug('Uninstalling docking area widget')
-        self.session.removeDockWidget(self.widget('info_dock'))
+        self.session.removeDockWidget(cast(QtWidgets.QDockWidget, self.widget('info_dock')))
 
-    def start(self):
+    def start(self) -> None:
         """
         Perform initialization tasks for the plugin.
         """
@@ -225,7 +259,11 @@ class InfoPlugin(AbstractPlugin):
         self.debug('Creating docking area widget')
         widget = DockWidget('Info', QtGui.QIcon(':/icons/18/ic_info_outline_black'), self.session)
         widget.installEventFilter(self)
-        widget.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
+        widget.setAllowedAreas(
+            QtCore.Qt.LeftDockWidgetArea
+            | QtCore.Qt.RightDockWidgetArea
+            | QtCore.Qt.BottomDockWidgetArea
+        )
         widget.setObjectName('info_dock')
         widget.setWidget(self.widget('info'))
         self.addWidget(widget)
@@ -242,7 +280,10 @@ class InfoPlugin(AbstractPlugin):
 
         # INSTALL DOCKING AREA WIDGET
         self.debug('Installing docking area widget')
-        self.session.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.widget('info_dock'))
+        self.session.addDockWidget(
+            QtCore.Qt.RightDockWidgetArea,
+            cast(QtWidgets.QDockWidget, self.widget('info_dock'))
+        )
 
         # CONFIGURE SIGNAL/SLOTS
         self.debug('Connecting to active session')
@@ -254,15 +295,14 @@ class InfoWidget(QtWidgets.QScrollArea):
     """
     This class implements the information box widget.
     """
-    def __init__(self, plugin):
+    def __init__(self, plugin: AbstractPlugin) -> None:
         """
         Initialize the info box.
-        :type plugin: Info
         """
         super().__init__(plugin.session)
 
-        self.diagram = None
-        self.plugin = plugin
+        self.diagram = None  # type: Optional[Diagram]
+        self.plugin = plugin  # type: AbstractPlugin
 
         self.stacked = QtWidgets.QStackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
@@ -274,15 +314,14 @@ class InfoWidget(QtWidgets.QScrollArea):
         self.infoAttributeNode = AttributeIRIInfo(self.session, self.stacked)
         self.infoRoleNode = RoleIRIInfo(self.session, self.stacked)
         self.infoLiteral = LiteralInfo(self.session, self.stacked)
-        self.infoFacet = FacetIRIInfo(self.session,self.stacked)
-        '''
-        self.infoPredicateNode = PredicateNodeInfo(self.session, self.stacked)
-        self.infoAttributeNode = AttributeNodeInfo(self.session, self.stacked)
-        self.infoRoleNode = RoleNodeInfo(self.session, self.stacked)
-        self.infoValueNode = ValueNodeInfo(self.session, self.stacked)
-        self.infoValueDomainNode = ValueDomainNodeInfo(self.session, self.stacked)
-        self.infoFacet = FacetNodeInfo(self.session, self.stacked)
-        '''
+        self.infoFacet = FacetIRIInfo(self.session, self.stacked)
+        # Old names, for reference
+        # self.infoPredicateNode = PredicateNodeInfo(self.session, self.stacked)
+        # self.infoAttributeNode = AttributeNodeInfo(self.session, self.stacked)
+        # self.infoRoleNode = RoleNodeInfo(self.session, self.stacked)
+        # self.infoValueNode = ValueNodeInfo(self.session, self.stacked)
+        # self.infoValueDomainNode = ValueDomainNodeInfo(self.session, self.stacked)
+        # self.infoFacet = FacetNodeInfo(self.session, self.stacked)
         self.stacked.addWidget(self.infoProject)
         self.stacked.addWidget(self.infoEdge)
         self.stacked.addWidget(self.infoNode)
@@ -291,11 +330,9 @@ class InfoWidget(QtWidgets.QScrollArea):
         self.stacked.addWidget(self.infoRoleNode)
         self.stacked.addWidget(self.infoLiteral)
         self.stacked.addWidget(self.infoFacet)
-        '''
-        self.stacked.addWidget(self.infoValueNode)
-        self.stacked.addWidget(self.infoValueDomainNode)
-        self.stacked.addWidget(self.infoFacet)
-        '''
+        # self.stacked.addWidget(self.infoValueNode)
+        # self.stacked.addWidget(self.infoValueDomainNode)
+        # self.stacked.addWidget(self.infoFacet)
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumSize(QtCore.QSize(216, 120))
@@ -364,37 +401,31 @@ class InfoWidget(QtWidgets.QScrollArea):
         scrollbar = self.verticalScrollBar()
         scrollbar.installEventFilter(self)
 
-        self.connectedItem = None
-
     #############################################
     #   PROPERTIES
     #################################
 
     @property
-    def project(self):
+    def project(self) -> Project:
         """
         Returns the reference to the active project.
-        :rtype: Session
         """
-        return self.session.project
+        return self.plugin.project
 
     @property
-    def session(self):
+    def session(self) -> Session:
         """
         Returns the reference to the active session.
-        :rtype: Session
         """
-        return self.plugin.parent()
+        return self.plugin.session
 
     #############################################
     #   EVENTS
     #################################
 
-    def eventFilter(self, source, event):
+    def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent) -> bool:
         """
         Filter incoming events.
-        :type source: QObject
-        :type event: QtCore.QEvent
         """
         if source is self.verticalScrollBar():
             if event.type() in {QtCore.QEvent.Show, QtCore.QEvent.Hide}:
@@ -405,7 +436,7 @@ class InfoWidget(QtWidgets.QScrollArea):
     #   INTERFACE
     #################################
 
-    def redraw(self):
+    def redraw(self) -> None:
         """
         Redraw the content of the widget.
         """
@@ -420,14 +451,13 @@ class InfoWidget(QtWidgets.QScrollArea):
         self.stacked.setFixedWidth(width)
         self.stacked.setFixedHeight(clamp(height, 0))
 
-    def setDiagram(self, diagram):
+    def setDiagram(self, diagram: Diagram) -> None:
         """
         Sets the widget to inspect the given diagram.
-        :type diagram: diagram
         """
         self.diagram = diagram
 
-    def stack(self):
+    def stack(self) -> None:
         """
         Set the current stacked widget.
         """
@@ -436,43 +466,29 @@ class InfoWidget(QtWidgets.QScrollArea):
             if not selected or len(selected) > 1:
                 show = self.infoProject
                 show.updateData(self.project)
-                if self.connectedItem:
-                    disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             else:
                 item = first(selected)
                 if item.isNode():
-                    if not item is self.connectedItem:
-                        if self.connectedItem:
-                            disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
-                        self.connectedItem = item
-                        connect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
-
                     if item.isPredicate():
-                        if item.type() is Item.AttributeIRINode:
+                        if item.type() is Item.AttributeNode:
                             show = self.infoAttributeNode
-                        elif item.type() is Item.RoleIRINode:
+                        elif item.type() is Item.RoleNode:
                             show = self.infoRoleNode
                         elif item.type() is Item.LiteralNode:
                             show = self.infoLiteral
-                        elif item.type() is Item.FacetIRINode:
+                        elif item.type() is Item.FacetNode:
                             show = self.infoFacet
                         else:
                             show = self.infoPredicateNode
                     else:
                         show = self.infoNode
                 else:
-                    if self.connectedItem:
-                        disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
                     show = self.infoEdge
                 show.updateData(item)
         elif self.project:
-            if self.connectedItem:
-                disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             show = self.infoProject
             show.updateData(self.project)
         else:
-            if self.connectedItem:
-                disconnect(self.connectedItem.sgnNodeModified, self.onConnectedItemModified)
             show = self.infoEmpty
 
         prev = self.stacked.currentWidget()
@@ -482,9 +498,6 @@ class InfoWidget(QtWidgets.QScrollArea):
             scrollbar = self.verticalScrollBar()
             scrollbar.setValue(0)
 
-    @QtCore.pyqtSlot()
-    def onConnectedItemModified(self):
-        self.stack()
 
 #############################################
 #   COMPONENTS
@@ -495,7 +508,7 @@ class Header(QtWidgets.QLabel):
     """
     This class implements the header of properties section.
     """
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """
         Initialize the header.
         """
@@ -508,7 +521,7 @@ class Key(QtWidgets.QLabel):
     """
     This class implements the key of an info field.
     """
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """
         Initialize the key.
         """
@@ -520,7 +533,7 @@ class Button(QtWidgets.QPushButton):
     """
     This class implements the button to which associate a QtWidgets.QMenu instance of an info field.
     """
-    def __init__(self,  *args):
+    def __init__(self,  *args: Any) -> None:
         """
         Initialize the button.
         """
@@ -531,7 +544,7 @@ class Integer(IntegerField):
     """
     This class implements the integer value of an info field.
     """
-    def __init__(self,  *args):
+    def __init__(self,  *args: Any) -> None:
         """
         Initialize the field.
         """
@@ -543,7 +556,7 @@ class String(StringField):
     """
     This class implements the string value of an info field.
     """
-    def __init__(self,  *args):
+    def __init__(self,  *args: Any) -> None:
         """
         Initialize the field.
         """
@@ -555,7 +568,7 @@ class Select(ComboBox):
     """
     This class implements the selection box of an info field.
     """
-    def __init__(self,  *args):
+    def __init__(self,  *args: Any) -> None:
         """
         Initialize the field.
         """
@@ -567,19 +580,19 @@ class Select(ComboBox):
 
 class Parent(QtWidgets.QWidget):
     """
-    This class implements the parent placeholder to be used to store checkbox and radio button value fields.
+    This class implements the parent placeholder to be used
+    to store checkbox and radio button value fields.
     """
-    def __init__(self,  *args):
+    def __init__(self,  *args: Any) -> None:
         """
         Initialize the field.
         """
         super().__init__(*args)
         self.setFixedHeight(20)
 
-    def paintEvent(self, paintEvent):
+    def paintEvent(self, paintEvent: QtGui.QPaintEvent) -> None:
         """
         This is needed for the widget to pick the stylesheet.
-        :type paintEvent: QPaintEvent
         """
         option = QtWidgets.QStyleOption()
         option.initFrom(self)
@@ -598,11 +611,9 @@ class AbstractInfo(QtWidgets.QWidget):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the base information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(parent)
         self.session = session
@@ -613,10 +624,9 @@ class AbstractInfo(QtWidgets.QWidget):
     #################################
 
     @property
-    def project(self):
+    def project(self) -> Project:
         """
         Returns the project loaded in the current session.
-        :rtype: Project
         """
         return self.session.project
 
@@ -625,7 +635,7 @@ class AbstractInfo(QtWidgets.QWidget):
     #################################
 
     @abstractmethod
-    def updateData(self, **kwargs):
+    def updateData(self, **kwargs: Any) -> None:
         """
         Fetch new information and fill the widget with data.
         """
@@ -636,49 +646,40 @@ class ProjectInfo(AbstractInfo):
     """
     This class implements the project information box.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the project information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
         self.versionKey = Key('Version', self)
         self.versionField = String(self)
         self.versionField.setReadOnly(True)
-        connect(self.versionField.editingFinished, self.versionEditingFinished)
+        connect(self.versionField.editingFinished, self.onVersionEditingFinished)
 
-        #self.prefixKey = Key('Prefix', self)
-        #self.prefixField = String(self)
-        #self.prefixField.setReadOnly(True)
-        #connect(self.prefixField.editingFinished, self.prefixEditingFinished)
-        """
-        self.prefixesKey = Key('Prefix(es)', self)
-        self.prefixesField = String(self)
-        #self.prefixesField.setReadOnly(True)
-        connect(self.prefixesField.editingFinished, self.prefixesEditingFinished)
-        """
+        # self.prefixKey = Key('Prefix', self)
+        # self.prefixField = String(self)
+        # self.prefixField.setReadOnly(True)
+        # connect(self.prefixField.editingFinished, self.onPrefixEditingFinished)
+
         self.iriKey = Key('IRI', self)
         self.iriField = String(self)
         self.iriField.setReadOnly(True)
-        connect(self.iriField.editingFinished, self.iriEditingFinished)
+        connect(self.iriField.editingFinished, self.onIRIEditingFinished)
 
-        """
-        self.profileKey = Key('Profile', self)
-        self.profileField = Select(self)
-        self.profileField.addItems(self.session.profileNames())
-        connect(self.profileField.activated, self.profileChanged)
-        """
+        # self.profileKey = Key('Profile', self)
+        # self.profileField = Select(self)
+        # self.profileField.addItems(self.session.profileNames())
+        # connect(self.profileField.activated, self.onProfileChanged)
+
         self.ontologyPropHeader = Header('Ontology properties', self)
-
         self.ontologyPropLayout = QtWidgets.QFormLayout()
         self.ontologyPropLayout.setSpacing(0)
         self.ontologyPropLayout.addRow(self.iriKey, self.iriField)
         self.ontologyPropLayout.addRow(self.versionKey, self.versionField)
-        #self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
-        #self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
-        #self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
+        # self.ontologyPropLayout.addRow(self.prefixKey, self.prefixField)
+        # self.ontologyPropLayout.addRow(self.prefixesKey, self.prefixesField)
+        # self.ontologyPropLayout.addRow(self.profileKey, self.profileField)
 
         self.conceptsKey = Key('Classes', self)
         self.conceptsField = Integer(self)
@@ -711,21 +712,18 @@ class ProjectInfo(AbstractInfo):
         self.membershipField.setReadOnly(True)
 
         self.atomicPredHeader = Header('Entity Nodes', self)
-
         self.atomicPredLayout = QtWidgets.QFormLayout()
         self.atomicPredLayout.setSpacing(0)
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
         self.atomicPredLayout.addRow(self.rolesKey, self.rolesField)
         self.atomicPredLayout.addRow(self.attributesKey, self.attributesField)
         self.atomicPredLayout.addRow(self.individualsKey, self.individualsField)
-        '''
-        self.assertionsHeader = Header('Assertions', self)
 
-        self.assertionsLayout = QtWidgets.QFormLayout()
-        self.assertionsLayout.setSpacing(0)
-        self.assertionsLayout.addRow(self.inclusionsKey, self.inclusionsField)
-        self.assertionsLayout.addRow(self.membershipKey, self.membershipField)
-        '''
+        # self.assertionsHeader = Header('Assertions', self)
+        # self.assertionsLayout = QtWidgets.QFormLayout()
+        # self.assertionsLayout.setSpacing(0)
+        # self.assertionsLayout.addRow(self.inclusionsKey, self.inclusionsField)
+        # self.assertionsLayout.addRow(self.membershipKey, self.membershipField)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -735,65 +733,29 @@ class ProjectInfo(AbstractInfo):
         self.mainLayout.insertLayout(3,self.ontologyPropLayout)
         self.mainLayout.insertWidget(0,self.atomicPredHeader)
         self.mainLayout.insertLayout(1,self.atomicPredLayout)
-        '''
-        self.mainLayout.addWidget(self.assertionsHeader)
-        self.mainLayout.addLayout(self.assertionsLayout)
-        '''
-
-        self.ENTRY_MODIFIED_OK_var = set()
-        self.ENTRY_IGNORE_var = set()
-
-        #connect(self.project.sgnIRIPrefixesEntryModified, self.entry_MODIFIED_ok)
-        #connect(self.project.sgnIRIPrefixesEntryIgnored, self.entry_NOT_OK)
-
+        # self.mainLayout.addWidget(self.assertionsHeader)
+        # self.mainLayout.addLayout(self.assertionsLayout)
 
     #############################################
     #   SLOTS
     #################################
-    @QtCore.pyqtSlot(str, str, str, str)
-    def entry_MODIFIED_ok(self, iri_from, prefixes_from, iri_to, prefixes_to):
-
-        self.ENTRY_MODIFIED_OK_var.add(True)
-        #print('entry_ADD_ok(self): ', iri_from, ',', prefixes_from, ',', iri_to, ',',prefixes_to)
-
-    @QtCore.pyqtSlot(str, str, str)
-    def entry_NOT_OK(self, iri, prefix, message):
-
-        self.ENTRY_IGNORE_var.add(True)
-        #print('entry_NOT_OK(self): ', iri, ',', prefix, ',', message)
 
     @QtCore.pyqtSlot()
-    def iriEditingFinished(self):
+    def onIRIEditingFinished(self) -> None:
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        new_iri = self.iriField.value()
-
         self.iriField.clearFocus()
 
     @QtCore.pyqtSlot()
-    def prefixEditingFinished(self):
+    def onPrefixEditingFinished(self) -> None:
         """
         Executed whenever we finish to edit the ontology prefix
         """
-        prefix_in_field = self.prefixField.value().strip()
-
-
-
         self.prefixField.clearFocus()
 
-    #not used
     @QtCore.pyqtSlot()
-    def prefixesEditingFinished(self):
-        """
-        Executed whenever we finish to edit the ontology prefix
-        """
-        prefixes_str = self.prefixesField.value()
-
-        self.prefixesField.clearFocus()
-
-    @QtCore.pyqtSlot()
-    def profileChanged(self):
+    def onProfileChanged(self) -> None:
         """
         Executed when we need to change the project profile.
         """
@@ -803,46 +765,29 @@ class ProjectInfo(AbstractInfo):
         self.profileField.clearFocus()
 
     @QtCore.pyqtSlot()
-    def versionEditingFinished(self):
+    def onVersionEditingFinished(self) -> None:
         """
         Executed whenever we finish to edit the ontology prefix
         """
         version = self.versionField.value()
         if self.project.version != version:
+            # FIXME: Why are arguments in the call missing?
             self.session.undostack.push(CommandProjectSetOntologyIRIAndVersion(self.project, self.project.version, version))
-        #self.iriField.clearFocus()
         self.versionField.clearFocus()
+
     #############################################
     #   INTERFACE
     #################################
 
-    def updateData(self, project):
+    def updateData(self, project: Project) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type project: Project
         """
-        '''
-        self.prefixField.setValue(project.prefix)
-        self.prefixField.home(True)
-        self.prefixField.clearFocus()
-        self.prefixField.deselect()
-        '''
-        """
-        prefixes_str_to_set = ''
-        project_prefixes = project.prefixes
-        if project_prefixes is None:
-            self.prefixesField.setValue('')
-        else:
-            for p in project_prefixes:
-                prefixes_str_to_set = prefixes_str_to_set+p+', '
+        # self.prefixField.setValue(project.prefix)
+        # self.prefixField.home(True)
+        # self.prefixField.clearFocus()
+        # self.prefixField.deselect()
 
-            prefixes_str_to_set = prefixes_str_to_set[0:len(prefixes_str_to_set)-2]
-            self.prefixesField.setValue(prefixes_str_to_set)
-
-        self.prefixesField.home(True)
-        self.prefixesField.clearFocus()
-        self.prefixesField.deselect()
-        """
         self.iriField.setValue(str(project.ontologyIRI))
         self.iriField.home(True)
         self.iriField.clearFocus()
@@ -853,29 +798,26 @@ class ProjectInfo(AbstractInfo):
         self.versionField.clearFocus()
         self.versionField.deselect()
 
-        """
-        for i in range(self.profileField.count()):
-            if self.profileField.itemText(i) == self.project.profile.name():
-                self.profileField.setCurrentIndex(i)
-                break
-        """
+        # for i in range(self.profileField.count()):
+        #     if self.profileField.itemText(i) == self.project.profile.name():
+        #         self.profileField.setCurrentIndex(i)
+        #         break
 
-        self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeIRINode))
-        self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptIRINode))
-        self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleIRINode))
-        self.individualsField.setValue(project.itemDistinctIRICount(Item.IndividualIRINode))
-        #self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
-        #self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
+        self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeNode))
+        self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptNode))
+        self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleNode))
+        self.individualsField.setValue(project.itemDistinctIRICount(Item.IndividualNode))
+        # self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
+        # self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
+
 
 class EdgeInfo(AbstractInfo):
     """
     This class implements the information box for generic edges.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the generic edge information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -910,10 +852,9 @@ class EdgeInfo(AbstractInfo):
     #   INTERFACE
     #################################
 
-    def updateData(self, edge):
+    def updateData(self, edge: AbstractEdge) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type edge: AbstractEdge
         """
         self.sourceField.setValue(edge.source.id)
         self.targetField.setValue(edge.target.id)
@@ -921,15 +862,14 @@ class EdgeInfo(AbstractInfo):
         self.typeField.home(True)
         self.typeField.deselect()
 
+
 class NodeInfo(AbstractInfo):
     """
     This class implements the information box for generic nodes.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the generic node information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -960,14 +900,14 @@ class NodeInfo(AbstractInfo):
     #   INTERFACE
     #################################
 
-    def updateData(self, node):
+    def updateData(self, node: AbstractNode) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type node: AbstractNode
         """
         self.idField.setValue(node.id)
         self.identityField.setValue(node.identityName)
         self.node = node
+
 
 #############################################
 #   IRI INFO WIDGETS
@@ -977,47 +917,45 @@ class IRIInfo(NodeInfo):
     """
     This class implements the information box for nodes having an associated IRI.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the predicate node information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
         self.textKey = Key('Label', self)
         self.textField = String(self)
-        #self.textField.setReadOnly(False)
+        # self.textField.setReadOnly(False)
         self.textField.setReadOnly(True)
-        connect(self.textField.editingFinished, self.editingFinished)
+        connect(self.textField.editingFinished, self.onEditingFinished)
 
         self.brushKey = Key('Color', self)
         self.brushMenu = QtWidgets.QMenu(self)
         self.brushButton = Button()
         self.brushButton.setMenu(self.brushMenu)
-        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                       QtWidgets.QSizePolicy.Preferred)
 
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
-        #self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.nameKey = Key('Simple name', self)
         self.nameField = String(self)
-        #self.nameField.setReadOnly(False)
+        # self.nameField.setReadOnly(False)
         self.nameField.setReadOnly(True)
-        #connect(self.nameField.editingFinished, self.editingFinished)
+        # connect(self.nameField.editingFinished, self.editingFinished)
 
         self.fullIRIKey = Key('IRI', self)
         self.fullIRIField = String(self)
         # self.nameField.setReadOnly(False)
         self.fullIRIField.setReadOnly(True)
-        #connect(self.fullIRIField.editingFinished, self.editingFinished)
+        # connect(self.fullIRIField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('IRI properties', self)
         self.labelKey = Key('Label', self)
         self.labelField = String(self)
         # self.textField.setReadOnly(False)
         self.labelField.setReadOnly(True)
-        #connect(self.labelField.editingFinished, self.editingFinished)
+        # connect(self.labelField.editingFinished, self.editingFinished)
 
         self.predPropHeader = Header('IRI properties', self)
         self.predPropLayout = QtWidgets.QFormLayout()
@@ -1034,12 +972,11 @@ class IRIInfo(NodeInfo):
     #################################
 
     @QtCore.pyqtSlot()
-    def editingFinished(self):
+    def onEditingFinished(self) -> None:
         """
         Executed whenever we finish to edit the predicate/node name.
         """
         if self.node:
-
             try:
                 sender = self.sender()
                 node = self.node
@@ -1065,10 +1002,9 @@ class IRIInfo(NodeInfo):
     #   INTERFACE
     #################################
 
-    def     updateData(self, node):
+    def updateData(self, node: AbstractNode) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type node: AbstractNode
         """
         super().updateData(node)
 
@@ -1089,6 +1025,7 @@ class IRIInfo(NodeInfo):
         #############################################
         # IRI FIELDS
         #################################
+
         if node.iri:
             self.fullIRIField.setValue(str(node.iri))
             self.nameField.setValue(str(node.iri.getSimpleName()))
@@ -1100,26 +1037,14 @@ class IRIInfo(NodeInfo):
             else:
                 self.labelField.setValue('')
 
-        #############################################
-        # ENABLE / DISABLE REFACTORING
-        #################################
-        #TODO NEL CASO SOTTO MODIFICA TUTTO
-        refactor = True
-        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
-            if node.special() is not None:
-                refactor = False
-        #self.nameField.setReadOnly(not refactor)
 
 class FacetIRIInfo(NodeInfo):
     """
     This class implements the information box for nodes having an associated Facet.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the predicate node information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1127,22 +1052,23 @@ class FacetIRIInfo(NodeInfo):
         self.brushMenu = QtWidgets.QMenu(self)
         self.brushButton = Button()
         self.brushButton.setMenu(self.brushMenu)
-        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                       QtWidgets.QSizePolicy.Preferred)
 
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
-        #self.nodePropLayout.addRow(self.textKey, self.textField)
+        # self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.facetKey = Key('Constr. facet', self)
         self.facetField = String(self)
-        #self.nameField.setReadOnly(False)
+        # self.nameField.setReadOnly(False)
         self.facetField.setReadOnly(True)
-        connect(self.facetField.editingFinished, self.editingFinished)
+        connect(self.facetField.editingFinished, self.onEditingFinished)
 
         self.valueKey = Key('Constr. value', self)
         self.valueField = String(self)
         # self.nameField.setReadOnly(False)
         self.valueField.setReadOnly(True)
-        connect(self.valueField.editingFinished, self.editingFinished)
+        connect(self.valueField.editingFinished, self.onEditingFinished)
 
         self.predPropHeader = Header('Literal properties', self)
         self.predPropLayout = QtWidgets.QFormLayout()
@@ -1158,32 +1084,10 @@ class FacetIRIInfo(NodeInfo):
     #################################
 
     @QtCore.pyqtSlot()
-    def editingFinished(self):
+    def onEditingFinished(self) -> None:
         """
         Executed whenever we finish to edit the predicate/node name.
         """
-        '''
-        if self.node:
-
-            try:
-                sender = self.sender()
-                node = self.node
-                data = sender.value()
-                data = data if not isEmpty(data) else node.label.template
-                if data != node.text():
-                    diagram = node.diagram
-                    project = node.project
-                    if sender is self.facetField:
-                        self.session.undostack.beginMacro('change predicate "{0}" to "{1}"'.format(node.text(), data))
-                        for n in project.predicates(node.type(), node.text()):
-                            self.session.undostack.push(CommandLabelChange(n.diagram, n, n.text(), data, refactor=True))
-                        self.session.undostack.endMacro()
-                    else:
-                        self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data))
-            except RuntimeError:
-                pass
-        '''
-
         self.facetField.clearFocus()
         self.textField.clearFocus()
 
@@ -1191,33 +1095,28 @@ class FacetIRIInfo(NodeInfo):
     #   INTERFACE
     #################################
 
-    def     updateData(self, node):
+    def updateData(self, node: AbstractNode) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type node: AbstractNode
         """
         super().updateData(node)
 
         #############################################
-        # BRUSH FIELD
+        # FACET FIELDS
         #################################
 
-        #############################################
-        # Literal FIELDS
-        #################################
         if node.facet:
             self.valueField.setValue(str(node.facet.literal))
             self.facetField.setValue(str(node.facet.constrainingFacet))
+
 
 class AttributeIRIInfo(IRIInfo):
     """
     This class implements the information box for the Attribute node.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the Attribute node information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1226,7 +1125,7 @@ class AttributeIRIInfo(IRIInfo):
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
         self.functBox.setProperty('key', K_FUNCTIONAL)
-        connect(self.functBox.clicked, self.flagChanged)
+        connect(self.functBox.clicked, self.onFlagChanged)
 
         self.predPropLayout.addRow(self.functKey, functParent)
 
@@ -1235,37 +1134,30 @@ class AttributeIRIInfo(IRIInfo):
     #################################
 
     @QtCore.pyqtSlot()
-    def flagChanged(self):
+    def onFlagChanged(self) -> None:
         """
         Executed whenever one of the property fields changes.
         """
         sender = self.sender()
         checked = sender.isChecked()
         key = sender.property('key')
-        #undo = self.project.meta(self.node.type(), self.node.text())
         undo = self.node.iri.getMetaProperties()
         redo = undo.copy()
         redo[key] = checked
         if redo != undo:
             prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
             name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.iri, prop)
-            #TODO SWITCHA VERSO CommandIRISetMeta(...)
-            self.session.undostack.push(CommandIRISetMeta(self.project,self.node.type(),self.node.iri,undo,redo,name))
-            '''self.session.undostack.push(
-                CommandNodeSetMeta(
-                    self.project,
-                    self.node.type(),
-                    self.node.text(),
-                    undo, redo, name))'''
+            self.session.undostack.push(
+                CommandIRISetMeta(self.project, self.node.type(), self.node.iri, undo, redo, name)
+            )
 
     #############################################
     #   INTERFACE
     #################################
 
-    def updateData(self, node):
+    def updateData(self, node: AbstractNode) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type node: AbstractNode
         """
         super().updateData(node)
         self.functBox.setChecked(node.isFunctional())
@@ -1274,15 +1166,14 @@ class AttributeIRIInfo(IRIInfo):
         self.functBox.setEnabled(functEnabled)
         self.functKey.setEnabled(functEnabled)
 
+
 class RoleIRIInfo(IRIInfo):
     """
     This class implements the information box for the Role node.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the Role node information box.
-        :type session: Session
-        :type parent: QtWidgets.QWidget
         """
         super().__init__(session, parent)
 
@@ -1291,49 +1182,49 @@ class RoleIRIInfo(IRIInfo):
         self.functBox = CheckBox(functParent)
         self.functBox.setCheckable(True)
         self.functBox.setProperty('key', K_FUNCTIONAL)
-        connect(self.functBox.clicked, self.flagChanged)
+        connect(self.functBox.clicked, self.onFlagChanged)
 
         self.invFunctKey = Key('Inv. Funct.', self)
         invFunctParent = Parent(self)
         self.invFunctBox = CheckBox(invFunctParent)
         self.invFunctBox.setCheckable(True)
         self.invFunctBox.setProperty('key', K_INVERSE_FUNCTIONAL)
-        connect(self.invFunctBox.clicked, self.flagChanged)
+        connect(self.invFunctBox.clicked, self.onFlagChanged)
 
         self.asymmetricKey = Key('Asymmetric', self)
         asymmetricParent = Parent(self)
         self.asymmetricBox = CheckBox(asymmetricParent)
         self.asymmetricBox.setCheckable(True)
         self.asymmetricBox.setProperty('key', K_ASYMMETRIC)
-        connect(self.asymmetricBox.clicked, self.flagChanged)
+        connect(self.asymmetricBox.clicked, self.onFlagChanged)
 
         self.irreflexiveKey = Key('Irreflexive', self)
         irreflexiveParent = Parent(self)
         self.irreflexiveBox = CheckBox(irreflexiveParent)
         self.irreflexiveBox.setCheckable(True)
         self.irreflexiveBox.setProperty('key', K_IRREFLEXIVE)
-        connect(self.irreflexiveBox.clicked, self.flagChanged)
+        connect(self.irreflexiveBox.clicked, self.onFlagChanged)
 
         self.reflexiveKey = Key('Reflexive', self)
         reflexiveParent = Parent(self)
         self.reflexiveBox = CheckBox(reflexiveParent)
         self.reflexiveBox.setCheckable(True)
         self.reflexiveBox.setProperty('key', K_REFLEXIVE)
-        connect(self.reflexiveBox.clicked, self.flagChanged)
+        connect(self.reflexiveBox.clicked, self.onFlagChanged)
 
         self.symmetricKey = Key('Symmetric', self)
         symmetricParent = Parent(self)
         self.symmetricBox = CheckBox(symmetricParent)
         self.symmetricBox.setCheckable(True)
         self.symmetricBox.setProperty('key', K_SYMMETRIC)
-        connect(self.symmetricBox.clicked, self.flagChanged)
+        connect(self.symmetricBox.clicked, self.onFlagChanged)
 
         self.transitiveKey = Key('Transitive', self)
         transitiveParent = Parent(self)
         self.transitiveBox = CheckBox(transitiveParent)
         self.transitiveBox.setCheckable(True)
         self.transitiveBox.setProperty('key', K_TRANSITIVE)
-        connect(self.transitiveBox.clicked, self.flagChanged)
+        connect(self.transitiveBox.clicked, self.onFlagChanged)
 
         self.predPropLayout.addRow(self.functKey, functParent)
         self.predPropLayout.addRow(self.invFunctKey, invFunctParent)
@@ -1348,7 +1239,7 @@ class RoleIRIInfo(IRIInfo):
     #################################
 
     @QtCore.pyqtSlot()
-    def flagChanged(self):
+    def onFlagChanged(self) -> None:
         """
         Executed whenever one of the property fields changes.
         """
@@ -1363,24 +1254,16 @@ class RoleIRIInfo(IRIInfo):
             prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
             name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.iri, prop)
             self.session.undostack.push(
-                CommandIRISetMeta(self.project, self.node.type(), self.node.iri, undo, redo, name))
-            '''
-            self.session.undostack.push(
-                CommandNodeSetMeta(
-                    self.project,
-                    self.node.type(),
-                    self.node.text(),
-                    undo, redo, name))
-            '''
+                CommandIRISetMeta(self.project, self.node.type(), self.node.iri, undo, redo, name)
+            )
 
     #############################################
     #   INTERFACE
     #################################
 
-    def updateData(self, node):
+    def updateData(self, node: AbstractNode) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type node: AbstractNode
         """
         super().updateData(node)
 
@@ -1410,11 +1293,12 @@ class RoleIRIInfo(IRIInfo):
         self.transitiveBox.setEnabled(transitiveEnabled)
         self.transitiveKey.setEnabled(transitiveEnabled)
 
+
 class LiteralInfo(NodeInfo):
     """
     This class implements the information box for nodes having an associated IRI.
     """
-    def __init__(self, session, parent=None):
+    def __init__(self, session: Session, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the predicate node information box.
         :type session: Session
@@ -1426,28 +1310,29 @@ class LiteralInfo(NodeInfo):
         self.brushMenu = QtWidgets.QMenu(self)
         self.brushButton = Button()
         self.brushButton.setMenu(self.brushMenu)
-        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.brushButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                       QtWidgets.QSizePolicy.Preferred)
 
         self.nodePropLayout.addRow(self.brushKey, self.brushButton)
-        #self.nodePropLayout.addRow(self.textKey, self.textField)
+        # self.nodePropLayout.addRow(self.textKey, self.textField)
 
         self.lexicalSpaceKey = Key('Lexical space', self)
         self.lexicalFormField = String(self)
-        #self.nameField.setReadOnly(False)
+        # self.nameField.setReadOnly(False)
         self.lexicalFormField.setReadOnly(True)
-        connect(self.lexicalFormField.editingFinished, self.editingFinished)
+        connect(self.lexicalFormField.editingFinished, self.onEditingFinished)
 
         self.datatypeKey = Key('Datatype', self)
         self.datatypeField = String(self)
         # self.nameField.setReadOnly(False)
         self.datatypeField.setReadOnly(True)
-        connect(self.datatypeField.editingFinished, self.editingFinished)
+        connect(self.datatypeField.editingFinished, self.onEditingFinished)
 
         self.langKey = Key('Language', self)
         self.langField = String(self)
         # self.textField.setReadOnly(False)
         self.langField.setReadOnly(True)
-        connect(self.langField.editingFinished, self.editingFinished)
+        connect(self.langField.editingFinished, self.onEditingFinished)
 
         self.predPropHeader = Header('Literal properties', self)
         self.predPropLayout = QtWidgets.QFormLayout()
@@ -1464,12 +1349,11 @@ class LiteralInfo(NodeInfo):
     #################################
 
     @QtCore.pyqtSlot()
-    def editingFinished(self):
+    def onEditingFinished(self) -> None:
         """
         Executed whenever we finish to edit the predicate/node name.
         """
         if self.node:
-
             try:
                 sender = self.sender()
                 node = self.node
@@ -1495,10 +1379,9 @@ class LiteralInfo(NodeInfo):
     #   INTERFACE
     #################################
 
-    def     updateData(self, node):
+    def updateData(self, node: AbstractNode) -> None:
         """
         Fetch new information and fill the widget with data.
-        :type node: AbstractNode
         """
         super().updateData(node)
 
@@ -1517,21 +1400,11 @@ class LiteralInfo(NodeInfo):
                 break
 
         #############################################
-        # Literal FIELDS
+        # LITERAL FIELDS
         #################################
+
         if node.literal:
             self.datatypeField.setValue(str(node.datatype))
             self.lexicalFormField.setValue(str(node.lexicalForm))
             if node.language:
                 self.langField.setValue(str(node.language))
-
-        #############################################
-        # ENABLE / DISABLE REFACTORING
-        #################################
-        #TODO NEL CASO SOTTO MODIFICA TUTTO
-        refactor = True
-        #if node.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode}:
-        if (('AttributeNode' in str(type(node))) or ('ConceptNode' in str(type(node))) or ('RoleNode' in str(type(node)))):
-            if node.special() is not None:
-                refactor = False
-        #self.nameField.setReadOnly(not refactor)

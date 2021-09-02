@@ -36,23 +36,20 @@
 from abc import ABCMeta
 from operator import attrgetter
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
 from eddy.core.commands.labels import CommandLabelChange
 from eddy.core.datatypes.graphol import Identity
-from eddy.core.datatypes.owl import Datatype, Namespace
-from eddy.core.datatypes.qt import Font
+from eddy.core.datatypes.owl import Datatype
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
-from eddy.core.output import getLogger
-from eddy.core.regex import RE_VALUE
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import IntegerField
 from eddy.ui.fields import StringField
-
-LOGGER = getLogger()
 
 
 class CardinalityRestrictionForm(QtWidgets.QDialog):
@@ -127,8 +124,8 @@ class CardinalityRestrictionForm(QtWidgets.QDialog):
             if v1 is not None and v1 < 0 or v2 is not None and v2 < 0:
                 raise ValueError('Please enter only <b>positive</b> integers!')
             if v1 is not None and v2 is not None and v1 > v2:
-                raise ValueError(
-                    'Min. cardinality <b>{0}</b> must be <= than Max. cardinality <b>{1}</b>'.format(v1, v2))
+                raise ValueError('Min. cardinality <b>{0}</b> must be '
+                                 '<= than Max. cardinality <b>{1}</b>'.format(v1, v2))
         except ValueError as e:
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -186,20 +183,10 @@ class RefactorNameForm(QtWidgets.QDialog):
         #################################
 
         self.renameLabel = QtWidgets.QLabel(self)
-        self.renameLabel.setText('IRI label')
+        self.renameLabel.setText('Name')
         self.renameField = StringField(self)
         self.renameField.setFixedWidth(200)
-        self.renameLabel.setWordWrap(True)
-
-        match = RE_VALUE.match(self.node.text())
-        if match:
-            self.renameField.setValue(self.node.text())
-
-        else:
-            self.renameField.setValue(self.node.remaining_characters)
-
-        self.old_text = self.node.text()
-
+        self.renameField.setValue(self.node.text())
         connect(self.renameField.textChanged, self.nameChanged)
 
         self.formWidget = QtWidgets.QWidget(self)
@@ -263,165 +250,6 @@ class RefactorNameForm(QtWidgets.QDialog):
 
     @QtCore.pyqtSlot()
     def accept(self):
-        """
-        Accepts the rename form and perform refactoring.
-        """
-        currentData = self.renameField.value()
-
-        if currentData and currentData != self.old_text:
-
-            match = RE_VALUE.match(currentData)
-            match_old = RE_VALUE.match(self.old_text)
-
-            commands = []
-
-            if match:
-                new_prefix = match.group('datatype')[0:match.group('datatype').index(':')]
-                new_remaining_characters = match.group('datatype')[
-                                           match.group('datatype').index(':') + 1:len(match.group('datatype'))]
-                new_iri = None
-
-                for namespace in Namespace:
-                    if namespace.name.lower() == new_prefix:
-                        new_iri = namespace.value
-
-                Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                    self.project.IRI_prefixes_nodes_dict, dict())
-                Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                    self.project.IRI_prefixes_nodes_dict, dict())
-
-                old_iri = self.project.get_iri_of_node(self.node)
-
-                list_of_nodes_to_process = []
-
-                commands_label_change_list_1 = []
-                commands_label_change_list_2 = []
-                commands_rc_change = []
-
-                for node in self.project.predicates(self.node.type(), self.node.text()):
-                    list_of_nodes_to_process.append(node)
-
-                    Duplicate_dict_1[old_iri][1].remove(node)
-                    Duplicate_dict_1[new_iri][1].add(node)
-
-                    commands_label_change_list_1.append(
-                        CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
-                    commands_rc_change.append(
-                        CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node,
-                                                          self.project, refactor=True))
-                    commands_label_change_list_2.append(
-                        CommandLabelChange(node.diagram, node, self.old_text, currentData, refactor=True))
-
-
-                commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-
-                commands.extend(commands_label_change_list_1)
-                commands.extend(commands_rc_change)
-                commands.extend(commands_label_change_list_2)
-
-                commands.append(CommandProjectConnectSpecificSignals(self.project))
-
-            else:
-                exception_list = ['-', '_', '.', '~', '\n']
-                currentData_processed = ''
-                flag = False
-
-                for i, c in enumerate(currentData):
-                    if c == '':
-                        pass
-                    elif i < (len(currentData) - 1) and (c == '\\' and currentData[i + 1] == 'n'):
-                        currentData_processed = currentData_processed + '\n'
-                    elif i > 0 and (c == 'n' and currentData[i - 1] == '\\'):
-                        pass
-                    elif (not c.isalnum()) and (c not in exception_list):
-                        currentData_processed = currentData_processed + '_'
-                        flag = True
-                    else:
-                        currentData_processed = currentData_processed + c
-
-                if flag is True:
-                    self.session.statusBar().showMessage(
-                        'Spaces in between alphanumeric characters and special characters were replaced by an '
-                        'underscore character.',
-                        15000)
-
-                if match_old:
-                    new_remaining_characters = currentData_processed
-                    new_iri = self.project.ontologyIRIString
-
-                    Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-                    Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(
-                        self.project.IRI_prefixes_nodes_dict, dict())
-
-                    old_iri = self.project.get_iri_of_node(self.node)
-
-                    list_of_nodes_to_process = []
-
-                    commands_label_change_list_1 = []
-                    commands_label_change_list_2 = []
-                    commands_rc_change = []
-
-                    for node in self.project.predicates(self.node.type(), self.node.text()):
-                        list_of_nodes_to_process.append(node)
-
-                        Duplicate_dict_1[old_iri][1].remove(node)
-                        Duplicate_dict_1[new_iri][1].add(node)
-
-                        if len(Duplicate_dict_1[new_iri][0]) == 0:
-                            new_label = self.project.get_full_IRI(new_iri, None, new_remaining_characters)
-                        else:
-                            new_label = str(Duplicate_dict_1[new_iri][0][
-                                                len(Duplicate_dict_1[new_iri][0]) - 1] + ':' + new_remaining_characters)
-
-                        commands_label_change_list_1.append(
-                            CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
-                        commands_rc_change.append(
-                            CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node,
-                                                              self.project, refactor=True))
-                        commands_label_change_list_2.append(
-                            CommandLabelChange(node.diagram, node, self.old_text, new_label, refactor=True))
-
-                    command_dict_change = CommandProjetSetIRIPrefixesNodesDict(self.project, Duplicate_dict_2,
-                                                                               Duplicate_dict_1, [old_iri, new_iri],
-                                                                               list_of_nodes_to_process)
-
-                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-
-                    commands.extend(commands_label_change_list_1)
-                    commands.append(command_dict_change)
-                    commands.extend(commands_rc_change)
-                    commands.extend(commands_label_change_list_2)
-
-                    commands.append(CommandProjectConnectSpecificSignals(self.project))
-
-                else:
-
-                    commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-
-                    for node in self.project.predicates(self.node.type(), self.node.text()):
-                        commands.append(
-                            CommandNodeSetRemainingCharacters(node.remaining_characters, currentData_processed, node,
-                                                              self.project, refactor=True))
-
-                    commands.append(CommandProjectConnectSpecificSignals(self.project))
-
-            if any(commands):
-                self.session.undostack.beginMacro(
-                    'change predicate "{0}" to "{1}"'.format(self.node.text(), currentData))
-                for command in commands:
-                    if command:
-                        self.session.undostack.push(command)
-                self.session.undostack.endMacro()
-
-        else:
-            pass
-
-        super().accept()
-
-    # not used
-    @QtCore.pyqtSlot()
-    def accept_2(self):
         """
         Accepts the rename form and perform refactoring.
         """
@@ -552,54 +380,14 @@ class ValueForm(QtWidgets.QDialog):
         """
         Accepts the form and set the new value.
         """
-        # print('>>>          ValueForm (accept)')
         node = self.node
         diagram = node.diagram
         datatype = self.datatypeField.currentData()
         value = self.valueField.value()
         data = node.compose(value, datatype)
-
         if node.text() != data:
             name = 'change {0} to {1}'.format(node.text(), data)
-
-            new_prefix = datatype.value[0:datatype.value.index(':')]
-            new_remaining_characters = datatype.value[datatype.value.index(':') + 1:len(datatype.value)]
-            new_iri = None
-
-            for namespace in Namespace:
-                if namespace.name.lower() == new_prefix:
-                    new_iri = namespace.value
-
-            if new_iri is None:
-                LOGGER.error('*****************   failed to assign iri to node   *******************')
-                return
-
-            Duplicate_dict_1 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
-                                                                                 dict())
-            Duplicate_dict_2 = self.project.copy_IRI_prefixes_nodes_dictionaries(self.project.IRI_prefixes_nodes_dict,
-                                                                                 dict())
-
-            old_iri = self.project.get_iri_of_node(node)
-
-            Duplicate_dict_1[old_iri][1].remove(node)
-            Duplicate_dict_1[new_iri][1].add(node)
-
-            commands = []
-
-            commands.append(CommandProjectDisconnectSpecificSignals(self.project))
-            commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
-            commands.append(CommandNodeSetRemainingCharacters(node.remaining_characters, new_remaining_characters, node,
-                                                              self.project))
-            commands.append(CommandLabelChange(diagram, self.node, self.node.text(), data))
-            commands.append(CommandProjectConnectSpecificSignals(self.project))
-
-            if any(commands):
-                self.session.undostack.beginMacro('edit Forms >> accept() {0}'.format(node))
-                for command in commands:
-                    if command:
-                        self.session.undostack.push(command)
-                self.session.undostack.endMacro()
-
+            self.session.undostack.push(CommandLabelChange(diagram, node, node.text(), data, name=name))
         super().accept()
 
 

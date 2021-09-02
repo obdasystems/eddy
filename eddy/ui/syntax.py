@@ -321,9 +321,9 @@ class SyntaxValidationWorker(AbstractWorker):
                 if not pvr.isValid():
                     s = '{} <b>({})</b>'.format(source.name, source.id)
                     t = '{} <b>({})</b>'.format(target.name, target.id)
-                    if source.type() in {Item.AttributeIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.ValueDomainIRINode}:
+                    if source.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.ValueDomainNode}:
                         s = '{} <b>{} ({})</b>'.format(source.name, source.text(), source.id)
-                    if target.type() in {Item.AttributeIRINode, Item.ConceptIRINode, Item.RoleIRINode, Item.ValueDomainIRINode}:
+                    if target.type() in {Item.AttributeNode, Item.ConceptNode, Item.RoleNode, Item.ValueDomainNode}:
                         t = '{} <b>{} ({})</b>'.format(target.name, target.text(), target.id)
                     i = '{}{}'.format(pvr.message()[:1].lower(), pvr.message()[1:])
                     errorMsg = 'Syntax error detected on {} from {} to {}: <i>{}</i>.'.format(item.name, s, t, i)

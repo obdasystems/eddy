@@ -119,7 +119,7 @@ def test_inclusion_no_graphol_expression(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.IndividualIRINode, iri1), (Item.IndividualIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.IndividualNode, iri1), (Item.IndividualNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion must involve two graphol expressions'
@@ -133,7 +133,7 @@ def test_inclusion_between_concept_and_role(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptIRINode, iri1), (Item.RoleIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptNode, iri1), (Item.RoleNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between Concept and Role'
@@ -147,7 +147,7 @@ def test_inclusion_between_concept_and_attribute(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptIRINode, iri1), (Item.AttributeIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptNode, iri1), (Item.AttributeNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between Concept and Attribute'
@@ -161,7 +161,7 @@ def test_inclusion_between_concept_and_value_domain(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptIRINode, iri1), (Item.ValueDomainIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.ConceptNode, iri1), (Item.ValueDomainNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between Concept and Value Domain'
@@ -175,7 +175,7 @@ def test_inclusion_between_role_and_attribute(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, iri1), (Item.AttributeIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleNode, iri1), (Item.AttributeNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between Role and Attribute'
@@ -189,7 +189,7 @@ def test_inclusion_between_role_and_value_domain(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
     iri2 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, iri1), (Item.ValueDomainIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleNode, iri1), (Item.ValueDomainNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between Role and Value Domain'
@@ -203,7 +203,7 @@ def test_inclusion_between_attribute_and_value_domain(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
     iri2 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, iri1), (Item.ValueDomainIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeNode, iri1), (Item.ValueDomainNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between Attribute and Value Domain'
@@ -217,10 +217,10 @@ def test_inclusion_between_role_and_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: role irinode and union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: role node and union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -231,10 +231,10 @@ def test_inclusion_between_role_and_disjoint_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: role irinode and disjoint union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: role node and disjoint union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -245,10 +245,10 @@ def test_inclusion_between_role_and_intersection_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: role irinode and intersection node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: role node and intersection node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -259,10 +259,10 @@ def test_inclusion_between_attribute_and_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: attribute irinode and union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: attribute node and union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -273,10 +273,10 @@ def test_inclusion_between_attribute_and_disjoint_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: attribute irinode and disjoint union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: attribute node and disjoint union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -287,10 +287,10 @@ def test_inclusion_between_attribute_and_intersection_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: attribute irinode and intersection node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: attribute node and intersection node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -301,7 +301,7 @@ def test_inclusion_between_value_domain_expressions(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InclusionEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between value-domain expressions'
@@ -315,7 +315,7 @@ def test_inclusion_between_complement_node_and_role(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.InclusionEdge, source, (Item.RoleIRINode, iri1), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, source, (Item.RoleNode, iri1), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid source for Role inclusion: complement node'
@@ -329,7 +329,7 @@ def test_inclusion_between_complement_node_and_attribute(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.InclusionEdge, source, (Item.AttributeIRINode, iri1), qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, source, (Item.AttributeNode, iri1), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid source for Attribute inclusion: complement node'
@@ -357,7 +357,7 @@ def test_inclusion_between_role_and_role_chain_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Role chain nodes cannot be target of a Role inclusion'
@@ -371,7 +371,7 @@ def test_inclusion_between_role_and_complement_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R9')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Detected unsupported operator sequence on intersection node'
@@ -385,7 +385,7 @@ def test_inclusion_between_attribute_and_complement_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InclusionEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Detected unsupported operator sequence on intersection node'
@@ -403,7 +403,7 @@ def test_equivalence_no_graphol_expression(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.IndividualIRINode, iri1), (Item.IndividualIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.IndividualNode, iri1), (Item.IndividualNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() =='Type mismatch: equivalence must involve two graphol expressions'
@@ -417,7 +417,7 @@ def test_equivalence_between_concept_and_role(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptIRINode, iri1), (Item.RoleIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptNode, iri1), (Item.RoleNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: equivalence between Concept and Role'
@@ -431,7 +431,7 @@ def test_equivalence_between_concept_and_attribute(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptIRINode, iri1), (Item.AttributeIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptNode, iri1), (Item.AttributeNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: equivalence between Concept and Attribute'
@@ -445,7 +445,7 @@ def test_equivalence_between_concept_and_value_domain(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptIRINode, iri1), (Item.ValueDomainIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ConceptNode, iri1), (Item.ValueDomainNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: equivalence between Concept and Value Domain'
@@ -459,7 +459,7 @@ def test_equivalence_between_role_and_attribute(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, iri1), (Item.AttributeIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleNode, iri1), (Item.AttributeNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: equivalence between Role and Attribute'
@@ -473,7 +473,7 @@ def test_equivalence_between_role_and_value_domain(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
     iri2 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, iri1), (Item.ValueDomainIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleNode, iri1), (Item.ValueDomainNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: equivalence between Role and Value Domain'
@@ -487,7 +487,7 @@ def test_equivalence_between_attribute_and_value_domain(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
     iri2 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, iri1), (Item.ValueDomainIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeNode, iri1), (Item.ValueDomainNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: equivalence between Attribute and Value Domain'
@@ -501,10 +501,10 @@ def test_equivalence_between_role_and_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: role irinode and union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: role node and union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -515,10 +515,10 @@ def test_equivalence_between_role_and_disjoint_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: role irinode and disjoint union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: role node and disjoint union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -529,10 +529,10 @@ def test_equivalence_between_role_and_intersection_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: role irinode and intersection node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: role node and intersection node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -543,10 +543,10 @@ def test_equivalence_between_attribute_and_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: attribute irinode and union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: attribute node and union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -557,10 +557,10 @@ def test_equivalence_between_attribute_and_disjoint_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: attribute irinode and disjoint union node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: attribute node and disjoint union node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -571,10 +571,10 @@ def test_equivalence_between_attribute_and_intersection_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Type mismatch: attribute irinode and intersection node are not compatible'
+    assert session.project.profile.pvr().message() == 'Type mismatch: attribute node and intersection node are not compatible'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -585,7 +585,7 @@ def test_equivalence_between_value_domain_expressions(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: equivalence between value-domain expressions'
@@ -599,7 +599,7 @@ def test_equivalence_between_complement_node_and_role(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.EquivalenceEdge, source, (Item.RoleIRINode, iri1), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, source, (Item.RoleNode, iri1), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Equivalence is forbidden when expressing Role disjointness'
@@ -613,7 +613,7 @@ def test_equivalence_between_complement_node_and_attribute(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A1')
-    __insert_edge_between(session, Item.EquivalenceEdge, source, (Item.AttributeIRINode, iri1), qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, source, (Item.AttributeNode, iri1), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Equivalence is forbidden when expressing Attribute disjointness'
@@ -641,7 +641,7 @@ def test_equivalence_between_role_and_role_chain_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.RoleChainNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.EquivalenceEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Equivalence is forbidden in presence of a role chain node'
@@ -659,7 +659,7 @@ def test_input_between_concept_node_and_concept_node(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C2')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), (Item.ConceptIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri1), (Item.ConceptNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Input edges can only target constructor nodes'
@@ -673,7 +673,7 @@ def test_input_between_role_node_and_role_node(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R2')
-    __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, iri1), (Item.RoleIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.RoleNode, iri1), (Item.RoleNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Input edges can only target constructor nodes'
@@ -687,7 +687,7 @@ def test_input_between_individual_node_and_complement_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid input to complement node: Individual'
@@ -701,7 +701,7 @@ def test_input_between_individual_node_and_union_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid input to union node: Individual'
@@ -715,7 +715,7 @@ def test_input_between_individual_node_and_intersection_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid input to intersection node: Individual'
@@ -729,7 +729,7 @@ def test_input_between_value_domain_node_and_chain_of_inclusion_connected_neutra
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: inclusion between value-domain expressions'
@@ -743,7 +743,7 @@ def test_input_between_concept_node_and_complement_node_with_already_an_input(se
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C2')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri2), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri2), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many inputs to complement node'
@@ -757,7 +757,7 @@ def test_input_between_role_node_and_complement_node_with_outgoing_edge(session,
     target = first(filter(lambda x: x.type() is Item.ComplementNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid negative Role expression'
@@ -771,7 +771,7 @@ def test_input_between_value_domain_node_and_non_neutral_union_node(session, qtb
     target = first(filter(lambda x: x.type() is Item.UnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: union between Value Domain and Concept'
@@ -785,7 +785,7 @@ def test_input_between_value_domain_node_and_non_neutral_disjoint_union_node(ses
     target = first(filter(lambda x: x.type() is Item.DisjointUnionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: disjoint union between Value Domain and Concept'
@@ -799,7 +799,7 @@ def test_input_between_value_domain_node_and_non_neutral_intersection_node(sessi
     target = first(filter(lambda x: x.type() is Item.IntersectionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: intersection between Value Domain and Concept'
@@ -827,14 +827,13 @@ def test_input_between_concept_node_and_enumeration_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.EnumerationNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C5')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project +1
     assert session.project.profile.pvr().isValid()
 
 
-'''
-#TODO SKIP
+@pytest.mark.skip
 def test_input_between_value_node_and_enumeration_node_with_individuals(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram4', qtbot)
@@ -843,12 +842,12 @@ def test_input_between_value_node_and_enumeration_node_with_individuals(session,
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"32"^^xsd:string'), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, '"32"^^xsd:string'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid input to enumeration node: Value'
     assert not session.project.profile.pvr().isValid()
-'''
+
 
 def test_input_between_role_chain_node_and_role_inverse_node(session, qtbot):
     # GIVEN
@@ -899,10 +898,10 @@ def test_input_between_concept_node_and_datatype_restriction_node(session, qtbot
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C6')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Invalid input to datatype restriction node: concept irinode'
+    assert session.project.profile.pvr().message() == 'Invalid input to datatype restriction node: concept node'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -913,7 +912,7 @@ def test_input_between_value_domain_node_and_datatype_restriction_node_with_data
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.integer.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many value-domain nodes in input to datatype restriction node'
@@ -927,7 +926,7 @@ def test_input_between_value_domain_node_and_datatype_restriction_node_with_inco
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Type mismatch: datatype http://www.w3.org/2001/XMLSchema#string is not compatible by facet http://www.w3.org/2001/XMLSchema#maxExclusive'
@@ -937,7 +936,7 @@ def test_input_between_facet_node_and_datatype_restriction_node_with_incompatibl
     # GIVEN
     __give_focus_to_diagram(session, 'diagram29', qtbot)
     num_edges_in_project = len(session.project.edges())
-    source = first(filter(lambda x: x.type() is Item.FacetIRINode, session.project.nodes(session.mdi.activeDiagram())))
+    source = first(filter(lambda x: x.type() is Item.FacetNode, session.project.nodes(session.mdi.activeDiagram())))
     target = first(filter(lambda x: x.type() is Item.DatatypeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     __insert_edge_between(session, Item.InputEdge, source, target, qtbot)
@@ -954,7 +953,7 @@ def test_input_between_concept_node_and_property_assertion_node(session, qtbot):
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project + 1
     assert session.project.profile.pvr().isValid()
@@ -967,15 +966,14 @@ def test_input_between_individual_node_and_property_assertion_node_with_already_
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I3')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many inputs to property assertion node'
     assert not session.project.profile.pvr().isValid()
 
 
-
-#TODO SKIP
+@pytest.mark.skip(reason='broken since v3.0')
 def test_input_between_value_node_and_property_assertion_node_set_as_role_instance(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram28', qtbot)
@@ -991,7 +989,8 @@ def test_input_between_value_node_and_property_assertion_node_set_as_role_instan
     assert session.project.profile.pvr().message() == 'Invalid input to Role Instance: Value'
     assert not session.project.profile.pvr().isValid()
 
-#TODO SKIP
+
+@pytest.mark.skip(reason='broken since v3.0')
 def test_input_between_value_node_and_property_assertion_node_with_no_subject(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram51', qtbot)
@@ -1008,7 +1007,6 @@ def test_input_between_value_node_and_property_assertion_node_with_no_subject(se
     assert not session.project.profile.pvr().isValid()
 
 
-
 def test_input_between_individual_node_and_property_assertion_node_set_as_attribute_instance(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram31', qtbot)
@@ -1016,14 +1014,14 @@ def test_input_between_individual_node_and_property_assertion_node_set_as_attrib
     target = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, iri2), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, iri2), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many individuals in input to Attribute Instance'
     assert not session.project.profile.pvr().isValid()
 
-'''
-#TODO SKIP
+
+@pytest.mark.skip
 def test_input_between_value_node_and_property_assertion_node_set_as_attribute_instance(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram32', qtbot)
@@ -1032,12 +1030,11 @@ def test_input_between_value_node_and_property_assertion_node_set_as_attribute_i
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I2')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, '"32"^^xsd:integer'), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, '"32"^^xsd:integer'), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many values in input to Attribute Instance'
     assert not session.project.profile.pvr().isValid()
-'''
 
 
 def test_input_between_concept_node_and_domain_restriction_node_with_filler(session, qtbot):
@@ -1047,7 +1044,7 @@ def test_input_between_concept_node_and_domain_restriction_node_with_filler(sess
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C2')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri2), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri2), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many inputs to domain restriction node'
@@ -1061,7 +1058,7 @@ def test_input_between_individual_node_and_domain_restriction_node(session, qtbo
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I4')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid input to domain restriction node: Individual'
@@ -1103,7 +1100,7 @@ def test_input_between_concept_node_and_domain_restriction_node_with_self_restri
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid restriction type for qualified domain restriction: self'
@@ -1117,7 +1114,7 @@ def test_input_between_concept_node_and_domain_restriction_node_with_attribute_i
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C7')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid qualified domain restriction: Concept + Attribute'
@@ -1131,7 +1128,7 @@ def test_input_between_role_node_and_domain_restriction_node_with_value_domain_i
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R5')
-    __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid qualified domain restriction: Role + Value Domain'
@@ -1145,7 +1142,7 @@ def test_input_between_attribute_node_and_domain_restriction_node_with_self_rest
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A4')
-    __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Attributes do not have self'
@@ -1159,7 +1156,7 @@ def test_input_between_attribute_node_and_domain_restriction_node_with_concept_i
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A4')
-    __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid qualified domain restriction: Attribute + Concept'
@@ -1173,7 +1170,7 @@ def test_input_between_value_domain_node_and_domain_restriction_node_with_self_r
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid restriction type for qualified domain restriction: self'
@@ -1187,7 +1184,7 @@ def test_input_between_value_domain_node_and_domain_restriction_node_with_role_i
     target = first(filter(lambda x: x.type() is Item.DomainRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid qualified domain restriction: Value Domain + Role'
@@ -1201,12 +1198,11 @@ def test_input_between_concept_node_and_range_restriction_node_with_filler(sessi
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C2')
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri2), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri2), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many inputs to range restriction node'
     assert not session.project.profile.pvr().isValid()
-
 
 
 def test_input_between_value_domain_node_and_range_restriction_node_with_attribute_as_input(session, qtbot):
@@ -1216,7 +1212,7 @@ def test_input_between_value_domain_node_and_range_restriction_node_with_attribu
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Too many inputs to attribute range restriction'
@@ -1230,7 +1226,7 @@ def test_input_between_individual_node_and_range_restriction_node(session, qtbot
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I4')
-    __insert_edge_between(session, Item.InputEdge, (Item.IndividualIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.IndividualNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid input to range restriction node: Individual'
@@ -1271,7 +1267,7 @@ def test_input_between_role_node_and_range_restriction_node_with_role_node_in_in
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R5')
-    __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid qualified range restriction: Role + Role'
@@ -1285,23 +1281,24 @@ def test_input_between_attribute_node_and_range_restriction_node_with_self_restr
     target = first(filter(lambda x: x.type() is Item.RangeRestrictionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A4')
-    __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Attributes do not have self'
     assert not session.project.profile.pvr().isValid()
 
+
 def test_input_between_value_domain_node_and_facet_node(session, qtbot):
     # GIVEN
     __give_focus_to_diagram(session, 'diagram41', qtbot)
     num_edges_in_project = len(session.project.edges())
-    target = first(filter(lambda x: x.type() is Item.FacetIRINode, session.project.nodes(session.mdi.activeDiagram())))
+    target = first(filter(lambda x: x.type() is Item.FacetNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = OWL2Datatype.string.value
-    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ValueDomainNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
-    assert session.project.profile.pvr().message() == 'Input edges can only target constructor nodes'
+    assert session.project.profile.pvr().message() == 'Facet node cannot be target of any input'
     assert not session.project.profile.pvr().isValid()
 
 
@@ -1316,7 +1313,7 @@ def test_membership_between_concept_and_concept(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/C2')
-    __insert_edge_between(session, Item.MembershipEdge, (Item.ConceptIRINode, iri1), (Item.ConceptIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.MembershipEdge, (Item.ConceptNode, iri1), (Item.ConceptNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project+1
     assert session.project.profile.pvr().isValid()
@@ -1329,7 +1326,7 @@ def test_membership_between_individual_and_role(session, qtbot):
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/I1')
     iri2 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R4')
-    __insert_edge_between(session, Item.MembershipEdge, (Item.IndividualIRINode, iri1), (Item.RoleIRINode, iri2), qtbot)
+    __insert_edge_between(session, Item.MembershipEdge, (Item.IndividualNode, iri1), (Item.RoleNode, iri2), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid target for Concept assertion: Role'
@@ -1371,7 +1368,7 @@ def test_membership_between_attribute_instance_and_role_node(session, qtbot):
     source = first(filter(lambda x: x.type() is Item.PropertyAssertionNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/R1')
-    __insert_edge_between(session, Item.MembershipEdge, source, (Item.RoleIRINode, iri1), qtbot)
+    __insert_edge_between(session, Item.MembershipEdge, source, (Item.RoleNode, iri1), qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'Invalid target for Attribute assertion: Role'
@@ -1427,7 +1424,7 @@ def test_input_between_class_node_and_haskey_node_with_class_expression(session,
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/A')
     target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
-    __insert_edge_between(session, Item.InputEdge, (Item.ConceptIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.ConceptNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project
     assert session.project.profile.pvr().message() == 'A key can be defined over one and only one class expression'
@@ -1627,7 +1624,7 @@ def test_input_between_objprop_and_haskey_node_with_class_expression(session, qt
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/P')
     target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
-    __insert_edge_between(session, Item.InputEdge, (Item.RoleIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.RoleNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project+1
     assert session.project.profile.pvr().isValid()
@@ -1639,7 +1636,7 @@ def test_input_between_dataprop_and_haskey_node_with_class_expression_and_objpro
     iri1 = session.project.getIRI('http://www.dis.uniroma1.it/~graphol/test_project/U')
     target = first(filter(lambda x: x.type() is Item.HasKeyNode, session.project.nodes(session.mdi.activeDiagram())))
     # WHEN
-    __insert_edge_between(session, Item.InputEdge, (Item.AttributeIRINode, iri1), target, qtbot)
+    __insert_edge_between(session, Item.InputEdge, (Item.AttributeNode, iri1), target, qtbot)
     # THEN
     assert len(session.project.edges()) == num_edges_in_project+1
     assert session.project.profile.pvr().isValid()

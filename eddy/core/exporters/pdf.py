@@ -1,30 +1,75 @@
+# -*- coding: utf-8 -*-
 
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
 
 
 from textwrap import dedent
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtPrintSupport
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+    QtPrintSupport,
+)
 
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
-from eddy.core.exporters.common import AbstractDiagramExporter, AbstractProjectExporter
+from eddy.core.exporters.common import (
+    AbstractDiagramExporter,
+    AbstractProjectExporter,
+)
 from eddy.core.functions.misc import natsorted
 from eddy.core.functions.path import openPath
 from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.output import getLogger
-from eddy.core.owl import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL, K_REFLEXIVE, K_IRREFLEXIVE, K_SYMMETRIC, K_ASYMMETRIC, K_TRANSITIVE
+from eddy.core.project import (
+    K_ASYMMETRIC,
+    K_FUNCTIONAL,
+    K_INVERSE_FUNCTIONAL,
+    K_IRREFLEXIVE,
+    K_REFLEXIVE,
+    K_SYMMETRIC,
+    K_TRANSITIVE,
+)
 from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
 
 
-class PdfDiagramExporter_v3(AbstractDiagramExporter):
+class PdfDiagramExporter(AbstractDiagramExporter):
     """
     Extends AbstractDiagramExporter with facilities to export the structure of Graphol diagrams in PDF format.
     """
@@ -79,7 +124,8 @@ class PdfDiagramExporter_v3(AbstractDiagramExporter):
                 if self.open:
                     openPath(path)
 
-class PdfProjectExporter_v3(AbstractProjectExporter):
+
+class PdfProjectExporter(AbstractProjectExporter):
     """
     Extends AbstractProjectExporter with facilities to export the structure of Graphol diagrams in PDF format.
     """
@@ -208,14 +254,14 @@ class PdfProjectExporter_v3(AbstractProjectExporter):
         ##############################################################
 
         predicateRows = []
-        predicateIRIs = set()
-        for item in {Item.RoleIRINode, Item.AttributeIRINode}:
+        predicates = set()
+        for item in {Item.RoleNode, Item.AttributeNode}:
             for node in self.project.iriOccurrences(item=item):
                 if not node.iri.isTopBottomEntity():
-                    predicateIRIs.add(node.iri)
+                    predicates.add(node.iri)
 
-        for predicateIRI in sorted(predicateIRIs,key=str):
-            meta = predicateIRI.getMetaProperties()
+        for predicate in sorted(predicates, key=str):
+            meta = predicate.getMetaProperties()
             attributes = [
                 meta.get(K_FUNCTIONAL, False),
                 meta.get(K_INVERSE_FUNCTIONAL, False),
@@ -236,7 +282,7 @@ class PdfProjectExporter_v3(AbstractProjectExporter):
                     <td width=10%><center>{6}</center></td>
                     <td width=10%><center>{7}</center></td>
                 </tr>
-            '''.format(str(predicateIRI).replace('\n', ''), *map(lambda x: u'\u2713' if x else '', attributes)))
+            '''.format(str(predicate), *map(lambda x: u'\u2713' if x else '', attributes)))
         sections = [predicateRows[i:i+self.rowsPerPage] for i in range(0, len(predicateRows), self.rowsPerPage)]
 
         for section in sections:
@@ -274,6 +320,7 @@ class PdfProjectExporter_v3(AbstractProjectExporter):
         # OPEN THE DOCUMENT
         if self.open:
             openPath(printer.outputFileName())
+
 
 class PageSetupDialog(QtWidgets.QDialog, HasWidgetSystem):
     """

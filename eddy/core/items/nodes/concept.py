@@ -32,26 +32,35 @@
 #                                                                        #
 ##########################################################################
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
 
-from eddy.core.datatypes.graphol import Identity, Item, Special
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
+
+from eddy.core.datatypes.graphol import (
+    Identity,
+    Item,
+    Special,
+)
 from eddy.core.functions.misc import snapF
 from eddy.core.items.common import Polygon
-from eddy.core.items.nodes.common.base import AbstractResizableNode
-from eddy.core.items.nodes.common.label import NodeLabel
+from eddy.core.items.nodes.common.base import (
+    AbstractResizableNode,
+    PredicateNodeMixin,
+)
 
 
-class ConceptNode(AbstractResizableNode):
+class ConceptNode(PredicateNodeMixin, AbstractResizableNode):
     """
     This class implements the 'Concept' node.
     """
     DefaultBrush = QtGui.QBrush(QtGui.QColor(252, 252, 252, 255))
     DefaultPen = QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
-    Identities = {Identity.Concept}
+    Identities = {Identity.Concept, Identity.Individual}
     Type = Item.ConceptNode
 
-    def __init__(self, width=110, height=50, brush=None, remaining_characters='concept', **kwargs):
+    def __init__(self, width=110, height=50, brush=None, **kwargs):
         """
         Initialize the node.
         :type width: int
@@ -67,21 +76,29 @@ class ConceptNode(AbstractResizableNode):
         self.selection = Polygon(QtCore.QRectF(-(w + 8) / 2, -(h + 8) / 2, w + 8, h + 8))
         self.polygon = Polygon(QtCore.QRectF(-w / 2, -h / 2, w, h), brush, pen)
 
-        self.remaining_characters = remaining_characters
-
-        self.label = NodeLabel(template='concept', pos=self.center, parent=self, editable=True)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
-        self.updateTextPos()
-
-
-    def emptyMethod(self):
-        projectName = ''#self.project.name
-        print('eccolo {}'.format(projectName))
 
     #############################################
     #   INTERFACE
     #################################
+
+    def initialLabelPosition(self):
+        return self.center()
+
+    def occursAsIndividual(self):
+        # Class Assertion
+        for instEdge in [x for x in self.edges if x.type() is Item.MembershipEdge]:
+            if instEdge.source is self:
+                return True
+        # Object[Data] Property Assertion
+        for inputEdge in [x for x in self.edges if x.type() is Item.InputEdge]:
+            if inputEdge.source is self and inputEdge.target.type() is Item.PropertyAssertionNode:
+                return True
+        # SameAs and Different
+        for inputEdge in [x for x in self.edges if (x.type() is Item.SameEdge or x.type() is Item.DifferentEdge)]:
+            if inputEdge.source is self or inputEdge.target is self:
+                return True
+        return False
 
     def boundingRect(self):
         """
@@ -95,19 +112,17 @@ class ConceptNode(AbstractResizableNode):
         Create a copy of the current item.
         :type diagram: Diagram
         """
-        #print('copy >> self',self)
-        #print('copy >> type(self)', type(self))
         node = diagram.factory.create(self.type(), **{
             'id': self.id,
+            'iri': None,
             'brush': self.brush(),
             'height': self.height(),
             'width': self.width(),
-            'remaining_characters': self.remaining_characters,
         })
         node.setPos(self.pos())
-        node.setText(self.text())
+        # node.setText(self.text())
+        node.iri = self.iri
         node.setTextPos(node.mapFromScene(self.mapToScene(self.textPos())))
-        #print('copy END >> self', self)
         return node
 
     def height(self):

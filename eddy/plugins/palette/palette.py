@@ -96,13 +96,13 @@ class PalettePlugin(AbstractPlugin):
         widget.button(Item.UnionNode).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.DisjointUnionNode).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.DatatypeRestrictionNode).setEnabled(profile not in {OWLProfile.OWL2QL, OWLProfile.OWL2RL})
-        widget.button(Item.FacetIRINode).setEnabled(profile not in {OWLProfile.OWL2QL, OWLProfile.OWL2RL})
+        widget.button(Item.FacetNode).setEnabled(profile not in {OWLProfile.OWL2QL, OWLProfile.OWL2RL})
         widget.button(Item.EnumerationNode).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.RoleChainNode).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.SameEdge).setEnabled(profile is not OWLProfile.OWL2QL)
         widget.button(Item.HasKeyNode).setEnabled(profile is not OWLProfile.OWL2QL)
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def onDiagramAdded(self, diagram):
         """
         Executed when a diagram is added to the project.
@@ -112,7 +112,7 @@ class PalettePlugin(AbstractPlugin):
         connect(diagram.sgnItemInsertionCompleted, self.onDiagramItemInsertionCompleted)
         connect(diagram.sgnModeChanged, self.onDiagramModeChanged)
 
-    @QtCore.pyqtSlot('QGraphicsItem', int)
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsItem, int)
     def onDiagramItemInsertionCompleted(self, _, modifiers):
         """
         Executed after an item MANUAL insertion process ends (not triggered for item added programmatically).
@@ -134,7 +134,7 @@ class PalettePlugin(AbstractPlugin):
         if mode not in (DiagramMode.NodeAdd, DiagramMode.EdgeAdd):
             self.widget('palette').reset()
 
-    @QtCore.pyqtSlot('QGraphicsScene')
+    @QtCore.pyqtSlot(QtWidgets.QGraphicsScene)
     def onDiagramRemoved(self, diagram):
         """
         Executed when a diagram is removed to the project.
@@ -277,13 +277,13 @@ class PaletteWidget(QtWidgets.QWidget):
         self.display = {}
         self.plugin = plugin
         self.items = [
-            Item.ConceptIRINode,
-            Item.RoleIRINode,
-            Item.AttributeIRINode,
-            Item.ValueDomainIRINode,
-            Item.IndividualIRINode,
+            Item.ConceptNode,
+            Item.RoleNode,
+            Item.AttributeNode,
+            Item.ValueDomainNode,
+            Item.IndividualNode,
             Item.LiteralNode,
-            Item.FacetIRINode,
+            Item.FacetNode,
             Item.DomainRestrictionNode,
             Item.RangeRestrictionNode,
             Item.IntersectionNode,
@@ -305,13 +305,13 @@ class PaletteWidget(QtWidgets.QWidget):
         ]
         self.shortcutPrefix = 'Shift+Alt'
         self.itemShortcuts = {
-            Item.ConceptIRINode: '{}+c'.format(self.shortcutPrefix),
-            Item.IndividualIRINode: '{}+i'.format(self.shortcutPrefix),
+            Item.ConceptNode: '{}+c'.format(self.shortcutPrefix),
+            Item.IndividualNode: '{}+i'.format(self.shortcutPrefix),
             Item.LiteralNode: '{}+i,v'.format(self.shortcutPrefix),
-            Item.RoleIRINode: '{}+r'.format(self.shortcutPrefix),
-            Item.AttributeIRINode: '{}+a'.format(self.shortcutPrefix),
-            Item.ValueDomainIRINode: '{}+v'.format(self.shortcutPrefix),
-            Item.FacetIRINode: '{}+n,f'.format(self.shortcutPrefix),
+            Item.RoleNode: '{}+r'.format(self.shortcutPrefix),
+            Item.AttributeNode: '{}+a'.format(self.shortcutPrefix),
+            Item.ValueDomainNode: '{}+v'.format(self.shortcutPrefix),
+            Item.FacetNode: '{}+n,f'.format(self.shortcutPrefix),
             Item.DomainRestrictionNode: '{}+n,e'.format(self.shortcutPrefix),
             Item.RangeRestrictionNode: '{}+n,g'.format(self.shortcutPrefix),
             Item.IntersectionNode: '{}+n,a'.format(self.shortcutPrefix),
@@ -411,9 +411,6 @@ class PaletteWidget(QtWidgets.QWidget):
                 diagram.setMode(DiagramMode.Idle)
             else:
                 if Item.ConceptNode <= button.item < Item.InclusionEdge:
-                    diagram.setMode(DiagramMode.NodeAdd, button.item)
-                #TODO elif added
-                elif Item.ConceptIRINode <= button.item <=Item.IndividualIRINode:
                     diagram.setMode(DiagramMode.NodeAdd, button.item)
                 elif Item.InclusionEdge <= button.item <= Item.DifferentEdge:
                     diagram.setMode(DiagramMode.EdgeAdd, button.item)
@@ -565,18 +562,6 @@ class PaletteButton(QtWidgets.QToolButton):
                     drag.setPixmap(self.icon().pixmap(60, 40))
                     drag.setHotSpot(self.startPos - self.rect().topLeft())
                     drag.exec_(QtCore.Qt.CopyAction)
-            #TODO added
-            elif Item.ConceptIRINode <= self.item <= Item.IndividualIRINode:
-                distance = (mouseEvent.pos() - self.startPos).manhattanLength()
-                if distance >= QtWidgets.QApplication.startDragDistance():
-                    mimeData = QtCore.QMimeData()
-                    mimeData.setText(str(self.item.value))
-                    drag = QtGui.QDrag(self)
-                    drag.setMimeData(mimeData)
-                    drag.setPixmap(self.icon().pixmap(60, 40))
-                    drag.setHotSpot(self.startPos - self.rect().topLeft())
-                    drag.exec_(QtCore.Qt.CopyAction)
-
 
         super().mouseMoveEvent(mouseEvent)
 
@@ -627,7 +612,7 @@ class PaletteButton(QtWidgets.QToolButton):
             # CONCEPT NODE
             #################################
 
-            if item is Item.ConceptIRINode:
+            if item is Item.ConceptNode:
                 painter = QtGui.QPainter(pixmap)
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
@@ -641,7 +626,7 @@ class PaletteButton(QtWidgets.QToolButton):
             # ROLE NODE
             #################################
 
-            elif item is Item.RoleIRINode:
+            elif item is Item.RoleNode:
 
                 painter = QtGui.QPainter(pixmap)
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -663,7 +648,7 @@ class PaletteButton(QtWidgets.QToolButton):
             # ATTRIBUTE NODE
             #################################
 
-            elif item is Item.AttributeIRINode:
+            elif item is Item.AttributeNode:
 
                 painter = QtGui.QPainter(pixmap)
                 painter.setFont(Font(pixelSize=9, weight=Font.Light))
@@ -680,7 +665,7 @@ class PaletteButton(QtWidgets.QToolButton):
             # VALUE-DOMAIN NODE
             #################################
 
-            elif item is Item.ValueDomainIRINode:
+            elif item is Item.ValueDomainNode:
 
                 painter = QtGui.QPainter(pixmap)
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -696,7 +681,7 @@ class PaletteButton(QtWidgets.QToolButton):
             # INDIVIDUAL NODE
             #################################
 
-            elif item is Item.IndividualIRINode:
+            elif item is Item.IndividualNode:
                 painter = QtGui.QPainter(pixmap)
                 painter.setRenderHint(QtGui.QPainter.Antialiasing)
                 painter.setPen(
@@ -750,7 +735,7 @@ class PaletteButton(QtWidgets.QToolButton):
             # FACET NODE
             #################################
 
-            elif item is Item.FacetIRINode:
+            elif item is Item.FacetNode:
 
                 polygonA = QtGui.QPolygonF([
                     QtCore.QPointF(-54 / 2 + 4, -32 / 2),
