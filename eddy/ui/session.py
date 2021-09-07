@@ -661,8 +661,7 @@ class Session(
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_save_black'), 'Save As...', self,
             objectName='save_as', shortcut=QtGui.QKeySequence.SaveAs,
-            statusTip='Save the current project',
-            enabled=False, triggered=self.doSaveAs))
+            statusTip='Save the current project', triggered=self.doSaveAs))
 
         # self.addAction(QtWidgets.QAction(
         #    'Import...', self, objectName='import', triggered=self.doImport,
@@ -3247,7 +3246,6 @@ class Session(
         self.action('property_transitive').setChecked(isPropertyTransitiveChecked)
         self.action('property_transitive').setEnabled(isPropertyTransitiveEnabled)
         self.action('save').setEnabled(not isUndoStackClean)
-        self.action('save_as').setEnabled(not isProjectEmpty)
         self.action('select_all').setEnabled(isDiagramActive)
         self.action('send_to_back').setEnabled(isNodeSelected)
         self.action('snap_to_grid').setEnabled(isDiagramActive)
