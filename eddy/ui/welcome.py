@@ -70,6 +70,7 @@ from eddy.core.functions.path import (
     shortPath,
 )
 from eddy.core.functions.signals import connect
+from eddy.ui.file import FileDialog
 from eddy.ui.project import NewProjectDialog
 
 
@@ -296,11 +297,9 @@ class Welcome(QtWidgets.QDialog):
         """
         Bring up a modal window used to open a project.
         """
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters([File.Graphol.value])
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.sgnOpenProject.emit(first(dialog.selectedFiles()))

@@ -200,6 +200,7 @@ from eddy.ui.explanation import (
     EmptyEntityDialog,
 )
 from eddy.ui.fields import ComboBox
+from eddy.ui.file import FileDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
     NewDiagramForm,
@@ -1866,9 +1867,8 @@ class Session(
         Export the current project.
         """
         if not self.project.isEmpty():
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(
                 # self.ontologyExporterNameFilters()                -> .owl
@@ -1878,7 +1878,6 @@ class Session(
                        + self.diagramExporterNameFilters({File.Pdf, File.GraphML})
                        ))
 
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
             if dialog.exec_():
@@ -1902,14 +1901,12 @@ class Session(
         Export the current project diagrams.
         """
         if not self.project.isEmpty():
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             # dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol,File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
             dialog.setNameFilters(self.projectExporterNameFilters(
                 {File.Csv, File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Pdf.value)
             if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
@@ -1984,12 +1981,10 @@ class Session(
         Export the current project.
         """
         if not self.project.isEmpty():
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
             if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
@@ -2052,11 +2047,9 @@ class Session(
         """
         Import an ontology into the currently active Project.
         """
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters(self.ontologyLoaderNameFilters({File.GraphML}))
         if dialog.exec_():
             filetype = File.valueOf(dialog.selectedNameFilter())
@@ -2180,11 +2173,9 @@ class Session(
         """
         Open a project in a new session.
         """
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters([File.Graphol.value])
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.app.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
@@ -2682,9 +2673,8 @@ class Session(
                     settings.sync()
             else:
                 if self.project.diagrams():
-                    dialog = QtWidgets.QFileDialog(self)
+                    dialog = FileDialog(self)
                     dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-                    dialog.setDirectory(expandPath('~/'))
                     dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
                     # dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
                     dialog.setNameFilter(File.Graphol.value)
@@ -2737,12 +2727,8 @@ class Session(
         """
         try:
             workingPath = self.project.path if self.project.path else None
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            if workingPath:
-                dialog.setDirectory(expandPath(workingPath))
-            else:
-                dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             # dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
             dialog.setNameFilter(File.Graphol.value)

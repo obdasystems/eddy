@@ -6,15 +6,16 @@ from PyQt5.QtWidgets import QRadioButton, QButtonGroup, QAbstractButton
 
 from eddy.core.commands.project import CommandProjectAddOntologyImport
 from eddy.core.common import HasWidgetSystem, HasThreadingSystem
-from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.owl2 import OwlOntologyImportWorker
 from eddy.core.output import getLogger
 from eddy.core.owl import ImportedOntology
 from eddy.ui.fields import StringField
+from eddy.ui.file import FileDialog
 
 LOGGER = getLogger()
+
 
 class ImportOntologyDialog(QtWidgets.QDialog, HasWidgetSystem, HasThreadingSystem):
     sgnOntologyImportAccepted = QtCore.pyqtSignal(ImportedOntology)
@@ -410,21 +411,21 @@ class LocalFileWidget(QtWidgets.QWidget):
             self.pathField.setStyleSheet("color: red;")
 
     @QtCore.pyqtSlot(bool)
-    def onBrowseClicked(self,  _):
+    def onBrowseClicked(self, _):
         """
         Back button pressed
         :type _: bool
         """
         self.browseBtn.setDown(False)
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilter("OWL files (*.owl)")
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             path = first(dialog.selectedFiles())
             if path:
                 self.pathField.setText(path)
+
 
 class WebFileWidget(QtWidgets.QWidget):
     sgnValidURI = QtCore.pyqtSignal()
