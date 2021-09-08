@@ -55,7 +55,7 @@ packaging==21.0
     #   tox
 pep517==0.11.0
     # via pip-tools
-pillow==8.3.1
+pillow==8.3.2
     # via -r requirements/in/packaging.in
 pip-tools==6.2.0
     # via -r requirements/in/dev.in
