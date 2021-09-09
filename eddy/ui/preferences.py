@@ -51,6 +51,7 @@ from eddy.core.functions.signals import connect
 from eddy.ui.fields import CheckBox, StringField
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import SpinBox
+from eddy.ui.file import FileDialog
 
 
 class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -374,12 +375,11 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         if not isPathValid(path):
             path = expandPath('~')
 
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(path)
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
 
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.widget('workspace_field').setValue(first(dialog.selectedFiles()))

@@ -33,23 +33,30 @@
 ##########################################################################
 
 
-import os
-
 from textwrap import dedent
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
 from eddy import APPNAME
-from eddy.core.functions.misc import first, format_exception, isEmpty
-from eddy.core.functions.path import expandPath, isPathValid
+from eddy.core.datatypes.qt import Font
+from eddy.core.datatypes.system import File
+from eddy.core.functions.misc import (
+    first,
+    format_exception,
+    isEmpty,
+)
+from eddy.core.functions.path import (
+    expandPath,
+    isPathValid,
+)
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
-from eddy.core.datatypes.system import File
-from eddy.core.datatypes.qt import Font
-
 from eddy.ui.fields import StringField
+from eddy.ui.file import FileDialog
 
 LOGGER = getLogger()
 
@@ -194,15 +201,9 @@ class PluginInstallDialog(QtWidgets.QDialog):
         """
         Bring up a modal window that allows the user to choose a valid plugin archive.
         """
-        path = os.path.dirname(self.pluginField.value())
-        if not isPathValid(path):
-            path = expandPath('~')
-
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(path)
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters([File.Zip.value])
 
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:

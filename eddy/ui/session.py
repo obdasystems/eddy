@@ -200,6 +200,7 @@ from eddy.ui.explanation import (
     EmptyEntityDialog,
 )
 from eddy.ui.fields import ComboBox
+from eddy.ui.file import FileDialog
 from eddy.ui.forms import (
     CardinalityRestrictionForm,
     NewDiagramForm,
@@ -660,8 +661,7 @@ class Session(
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_save_black'), 'Save As...', self,
             objectName='save_as', shortcut=QtGui.QKeySequence.SaveAs,
-            statusTip='Save the current project',
-            enabled=False, triggered=self.doSaveAs))
+            statusTip='Save the current project', triggered=self.doSaveAs))
 
         # self.addAction(QtWidgets.QAction(
         #    'Import...', self, objectName='import', triggered=self.doImport,
@@ -1513,6 +1513,7 @@ class Session(
         connect(self.sgnCheckForUpdate, self.doCheckForUpdate)
         connect(self.sgnFocusDiagram, self.doFocusDiagram)
         connect(self.sgnFocusItem, self.doFocusItem)
+        connect(self.sgnProjectSaved, self.onProjectSaved)
         connect(self.sgnReady, self.doUpdateState)
         connect(self.sgnReady, self.onSessionReady)
         connect(self.sgnSaveProject, self.doSave)
@@ -1866,9 +1867,8 @@ class Session(
         Export the current project.
         """
         if not self.project.isEmpty():
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(
                 # self.ontologyExporterNameFilters()                -> .owl
@@ -1878,7 +1878,6 @@ class Session(
                        + self.diagramExporterNameFilters({File.Pdf, File.GraphML})
                        ))
 
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
             if dialog.exec_():
@@ -1902,14 +1901,12 @@ class Session(
         Export the current project diagrams.
         """
         if not self.project.isEmpty():
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             # dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol,File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
             dialog.setNameFilters(self.projectExporterNameFilters(
                 {File.Csv, File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Pdf.value)
             if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
@@ -1984,12 +1981,10 @@ class Session(
         Export the current project.
         """
         if not self.project.isEmpty():
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
             dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Owl.value)
             if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
@@ -2052,11 +2047,9 @@ class Session(
         """
         Import an ontology into the currently active Project.
         """
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters(self.ontologyLoaderNameFilters({File.GraphML}))
         if dialog.exec_():
             filetype = File.valueOf(dialog.selectedNameFilter())
@@ -2180,11 +2173,9 @@ class Session(
         """
         Open a project in a new session.
         """
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(expandPath('~'))
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         dialog.setNameFilters([File.Graphol.value])
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.app.sgnCreateSession.emit(expandPath(first(dialog.selectedFiles())))
@@ -2665,59 +2656,22 @@ class Session(
         """
         Save the current project.
         """
+        currentPath = self.project.path
         try:
-            settings = QtCore.QSettings()
-            projects = settings.value('project/recent', None, str) or []
-            if self.project.path:
-                worker = self.createProjectExporter(File.Graphol, self.project, self)
-                worker.run()
-                try:
-                    projects.remove(self.project.path)
-                except ValueError:
-                    pass
-                finally:
-                    projects.insert(0, self.project.path)
-                    projects = projects[:8]
-                    settings.setValue('project/recent', projects)
-                    settings.sync()
-            else:
-                if self.project.diagrams():
-                    dialog = QtWidgets.QFileDialog(self)
-                    dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-                    dialog.setDirectory(expandPath('~/'))
-                    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-                    # dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
-                    dialog.setNameFilter(File.Graphol.value)
-                    dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-                    dialog.selectFile(self.project.name)
-                    dialog.selectNameFilter(File.Graphol.value)
-                    if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
-                        # When this is set on macOS, for some reason the native file dialog requires to set
-                        # the file filter twice before changing the default suffix, but it already
-                        # does this without setting this action. Tested on Qt 5.10.1
-                        connect(dialog.filterSelected, lambda value: \
-                            dialog.setDefaultSuffix(
-                                File.forValue(value).extension if value else None))
-                    if dialog.exec_():
-                        filetype = File.valueOf(dialog.selectedNameFilter())
-                        self.project.path = expandPath(first(dialog.selectedFiles()))
-                        worker = self.createProjectExporter(filetype, self.project, self)
-                        worker.run()
-
-                        #############################################
-                        # UPDATE RECENT PROJECTS
-                        #################################
-
-                        try:
-                            projects.remove(self.project.path)
-                        except ValueError:
-                            pass
-                        finally:
-                            projects.insert(0, self.project.path)
-                            projects = projects[:8]
-                            settings.setValue('project/recent', projects)
-                            settings.sync()
+            if not self.project.path:
+                dialog = FileDialog(self)
+                dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+                dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+                dialog.setNameFilter(File.Graphol.value)
+                dialog.selectFile(self.project.name)
+                dialog.selectNameFilter(File.Graphol.value)
+                if not dialog.exec_():
+                    return
+                self.project.path = expandPath(first(dialog.selectedFiles()))
+            worker = self.createProjectExporter(File.Graphol, self.project, self)
+            worker.run()
         except Exception as e:
+            self.project.path = currentPath
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
@@ -2735,52 +2689,19 @@ class Session(
         """
         Save the current project as...
         """
+        currentPath = self.project.path
         try:
-            workingPath = self.project.path if self.project.path else None
-            dialog = QtWidgets.QFileDialog(self)
+            dialog = FileDialog(self)
             dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            if workingPath:
-                dialog.setDirectory(expandPath(workingPath))
-            else:
-                dialog.setDirectory(expandPath('~/'))
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            # dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
             dialog.setNameFilter(File.Graphol.value)
-            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-            # dialog.selectFile(self.project.name)
             dialog.selectNameFilter(File.Graphol.value)
-            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
-                # When this is set on macOS, for some reason the native file dialog requires to set
-                # the file filter twice before changing the default suffix, but it already
-                # does this without setting this action. Tested on Qt 5.10.1
-                connect(dialog.filterSelected, lambda value: \
-                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
-            savePath = None
             if dialog.exec_():
-                filetype = File.valueOf(dialog.selectedNameFilter())
-                savePath = expandPath(first(dialog.selectedFiles()))
-                worker = None
-                if not workingPath:
-                    self.project.path = savePath
-                    worker = self.createProjectExporter(filetype, self.project, self)
-                else:
-                    worker = self.createProjectExporter(filetype, self.project, self, savePath)
+                self.project.path = expandPath(first(dialog.selectedFiles()))
+                worker = self.createProjectExporter(File.Graphol, self.project, self)
                 worker.run()
-                #############################################
-                # UPDATE RECENT PROJECTS
-                #################################
-                settings = QtCore.QSettings()
-                projects = settings.value('project/recent', None, str) or []
-                try:
-                    projects.remove(savePath)
-                except ValueError:
-                    pass
-                finally:
-                    projects.insert(0, savePath)
-                    projects = projects[:8]
-                    settings.setValue('project/recent', projects)
-                    settings.sync()
         except Exception as e:
+            self.project.path = currentPath
             msgbox = QtWidgets.QMessageBox(self)
             msgbox.setDetailedText(format_exception(e))
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
@@ -2790,10 +2711,8 @@ class Session(
             msgbox.setWindowTitle('Save failed!')
             msgbox.exec_()
         else:
-            if not workingPath or (
-                savePath and expandPath(savePath) == expandPath(self.project.path)):
-                self.undostack.setClean()
-                self.sgnProjectSaved.emit()
+            self.undostack.setClean()
+            self.sgnProjectSaved.emit()
 
     @QtCore.pyqtSlot()
     def doSelectAll(self) -> None:
@@ -3327,7 +3246,6 @@ class Session(
         self.action('property_transitive').setChecked(isPropertyTransitiveChecked)
         self.action('property_transitive').setEnabled(isPropertyTransitiveEnabled)
         self.action('save').setEnabled(not isUndoStackClean)
-        self.action('save_as').setEnabled(not isProjectEmpty)
         self.action('select_all').setEnabled(isDiagramActive)
         self.action('send_to_back').setEnabled(isNodeSelected)
         self.action('snap_to_grid').setEnabled(isDiagramActive)
@@ -3454,6 +3372,22 @@ class Session(
             <b><font color="#7E0B17">ERROR</font></b>: Could not connect to update site:
             unable to get update information.
             """))
+
+    @QtCore.pyqtSlot()
+    def onProjectSaved(self) -> None:
+        """
+        Executed when the current project is saved.
+        """
+        # UPDATE WINDOW TITLE
+        self.setWindowTitle(self.project)
+        # UPDATE RECENT PROJECTS
+        settings = QtCore.QSettings()
+        projects = [self.project.path]
+        for path in map(expandPath, settings.value('project/recent', None, str) or []):
+            if fexists(path) and path not in projects:
+                projects.append(path)
+        settings.setValue('project/recent', projects)
+        settings.sync()
 
     @QtCore.pyqtSlot()
     def onSessionReady(self) -> None:

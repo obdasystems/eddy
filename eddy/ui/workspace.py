@@ -35,17 +35,29 @@
 
 from textwrap import dedent
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
-from eddy import APPNAME, WORKSPACE
+from eddy import (
+    APPNAME,
+    WORKSPACE,
+)
 from eddy.core.datatypes.qt import Font
 from eddy.core.functions.fsystem import mkdir
-from eddy.core.functions.misc import first, format_exception
-from eddy.core.functions.path import isPathValid, expandPath
+from eddy.core.functions.misc import (
+    first,
+    format_exception,
+)
+from eddy.core.functions.path import (
+    isPathValid,
+    expandPath,
+)
 from eddy.core.functions.signals import connect
 from eddy.ui.fields import StringField
+from eddy.ui.file import FileDialog
 
 
 class WorkspaceDialog(QtWidgets.QDialog):
@@ -165,12 +177,11 @@ class WorkspaceDialog(QtWidgets.QDialog):
         if not isPathValid(path):
             path = expandPath('~')
 
-        dialog = QtWidgets.QFileDialog(self)
+        dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setDirectory(path)
         dialog.setFileMode(QtWidgets.QFileDialog.Directory)
         dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
 
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.workspaceField.setValue(first(dialog.selectedFiles()))
