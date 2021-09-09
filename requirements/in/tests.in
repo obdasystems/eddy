@@ -2,7 +2,7 @@
 -r base.in
 
 # From PyPi
-pytest==6.2.4
+pytest==6.2.5
 pytest-benchmark==3.4.1
 pytest-cov==2.12.1
 pytest-instafail==0.4.2
