@@ -64,12 +64,9 @@ if not os.path.isdir(__HOME_PATH):
     os.mkdir(__HOME_PATH)
 
 
-def compressPath(path, maxchars, dots=3):
+def compressPath(path: str, maxchars: int, dots: int = 3) -> str:
     """
     Returns a visual representation of the given path showing up to 'marchars' characters.
-    :type path: str
-    :type maxchars: int
-    :type dots: int
     """
     if len(path) > maxchars:
         index = path.rfind(os.path.sep)
@@ -80,7 +77,7 @@ def compressPath(path, maxchars, dots=3):
     return path
 
 
-def expandPath(path):
+def expandPath(path: str) -> str:
     """
     Return an absolute path by expanding the given relative one.
     The following tokens will be expanded:
@@ -95,8 +92,6 @@ def expandPath(path):
         - @tests => Eddy's tests directory
         - ~ => will be expanded to the user home directory ($HOME)
 
-    :type path: str
-    :rtype: str
     """
     if path.startswith('@eddy/') or path.startswith('@eddy\\'):
         path = os.path.join(__MODULE_PATH, path[6:])
@@ -117,11 +112,9 @@ def expandPath(path):
     return os.path.abspath(os.path.normpath(os.path.expanduser(path)))
 
 
-def isPathValid(path):
+def isPathValid(path: str) -> bool:
     """
     Returns True if the given path is valid, False otherwise.
-    :type path: str
-    :rtype: bool
     """
     try:
         if not path or not isinstance(path, str):
@@ -148,20 +141,16 @@ def isPathValid(path):
         return True
 
 
-def isSubPath(path1, path2):
+def isSubPath(path1: str, path2: str) -> bool:
     """
     Check whether the given 'path1' is subpath of the given 'path2'.
-    :param path1: str
-    :param path2: str
-    :rtype: bool
     """
     return expandPath(path2).startswith(expandPath(path1))
 
 
-def openPath(path):
+def openPath(path: str) -> None:
     """
     Open the given path using the OS default program.
-    :type path: str
     """
     path = expandPath(path)
     if os.path.isfile(path) or os.path.isdir(path):
@@ -173,15 +162,13 @@ def openPath(path):
             os.system('xdg-open "{0}"'.format(path))
 
 
-def shortPath(path):
+def shortPath(path: str) -> str:
     """
     Convert the given path into a short one.
     The following tokens will be reintroduced:
 
         - ~ => user home directory ($HOME)
 
-    :type path: str
-    :rtype: str
     """
     for prefix in ('~',):
         absprefix = expandPath(prefix)
@@ -190,13 +177,9 @@ def shortPath(path):
     return path
 
 
-def uniquePath(base, name, extension):
+def uniquePath(base: str, name: str, extension: str) -> str:
     """
     This function generates a unique filepath which ensure not to overwrite an existing file.
-    :type base: str
-    :type name: str
-    :type extension: str
-    :rtype: str
     """
     num = 0
     base = expandPath(base)
