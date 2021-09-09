@@ -33,22 +33,16 @@
 ##########################################################################
 
 
-import os
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+    QtXmlPatterns,
+)
 
-from PyQt5 import QtCore, QtXmlPatterns
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-
-from eddy import WORKSPACE
-from eddy.core.exporters.graphol import GrapholProjectExporter
-from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
-from eddy.core.functions.fsystem import isdir
-from eddy.core.functions.misc import isEmpty, rstrip
-from eddy.core.functions.path import expandPath, isPathValid
+from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
-from eddy.core.owl import IRI, IllegalNamespaceError
-from eddy.core.profiles.owl2 import OWL2Profile
-from eddy.core.project import Project
+from eddy.core.owl import IRI
 from eddy.ui.fields import StringField
 
 
@@ -56,7 +50,7 @@ class NewProjectDialog(QtWidgets.QDialog):
     """
     This class is used to display a modal window to enter new project specific data.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the project dialog.
         :type parent: QWidget
@@ -66,11 +60,6 @@ class NewProjectDialog(QtWidgets.QDialog):
         #############################################
         # FORM AREA
         #################################
-
-        settings = QtCore.QSettings()
-
-        self.workspace = expandPath(settings.value('workspace/home', WORKSPACE, str))
-        self.workspace = '{0}{1}'.format(rstrip(self.workspace, os.path.sep), os.path.sep)
 
         self.nameLabel = QtWidgets.QLabel(self)
         self.nameLabel.setText('Project name')
@@ -88,21 +77,9 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.prefixField = StringField(self)
         self.prefixField.setMinimumWidth(400)
 
-        connect(self.prefixField.textChanged, self.doAcceptForm)
-        #connect(self.prefixesField.textChanged, self.doAcceptForm)
-        connect(self.iriField.textChanged, self.doAcceptForm)
-        connect(self.nameField.textChanged, self.doAcceptForm)
-        connect(self.nameField.textChanged, self.onNameFieldChanged)
-
-        '''
-        self.pathLabel = QtWidgets.QLabel(self)
-        self.pathLabel.setText('Location')
-        self.pathField = StringField(self)
-        self.pathField.setMinimumWidth(400)
-        self.pathField.setReadOnly(True)
-        self.pathField.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.pathField.setValue(self.workspace)
-        '''
+        connect(self.prefixField.textChanged, self.doValidateForm)
+        connect(self.iriField.textChanged, self.doValidateForm)
+        connect(self.nameField.textChanged, self.doValidateForm)
 
         spacer = QtWidgets.QFrame()
         spacer.setFrameShape(QtWidgets.QFrame.HLine)
@@ -114,7 +91,6 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.formLayout.addRow(self.iriLabel, self.iriField)
         self.formLayout.addRow(self.prefixLabel, self.prefixField)
         self.formLayout.addWidget(spacer)
-        #self.formLayout.addRow(self.pathLabel, self.pathField)
 
         #############################################
         # CONFIRMATION AREA
@@ -152,70 +128,30 @@ class NewProjectDialog(QtWidgets.QDialog):
     #   INTERFACE
     #################################
 
-    def iri(self):
+    def iri(self) -> str:
         """
         Returns the value of the iri field (trimmed).
-        :rtype: str
         """
         return self.iriField.value()
 
-    def name(self):
+    def name(self) -> str:
         """
         Returns the value of the name field (trimmed).
-        :rtype: str
         """
         return self.nameField.value()
 
-    def path(self):
-        """
-        Returns the value of the path field (expanded).
-        :rtype: str
-        """
-        return expandPath('{}{}'.format(self.workspace,self.nameField.value()))
-        #return expandPath(self.pathField.value())
-
-
-    def prefix(self):
+    def prefix(self) -> str:
         """
         Returns the value of the prefix field (trimmed).
-        :rtype: str
         """
         return self.prefixField.value()
 
     #############################################
     # SLOTS
     #################################
-    @QtCore.pyqtSlot()
-    def accept(self):
-        """
-        Accept the project form and creates a new empty project.
-        """
-        '''
-        project = Project(
-            name=self.name(),
-            path=self.path(),
-            version=None,
-            profile=OWL2Profile(),
-            prefixMap=None,
-            ontologyIRI=self.iri(),
-            datatypes=None,
-            constrFacets=None,
-            languages=None,
-            annotationProperties=None,
-            session=None,
-            ontologyPrefix=str(self.prefix()).strip(),
-            defaultLanguage="en",
-            addLabelFromSimpleName=False,
-            addLabelFromUserInput=False,
-            ontologies=set()
-        )
-        worker = GrapholIRIProjectExporter(project)
-        worker.run()
-        '''
-        super().accept()
 
     @QtCore.pyqtSlot()
-    def doAcceptForm(self):
+    def doValidateForm(self) -> None:
         """
         Validate project settings.
         """
@@ -229,25 +165,15 @@ class NewProjectDialog(QtWidgets.QDialog):
         if not self.name():
             caption = ''
             enabled = False
-        '''
-        else:
-            if isdir(self.path()):
-                caption = "Project '{0}' already exists!".format(self.name())
-                enabled = False
-            elif not isPathValid(self.path()):
-                caption = "'{0}' is not a valid project name!".format(self.name())
-                enabled = False
-        '''
 
         #############################################
         # CHECK PREFIX
         #################################
 
         if enabled:
-            if self.prefix() and not QtXmlPatterns.QXmlName.isNCName(str(self.prefix()).strip()):
+            if self.prefix() and not QtXmlPatterns.QXmlName.isNCName(self.prefix()):
                 caption = 'Please insert a legal prefix'
                 enabled = False
-
 
         #############################################
         # CHECK IRI
@@ -257,23 +183,11 @@ class NewProjectDialog(QtWidgets.QDialog):
             if not self.iri():
                 caption = ''
                 enabled = False
-            else:
-                try:
-                    iriObj = IRI(self.iri())
-                except IllegalNamespaceError:
-                    caption = 'Please insert a legal IRI'
-                    enabled = False
+            elif not IRI.isValidNamespace(self.iri()):
+                caption = 'Please insert a legal IRI'
+                enabled = False
 
         self.caption.setText(caption)
         self.caption.setVisible(not isEmpty(caption))
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
-
-    @QtCore.pyqtSlot(str)
-    def onNameFieldChanged(self, name):
-        """
-        Update the project location field to reflect the new project name.
-        :type name: str
-        """
-        #self.pathField.setValue('{0}{1}'.format(self.workspace, name.strip()))
-        pass
