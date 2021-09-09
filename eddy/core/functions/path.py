@@ -60,10 +60,6 @@ __SUPPORT_PATH = os.path.join(__ROOT_PATH, 'support')
 __TESTS_PATH = os.path.join(__ROOT_PATH, 'tests')
 
 
-if not os.path.isdir(__HOME_PATH):
-    os.mkdir(__HOME_PATH)
-
-
 def compressPath(path: str, maxchars: int, dots: int = 3) -> str:
     """
     Returns a visual representation of the given path showing up to 'marchars' characters.
