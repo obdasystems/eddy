@@ -37,6 +37,8 @@ import errno
 import os
 import sys
 
+from PyQt5 import QtCore
+
 from eddy.core.datatypes.system import (
     IS_FROZEN,
     IS_LINUX,
@@ -58,6 +60,7 @@ __PLUGINS_PATH = os.path.join(__MODULE_PATH, 'plugins')
 __RESOURCES_PATH = os.path.join(__ROOT_PATH, 'resources')
 __SUPPORT_PATH = os.path.join(__ROOT_PATH, 'support')
 __TESTS_PATH = os.path.join(__ROOT_PATH, 'tests')
+__TEST_RESOURCES_PATH = os.path.join(__TESTS_PATH, 'test_resources')
 
 
 def compressPath(path: str, maxchars: int, dots: int = 3) -> str:
@@ -80,12 +83,18 @@ def expandPath(path: str) -> str:
 
         - @eddy => Eddy's directory
         - @home => Eddy's home directory (.eddy in $HOME)
+        - @config => Eddy's config directory (platform-specific)
+        - @cache => Eddy's cache directory (platform-specific)
+        - @data => Eddy's data directory (platform-specific)
+        - @temp => Eddy's temp directory (platform-specific)
+        - @runtime => Eddy's runtime directory (platform-specific)
         - @root => Eddy's root (matches @eddy if running a frozen application)
         - @resources => Eddy's resources directory
         - @examples => Eddy's examples directory
         - @plugins => Eddy's plugins directory
         - @support => Eddy's support directory
         - @tests => Eddy's tests directory
+        - @test_resources => Eddy's test resources directory
         - ~ => will be expanded to the user home directory ($HOME)
 
     """
@@ -93,6 +102,21 @@ def expandPath(path: str) -> str:
         path = os.path.join(__MODULE_PATH, path[6:])
     elif path.startswith('@home/') or path.startswith('@home\\'):
         path = os.path.join(__HOME_PATH, path[6:])
+    elif path.startswith('@config/') or path.startswith('@config\\'):
+        confPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppConfigLocation)
+        path = os.path.join(os.path.normpath(os.path.join(confPath, os.path.pardir)), path[8:])
+    elif path.startswith('@cache/') or path.startswith('@cache\\'):
+        cachePath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.CacheLocation)
+        path = os.path.join(os.path.normpath(os.path.join(cachePath, os.path.pardir)), path[7:])
+    elif path.startswith('@data/') or path.startswith('@data\\'):
+        dataPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
+        path = os.path.join(os.path.normpath(os.path.join(dataPath, os.path.pardir)), path[6:])
+    elif path.startswith('@temp/') or path.startswith('@temp\\'):
+        tempPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.TempLocation)
+        path = os.path.join(tempPath, path[6:])
+    elif path.startswith('@runtime/') or path.startswith('@runtime\\'):
+        runPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.RuntimeLocation)
+        path = os.path.join(runPath, path[9:])
     elif path.startswith('@root/') or path.startswith('@root\\'):
         path = os.path.join(__ROOT_PATH, path[6:])
     elif path.startswith('@resources/') or path.startswith('@resources\\'):
@@ -105,6 +129,8 @@ def expandPath(path: str) -> str:
         path = os.path.join(__SUPPORT_PATH, path[9:])
     elif path.startswith('@tests/') or path.startswith('@tests\\'):
         path = os.path.join(__TESTS_PATH, path[7:])
+    elif path.startswith('@test_resources/') or path.startswith('@test_resources\\'):
+        path = os.path.join(__TEST_RESOURCES_PATH, path[16:])
     return os.path.abspath(os.path.normpath(os.path.expanduser(path)))
 
 
