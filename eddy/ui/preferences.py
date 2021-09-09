@@ -35,23 +35,21 @@
 
 import textwrap
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
-from eddy import WORKSPACE
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.owl import OWLAxiom
 from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import Channel
 from eddy.core.diagram import Diagram
-from eddy.core.functions.misc import first
-from eddy.core.functions.path import isPathValid, expandPath
 from eddy.core.functions.signals import connect
-from eddy.ui.fields import CheckBox, StringField
+from eddy.ui.fields import CheckBox
 from eddy.ui.fields import ComboBox
 from eddy.ui.fields import SpinBox
-from eddy.ui.file import FileDialog
 
 
 class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -70,26 +68,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # GENERAL TAB
         #################################
-
-        # WORKSPACE GROUP
-
-        workspace = StringField(self, objectName='workspace_field')
-        workspace.setMinimumWidth(400)
-        workspace.setReadOnly(True)
-        workspace.setText(settings.value('workspace/home', WORKSPACE, str))
-        self.addWidget(workspace)
-
-        browse = QtWidgets.QPushButton(self, objectName='workspace_browse_button')
-        browse.setText('Browse')
-        connect(browse.clicked, self.browseWorkspace)
-        self.addWidget(browse)
-
-        boxLayout = QtWidgets.QHBoxLayout()
-        boxLayout.addWidget(self.widget('workspace_field'))
-        boxLayout.addWidget(self.widget('workspace_browse_button'))
-        groupbox = QtWidgets.QGroupBox('Workspace', self, objectName='workspace_widget')
-        groupbox.setLayout(boxLayout)
-        self.addWidget(groupbox)
 
         ## EDITOR GROUP
 
@@ -157,7 +135,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('workspace_widget'), 0, QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('editor_widget'), 0, QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('update_widget'), 0, QtCore.Qt.AlignTop)
         widget = QtWidgets.QWidget()
@@ -367,24 +344,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
     #################################
 
     @QtCore.pyqtSlot()
-    def browseWorkspace(self):
-        """
-        Bring up a modal window that allows the user to choose a valid workspace path.
-        """
-        path = self.widget('workspace_field').value()
-        if not isPathValid(path):
-            path = expandPath('~')
-
-        dialog = FileDialog(self)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setDirectory(path)
-        dialog.setFileMode(QtWidgets.QFileDialog.Directory)
-        dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly, True)
-
-        if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
-            self.widget('workspace_field').setValue(first(dialog.selectedFiles()))
-
-    @QtCore.pyqtSlot()
     def accept(self):
         """
         Executed when the dialog is accepted.
@@ -426,7 +385,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         # GENERAL TAB
         #################################
 
-        settings.setValue('workspace/home', self.widget('workspace_field').text())
         settings.setValue('diagram/size', self.widget('diagram_size_field').value())
         settings.setValue('diagram/fontsize', self.widget('diagram_font_size_field').value())
         settings.setValue('update/channel', self.widget('update_channel_switch').currentText())
