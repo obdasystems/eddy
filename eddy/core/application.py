@@ -71,6 +71,7 @@ from eddy.core.datatypes.system import (
     File,
     IS_WIN,
     IS_FROZEN,
+    IS_XDG,
 )
 from eddy.core.functions.fsystem import (
     fexists,
@@ -138,9 +139,9 @@ class Eddy(QtWidgets.QApplication):
 
         # APPLICATION INFO
         self.setDesktopFileName('{}.{}'.format(ORGANIZATION_REVERSE_DOMAIN, APPNAME))
-        self.setOrganizationName(ORGANIZATION)
+        self.setOrganizationName(ORGANIZATION.lower() if IS_XDG else ORGANIZATION)
         self.setOrganizationDomain(ORGANIZATION_DOMAIN)
-        self.setApplicationName(APPNAME)
+        self.setApplicationName(APPNAME.lower())
         self.setApplicationDisplayName(APPNAME)
         self.setApplicationVersion(VERSION)
 

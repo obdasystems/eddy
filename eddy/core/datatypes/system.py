@@ -43,6 +43,7 @@ IS_FREEBSD = sys.platform.startswith('freebsd')
 IS_LINUX = sys.platform.startswith('linux')
 IS_MACOS = sys.platform.startswith('darwin')
 IS_WIN = sys.platform.startswith('win') or sys.platform.startswith('cygwin')
+IS_XDG = IS_LINUX or IS_FREEBSD
 
 IS_FROZEN = hasattr(sys, 'frozen')
 
