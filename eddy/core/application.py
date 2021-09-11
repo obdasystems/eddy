@@ -258,7 +258,7 @@ class Eddy(QtWidgets.QApplication):
         # LOOKUP PLUGINS
         #################################
 
-        PluginManager.scan('@plugins/', '@home/plugins/')
+        PluginManager.scan('@plugins/', '@data/plugins/')
 
         #############################################
         # CLOSE THE SPLASH SCREEN

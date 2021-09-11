@@ -182,9 +182,13 @@ class AbstractPlugin(
         """
         Returns the path to the the plugin (either a directory of a ZIP file).
         """
-        path = lstrip(inspect.getfile(self.__class__), expandPath('@plugins/'), expandPath('@home/plugins/'))
+        path = lstrip(
+            inspect.getfile(self.__class__),
+            expandPath('@plugins/'),
+            expandPath('@data/plugins/'),
+        )
         home = first(filter(None, path.split(os.path.sep)))
-        root = expandPath('@plugins/' if self.isBuiltIn() else '@home/plugins/')
+        root = expandPath('@plugins/' if self.isBuiltIn() else '@data/plugins/')
         return os.path.join(root, home)
 
     @classmethod
@@ -517,8 +521,8 @@ class PluginManager(QtCore.QObject):
                 raise PluginError('plugin %s (id: %s) is already installed' % (plugin_name, plugin_id))
 
             # COPY THE PLUGIN
-            mkdir('@home/plugins/')
-            fcopy(archive, '@home/plugins/')
+            mkdir('@data/plugins/')
+            fcopy(archive, '@data/plugins/')
 
         except Exception as e:
             LOGGER.error('Failed to install plugin: %s', e, exc_info=not isinstance(e, PluginError))
