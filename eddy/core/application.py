@@ -288,16 +288,18 @@ class Eddy(QtWidgets.QApplication):
         self.welcome = Welcome(self)
         self.welcome.show()
         # PROCESS ADDITIONAL COMMAND LINE OPTIONS
-        # NONE FOR NOW
+        if self.options.isSet(CommandLineParser.JVM_CLASSPATH):
+            value = self.options.value(CommandLineParser.JVM_CLASSPATH)
+            addJVMClasspath(*value.split(os.pathsep))
+        if self.options.isSet(CommandLineParser.JVM_OPTS):
+            value = self.options.value(CommandLineParser.JVM_OPTS)
+            addJVMOptions(*value.split())
         # POSITIONAL ARGUMENTS
-        if args:
-            for arg in args:
-                fname = expandPath(arg)
-                if fexists(fname):
-                    project = fname
-                    self.sgnCreateSession.emit(project)
-                else:
-                    LOGGER.warning('Unable to open file: %s', fname)
+        for path in filter(None, map(os.path.abspath, args)):
+            if fexists(path) and faccess(path):
+                self.sgnCreateSession.emit(path)
+            else:
+                LOGGER.warning('Unable to open project file: %s', path)
         # COMPLETE STARTUP
         self.started = True
 

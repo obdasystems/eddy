@@ -44,6 +44,8 @@ class CommandLineParser(QtCore.QCommandLineParser):
     """
     Extension of QtCore.QCommandLineParser that can parse command line options for the application.
     """
+    JVM_CLASSPATH = 'jvm-classpath'
+    JVM_OPTS = 'jvm-opts'
     NO_SPLASH = 'no-splash'
 
     def __init__(self):
@@ -54,6 +56,17 @@ class CommandLineParser(QtCore.QCommandLineParser):
         self.addHelpOption()
         self.addVersionOption()
         self.addOptions([
+            QtCore.QCommandLineOption(
+                [CommandLineParser.JVM_CLASSPATH],
+                'Additional class path entries for the JVM.',
+                valueName=CommandLineParser.JVM_CLASSPATH
+            ),
+            QtCore.QCommandLineOption(
+                [CommandLineParser.JVM_OPTS],
+                'Startup options to pass to the JVM.\n'
+                '(e.g. --jvm-opts "-Xms128M -Xmx1G)"',
+                valueName=CommandLineParser.JVM_OPTS
+            ),
             QtCore.QCommandLineOption(
                 [CommandLineParser.NO_SPLASH],
                 'Do not show the application splash screen.'
