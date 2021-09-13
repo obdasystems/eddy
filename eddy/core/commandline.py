@@ -45,7 +45,6 @@ class CommandLineParser(QtCore.QCommandLineParser):
     Extension of QtCore.QCommandLineParser that can parse command line options for the application.
     """
     NO_SPLASH = 'no-splash'
-    OPEN = 'open'
 
     def __init__(self):
         """
@@ -59,13 +58,8 @@ class CommandLineParser(QtCore.QCommandLineParser):
                 [CommandLineParser.NO_SPLASH],
                 'Do not show the application splash screen.'
             ),
-            QtCore.QCommandLineOption(
-                [CommandLineParser.OPEN],
-                'Look for a project in the workspace with the given name and open it.',
-                valueName=CommandLineParser.OPEN
-            ),
         ])
-        self.addPositionalArgument('project', 'Path to a project file to open.', '[project]')
+        self.addPositionalArgument('project', 'Path to a project file to open.', '[project]...')
         self.setApplicationDescription(textwrap.dedent("""
         {0}, a graphical editor for the specification and visualization of Graphol ontologies.
         """).format(APPNAME))
