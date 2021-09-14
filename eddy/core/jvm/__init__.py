@@ -561,8 +561,7 @@ try:
             if self.initialized:
                 return
             try:
-                sep = ';' if IS_WIN else ':'
-                classpath = sep.join([p for p in self.classpath])
+                classpath = os.pathsep.join([p for p in self.classpath])
                 jpype.startJVM(jpype.getDefaultJVMPath(),
                                '-Djava.class.path={0}'.format(classpath),
                                *self.options,
