@@ -33,78 +33,45 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItem, QStandardItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QStyledItemDelegate
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
-from eddy.core.commands.iri import CommandIRIRemoveAnnotationAssertion, CommandCommmonSubstringIRIsRefactor
-from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectRemovePrefix, \
-    CommandProjectModifyPrefixResolution, CommandProjectModifyNamespacePrefix, CommandProjectAddAnnotationProperty, \
-    CommandProjectRemoveAnnotationProperty, CommandProjectSetOntologyIRIAndVersion, \
-    CommandProjectSetLabelFromSimpleNameOrInputAndLanguage, CommandProjectRemoveOntologyImport
-from eddy.core.datatypes.qt import Font
-from eddy.core.owl import IllegalPrefixError, IllegalNamespaceError, AnnotationAssertion, ImportedOntology
-
+from eddy.core.commands.iri import (
+    CommandCommmonSubstringIRIsRefactor,
+    CommandIRIRemoveAnnotationAssertion,
+)
+from eddy.core.commands.project import (
+    CommandProjectAddAnnotationProperty,
+    CommandProjectAddPrefix,
+    CommandProjectModifyPrefixResolution,
+    CommandProjectModifyNamespacePrefix,
+    CommandProjectRemoveAnnotationProperty,
+    CommandProjectRemoveOntologyImport,
+    CommandProjectRemovePrefix,
+    CommandProjectSetLabelFromSimpleNameOrInputAndLanguage,
+    CommandProjectSetOntologyIRIAndVersion,
+)
 from eddy.core.common import HasWidgetSystem
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
-from eddy.ui.annotation_assertion import AnnotationAssertionBuilderDialog
-from eddy.ui.fields import StringField, ComboBox, CheckBox
+from eddy.core.owl import (
+    AnnotationAssertion,
+    IllegalPrefixError,
+    IllegalNamespaceError,
+    ImportedOntology
+)
+from eddy.ui.fields import (
+    StringField,
+    CheckBox,
+    ComboBox,
+)
 from eddy.ui.message_box import MessageBoxFactory, MsgBoxType
 
 LOGGER = getLogger()
 
-'''
-class BoldDelegate(QStyledItemDelegate):
-    def paint(self, painter, option, index):
-        # decide here if item should be bold and set font weight to bold if needed
-        #option.backgroundBrush.setColor(QtGui.QColor(255, 0, 0))
-
-        option.font.setWeight(QtGui.QFont.Bold)
-        option.font.setItalic(True)
-        option.font.setUnderline(True)
-
-        painter.save()
-        displayText = index.data(Qt.DisplayRole)
-        #painter.setBrush(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
-        painter.setPen(QtGui.QColor(255, 0, 0))
-        if (option.state & QtWidgets.QStyle.State_Selected): painter.fillRect(option.rect, option.palette.highlight())
-
-        painter.drawText(option.rect, QtCore.Qt.AlignVCenter, displayText)
-        painter.restore()
-        #QStyledItemDelegate.paint(self, painter, option, index)
-
-class ComponentItem(QStandardItem):
-    """docstring for ComponentItem"""
-    def __init__(self, text, role=Qt.DisplayRole):
-        super().__init__()
-        self.setData(text, role)
-
-
-
-class ComponentModel(QStandardItemModel):
-    """docstring for ComponentModel"""
-    def __init__(self, parent=None):
-        super(ComponentModel, self).__init__()
-        self.parent = parent
-
-        _component = ComponentItem("Hello World")  #How do I change Text Color?
-        #_component.setData(QtGui.QBrush(QtGui.QColor(255, 0, 0)),QtCore.Qt.ForegroundRole) #Does not work
-        #_component.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
-        self.appendRow(_component)
-
-class ComponentTree(QTreeView):
-    """docstring for ComponentTree"""
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent = parent
-
-        self.setModel(ComponentModel(self))
-        self.setItemDelegate(BoldDelegate(self))
-'''
 
 class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     """
@@ -130,7 +97,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # GENERAL TAB
         #################################
 
-        ## ONTOLOGY PROPERTIES GROUP
+        # ONTOLOGY PROPERTIES GROUP
         iriLabel = QtWidgets.QLabel(self, objectName='ontology_iri_label')
         iriLabel.setText('Ontology IRI')
         self.addWidget(iriLabel)
@@ -169,7 +136,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox.setLayout(outerFormLayout)
         self.addWidget(groupbox)
 
-        ## ONTOLOGY IMPORTS GROUP
+        # ONTOLOGY IMPORTS GROUP
         table = QtWidgets.QTableWidget(0, 3, self, objectName='ontology_imports_table_widget')
         table.setHorizontalHeaderLabels(['Ontology IRI', 'Version IRI', 'Location'])
         table.horizontalHeader().setStretchLastSection(True)
@@ -207,7 +174,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
 
-        ## ONTOLOGY ANNOTATIONS GROUP
+        # ONTOLOGY ANNOTATIONS GROUP
         table = QtWidgets.QTableWidget(0, 2, self, objectName='annotations_table_widget')
         table.clear()
         table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
@@ -246,7 +213,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
 
-        ## GENERAL TAB LAYOUT CONFIGURATION
+        # GENERAL TAB LAYOUT CONFIGURATION
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('ontology_iri_widget'), 0, QtCore.Qt.AlignTop)
@@ -261,7 +228,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # PREFIXES TAB
         #################################
 
-        ## PREFIXES GROUP
+        # PREFIXES GROUP
         table = QtWidgets.QTableWidget(1, 2, self, objectName='prefixes_table_widget')
         table.horizontalHeader().setStretchLastSection(True)
         table.horizontalHeader().setSectionsClickable(False)
@@ -324,7 +291,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
 
-        ## PREFIXES TAB LAYOUT CONFIGURATION
+        # PREFIXES TAB LAYOUT CONFIGURATION
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('defined_prefixes_group_widget'), 0, QtCore.Qt.AlignTop)
@@ -338,7 +305,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # ANNOTATIONS TAB
         #################################
 
-        ## ANNOTATIONS GROUP
+        # ANNOTATIONS GROUP
         table = QtWidgets.QTableWidget(0, 2, self, objectName='annotation_properties_table_widget')
         table.setHorizontalHeaderLabels(['IRI', 'Comment'])
         table.horizontalHeader().setStretchLastSection(True)
@@ -369,7 +336,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
 
-        ########ADDED
+        # ADDED
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='iri_prefix_combobox_label')
         comboBoxLabel.setText('Prefix')
@@ -422,7 +389,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onAnnotationPrefixChanged)
         connect(self.widget('iri_input_field').textChanged, self.onAnnotationInputChanged)
 
-        ## ANNOTATIONS TAB LAYOUT CONFIGURATION
+        # ANNOTATIONS TAB LAYOUT CONFIGURATION
 
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
@@ -433,10 +400,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.setObjectName('annotations_widget')
         self.addWidget(widget)
 
-        #TODO
         #############################################
         # Global IRI
         #################################
+
         checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_simplename')
         checkBoxLabel.setText('Derive rdfs:label from simple name')
         self.addWidget(checkBoxLabel)
@@ -466,10 +433,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             combobox.setCurrentText(self.emptyString)
         if self.widget('label_simplename_checkbox').isChecked() or self.widget('label_userinput_checkbox').isChecked():
-            combobox.setStyleSheet("background:#FFFFFF");
+            combobox.setStyleSheet("background:#FFFFFF")
             combobox.setEnabled(True)
         else:
-            combobox.setStyleSheet("background:#808080");
+            combobox.setStyleSheet("background:#808080")
             combobox.setEnabled(False)
         connect(combobox.currentIndexChanged, self.onLanguageSwitched)
 
@@ -538,8 +505,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.setObjectName('iri_widget')
         self.addWidget(widget)
 
-        # TODO END
-
         #############################################
         # CONFIRMATION BOX
         #################################
@@ -582,6 +547,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   PROPERTIES
     #################################
+
     @property
     def session(self):
         """
@@ -593,57 +559,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   SLOTS
     #################################
-    @QtCore.pyqtSlot()
-    def accept(self):
-        """
-        Executed when the dialog is accepted.
-        """
-        ##
-        ## TODO: complete validation and settings save
-        ##
-        #############################################
-        # GENERAL TAB
-        #################################
-
-        #############################################
-        # PREFIXES TAB
-        #################################
-
-        #############################################
-        # ANNOTATIONS TAB
-        #################################
-
-        #############################################
-        # SAVE & EXIT
-        #################################
-
-        super().accept()
-
-    @QtCore.pyqtSlot()
-    def reject(self):
-        """
-        Executed when the dialog is accepted.
-        """
-        ##
-        ## TODO: complete validation and settings save
-        ##
-        #############################################
-        # GENERAL TAB
-        #################################
-
-        #############################################
-        # PREFIXES TAB
-        #################################
-
-        #############################################
-        # ANNOTATIONS TAB
-        #################################
-
-        #############################################
-        # SAVE & EXIT
-        #################################
-
-        super().reject()
 
     @QtCore.pyqtSlot()
     def redraw(self):
@@ -653,6 +568,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # GENERAL TAB
         #################################
+
         iriField = self.widget('ontology_iri_field')
         if self.project.ontologyIRI:
             iriField.setText(str(self.project.ontologyIRI))
@@ -671,7 +587,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for impOnt in importedOntologies:
             ontIriItem = QtWidgets.QTableWidgetItem(str(impOnt.ontologyIRI))
             ontIriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-            ontIriItem.setData(Qt.UserRole, impOnt)
+            ontIriItem.setData(QtCore.Qt.UserRole, impOnt)
             versionItem = QtWidgets.QTableWidgetItem(str(impOnt.versionIRI))
             versionItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             locationItem = QtWidgets.QTableWidgetItem(str(impOnt.docLocation))
@@ -703,7 +619,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for assertion in ontAnnAss:
             propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
             propertyItem.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
-            propertyItem.setData(Qt.UserRole, assertion)
+            propertyItem.setData(QtCore.Qt.UserRole, assertion)
             table.setItem(rowcount, 0, propertyItem)
             valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
             valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
@@ -714,14 +630,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 reloadItem = table.item(row, 0)
-                impOnt = reloadItem.data(Qt.UserRole)
+                impOnt = reloadItem.data(QtCore.Qt.UserRole)
                 if not impOnt.correctlyLoaded:
                     self.widget('ontology_imports_reload_button').setEnabled(True)
                     break
-        """
-        else:
-            self.widget('ontology_annotations_edit_button').setEnabled(False)
-        """
 
         #############################################
         # PREFIXES TAB
@@ -745,6 +657,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # ANNOTATIONS TAB
         #################################
+
         annotationProperties = self.project.getAnnotationPropertyIRIs()
         table = self.widget('annotation_properties_table_widget')
         table.clear()
@@ -761,6 +674,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         #############################################
         # Global IRI
         #################################
+
         checked = self.project.addLabelFromSimpleName
         checkBoxSimpleName = self.widget('label_simplename_checkbox')
         checkBoxSimpleName.setChecked(checked)
@@ -775,10 +689,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             combobox.setCurrentText(self.emptyString)
         if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
-            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
         else:
-            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
 
         # REFACTOR
@@ -786,15 +700,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         preField = self.widget('pre_input_field')
         postField = self.widget('post_input_field')
 
-
-        #############################################
-        # SAVE & EXIT
-        #################################
-
-
     #############################################
     # GENERAL TAB
     #################################
+
     @QtCore.pyqtSlot(str)
     def onOntologyIriOrVersionEdited(self, textValue):
         self.widget('save_ont_iri_version_button').setEnabled(True)
@@ -839,7 +748,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 reloadItem = table.item(row, 0)
-                impOnt = reloadItem.data(Qt.UserRole)
+                impOnt = reloadItem.data(QtCore.Qt.UserRole)
                 if not impOnt.correctlyLoaded:
                     found= True
                     break
@@ -859,7 +768,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 reloadItem = table.item(row, 0)
-                impOnt = reloadItem.data(Qt.UserRole)
+                impOnt = reloadItem.data(QtCore.Qt.UserRole)
                 if not impOnt.correctlyLoaded:
                     ontImportWidget = self.session.doOpenImportOntologyWizard(impOnt)
                     connect(ontImportWidget.sgnOntologyImportCorrectlyReloaded, self.onOntologyImportCorrectlyReloaded)
@@ -883,7 +792,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setRowCount(rowcount + 1)
         ontIriItem = QtWidgets.QTableWidgetItem(str(impOnt.ontologyIRI))
         ontIriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        ontIriItem.setData(Qt.UserRole,impOnt)
+        ontIriItem.setData(QtCore.Qt.UserRole,impOnt)
         table.setItem(rowcount, 0, ontIriItem)
         versionItem = QtWidgets.QTableWidgetItem(str(impOnt.versionIRI))
         versionItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
@@ -900,7 +809,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         rowcount = table.rowCount()
         for row in range(0, rowcount):
             ontIriItem = table.item(row, 0)
-            itemImpOnt = ontIriItem.data(Qt.UserRole)
+            itemImpOnt = ontIriItem.data(QtCore.Qt.UserRole)
             if itemImpOnt is impOnt:
                 versionItem = table.item(row, 1)
                 locationItem = table.item(row, 2)
@@ -924,7 +833,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
-                impOnt = removedItem.data(Qt.UserRole)
+                impOnt = removedItem.data(QtCore.Qt.UserRole)
                 command = CommandProjectRemoveOntologyImport(self.project, impOnt)
                 commands.append(command)
         self.session.undostack.beginMacro('Remove ontology imports >>')
@@ -950,15 +859,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     #@QtCore.pyqtSlot(AnnotationAssertion)
     def onOntologyAnnotationAssertionAccepted(self,assertion):
-        '''
+        """
         :type assertion:AnnotationAssertion
-        '''
+        """
         table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         table.setRowCount(rowcount + 1)
         propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
         propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        propertyItem.setData(Qt.UserRole,assertion)
+        propertyItem.setData(QtCore.Qt.UserRole,assertion)
         table.setItem(rowcount, 0, propertyItem)
         valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
         valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
@@ -981,7 +890,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 removedItem = table.item(row, 0)
-                assertion = removedItem.data(Qt.UserRole)
+                assertion = removedItem.data(QtCore.Qt.UserRole)
                 command = CommandIRIRemoveAnnotationAssertion(self.project, self.project.ontologyIRI, assertion)
                 commands.append(command)
         self.session.undostack.beginMacro('Remove annotations >>')
@@ -1007,7 +916,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 editItem = table.item(row, 0)
-                assertion = editItem.data(Qt.UserRole)
+                assertion = editItem.data(QtCore.Qt.UserRole)
                 #editItem.setData(None)
                 assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI,assertion)
                 connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,self.onOntologyAnnotationAssertionModified)
@@ -1015,18 +924,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(AnnotationAssertion)
     def onOntologyAnnotationAssertionModified(self,assertion):
-        '''
+        """
         :type assertion:AnnotationAssertion
-        '''
+        """
         table = self.widget('annotations_table_widget')
         rowcount = table.rowCount()
         for row in range(0,rowcount):
             propItem = table.item(row, 0)
-            itemAssertion = propItem.data(Qt.UserRole)
+            itemAssertion = propItem.data(QtCore.Qt.UserRole)
             if itemAssertion is assertion:
                 newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
                 newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                newPropertyItem.setData(Qt.UserRole, assertion)
+                newPropertyItem.setData(QtCore.Qt.UserRole, assertion)
                 table.setItem(row, 0, newPropertyItem)
                 valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
                 valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
@@ -1036,6 +945,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     # PREFIXES TAB
     #################################
+
     @QtCore.pyqtSlot(int,int)
     def managePrefixTableEntryModification(self, row, column):
         if not self.addingNewPrefix:
@@ -1138,7 +1048,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 msgBox = MessageBoxFactory.getMessageBox(self, 'Already defined prefix',
                                                          'Prefix definition issue', MsgBoxType.WARNING.value,
                                                          informativeText='The prefix "{}" is already used'.format(prefixValue))
-                msgBox.setWindowModality(Qt.ApplicationModal)
                 msgBox.exec_()
                 return
             nsField = self.widget('ns_input_field')
@@ -1205,6 +1114,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     # ANNOTATIONS TAB
     #################################
+
     @QtCore.pyqtSlot(bool)
     def addAnnotationProperty(self, _):
         """
@@ -1341,6 +1251,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     # Global IRI
     #################################
+
     @QtCore.pyqtSlot()
     def onLabelSimpleNameCheckBoxClicked(self):
         checkBoxSimpleName = self.widget('label_simplename_checkbox')
