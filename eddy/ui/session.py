@@ -187,7 +187,7 @@ from eddy.core.project import (
 )
 from eddy.core.regex import RE_CAMEL_SPACE
 from eddy.ui.about import AboutDialog
-from eddy.ui.annotation_assertion import (
+from eddy.ui.annotation import (
     AnnotationAssertionBuilderDialog,
     AnnotationBuilderDialog,
 )
