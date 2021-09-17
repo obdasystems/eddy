@@ -68,7 +68,6 @@ from eddy.ui.fields import (
     CheckBox,
     ComboBox,
 )
-from eddy.ui.message_box import MessageBoxFactory, MsgBoxType
 
 LOGGER = getLogger()
 
@@ -733,11 +732,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.session.undostack.endMacro()
             self.widget('save_ont_iri_version_button').setEnabled(False)
         except IllegalNamespaceError as e:
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal identifier',
-                                                     'IRI definition issue', MsgBoxType.WARNING.value,
-                                                     informativeText='The string "{}" is not a legal identifier'.format(
-                                                         ontIriString),
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'IRI Definition Error',
+                'Illegal identifier defined.',
+                informativeText='The string "{}" is not a legal identifier'.format(ontIriString),
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
 
     @QtCore.pyqtSlot(int, int)
@@ -964,11 +967,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         for index,prefix in self.prefixIndexMap.items():
             if not index==row:
                 if prefix==text:
-                    print('prefisso già definito')
                     table.setItem(row, 0, QtWidgets.QTableWidgetItem(self.prefixIndexMap[row]))
-                    msgBox = MessageBoxFactory.getMessageBox(self,'Already defined prefix',
-                                                             'Prefix definition issue',MsgBoxType.WARNING.value,
-                                                             informativeText='The prefix "{}" is already used'.format(text))
+                    # noinspection PyArgumentList
+                    msgBox = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Warning,
+                        'Prefix Definition Error',
+                        'Prefix already defined.',
+                        informativeText='The prefix "{}" is already used'.format(text),
+                        parent=self,
+                    )
                     msgBox.exec_()
                     return
         corrNSItem = table.item(row, 1)
@@ -993,10 +1000,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.prefixIndexMap[row]=text
         except IllegalPrefixError as e:
             table.setItem(row, 0, QtWidgets.QTableWidgetItem(self.prefixIndexMap[row]))
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal prefix',
-                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
-                                                     informativeText='The string "{}" is not a legal prefix'.format(text),
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Prefix Definition Error',
+                'Illegal prefix defined.',
+                informativeText='The string "{}" is not a legal prefix'.format(text),
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
 
     def manageNamespaceModification(self, row, column):
@@ -1017,10 +1029,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.session.undostack.endMacro()
 
         except IllegalNamespaceError as e:
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal namespace',
-                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
-                                                     informativeText='The string "{}" is not a legal namespace'.format(text),
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Prefix Definition Error',
+                'Illegal namespace defined.',
+                informativeText='The string "{}" is not a legal namespace'.format(text),
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
 
     def buildPrefixIndexMap(self):
@@ -1044,10 +1061,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixValue = prefixField.value()
             currentPrefixes = self.project.getManagedPrefixes()
             if prefixValue in currentPrefixes:
-                print('prefisso già definito, modificalo dalla tabella')
-                msgBox = MessageBoxFactory.getMessageBox(self, 'Already defined prefix',
-                                                         'Prefix definition issue', MsgBoxType.WARNING.value,
-                                                         informativeText='The prefix "{}" is already used'.format(prefixValue))
+                # noinspection PyArgumentList
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Prefix Definition Error',
+                    'Prefix already defined.',
+                    informativeText='The prefix "{}" is already used'.format(prefixValue),
+                    parent=self,
+                )
                 msgBox.exec_()
                 return
             nsField = self.widget('ns_input_field')
@@ -1072,16 +1093,26 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             prefixField.setValue('')
             nsField.setValue('')
         except IllegalPrefixError as e:
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal prefix',
-                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
-                                                     informativeText='The string "{}" is not a legal prefix'.format(prefixValue),
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Prefix Definition Error',
+                'Illegal prefix defined.',
+                informativeText='The string "{}" is not a legal prefix'.format(prefixValue),
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
         except IllegalNamespaceError as e:
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal namespace',
-                                                     'Prefix definition issue', MsgBoxType.WARNING.value,
-                                                     informativeText='The string "{}" is not a legal namespace'.format(nsValue),
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Prefix Definition Error',
+                'Illegal namespace defined.',
+                informativeText='The string "{}" is not a legal namespace'.format(nsValue),
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
 
     @QtCore.pyqtSlot(bool)
@@ -1143,10 +1174,15 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('iri_prefix_switch').setCurrentText(self.noPrefixString)
             self.widget('iri_input_field').setText('')
         except IllegalNamespaceError as e:
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal namespace',
-                                                     'Entity definition', MsgBoxType.WARNING.value,
-                                                     informativeText='The string "{}" is not a legal IRI'.format(annIRI),
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Entity Definition Error',
+                'Illegal namespace defined.',
+                informativeText='The string "{}" is not a legal IRI'.format(annIRI),
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
 
     @QtCore.pyqtSlot(bool)
@@ -1228,24 +1264,37 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             if command:
                 self.session.undostack.push(command)
             self.session.undostack.endMacro()
-            msgBox = MessageBoxFactory.getMessageBox(self, 'IRI refactor',
-                                                     'IRI refactor', MsgBoxType.INFO.value,
-                                                     informativeText="{} IRIs starting with'{}' have been modified".format(len(commandDict), preValue))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Information,
+                'IRI Refactor', 'IRI refactor.',
+                informativeText="{} IRIs starting with'{}' have been modified".format(len(commandDict), preValue),
+                parent=self,
+            )
             msgBox.exec_()
             preField.setValue('')
             postField.setValue('')
         except IllegalNamespaceError as e:
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal Post value',
-                                                     'IRI refactor issue', MsgBoxType.WARNING.value,
-                                                     informativeText='The string "{}" is not a legal namespace'.format(
-                                                         postValue),
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'IRI Refactor Error',
+                'Illegal post-value.',
+                informativeText='The string "{}" is not a legal namespace'.format(postValue),
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
         except RuntimeError as e:
-            msgBox = MessageBoxFactory.getMessageBox(self, 'Illegal Pre value',
-                                                     'IRI refactor issue', MsgBoxType.WARNING.value,
-                                                     informativeText='Empty string is not allowed as Pre value',
-                                                     detailedText=str(e))
+            # noinspection PyArgumentList
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'IRI Refactor Error',
+                'Illegal pre-value.',
+                informativeText='Empty string is not allowed as pre-value',
+                detailedText=str(e),
+                parent=self,
+            )
             msgBox.exec_()
 
     #############################################
