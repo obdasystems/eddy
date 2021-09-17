@@ -2198,10 +2198,7 @@ class Session(
         action = self.sender()
         dialog = action.data()
         window = dialog(self)
-        window.setWindowModality(QtCore.Qt.ApplicationModal)
-        window.show()
-        window.raise_()
-        window.activateWindow()
+        window.open()
 
     @QtCore.pyqtSlot()
     def doOpenURL(self) -> None:
@@ -2223,10 +2220,7 @@ class Session(
         if diagram:
             diagram.setMode(DiagramMode.Idle)
             properties = self.pf.create(diagram)
-            properties.setWindowModality(QtCore.Qt.ApplicationModal)
-            properties.show()
-            properties.raise_()
-            properties.activateWindow()
+            properties.open()
 
     @QtCore.pyqtSlot()
     def doOpenNodeProperties(self) -> None:
@@ -2239,10 +2233,7 @@ class Session(
             node = first(diagram.selectedNodes())
             if node:
                 properties = self.pf.create(diagram, node)
-                properties.setWindowModality(QtCore.Qt.ApplicationModal)
-                properties.show()
-                properties.raise_()
-                properties.activateWindow()
+                properties.open()
 
     @QtCore.pyqtSlot(AbstractNode)
     def doOpenIRIBuilder(self, node: AbstractNode) -> None:
@@ -2256,10 +2247,7 @@ class Session(
                 node = first(diagram.selectedNodes())
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot(FacetNode)
     def doOpenConstrainingFacetBuilder(self, node: FacetNode) -> None:
@@ -2273,10 +2261,7 @@ class Session(
                 node = first(diagram.selectedNodes())
             if node:
                 builder = ConstrainingFacetDialog(node, diagram, self)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot(LiteralNode)
     def doOpenLiteralBuilder(self, node: LiteralNode) -> None:
@@ -2290,10 +2275,7 @@ class Session(
                 node = first(diagram.selectedNodes())
             if node:
                 builder = LiteralDialog(node, diagram, self)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot()
     def doOpenIRIDialog(self, node=None):
@@ -2312,10 +2294,7 @@ class Session(
             if node:
                 builder = IriBuilderDialog(node, diagram, self)
                 # connect(builder.sgnIRIChanged, self.project.doSingleSwitchIRI)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot()
     def doOpenIRIFontDialog(self) -> None:
@@ -2325,10 +2304,7 @@ class Session(
             node = first(diagram.selectedNodes())
             if node:
                 dialog = FontDialog(self, node, refactor=True)
-                dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-                dialog.show()
-                dialog.raise_()
-                dialog.activateWindow()
+                dialog.open()
 
     @QtCore.pyqtSlot()
     def doOpenNodeFontDialog(self) -> None:
@@ -2338,10 +2314,7 @@ class Session(
             node = first(diagram.selectedNodes())
             if node:
                 dialog = FontDialog(self, node)
-                dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-                dialog.show()
-                dialog.raise_()
-                dialog.activateWindow()
+                dialog.open()
 
     @QtCore.pyqtSlot()
     def doOpenFacetDialog(self) -> None:
@@ -2354,10 +2327,7 @@ class Session(
             node = first(diagram.selectedNodes())
             if node:
                 builder = ConstrainingFacetDialog(node, diagram, self)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot()
     def doOpenLiteralDialog(self, node: LiteralNode) -> None:
@@ -2373,10 +2343,7 @@ class Session(
                 node = first(selected)
             if node:
                 builder = LiteralDialog(node, diagram, self)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot()
     def doOpenIRIPropsBuilder(self) -> None:
@@ -2397,10 +2364,7 @@ class Session(
                 builder = IriPropsDialog(iri, self)
                 connect(builder.sgnIRISwitch, self.project.doSwitchIRI)
                 # connect(builder.sgnReHashIRI, self.project.doReHashIRI)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot()
     def doOpenIRIPropsAnnotationBuilder(self) -> None:
@@ -2421,10 +2385,7 @@ class Session(
                 builder = IriPropsDialog(iri, self, True)
                 connect(builder.sgnIRISwitch, self.project.doSwitchIRI)
                 # connect(builder.sgnReHashIRI, self.project.doReHashIRI)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot(IRI)
     def doOpenAnnotationAssertionBuilder(self, iri: IRI, assertion: AnnotationAssertion = None,):
@@ -2433,10 +2394,7 @@ class Session(
         """
         if iri:
             builder = AnnotationAssertionBuilderDialog(iri, self, assertion)
-            builder.setWindowModality(QtCore.Qt.ApplicationModal)
-            builder.show()
-            builder.raise_()
-            builder.activateWindow()
+            builder.open()
             return builder
         else:
             diagram = self.mdi.activeDiagram()
@@ -2444,10 +2402,7 @@ class Session(
                 diagram.setMode(DiagramMode.Idle)
                 node = first(diagram.selectedNodes())
                 builder = AnnotationAssertionBuilderDialog(node.iri, self, assertion)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot()
     def doOpenEdgePropsAnnotationBuilder(self) -> None:
@@ -2460,10 +2415,7 @@ class Session(
             edge = first(diagram.selectedEdges(lambda x: isinstance(x, AxiomEdge)))
             if edge:
                 builder = EdgeAxiomDialog(edge, self)
-                builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                builder.show()
-                builder.raise_()
-                builder.activateWindow()
+                builder.open()
 
     @QtCore.pyqtSlot(AxiomEdge)
     def doOpenAnnotationBuilder(self, edge: AxiomEdge, annotation: AnnotationAssertion = None):
@@ -2472,10 +2424,7 @@ class Session(
         """
         if edge:
             builder = AnnotationBuilderDialog(edge, self, annotation)
-            builder.setWindowModality(QtCore.Qt.ApplicationModal)
-            builder.show()
-            builder.raise_()
-            builder.activateWindow()
+            builder.open()
             return builder
         else:
             diagram = self.mdi.activeDiagram()
@@ -2484,10 +2433,7 @@ class Session(
                 edge = first(diagram.selectedEdges(lambda x: isinstance(x, AxiomEdge)))
                 if edge:
                     builder = AnnotationBuilderDialog(edge, self, annotation)
-                    builder.setWindowModality(QtCore.Qt.ApplicationModal)
-                    builder.show()
-                    builder.raise_()
-                    builder.activateWindow()
+                    builder.open()
 
     @QtCore.pyqtSlot(ImportedOntology)
     def doOpenImportOntologyWizard(self, importedOntology: ImportedOntology = None):
@@ -2496,10 +2442,7 @@ class Session(
         :type node: IRI
         """
         builder = ImportOntologyDialog(self, importedOntology)
-        builder.setWindowModality(QtCore.Qt.ApplicationModal)
-        builder.show()
-        builder.raise_()
-        builder.activateWindow()
+        builder.open()
         return builder
 
     @QtCore.pyqtSlot()
@@ -2988,8 +2931,7 @@ class Session(
         Show explanations for inconsistent ontology
         """
         dialog = ExplanationDialog(self, self.inconsistentOntologyExplanations)
-        dialog.show()
-        dialog.activateWindow()
+        dialog.open()
 
     @QtCore.pyqtSlot()
     def doShowEmptyEntityExplanations(self) -> None:
@@ -2999,8 +2941,7 @@ class Session(
         dialog = ExplanationDialog(self, self.currentEmptyEntityExplanations,
                                    entityIRI=self.currentEmptyEntityIRI,
                                    entityType=self.currentEmptyEntityType)
-        dialog.show()
-        dialog.activateWindow()
+        dialog.open()
 
     @QtCore.pyqtSlot()
     def doShowInvolvingAxioms(self) -> None:
@@ -3019,16 +2960,13 @@ class Session(
                 iri = node.iri
             if iri:
                 dialog = AxiomsByEntityDialog(self.project, self, iri)
-                dialog.show()
-                dialog.raise_()
-                dialog.activateWindow()
+                dialog.open()
 
     @QtCore.pyqtSlot()
     def doShowNoMatchingLabelIRIs(self) -> None:
         iris = self.project.getAllIRIsWithNoMatchingLabel()
         dialog = LabelDialog(self, iris)
-        dialog.show()
-        dialog.activateWindow()
+        dialog.open()
 
     @QtCore.pyqtSlot()
     def doSelectReasoner(self) -> None:

@@ -94,9 +94,7 @@ class AxiomsByEntityDialog(QtWidgets.QDialog, HasThreadingSystem):
                 self.workerThread.terminate()
                 self.workerThread.wait()
         axioms_dialog = AxiomsByTypeDialog(self.session, self.worker.getAxioms(), self.iri)
-        axioms_dialog.show()
-        axioms_dialog.raise_()
-        axioms_dialog.activateWindow()
+        axioms_dialog.open()
 
     #############################################
     #   PROPERTIES

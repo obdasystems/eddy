@@ -642,10 +642,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if currText == '':
                     errorDialog = QtWidgets.QErrorMessage(parent=self)
                     errorDialog.showMessage('Please select a non-empty element from the combobox')
-                    errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-                    errorDialog.show()
-                    errorDialog.raise_()
-                    errorDialog.activateWindow()
+                    errorDialog.open()
                 else:
                     if self.iri:
                         if not str(self.iri) == currText:
@@ -663,10 +660,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage('The input string is not a valid IRI')
-            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-            errorDialog.show()
-            errorDialog.raise_()
-            errorDialog.activateWindow()
+            errorDialog.open()
 
 
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -1006,10 +1000,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         except IllegalNamespaceError:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage('The input string cannot be used to build a valid IRI')
-            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-            errorDialog.show()
-            errorDialog.raise_()
-            errorDialog.activateWindow()
+            errorDialog.open()
         finally:
             self.widget('save_iri_button').setEnabled(False)
 
@@ -1196,10 +1187,7 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
         except RuntimeError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage(str(e))
-            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-            errorDialog.show()
-            errorDialog.raise_()
-            errorDialog.activateWindow()
+            errorDialog.open()
 
     @QtCore.pyqtSlot()
     def reject(self):
@@ -1390,10 +1378,7 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
         except IllegalLiteralError as e:
             errorDialog = QtWidgets.QErrorMessage(parent=self)
             errorDialog.showMessage(str(e))
-            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-            errorDialog.show()
-            errorDialog.raise_()
-            errorDialog.activateWindow()
+            errorDialog.open()
 
 
 class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
