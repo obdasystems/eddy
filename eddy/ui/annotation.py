@@ -1,16 +1,62 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+# -*- coding: utf-8 -*-
 
-from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion, CommandIRIModifyAnnotationAssertion, \
-    CommandEdgeAddAnnotation, CommandEdgeModifyAnnotation
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
+
+
+from PyQt5 import (
+    QtCore,
+    QtWidgets,
+)
+
+from eddy.core.commands.iri import (
+    CommandEdgeAddAnnotation,
+    CommandEdgeModifyAnnotation,
+    CommandIRIAddAnnotationAssertion,
+    CommandIRIModifyAnnotationAssertion,
+)
 from eddy.core.common import HasWidgetSystem
-from eddy.core.datatypes.qt import Font
 from eddy.core.functions.signals import connect
-from eddy.core.owl import AnnotationAssertion, Annotation
+from eddy.core.owl import (
+    Annotation,
+    AnnotationAssertion,
+)
 from eddy.ui.fields import ComboBox
 
 
 class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
-
+    """
+    Subclass of `QtWidgets.QDialog` used to define annotation assertions.
+    """
     sgnAnnotationAssertionAccepted = QtCore.pyqtSignal(AnnotationAssertion)
     sgnAnnotationAssertionCorrectlyModified = QtCore.pyqtSignal(AnnotationAssertion)
     sgnAnnotationAssertionRejected = QtCore.pyqtSignal()
@@ -29,21 +75,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.project = session.project
         self.iri = iri
         self.assertion = assertion
-        '''
-        widget = AnnotationPropertyExplorerWidget(session)
-        widget.setObjectName('annotation_property_explorer')
-        #widget.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Maximum)
-        self.addWidget(widget)
-
-        self.setMinimumSize(740, 420)
-        self.setWindowTitle('Annotation assertion builder')
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.widget('annotation_property_explorer'))
-
-        self.setLayout(layout)
-        '''
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='property_combobox_label')
         comboBoxLabel.setText('Property')
@@ -55,7 +86,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.emptyString)
         sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        # combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
         if not self.assertion:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -63,24 +93,16 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged, self.onPropertySwitched)
 
-        '''
-        formlayout = QtWidgets.QFormLayout(self, objectName='property_layout')
-        formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
-        self.addWidget(formlayout)
-        '''
-
-        textArea = QtWidgets.QTextEdit(self, objectName='valueTextArea')
+        textArea = QtWidgets.QTextEdit(self, objectName='value_textedit')
         if self.assertion:
             if self.assertion.value:
                 textArea.setText(str(self.assertion.value))
         self.addWidget(textArea)
 
-
         comboBoxLabel = QtWidgets.QLabel(self, objectName='type_combobox_label')
         comboBoxLabel.setText('Type')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='type_switch')
-        #combobox.palette().setColor(QtGui.QPalette.Button, QtGui.QColor(169, 169, 169))
         combobox.setEditable(False)
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
@@ -88,7 +110,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        #combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
         if not self.assertion:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -98,13 +119,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged,self.onTypeSwitched)
-        '''
-        boxlayout = QtWidgets.QHBoxLayout(self, objectName='type_layout')
-        boxlayout.setAlignment(QtCore.Qt.AlignLeft)
-        boxlayout.addWidget(self.widget('type_combobox_label'))
-        boxlayout.addWidget(self.widget('type_switch'))
-        self.addWidget(boxlayout)
-        '''
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
         comboBoxLabel.setText('Lang')
@@ -124,39 +138,12 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
-        '''
-        boxlayout = QtWidgets.QHBoxLayout(self, objectName='lang_layout')
-        boxlayout.setAlignment(QtCore.Qt.AlignLeft)
-        boxlayout.addWidget(self.widget('lang_combobox_label'))
-        boxlayout.addWidget(self.widget('lang_switch'))
-        self.addWidget(boxlayout)
-
-
-        boxlayout = QtWidgets.QHBoxLayout(self, objectName='type_lang_layout')
-        boxlayout.setAlignment(QtCore.Qt.AlignLeft)
-        boxlayout.addWidget(self.widget('type_layout'))
-        boxlayout.addWidget(self.widget('lang_layout'))
-
-
-        formlayout = QtWidgets.QFormLayout(self, objectName='type_lang_layout')
-        formlayout.addRow(self.widget('type_layout'))
-        formlayout.addRow(self.widget('lang_layout'))
-        self.addWidget(formlayout)
-
-        formlayout = QtWidgets.QFormLayout()
-        formlayout.addRow(self.widget('valueTextArea'))
-        formlayout.addRow(self.widget('type_lang_layout'))
-
-        groupbox = QtWidgets.QGroupBox('Object resource', self, objectName='object_resource_widget')
-        groupbox.setLayout(formlayout)
-        self.addWidget(groupbox)
-        '''
-
         #############################################
         # CONFIRMATION BOX
         #################################
 
-        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        confirmation.setObjectName('confirmation_widget')
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
@@ -166,14 +153,12 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
 
-        formlayout = QtWidgets.QFormLayout()
+        formlayout = QtWidgets.QFormLayout(self)
         formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
-        formlayout.addRow(self.widget('valueTextArea'))
+        formlayout.addRow(self.widget('value_textedit'))
         formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
         formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
         formlayout.addRow(self.widget('confirmation_widget'))
-
-        self.setLayout(formlayout)
 
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Annotation assertion builder <{}>'.format(str(iri)))
@@ -182,6 +167,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot()
     def redraw(self):
         combobox = self.widget('property_switch')
@@ -189,13 +175,12 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.emptyString)
         sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        #combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
         if not self.assertion:
             combobox.setCurrentText(self.emptyString)
         else:
             combobox.setCurrentText(str(self.assertion.assertionProperty))
 
-        textArea = self.widget('valueTextArea')
+        textArea = self.widget('value_textedit')
         if self.assertion:
             if self.assertion.value:
                 textArea.setText(str(self.assertion.value))
@@ -205,7 +190,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.emptyString)
         sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        # combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
         if not self.assertion:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -228,85 +212,64 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(int)
     def onPropertySwitched(self, index):
-        propIRI = str(self.widget('property_switch').itemText(index))
-        if propIRI and not propIRI==self.emptyString:
-            self.widget('confirmation_widget').button(QtWidgets.QDialogButtonBox.Save).setEnabled(True)
-        else:
-            self.widget('confirmation_widget').button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
+        propIRI = self.widget('property_switch').itemText(index)
+        confirmation = self.widget('confirmation_widget')
+        confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(bool(propIRI))
 
     @QtCore.pyqtSlot(int)
     def onTypeSwitched(self, index):
-        typeIRI = str(self.widget('type_switch').itemText(index))
+        typeIRI = self.widget('type_switch').itemText(index)
         if not self.project.canAddLanguageTag(typeIRI):
-            '''
-            model = self.widget('lang_switch').model()
-            allItems = [model.item(i) for i in range(model.rowCount())]
-            for item in allItems:
-                #item.setBackground(QtGui.QColor('grey'))
-
-            palette = self.widget('lang_switch').palette()
-            palette.setColor(QtGui.QPalette.Active,QtGui.QPalette.Button,QtGui.QColor('red'))
-            palette.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Button, QtGui.QColor('pink'))
-            self.widget('lang_switch').setPalette(palette)
-            '''
-
-            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
         else:
-            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
 
     @QtCore.pyqtSlot()
     def accept(self):
-        propertyStr = str(self.widget('property_switch').currentText())
+        propertyStr = self.widget('property_switch').currentText()
         propertyIRI = self.project.getIRI(propertyStr)
-        value = str(self.widget('valueTextArea').toPlainText())
+        value = self.widget('value_textedit').toPlainText()
         if not value:
             value = ' '
-        typeStr = str(self.widget('type_switch').currentText())
+        typeStr = self.widget('type_switch').currentText()
         typeIRI = None
-        if typeStr and not typeStr == self.emptyString:
+        if typeStr:
             typeIRI = self.project.getIRI(typeStr)
         language = None
         if self.widget('lang_switch').isEnabled():
-            language = str(self.widget('lang_switch').currentText())
-            if not language in self.project.getLanguages():
+            language = self.widget('lang_switch').currentText()
+            if language not in self.project.getLanguages():
                 self.project.addLanguageTag(language)
         if not self.assertion:
             annAss = AnnotationAssertion(self.iri,propertyIRI,value,typeIRI,language)
             command = CommandIRIAddAnnotationAssertion(self.project, self.iri, annAss)
-            self.session.undostack.beginMacro('Add annotation to {0} '.format(str(self.iri)))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
-            #self.iri.addAnnotationAssertion(annAss)
+            self.session.undostack.push(command)
             self.sgnAnnotationAssertionAccepted.emit(annAss)
         else:
-            undo = dict()
-            undo['assertionProperty'] = self.assertion.assertionProperty
-            undo['value'] = self.assertion.value
-            undo['datatype'] = self.assertion.datatype
-            undo['language'] = self.assertion.language
-            redo = dict()
-            redo['assertionProperty']=propertyIRI
-            redo['value']=value
-            redo['datatype']=typeIRI
-            redo['language']=language
+            undo = {
+                'assertionProperty': self.assertion.assertionProperty,
+                'datatype': self.assertion.datatype,
+                'language': self.assertion.language,
+                'value': self.assertion.value,
+            }
+            redo = {
+                'assertionProperty': propertyIRI,
+                'datatype': typeIRI,
+                'language': language,
+                'value': value,
+            }
             command = CommandIRIModifyAnnotationAssertion(self.project, self.assertion, undo, redo)
-            self.session.undostack.beginMacro('Modify annotation {} '.format(str(self.assertion)))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
+            self.session.undostack.push(command)
             self.sgnAnnotationAssertionCorrectlyModified.emit(self.assertion)
         super().accept()
 
-    @QtCore.pyqtSlot()
-    def reject(self):
-        self.rejected.emit()
-        super().reject()
-
 
 class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
+    """
+    Subclass of `QtWidgets.QDialog` used to define new annotation properties.
+    """
     sgnAnnotationAccepted = QtCore.pyqtSignal(Annotation)
     sgnAnnotationCorrectlyModified = QtCore.pyqtSignal(Annotation)
     sgnAnnotationRejected = QtCore.pyqtSignal()
@@ -336,7 +299,6 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.emptyString)
         sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        # combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
         if not self.annotation:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -344,9 +306,7 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged, self.onPropertySwitched)
 
-
-
-        textArea = QtWidgets.QTextEdit(self, objectName='valueTextArea')
+        textArea = QtWidgets.QTextEdit(self, objectName='value_textedit')
         if self.annotation:
             if self.annotation.value:
                 textArea.setText(str(self.annotation.value))
@@ -356,7 +316,6 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         comboBoxLabel.setText('Type')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='type_switch')
-        # combobox.palette().setColor(QtGui.QPalette.Button, QtGui.QColor(169, 169, 169))
         combobox.setEditable(False)
         combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
         combobox.setScrollEnabled(True)
@@ -364,7 +323,6 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        # combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
         if not self.annotation:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -393,12 +351,12 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
-
         #############################################
         # CONFIRMATION BOX
         #################################
 
-        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        confirmation.setObjectName('confirmation_widget')
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
@@ -408,14 +366,12 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
 
-        formlayout = QtWidgets.QFormLayout()
+        formlayout = QtWidgets.QFormLayout(self)
         formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
-        formlayout.addRow(self.widget('valueTextArea'))
+        formlayout.addRow(self.widget('value_textedit'))
         formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
         formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
         formlayout.addRow(self.widget('confirmation_widget'))
-
-        self.setLayout(formlayout)
 
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Annotation builder <{}>'.format(str(edge)))
@@ -424,6 +380,7 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot()
     def redraw(self):
         combobox = self.widget('property_switch')
@@ -431,13 +388,12 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.emptyString)
         sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        # combobox.addItems([str(x) for x in self.project.getAnnotationPropertyIRIs()])
         if not self.annotation:
             combobox.setCurrentText(self.emptyString)
         else:
             combobox.setCurrentText(str(self.annotation.assertionProperty))
 
-        textArea = self.widget('valueTextArea')
+        textArea = self.widget('value_textedit')
         if self.annotation:
             if self.annotation.value:
                 textArea.setText(str(self.annotation.value))
@@ -447,7 +403,6 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.addItem(self.emptyString)
         sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        # combobox.addItems([str(x) for x in self.project.getDatatypeIRIs()])
         if not self.annotation:
             combobox.setCurrentText(self.emptyString)
         else:
@@ -470,179 +425,55 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(int)
     def onPropertySwitched(self, index):
-        propIRI = str(self.widget('property_switch').itemText(index))
-        if propIRI and not propIRI == self.emptyString:
-            self.widget('confirmation_widget').button(QtWidgets.QDialogButtonBox.Save).setEnabled(True)
-        else:
-            self.widget('confirmation_widget').button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
+        propIRI = self.widget('property_switch').itemText(index)
+        confirmation = self.widget('confirmation_widget')
+        confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(bool(propIRI))
 
     @QtCore.pyqtSlot(int)
     def onTypeSwitched(self, index):
-        typeIRI = str(self.widget('type_switch').itemText(index))
+        typeIRI = self.widget('type_switch').itemText(index)
         if not self.project.canAddLanguageTag(typeIRI):
-
-            self.widget('lang_switch').setStyleSheet("background:#808080");
+            self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
         else:
-            self.widget('lang_switch').setStyleSheet("background:#FFFFFF");
+            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
 
     @QtCore.pyqtSlot()
     def accept(self):
-        propertyStr = str(self.widget('property_switch').currentText())
+        propertyStr = self.widget('property_switch').currentText()
         propertyIRI = self.project.getIRI(propertyStr)
-        value = str(self.widget('valueTextArea').toPlainText())
+        value = self.widget('value_textedit').toPlainText()
         if not value:
             value = ' '
-        typeStr = str(self.widget('type_switch').currentText())
+        typeStr = self.widget('type_switch').currentText()
         typeIRI = None
-        if typeStr and not typeStr == self.emptyString:
+        if typeStr:
             typeIRI = self.project.getIRI(typeStr)
         language = None
         if self.widget('lang_switch').isEnabled():
-            language = str(self.widget('lang_switch').currentText())
-            if not language in self.project.getLanguages():
+            language = self.widget('lang_switch').currentText()
+            if language not in self.project.getLanguages():
                 self.project.addLanguageTag(language)
         if not self.annotation:
-            annotation = Annotation( propertyIRI, value, typeIRI, language)
+            annotation = Annotation(propertyIRI, value, typeIRI, language)
             command = CommandEdgeAddAnnotation(self.project, self.edge, annotation)
-            self.session.undostack.beginMacro('Add annotation to {0} '.format(str(self.edge)))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
+            self.session.undostack.push(command)
             self.sgnAnnotationAccepted.emit(annotation)
         else:
-            undo = dict()
-            undo['assertionProperty'] = self.annotation.assertionProperty
-            undo['value'] = self.annotation.value
-            undo['datatype'] = self.annotation.datatype
-            undo['language'] = self.annotation.language
-            redo = dict()
-            redo['assertionProperty'] = propertyIRI
-            redo['value'] = value
-            redo['datatype'] = typeIRI
-            redo['language'] = language
+            undo = {
+                'assertionProperty': self.annotation.assertionProperty,
+                'value': self.annotation.value,
+                'datatype': self.annotation.datatype,
+                'language': self.annotation.language,
+            }
+            redo = {
+                'assertionProperty': propertyIRI,
+                'value': value,
+                'datatype': typeIRI,
+                'language': language,
+            }
             command = CommandEdgeModifyAnnotation(self.project, self.annotation, undo, redo)
-            self.session.undostack.beginMacro('Modify annotation {} '.format(str(self.annotation)))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
+            self.session.undostack.push(command)
             self.sgnAnnotationCorrectlyModified.emit(self.annotation)
         super().accept()
-
-    @QtCore.pyqtSlot()
-    def reject(self):
-        self.rejected.emit()
-        super().reject()
-
-#TODO MAI USATA VALUTA CANCELLAZIONE
-class AnnotationPropertyExplorerWidget(QtWidgets.QWidget):
-    """
-    This class implements the ontology explorer used to list ontology predicates.
-    """
-    sgnItemActivated = QtCore.pyqtSignal('QGraphicsItem')
-    sgnItemClicked = QtCore.pyqtSignal('QGraphicsItem')
-    sgnItemDoubleClicked = QtCore.pyqtSignal('QGraphicsItem')
-    sgnItemRightClicked = QtCore.pyqtSignal('QGraphicsItem')
-
-    def __init__(self, session):
-        """
-        Initialize the ontology explorer widget.
-        :type plugin: Session
-        """
-        super().__init__(session)
-
-        self.iconRole = QtGui.QIcon(':/icons/18/ic_treeview_role')
-
-        self.project = session.project
-
-        self.model = QtGui.QStandardItemModel(self)
-        self.propView = AnnotationPropertyExplorerView(self)
-        self.propView.setModel(self.model)
-        self.setContentsMargins(0, 0, 0, 0)
-        #self.setMinimumWidth(216)
-
-        #self.setMinimumHeight(420)
-
-        self.setStyleSheet("""
-                    QLineEdit,
-                    QLineEdit:editable,
-                    QLineEdit:hover,
-                    QLineEdit:pressed,
-                    QLineEdit:focus {
-                      border: none;
-                      border-radius: 0;
-                      background: #FFFFFF;
-                      color: #000000;
-                      padding: 4px 4px 4px 4px;
-                    }
-                """)
-
-        self.populateAnnotationPropertyView()
-
-        header = self.propView.header()
-        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
-        #header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        header.setStretchLastSection(False)
-
-
-        print('COLUMN COUNT = {}'.format(self.model.columnCount()))
-
-    def populateAnnotationPropertyView(self):
-        annotationProperties = self.project.getAnnotationPropertyIRIs()
-        for propIRI in annotationProperties:
-            item = QtGui.QStandardItem(str(propIRI))
-            item.setData(propIRI)
-            self.model.appendRow(item)
-
-#TODO MAI USATA VALUTA CANCELLAZIONE
-class AnnotationPropertyExplorerView(QtWidgets.QTreeView):
-    """
-    This class implements the annotation property explorer tree view.
-    """
-    def __init__(self, widget):
-        """
-        Initialize the ontology explorer view.
-        :type widget: OntologyExplorerWidget
-        """
-        super().__init__(widget)
-        self.startPos = None
-        self.setContextMenuPolicy(QtCore.Qt.PreventContextMenu)
-        self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setHeaderHidden(True)
-        self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setSelectionMode(QtWidgets.QTreeView.SingleSelection)
-        self.setSortingEnabled(True)
-        self.setWordWrap(True)
-        self.setMinimumWidth(500)
-        self.setMinimumHeight(420)
-        #self.column
-        #self.resizeColumnToContents(0)
-
-    #############################################
-    #   PROPERTIES
-    #################################
-
-    @property
-    def session(self):
-        """
-        Returns the reference to the Session holding the OntologyExplorer widget.
-        :rtype: Session
-        """
-        return self.widget.session
-
-    @property
-    def widget(self):
-        """
-        Returns the reference to the OntologyExplorer widget.
-        :rtype: OntologyExplorerWidget
-        """
-        return self.parent()
-
-    #############################################
-    #   EVENTS
-    #################################
-
-
