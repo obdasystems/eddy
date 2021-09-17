@@ -34,14 +34,13 @@
 
 
 from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from eddy.core.functions.signals import connect, disconnect
+
 from eddy.core.datatypes.graphol import Item
+
 
 #############################################
 #   Ontology IRI
 #################################
-from eddy.core.owl import IllegalNamespaceError
 
 class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoCommand):
     """
@@ -103,16 +102,8 @@ class CommandProjectSetOntologyIRIAndVersion(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        try:
-            self._project.setOntologyIRI(self._iriRedo)
-            self._project.version = self._versionRedo
-        except IllegalNamespaceError:
-            errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage('The input string is not a valid IRI')
-            errorDialog.setWindowModality(QtCore.Qt.ApplicationModal)
-            errorDialog.show()
-            errorDialog.raise_()
-            errorDialog.activateWindow()
+        self._project.setOntologyIRI(self._iriRedo)
+        self._project.version = self._versionRedo
 
     def undo(self):
         """undo the command"""
