@@ -38,6 +38,7 @@ import pytest
 
 from PyQt5 import QtPrintSupport
 
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.owl import OWLSyntax, OWLAxiom
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.graphml import GraphMLDiagramExporter
@@ -87,7 +88,6 @@ def test_export_project_as_graphol(session, qtbot, tmpdir):
 #   CSV EXPORT
 #################################
 
-@pytest.mark.skip(reason='csv export is currently broken')
 def test_export_project_to_csv(session, qtbot, tmpdir):
     # GIVEN
     csv = tmpdir.join('project.csv')
@@ -96,10 +96,36 @@ def test_export_project_to_csv(session, qtbot, tmpdir):
         session.sgnFocusDiagram.emit(project.diagram('diagram'))
     # WHEN
     exporter = session.projectExporter(File.Csv)
-    worker = exporter(project, session, diagrams=project.diagrams())
+    worker = exporter(project, session,
+                      diagrams=project.diagrams(),
+                      annotations=project.annotationProperties,
+                      items={Item.ConceptNode, Item.RoleNode,
+                             Item.AttributeNode, Item.IndividualNode})
     worker.run(str(csv))
     # THEN
     assert os.path.isfile(str(csv))
+
+
+#############################################
+#   XLSX EXPORT
+#################################
+
+def test_export_project_to_xlsx(session, qtbot, tmpdir):
+    # GIVEN
+    xlsx = tmpdir.join('project.xlsx')
+    project = session.project
+    with qtbot.waitSignal(session.sgnDiagramFocused):
+        session.sgnFocusDiagram.emit(project.diagram('diagram'))
+    # WHEN
+    exporter = session.projectExporter(File.Xlsx)
+    worker = exporter(project, session,
+                      diagrams=project.diagrams(),
+                      annotations=project.annotationProperties,
+                      items={Item.ConceptNode, Item.RoleNode,
+                             Item.AttributeNode, Item.IndividualNode})
+    worker.run(str(xlsx))
+    # THEN
+    assert os.path.isfile(str(xlsx))
 
 
 #############################################
