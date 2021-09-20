@@ -37,6 +37,8 @@ import errno
 import os
 import sys
 
+from PyQt5 import QtCore
+
 from eddy.core.datatypes.system import (
     IS_FROZEN,
     IS_LINUX,
@@ -58,18 +60,12 @@ __PLUGINS_PATH = os.path.join(__MODULE_PATH, 'plugins')
 __RESOURCES_PATH = os.path.join(__ROOT_PATH, 'resources')
 __SUPPORT_PATH = os.path.join(__ROOT_PATH, 'support')
 __TESTS_PATH = os.path.join(__ROOT_PATH, 'tests')
+__TEST_RESOURCES_PATH = os.path.join(__TESTS_PATH, 'test_resources')
 
 
-if not os.path.isdir(__HOME_PATH):
-    os.mkdir(__HOME_PATH)
-
-
-def compressPath(path, maxchars, dots=3):
+def compressPath(path: str, maxchars: int, dots: int = 3) -> str:
     """
     Returns a visual representation of the given path showing up to 'marchars' characters.
-    :type path: str
-    :type maxchars: int
-    :type dots: int
     """
     if len(path) > maxchars:
         index = path.rfind(os.path.sep)
@@ -80,28 +76,47 @@ def compressPath(path, maxchars, dots=3):
     return path
 
 
-def expandPath(path):
+def expandPath(path: str) -> str:
     """
     Return an absolute path by expanding the given relative one.
     The following tokens will be expanded:
 
         - @eddy => Eddy's directory
         - @home => Eddy's home directory (.eddy in $HOME)
+        - @config => Eddy's config directory (platform-specific)
+        - @cache => Eddy's cache directory (platform-specific)
+        - @data => Eddy's data directory (platform-specific)
+        - @temp => Eddy's temp directory (platform-specific)
+        - @runtime => Eddy's runtime directory (platform-specific)
         - @root => Eddy's root (matches @eddy if running a frozen application)
         - @resources => Eddy's resources directory
         - @examples => Eddy's examples directory
         - @plugins => Eddy's plugins directory
         - @support => Eddy's support directory
         - @tests => Eddy's tests directory
+        - @test_resources => Eddy's test resources directory
         - ~ => will be expanded to the user home directory ($HOME)
 
-    :type path: str
-    :rtype: str
     """
     if path.startswith('@eddy/') or path.startswith('@eddy\\'):
         path = os.path.join(__MODULE_PATH, path[6:])
     elif path.startswith('@home/') or path.startswith('@home\\'):
         path = os.path.join(__HOME_PATH, path[6:])
+    elif path.startswith('@config/') or path.startswith('@config\\'):
+        confPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppConfigLocation)
+        path = os.path.join(os.path.normpath(os.path.join(confPath, os.path.pardir)), path[8:])
+    elif path.startswith('@cache/') or path.startswith('@cache\\'):
+        cachePath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.CacheLocation)
+        path = os.path.join(os.path.normpath(os.path.join(cachePath, os.path.pardir)), path[7:])
+    elif path.startswith('@data/') or path.startswith('@data\\'):
+        dataPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
+        path = os.path.join(os.path.normpath(os.path.join(dataPath, os.path.pardir)), path[6:])
+    elif path.startswith('@temp/') or path.startswith('@temp\\'):
+        tempPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.TempLocation)
+        path = os.path.join(tempPath, path[6:])
+    elif path.startswith('@runtime/') or path.startswith('@runtime\\'):
+        runPath = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.RuntimeLocation)
+        path = os.path.join(runPath, path[9:])
     elif path.startswith('@root/') or path.startswith('@root\\'):
         path = os.path.join(__ROOT_PATH, path[6:])
     elif path.startswith('@resources/') or path.startswith('@resources\\'):
@@ -114,14 +129,14 @@ def expandPath(path):
         path = os.path.join(__SUPPORT_PATH, path[9:])
     elif path.startswith('@tests/') or path.startswith('@tests\\'):
         path = os.path.join(__TESTS_PATH, path[7:])
+    elif path.startswith('@test_resources/') or path.startswith('@test_resources\\'):
+        path = os.path.join(__TEST_RESOURCES_PATH, path[16:])
     return os.path.abspath(os.path.normpath(os.path.expanduser(path)))
 
 
-def isPathValid(path):
+def isPathValid(path: str) -> bool:
     """
     Returns True if the given path is valid, False otherwise.
-    :type path: str
-    :rtype: bool
     """
     try:
         if not path or not isinstance(path, str):
@@ -148,20 +163,16 @@ def isPathValid(path):
         return True
 
 
-def isSubPath(path1, path2):
+def isSubPath(path1: str, path2: str) -> bool:
     """
     Check whether the given 'path1' is subpath of the given 'path2'.
-    :param path1: str
-    :param path2: str
-    :rtype: bool
     """
     return expandPath(path2).startswith(expandPath(path1))
 
 
-def openPath(path):
+def openPath(path: str) -> None:
     """
     Open the given path using the OS default program.
-    :type path: str
     """
     path = expandPath(path)
     if os.path.isfile(path) or os.path.isdir(path):
@@ -173,15 +184,13 @@ def openPath(path):
             os.system('xdg-open "{0}"'.format(path))
 
 
-def shortPath(path):
+def shortPath(path: str) -> str:
     """
     Convert the given path into a short one.
     The following tokens will be reintroduced:
 
         - ~ => user home directory ($HOME)
 
-    :type path: str
-    :rtype: str
     """
     for prefix in ('~',):
         absprefix = expandPath(prefix)
@@ -190,13 +199,9 @@ def shortPath(path):
     return path
 
 
-def uniquePath(base, name, extension):
+def uniquePath(base: str, name: str, extension: str) -> str:
     """
     This function generates a unique filepath which ensure not to overwrite an existing file.
-    :type base: str
-    :type name: str
-    :type extension: str
-    :rtype: str
     """
     num = 0
     base = expandPath(base)
