@@ -160,10 +160,11 @@ def make_archive(path, dst, base_dir=None, format='zip'):
 def mkdir(path):
     """
     Create the directory identified by the given path if it doesn't exists.
+    This method will create all intermediate-level directories if needed.
     :type path: str
     """
     if not isdir(path):
-        os.mkdir(expandPath(path))
+        os.makedirs(expandPath(path))
 
 
 def rmdir(path):
