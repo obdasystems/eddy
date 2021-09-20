@@ -640,9 +640,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             elif activeTab is self.widget('predefined_datatype_widget'):
                 currText = str(self.widget('datatype_switch').currentText())
                 if currText == '':
-                    errorDialog = QtWidgets.QErrorMessage(parent=self)
-                    errorDialog.showMessage('Please select a non-empty element from the combobox')
-                    errorDialog.open()
+                    dialog = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Warning,
+                        'IRI Datatype Error',
+                        'Please select a non-empty element from the combobox',
+                        parent=self)
+                    dialog.open()
                 else:
                     if self.iri:
                         if not str(self.iri) == currText:
@@ -658,9 +661,12 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                             self.node.doUpdateNodeLabel()
                     super().accept()
         except IllegalNamespaceError:
-            errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage('The input string is not a valid IRI')
-            errorDialog.open()
+            dialog = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'IRI Definition Error',
+                'The input string is not a valid IRI',
+                parent=self)
+            dialog.open()
 
 
 class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -998,9 +1004,12 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                                                          oldStr)
                     self.session.undostack.push(command)
         except IllegalNamespaceError:
-            errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage('The input string cannot be used to build a valid IRI')
-            errorDialog.open()
+            dialog = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'IRI Definition Error',
+                'The input string cannot be used to build a valid IRI',
+                parent=self)
+            dialog.open()
         finally:
             self.widget('save_iri_button').setEnabled(False)
 
@@ -1185,9 +1194,11 @@ class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
                     self.node.doUpdateNodeLabel()
             super().accept()
         except RuntimeError as e:
-            errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage(str(e))
-            errorDialog.open()
+            dialog = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Constraining Facet Definition Error',
+                str(e), parent=self)
+            dialog.open()
 
     @QtCore.pyqtSlot()
     def reject(self):
@@ -1376,9 +1387,11 @@ class LiteralDialog(QtWidgets.QDialog, HasWidgetSystem):
                     self.node.doUpdateNodeLabel()
             super().accept()
         except IllegalLiteralError as e:
-            errorDialog = QtWidgets.QErrorMessage(parent=self)
-            errorDialog.showMessage(str(e))
-            errorDialog.open()
+            dialog = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Literal Definition Error',
+                str(e), parent=self)
+            dialog.open()
 
 
 class FontDialog(QtWidgets.QDialog, HasWidgetSystem):
