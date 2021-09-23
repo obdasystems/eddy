@@ -602,7 +602,7 @@ class PaletteButton(QtWidgets.QToolButton):
         """
         icon = QtGui.QIcon()
 
-        for i in (1.0, 2.0):
+        for i in (1, 2):
 
             pixmap = QtGui.QPixmap(60 * i, 44 * i)
             pixmap.setDevicePixelRatio(i)
@@ -1125,10 +1125,8 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.drawLine(L1)
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(252, 252, 252, 255)))
-                #painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
                 painter.drawPolygon(H1)
                 painter.setFont(Font(pixelSize=9, weight=Font.Light))
-                #painter.drawText(PP1.x() + S1, 18, 'instanceOf')
                 painter.end()
 
             #############################################
@@ -1148,7 +1146,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
                 painter.setFont(Font(pixelSize=9, weight=Font.Light))
-                painter.drawText(PP1.x() + S1, 18, 'same')
+                painter.drawText(QtCore.QPointF(PP1.x() + S1, 18), 'same')
                 painter.end()
 
             #############################################
@@ -1168,7 +1166,7 @@ class PaletteButton(QtWidgets.QToolButton):
                 painter.setPen(QtGui.QPen(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)), 1.1, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
                 painter.setBrush(QtGui.QBrush(QtGui.QColor(0, 0, 0, 255)))
                 painter.setFont(Font(pixelSize=9, weight=Font.Light))
-                painter.drawText(PP1.x() + S1, 18, 'different')
+                painter.drawText(QtCore.QPointF(PP1.x() + S1, 18), 'different')
                 painter.end()
 
             #############################################

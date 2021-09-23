@@ -95,14 +95,14 @@ class ImageDiagramExporter(AbstractDiagramExporter):
         Perform JPEG document generation.
         :type path: str
         """
-        shape = self.diagram.visibleRect(margin=20)
+        shape = self.diagram.visibleRect(margin=20).toAlignedRect()
         pixmap = QtGui.QPixmap(shape.width(), shape.height())
         painter = QtGui.QPainter()
 
         if painter.begin(pixmap):
             painter.setBackgroundMode(QtCore.Qt.OpaqueMode)
             # RENDER THE DIAGRAM IN THE PAINTER
-            self.diagram.render(painter, source=shape)
+            self.diagram.render(painter, source=QtCore.QRectF(shape))
             # COMPLETE THE EXPORT
             painter.end()
             image = pixmap.toImage()

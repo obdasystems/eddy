@@ -292,7 +292,7 @@ class NodeProperty(PropertyDialog):
         #################################
 
         nodePos = self.node.pos()
-        sceneRect = self.diagram.sceneRect()
+        sceneRect = self.diagram.sceneRect().toAlignedRect()
 
         self.xLabel = QtWidgets.QLabel(self)
         self.xLabel.setText('X')

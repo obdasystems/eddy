@@ -224,8 +224,8 @@ class Welcome(QtWidgets.QDialog):
         desktop = QtWidgets.QDesktopWidget()
         screen = desktop.availableGeometry(self)
         widget = self.geometry()
-        x = screen.x() + (screen.width() - widget.width()) / 2
-        y = screen.y() + (screen.height() - widget.height()) / 2
+        x = screen.x() + (screen.width() - widget.width()) // 2
+        y = screen.y() + (screen.height() - widget.height()) // 2
         self.move(x, y)
 
         # UPDATE RECENT PROJECTS
