@@ -33,26 +33,56 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
+import platform
+import textwrap
 
-from eddy.ui.splash import Splash
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
+
+from eddy import COPYRIGHT
+from eddy.core.functions.signals import connect
 
 
-class AboutDialog(Splash):
+class AboutDialog(QtWidgets.QDialog):
     """
     This class is used to display the 'About' dialog.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QtWidgets.QWidget = None) -> None:
         """
         Initialize the dialog.
-        :type parent: QWidget
         """
         super().__init__(parent)
-        self.setWindowFlags(QtCore.Qt.Popup)
-
-    def exec_(self):
-        """
-        Alias AboutDialog.show() so that the screen can be shown using Session.doOpenDialog.
-        """
-        self.show()
+        self.iconLabel = QtWidgets.QLabel(self)
+        self.iconLabel.setContentsMargins(20, 0, 40, 0)
+        self.iconLabel.setPixmap(QtGui.QPixmap(':/images/eddy-smile'))
+        self.infoLabel = QtWidgets.QLabel(self)
+        self.infoLabel.setText(textwrap.dedent("""
+        <h3>{} {}</h3>
+        An editor for the specification and visualization<br/>
+        of Graphol ontologies.<br/><br/>
+        Runtime: {} {}<br/>
+        PyQt: {}<br/>
+        Qt: {}<br/><br/>
+        {}<br/><br/>
+        Licensed under the GNU General Public License v3<br/>""".format(
+            QtWidgets.qApp.applicationDisplayName(),
+            QtWidgets.qApp.applicationVersion(),
+            platform.python_implementation(),
+            platform.python_version(),
+            QtCore.PYQT_VERSION_STR,
+            QtCore.QT_VERSION_STR,
+            COPYRIGHT,
+        )))
+        self.confirmation = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
+        connect(self.confirmation.accepted, self.accept)
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(self.iconLabel, 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.infoLabel)
+        mainLayout = QtWidgets.QVBoxLayout(self)
+        mainLayout.addLayout(layout)
+        mainLayout.addWidget(self.confirmation)
+        self.setWindowTitle('About {}'.format(QtWidgets.qApp.applicationDisplayName()))
