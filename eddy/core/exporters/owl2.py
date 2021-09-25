@@ -34,7 +34,6 @@
 
 
 import os
-import re
 
 from PyQt5 import (
     QtCore,
@@ -67,16 +66,9 @@ from eddy.core.functions.fsystem import (
 from eddy.core.functions.misc import (
     clamp,
     first,
-    isEmpty,
-    rtfStripFontAttributes,
 )
-from eddy.core.functions.misc import (
-    rstrip,
-    postfix,
-    format_exception,
-)
+from eddy.core.functions.misc import format_exception
 from eddy.core.functions.owl import (
-    OWLAnnotationText,
     OWLFunctionalSyntaxDocumentFilter,
     OWLManchesterSyntaxDocumentFilter,
     RDFXMLDocumentFilter,
@@ -93,7 +85,6 @@ from eddy.core.owl import (
     OWL2Datatype,
     OWL2Facet,
 )
-from eddy.core.project import K_DESCRIPTION
 from eddy.core.worker import AbstractWorker
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import (
@@ -329,11 +320,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         normalization.setObjectName('normalization')
         self.addWidget(normalization)
 
-        exportRichText = CheckBox('Annotation in Rich Text', self)
-        exportRichText.setChecked(False)
-        exportRichText.setObjectName('exportRichText')
-        self.addWidget(exportRichText)
-
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
@@ -345,7 +331,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         confirmationLayout = QtWidgets.QHBoxLayout()
         confirmationLayout.setContentsMargins(0, 0, 0, 0)
         confirmationLayout.addWidget(self.widget('normalization'), 0, QtCore.Qt.AlignLeft)
-        confirmationLayout.addWidget(self.widget('exportRichText'), 0, QtCore.Qt.AlignLeft)
         confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
         confirmationArea = QtWidgets.QWidget()
         confirmationArea.setLayout(confirmationLayout)
@@ -390,13 +375,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         :rtype: bool
         """
         return self.widget('normalization').isChecked()
-
-    def exportInRichText(self):
-        """
-        Returns whether the current ontology needs to be exported, or not in Rich Text
-        :rtype: bool
-        """
-        return self.widget('exportRichText').isChecked()
 
     def syntax(self):
         """
@@ -509,7 +487,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
                 checkbox = self.widget(axiom.value)
                 checkbox.setEnabled(False)
         self.widget('normalization').setEnabled(False)
-        self.widget('exportRichText').setEnabled(False)
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -519,8 +496,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
         worker = OWLOntologyExporterWorker(self.project, self.path,
                                            axioms=self.axioms(), normalize=self.normalize(),
-                                           syntax=self.syntax(), export=self.exportInRichText(),
-                                           diagrams=self.diagrams)
+                                           syntax=self.syntax(), diagrams=self.diagrams)
 
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
@@ -580,7 +556,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.project = project
         self.axiomsList = kwargs.get('axioms', set())
         self.normalize = kwargs.get('normalize', False)
-        self.export= kwargs.get('export', False)
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
 
         self.selected_diagrams = kwargs.get('diagrams', self.project.diagrams())
@@ -1310,109 +1285,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
     #   AXIOMS GENERATION
     #################################
 
-    def createAnnotationAssertionAxiom(self, node):
-        """
-        Generate a OWL 2 annotation axiom as rdfs:comment.
-        :type node: AbstractNode
-        """
-        text = QtGui.QTextDocument()
-
-        if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-
-                aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
-                text.setHtml(meta.get(K_DESCRIPTION, ''))
-
-                value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion = self.convert(node)
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-                text.clear()
-
-    def createAnnotationAssertionAxiomRichVersion(self, node):
-        """
-        Generate a OWL 2 annotation in Rich Text Format.
-        :type node: AbstractNode
-        """
-
-        if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                strDescription = meta.get(K_DESCRIPTION, '')
-                convHTML = QtGui.QTextDocument()
-                convHTML.setHtml(strDescription)
-                strDescriptionHTML = convHTML.toHtml()
-                filterDescription = re.sub(r'^.*?<body', "<OntologyDescription", strDescriptionHTML, flags=re.DOTALL)
-
-                ##################################################
-                # Remove font attributes. See redmine issue 414
-                filterDescription = rtfStripFontAttributes(filterDescription)
-                ##################################################
-
-                exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
-
-                if (node.type() == Item.IndividualNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
-
-                elif (node.type() == Item.ConceptNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
-
-                elif (node.type() == Item.AttributeNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
-
-                elif (node.type() == Item.RoleNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
-
-                else:
-                    raise ValueError('no conversion of description is available for node %s' % node)
-
-                value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion = self.convert(node)
-
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
-    def createAnnotationAssertionAxiomPlainMastroVersion(self, node):
-        """
-        Generate a OWL 2 annotation in Plain Text Format for Mastro.
-        :type node: AbstractNode
-        """
-
-        if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                strDescription = meta.get(K_DESCRIPTION, '')
-                strPlain = QtGui.QTextDocument()
-                strPlain.setHtml(strDescription)
-                descPlain= strPlain.toPlainText()
-
-                if (node.type() == Item.IndividualNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
-
-                elif (node.type() == Item.ConceptNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
-
-                elif (node.type() == Item.AttributeNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
-
-                elif (node.type() == Item.RoleNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
-
-                else:
-                    raise ValueError('no conversion of description is available for node %s' % node)
-
-                value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion = self.convert(node)
-
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
     def createClassAssertionAxiom(self, edge):
         """
         Generate a OWL 2 ClassAssertion axiom.
@@ -1904,11 +1776,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # INITIALIZE ONTOLOGY
             #################################
 
-            ontologyIRI = rstrip(str(self.project.ontologyIRI), '#')
-            mastroIRI = rstrip('http://www.obdasystems.com/mastrostudio', '#')
+            ontologyIRI = str(self.project.ontologyIRI)
             versionIRI = self.project.version
-            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(
-                versionIRI)) if versionIRI else self.OWLOntologyID(self.IRI.create(ontologyIRI))
+            if versionIRI:
+                ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI),
+                                                self.IRI.create(versionIRI))
+            else:
+                ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI))
             self.man = self.OWLManager.createOWLOntologyManager()
             self.df = self.OWLManager.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
@@ -1916,11 +1790,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
             for prefix, ns in self.project.prefixDictItems():
                 self.pm.setPrefix(prefix, ns)
-
-            if self.export:
-                self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
-
-            self.vm.cast(self.PrefixManager, self.pm)
 
             LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
