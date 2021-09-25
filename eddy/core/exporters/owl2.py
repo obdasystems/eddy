@@ -2006,7 +2006,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
                             self.createEquivalentClassesAxiom(edge)
                         # ROLES
                         elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                            self.createEquivalentObjectPropertiesAxiom(edge)
+                            if Item.RoleInverseNode in {edge.source.type(), edge.target.type()}:
+                                self.createInverseObjectPropertiesAxiom(edge)
+                            else:
+                                self.createEquivalentObjectPropertiesAxiom(edge)
                         # ATTRIBUTES
                         elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
                             self.createEquivalentDataPropertiesAxiom(edge)
