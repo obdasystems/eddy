@@ -235,17 +235,16 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
                                              clicked=self.doCheckAxiomMarks,
                                              objectName='btn_clear_all'))
         for axiom in OWLAxiom:
-            if axiom is not OWLAxiom.Declaration:
-                self.addWidget(CheckBox(axiom.value, self,
-                                        enabled=False, objectName=axiom.value,
-                                        checked=False, clicked=self.onAxiomCheckClicked))
+            self.addWidget(CheckBox(axiom.value, self,
+                                    enabled=False, objectName=axiom.value,
+                                    checked=False, clicked=self.onAxiomCheckClicked))
 
         nonLogicalLayout = QtWidgets.QGridLayout()
         nonLogicalLayout.setColumnMinimumWidth(0, 230)
         nonLogicalLayout.setColumnMinimumWidth(1, 230)
         nonLogicalLayout.setColumnMinimumWidth(2, 230)
         nonLogicalLayout.addWidget(self.widget(OWLAxiom.Annotation.value), 0, 0)
-        # nonLogicalLayout.addWidget(self.widget(OWLAxiom.Declaration.value), 0, 1)
+        nonLogicalLayout.addWidget(self.widget(OWLAxiom.Declaration.value), 0, 1)
         nonLogicalLayout.addWidget(QtWidgets.QWidget(self), 0, 2)
         nonLogicalGroup = QtWidgets.QGroupBox('Non-Logical', self)
         nonLogicalGroup.setLayout(nonLogicalLayout)
@@ -357,10 +356,9 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
 
         # for axiom in OWLAxiom.forProfile(self.project.profile.type()):
         for axiom in OWLAxiom:
-            if axiom is not OWLAxiom.Declaration:
-                checkbox = self.widget(axiom.value)
-                checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
-                checkbox.setEnabled(True)
+            checkbox = self.widget(axiom.value)
+            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
+            checkbox.setEnabled(True)
 
         mainLayout = QtWidgets.QVBoxLayout()
         mainLayout.setContentsMargins(10, 10, 10, 10)
@@ -384,7 +382,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         Returns the set of axioms that needs to be exported.
         :rtype: set
         """
-        return {axiom for axiom in OWLAxiom if axiom is not OWLAxiom.Declaration and self.widget(axiom.value).isChecked()}
+        return {axiom for axiom in OWLAxiom if self.widget(axiom.value).isChecked()}
 
     def normalize(self):
         """
