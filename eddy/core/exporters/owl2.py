@@ -526,6 +526,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if not self.vm.isRunning():
             self.vm.initialize()
         self.vm.attachThreadToJVM()
+        self.AddOntologyAnnotation = self.vm.getJavaClass('org.semanticweb.owlapi.model.AddOntologyAnnotation')
         self.DefaultPrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.util.DefaultPrefixManager')
         self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
         self.HashSet = self.vm.getJavaClass('java.util.HashSet')
@@ -675,6 +676,27 @@ class OWLOntologyExporterWorker(AbstractWorker):
     #   AUXILIARY METHODS
     #################################
 
+    def getOWLApiAnnotation(self, annotation):
+        """
+        Returns an OWLAnnotation corresponding to the given annotation object.
+        :type annotation: Annotation
+        :rtype: OWLAnnotation
+        """
+        prop = self.df.getOWLAnnotationProperty(self.IRI.create(str(annotation.assertionProperty)))
+        if annotation.isIRIValued():
+            value = self.IRI.create(str(annotation.value))
+        else:
+            lexicalForm = annotation.value.replace('\n', ' ')
+            if annotation.language:
+                value = self.df.getOWLLiteral(lexicalForm, annotation.language)
+            else:
+                if annotation.datatype:
+                    datatype = self.df.getOWLDatatype(self.IRI.create(str(annotation.datatype)))
+                else:
+                    datatype = self.OWL2Datatype.RDF_PLAIN_LITERAL
+                value = self.df.getOWLLiteral(lexicalForm, datatype)
+        return self.df.getOWLAnnotation(prop, value)
+
     def getOWLApiDatatype(self, datatype):
         """
         Returns the OWLDatatype matching the given Datatype.
@@ -807,25 +829,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: Set
         """
         collection = self.HashSet()
-        for annotation in edge.annotations:
-            annProp = annotation.assertionProperty
-            owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp)))
-            if annotation.isIRIValued():
-                obj = annotation.value
-                owlApiObj = self.IRI.create(str(obj))
-            else:
-                obj = annotation.value.replace('\n', ' ')
-                datatype = annotation.datatype
-                lang = annotation.language
-                if lang:
-                    owlApiObj = self.df.getOWLLiteral(obj, lang)
-                else:
-                    if datatype:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
-                    else:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
-                    owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
-            collection.add(self.df.getOWLAnnotation(owlApiProp, owlApiObj))
+        if OWLAxiom.Annotation in self.axiomsList:
+            for annotation in edge.annotations:
+                collection.add(self.getOWLApiAnnotation(annotation))
         return collection
 
     def getComplement(self, node):
@@ -1316,6 +1322,17 @@ class OWLOntologyExporterWorker(AbstractWorker):
     #   AXIOMS GENERATION
     #################################
 
+    def createAnnotationAssertionAxioms(self, node):
+        """
+        Generate a set of OWL 2 annotation assertion axioms for the given node annotations.
+        :type node: AbstractNode
+        """
+        if OWLAxiom.Annotation in self.axiomsList:
+            for annotation in node.iri.annotationAssertions:
+                subject = self.IRI.create(str(annotation.subject))
+                value = self.getOWLApiAnnotation(annotation)
+                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
+
     def createClassAssertionAxiom(self, edge):
         """
         Generate a OWL 2 ClassAssertion axiom.
@@ -1805,6 +1822,15 @@ class OWLOntologyExporterWorker(AbstractWorker):
             for prefix, ns in self.project.prefixDictItems():
                 self.pm.setPrefix(prefix, ns)
 
+            #############################################
+            # ONTOLOGY ANNOTATIONS
+            #################################
+
+            if OWLAxiom.Annotation in self.axiomsList:
+                for annotation in self.project.ontologyIRI.annotationAssertions:
+                    value = self.getOWLApiAnnotation(annotation)
+                    self.ontology.applyChange(self.AddOntologyAnnotation(self.ontology, value))
+
             LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
             #############################################
@@ -1837,6 +1863,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
                         self.createPropertyRangeAxiom(node)
                     elif node.type() is Item.HasKeyNode:
                         self.createHasKeyAxiom(node)
+
+                    if node.isPredicate():
+                        self.createAnnotationAssertionAxioms(node)
+
                     self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from nodes (axioms = %s)', len(self.axioms()))
@@ -1952,35 +1982,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
-
-            #############################################
-            # ANNOTATION ASSERTIONS
-            #################################
-
-            if OWLAxiom.Annotation in self.axiomsList:
-                for ann in [x for iri in self.project.iris for x in iri.annotationAssertions]:
-                    subj = ann.subject
-                    owlApiSubj = self.IRI.create(str(subj))
-                    annProp = ann.assertionProperty
-                    owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp)))
-                    if ann.isIRIValued():
-                        obj = ann.value
-                        owlApiObj = self.IRI.create(str(obj))
-                    else:
-                        obj = ann.value.replace('\n', ' ')
-                        datatype = ann.datatype
-                        lang = ann.language
-                        if lang:
-                            owlApiObj = self.df.getOWLLiteral(obj, lang)
-                        else:
-                            if datatype:
-                                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
-                            else:
-                                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
-                            owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
-
-            LOGGER.debug('Generated OWL 2 annotation assertion axioms from edges (axioms = %s)', len(self.axioms()))
 
             #############################################
             # APPLY GENERATED AXIOMS
