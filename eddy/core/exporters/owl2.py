@@ -640,8 +640,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             elif node.type() is Item.RangeRestrictionNode:
                 self._converted[node.diagram.name][node.id] = self.getRangeRestriction(node)
             elif node.type() is Item.HasKeyNode:
-                self.createHasKeyAxiom(node)
-                return
+                self._converted[node.diagram.name][node.id] = self.getHasKey(node)
             else:
                 raise ValueError('no conversion available for node %s' % node)
         return self._converted[node.diagram.name][node.id]
@@ -1043,6 +1042,38 @@ class OWLOntologyExporterWorker(AbstractWorker):
         )
         facet = self.getOWLApiFacet(nodeFacet.constrainingFacet)
         return self.df.getOWLFacetRestriction(facet, literal)
+
+    def getHasKey(self, node):
+        """
+        Build and returns a collection of expressions that can be used to build
+        a OWL 2 HasKey axiom. The first item of the collection is a the class expression,
+        and the remaining items are object and data property expressions that uniquely
+        identify named instances of the class expression.
+        :type node: HasKeyNode
+        :rtype: list
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Concept
+        f3 = lambda x: x.identity() is Identity.Role
+        f4 = lambda x: x.identity() is Identity.Attribute
+        classes = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        objProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
+        dtProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
+
+        if not classes:
+            raise DiagramMalformedError(node, 'missing class expression operand')
+        if len(classes) > 1:
+            raise DiagramMalformedError(node, 'too many class expression operands')
+        if not (objProps or dtProps):
+            raise DiagramMalformedError(node, 'HasKey nodes must be connected to at least '
+                                              'an (object or data) property expression')
+
+        collection = [self.convert(first(classes))]
+        for prop in objProps:
+            collection.append(self.convert(prop))
+        for prop in dtProps:
+            collection.append(self.convert(prop))
+        return collection
 
     def getIndividual(self, node):
         """
@@ -1486,29 +1517,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
         Generate a OWL 2 HasKeyAxiom starting from node.
         :type node: HasKeyNode
         """
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity() is Identity.Concept
-        f3 = lambda x: x.identity() is Identity.Role
-        f4 = lambda x: x.identity() is Identity.Attribute
-        classes = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-        objProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
-        dtProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
-
-        if not classes:
-            raise DiagramMalformedError(node, 'missing class expression operand')
-        if len(classes) > 1:
-            raise DiagramMalformedError(node, 'too many class expression operands')
-        if not (objProps or dtProps):
-            raise DiagramMalformedError(node, 'HasKey nodes must be connected to at least one object (or data) property expression')
-
-        owlClExpr = self.convert(first(classes))
-        owlPropExprs = self.HashSet()
-        for prop in objProps:
-            owlPropExprs.add(self.convert(prop))
-        for prop in dtProps:
-            owlPropExprs.add(self.convert(prop))
-
-        self.addAxiom(self.df.getOWLHasKeyAxiom(owlClExpr, owlPropExprs))
+        if OWLAxiom.HasKey in self.axiomsList:
+            properties = self.HashSet()
+            expression = self.convert(node)[0]
+            for prop in self.convert(node)[1:]:
+                properties.add(prop)
+            self.addAxiom(self.df.getOWLHasKeyAxiom(expression, properties))
 
     def createInverseObjectPropertiesAxiom(self, edge):
         """
@@ -1821,6 +1835,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
                         self.createPropertyDomainAxiom(node)
                     elif node.type() is Item.RangeRestrictionNode:
                         self.createPropertyRangeAxiom(node)
+                    elif node.type() is Item.HasKeyNode:
+                        self.createHasKeyAxiom(node)
                     self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from nodes (axioms = %s)', len(self.axioms()))
