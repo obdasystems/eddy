@@ -487,4 +487,4 @@ def test_export_project_to_owl_with_normalization(session, tmpdir):
     assert 'AnnotationAssertion(rdfs:label test:Trudy "Trudy")' in content
 
     # AND
-    assert len(content) == 89
+    assert len(content) == 88

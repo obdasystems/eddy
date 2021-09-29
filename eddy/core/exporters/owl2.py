@@ -34,7 +34,6 @@
 
 
 import os
-import re
 
 from PyQt5 import (
     QtCore,
@@ -67,16 +66,9 @@ from eddy.core.functions.fsystem import (
 from eddy.core.functions.misc import (
     clamp,
     first,
-    isEmpty,
-    rtfStripFontAttributes,
 )
-from eddy.core.functions.misc import (
-    rstrip,
-    postfix,
-    format_exception,
-)
+from eddy.core.functions.misc import format_exception
 from eddy.core.functions.owl import (
-    OWLAnnotationText,
     OWLFunctionalSyntaxDocumentFilter,
     OWLManchesterSyntaxDocumentFilter,
     RDFXMLDocumentFilter,
@@ -93,7 +85,6 @@ from eddy.core.owl import (
     OWL2Datatype,
     OWL2Facet,
 )
-from eddy.core.project import K_DESCRIPTION
 from eddy.core.worker import AbstractWorker
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import (
@@ -235,17 +226,16 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
                                              clicked=self.doCheckAxiomMarks,
                                              objectName='btn_clear_all'))
         for axiom in OWLAxiom:
-            if axiom is not OWLAxiom.Declaration:
-                self.addWidget(CheckBox(axiom.value, self,
-                                        enabled=False, objectName=axiom.value,
-                                        checked=False, clicked=self.onAxiomCheckClicked))
+            self.addWidget(CheckBox(axiom.value, self,
+                                    enabled=False, objectName=axiom.value,
+                                    checked=False, clicked=self.onAxiomCheckClicked))
 
         nonLogicalLayout = QtWidgets.QGridLayout()
         nonLogicalLayout.setColumnMinimumWidth(0, 230)
         nonLogicalLayout.setColumnMinimumWidth(1, 230)
         nonLogicalLayout.setColumnMinimumWidth(2, 230)
         nonLogicalLayout.addWidget(self.widget(OWLAxiom.Annotation.value), 0, 0)
-        # nonLogicalLayout.addWidget(self.widget(OWLAxiom.Declaration.value), 0, 1)
+        nonLogicalLayout.addWidget(self.widget(OWLAxiom.Declaration.value), 0, 1)
         nonLogicalLayout.addWidget(QtWidgets.QWidget(self), 0, 2)
         nonLogicalGroup = QtWidgets.QGroupBox('Non-Logical', self)
         nonLogicalGroup.setLayout(nonLogicalLayout)
@@ -330,11 +320,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         normalization.setObjectName('normalization')
         self.addWidget(normalization)
 
-        exportRichText = CheckBox('Annotation in Rich Text', self)
-        exportRichText.setChecked(False)
-        exportRichText.setObjectName('exportRichText')
-        self.addWidget(exportRichText)
-
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
@@ -346,7 +331,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         confirmationLayout = QtWidgets.QHBoxLayout()
         confirmationLayout.setContentsMargins(0, 0, 0, 0)
         confirmationLayout.addWidget(self.widget('normalization'), 0, QtCore.Qt.AlignLeft)
-        confirmationLayout.addWidget(self.widget('exportRichText'), 0, QtCore.Qt.AlignLeft)
         confirmationLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
         confirmationArea = QtWidgets.QWidget()
         confirmationArea.setLayout(confirmationLayout)
@@ -357,10 +341,9 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
 
         # for axiom in OWLAxiom.forProfile(self.project.profile.type()):
         for axiom in OWLAxiom:
-            if axiom is not OWLAxiom.Declaration:
-                checkbox = self.widget(axiom.value)
-                checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
-                checkbox.setEnabled(True)
+            checkbox = self.widget(axiom.value)
+            checkbox.setChecked(settings.value('export/axiom/{0}'.format(axiom.value), True, bool))
+            checkbox.setEnabled(True)
 
         mainLayout = QtWidgets.QVBoxLayout()
         mainLayout.setContentsMargins(10, 10, 10, 10)
@@ -384,7 +367,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         Returns the set of axioms that needs to be exported.
         :rtype: set
         """
-        return {axiom for axiom in OWLAxiom if axiom is not OWLAxiom.Declaration and self.widget(axiom.value).isChecked()}
+        return {axiom for axiom in OWLAxiom if self.widget(axiom.value).isChecked()}
 
     def normalize(self):
         """
@@ -392,13 +375,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         :rtype: bool
         """
         return self.widget('normalization').isChecked()
-
-    def exportInRichText(self):
-        """
-        Returns whether the current ontology needs to be exported, or not in Rich Text
-        :rtype: bool
-        """
-        return self.widget('exportRichText').isChecked()
 
     def syntax(self):
         """
@@ -511,7 +487,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
                 checkbox = self.widget(axiom.value)
                 checkbox.setEnabled(False)
         self.widget('normalization').setEnabled(False)
-        self.widget('exportRichText').setEnabled(False)
 
     @QtCore.pyqtSlot()
     def run(self):
@@ -521,8 +496,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         LOGGER.info('Exporting project %s in OWL 2 format: %s', self.project.name, self.path)
         worker = OWLOntologyExporterWorker(self.project, self.path,
                                            axioms=self.axioms(), normalize=self.normalize(),
-                                           syntax=self.syntax(), export=self.exportInRichText(),
-                                           diagrams=self.diagrams)
+                                           syntax=self.syntax(), diagrams=self.diagrams)
 
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
@@ -552,6 +526,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if not self.vm.isRunning():
             self.vm.initialize()
         self.vm.attachThreadToJVM()
+        self.AddOntologyAnnotation = self.vm.getJavaClass('org.semanticweb.owlapi.model.AddOntologyAnnotation')
         self.DefaultPrefixManager = self.vm.getJavaClass('org.semanticweb.owlapi.util.DefaultPrefixManager')
         self.FunctionalSyntaxDocumentFormat = self.vm.getJavaClass('org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat')
         self.HashSet = self.vm.getJavaClass('java.util.HashSet')
@@ -582,7 +557,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self.project = project
         self.axiomsList = kwargs.get('axioms', set())
         self.normalize = kwargs.get('normalize', False)
-        self.export= kwargs.get('export', False)
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
 
         self.selected_diagrams = kwargs.get('diagrams', self.project.diagrams())
@@ -667,8 +641,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
             elif node.type() is Item.RangeRestrictionNode:
                 self._converted[node.diagram.name][node.id] = self.getRangeRestriction(node)
             elif node.type() is Item.HasKeyNode:
-                self.createHasKeyAxiom(node)
-                return
+                self._converted[node.diagram.name][node.id] = self.getHasKey(node)
             else:
                 raise ValueError('no conversion available for node %s' % node)
         return self._converted[node.diagram.name][node.id]
@@ -702,6 +675,27 @@ class OWLOntologyExporterWorker(AbstractWorker):
     #############################################
     #   AUXILIARY METHODS
     #################################
+
+    def getOWLApiAnnotation(self, annotation):
+        """
+        Returns an OWLAnnotation corresponding to the given annotation object.
+        :type annotation: Annotation
+        :rtype: OWLAnnotation
+        """
+        prop = self.df.getOWLAnnotationProperty(self.IRI.create(str(annotation.assertionProperty)))
+        if annotation.isIRIValued():
+            value = self.IRI.create(str(annotation.value))
+        else:
+            lexicalForm = annotation.value.replace('\n', ' ')
+            if annotation.language:
+                value = self.df.getOWLLiteral(lexicalForm, annotation.language)
+            else:
+                if annotation.datatype:
+                    datatype = self.df.getOWLDatatype(self.IRI.create(str(annotation.datatype)))
+                else:
+                    datatype = self.OWL2Datatype.RDF_PLAIN_LITERAL
+                value = self.df.getOWLLiteral(lexicalForm, datatype)
+        return self.df.getOWLAnnotation(prop, value)
 
     def getOWLApiDatatype(self, datatype):
         """
@@ -835,25 +829,9 @@ class OWLOntologyExporterWorker(AbstractWorker):
         :rtype: Set
         """
         collection = self.HashSet()
-        for annotation in edge.annotations:
-            annProp = annotation.assertionProperty
-            owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp)))
-            if annotation.isIRIValued():
-                obj = annotation.value
-                owlApiObj = self.IRI.create(str(obj))
-            else:
-                obj = annotation.value.replace('\n', ' ')
-                datatype = annotation.datatype
-                lang = annotation.language
-                if lang:
-                    owlApiObj = self.df.getOWLLiteral(obj, lang)
-                else:
-                    if datatype:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
-                    else:
-                        owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
-                    owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
-            collection.add(self.df.getOWLAnnotation(owlApiProp, owlApiObj))
+        if OWLAxiom.Annotation in self.axiomsList:
+            for annotation in edge.annotations:
+                collection.add(self.getOWLApiAnnotation(annotation))
         return collection
 
     def getComplement(self, node):
@@ -1070,6 +1048,38 @@ class OWLOntologyExporterWorker(AbstractWorker):
         )
         facet = self.getOWLApiFacet(nodeFacet.constrainingFacet)
         return self.df.getOWLFacetRestriction(facet, literal)
+
+    def getHasKey(self, node):
+        """
+        Build and returns a collection of expressions that can be used to build
+        a OWL 2 HasKey axiom. The first item of the collection is a the class expression,
+        and the remaining items are object and data property expressions that uniquely
+        identify named instances of the class expression.
+        :type node: HasKeyNode
+        :rtype: list
+        """
+        f1 = lambda x: x.type() is Item.InputEdge
+        f2 = lambda x: x.identity() is Identity.Concept
+        f3 = lambda x: x.identity() is Identity.Role
+        f4 = lambda x: x.identity() is Identity.Attribute
+        classes = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
+        objProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
+        dtProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
+
+        if not classes:
+            raise DiagramMalformedError(node, 'missing class expression operand')
+        if len(classes) > 1:
+            raise DiagramMalformedError(node, 'too many class expression operands')
+        if not (objProps or dtProps):
+            raise DiagramMalformedError(node, 'HasKey nodes must be connected to at least '
+                                              'an (object or data) property expression')
+
+        collection = [self.convert(first(classes))]
+        for prop in objProps:
+            collection.append(self.convert(prop))
+        for prop in dtProps:
+            collection.append(self.convert(prop))
+        return collection
 
     def getIndividual(self, node):
         """
@@ -1312,108 +1322,16 @@ class OWLOntologyExporterWorker(AbstractWorker):
     #   AXIOMS GENERATION
     #################################
 
-    def createAnnotationAssertionAxiom(self, node):
+    def createAnnotationAssertionAxioms(self, node):
         """
-        Generate a OWL 2 annotation axiom as rdfs:comment.
+        Generate a set of OWL 2 annotation assertion axioms for the given node annotations.
         :type node: AbstractNode
         """
-        text = QtGui.QTextDocument()
-
         if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-
-                aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.w3.org/2000/01/rdf-schema#comment"))
-                text.setHtml(meta.get(K_DESCRIPTION, ''))
-
-                value = self.df.getOWLLiteral(OWLAnnotationText(text.toPlainText()))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion = self.convert(node)
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-                text.clear()
-
-    def createAnnotationAssertionAxiomRichVersion(self, node):
-        """
-        Generate a OWL 2 annotation in Rich Text Format.
-        :type node: AbstractNode
-        """
-
-        if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                strDescription = meta.get(K_DESCRIPTION, '')
-                convHTML = QtGui.QTextDocument()
-                convHTML.setHtml(strDescription)
-                strDescriptionHTML = convHTML.toHtml()
-                filterDescription = re.sub(r'^.*?<body', "<OntologyDescription", strDescriptionHTML, flags=re.DOTALL)
-
-                ##################################################
-                # Remove font attributes. See redmine issue 414
-                filterDescription = rtfStripFontAttributes(filterDescription)
-                ##################################################
-
-                exportDescription = filterDescription.replace('</body></html>', '</OntologyDescription>')
-
-                if (node.type() == Item.IndividualNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
-
-                elif (node.type() == Item.ConceptNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
-
-                elif (node.type() == Item.AttributeNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
-
-                elif (node.type() == Item.RoleNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
-
-                else:
-                    raise ValueError('no conversion of description is available for node %s' % node)
-
-                value = self.df.getOWLLiteral(OWLAnnotationText(exportDescription))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion = self.convert(node)
-
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
-
-    def createAnnotationAssertionAxiomPlainMastroVersion(self, node):
-        """
-        Generate a OWL 2 annotation in Plain Text Format for Mastro.
-        :type node: AbstractNode
-        """
-
-        if OWLAxiom.Annotation in self.axiomsList:
-            meta = self.project.meta(node.type(), node.text())
-
-            if meta and not isEmpty(meta.get(K_DESCRIPTION, '')):
-                strDescription = meta.get(K_DESCRIPTION, '')
-                strPlain = QtGui.QTextDocument()
-                strPlain.setHtml(strDescription)
-                descPlain= strPlain.toPlainText()
-
-                if (node.type() == Item.IndividualNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#individualDescription"))
-
-                elif (node.type() == Item.ConceptNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#classDescription"))
-
-                elif (node.type() == Item.AttributeNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#dataPropertyDescription"))
-
-                elif (node.type() == Item.RoleNode):
-                    aproperty = self.df.getOWLAnnotationProperty(self.IRI.create("http://www.obdasystems.com/mastrostudio#objectPropertyDescription"))
-
-                else:
-                    raise ValueError('no conversion of description is available for node %s' % node)
-
-                value = self.df.getOWLLiteral(OWLAnnotationText(descPlain))
-                value = self.vm.cast(self.OWLAnnotationValue, value)
-                annotation = self.df.getOWLAnnotation(aproperty, value)
-                conversion = self.convert(node)
-
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(conversion.getIRI(), annotation))
+            for annotation in node.iri.annotationAssertions:
+                subject = self.IRI.create(str(annotation.subject))
+                value = self.getOWLApiAnnotation(annotation)
+                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
 
     def createClassAssertionAxiom(self, edge):
         """
@@ -1616,29 +1534,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
         Generate a OWL 2 HasKeyAxiom starting from node.
         :type node: HasKeyNode
         """
-        f1 = lambda x: x.type() is Item.InputEdge
-        f2 = lambda x: x.identity() is Identity.Concept
-        f3 = lambda x: x.identity() is Identity.Role
-        f4 = lambda x: x.identity() is Identity.Attribute
-        classes = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f2)
-        objProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f3)
-        dtProps = node.incomingNodes(filter_on_edges=f1, filter_on_nodes=f4)
-
-        if not classes:
-            raise DiagramMalformedError(node, 'missing class expression operand')
-        if len(classes) > 1:
-            raise DiagramMalformedError(node, 'too many class expression operands')
-        if not (objProps or dtProps):
-            raise DiagramMalformedError(node, 'HasKey nodes must be connected to at least one object (or data) property expression')
-
-        owlClExpr = self.convert(first(classes))
-        owlPropExprs = self.HashSet()
-        for prop in objProps:
-            owlPropExprs.add(self.convert(prop))
-        for prop in dtProps:
-            owlPropExprs.add(self.convert(prop))
-
-        self.addAxiom(self.df.getOWLHasKeyAxiom(owlClExpr, owlPropExprs))
+        if OWLAxiom.HasKey in self.axiomsList:
+            properties = self.HashSet()
+            expression = self.convert(node)[0]
+            for prop in self.convert(node)[1:]:
+                properties.add(prop)
+            self.addAxiom(self.df.getOWLHasKeyAxiom(expression, properties))
 
     def createInverseObjectPropertiesAxiom(self, edge):
         """
@@ -1906,11 +1807,13 @@ class OWLOntologyExporterWorker(AbstractWorker):
             # INITIALIZE ONTOLOGY
             #################################
 
-            ontologyIRI = rstrip(str(self.project.ontologyIRI), '#')
-            mastroIRI = rstrip('http://www.obdasystems.com/mastrostudio', '#')
+            ontologyIRI = str(self.project.ontologyIRI)
             versionIRI = self.project.version
-            ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI), self.IRI.create(
-                versionIRI)) if versionIRI else self.OWLOntologyID(self.IRI.create(ontologyIRI))
+            if versionIRI:
+                ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI),
+                                                self.IRI.create(versionIRI))
+            else:
+                ontologyID = self.OWLOntologyID(self.IRI.create(ontologyIRI))
             self.man = self.OWLManager.createOWLOntologyManager()
             self.df = self.OWLManager.getOWLDataFactory()
             self.ontology = self.man.createOntology(ontologyID)
@@ -1919,10 +1822,14 @@ class OWLOntologyExporterWorker(AbstractWorker):
             for prefix, ns in self.project.prefixDictItems():
                 self.pm.setPrefix(prefix, ns)
 
-            if self.export:
-                self.pm.setPrefix('ms:', postfix(mastroIRI, '#'))
+            #############################################
+            # ONTOLOGY ANNOTATIONS
+            #################################
 
-            self.vm.cast(self.PrefixManager, self.pm)
+            if OWLAxiom.Annotation in self.axiomsList:
+                for annotation in self.project.ontologyIRI.annotationAssertions:
+                    value = self.getOWLApiAnnotation(annotation)
+                    self.ontology.applyChange(self.AddOntologyAnnotation(self.ontology, value))
 
             LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
@@ -1954,6 +1861,12 @@ class OWLOntologyExporterWorker(AbstractWorker):
                         self.createPropertyDomainAxiom(node)
                     elif node.type() is Item.RangeRestrictionNode:
                         self.createPropertyRangeAxiom(node)
+                    elif node.type() is Item.HasKeyNode:
+                        self.createHasKeyAxiom(node)
+
+                    if node.isPredicate():
+                        self.createAnnotationAssertionAxioms(node)
+
                     self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from nodes (axioms = %s)', len(self.axioms()))
@@ -2008,7 +1921,10 @@ class OWLOntologyExporterWorker(AbstractWorker):
                             self.createEquivalentClassesAxiom(edge)
                         # ROLES
                         elif edge.source.identity() is Identity.Role and edge.target.identity() is Identity.Role:
-                            self.createEquivalentObjectPropertiesAxiom(edge)
+                            if Item.RoleInverseNode in {edge.source.type(), edge.target.type()}:
+                                self.createInverseObjectPropertiesAxiom(edge)
+                            else:
+                                self.createEquivalentObjectPropertiesAxiom(edge)
                         # ATTRIBUTES
                         elif edge.source.identity() is Identity.Attribute and edge.target.identity() is Identity.Attribute:
                             self.createEquivalentDataPropertiesAxiom(edge)
@@ -2066,35 +1982,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     self.step(+1)
 
             LOGGER.debug('Generated OWL 2 axioms from edges (axioms = %s)', len(self.axioms()))
-
-            #############################################
-            # ANNOTATION ASSERTIONS
-            #################################
-
-            if OWLAxiom.Annotation in self.axiomsList:
-                for ann in [x for iri in self.project.iris for x in iri.annotationAssertions]:
-                    subj = ann.subject
-                    owlApiSubj = self.IRI.create(str(subj))
-                    annProp = ann.assertionProperty
-                    owlApiProp = self.df.getOWLAnnotationProperty(self.IRI.create(str(annProp)))
-                    if ann.isIRIValued():
-                        obj = ann.value
-                        owlApiObj = self.IRI.create(str(obj))
-                    else:
-                        obj = ann.value.replace('\n', ' ')
-                        datatype = ann.datatype
-                        lang = ann.language
-                        if lang:
-                            owlApiObj = self.df.getOWLLiteral(obj, lang)
-                        else:
-                            if datatype:
-                                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
-                            else:
-                                owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(OWL2Datatype.PlainLiteral.value)))
-                            owlApiObj = self.df.getOWLLiteral(obj, owlApiDatatype)
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(owlApiProp, owlApiSubj, owlApiObj))
-
-            LOGGER.debug('Generated OWL 2 annotation assertion axioms from edges (axioms = %s)', len(self.axioms()))
 
             #############################################
             # APPLY GENERATED AXIOMS
