@@ -1,0 +1,53 @@
+## Maven-generated resources
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+## Java-related output resources
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+## IDEA-related files
+
+# User-specific stuff
+.idea/
+
+# File-based project format
+*.iws
+
+# IntelliJ output dir
+out/
+
+# mpeltonen/sbt-idea plugin
+.idea_modules/
+
+# Crashlytics plugin (for Android Studio and IntelliJ)
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+## Eclipse workspace and project files
+.metadata/
+.recommenders/
+.classpath
+.project
+
+# Google Application credentials
+/**/google-services.json
+
+# Logs directories
+**/logs/
