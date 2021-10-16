@@ -207,7 +207,8 @@ def test_export_project_to_pdf(session, qtbot, tmpdir):
     # WHEN
     worker = PdfProjectExporter(project, session,
                                 pageSize=QtPrintSupport.QPrinter.A3,
-                                diagrams=project.diagrams())
+                                diagrams=project.diagrams(),
+                                includeTables=True)
     worker.run(str(pdffile))
     # THEN
     assert os.path.isfile(str(pdffile))
