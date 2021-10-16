@@ -138,6 +138,7 @@ class PdfProjectExporter(AbstractProjectExporter):
         super().__init__(project, session)
 
         self.diagrams = kwargs.get('diagrams', None)
+        self.includeTables = kwargs.get('includeTables', None)
         self.open = kwargs.get('open', False)
         self.pageSize = kwargs.get('pageSize', None)
         self.rowsPerPage = 23
@@ -179,6 +180,23 @@ class PdfProjectExporter(AbstractProjectExporter):
                 return
         else:
             printer.setPageSize(self.pageSize)
+        # ENTITY TABLES SELECTION
+        if self.includeTables is None:
+            dialog = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Question,
+                'PDF Export',
+                'Include entity tables in the generated PDF?',
+                buttons=(
+                    QtWidgets.QMessageBox.Yes
+                    | QtWidgets.QMessageBox.No
+                    | QtWidgets.QMessageBox.Cancel
+                ),
+                parent=self.session,
+            )
+            result = dialog.exec_()
+            if result == QtWidgets.QMessageBox.Cancel:
+                return
+            self.includeTables = result == QtWidgets.QMessageBox.Yes
 
         ##############################################################
         # DIAGRAMS
@@ -208,110 +226,122 @@ class PdfProjectExporter(AbstractProjectExporter):
                             item.setCacheMode(AbstractItem.DeviceCoordinateCache)
 
         ##############################################################
-        # IRI TABLE
+        # ENTITY TABLES
         ##############################################################
 
-        # RESET PAGE SIZE AND ORIENTATION FOR PREDICATE TABLES
-        printer.setPageSize(QtPrintSupport.QPrinter.A4)
-        printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
-        printer.setPageMargins(12.5, 12.5, 12.5, 12.5, QtPrintSupport.QPrinter.Millimeter)
+        if self.includeTables:
 
-        prefixRows = []
-        for prefix in sorted(self.project.getManagedPrefixes()):
-            ns = self.project.getPrefixResolution(prefix)
-            prefixRows.append(dedent('''
-                    <tr>
-                        <td width=25%>{0}</td>
-                        <td width=75%>{1}</td>
-                    </tr>
-                '''.format(prefix, ns)))
-        sections = [prefixRows[i:i+self.rowsPerPage] for i in range(0, len(prefixRows), self.rowsPerPage)]
+            ##############################################################
+            # IRI TABLE
+            ##############################################################
 
-        for section in sections:
-            if len(section) > 0:
-                if len(self.diagrams) > 0:
-                    printer.newPage()
-                doc = QtGui.QTextDocument()
-                htmlTable = '''
-                <table width=100% border=5 cellspacing=0 cellpadding=60>
-                    <thead>
+            # RESET PAGE SIZE AND ORIENTATION FOR PREDICATE TABLES
+            printer.setPageSize(QtPrintSupport.QPrinter.A4)
+            printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
+            printer.setPageMargins(12.5, 12.5, 12.5, 12.5, QtPrintSupport.QPrinter.Millimeter)
+
+            prefixRows = []
+            for prefix in sorted(self.project.getManagedPrefixes()):
+                ns = self.project.getPrefixResolution(prefix)
+                prefixRows.append(dedent('''
                         <tr>
-                            <th bgcolor=#c8c8c8>PREFIX</th>
-                            <th bgcolor=#c8c8c8>IRI</th>
+                            <td width=25%>{0}</td>
+                            <td width=75%>{1}</td>
                         </tr>
-                    </thead>
-                 <tbody>'''
-                htmlTable += '\n'.join(section)
-                htmlTable += '</tbody>'
-                htmlTable += '</table>'
-                doc.setDefaultFont(Font(pixelSize=180))
-                doc.setHtml(htmlTable)
-                doc.setPageSize(QtCore.QSizeF(printer.pageRect().size()))
-                doc.drawContents(painter)
-
-        ##############################################################
-        # ROLES AND ATTRIBUTES TABLE
-        ##############################################################
-
-        predicateRows = []
-        predicates = set()
-        for item in {Item.RoleNode, Item.AttributeNode}:
-            for node in self.project.iriOccurrences(item=item):
-                if not node.iri.isTopBottomEntity():
-                    predicates.add(node.iri)
-
-        for predicate in sorted(predicates, key=str):
-            meta = predicate.getMetaProperties()
-            attributes = [
-                meta.get(K_FUNCTIONAL, False),
-                meta.get(K_INVERSE_FUNCTIONAL, False),
-                meta.get(K_REFLEXIVE, False),
-                meta.get(K_IRREFLEXIVE, False),
-                meta.get(K_SYMMETRIC, False),
-                meta.get(K_ASYMMETRIC, False),
-                meta.get(K_TRANSITIVE, False),
+                    '''.format(prefix, ns)))
+            sections = [
+                prefixRows[i:i+self.rowsPerPage]
+                for i in range(0, len(prefixRows), self.rowsPerPage)
             ]
-            predicateRows.append('''
-                <tr>
-                    <td width=30%>{0}</td>
-                    <td width=10%><center>{1}</center></td>
-                    <td width=10%><center>{2}</center></td>
-                    <td width=10%><center>{3}</center></td>
-                    <td width=10%><center>{4}</center></td>
-                    <td width=10%><center>{5}</center></td>
-                    <td width=10%><center>{6}</center></td>
-                    <td width=10%><center>{7}</center></td>
-                </tr>
-            '''.format(str(predicate), *map(lambda x: u'\u2713' if x else '', attributes)))
-        sections = [predicateRows[i:i+self.rowsPerPage] for i in range(0, len(predicateRows), self.rowsPerPage)]
 
-        for section in sections:
-            if len(section) > 0:
-                if len(self.diagrams) > 0:
-                    printer.newPage()
-                doc = QtGui.QTextDocument()
-                htmlTable = '''
-                <table width=100% border=5 cellspacing=0 cellpadding=60>
-                    <thead>
-                        <tr>
-                            <th bgcolor=#c8c8c8>ENTITY</th>
-                            <th bgcolor=#c8c8c8>FUNCT</th>
-                            <th bgcolor=#c8c8c8>INVERSE FUNCT</th>
-                            <th bgcolor=#c8c8c8>TRANS</th>
-                            <th bgcolor=#c8c8c8>REFL</th>
-                            <th bgcolor=#c8c8c8>IRREFL</th>
-                            <th bgcolor=#c8c8c8>SYMM</th>
-                            <th bgcolor=#c8c8c8>ASYMM</th>
-                        </tr>
-                    </thead>
-                 <tbody>'''
-                htmlTable += '\n'.join(section)
-                htmlTable += '</tbody>'
-                htmlTable += '</table>'
-                doc.setDefaultFont(Font(pixelSize=180))
-                doc.setHtml(htmlTable)
-                doc.setPageSize(QtCore.QSizeF(printer.pageRect().size()))
-                doc.drawContents(painter)
+            for section in sections:
+                if len(section) > 0:
+                    if len(self.diagrams) > 0:
+                        printer.newPage()
+                    doc = QtGui.QTextDocument()
+                    htmlTable = '''
+                    <table width=100% border=5 cellspacing=0 cellpadding=60>
+                        <thead>
+                            <tr>
+                                <th bgcolor=#c8c8c8>PREFIX</th>
+                                <th bgcolor=#c8c8c8>IRI</th>
+                            </tr>
+                        </thead>
+                     <tbody>'''
+                    htmlTable += '\n'.join(section)
+                    htmlTable += '</tbody>'
+                    htmlTable += '</table>'
+                    doc.setDefaultFont(Font(pixelSize=180))
+                    doc.setHtml(htmlTable)
+                    doc.setPageSize(QtCore.QSizeF(printer.pageRect().size()))
+                    doc.drawContents(painter)
+
+            ##############################################################
+            # ROLES AND ATTRIBUTES TABLE
+            ##############################################################
+
+            predicateRows = []
+            predicates = set()
+            for item in {Item.RoleNode, Item.AttributeNode}:
+                for node in self.project.iriOccurrences(item=item):
+                    if not node.iri.isTopBottomEntity():
+                        predicates.add(node.iri)
+
+            for predicate in sorted(predicates, key=str):
+                meta = predicate.getMetaProperties()
+                attributes = [
+                    meta.get(K_FUNCTIONAL, False),
+                    meta.get(K_INVERSE_FUNCTIONAL, False),
+                    meta.get(K_REFLEXIVE, False),
+                    meta.get(K_IRREFLEXIVE, False),
+                    meta.get(K_SYMMETRIC, False),
+                    meta.get(K_ASYMMETRIC, False),
+                    meta.get(K_TRANSITIVE, False),
+                ]
+                predicateRows.append('''
+                    <tr>
+                        <td width=30%>{0}</td>
+                        <td width=10%><center>{1}</center></td>
+                        <td width=10%><center>{2}</center></td>
+                        <td width=10%><center>{3}</center></td>
+                        <td width=10%><center>{4}</center></td>
+                        <td width=10%><center>{5}</center></td>
+                        <td width=10%><center>{6}</center></td>
+                        <td width=10%><center>{7}</center></td>
+                    </tr>
+                '''.format(str(predicate), *map(lambda x: u'\u2713' if x else '', attributes)))
+            sections = [
+                predicateRows[i:i+self.rowsPerPage]
+                for i in range(0, len(predicateRows), self.rowsPerPage)
+            ]
+
+            for section in sections:
+                if len(section) > 0:
+                    if len(self.diagrams) > 0:
+                        printer.newPage()
+                    doc = QtGui.QTextDocument()
+                    htmlTable = '''
+                    <table width=100% border=5 cellspacing=0 cellpadding=60>
+                        <thead>
+                            <tr>
+                                <th bgcolor=#c8c8c8>ENTITY</th>
+                                <th bgcolor=#c8c8c8>FUNCT</th>
+                                <th bgcolor=#c8c8c8>INVERSE FUNCT</th>
+                                <th bgcolor=#c8c8c8>TRANS</th>
+                                <th bgcolor=#c8c8c8>REFL</th>
+                                <th bgcolor=#c8c8c8>IRREFL</th>
+                                <th bgcolor=#c8c8c8>SYMM</th>
+                                <th bgcolor=#c8c8c8>ASYMM</th>
+                            </tr>
+                        </thead>
+                     <tbody>'''
+                    htmlTable += '\n'.join(section)
+                    htmlTable += '</tbody>'
+                    htmlTable += '</table>'
+                    doc.setDefaultFont(Font(pixelSize=180))
+                    doc.setHtml(htmlTable)
+                    doc.setPageSize(QtCore.QSizeF(printer.pageRect().size()))
+                    doc.drawContents(painter)
 
         # COMPLETE THE EXPORT
         if painter.isActive():
