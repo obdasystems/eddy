@@ -1,44 +1,44 @@
-altgraph==0.17
+altgraph==0.17.2
     # via pyinstaller
-appimage-builder==0.9.1 ; sys_platform == "linux"
+appimage-builder==0.9.2 ; sys_platform == "linux"
     # via -r requirements/in/packaging.in
 attrs==21.2.0
     # via pytest
 backports.entry-points-selectable==1.1.0
     # via virtualenv
-certifi==2021.5.30
+certifi==2021.10.8
     # via requests
-charset-normalizer==2.0.4
+charset-normalizer==2.0.7
     # via requests
-click==8.0.1
+click==8.0.3
     # via pip-tools
 contextlib2==21.6.0
     # via schema
-coverage==5.5
+coverage[toml]==6.0.2
     # via pytest-cov
 cython==0.29.24
     # via -r requirements/in/cython.in
-decorator==5.0.9
+decorator==5.1.0
     # via jsonpath-rw
-distlib==0.3.2
+distlib==0.3.3
     # via virtualenv
-docker==5.0.2
+docker==5.0.3
     # via appimage-builder
 easyprocess==0.3
     # via pyvirtualdisplay
 emrichen==0.2.3
     # via appimage-builder
-filelock==3.0.12
+filelock==3.3.1
     # via
     #   tox
     #   virtualenv
-flake8==3.9.2
+flake8==4.0.1
     # via -r requirements/in/dev.in
 graphviz==0.17
     # via objgraph
-idna==3.2
+idna==3.3
     # via requests
-importlib-metadata==4.8.1
+importlib-metadata==4.2.0
     # via
     #   backports.entry-points-selectable
     #   click
@@ -64,11 +64,11 @@ packaging==21.0
     #   appimage-builder
     #   pytest
     #   tox
-pep517==0.11.0
+pep517==0.12.0
     # via pip-tools
-pip-tools==6.2.0
+pip-tools==6.4.0
     # via -r requirements/in/dev.in
-platformdirs==2.3.0
+platformdirs==2.4.0
     # via virtualenv
 pluggy==1.0.0
     # via
@@ -84,11 +84,11 @@ py==1.10.0
     #   tox
 py-cpuinfo==8.0.0
     # via pytest-benchmark
-pyaml==21.8.3
+pyaml==21.10.1
     # via emrichen
-pycodestyle==2.7.0
+pycodestyle==2.8.0
     # via flake8
-pyflakes==2.3.1
+pyflakes==2.4.0
     # via flake8
 pyinstaller==4.5.1
     # via -r requirements/in/packaging.in
@@ -96,7 +96,7 @@ pyinstaller-hooks-contrib==2021.3
     # via pyinstaller
 pyparsing==2.4.7
     # via packaging
-pyqt5==5.15.4
+pyqt5==5.15.5
     # via -r requirements/in/pyqt5.in
 pyqt5-qt5==5.15.2
     # via pyqt5
@@ -114,7 +114,7 @@ pytest==6.2.5
     #   pytest-xvfb
 pytest-benchmark==3.4.1
     # via -r requirements/in/tests.in
-pytest-cov==2.12.1
+pytest-cov==3.0.0
     # via -r requirements/in/tests.in
 pytest-instafail==0.4.2
     # via -r requirements/in/tests.in
@@ -128,7 +128,7 @@ pytest-xvfb==2.0.0 ; sys_platform != "win32"
     # via -r requirements/in/tests.in
 pyvirtualdisplay==2.2
     # via pytest-xvfb
-pyyaml==5.4.1
+pyyaml==6.0
     # via
     #   appimage-builder
     #   emrichen
@@ -157,11 +157,12 @@ six==1.16.0
 toml==0.10.2
     # via
     #   pytest
-    #   pytest-cov
     #   tox
 tomli==1.2.1
-    # via pep517
-tox==3.24.3
+    # via
+    #   coverage
+    #   pep517
+tox==3.24.4
     # via
     #   -r requirements/in/tox.in
     #   tox-factor
@@ -171,9 +172,9 @@ typing-extensions==3.10.0.2
     # via
     #   importlib-metadata
     #   jpype1
-urllib3==1.26.6
+urllib3==1.26.7
     # via requests
-virtualenv==20.7.2
+virtualenv==20.8.1
     # via tox
 wcwidth==0.2.5
     # via prompt-toolkit
@@ -181,7 +182,7 @@ websocket-client==1.2.1
     # via docker
 wheel==0.37.0
     # via pip-tools
-zipp==3.5.0
+zipp==3.6.0
     # via
     #   importlib-metadata
     #   pep517
