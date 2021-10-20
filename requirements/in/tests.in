@@ -4,7 +4,7 @@
 # From PyPi
 pytest==6.2.5
 pytest-benchmark==3.4.1
-pytest-cov==2.12.1
+pytest-cov==3.0.0
 pytest-instafail==0.4.2
 pytest-mock==3.6.1
 pytest-qt==4.0.2
