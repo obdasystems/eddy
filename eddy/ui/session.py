@@ -386,22 +386,11 @@ class Session(
                 self.owlOntologyImportErrors = worker.owlOntologyImportErrors
         else:
             self.project = Project(
+                parent=self,
                 name=name,
-                path=None,
-                version=None,
-                profile=OWL2Profile(),
-                prefixMap=None,
                 ontologyIRI=iri,
-                datatypes=None,
-                constrFacets=None,
-                languages=None,
-                annotationProperties=set(),
-                session=self,
                 ontologyPrefix=prefix,
-                defaultLanguage="en",
-                addLabelFromSimpleName=False,
-                addLabelFromUserInput=False,
-                ontologies=set()
+                profile=OWL2Profile(),
             )
 
         #############################################

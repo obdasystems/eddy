@@ -830,7 +830,7 @@ class GrapholProjectLoader_v1(AbstractProjectLoader):
             ontologyIRI=iri,
             path='{}{}'.format(path, File.Graphol.extension),
             profile=profile,
-            session=self.session,
+            parent=self.session,
         )
 
     def importMetaFromXML(self):
@@ -1104,22 +1104,15 @@ class GrapholProjectIRILoaderMixin_2(object):
             return content
 
         self.nproject = Project(
-            name=parse(tag='name', default=rstrip(os.path.basename(self.path), File.Graphol.extension)),
+            parent=self.session,
             path=self.path,
+            name=parse(tag='name', default=os.path.splitext(self.path)[0]),
             version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile('OWL 2'),
             prefixMap=self.getPrefixesDict(section),
             ontologyIRI=self.getOntologyIRI(section),
-            datatypes=None,
-            constrFacets=None,
-            languages=None,
-            annotationProperties=None,
             ontologyPrefix=self.getOntologyPrefix(section),
-            defaultLanguage='en',
-            addLabelFromSimpleName=False,
-            addLabelFromUserInput=False,
-            ontologies=set(),
-            session=self.session)
+        )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
     def getOntologyIRI(self, ontologySection):
@@ -2066,23 +2059,22 @@ class GrapholProjectIRILoaderMixin_3(object):
         languages = self.getLanguages(ontologyEl)
         imports = self.getImports(ontologyEl)
         self.nproject = Project(
+            parent=self.session,
             name=projectName,
-            # TODO path=os.path.dirname(self.path),
             path=self.path,
             version=projectVersion,
             profile=self.session.createProfile('OWL 2'),
             prefixMap=prefixMap,
             ontologyIRI=ontologyIri,
-            datatypes=datatypes,
-            constrFacets=facets,
-            languages=languages,
-            annotationProperties=annotationProperties,
-            session=self.session,
             ontologyPrefix=ontologyPrefix,
+            annotationProperties=annotationProperties,
+            datatypes=datatypes,
+            facets=facets,
+            imports=imports,
+            languages=languages,
             defaultLanguage=ontologyLang,
             addLabelFromSimpleName=labelBoolean,
             addLabelFromUserInput=labelUserInputBoolean,
-            ontologies=imports
         )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
