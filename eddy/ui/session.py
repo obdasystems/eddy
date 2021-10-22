@@ -2319,17 +2319,14 @@ class Session(
                 builder.open()
 
     @QtCore.pyqtSlot()
-    def doOpenLiteralDialog(self, node: LiteralNode) -> None:
+    def doOpenLiteralDialog(self) -> None:
         """
         Executed when the Literal associated to a node might be modified by the user.
         """
         diagram = self.mdi.activeDiagram()
         if diagram:
             diagram.setMode(DiagramMode.Idle)
-            selected = diagram.selectedNodes()
-            # node = None
-            if len(selected) == 1:
-                node = first(selected)
+            node = first(diagram.selectedNodes())
             if node:
                 builder = LiteralDialog(node, diagram, self)
                 builder.open()

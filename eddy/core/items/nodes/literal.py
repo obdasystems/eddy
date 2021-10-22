@@ -178,7 +178,7 @@ class LiteralNode(AbstractResizableNode):
         Executed when the mouse is double clicked on the text item.
         :type mouseEvent: QGraphicsSceneMouseEvent
         """
-        self.session.doOpenLiteralDialog(self)
+        self.session.doOpenLiteralDialog()
         mouseEvent.accept()
 
     def boundingRect(self):
