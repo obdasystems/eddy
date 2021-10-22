@@ -1,57 +1,986 @@
+# -*- coding: utf-8 -*-
+
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
+
 
 import os
 import textwrap
 from time import time
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
-from PyQt5 import QtXml
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+    QtXml,
+)
 
 from eddy import APPNAME
 from eddy.core.commands.diagram import CommandDiagramAdd
-from eddy.core.commands.project import CommandProjectAddPrefix, CommandProjectAddAnnotationProperty, \
-    CommandProjectAddOntologyImport
-from eddy.core.common import HasThreadingSystem
+from eddy.core.commands.project import (
+    CommandProjectAddAnnotationProperty,
+    CommandProjectAddOntologyImport,
+    CommandProjectAddPrefix,
+)
 from eddy.core.datatypes.collections import DistinctList
 from eddy.core.datatypes.graphol import Item, Identity
 from eddy.core.datatypes.owl import Namespace
 from eddy.core.datatypes.system import File
-from eddy.core.diagram import Diagram
-from eddy.core.diagram import DiagramNotFoundError
-from eddy.core.diagram import DiagramNotValidError
-from eddy.core.exporters.graphol import GrapholProjectExporter
+from eddy.core.diagram import (
+    Diagram,
+    DiagramNotFoundError,
+    DiagramNotValidError,
+)
 from eddy.core.exporters.graphol_iri import GrapholIRIProjectExporter
 from eddy.core.functions.fsystem import fread, fexists, isdir, rmdir, make_archive
-from eddy.core.functions.misc import rstrip, postfix, rtfStripFontAttributes
+from eddy.core.functions.misc import rstrip, rtfStripFontAttributes
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.common.base import PredicateNodeMixin
-from eddy.core.loaders.common import AbstractDiagramLoader
-from eddy.core.loaders.common import AbstractOntologyLoader
-from eddy.core.loaders.common import AbstractProjectLoader
-from eddy.core.loaders.graphol import GrapholProjectLoader_v1
-from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker, OwlOntologyImportWorker
+from eddy.core.loaders.common import (
+    AbstractDiagramLoader,
+    AbstractOntologyLoader,
+    AbstractProjectLoader,
+)
+from eddy.core.loaders.owl2 import OwlOntologyImportWorker
 from eddy.core.output import getLogger
-from eddy.core.owl import Literal, Facet, AnnotationAssertion, ImportedOntology, AnnotationAssertionProperty, \
-    OWL2Datatype, Annotation
-from eddy.core.project import Project, K_DESCRIPTION, ProjectStopImportingError
-from eddy.core.project import ProjectNotFoundError
-from eddy.core.project import ProjectNotValidError
-from eddy.core.project import ProjectVersionError
-from eddy.core.project import ProjectStopLoadingError
-from eddy.core.project import K_FUNCTIONAL, K_INVERSE_FUNCTIONAL
-from eddy.core.project import K_ASYMMETRIC, K_IRREFLEXIVE, K_REFLEXIVE
-from eddy.core.project import K_SYMMETRIC, K_TRANSITIVE
+from eddy.core.owl import (
+    Annotation,
+    AnnotationAssertion,
+    AnnotationAssertionProperty,
+    Facet,
+    ImportedOntology,
+    Literal,
+    OWL2Datatype,
+)
+from eddy.core.project import (
+    K_ASYMMETRIC,
+    K_DESCRIPTION,
+    K_FUNCTIONAL,
+    K_INVERSE_FUNCTIONAL,
+    K_IRREFLEXIVE,
+    K_REFLEXIVE,
+    K_SYMMETRIC,
+    K_TRANSITIVE,
+    Project,
+    ProjectNotFoundError,
+    ProjectNotValidError,
+    ProjectStopImportingError,
+    ProjectStopLoadingError,
+    ProjectVersionError,
+)
+from eddy.core.regex import RE_FACET
 from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
 
-    ####################
-    #                  #
-    #   VERSION 2      #
-    #                  #
-    ####################
+
+class GrapholDiagramLoader_v1(AbstractDiagramLoader):
+    """
+    Extends AbstractDiagramLoader with facilities to load diagrams from Graphol file format.
+    """
+
+    def __init__(self, path, project, session):
+        """
+        Initialize the Graphol diagram loader.
+        :type path: str
+        :type project: Project
+        :type session: Session
+        """
+        super().__init__(path, project, session)
+
+        self.diagram = None
+        self.edges = dict()
+        self.nodes = dict()
+
+        self.importFuncForItem = {
+            Item.AttributeNode: self.importAttributeNode,
+            Item.ComplementNode: self.importComplementNode,
+            Item.ConceptNode: self.importConceptNode,
+            Item.DatatypeRestrictionNode: self.importDatatypeRestrictionNode,
+            Item.DisjointUnionNode: self.importDisjointUnionNode,
+            Item.DomainRestrictionNode: self.importDomainRestrictionNode,
+            Item.EnumerationNode: self.importEnumerationNode,
+            Item.FacetNode: self.importFacetNode,
+            Item.IndividualNode: self.importIndividualNode,
+            Item.IntersectionNode: self.importIntersectionNode,
+            Item.PropertyAssertionNode: self.importPropertyAssertionNode,
+            Item.RangeRestrictionNode: self.importRangeRestrictionNode,
+            Item.RoleNode: self.importRoleNode,
+            Item.RoleChainNode: self.importRoleChainNode,
+            Item.RoleInverseNode: self.importRoleInverseNode,
+            Item.UnionNode: self.importUnionNode,
+            Item.ValueDomainNode: self.importValueDomainNode,
+            Item.InclusionEdge: self.importInclusionEdge,
+            Item.EquivalenceEdge: self.importEquivalenceEdge,
+            Item.InputEdge: self.importInputEdge,
+            Item.MembershipEdge: self.importMembershipEdge,
+        }
+
+        self.itemFromXml = {
+            'attribute': Item.AttributeNode,
+            'complement': Item.ComplementNode,
+            'concept': Item.ConceptNode,
+            'datatype-restriction': Item.DatatypeRestrictionNode,
+            'disjoint-union': Item.DisjointUnionNode,
+            'domain-restriction': Item.DomainRestrictionNode,
+            'enumeration': Item.EnumerationNode,
+            'facet': Item.FacetNode,
+            'individual': Item.IndividualNode,
+            'intersection': Item.IntersectionNode,
+            'property-assertion': Item.PropertyAssertionNode,
+            'range-restriction': Item.RangeRestrictionNode,
+            'role': Item.RoleNode,
+            'role-chain': Item.RoleChainNode,
+            'role-inverse': Item.RoleInverseNode,
+            'union': Item.UnionNode,
+            'value-domain': Item.ValueDomainNode,
+            'value-restriction': Item.FacetNode,
+            'inclusion': Item.InclusionEdge,
+            'equivalence': Item.EquivalenceEdge,
+            'input': Item.InputEdge,
+            'instance-of': Item.MembershipEdge,
+            'membership': Item.MembershipEdge,
+        }
+
+    #############################################
+    #   NODES
+    #################################
+
+    def importAttributeNode(self, e):
+        """
+        Build an Attribute node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: AttributeNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.AttributeNode, e)
+        node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        node.iri = self.getIRIFromLabel(label.text(), node.type())
+        node.doUpdateNodeLabel()
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
+
+    def importComplementNode(self, e):
+        """
+        Build a Complement node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: ComplementNode
+        """
+        return self.importGenericNode(Item.ComplementNode, e)
+
+    def importConceptNode(self, e):
+        """
+        Build a Concept node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: ConceptNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.ConceptNode, e)
+        node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        node.iri = self.getIRIFromLabel(label.text(), node.type())
+        node.doUpdateNodeLabel()
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
+
+    def importDatatypeRestrictionNode(self, e):
+        """
+        Build a DatatypeRestriction node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: DatatypeRestrictionNode
+        """
+        return self.importGenericNode(Item.DatatypeRestrictionNode, e)
+
+    def importDisjointUnionNode(self, e):
+        """
+        Build a DisjointUnion node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: DisjointUnionNode
+        """
+        return self.importGenericNode(Item.DisjointUnionNode, e)
+
+    def importDomainRestrictionNode(self, e):
+        """
+        Build a DomainRestriction node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: DomainRestrictionNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.DomainRestrictionNode, e)
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
+
+    def importEnumerationNode(self, e):
+        """
+        Build an Enumeration node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: EnumerationNode
+        """
+        return self.importGenericNode(Item.EnumerationNode, e)
+
+    def importFacetNode(self, e):
+        """
+        Build a FacetNode node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: FacetNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.FacetNode, e)
+        match = RE_FACET.match(label.text())
+        if match:
+            facet = Facet(
+                self.nproject.getIRI(match.group('facet')),
+                Literal(match.group('value')),
+            )
+            node.facet = facet
+            node.doUpdateNodeLabel()
+        return node
+
+    def importIndividualNode(self, e):
+        """
+        Build an Individual node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: IndividualNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.IndividualNode, e)
+        node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        node.iri = self.getIRIFromLabel(label.text(), node.type())
+        node.doUpdateNodeLabel()
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
+
+    def importIntersectionNode(self, e):
+        """
+        Build an Intersection node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: IntersectionNode
+        """
+        return self.importGenericNode(Item.IntersectionNode, e)
+
+    def importPropertyAssertionNode(self, e):
+        """
+        Build a PropertyAssertion node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: PropertyAssertionNode
+        """
+        inputs = e.attribute('inputs', '').strip()
+        node = self.importGenericNode(Item.PropertyAssertionNode, e)
+        node.inputs = DistinctList(inputs.split(',') if inputs else [])
+        return node
+
+    def importRangeRestrictionNode(self, e):
+        """
+        Build a RangeRestriction node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: RangeRestrictionNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.RangeRestrictionNode, e)
+        node.setText(label.text())
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
+
+    def importRoleNode(self, e):
+        """
+        Build a Role node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: RoleNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.RoleNode, e)
+        node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        node.iri = self.getIRIFromLabel(label.text(), node.type())
+        node.doUpdateNodeLabel()
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
+
+    def importRoleChainNode(self, e):
+        """
+        Build a RoleChain node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: RoleChainNode
+        """
+        inputs = e.attribute('inputs', '').strip()
+        node = self.importGenericNode(Item.RoleChainNode, e)
+        node.inputs = DistinctList(inputs.split(',') if inputs else [])
+        return node
+
+    def importRoleInverseNode(self, e):
+        """
+        Build a RoleInverse node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: RoleInverseNode
+        """
+        return self.importGenericNode(Item.RoleInverseNode, e)
+
+    def importValueDomainNode(self, e):
+        """
+        Build a Value-Domain node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: ValueDomainNode
+        """
+        label = self.getLabelFromElement(e)
+        node = self.importGenericNode(Item.ValueDomainNode, e)
+        node.setBrush(QtGui.QBrush(QtGui.QColor(e.attribute('color', '#fcfcfc'))))
+        node.iri = self.project.getExpandedIRI(label.text())
+        node.setTextPos(node.mapFromScene(QtCore.QPointF(int(label.attribute('x')), int(label.attribute('y')))))
+        return node
+
+    def importUnionNode(self, e):
+        """
+        Build a Union node using the given QDomElement.
+        :type e: QDomElement
+        :rtype: UnionNode
+        """
+        return self.importGenericNode(Item.UnionNode, e)
+
+    #############################################
+    #   EDGES
+    #################################
+
+    def importEquivalenceEdge(self, e):
+        """
+        Build an Equivalence edge using the given QDomElement.
+        :type e: QDomElement
+        :rtype: EquivalenceEdge
+        """
+        return self.importGenericEdge(Item.EquivalenceEdge, e)
+
+    def importInclusionEdge(self, e):
+        """
+        Build an Inclusion edge using the given QDomElement.
+        :type e: QDomElement
+        :rtype: InclusionEdge
+        """
+        if self.getEdgeEquivalenceFromElement(e):
+            return self.importEquivalenceEdge(e)
+        return self.importGenericEdge(Item.InclusionEdge, e)
+
+    def importInputEdge(self, e):
+        """
+        Build an Input edge using the given QDomElement.
+        :type e: QDomElement
+        :rtype: InputEdge
+        """
+        return self.importGenericEdge(Item.InputEdge, e)
+
+    def importMembershipEdge(self, e):
+        """
+        Build a Membership edge using the given QDomElement.
+        :type e: QDomElement
+        :rtype: MembershipEdge
+        """
+        return self.importGenericEdge(Item.MembershipEdge, e)
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def importGenericEdge(self, item, e):
+        """
+        Build an edge using the given item type and QDomElement.
+        :type item: Item
+        :type e: QDomElement
+        :rtype: AbstractEdge
+        """
+        points = []
+        point = self.getPointInsideElement(e)
+        while not point.isNull():
+            points.append(QtCore.QPointF(int(point.attribute('x')), int(point.attribute('y'))))
+            point = self.getPointBesideElement(point)
+
+        source = self.nodes[e.attribute('source')]
+        target = self.nodes[e.attribute('target')]
+        edge = self.diagram.factory.create(item, **{
+            'id': e.attribute('id'),
+            'source': source,
+            'target': target,
+            'breakpoints': [
+                p for p in points[1:-1]
+                if not (source.painterPath().contains(p) or target.painterPath().contains(p))
+            ]
+        })
+
+        path = edge.source.painterPath()
+        if path.contains(edge.source.mapFromScene(points[0])):
+            edge.source.setAnchor(edge, points[0])
+
+        path = edge.target.painterPath()
+        if path.contains(edge.target.mapFromScene(points[-1])):
+            edge.target.setAnchor(edge, points[-1])
+
+        edge.source.addEdge(edge)
+        edge.target.addEdge(edge)
+        return edge
+
+    def importGenericNode(self, item, e):
+        """
+        Build a node using the given item type and QDomElement.
+        :type item: Item
+        :type e: QDomElement
+        :rtype: AbstractNode
+        """
+        geometry = self.getGeometryFromElement(e)
+        node = self.diagram.factory.create(item, **{
+            'id': e.attribute('id'),
+            'height': int(geometry.attribute('height')),
+            'width': int(geometry.attribute('width'))
+        })
+        node.setPos(QtCore.QPointF(int(geometry.attribute('x')), int(geometry.attribute('y'))))
+        return node
+
+    @staticmethod
+    def getEdgeEquivalenceFromElement(e):
+        """
+        Returns the value of the 'equivalence' attribute from the given element.
+        :type e: QDomElement
+        :rtype: bool
+        """
+        if e.hasAttribute('equivalence'):
+            return bool(int(e.attribute('equivalence', '0')))
+        return bool(int(e.attribute('complete', '0')))
+
+    def getIRIFromLabel(self, label, item, addRdfsLabel=False, lang=None):
+        """
+        Returns an IRI object from a plain text label.
+        :type label: str
+        :type item: Item
+        :type addRdfsLabel: bool
+        :type lang: str
+        :rtype: IRI
+        """
+        label = label.replace('\n', '')
+        if label == 'TOP':
+            if item is Item.ConceptNode:
+                ns = 'http://www.w3.org/2002/07/owl#Thing'
+            elif item is Item.AttributeNode:
+                ns = 'http://www.w3.org/2002/07/owl#topDataProperty'
+            elif item is Item.RoleNode:
+                ns = 'http://www.w3.org/2002/07/owl#topObjectProperty'
+            else:
+                ns = label
+            iri = self.project.getIRI(ns)
+        elif label == 'BOTTOM':
+            if item is Item.ConceptNode:
+                ns = 'http://www.w3.org/2002/07/owl#Nothing'
+            elif item is Item.AttributeNode:
+                ns = 'http://www.w3.org/2002/07/owl#bottomDataProperty'
+            elif item is Item.RoleNode:
+                ns = 'http://www.w3.org/2002/07/owl#bottomObjectProperty'
+            else:
+                ns = label
+            iri = self.project.getIRI(ns)
+        else:
+            iri = self.project.getIRI(label)
+            if addRdfsLabel:
+                annotation = AnnotationAssertion(
+                    iri, AnnotationAssertionProperty.Label.value,
+                    label, OWL2Datatype.PlainLiteral.value, lang)
+                iri.addAnnotationAssertion(annotation)
+        return iri
+
+    @staticmethod
+    def getGeometryFromElement(e):
+        """
+        Returns the geometry element inside the given one.
+        :type e: QDomElement
+        :rtype: QDomElement
+        """
+        search = e.firstChildElement('geometry')
+        if search.isNull():
+            search = e.firstChildElement('shape:geometry')
+        return search
+
+    @staticmethod
+    def getLabelFromElement(e):
+        """
+        Returns the label element inside the given one.
+        :type e: QDomElement
+        :rtype: QDomElement
+        """
+        search = e.firstChildElement('label')
+        if search.isNull():
+            search = e.firstChildElement('shape:label')
+        return search
+
+    @staticmethod
+    def getPointBesideElement(e):
+        """
+        Returns the point element beside the given one.
+        :type e: QDomElement
+        :rtype: QDomElement
+        """
+        search = e.nextSiblingElement('point')
+        if search.isNull():
+            search = e.nextSiblingElement('line:point')
+        return search
+
+    @staticmethod
+    def getPointInsideElement(e):
+        """
+        Returns the point element inside the given one.
+        :type e: QDomElement
+        :rtype: QDomElement
+        """
+        search = e.firstChildElement('point')
+        if search.isNull():
+            search = e.firstChildElement('line:point')
+        return search
+
+    def itemFromGrapholNode(self, e):
+        """
+        Returns the item matching the given graphol node.
+        :type e: QDomElement
+        :rtype: Item
+        """
+        try:
+            return self.itemFromXml[e.attribute('type').lower().strip()]
+        except KeyError:
+            return None
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.Graphol
+
+    def run(self):
+        """
+        Perform diagram import from Graphol file format and add it to the project.
+        """
+        LOGGER.info('Loading diagram: %s', self.path)
+
+        if not fexists(self.path):
+            raise DiagramNotFoundError('diagram not found: {0}'.format(self.path))
+
+        document = QtXml.QDomDocument()
+        if not document.setContent(fread(self.path)):
+            raise DiagramNotValidError('could not parse diagram from {0}'.format(self.path))
+
+        root = document.documentElement()
+        graph = root.firstChildElement('graph')
+        size = max(int(graph.attribute('width', '10000')), int(graph.attribute('height', '10000')))
+
+        #############################################
+        # CREATE AN EMPTY DIAGRAM
+        #################################
+
+        LOGGER.debug('Initialzing empty diagram with size: %s', size)
+
+        name = os.path.basename(self.path)
+        name = rstrip(name, File.Graphol.extension)
+        self.diagram = Diagram.create(name, size, self.project)
+
+        #############################################
+        # LOAD NODES
+        #################################
+
+        element = graph.firstChildElement('node')
+        while not element.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                item = self.itemFromGrapholNode(element)
+                func = self.importFuncForItem[item]
+                node = func(element)
+            except Exception:
+                LOGGER.exception('Failed to create node %s', element.attribute('id'))
+            else:
+                self.diagram.addItem(node)
+                self.diagram.guid.update(node.id)
+                self.nodes[node.id] = node
+            finally:
+                element = element.nextSiblingElement('node')
+
+        LOGGER.debug('Loaded nodes: %s', len(self.nodes))
+
+        #############################################
+        # LOAD EDGES
+        #################################
+
+        element = graph.firstChildElement('edge')
+        while not element.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                item = self.itemFromGrapholNode(element)
+                func = self.importFuncForItem[item]
+                edge = func(element)
+            except Exception:
+                LOGGER.exception('Failed to create edge %s', element.attribute('id'))
+            else:
+                self.diagram.addItem(edge)
+                self.diagram.guid.update(edge.id)
+                self.edges[edge.id] = edge
+                edge.updateEdge()
+            finally:
+                element = element.nextSiblingElement('edge')
+
+        LOGGER.debug('Loaded edges: %s', len(self.edges))
+
+        #############################################
+        # IDENTIFY NODES
+        #################################
+
+        nodes = [n for n in self.nodes.values() if Identity.Neutral in n.identities()]
+        if nodes:
+            LOGGER.debug('Running identification algorithm for %s nodes', len(nodes))
+            for node in nodes:
+                self.diagram.sgnNodeIdentification.emit(node)
+
+        #############################################
+        # CONFIGURE DIAGRAM SIGNALS
+        #################################
+
+        connect(self.diagram.sgnItemAdded, self.project.doAddItem)
+        connect(self.diagram.sgnItemRemoved, self.project.doRemoveItem)
+        connect(self.diagram.selectionChanged, self.session.doUpdateState)
+
+        LOGGER.debug('Diagram created: %s', self.diagram.name)
+
+        #############################################
+        # ADD THE DIAGRAM TO THE PROJECT
+        #################################
+
+        self.project.addDiagram(self.diagram)
+
+        LOGGER.debug('Diagram "%s" added to project "%s"', self.diagram.name, self.project.name)
+
+
+class GrapholProjectLoader_v1(AbstractProjectLoader):
+    """
+    Extends AbstractProjectLoader with facilities to load Graphol projects.
+    This class can be used to load projects.
+
+    A Graphol project is stored within a directory whose structure is the following:
+
+    - projectname/
+    -   .eddy/              # subdirectory which contains project specific information
+    -       meta.xml        # contains ontology and predicates meta information
+    -       modules.xml     # contains the paths of all the modules of the ontology
+
+    -   module1.graphol
+    -   module2.graphol
+    -   ...
+    -   moduleN.graphol
+    """
+
+    def __init__(self, path, session):
+        """
+        Initialize the project loader.
+        :type path: str
+        :type session: Session
+        """
+        super().__init__(path, session)
+
+        self.project = None
+        self.metaDocument = None
+        self.modulesDocument = None
+
+        self.projectMainPath = expandPath(self.path)
+        self.projectHomePath = os.path.join(self.projectMainPath, '.eddy')
+        self.projectMetaDataPath = os.path.join(self.projectHomePath, 'meta.xml')
+        self.projectModulesDataPath = os.path.join(self.projectHomePath, 'modules.xml')
+
+        self.metaFuncForItem = {
+            Item.AttributeNode: self.importAttributeMetadata,
+            Item.ConceptNode: self.importPredicateMetadata,
+            Item.IndividualNode: self.importPredicateMetadata,
+            Item.RoleNode: self.importRoleMetadata,
+        }
+
+        self.itemFromXml = {
+            'attribute': Item.AttributeNode,
+            'complement': Item.ComplementNode,
+            'concept': Item.ConceptNode,
+            'datatype-restriction': Item.DatatypeRestrictionNode,
+            'disjoint-union': Item.DisjointUnionNode,
+            'domain-restriction': Item.DomainRestrictionNode,
+            'enumeration': Item.EnumerationNode,
+            'facet': Item.FacetNode,
+            'individual': Item.IndividualNode,
+            'intersection': Item.IntersectionNode,
+            'property-assertion': Item.PropertyAssertionNode,
+            'range-restriction': Item.RangeRestrictionNode,
+            'role': Item.RoleNode,
+            'role-chain': Item.RoleChainNode,
+            'role-inverse': Item.RoleInverseNode,
+            'union': Item.UnionNode,
+            'value-domain': Item.ValueDomainNode,
+            'inclusion': Item.InclusionEdge,
+            'input': Item.InputEdge,
+            'instance-of': Item.MembershipEdge,
+            'membership': Item.MembershipEdge,
+        }
+
+    #############################################
+    #   AUXILIARY METHODS
+    #################################
+
+    def importAttributeMetadata(self, element):
+        """
+        Build role metadata using the given QDomElement.
+        :type element: QDomElement
+        """
+        self.importPredicateMetadata(element)
+        iri = self.project.getIRI(element.attribute('name'))
+        iri.functional = bool(int(element.firstChildElement(K_FUNCTIONAL).text()))
+
+    def importPredicateMetadata(self, element):
+        """
+        Build predicate metadata using the given QDomElement.
+        :type element: QDomElement
+        """
+        iri = self.project.getIRI(element.attribute('name'))
+        description = AnnotationAssertion(
+            iri,
+            self.project.getIRI('http://www.w3.org/2000/01/rdf-schema#comment'),
+            element.firstChildElement(K_DESCRIPTION).text(),
+        )
+        # We currently don't import K_URL as we derive the predicate IRI from its label.
+        # url = element.firstChildElement(K_URL).text()
+        iri.addAnnotationAssertion(description)
+
+    def importRoleMetadata(self, element):
+        """
+        Build role metadata using the given QDomElement.
+        :type element: QDomElement
+        :rtype: dict
+        """
+        self.importPredicateMetadata(element)
+        iri = self.project.getIRI(element.attribute('name'))
+        iri.functional = bool(int(element.firstChildElement(K_FUNCTIONAL).text()))
+        iri.inverseFunctional = bool(int(element.firstChildElement(K_INVERSE_FUNCTIONAL).text()))
+        iri.asymmetric = bool(int(element.firstChildElement(K_ASYMMETRIC).text()))
+        iri.irreflexive = bool(int(element.firstChildElement(K_IRREFLEXIVE).text()))
+        iri.reflexive = bool(int(element.firstChildElement(K_REFLEXIVE).text()))
+        iri.symmetric = bool(int(element.firstChildElement(K_SYMMETRIC).text()))
+        iri.transitive = bool(int(element.firstChildElement(K_TRANSITIVE).text()))
+
+    #############################################
+    #   IMPORT PROJECT FROM XML
+    #################################
+
+    def importProjectFromXML(self):
+        """
+        Initialize the project instance by reading project metadata from XML file.
+        :raise ProjectNotValidError: If the project metadata file is missing or not readable.
+        """
+        QtWidgets.QApplication.processEvents()
+
+        LOGGER.info('Loading ontology metadata from %s', self.projectMetaDataPath)
+
+        if not fexists(self.projectMetaDataPath):
+            raise ProjectNotValidError('missing project metadata: {0}'.format(self.projectMetaDataPath))
+
+        self.metaDocument = QtXml.QDomDocument()
+        if not self.metaDocument.setContent(fread(self.projectMetaDataPath)):
+            raise ProjectNotValidError('could read project metadata from {0}'.format(self.projectMetaDataPath))
+
+        path = self.projectMainPath
+        root = self.metaDocument.documentElement()
+        ontology = root.firstChildElement('ontology')
+        prefix = ontology.firstChildElement('prefix').text()
+        LOGGER.debug('Loaded ontology prefix: %s', prefix)
+        iri = ontology.firstChildElement('iri').text()
+        LOGGER.debug('Loaded ontology IRI: %s', iri)
+        profileName = ontology.firstChildElement('profile').text()
+        if not profileName:
+            profileName = 'OWL 2'
+            LOGGER.warning('Missing ontology profile, using default: %s', profileName)
+        profile = self.session.createProfile(profileName)
+        LOGGER.debug('Loaded ontology profile: %s', profile.name())
+        self.project = Project(
+            name=os.path.basename(path),
+            ontologyIRI=iri,
+            path='{}{}'.format(path, File.Graphol.extension),
+            profile=profile,
+            parent=self.session,
+        )
+
+    def importMetaFromXML(self):
+        """
+        Import predicate metadata from XML file.
+        """
+        QtWidgets.QApplication.processEvents()
+
+        #############################################
+        # LOAD PREDICATE METADATA
+        #################################
+
+        LOGGER.info('Loading ontology predicate metadata from %s', self.projectMetaDataPath)
+
+        root = self.metaDocument.documentElement()
+        predicates = root.firstChildElement('predicates')
+        predicate = predicates.firstChildElement('predicate')
+        while not predicate.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                item = self.itemFromXml[predicate.attribute('type')]
+                func = self.metaFuncForItem[item]
+                func(predicate)
+            except Exception:
+                LOGGER.exception('Failed to create metadata for predicate %s', predicate.attribute('name'))
+            finally:
+                predicate = predicate.nextSiblingElement('predicate')
+
+        #############################################
+        # UPDATE LAYOUT ACCORDING TO METADATA
+        #################################
+
+        predicates = self.project.iriOccurrences()
+        LOGGER.info('Refreshing state for %s predicate nodes', len(predicates))
+        for node in predicates:
+            node.updateNode()
+
+    def importModulesFromXML(self):
+        """
+        Import project modules from XML file.
+        :raise ProjectNotValidError: If the project structure file is missing or not readable.
+        """
+        QtWidgets.QApplication.processEvents()
+
+        LOGGER.info('Loading ontology structure from %s', self.projectModulesDataPath)
+
+        if not fexists(self.projectModulesDataPath):
+            raise ProjectNotValidError('missing project structure: {0}'.format(self.projectModulesDataPath))
+
+        self.modulesDocument = QtXml.QDomDocument()
+        if not self.modulesDocument.setContent(fread(self.projectModulesDataPath)):
+            raise ProjectNotValidError('could read project structure from {0}'.format(self.projectModulesDataPath))
+
+        root = self.modulesDocument.documentElement()
+        modules = root.firstChildElement('modules')
+        mod = modules.firstChildElement('module')
+        while not mod.isNull():
+            try:
+                QtWidgets.QApplication.processEvents()
+                name = mod.text()
+                path = os.path.join(self.projectMainPath, name)
+                worker = GrapholDiagramLoader_v1(path, self.project, self.session)
+                worker.run()
+            except (DiagramNotFoundError, DiagramNotValidError) as e:
+                LOGGER.warning('Failed to load project diagram %s: %s', name, e)
+            except Exception:
+                LOGGER.exception('Failed to load diagram module %s', name)
+            finally:
+                mod = mod.nextSiblingElement('module')
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.Graphol
+
+    def run(self):
+        """
+        Perform project import (LEGACY MODE).
+        """
+        #############################################
+        # VALIDATE PROJECT
+        #################################
+
+        if not isdir(self.projectMainPath):
+            raise ProjectNotFoundError('project not found: {0}'.format(self.projectMainPath))
+
+        if not isdir(self.projectHomePath):
+            raise ProjectNotValidError('missing project home: {0}'.format(self.projectHomePath))
+
+        #############################################
+        # LEGACY LOADING CHECK
+        #################################
+
+        msgbox = QtWidgets.QMessageBox()
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+        msgbox.setTextFormat(QtCore.Qt.RichText)
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Legacy mode')
+        msgbox.setText(textwrap.dedent("""
+        You have selected an {EDDY} version <b>1</b> project.<br/>
+        If you continue with the loading procedure the project will be automatically
+        converted to the most recent project version.<br/><br/>
+        Do you want to continue?
+        """.format(EDDY=APPNAME)))
+        msgbox.exec_()
+
+        if msgbox.result() == QtWidgets.QMessageBox.No:
+            raise ProjectStopLoadingError
+
+        #############################################
+        # IMPORT PROJECT
+        #################################
+
+        LOGGER.info('Loading ontology: %s (LEGACY MODE)...', os.path.basename(self.projectMainPath))
+
+        self.importProjectFromXML()
+        self.importModulesFromXML()
+        self.importMetaFromXML()
+
+        #############################################
+        # BACKUP PROJECT DIRECTORY
+        #################################
+
+        projectName = os.path.basename(self.projectMainPath)
+        archivePath = os.path.join(self.projectMainPath, os.path.pardir)
+        archiveName = '{}-{}'.format(projectName, int(round(time() * 1000)))
+        archiveFullName = os.path.join(archivePath, archiveName)
+        LOGGER.info('Archiving legacy project to: {}'.format(archiveFullName))
+        make_archive(archivePath, expandPath(archiveFullName), projectName)
+
+        #############################################
+        # CLEANUP PROJECT DIRECTORY
+        #################################
+
+        rmdir(self.projectMainPath)
+
+        #############################################
+        # SET THE LOADED PROJECT IN THE CURRENT SESSION
+        #################################
+
+        self.session.project = self.project
+
 
 class GrapholProjectIRILoaderMixin_2(object):
     """
@@ -130,6 +1059,7 @@ class GrapholProjectIRILoaderMixin_2(object):
     #############################################
     #   DOCUMENT (Prefixes,OntologyIRI)
     #################################
+
     def createDomDocument(self):
         """
         Create the QDomDocument from where to parse Project information.
@@ -147,6 +1077,7 @@ class GrapholProjectIRILoaderMixin_2(object):
     #############################################
     #   PROJECT (Prefixes,OntologyIRI)
     #################################
+
     def createProject(self):
         """
         Create the Project by reading data from the parsed QDomDocument.
@@ -173,22 +1104,15 @@ class GrapholProjectIRILoaderMixin_2(object):
             return content
 
         self.nproject = Project(
-            name=parse(tag='name', default=rstrip(os.path.basename(self.path), File.Graphol.extension)),
+            parent=self.session,
             path=self.path,
+            name=parse(tag='name', default=os.path.splitext(self.path)[0]),
             version=parse(tag='version', default='1.0'),
             profile=self.session.createProfile('OWL 2'),
             prefixMap=self.getPrefixesDict(section),
             ontologyIRI=self.getOntologyIRI(section),
-            datatypes=None,
-            constrFacets=None,
-            languages=None,
-            annotationProperties=None,
             ontologyPrefix=self.getOntologyPrefix(section),
-            defaultLanguage='en',
-            addLabelFromSimpleName=False,
-            addLabelFromUserInput=False,
-            ontologies=set(),
-            session=self.session)
+        )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
     def getOntologyIRI(self, ontologySection):
@@ -459,10 +1383,8 @@ class GrapholProjectIRILoaderMixin_2(object):
     #############################################
     #   NODES
     #################################
-    def getIriFromLabelText(self,labelText, itemType, addRdfsLabel=False, lang=None):
-        if itemType==Item.ValueDomainNode:
-            print()
 
+    def getIriFromLabelText(self, labelText, itemType, addRdfsLabel=False, lang=None):
         iriString = ''
         if labelText == 'TOP':
             addRdfsLabel = False
@@ -941,6 +1863,7 @@ class GrapholOntologyIRILoader_v2(AbstractOntologyLoader, GrapholProjectIRILoade
         self.projectRender()
         self.projectMerge()
 
+
 class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderMixin_2):
     """
     Extends AbstractProjectLoader with facilities to load Graphol projects.
@@ -957,27 +1880,14 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
         #path = postfix(path, File.Graphol.extension)
         super().__init__(path, session)
 
-    '''
     def createLegacyProject(self):
         """
         Create a Project using the @deprecated Graphol project loader (v1).
         """
         worker = GrapholProjectLoader_v1(os.path.dirname(self.path), self.session)
         worker.run()
-        worker = GrapholProjectExporter(self.session.project)
+        worker = GrapholIRIProjectExporter(self.session.project)
         worker.run()
-    '''
-    def createLegacyProject(self):
-        """
-        Create a Project using the @deprecated Graphol project loader (v2).
-        """
-        worker = GrapholProjectLoader_v1(os.path.dirname(self.path), self.session)
-        worker.run()
-        worker = GrapholProjectExporter(self.session.project)
-        worker.run()
-        print()
-        #self.session.project = None
-
 
     def projectLoaded(self):
         """
@@ -1001,55 +1911,38 @@ class GrapholIRIProjectLoader_v2(AbstractProjectLoader, GrapholProjectIRILoaderM
         """
         Perform project import.
         """
-        version_1 = False
         try:
             self.createDomDocument()
+
+            #############################################
+            # LEGACY LOADING CHECK
+            #################################
+
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Legacy mode')
+            msgbox.setText(textwrap.dedent("""
+                                You have selected an {EDDY} version <b>2</b> project.<br/>
+                                If you continue with the loading procedure the project will be automatically
+                                converted to the most recent project version.<br/><br/>
+                                Do you want to continue?
+                                """.format(EDDY=APPNAME)))
+            msgbox.exec_()
+
+            if msgbox.result() == QtWidgets.QMessageBox.No:
+                raise ProjectStopLoadingError
         except (ProjectNotFoundError, ProjectVersionError):
             self.createLegacyProject()
-            version_1 = True
-        finally:
-            if not version_1:
-                #############################################
-                # LEGACY LOADING CHECK
-                #################################
-
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Legacy mode')
-                msgbox.setText(textwrap.dedent("""
-                                    You have selected an {EDDY} version <b>2</b> project.<br/>
-                                    If you continue with the loading procedure the project will be automatically
-                                    converted to the most recent project version.<br/><br/>
-                                    Do you want to continue?
-                                    """.format(EDDY=APPNAME)))
-                msgbox.exec_()
-
-                if msgbox.result() == QtWidgets.QMessageBox.No:
-                    raise ProjectStopLoadingError
-            else:
-                self.createDomDocument()
+        else:
             self.createProject()
             self.createDiagrams()
             self.createPredicatesMeta()
             self.projectRender()
             self.projectLoaded()
 
-
-    ####################
-    #                  #
-    #   VERSION 3      #
-    #                  #
-    ####################
-
-
-    ####################
-    #                  #
-    #   VERSION 2      #
-    #                  #
-    ####################
 
 class GrapholProjectIRILoaderMixin_3(object):
     """
@@ -1166,23 +2059,22 @@ class GrapholProjectIRILoaderMixin_3(object):
         languages = self.getLanguages(ontologyEl)
         imports = self.getImports(ontologyEl)
         self.nproject = Project(
+            parent=self.session,
             name=projectName,
-            # TODO path=os.path.dirname(self.path),
             path=self.path,
             version=projectVersion,
             profile=self.session.createProfile('OWL 2'),
             prefixMap=prefixMap,
             ontologyIRI=ontologyIri,
-            datatypes=datatypes,
-            constrFacets=facets,
-            languages=languages,
-            annotationProperties=annotationProperties,
-            session=self.session,
             ontologyPrefix=ontologyPrefix,
+            annotationProperties=annotationProperties,
+            datatypes=datatypes,
+            facets=facets,
+            imports=imports,
+            languages=languages,
             defaultLanguage=ontologyLang,
             addLabelFromSimpleName=labelBoolean,
             addLabelFromUserInput=labelUserInputBoolean,
-            ontologies=imports
         )
         LOGGER.info('Loaded ontology: %s...', self.nproject.name)
 
@@ -1457,7 +2349,6 @@ class GrapholProjectIRILoaderMixin_3(object):
     #############################################
     #   NODES
     #################################
-
 
     def importAttributeNode(self, diagram, nodeElement):
         return self.getIriPredicateNode(diagram, nodeElement, Item.AttributeNode)
@@ -1896,6 +2787,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         except KeyError:
             return None
 
+
 class GrapholOntologyIRILoader_v3(AbstractOntologyLoader, GrapholProjectIRILoaderMixin_3):
     """
     Extends AbstractOntologyLoader with facilities to load ontologies from Graphol file format and merge them with current project
@@ -1927,7 +2819,6 @@ class GrapholOntologyIRILoader_v3(AbstractOntologyLoader, GrapholProjectIRILoade
     @QtCore.pyqtSlot(str, Exception)
     def onImportError(self, location, exc):
         self._owlOntologyImportErrors.update([(location,str(exc))])
-        print()
 
     #############################################
     #   INTERFACE
@@ -1951,6 +2842,7 @@ class GrapholOntologyIRILoader_v3(AbstractOntologyLoader, GrapholProjectIRILoade
         self.projectRender()
         self.projectMerge()
 
+
 class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderMixin_3):
     """
     Extends AbstractProjectLoader with facilities to load Graphol projects.
@@ -1971,7 +2863,6 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
         """
         Create a Project using the @deprecated Graphol project loader (v2).
         """
-        #worker = GrapholIRIProjectLoader_v2(os.path.dirname(self.path), self.session)
         worker = GrapholIRIProjectLoader_v2(self.path, self.session)
         worker.run()
         worker = GrapholIRIProjectExporter(self.session.project)
@@ -2002,13 +2893,13 @@ class GrapholIRIProjectLoader_v3(AbstractProjectLoader, GrapholProjectIRILoaderM
         try:
             self.createDomDocument()
         except (ProjectNotFoundError, ProjectVersionError):
-            LOGGER.info("Try to load legacy project (graphol version=2)")
             self.createLegacyProject()
         else:
             self.createProject()
             self.createDiagrams()
             self.projectRender()
             self.projectLoaded()
+
 
 class ProjectIRIMergeWorker_v3(QtCore.QObject):
     """

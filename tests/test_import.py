@@ -40,9 +40,11 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.fsystem import cpdir, fcopy
 from eddy.core.functions.path import expandPath
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
-from eddy.core.loaders.graphol import GrapholProjectLoader_v1
-from eddy.core.loaders.graphol import GrapholProjectLoader_v2
-from eddy.core.loaders.graphol_iri import GrapholIRIProjectLoader_v2, GrapholIRIProjectLoader_v3
+from eddy.core.loaders.graphol_iri import (
+    GrapholProjectLoader_v1,
+    GrapholIRIProjectLoader_v2,
+    GrapholIRIProjectLoader_v3,
+)
 from eddy.ui.session import Session
 
 
@@ -74,7 +76,6 @@ def no_message_box(monkeypatch):
 #   GRAPHOL IMPORT
 #################################
 
-@pytest.mark.skip(reason='graphol v1 import is currently broken')
 def test_load_project_from_graphol_v1(session, qtbot, tmpdir):
     # GIVEN
     graphol = tmpdir.join('LUBM')

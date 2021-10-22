@@ -1086,9 +1086,12 @@ class ImportedOntology(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+
 class IRIManager(QtCore.QObject):
     """
-    A `IRIManager` manages: (i)associations between extended IRIs and their prefixed forms, (ii)the set of IRIs identifying active ontology elements
+    A `IRIManager` manages:
+      (i) associations between extended IRIs and their prefixed forms;
+      (ii) the set of IRIs identifying active ontology elements.
     """
     sgnPrefixAdded = QtCore.pyqtSignal('QString', 'QString')
     sgnPrefixRemoved = QtCore.pyqtSignal('QString')
@@ -1114,7 +1117,22 @@ class IRIManager(QtCore.QObject):
 
     sgnLanguageTagAdded = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None, prefixMap=None, ontologyIRI=None, ontologyPrefix=None, datatypes=None, languages=None, constrFacets=None, annotationProperties=None, defaultLanguage='en', addLabelFromSimpleName=False, addLabelFromUserInput=False, ontologies=set()):
+    def __init__(
+        self,
+        parent=None,
+        prefixMap=None,
+        ontologyIRI=None,
+        ontologyPrefix=None,
+        annotationProperties=None,
+        imports=None,
+        datatypes=None,
+        facets=None,
+        languages=None,
+        defaultLanguage='en',
+        addLabelFromSimpleName=False,
+        addLabelFromUserInput=False,
+        **kwargs,
+    ):
         """
         Create a new `IRIManager`
         :type parent: QtCore.QObject
@@ -1160,10 +1178,10 @@ class IRIManager(QtCore.QObject):
             defaults = False
             for dt in datatypes:
                 self.addDatatype(dt)
-        if constrFacets:
+        if facets:
             defaults = False
-            for fac in constrFacets:
-                self.addConstrainingFacet(fac)
+            for facet in facets:
+                self.addConstrainingFacet(facet)
         if languages:
             defaults = False
             for lang in languages:
@@ -1174,7 +1192,7 @@ class IRIManager(QtCore.QObject):
         self._defaultLanguage = defaultLanguage
         self._addLabelFromSimpleName = addLabelFromSimpleName
         self._addLabelFromUserInput = addLabelFromUserInput
-        self._importedOntologies = ontologies
+        self._importedOntologies = imports or set()
 
     #############################################
     #   IMPORTED ONTOLOGIES

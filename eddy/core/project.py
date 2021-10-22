@@ -46,14 +46,10 @@ from PyQt5 import (
     QtWidgets,
 )
 
-from eddy.core.datatypes.graphol import (
-    Item,
-)
+from eddy.core.datatypes.graphol import Item
 from eddy.core.diagram import Diagram
 from eddy.core.functions.path import expandPath
-from eddy.core.functions.signals import (
-    connect,
-)
+from eddy.core.functions.signals import connect
 from eddy.core.items.common import AbstractItem
 from eddy.core.items.edges.common.base import AbstractEdge
 from eddy.core.items.nodes.attribute import AttributeNode
@@ -80,6 +76,7 @@ from eddy.core.owl import (
     K_TRANSITIVE,
     K_FUNCTIONAL,
 )
+from eddy.core.profiles.owl2 import OWL2Profile
 
 if TYPE_CHECKING:
     from eddy.ui.session import Session
@@ -149,19 +146,24 @@ class Project(IRIManager):
     sgnIRIChanged = QtCore.pyqtSignal(QtWidgets.QGraphicsItem, IRI)
     sgnIRIRefactor = QtCore.pyqtSignal(IRI, IRI)
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        name: str = None,
+        path: str = None,
+        profile: OWL2Profile = None,
+        version: str = None,
+        **kwargs: Any
+    ) -> None:
         """
         Initialize the graphol project.
         """
-        super().__init__(kwargs.get('session'),kwargs.get('prefixMap'),kwargs.get('ontologyIRI'), kwargs.get('ontologyPrefix'), kwargs.get('datatypes'), kwargs.get('languages'), kwargs.get('constrFacets'), kwargs.get('annotationProperties'), kwargs.get('defaultLanguage'), kwargs.get('addLabelFromSimpleName'),  kwargs.get('addLabelFromUserInput'), kwargs.get('ontologies'))
+        super().__init__(**kwargs)
         self.index = ProjectIRIIndex(self)
-        #self.iri = kwargs.get('iri', 'NULL')
-        self.name = kwargs.get('name')
-        self.path = expandPath(kwargs.get('path')) if kwargs.get('path') else None
-        #self.prefix = kwargs.get('prefix', 'NULL')
-        self.profile = kwargs.get('profile')
+        self.name = name
+        self.path = expandPath(path) if path else None
+        self.profile = profile
         self.profile.setParent(self)
-        self.version = kwargs.get('version', '1.0')
+        self.version = version if version is not None else '1.0'
 
         # FIXME: delete once all references have been dropped
         self.IRI_prefixes_nodes_dict = kwargs.get('IRI_prefixes_nodes_dict')
