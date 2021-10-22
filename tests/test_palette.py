@@ -85,13 +85,38 @@ def test_insert_single_node(session, qtbot):
     assert diagram.mode is DiagramMode.NodeAdd
     assert diagram.modeParam is Item.ConceptNode
     # WHEN
+
+    def on_timeout_insert_single_node():
+        from eddy.ui.iri import IriBuilderDialog
+        num_nodes_in_diagram = len(diagram.nodes())
+        num_items_in_project = len(project.items())
+        num_nodes_in_project = len(project.nodes())
+        newStr = 'http://www.dis.uniroma1.it/~graphol/test_project/NewClass'
+        newIri = project.getIRI(newStr)
+        dialog = None
+        for child in session.children():
+            if isinstance(child, IriBuilderDialog):
+                dialog = child
+                break
+        if dialog:
+            dialog.widget('full_iri_field').setValue(newStr)
+            dialog.accept()
+        assert not dialog is None
+        assert num_nodes_in_diagram == len(diagram.nodes()) - 1
+        assert num_items_in_project == len(project.items()) - 1
+        assert num_nodes_in_project == len(project.nodes()) - 1
+        assert len(project.iriOccurrences(Item.ConceptNode, iri)) == 1
+        assert len(project.iriOccurrences(Item.ConceptNode, newIri)) == 1
+    QtCore.QTimer.singleShot(100, on_timeout_insert_single_node)
     qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, position)
+    qtbot.wait(500)
     # THEN
     assert not button.isChecked()
     assert diagram.mode is DiagramMode.Idle
     assert diagram.modeParam is None
 
 
+@pytest.mark.skip('node insert with control modifier is not supported anymore')
 def test_insert_single_node_with_control_modifier(session, qtbot):
     # GIVEN
     project = session.project
@@ -113,10 +138,11 @@ def test_insert_single_node_with_control_modifier(session, qtbot):
     qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
     # THEN
     assert not button.isChecked()
-    assert not diagram.mode is DiagramMode.NodeAdd
-    assert not diagram.modeParam is Item.ConceptNode
+    assert diagram.mode is not DiagramMode.NodeAdd
+    assert diagram.modeParam is not Item.ConceptNode
 
 
+@pytest.mark.skip('node insert with control modifier is not supported anymore')
 def test_insert_multiple_nodes_with_control_modifier(session, qtbot):
     # GIVEN
     project = session.project
@@ -139,8 +165,8 @@ def test_insert_multiple_nodes_with_control_modifier(session, qtbot):
         qtbot.mousePress(view.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.ControlModifier, position)
     # THEN
     assert not button.isChecked()
-    assert not diagram.mode is DiagramMode.NodeAdd
-    assert not diagram.modeParam is Item.RoleNode
+    assert diagram.mode is not DiagramMode.NodeAdd
+    assert diagram.modeParam is not Item.RoleNode
 
 
 #############################################
