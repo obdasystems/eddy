@@ -69,7 +69,7 @@ class File(Enum_):
     Html = 'Hyper-Text Markup Language (*.html)'
     Jar = 'Java Archive (*.jar)'
     Jpeg = 'JPEG (*.jpg)'
-    Owl = 'Web Ontology Language (*.owl)'
+    Owl = 'Web Ontology Language (*.owl *.ofn *.owx *.omn *.ttl)'
     Pdf = 'Portable Document Format (*.pdf)'
     Png = 'PNG (*.png)'
     Qss = 'Qt Style Sheet (*.qss)'
