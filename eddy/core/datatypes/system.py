@@ -69,7 +69,7 @@ class File(Enum_):
     Html = 'Hyper-Text Markup Language (*.html)'
     Jar = 'Java Archive (*.jar)'
     Jpeg = 'JPEG (*.jpg)'
-    Owl = 'Web Ontology Language (*.owl)'
+    Owl = 'Web Ontology Language (*.owl *.ofn *.owx *.omn *.ttl)'
     Pdf = 'Portable Document Format (*.pdf)'
     Png = 'PNG (*.png)'
     Qss = 'Qt Style Sheet (*.qss)'
@@ -104,13 +104,24 @@ class File(Enum_):
     @property
     def extension(self):
         """
-        The extension associated with the Enum member.
+        The extension associated with the Enum member,
+        or `None` if there is no associated extension.
+        If there is more than one associated extension,
+        the first one specified is returned.
         :rtype: str
         """
-        match = RE_FILE_EXTENSION.match(self.value)
+        match = RE_FILE_EXTENSION.search(self.value)
         if match:
             return match.group('extension')
         return None
+
+    @property
+    def extensions(self):
+        """
+        The list of extensions associated with the Enum member.
+        :rtype: list
+        """
+        return RE_FILE_EXTENSION.findall(self.value)
 
     def __lt__(self, other):
         """
