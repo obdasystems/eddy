@@ -61,7 +61,6 @@ from eddy.core.functions.path import openPath
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.owl import Annotation
-from eddy.core.plugin import AbstractPlugin
 from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import (
     CheckBox,
@@ -73,35 +72,6 @@ if TYPE_CHECKING:
     from eddy.ui.session import Session
 
 LOGGER = getLogger()
-
-
-class CsvExporterPlugin(AbstractPlugin):
-    """
-    Extends AbstractPlugin providing a Csv file format project exporter.
-    """
-    #############################################
-    #   HOOKS
-    #################################
-
-    def dispose(self):
-        """
-        Executed whenever the plugin is going to be destroyed.
-        """
-        # UNINSTALL THE EXPORTER
-        self.debug('Uninstalling CSV file format exporter')
-        self.session.removeProjectExporter(CsvExporter)
-        self.debug('Uninstalling Xlsx file format exporter')
-        self.session.removeProjectExporter(XlsxExporter)
-
-    def start(self):
-        """
-        Perform initialization tasks for the plugin.
-        """
-        # INSTALL THE EXPORTER
-        self.debug('Installing CSV file format exporter')
-        self.session.addProjectExporter(CsvExporter)
-        self.debug('Installing Xlsx file format exporter')
-        self.session.addProjectExporter(XlsxExporter)
 
 
 class AbstractMetadataExporter(AbstractProjectExporter):
@@ -225,7 +195,7 @@ class AbstractMetadataExporter(AbstractProjectExporter):
         pass
 
 
-class CsvExporter(AbstractMetadataExporter):
+class CsvProjectExporter(AbstractMetadataExporter):
     """
     This class can be used to export Graphol projects into CSV format.
     """
@@ -273,7 +243,7 @@ class CsvExporter(AbstractMetadataExporter):
             openPath(path)
 
 
-class XlsxExporter(AbstractMetadataExporter):
+class XlsxProjectExporter(AbstractMetadataExporter):
     """
     This class can be used to export Graphol projects into Excel 2007+ .xlsx format.
     """
