@@ -75,6 +75,7 @@ class File(Enum_):
     Qss = 'Qt Style Sheet (*.qss)'
     Spec = 'Plugin SPEC (*.spec)'
     Zip = 'ZIP (*.zip)'
+    Xlsx = 'Excel Spreadsheet (*.xlsx)'
     Xml = 'XML (*.xml)'
 
     @classmethod

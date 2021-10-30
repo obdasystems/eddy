@@ -128,7 +128,6 @@ def get_hidden_imports():
     # PLUGIN HIDDEN IMPORTS AND EXTRA MODULES TO BUNDLE
     imports.extend([
         'eddy.plugins',  # PLUGINS PACKAGE
-        'csv'  # REQUIRED BY csv-exporter
     ])
     return imports
 

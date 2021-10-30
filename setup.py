@@ -604,6 +604,7 @@ setuptools.setup(
     install_requires=[
         'jpype1>=0.7.1,!=0.7.2',
         'rfc3987',
+        'XlsxWriter',
     ],
     packages=setuptools.find_packages(exclude=['tests', 'scripts', 'support']),
     include_package_data=True,

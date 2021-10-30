@@ -129,6 +129,10 @@ from eddy.core.exporters.image import (
     JpegDiagramExporter,
     PngDiagramExporter,
 )
+from eddy.core.exporters.metadata import (
+    CsvProjectExporter,
+    XlsxProjectExporter,
+)
 from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
@@ -1125,8 +1129,11 @@ class Session(
         self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholIRIProjectExporter)
         self.addProjectExporter(PdfProjectExporter)
-        self.addProjectExporter(GraphReferencesProjectExporter)
-        self.addDiagramExporter(GraphMLDiagramExporter)
+        self.addProjectExporter(CsvProjectExporter)
+        self.addProjectExporter(XlsxProjectExporter)
+        # FIXME: CURRENTLY UNSUPPORTED
+        # self.addProjectExporter(GraphReferencesProjectExporter)
+        # self.addDiagramExporter(GraphMLDiagramExporter)
         self.addDiagramExporter(BmpDiagramExporter)
         self.addDiagramExporter(JpegDiagramExporter)
         self.addDiagramExporter(PngDiagramExporter)
@@ -1855,144 +1862,126 @@ class Session(
         """
         Export the current project.
         """
-        if not self.project.isEmpty():
-            dialog = FileDialog(self)
-            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(
-                # self.ontologyExporterNameFilters()                -> .owl
-                # self.projectExporterNameFilters(except{File.Graphol})   -> .csv
-                sorted(self.ontologyExporterNameFilters() + self.projectExporterNameFilters(
-                    {File.Graphol}) \
-                       + self.diagramExporterNameFilters({File.Pdf, File.GraphML})
-                       ))
-
-            dialog.selectFile(self.project.name)
-            dialog.selectNameFilter(File.Owl.value)
-            if dialog.exec_():
-                filetype = File.valueOf(dialog.selectedNameFilter())
+        if self.project.isEmpty():
+            return
+        dialog = FileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setNameFilters(sorted(
+            self.ontologyExporterNameFilters() +
+            self.projectExporterNameFilters({File.Graphol}) +
+            self.diagramExporterNameFilters({File.Pdf, File.GraphML})
+        ))
+        dialog.selectFile(self.project.name)
+        dialog.selectNameFilter(File.Owl.value)
+        if dialog.exec_():
+            filetype = File.valueOf(dialog.selectedNameFilter())
+            try:
                 try:
                     worker = self.createOntologyExporter(filetype, self.project, self)
                 except ValueError:
                     try:
                         worker = self.createProjectExporter(filetype, self.project, self)
                     except ValueError:
-                        arbitrary_diagram = list(self.project.diagrams())[0]
-                        if arbitrary_diagram:
-                            worker = self.createDiagramExporter(filetype, arbitrary_diagram, self)
-                        else:
-                            LOGGER.critical('no diagram present in the project')
+                        diagram = first(self.project.diagrams())
+                        if not diagram:
+                            LOGGER.info('no diagram present in the project')
+                            return
+                        worker = self.createDiagramExporter(filetype, diagram, self)
                 worker.run(expandPath(first(dialog.selectedFiles())))
+            except Exception as e:
+                LOGGER.error('error during export: {}', e)
+                self.addNotification("""
+                <b><font color="#7E0B17">ERROR</font></b>:
+                Could not complete the export, see the System Log for details.
+                """)
 
     @QtCore.pyqtSlot()
     def doExportDiagram(self) -> None:
         """
         Export the current project diagrams.
         """
-        if not self.project.isEmpty():
-            dialog = FileDialog(self)
-            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            # dialog.setNameFilters(self.projectExporterNameFilters({File.Graphol,File.Csv,File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
-            dialog.setNameFilters(self.projectExporterNameFilters(
-                {File.Csv, File.GraphReferences}) + self.diagramExporterNameFilters({File.GraphML}))
-            dialog.selectFile(self.project.name)
-            dialog.selectNameFilter(File.Pdf.value)
-            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
-                # When this is set on macOS, for some reason the native file dialog requires to set
-                # the file filter twice before changing the default suffix, but it already
-                # does this without setting this action. Tested on Qt 5.10.1
-                connect(dialog.filterSelected, lambda value: \
-                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
-            if dialog.exec_():
-                filetype = File.valueOf(dialog.selectedNameFilter())
-                try:
-                    try:
-                        with BusyProgressDialog('Exporting {0}...'.format(self.project.name),
-                                                parent=self):
-                            if filetype is File.Graphol:
-                                worker = self.createProjectExporter(filetype, self.project, self,
-                                                                    exportPath=expandPath(first(
-                                                                        dialog.selectedFiles())),
-                                                                    selectDiagrams=True)
-                                worker.run()
-                                if fexists(expandPath(first(dialog.selectedFiles()))):
-                                    self.addNotification("""Project export completed""")
-                            else:
-                                worker = self.createProjectExporter(filetype, self.project, self)
-                                worker.run(expandPath(first(dialog.selectedFiles())))
-                                if fexists(expandPath(first(dialog.selectedFiles()))):
-                                    self.addNotification("""
-                                    Project export completed: <br><br>
-                                    <b><a href=file:{0}>{1}</a></b>
-                                    """.format(expandPath(first(dialog.selectedFiles())),
-                                               'Open File'))
-                    except ValueError as e:
-                        # DIAGRAM SELECTION
-                        print(str(e))
-                        filterDialog = DiagramSelectionDialog(self)
-                        if not filterDialog.exec_():
-                            return
-                        # EXPORT DIAGRAMS
-                        with BusyProgressDialog(parent=self) as progress:
-                            for diagram in filterDialog.selectedDiagrams():
-                                progress.setWindowTitle('Exporting {0}...'.format(diagram.name))
-                                path = first(dialog.selectedFiles())
-                                name = path[0:path.rfind('.')]
-                                ext = path[path.rfind('.'):len(path)]
-                                path = expandPath('{}_{}{}'.format(name, diagram.name, ext))
-                                worker = self.createDiagramExporter(filetype, diagram, self)
-                                worker.run(path)
+        if self.project.isEmpty():
+            return
+        dialog = FileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setNameFilters(sorted(
+            self.projectExporterNameFilters({File.Graphol}) +
+            self.diagramExporterNameFilters()
+        ))
+        dialog.selectFile(self.project.name)
+        dialog.selectNameFilter(File.Pdf.value)
+        if dialog.exec_():
+            filetype = File.valueOf(dialog.selectedNameFilter())
+            try:
+                # EXPORT PROJECT
+                with BusyProgressDialog('Exporting {0}...'.format(self.project.name), parent=self):
+                    worker = self.createProjectExporter(filetype, self.project, self)
+                    worker.run(expandPath(first(dialog.selectedFiles())))
+                    if fexists(expandPath(first(dialog.selectedFiles()))):
                         self.addNotification("""
                         Project export completed: <br><br>
-                        <b><a href={0}>{1}</a></b>
-                        """.format(os.path.dirname(first(dialog.selectedFiles())), 'Open Folder'))
-                except Exception as e:
-                    LOGGER.error('error during export: {}', e)
-                    self.addNotification("""
-                    <b><font color="#7E0B17">ERROR</font></b>:
-                    Could not complete the export, see the System Log for details.
-                    """)
-                    msgbox = QtWidgets.QMessageBox(self)
-                    msgbox.setDetailedText(format_exception(e))
-                    msgbox.setIconPixmap(
-                        QtGui.QIcon(':/icons/48/ic_error_outline_black').pixmap(48))
-                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-                    msgbox.setText(
-                        'Eddy could not Could not complete the export, see the System Log for details.')
-                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                    msgbox.setWindowTitle('PDF export failed!')
-                    msgbox.exec_()
+                        <b><a href=file:{0}>{1}</a></b>
+                        """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+            except ValueError:
+                # DIAGRAM SELECTION
+                filterDialog = DiagramSelectionDialog(self)
+                if not filterDialog.exec_():
+                    return
+                # EXPORT DIAGRAMS
+                with BusyProgressDialog(parent=self) as progress:
+                    for diagram in filterDialog.selectedDiagrams():
+                        progress.setWindowTitle('Exporting {0}...'.format(diagram.name))
+                        path = first(dialog.selectedFiles())
+                        name, ext = os.path.splitext(path)
+                        outputPath = expandPath('{}_{}{}'.format(name, diagram.name, ext))
+                        worker = self.createDiagramExporter(filetype, diagram, self)
+                        worker.run(outputPath)
+                self.addNotification("""
+                Project export completed: <br><br>
+                <b><a href={0}>{1}</a></b>
+                """.format(os.path.dirname(first(dialog.selectedFiles())), 'Open Folder'))
+            except Exception as e:
+                LOGGER.error('error during export: {}', e)
+                self.addNotification("""
+                <b><font color="#7E0B17">ERROR</font></b>:
+                Could not complete the export, see the System Log for details.
+                """)
 
     @QtCore.pyqtSlot()
     def doExportOntology(self) -> None:
         """
         Export the current project.
         """
-        if not self.project.isEmpty():
-            dialog = FileDialog(self)
-            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            dialog.setNameFilters(sorted(self.ontologyExporterNameFilters()))
-            dialog.selectFile(self.project.name)
-            dialog.selectNameFilter(File.Owl.value)
-            if dialog.testOption(QtWidgets.QFileDialog.DontUseNativeDialog) or not IS_MACOS:
-                # When this is set on macOS, for some reason the native file dialog requires to set
-                # the file filter twice before changing the default suffix, but it already
-                # does this without setting this action. Tested on Qt 5.10.1
-                connect(dialog.filterSelected, lambda value: \
-                    dialog.setDefaultSuffix(File.forValue(value).extension if value else None))
-            if dialog.exec_():
+        dialog = FileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setNameFilters(sorted(
+            self.ontologyExporterNameFilters() +
+            self.projectExporterNameFilters({File.Graphol})
+        ))
+        dialog.selectFile(self.project.name)
+        dialog.selectNameFilter(File.Owl.value)
+        if dialog.exec_():
+            filetype = File.valueOf(dialog.selectedNameFilter())
+            try:
                 try:
-                    filetype = File.valueOf(dialog.selectedNameFilter())
                     worker = self.createOntologyExporter(filetype, self.project, self)
-                    worker.run(expandPath(first(dialog.selectedFiles())))
-                except Exception as e:
-                    LOGGER.error('error during export: {}', e)
+                except ValueError:
+                    worker = self.createProjectExporter(filetype, self.project, self)
+                worker.run(expandPath(first(dialog.selectedFiles())))
+                if (fexists(expandPath(first(dialog.selectedFiles())))):
                     self.addNotification("""
-                    <b><font color="#7E0B17">ERROR</font></b>:
-                    Could not complete the export, see the System Log for details.
-                    """)
+                    Ontology export completed: <br><br>
+                    <b><a href=file:{0}>{1}</a></b>
+                    """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+            except Exception as e:
+                LOGGER.error('error during export: {}', e)
+                self.addNotification("""
+                <b><font color="#7E0B17">ERROR</font></b>:
+                Could not complete the export, see the System Log for details.
+                """)
 
     @QtCore.pyqtSlot()
     def doFocusMdiArea(self) -> None:
@@ -3150,6 +3139,7 @@ class Session(
         self.action('delete').setEnabled(isNodeSelected or isEdgeSelected)
         self.action('purge').setEnabled(isNodeSelected)
         self.action('export').setEnabled(not isProjectEmpty)
+        self.action('export_diagrams').setEnabled(not isProjectEmpty)
         self.action('paste').setEnabled(not isClipboardEmpty)
         self.action('print').setEnabled(isDiagramActive)
         self.action('property_domain').setEnabled(isDomainRangeUsable)

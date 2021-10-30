@@ -161,23 +161,25 @@ class OWLOntologyExporter(AbstractOntologyExporter, HasThreadingSystem):
         Perform OWL ontology generation.
         :type path: str
         """
-        if not self.project.isEmpty():
-            # DIAGRAM SELECTION
-            if not self.diagrams:
+        # DIAGRAM SELECTION
+        if self.diagrams is None:
+            if not self.project.isEmpty():
                 dialog = DiagramSelectionDialog(self.session)
                 if not dialog.exec_():
                     return
                 self.diagrams = dialog.selectedDiagrams()
-            self.path = path
-            # DISABLE SYNTAX CHECK
-            # self.progress = BusyProgressDialog('Performing syntax check...')
-            # self.progress.show()
-            # worker = SyntaxValidationWorker(0, self.items, self.project)
-            # connect(worker.sgnCompleted, self.onSyntaxCheckCompleted)
-            # connect(worker.sgnSyntaxError, self.onSyntaxCheckErrored)
-            # self.startThread('syntaxCheck', worker)
-            dialog = OWLOntologyExporterDialog(self.project, self.path, self.session, self.diagrams)
-            dialog.exec_()
+            else:
+                self.diagrams = self.project.diagrams()
+        self.path = path
+        # DISABLE SYNTAX CHECK
+        # self.progress = BusyProgressDialog('Performing syntax check...')
+        # self.progress.show()
+        # worker = SyntaxValidationWorker(0, self.items, self.project)
+        # connect(worker.sgnCompleted, self.onSyntaxCheckCompleted)
+        # connect(worker.sgnSyntaxError, self.onSyntaxCheckErrored)
+        # self.startThread('syntaxCheck', worker)
+        dialog = OWLOntologyExporterDialog(self.project, self.path, self.session, self.diagrams)
+        dialog.exec_()
 
 
 class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidgetSystem):
