@@ -129,6 +129,10 @@ from eddy.core.exporters.image import (
     JpegDiagramExporter,
     PngDiagramExporter,
 )
+from eddy.core.exporters.metadata import (
+    CsvProjectExporter,
+    XlsxProjectExporter,
+)
 from eddy.core.exporters.owl2 import OWLOntologyExporter
 from eddy.core.exporters.pdf import PdfProjectExporter
 from eddy.core.exporters.printer import PrinterDiagramExporter
@@ -1136,6 +1140,8 @@ class Session(
         self.addOntologyExporter(OWLOntologyExporter)
         self.addProjectExporter(GrapholIRIProjectExporter)
         self.addProjectExporter(PdfProjectExporter)
+        self.addProjectExporter(CsvProjectExporter)
+        self.addProjectExporter(XlsxProjectExporter)
         # FIXME: CURRENTLY UNSUPPORTED
         # self.addProjectExporter(GraphReferencesProjectExporter)
         # self.addDiagramExporter(GraphMLDiagramExporter)
