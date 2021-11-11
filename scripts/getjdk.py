@@ -33,7 +33,7 @@
 #                                                                        #
 ##########################################################################
 
-"""Utility script to download a JRE from adoptopenjdk.net."""
+"""Utility script to download JDKs from adoptium.net."""
 
 
 import argparse
@@ -43,19 +43,20 @@ import os
 import platform
 import shutil
 import sys
+import urllib.parse
 import urllib.request
 import tarfile
 import zipfile
 
-API_ENDPOINT = 'https://api.adoptopenjdk.net/v3'
+API_ENDPOINT = 'https://api.adoptium.net/v3'
 ARCH = platform.machine()
 IS_64BIT = sys.maxsize > 2**32
 IS_CROSS = False
 IS_FREEBSD = sys.platform.startswith('freebsd')
 IS_LINUX = sys.platform.startswith('linux')
-IS_MACOS = sys.platform.startswith('darwing')
+IS_MACOS = sys.platform.startswith('darwin')
 IS_WIN = sys.platform.startswith('win') or sys.platform.startswith('cygwin')
-USER_AGENT = 'curl/7.69.1'
+USER_AGENT = 'curl/7.79.1'
 
 LOGGER = logging.getLogger('getjdk')
 LOGGER.setLevel(logging.DEBUG)
@@ -66,7 +67,7 @@ LOGGER.addHandler(_handler)
 
 def param_arch(sysarch):
     """
-    Returns the architecture's identifier string suitable for requests to api.adoptopenjdk.net.
+    Returns the architecture's identifier string suitable for requests to api.adoptium.net.
     :type sysarch: str
     :rtype: str
     """
@@ -86,7 +87,7 @@ def param_arch(sysarch):
 
 def param_os(osname):
     """
-    Returns the os name suitable for requests to api.adoptopenjdk.net.
+    Returns the os name suitable for requests to api.adoptium.net.
     :type osname: str
     :rtype: str
     """
@@ -125,9 +126,9 @@ def main(args):
     """
     # PARSE COMMAND LINE ARGUMENTS
     parser = argparse.ArgumentParser(
-        description='Client to interact with api.adoptopenjdk.net.',
+        description='Client to interact with api.adoptium.net.',
         epilog='example:\n'
-               '  {prog} --binary --os linux --arch x64 --feature-version 11 --image-type jdk')
+               '  %(prog)s --binary --os linux --arch x64 --feature-version 11 --image-type jdk')
     # MAIN QUERY PARAMETERS
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -149,29 +150,41 @@ def main(args):
                              'defaults to current architecture.')
     parser.add_argument('--extract-to', type=str,
                         help='Path where to extract the downloaded asset.')
-    parser.add_argument('--feature-version', required=True, type=int,
-                        help='The JDK feature version to query for.'
-                             'Feature versions are whole numbers (e.g. 8,11,14).')
+    parser.add_argument('--feature-version', type=int, required=True,
+                        help='The JDK feature version to query for. '
+                             'Feature versions are whole numbers (e.g. 8,11,17).')
     parser.add_argument('--heap-size', type=str, default='normal',
                         choices=('normal', 'large'),
                         help='Heap size, defaults to normal.')
-    parser.add_argument('--image-type', type=str, default='jdk', choices=('jdk', 'jre'),
+    parser.add_argument('--image-type', type=str, default='jdk',
+                        choices=('jdk', 'jre', 'testimage', 'debugimage',
+                                 'staticlibs', 'sources'),
                         help='Query for image type, defaults to jdk.')
     parser.add_argument('--jvm-impl', type=str, default='hotspot',
-                        choices=('hotspot', 'openj9'),
+                        choices=('hotspot', 'openj9', 'dragonwell'),
                         help='JVM implementation, defaults to hotspot.')
     parser.add_argument('--os', type=str, default=param_os(sys.platform),
-                        choices=('linux', 'windows', 'mac', 'solaris', 'aix'),
-                        help='Query for the specified os, defaults to the current os).')
+                        choices=('linux', 'windows', 'mac',
+                                 'solaris', 'aix', 'alpine-linux'),
+                        help='Query for the specified os, defaults to the current os.')
     parser.add_argument('--output-file', type=argparse.FileType('w'),
                         help='The file name to save the output to.')
-    parser.add_argument('--release-type', type=str, default='ga', choices=('ga', 'ea'),
+    parser.add_argument('--release-type', type=str, default='ga',
+                        choices=('ga', 'ea'),
                         help='The type of release. Either a release version, '
-                             'known as General Availability(ga) or an Early Access(ea).'
+                             'known as General Availability(ga) or an Early Access(ea). '
                              'Defaults to ga.')
-    parser.add_argument('--vendor', type=str, default='adoptopenjdk',
-                        choices=('adoptopenjdk', 'openjdk'),
-                        help='The JVM vendor, defaults to adoptopenjdk.')
+    parser.add_argument('--vendor', type=str, default='eclipse',
+                        choices=('adoptopenjdk', 'openjdk',
+                                 'eclipse', 'alibaba', 'ibm'),
+                        help='The JVM vendor, defaults to eclipse.')
+    parser.add_argument('--libc', type=str, default=None,
+                        choices=('glibc', 'musl'),
+                        help='C library type, implies image_type set to staticlibs.')
+    parser.add_argument('--project', type=str, default=None,
+                        choices=('jdk', 'valhalla', 'metropolis',
+                                 'jfr', 'shenandoah'),
+                        help='Project to query for, defaults to jdk.')
     options = parser.parse_args(args)
 
     # PROCESS REQUEST
@@ -204,7 +217,7 @@ def main(args):
             url = '{api_endpoint}/binary/latest' \
                   '/{feature_version}/{release_type}' \
                   '/{os}/{arch}/{image_type}' \
-                  '/{jvm_impl}/{heap_size}/{vendor}?project={project}' \
+                  '/{jvm_impl}/{heap_size}/{vendor}' \
                 .format(api_endpoint=API_ENDPOINT,
                         feature_version=options.feature_version,
                         release_type=options.release_type,
@@ -213,8 +226,13 @@ def main(args):
                         image_type=options.image_type,
                         jvm_impl=options.jvm_impl,
                         heap_size=options.heap_size,
-                        vendor=options.vendor,
-                        project='jdk')
+                        vendor=options.vendor)
+            params = urllib.parse.urlencode({k: v for k, v in {
+                'c_lib': options.libc,
+                'project': options.project,
+            }.items() if v})
+            if params:
+                url += '?' + params
             LOGGER.info('API request: %s', url)
             opener = urllib.request.build_opener()
             opener.addheaders = [('User-Agent', USER_AGENT)]
