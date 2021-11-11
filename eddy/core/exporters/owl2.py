@@ -211,6 +211,16 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         for syntax in OWLSyntax:
             field.addItem(syntax.value, syntax)
         field.setCurrentIndex(0)
+        # TRY PRESET SYNTAX FIELD BASED ON FILE EXTENSION
+        if self.path:
+            if self.path.endswith('.ttl'):
+                field.setCurrentIndex(field.findData(OWLSyntax.Turtle))
+            elif self.path.endswith('.omn'):
+                field.setCurrentIndex(field.findData(OWLSyntax.Manchester))
+            elif self.path.endswith('.owx'):
+                field.setCurrentIndex(field.findData(OWLSyntax.RDF))
+            elif self.path.endswith('.ofn'):
+                field.setCurrentIndex(field.findData(OWLSyntax.Functional))
         field.setObjectName('syntax_field')
         field.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.addWidget(field)
