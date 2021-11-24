@@ -141,16 +141,17 @@ class AbstractMetadataExporter(AbstractProjectExporter):
                 if node.type() not in self.items or node.iri in processed:
                     continue
                 for annotation in node.iri.annotationAssertions:
-                    processed.add(node.iri)
-                    meta.append({
-                        self.KeyResource: str(node.iri),
-                        self.KeySimpleName: node.iri.getSimpleName(),
-                        self.KeyType: self.Types.get(node.type()),
-                        self.KeyAnnotation: annotation.assertionProperty,
-                        self.KeyDataType: annotation.datatype or '',
-                        self.KeyLang: annotation.language or '',
-                        self.KeyValue: str(annotation.value),
-                    })
+                    if annotation.assertionProperty in self.annotations:
+                        meta.append({
+                            self.KeyResource: str(node.iri),
+                            self.KeySimpleName: node.iri.getSimpleName(),
+                            self.KeyType: self.Types.get(node.type()),
+                            self.KeyAnnotation: annotation.assertionProperty,
+                            self.KeyDataType: annotation.datatype or '',
+                            self.KeyLang: annotation.language or '',
+                            self.KeyValue: str(annotation.value),
+                        })
+                processed.add(node.iri)
         # IMPORTED METADATA
         for ont in self.project.importedOntologies:
             resources = []
@@ -166,16 +167,17 @@ class AbstractMetadataExporter(AbstractProjectExporter):
                 if resource in processed:
                     continue
                 for annotation in resource.annotationAssertions:
-                    processed.add(resource)
-                    meta.append({
-                        self.KeyResource: str(resource),
-                        self.KeySimpleName: resource.getSimpleName(),
-                        self.KeyType: entityType,
-                        self.KeyAnnotation: annotation.assertionProperty,
-                        self.KeyDataType: annotation.datatype or '',
-                        self.KeyLang: annotation.language or '',
-                        self.KeyValue: str(annotation.value),
-                    })
+                    if annotation.assertionProperty in self.annotations:
+                        meta.append({
+                            self.KeyResource: str(resource),
+                            self.KeySimpleName: resource.getSimpleName(),
+                            self.KeyType: entityType,
+                            self.KeyAnnotation: annotation.assertionProperty,
+                            self.KeyDataType: annotation.datatype or '',
+                            self.KeyLang: annotation.language or '',
+                            self.KeyValue: str(annotation.value),
+                        })
+                processed.add(resource)
 
         return sorted(meta, key=lambda i: i[self.KeyResource])
 
