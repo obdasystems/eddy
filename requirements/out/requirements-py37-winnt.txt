@@ -4,7 +4,7 @@ atomicwrites==1.4.0
     # via pytest
 attrs==21.2.0
     # via pytest
-backports.entry-points-selectable==1.1.0
+backports.entry-points-selectable==1.1.1
     # via virtualenv
 click==8.0.3
     # via pip-tools
@@ -13,13 +13,13 @@ colorama==0.4.4
     #   click
     #   pytest
     #   tox
-coverage[toml]==6.1
+coverage[toml]==6.1.2
     # via pytest-cov
 cython==0.29.24
     # via -r requirements/in\cython.in
 distlib==0.3.3
     # via virtualenv
-filelock==3.3.2
+filelock==3.4.0
     # via
     #   tox
     #   virtualenv
@@ -27,7 +27,7 @@ flake8==4.0.1
     # via -r requirements/in/dev.in
 future==0.18.2
     # via pefile
-graphviz==0.17
+graphviz==0.18.2
     # via objgraph
 importlib-metadata==4.2.0
     # via
@@ -51,7 +51,7 @@ mypy-extensions==0.4.3
     # via mypy
 objgraph==3.5.0
     # via -r requirements/in/dev.in
-packaging==21.2
+packaging==21.3
     # via
     #   pytest
     #   tox
@@ -67,7 +67,7 @@ pluggy==1.0.0
     # via
     #   pytest
     #   tox
-py==1.10.0
+py==1.11.0
     # via
     #   pytest
     #   tox
@@ -77,11 +77,11 @@ pycodestyle==2.8.0
     # via flake8
 pyflakes==2.4.0
     # via flake8
-pyinstaller==4.6
+pyinstaller==4.7
     # via -r requirements/in\packaging.in
 pyinstaller-hooks-contrib==2021.3
     # via pyinstaller
-pyparsing==2.4.7
+pyparsing==3.0.6
     # via packaging
 pyqt5==5.15.6
     # via -r requirements/in\pyqt5.in
@@ -137,16 +137,16 @@ tox-factor==0.1.2
     # via -r requirements/in\tox.in
 typed-ast==1.4.3
     # via mypy
-typing-extensions==3.10.0.2
+typing-extensions==4.0.0
     # via
     #   importlib-metadata
     #   jpype1
     #   mypy
-virtualenv==20.9.0
+virtualenv==20.10.0
     # via tox
 wheel==0.37.0
     # via pip-tools
-xlsxwriter==3.0.1
+xlsxwriter==3.0.2
     # via -r requirements/in\base.in
 zipp==3.6.0
     # via
