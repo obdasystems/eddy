@@ -11,43 +11,43 @@ jobs:
       matrix:
         include:
           - os: ubuntu-20.04
-            python-version: 3.8
+            python-version: 3.9
             architecture: x64
             platform: Linux
             type: AppImage
             appimage: true
           - os: ubuntu-20.04
-            python-version: 3.8
+            python-version: 3.9
             architecture: x64
             platform: Linux
             type: Standalone
             archive: true
           - os: macos-10.15
-            python-version: 3.8
+            python-version: 3.9
             architecture: x64
             platform: macOS
             type: DMG
             dmg: true
           - os: windows-2019
-            python-version: 3.8
+            python-version: 3.9
             architecture: x86
             platform: Windows
             type: Installer
             innosetup: true
           - os: windows-2019
-            python-version: 3.8
+            python-version: 3.9
             architecture: x86
             platform: Windows
             type: Standalone
             archive: true
           - os: windows-2019
-            python-version: 3.8
+            python-version: 3.9
             architecture: x64
             platform: Windows
             type: Installer
             innosetup: true
           - os: windows-2019
-            python-version: 3.8
+            python-version: 3.9
             architecture: x64
             platform: Windows
             type: Standalone
