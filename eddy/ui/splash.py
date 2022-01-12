@@ -49,7 +49,7 @@ from eddy.core.datatypes.qt import Font
 from eddy.core.functions.misc import rangeF
 
 COPYRIGHT = '  Copyright © 2015-2017 Sapienza Università di Roma\n' \
-            '  Copyright © 2017-2021 OBDA Systems'
+            '  Copyright © 2017-2022 OBDA Systems'
 LICENSE =   '   Licensed under the GNU General Public License v3'
 CREDITS =   '      Developed by OBDA Systems'
 
