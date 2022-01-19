@@ -32,6 +32,7 @@
 #                                                                        #
 ##########################################################################
 
+from __future__ import annotations
 
 from typing import (
     cast,
@@ -177,7 +178,7 @@ class Project(IRIManager):
     #################################
 
     @property
-    def session(self) -> 'Session':
+    def session(self) -> Session:
         """
         Returns the reference to the project session.
         """
