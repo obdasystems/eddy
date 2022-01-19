@@ -11,48 +11,48 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: 3.7
-            pyqt-version: 511
+            python-version: '3.7'
+            pyqt-version: '511'
           - os: ubuntu-latest
-            python-version: 3.7
-            pyqt-version: 512
+            python-version: '3.7'
+            pyqt-version: '512'
           - os: ubuntu-latest
-            python-version: 3.7
-            pyqt-version: 513
+            python-version: '3.7'
+            pyqt-version: '513'
           - os: ubuntu-latest
-            python-version: 3.7
-            pyqt-version: 514
+            python-version: '3.7'
+            pyqt-version: '514'
 
           - os: ubuntu-latest
-            python-version: 3.8
-            pyqt-version: 512
+            python-version: '3.8'
+            pyqt-version: '512'
           - os: ubuntu-latest
-            python-version: 3.8
-            pyqt-version: 513
+            python-version: '3.8'
+            pyqt-version: '513'
           - os: ubuntu-latest
-            python-version: 3.8
-            pyqt-version: 514
+            python-version: '3.8'
+            pyqt-version: '514'
           - os: ubuntu-latest
-            python-version: 3.8
-            pyqt-version: 515
+            python-version: '3.8'
+            pyqt-version: '515'
 
           - os: ubuntu-latest
-            python-version: 3.9
-            pyqt-version: 514
+            python-version: '3.9'
+            pyqt-version: '514'
           - os: ubuntu-latest
-            python-version: 3.9
-            pyqt-version: 515
+            python-version: '3.9'
+            pyqt-version: '515'
 
           - os: ubuntu-latest
-            python-version: 3.10
-            pyqt-version: 515
+            python-version: '3.10'
+            pyqt-version: '515'
 
           - os: macos-latest
-            python-version: 3.8
-            pyqt-version: 514
+            python-version: '3.8'
+            pyqt-version: '514'
           - os: macos-latest
-            python-version: 3.8
-            pyqt-version: 515
+            python-version: '3.8'
+            pyqt-version: '515'
 
     steps:
       - name: Checkout code
