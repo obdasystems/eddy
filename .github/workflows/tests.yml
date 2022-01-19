@@ -43,6 +43,10 @@ jobs:
             python-version: 3.9
             pyqt-version: 515
 
+          - os: ubuntu-latest
+            python-version: 3.10
+            pyqt-version: 515
+
           - os: macos-latest
             python-version: 3.8
             pyqt-version: 514
