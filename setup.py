@@ -600,7 +600,7 @@ setuptools.setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Utilities'
     ],
-    python_requires='>=3.5',
+    python_requires='>=3.7',
     install_requires=[
         'jpype1>=0.7.1,!=0.7.2',
         'rfc3987',
