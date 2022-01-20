@@ -49,10 +49,6 @@ from eddy.core.functions.misc import (
     format_exception,
     isEmpty,
 )
-from eddy.core.functions.path import (
-    expandPath,
-    isPathValid,
-)
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.ui.fields import StringField
@@ -121,9 +117,11 @@ class PluginInstallDialog(QtWidgets.QDialog):
         # CONFIRMATION AREA
         #################################
 
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok, self)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(self)
         self.confirmationBox.setContentsMargins(10, 0, 10, 10)
-        self.confirmationBox.setEnabled(False)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.btnOk = self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
+        self.btnOk.setEnabled(False)
 
         #############################################
         # SETUP DIALOG LAYOUT
@@ -141,6 +139,7 @@ class PluginInstallDialog(QtWidgets.QDialog):
 
         connect(self.btnBrowse.clicked, self.selectPlugin)
         connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
 
     #############################################
     #   PROPERTIES
@@ -208,4 +207,4 @@ class PluginInstallDialog(QtWidgets.QDialog):
 
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             self.pluginField.setValue(first(dialog.selectedFiles()))
-            self.confirmationBox.setEnabled(not isEmpty(self.pluginField.value()))
+            self.btnOk.setEnabled(not isEmpty(self.pluginField.value()))
