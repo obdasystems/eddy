@@ -248,6 +248,7 @@ info_plist = {
     'CFBundleExecutable': APPNAME,
     'NSPrincipalClass': 'NSApplication',
     'NSHighResolutionCapable': 'True',
+    'NSRequiresAquaSystemAppearance': 'True',
     'CFBundleDocumentTypes': [{
         'CFBundleTypeName': 'Graphol File',
         'CFBundleTypeRole': 'Editor',
