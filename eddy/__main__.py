@@ -36,7 +36,7 @@
 
 import sys
 
-from .core.application import main
+from eddy.core.application import main
 
 if __name__ == '__main__':
    sys.exit(main())
