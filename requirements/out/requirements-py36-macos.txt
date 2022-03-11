@@ -65,7 +65,7 @@ packaging==21.3
     #   tox
 pep517==0.12.0
     # via pip-tools
-pillow==8.4.0 ; sys_platform == "darwin"
+pillow==9.0.1 ; sys_platform == "darwin"
     # via -r requirements/in/packaging.in
 pip-tools==6.4.0
     # via -r requirements/in/dev.in
