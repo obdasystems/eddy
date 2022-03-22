@@ -427,9 +427,10 @@ class AbstractNode(AbstractItem):
         """
         pass
 
-    def setFontSize(self,size):
+    def setFontSize(self, size):
         if self.label:
-            self.label.setCustomFont(Font(font=self.diagram.font(), pixelSize=size, weight=Font.Light))
+            baseFont = self.diagram.font() if self.diagram else None
+            self.label.setCustomFont(Font(font=baseFont, pixelSize=size, weight=Font.Light))
 
     #############################################
     #   EVENTS
