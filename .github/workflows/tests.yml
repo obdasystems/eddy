@@ -66,6 +66,8 @@ jobs:
       - name: Install os dependencies
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
+          # Update package list
+          sudo apt-get update
           # Required to run tests in headless mode
           sudo apt-get install xvfb x11-utils
           # Required since Qt 5.12
