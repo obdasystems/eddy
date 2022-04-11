@@ -152,6 +152,25 @@ class AbstractMetadataExporter(AbstractProjectExporter):
                             self.KeyValue: str(annotation.value),
                         })
                 processed.add(node.iri)
+
+        if self.includeEntitiesWithoutAnnotations:
+
+            for diagram in self.diagrams:
+                for node in self.project.iriOccurrences(diagram=diagram):
+                    if node.type() in self.items and len(node.iri.annotationAssertions) == 0:
+
+                        meta.append({
+                            self.KeyResource: str(node.iri),
+                            self.KeySimpleName: node.iri.getSimpleName(),
+                            self.KeyType: self.Types.get(node.type()),
+                            self.KeyAnnotation: '',
+                            self.KeyDataType: '',
+                            self.KeyLang: '',
+                            self.KeyValue: '',
+                        })
+                        processed.add(node.iri)
+
+
         # IMPORTED METADATA
         for ont in self.project.importedOntologies:
             resources = []
@@ -236,6 +255,9 @@ class CsvProjectExporter(AbstractMetadataExporter):
             self.annotations = dialog.selectedAnnotations()
             self.items = dialog.selectedItems()
 
+            # CHECK INCLUSION OF ENTITIES WITHOUT ANNOTATIONS
+            self.includeEntitiesWithoutAnnotations = dialog.checked()
+
         buffer = io.StringIO()
         writer = csv.writer(buffer, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writerow(self.metadataHeader())
@@ -283,6 +305,9 @@ class XlsxProjectExporter(AbstractMetadataExporter):
                 return
             self.annotations = dialog.selectedAnnotations()
             self.items = dialog.selectedItems()
+
+            # CHECK INCLUSION OF ENTITIES WITHOUT ANNOTATIONS
+            self.includeEntitiesWithoutAnnotations = dialog.checked()
 
         workbook = xlsxwriter.Workbook(path)
         worksheet = workbook.add_worksheet(self.project.name)
@@ -361,6 +386,18 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
             self.addWidget(checkbox)
         self.addWidget(groupbox)
 
+        # ENTITY WITHOUT ANNOTATIONS CHECKBOX
+        groupbox2 = QtWidgets.QGroupBox('Entity Without Annotations')
+        groupbox2.setObjectName('entities_without_annotations')
+        layout2 = QtWidgets.QHBoxLayout(groupbox2)
+
+        checkbox = CheckBox('Include entities without annotations')
+        checkbox.setObjectName('all_entities_checkbox')
+        layout2.addWidget(checkbox)
+        self.addWidget(checkbox)
+
+        self.addWidget(groupbox2)
+
         # CONFIRMATION BOX
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.setObjectName('confirmation_box')
@@ -375,6 +412,7 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         mainLayout.addWidget(self.widget('annotations_group'))
         mainLayout.addWidget(self.widget('entities_group'))
+        mainLayout.addWidget(self.widget('entities_without_annotations'))
         mainLayout.addWidget(self.widget('confirmation_box'), 0, QtCore.Qt.AlignRight)
 
         self.setMinimumSize(640, 480)
@@ -413,6 +451,9 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
                 items.add(item)
         return items
 
+    def checked(self):
+        checked = self.widget('all_entities_checkbox').isChecked()
+        return checked
 
 class AnnotationListWidget(HasWidgetSystem, QtWidgets.QWidget):
     """

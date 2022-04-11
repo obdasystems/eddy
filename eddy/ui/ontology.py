@@ -68,6 +68,11 @@ from eddy.ui.fields import (
     CheckBox,
     ComboBox,
 )
+from eddy.core.functions.fsystem import fexists
+from eddy.ui.file import FileDialog
+from eddy.core.datatypes.system import File
+from eddy.core.functions.path import expandPath
+from eddy.core.functions.misc import first
 
 LOGGER = getLogger()
 
@@ -198,6 +203,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(addBtn)
         self.addWidget(delBtn)
         self.addWidget(editBtn)
+
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
@@ -371,9 +377,16 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         addBtn = QtWidgets.QPushButton('Add', objectName='annotation_add_button')
         connect(addBtn.clicked, self.addAnnotationProperty)
         self.addWidget(addBtn)
+
+        templateBtn = QtWidgets.QPushButton('Create Template',
+                                            objectName='annotation_create_template_button')
+        connect(templateBtn.clicked, self.createTemplate)
+        self.addWidget(templateBtn)
+
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(self.widget('annotation_add_button'))
+        boxlayout.addWidget(self.widget('annotation_create_template_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('iri_prefix_combobox_label'), self.widget('iri_prefix_switch'))
@@ -1342,3 +1355,35 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.undostack.endMacro()
 
         self.widget('iri_label_button').setEnabled(False)
+
+    def createTemplate(self):
+
+
+        session = self.session
+        dialog = FileDialog(session)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        filters = session.projectExporterNameFilters({File.Graphol})[:2]
+        dialog.setNameFilters(sorted(filters))
+        dialog.selectFile(session.project.name)
+        dialog.selectNameFilter(File.Csv.value)
+        #dialog.setDefaultSuffix('.xls')
+        if dialog.exec_():
+            filetype = File.valueOf(dialog.selectedNameFilter())
+            try:
+                try:
+                    worker = session.createOntologyExporter(filetype, session.project, session)
+                except ValueError:
+                    worker = session.createProjectExporter(filetype, session.project, session)
+                worker.run(expandPath(first(dialog.selectedFiles())))
+                if (fexists(expandPath(first(dialog.selectedFiles())))):
+                    session.addNotification("""
+                    Ontology export completed: <br><br>
+                    <b><a href=file:{0}>{1}</a></b>
+                    """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+            except Exception as e:
+                LOGGER.error('error during export: {}', e)
+                session.addNotification("""
+                <b><font color="#7E0B17">ERROR</font></b>:
+                Could not complete the export, see the System Log for details.
+                """)
