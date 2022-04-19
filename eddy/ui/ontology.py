@@ -31,7 +31,7 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-
+import io
 
 from PyQt5 import (
     QtCore,
@@ -41,7 +41,7 @@ from PyQt5 import (
 
 from eddy.core.commands.iri import (
     CommandCommmonSubstringIRIsRefactor,
-    CommandIRIRemoveAnnotationAssertion,
+    CommandIRIRemoveAnnotationAssertion, CommandIRIAddAnnotationAssertion,
 )
 from eddy.core.commands.project import (
     CommandProjectAddAnnotationProperty,
@@ -55,24 +55,30 @@ from eddy.core.commands.project import (
     CommandProjectSetOntologyIRIAndVersion,
 )
 from eddy.core.common import HasWidgetSystem
+from eddy.core.datatypes.graphol import Item
+from eddy.core.exporters.metadata import CsvTemplateExporter, XlsxTemplateExporter
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalPrefixError,
     IllegalNamespaceError,
-    ImportedOntology
+    ImportedOntology, IRI
 )
+from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import (
     StringField,
     CheckBox,
     ComboBox,
 )
-from eddy.core.functions.fsystem import fexists
+from eddy.core.functions.fsystem import fexists, fwrite
 from eddy.ui.file import FileDialog
 from eddy.core.datatypes.system import File
-from eddy.core.functions.path import expandPath
+from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.misc import first
+import csv
+import pandas as pd
+import numpy as np
 
 LOGGER = getLogger()
 
@@ -378,15 +384,20 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(addBtn.clicked, self.addAnnotationProperty)
         self.addWidget(addBtn)
 
-        templateBtn = QtWidgets.QPushButton('Create Template',
-                                            objectName='annotation_create_template_button')
+        templateBtn = QtWidgets.QPushButton('Generate Template', objectName='annotation_create_template_button')
         connect(templateBtn.clicked, self.createTemplate)
         self.addWidget(templateBtn)
+
+        importBtn = QtWidgets.QPushButton('Import from Template',
+                                            objectName='annotation_import_template_button')
+        connect(importBtn.clicked, self.importTemplate)
+        self.addWidget(importBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(self.widget('annotation_add_button'))
         boxlayout.addWidget(self.widget('annotation_create_template_button'))
+        boxlayout.addWidget(self.widget('annotation_import_template_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('iri_prefix_combobox_label'), self.widget('iri_prefix_switch'))
@@ -1358,7 +1369,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def createTemplate(self):
 
-
         session = self.session
         dialog = FileDialog(session)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
@@ -1367,15 +1377,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         dialog.setNameFilters(sorted(filters))
         dialog.selectFile(session.project.name)
         dialog.selectNameFilter(File.Csv.value)
-        #dialog.setDefaultSuffix('.xls')
         if dialog.exec_():
             filetype = File.valueOf(dialog.selectedNameFilter())
             try:
+
+                path = expandPath(first(dialog.selectedFiles()))
                 try:
-                    worker = session.createOntologyExporter(filetype, session.project, session)
-                except ValueError:
-                    worker = session.createProjectExporter(filetype, session.project, session)
-                worker.run(expandPath(first(dialog.selectedFiles())))
+                    if filetype == File.Csv:
+                        worker = CsvTemplateExporter(session.project, session)
+                    if filetype == File.Xlsx:
+                        worker = XlsxTemplateExporter(session.project, session)
+                except ValueError as e:
+                    print(e)
+                worker.run(path)
                 if (fexists(expandPath(first(dialog.selectedFiles())))):
                     session.addNotification("""
                     Ontology export completed: <br><br>
@@ -1387,3 +1401,365 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 <b><font color="#7E0B17">ERROR</font></b>:
                 Could not complete the export, see the System Log for details.
                 """)
+
+    def importTemplate(self):
+
+        session = self.session
+
+        dialog = AnnotationsOverridingDialog(session)
+        if not dialog.exec_():
+            return
+        override = dialog.checkedOption()
+
+        dialog = FileDialog(session)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        filters = session.projectExporterNameFilters({File.Graphol})[:2]
+        dialog.setNameFilters(sorted(filters))
+        dialog.selectNameFilter(File.Csv.value)
+
+        if dialog.exec_():
+            files = dialog.selectedFiles()
+            for file in files:
+                filetype = File.valueOf(dialog.selectedNameFilter())
+                try:
+                    if filetype == File.Csv:
+                        self.importFromCsv(file, override)
+                    else:
+                        self.importFromExcel(file, override)
+                except Exception as e:
+                    print(e)
+
+
+
+        return
+
+    def importFromCsv(self, file, override):
+
+        file = open(file)
+        csvreader = csv.reader(file)
+
+        header = next(csvreader)
+        #print(header)
+        if header == ['RESOURCE', 'SIMPLE_NAME', 'TYPE', 'ANNOTATION', 'DATATYPE', 'LANG', 'VALUE']:
+            pass
+        else:
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Template Mismatch')
+            msgbox.setText('The imported file does not match the predifined template. \n Please fill the predifined template and try again.')
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.exec_()
+            return
+
+        rows = []
+        for row in csvreader:
+            rows.append(row)
+        #print(rows)
+        file.close()
+        self.importAnnotations(rows, override)
+
+    def importFromExcel(self, file, override):
+
+        df = pd.read_excel(file, header=[0])
+        #print('excel')
+
+        header = list(df)
+        #print(header)
+        if header == ['RESOURCE', 'SIMPLE_NAME', 'TYPE', 'ANNOTATION', 'DATATYPE', 'LANG', 'VALUE']:
+            pass
+        else:
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Template Mismatch')
+            msgbox.setText('The imported file does not match the predifined template. \n Please fill the predifined template and try again.')
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.exec_()
+            return
+
+        rows = df.values.tolist()
+        #print(rows)
+        self.importAnnotations(rows, override)
+
+    def importAnnotations(self, rows, override):
+
+        types = {
+            'Data Property': Item.AttributeNode ,
+            'Class': Item.ConceptNode,
+            'Named Individual': Item.IndividualNode ,
+            'Object Property': Item.RoleNode
+        }
+
+        if override:
+
+            for row in rows:
+                resource = row[0]
+                simple_name = row[1]
+                type = row[2]
+                annotation = row[3]
+                datatype = row[4]
+                lang = row[5] if row[5] != '' else 'eng'
+                value = row[6]
+
+                if value == '':
+                    pass
+
+                else:
+                    # ADD ANNOTATION PROPERTY
+                    try:
+                        annIRI = str(annotation)
+                        listProperties = [str(el) for el in list(self.project.annotationProperties)]
+
+                        if annIRI not in listProperties:
+                            self.project.isValidIdentifier(annIRI)
+
+                            command = CommandProjectAddAnnotationProperty(self.project, annIRI)
+                            self.session.undostack.beginMacro(
+                                'Add annotation property {0} '.format(annIRI))
+                            if command:
+                                self.session.undostack.push(command)
+                            self.session.undostack.endMacro()
+
+                            table = self.widget('annotation_properties_table_widget')
+                            rowcount = table.rowCount()
+                            table.setRowCount(rowcount + 1)
+                            propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
+                            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+                            table.setItem(rowcount, 0, propertyItem)
+                            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(''))
+                            table.scrollToItem(table.item(rowcount, 0))
+                        self.widget('iri_prefix_switch').setCurrentText(self.noPrefixString)
+                        self.widget('iri_input_field').setText('')
+                    except IllegalNamespaceError as e:
+                        # noinspection PyArgumentList
+                        msgBox = QtWidgets.QMessageBox(
+                            QtWidgets.QMessageBox.Warning,
+                            'Entity Definition Error',
+                            'Illegal namespace defined.',
+                            informativeText='The string "{}" is not a legal IRI'.format(annIRI),
+                            detailedText=str(e),
+                            parent=self,
+                        )
+                        msgBox.exec_()
+
+                    # ADD ANNOTATION ASSERTION
+                    annotationAss = AnnotationAssertion(resource, annotation, value, language=lang)
+
+                    for diagram in self.project.diagrams():
+                        # LOOK FOR RESOURCE
+                        for item in diagram.items():
+                            if item.isNode() and item.type() == types[type] and str(item.iri) == resource:
+
+                                itemAnnotations = dict(item.iri.annotationAssertionMapItems)
+                                newdict = {}
+                                for k, v in itemAnnotations.items():
+                                    if str(k) not in newdict.keys():
+                                        newdict[str(k)] = [v]
+                                    else:
+                                        newdict[str(k)].append(v)
+
+
+
+                                existing = None
+                                for k, v in newdict.items():
+                                    # k, v -> (k, [[A1],[A2], ...])
+                                    if str(annotation) == k:
+                                        currList = v
+                                        if lang:
+                                            for el in currList:
+                                                ann = el[0]
+                                                # ann -> [Ai]
+                                                if ann.language == annotationAss.language:
+                                                    existing = ann
+                                                    if existing:
+                                                        # REMOVE ALL THE EXISTING ANNOTATION ASSERTIONS WITH SAME PROPERTY-LANG
+                                                        self.session.undostack.push(CommandIRIRemoveAnnotationAssertion(self.project, item.iri, existing))
+
+                                # ADD NEW ANNOTATION ASSERTION FOR PROPERTY-LANG
+                                self.session.undostack.push(
+                                    CommandIRIAddAnnotationAssertion(self.project, item.iri, annotationAss))
+                                #print('final anno set for', item.iri, ':', item.iri.annotationAssertionMapItems)
+
+
+        else:
+
+            for row in rows:
+                resource = row[0]
+                simple_name = row[1]
+                type = row[2]
+                annotation = row[3]
+                datatype = row[4]
+                lang = row[5] if row[5] != '' else 'eng'
+                value = row[6]
+
+                if value == '':
+                    pass
+
+                else:
+                    # ADD ANNOTATION PROPERTY
+                    try:
+                        annIRI = str(annotation)
+                        listProperties = [str(el) for el in list(self.project.annotationProperties)]
+
+                        if annIRI not in listProperties:
+                            self.project.isValidIdentifier(annIRI)
+
+                            command = CommandProjectAddAnnotationProperty(self.project, annIRI)
+                            self.session.undostack.beginMacro(
+                                'Add annotation property {0} '.format(annIRI))
+                            if command:
+                                self.session.undostack.push(command)
+                            self.session.undostack.endMacro()
+
+                            table = self.widget('annotation_properties_table_widget')
+                            rowcount = table.rowCount()
+                            table.setRowCount(rowcount + 1)
+                            propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
+                            propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
+                            table.setItem(rowcount, 0, propertyItem)
+                            table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(''))
+                            table.scrollToItem(table.item(rowcount, 0))
+                        self.widget('iri_prefix_switch').setCurrentText(self.noPrefixString)
+                        self.widget('iri_input_field').setText('')
+                    except IllegalNamespaceError as e:
+                        # noinspection PyArgumentList
+                        msgBox = QtWidgets.QMessageBox(
+                            QtWidgets.QMessageBox.Warning,
+                            'Entity Definition Error',
+                            'Illegal namespace defined.',
+                            informativeText='The string "{}" is not a legal IRI'.format(annIRI),
+                            detailedText=str(e),
+                            parent=self,
+                        )
+                        msgBox.exec_()
+
+                    # ADD ANNOTATION ASSERTION
+                    annotationAss = AnnotationAssertion(resource, annotation, value, language=lang)
+
+                    for diagram in self.project.diagrams():
+                        for item in diagram.items():
+                            if item.isNode() and item.type() == types[type] and str(item.iri) == resource:
+
+                                self.session.undostack.push(
+                                    CommandIRIAddAnnotationAssertion(self.project, item.iri, annotationAss))
+
+
+class AnnotationsOverridingDialog(HasWidgetSystem, QtWidgets.QDialog):
+    """
+    Extends QtWidgets.QDialog providing the form used to select the diagrams for a specific task like export/import
+    """
+    def __init__(self, session, project=None, **kwargs):
+        """
+        Initialize the form dialog.
+        :type session: Session
+        :type project: Project
+        """
+        super().__init__(parent=session, **kwargs)
+        self._project = project
+        self.addWidget(CheckBox('Add annotations to the existing ones', self, objectName='add_annotations',
+                                    checked=True, clicked=self.onOptionChecked))
+        self.addWidget(CheckBox('Override existing annotations', self, objectName='override_annotations',
+                     checked=False, clicked=self.onOptionChecked))
+
+        diagramLayout = QtWidgets.QGridLayout(self)
+        diagramLayout.setContentsMargins(8, 8, 8, 8)
+
+        diagramLayout.addWidget(self.widget('add_annotations'))
+        diagramLayout.addWidget(self.widget('override_annotations'))
+
+
+        diagramGroup = QtWidgets.QGroupBox('Overriding Options', self)
+        diagramGroup.setLayout(diagramLayout)
+
+        diagramGroupLayout = QtWidgets.QHBoxLayout(self)
+        diagramGroupLayout.addWidget(diagramGroup)
+
+        diagramWidget = QtWidgets.QWidget(self)
+        diagramWidget.setLayout(diagramGroupLayout)
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setObjectName('confirmation')
+        self.addWidget(confirmation)
+
+
+        buttonLayout = QtWidgets.QHBoxLayout(self)
+        buttonLayout.setAlignment(QtCore.Qt.AlignRight)
+        buttonLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+
+        buttonWidget = QtWidgets.QWidget(self)
+        buttonWidget.setLayout(buttonLayout)
+
+        mainLayout = QtWidgets.QVBoxLayout()
+        mainLayout.setContentsMargins(10, 10, 10, 10)
+        mainLayout.addWidget(diagramWidget)
+        mainLayout.addWidget(buttonWidget)
+
+        self.setLayout(mainLayout)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('Overriding Options')
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the active session (alias for self.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    @property
+    def project(self):
+        """
+        Returns the active project.
+        :rtype: Project
+        """
+        return self._project or self.session.project
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def onOptionChecked(self):
+        """
+        Executed when an diagram checkbox is clicked.
+        """
+        option = self.sender().text()
+        state = self.sender().isChecked()
+
+        if state:
+            if option == 'Add annotations to the existing ones':
+
+                self.widget('override_annotations').setChecked(False)
+
+            else:
+
+                self.widget('add_annotations').setChecked(False)
+
+            self.widget('confirmation').setEnabled(True)
+
+        else:
+
+            self.widget('confirmation').setEnabled(False)
+
+
+
+    def checkedOption(self):
+
+        if self.widget('override_annotations').isChecked():
+            return True
+        else:
+            return False
