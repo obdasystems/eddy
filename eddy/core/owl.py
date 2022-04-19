@@ -2177,7 +2177,7 @@ class OWL2Facet(Enum_):
         :type value: IRI
         :rtype: list
         """
-        allvalues = [x for x in cls]
+        allvalues = [x.value for x in cls]
         numbers = [OWL2Facet.maxExclusive.value, OWL2Facet.maxInclusive.value, OWL2Facet.minExclusive.value, OWL2Facet.minInclusive.value]
         strings = [OWL2Facet.langRange.value, OWL2Facet.length.value, OWL2Facet.maxLength.value, OWL2Facet.minLength.value, OWL2Facet.pattern.value]
         binary = [OWL2Facet.length.value, OWL2Facet.maxLength.value, OWL2Facet.minLength.value]
@@ -2218,4 +2218,4 @@ class OWL2Facet(Enum_):
             OWL2Datatype.unsignedLong.value: numbers,
             OWL2Datatype.unsignedShort.value: numbers,
             OWL2Datatype.XMLLiteral.value: []
-        }[value]
+        }.get(value, allvalues)
