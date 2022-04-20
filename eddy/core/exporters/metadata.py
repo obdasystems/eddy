@@ -140,6 +140,16 @@ class AbstractMetadataExporter(AbstractProjectExporter):
             for node in self.project.iriOccurrences(diagram=diagram):
                 if node.type() not in self.items or node.iri in processed:
                     continue
+                if self.includeEntitiesWithoutAnnotations and len(node.iri.annotationAssertions) == 0:
+                    meta.append({
+                        self.KeyResource: str(node.iri),
+                        self.KeySimpleName: node.iri.getSimpleName(),
+                        self.KeyType: self.Types.get(node.type()),
+                        self.KeyAnnotation: '',
+                        self.KeyDataType: '',
+                        self.KeyLang: '',
+                        self.KeyValue: '',
+                    })
                 for annotation in node.iri.annotationAssertions:
                     if annotation.assertionProperty in self.annotations:
                         meta.append({
@@ -152,7 +162,7 @@ class AbstractMetadataExporter(AbstractProjectExporter):
                             self.KeyValue: str(annotation.value),
                         })
                 processed.add(node.iri)
-
+        '''
         if self.includeEntitiesWithoutAnnotations:
 
             for diagram in self.diagrams:
@@ -169,7 +179,7 @@ class AbstractMetadataExporter(AbstractProjectExporter):
                             self.KeyValue: '',
                         })
                         processed.add(node.iri)
-
+        '''
 
         # IMPORTED METADATA
         for ont in self.project.importedOntologies:
@@ -790,7 +800,7 @@ class EntityTypesSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
         mainLayout.addWidget(self.widget('entities_group'))
         mainLayout.addWidget(self.widget('confirmation_box'), 0, QtCore.Qt.AlignRight)
 
-        self.setMinimumSize(640, 480)
+        self.setMinimumSize(640, 100)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle("Select Entity Types")
 
@@ -821,3 +831,117 @@ class EntityTypesSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
                 items.add(item)
         return items
 
+class AnnotationsOverridingDialog(HasWidgetSystem, QtWidgets.QDialog):
+    """
+    Extends QtWidgets.QDialog providing the form used to select the diagrams for a specific task like export/import
+    """
+    def __init__(self, session, project=None, **kwargs):
+        """
+        Initialize the form dialog.
+        :type session: Session
+        :type project: Project
+        """
+        super().__init__(parent=session, **kwargs)
+        self._project = project
+        self.addWidget(CheckBox('Add annotations to the existing ones', self, objectName='add_annotations',
+                                    checked=True, clicked=self.onOptionChecked))
+        self.addWidget(CheckBox('Override existing annotations', self, objectName='override_annotations',
+                     checked=False, clicked=self.onOptionChecked))
+
+        diagramLayout = QtWidgets.QGridLayout(self)
+        diagramLayout.setContentsMargins(8, 8, 8, 8)
+
+        diagramLayout.addWidget(self.widget('add_annotations'))
+        diagramLayout.addWidget(self.widget('override_annotations'))
+
+
+        diagramGroup = QtWidgets.QGroupBox('Overriding Options', self)
+        diagramGroup.setLayout(diagramLayout)
+
+        diagramGroupLayout = QtWidgets.QHBoxLayout(self)
+        diagramGroupLayout.addWidget(diagramGroup)
+
+        diagramWidget = QtWidgets.QWidget(self)
+        diagramWidget.setLayout(diagramGroupLayout)
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setObjectName('confirmation')
+        self.addWidget(confirmation)
+
+
+        buttonLayout = QtWidgets.QHBoxLayout(self)
+        buttonLayout.setAlignment(QtCore.Qt.AlignRight)
+        buttonLayout.addWidget(self.widget('confirmation'), 0, QtCore.Qt.AlignRight)
+
+        buttonWidget = QtWidgets.QWidget(self)
+        buttonWidget.setLayout(buttonLayout)
+
+        mainLayout = QtWidgets.QVBoxLayout()
+        mainLayout.setContentsMargins(10, 10, 10, 10)
+        mainLayout.addWidget(diagramWidget)
+        mainLayout.addWidget(buttonWidget)
+
+        self.setLayout(mainLayout)
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('Overriding Options')
+
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def session(self):
+        """
+        Returns the active session (alias for self.parent()).
+        :rtype: Session
+        """
+        return self.parent()
+
+    @property
+    def project(self):
+        """
+        Returns the active project.
+        :rtype: Project
+        """
+        return self._project or self.session.project
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def onOptionChecked(self):
+        """
+        Executed when an diagram checkbox is clicked.
+        """
+        option = self.sender().text()
+        state = self.sender().isChecked()
+
+        if state:
+            if option == 'Add annotations to the existing ones':
+
+                self.widget('override_annotations').setChecked(False)
+
+            else:
+
+                self.widget('add_annotations').setChecked(False)
+
+            self.widget('confirmation').setEnabled(True)
+
+        else:
+
+            self.widget('confirmation').setEnabled(False)
+
+
+
+    def checkedOption(self):
+
+        if self.widget('override_annotations').isChecked():
+            return True
+        else:
+            return False
