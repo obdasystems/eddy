@@ -1,0 +1,7 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Wiki
+    url: https://github.com/obdasystems/eddy/wiki
+    about: |
+      Before submitting questions, please check that an answer is not already
+      available in the project Wiki.
