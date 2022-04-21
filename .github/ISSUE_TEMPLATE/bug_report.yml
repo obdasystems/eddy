@@ -1,0 +1,112 @@
+name: Bug Report
+description: File a bug report about something in the application that isn't working as expected.
+title: "[BUG]: "
+labels: ["bug"]
+# assignees:
+#   - put your username to auto-assign report
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thank you for taking the time to fill out this bug report and helping us improve Eddy.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: Please provide a description of the bug.
+      placeholder: What is the bug about?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction Steps
+      description: Please summarize the steps required to reproduce the bug.
+      placeholder: How to reproduce the bug?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Result
+      description: Describe what you expect to happen.
+      placeholder: What is the expected result?
+    validations:
+      required: false
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Result
+      description: Describe what actually happens.
+      placeholder: What is the actual result?
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Affected Versions
+      description: Please list the application version(s) that are affected by the bug.
+      placeholder: e.g. 3.2, 3.3.dev0, ...
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation
+      description: |
+        There are several ways Eddy can be installed, please select the one
+        you are using where you have found the bug. If not sure leave empty.
+
+        Possible values are:
+        - Windows Installer: If you are using the Windows installer executable from GitHub
+        - macOS `.dmg`: If you are using the macOS disk image from GitHub
+        - GNU/Linux AppImage: If you are using the GNU/Linux AppImage from GitHub
+        - Standalone: If you are using any of the standalone (zip or tarball) binary releases
+        - Source: If you installed from source (e.g. via pip or git clone)
+      options:
+        - Windows Installer
+        - macOS `dmg`
+        - GNU/Linux AppImage
+        - Standalone
+        - Source
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: Please select the OS on which you have found the bug.
+      options:
+        - Windows
+        - macOS
+        - GNU/Linux
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: Operating System Version
+      description: Please specify the OS version on which you have found the bug.
+      placeholder: "e.g. Windows 10, macOS 11.0.6, Ubuntu 22.04 LTS"
+    validations:
+      required: true
+  - type: dropdown
+    id: arch
+    attributes:
+      label: Operating System Architecture
+      description: Please select the OS architecture on which you have found the bug.
+      options:
+        - x86_64
+        - x86
+        - arm
+        - aarch64 (e.g. Apple Silicon)
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        Please provide the application log if relevant.
+
+        From the application menu, select `Tools` -> `System log...`, then copy the content
+        of the log and paste it here.
+      render: sh

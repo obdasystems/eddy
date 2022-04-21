@@ -1,0 +1,15 @@
+name: Question
+description: Submit any question you have, either usage or implementation related.
+title: "[Q]: "
+labels: ["question"]
+# assignees:
+#   - put your username to auto-assign report
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: >
+        Please provide you question below. You can attach any additional material if needed.
+    validations:
+      required: true

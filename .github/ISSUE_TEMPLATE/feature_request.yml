@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a new feature or enhance an existing one
+title: "[FEATURE]: "
+labels: ["enhancement"]
+# assignees:
+#   - put your username to auto-assign report
+body:
+  - type: textarea
+    id: desc
+    attributes:
+      label: Description
+      description: Please provide a concise description of the feature request.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: >
+        Please try to describe how this feature could improve
+        your use case and possibly that of other users.
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example Use Cases
+      description: >
+        If possible, try to provide some examples of how this feature could be used
+        or implemented. You can attach screenshots, mockups or any other material
+        than may help describe the feature use cases here.
+    validations:
+      required: true
