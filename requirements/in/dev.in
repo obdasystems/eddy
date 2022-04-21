@@ -10,6 +10,6 @@
 
 # From PyPi
 flake8==4.0.1
-mypy==0.940
+mypy==0.942
 objgraph==3.5.0
-pip-tools==6.5.1
+pip-tools==6.6.0
