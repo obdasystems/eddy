@@ -34,6 +34,7 @@
 
 
 from abc import ABCMeta, abstractmethod
+from copy import copy
 import csv
 import io
 from typing import (
@@ -50,7 +51,9 @@ from PyQt5 import (
     QtGui,
     QtWidgets,
 )
-import xlsxwriter
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, DEFAULT_FONT, NamedStyle
+from openpyxl.utils import get_column_letter
 
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
@@ -284,29 +287,39 @@ class XlsxProjectExporter(AbstractMetadataExporter):
             self.annotations = dialog.selectedAnnotations()
             self.items = dialog.selectedItems()
 
-        workbook = xlsxwriter.Workbook(path)
-        worksheet = workbook.add_worksheet(self.project.name)
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = self.project.name
+        bodyFont = copy(DEFAULT_FONT)
+        headFont = copy(bodyFont)
+        headFont.bold = True
+        alignment = Alignment(vertical='center', wrapText=True)
+        headStyle = NamedStyle(name='head', font=headFont, alignment=alignment)
+        bodyStyle = NamedStyle(name='body', font=bodyFont, alignment=alignment)
         # HEADER ROW
-        headerFormat = workbook.add_format({'bold': True})
-        worksheet.write_row(0, 0, self.metadataHeader(), headerFormat)
-        worksheet.freeze_panes(1, 0)
+        for j, title in enumerate(self.metadataHeader(), start=1):
+            worksheet.cell(row=1, column=j, value=title).style = headStyle
+        worksheet.freeze_panes = 'A2'
         # METADATA ROWS
         metadata = self.metadata()
         if metadata:
-            for i, row in enumerate(metadata, start=1):
-                worksheet.write_row(i, 0, map(str, row.values()))
-
-            # AUTOFIT COLUMN WIDTHS
-            def cell_format(name: str):
-                valueFormat = workbook.add_format({'text_wrap': True, 'align': 'vcenter'})
-                keyFormat = workbook.add_format({'align': 'vcenter'})
-                return valueFormat if name == self.KeyValue else keyFormat
-            for j, key in enumerate(self.metadataHeader()):
-                # Compute the column width as the max between the size
-                # of the column header, and the max size of all column values.
-                width = max(len(key), max(map(lambda d: len(str(d[key])), metadata)))
-                worksheet.set_column(j, j, width, cell_format=cell_format(key))
-        workbook.close()
+            for i, row in enumerate(metadata, start=2):
+                for j, value in enumerate(row.values(), start=1):
+                    worksheet.cell(row=i, column=j, value=str(value)).style = bodyStyle
+        # AUTOFIT COLUMN WIDTHS
+        for j, key in enumerate(self.metadataHeader(), start=1):
+            # Length of the longest line in a multi-line string
+            def maxlen(s): return max(map(len, str(s).split('\n')))
+            # Compute the column width as the max between the length of
+            # the column header, and the max length of all column values.
+            width = max(len(key), max(map(lambda d: maxlen(d[key]), metadata)))
+            worksheet.column_dimensions[get_column_letter(j)].width = width
+        # AUTOFIT ROW HEIGHTS
+        for i, row in enumerate(metadata, start=2):
+            height = max(map(lambda s: len(s.split('\n')), map(str, row.values())))
+            # Set height as number of lines x default font height + some padding
+            worksheet.row_dimensions[i].height = height * bodyFont.size * 1.25
+        workbook.save(path)
         if self.open:
             openPath(path)
 
