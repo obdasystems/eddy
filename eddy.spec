@@ -42,7 +42,7 @@ import py_compile
 import sys
 import zipfile
 
-from PyInstaller.compat import is_linux, is_darwin, is_win, modname_tkinter
+from PyInstaller.compat import is_linux, is_darwin, is_win
 from PyInstaller.config import CONF
 from PyInstaller.log import logger
 
@@ -88,7 +88,7 @@ GRAPHOL_ICON = '{}.{}'.format(os.path.join('resources', 'images', 'graphol'), IC
 
 excludes = [
     # PYTHON BUILTINS
-    modname_tkinter,
+    'tkinter',
     # PyInstaller does not support pkg_resources
     'pkg_resources',
 ]
