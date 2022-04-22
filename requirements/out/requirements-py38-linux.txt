@@ -24,6 +24,8 @@ docker==5.0.3
     # via appimage-builder
 emrichen==0.2.3
     # via appimage-builder
+et-xmlfile==1.1.0
+    # via openpyxl
 filelock==3.6.0
     # via
     #   tox
@@ -48,6 +50,8 @@ mypy-extensions==0.4.3
     # via mypy
 objgraph==3.5.0
     # via -r requirements/in/dev.in
+openpyxl==3.0.9
+    # via -r requirements/in/base.in
 packaging==21.3
     # via
     #   appimage-builder
@@ -169,8 +173,6 @@ websocket-client==1.3.2
     # via docker
 wheel==0.37.1
     # via pip-tools
-xlsxwriter==3.0.3
-    # via -r requirements/in/base.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
