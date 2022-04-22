@@ -42,7 +42,8 @@ AppDir:
       - usr/share/python-wheels
   after_bundle: |
   runtime:
-    version: "continuous"
+    # See: https://github.com/AppImageCrafters/AppRun/issues/44
+    version: "v1.2.5"
     env:
       PATH: '${APPDIR}/usr/bin:${PATH}'
       PYTHONHOME: '${APPDIR}/usr'
