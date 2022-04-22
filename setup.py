@@ -163,7 +163,7 @@ class PyInstallerCommand(setuptools.Command):
             command.extend(['--workpath', '%s' % self.workpath])
         if self.distpath:
             command.extend(['--distpath', '%s' % self.distpath])
-        command.extend(['--noconfirm', '--clean', '--windowed', self.specfile])
+        command.extend(['--noconfirm', '--clean', self.specfile])
         distutils.log.info('Running PyInstaller: %s' % ' '.join(command))
         if not self.dry_run:
             subprocess.check_call(command)
