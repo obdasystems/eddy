@@ -31,9 +31,7 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-import io
 
-import openpyxl
 from PyQt5 import (
     QtCore,
     QtGui,
@@ -78,9 +76,7 @@ from eddy.ui.file import FileDialog
 from eddy.core.datatypes.system import File
 from eddy.core.functions.path import expandPath, openPath
 from eddy.core.functions.misc import first
-import csv
-import xlrd
-import xlsxwriter
+
 
 
 LOGGER = getLogger()
@@ -1428,14 +1424,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             for file in files:
                 filetype = File.valueOf(dialog.selectedNameFilter())
                 try:
+                    loader = session.createOntologyLoader(filetype, path, session.project, session)
                     if filetype == File.Csv:
-                        #self.importFromCsv(file, override)
-                        loader = session.createOntologyLoader(filetype, path, session.project, session)
                         loader.run(file, override)
                     else:
-                        #self.importFromExcel(path, override)
-                        loader = session.createOntologyLoader(filetype, path, session.project,
-                                                              session)
                         loader.run(path, override)
                 except Exception as e:
                     print(e)

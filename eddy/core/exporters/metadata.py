@@ -289,7 +289,7 @@ class CsvTemplateExporter(AbstractMetadataExporter):
         """
         Perform CSV file generation.
         """
-        LOGGER.info('Exporting project metadata %s to CSV file: %s', self.project.name, path)
+        LOGGER.info('Exporting metadata template %s to CSV file: %s', self.project.name, path)
         # SELECT PROJECT DIAGRAMS
         diagrams = None
         if diagrams is None:
@@ -419,7 +419,7 @@ class XlsxTemplateExporter(AbstractMetadataExporter):
         """
         Perform Xlsx file generation.
         """
-        LOGGER.info('Exporting project metadata %s to XLSX file: %s', self.project.name, path)
+        LOGGER.info('Exporting metadata template %s to XLSX file: %s', self.project.name, path)
 
         # SELECT PROJECT DIAGRAMS
         if self.diagrams is None:
