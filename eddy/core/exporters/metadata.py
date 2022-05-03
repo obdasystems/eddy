@@ -103,7 +103,7 @@ class AbstractMetadataExporter(AbstractProjectExporter):
         self.annotations = kwargs.get('annotations', None)
         self.items = kwargs.get('items', None)
         self.open = kwargs.get('open', False)
-
+        self.includeEntitiesWithoutAnnotations = False
     #############################################
     #   INTERFACE
     #################################
