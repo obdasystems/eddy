@@ -160,7 +160,6 @@ from eddy.core.items.nodes.common.base import (
 )
 from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
-from eddy.core.loaders.annotations import CsvLoader, XlsxLoader
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol_iri import (
     GrapholIRIProjectLoader_v3,
