@@ -55,6 +55,15 @@ from eddy.core.commands.project import (
     CommandProjectSetOntologyIRIAndVersion,
 )
 from eddy.core.common import HasWidgetSystem
+from eddy.core.datatypes.system import File
+from eddy.core.exporters.metadata import (
+    AnnotationsOverridingDialog,
+    CsvTemplateExporter,
+    XlsxTemplateExporter,
+)
+from eddy.core.functions.fsystem import fexists
+from eddy.core.functions.misc import first
+from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.output import getLogger
 from eddy.core.owl import (
@@ -68,6 +77,7 @@ from eddy.ui.fields import (
     CheckBox,
     ComboBox,
 )
+from eddy.ui.file import FileDialog
 
 LOGGER = getLogger()
 
@@ -371,9 +381,22 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         addBtn = QtWidgets.QPushButton('Add', objectName='annotation_add_button')
         connect(addBtn.clicked, self.addAnnotationProperty)
         self.addWidget(addBtn)
+
+        templateBtn = QtWidgets.QPushButton('Generate Template',
+                                            objectName='annotation_create_template_button')
+        connect(templateBtn.clicked, self.createTemplate)
+        self.addWidget(templateBtn)
+
+        importBtn = QtWidgets.QPushButton('Import from Template',
+                                          objectName='annotation_import_template_button')
+        connect(importBtn.clicked, self.importTemplate)
+        self.addWidget(importBtn)
+
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(self.widget('annotation_add_button'))
+        boxlayout.addWidget(self.widget('annotation_create_template_button'))
+        boxlayout.addWidget(self.widget('annotation_import_template_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('iri_prefix_combobox_label'), self.widget('iri_prefix_switch'))
@@ -1342,3 +1365,71 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.undostack.endMacro()
 
         self.widget('iri_label_button').setEnabled(False)
+
+    def createTemplate(self):
+
+        session = self.session
+        dialog = FileDialog(session)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        filters = ['Comma-separated values (*.csv)', 'Excel Spreadsheet (*.xlsx)']
+        dialog.setNameFilters(sorted(filters))
+        dialog.selectFile(session.project.name)
+        dialog.selectNameFilter(File.Csv.value)
+        if dialog.exec_():
+            filetype = File.valueOf(dialog.selectedNameFilter())
+            try:
+
+                path = expandPath(first(dialog.selectedFiles()))
+                try:
+                    if filetype == File.Csv:
+                        worker = CsvTemplateExporter(session.project, session)
+                    if filetype == File.Xlsx:
+                        worker = XlsxTemplateExporter(session.project, session)
+                except ValueError as e:
+                    print(e)
+                worker.run(path)
+                if fexists(expandPath(first(dialog.selectedFiles()))):
+                    session.addNotification("""
+                    Ontology export completed: <br><br>
+                    <b><a href=file:{0}>{1}</a></b>
+                    """.format(expandPath(first(dialog.selectedFiles())), 'Open File'))
+            except Exception as e:
+                LOGGER.error('error during export: {}', e)
+                session.addNotification("""
+                <b><font color="#7E0B17">ERROR</font></b>:
+                Could not complete the export, see the System Log for details.
+                """)
+
+    def importTemplate(self):
+
+        session = self.session
+
+        dialog = AnnotationsOverridingDialog(session)
+        if not dialog.exec_():
+            return
+        override = dialog.checkedOption()
+
+        dialog = FileDialog(session)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        filters = ['Comma-separated values (*.csv)', 'Excel Spreadsheet (*.xlsx)']
+        dialog.setNameFilters(sorted(filters))
+        dialog.selectNameFilter(File.Csv.value)
+
+        if dialog.exec_():
+            files = dialog.selectedFiles()
+            path = expandPath(first(dialog.selectedFiles()))
+            for file in files:
+                filetype = File.valueOf(dialog.selectedNameFilter())
+                try:
+                    loader = session.createOntologyLoader(filetype, path, session.project, session)
+                    if filetype == File.Csv:
+                        loader.run(file, override)
+                    else:
+                        loader.run(path, override)
+                except Exception as e:
+                    print(e)
+
+        return
