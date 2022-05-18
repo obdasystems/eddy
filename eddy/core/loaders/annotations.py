@@ -54,145 +54,90 @@ class TemplateLoader(AbstractOntologyLoader):
             'Object Property': Item.RoleNode
         }
 
-        if override:
+        for row in rows:
 
-            for row in rows:
-                resource = row[0]
-                simple_name = row[1]
-                type = row[2]
-                annotation = row[3]
-                datatype = row[4]
-                lang = row[5] if row[5] != '' else 'eng'
-                value = row[6]
+            resource = row[0]
+            simple_name = row[1]
+            type = row[2]
+            annotation = row[3]
+            datatype = row[4]
+            lang = row[5] if row[5] != '' else 'eng'
+            value = row[6]
 
-                if value == '':
-                    pass
+            resourceIRI = self.project.getIRI(resource)
+            annotationIRI = self.project.getIRI(annotation)
+            datatypeIRI = self.project.getIRI(datatype)
 
-                else:
-                    # ADD ANNOTATION PROPERTY
-                    try:
-                        annIRI = str(annotation)
-                        listProperties = [str(el) for el in list(self.project.annotationProperties)]
+            if value == '':
+                pass
+            else:
+                # ADD ANNOTATION PROPERTY
+                try:
+                    if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+                        self.project.isValidIdentifier(annotation)
 
-                        if annIRI not in listProperties:
-                            self.project.isValidIdentifier(annIRI)
+                        command = CommandProjectAddAnnotationProperty(self.project, annotation)
+                        self.session.undostack.beginMacro(
+                            'Add annotation property {0} '.format(annotation))
+                        if command:
+                            self.session.undostack.push(command)
+                        self.session.undostack.endMacro()
 
-                            command = CommandProjectAddAnnotationProperty(self.project, annIRI)
-                            self.session.undostack.beginMacro(
-                                'Add annotation property {0} '.format(annIRI))
-                            if command:
-                                self.session.undostack.push(command)
-                            self.session.undostack.endMacro()
+                except IllegalNamespaceError as e:
+                    # noinspection PyArgumentList
+                    msgBox = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Warning,
+                        'Entity Definition Error',
+                        'Illegal namespace defined.',
+                        informativeText='The string "{}" is not a legal IRI'.format(annotation),
+                        detailedText=str(e),
+                        parent=self,
+                    )
+                    msgBox.exec_()
 
-                    except IllegalNamespaceError as e:
-                        # noinspection PyArgumentList
-                        msgBox = QtWidgets.QMessageBox(
-                            QtWidgets.QMessageBox.Warning,
-                            'Entity Definition Error',
-                            'Illegal namespace defined.',
-                            informativeText='The string "{}" is not a legal IRI'.format(annIRI),
-                            detailedText=str(e),
-                            parent=self,
-                        )
-                        msgBox.exec_()
-
-                        # ADD ANNOTATION ASSERTION
-                    annotationAss = AnnotationAssertion(resource, annotation, value,
+                # CREATE ANNOTATION ASSERTION
+                annotationAss = AnnotationAssertion(resourceIRI, annotationIRI, value, type=datatypeIRI,
                                                         language=lang)
+
+                if override:
+
+                    assertionSub = annotationAss.subject
+                    assertionProp = annotationAss.assertionProperty
+                    assertionLang = annotationAss.language
+                    for diagram in self.project.diagrams():
+                        # LOOK FOR RESOURCE
+                        for item in diagram.items():
+                            if item.isNode() and item.type() == types[type] and item.iri is assertionSub:
+                                existing = []
+                                # LOOK FOR ANNOTATION PROPERTY
+                                for prop, assertionsList in item.iri.annotationAssertionMapItems:
+                                    if prop is assertionProp:
+                                        # LOOK FOR LANGUAGE
+                                        currList = assertionsList
+                                        for assertion in currList:
+                                            if assertion.language == assertionLang:
+                                                existing.append(assertion)
+
+                                # REMOVE  ALL EXISTING ANNOTATION ASSERTIONS
+                                for annAssertion in existing:
+                                    self.session.undostack.push(
+                                        CommandIRIRemoveAnnotationAssertion(
+                                                self.project, item.iri,
+                                                    annAssertion))
+
+                                # ADD NEW ANNOTATION ASSERTION FOR IRI-PROPERTY-LANG
+                                self.session.undostack.push(
+                                    CommandIRIAddAnnotationAssertion(self.project,
+                                                item.iri, annotationAss))
+                else:
 
                     for diagram in self.project.diagrams():
                         # LOOK FOR RESOURCE
                         for item in diagram.items():
-                            if item.isNode() and item.type() == types[type] and str(
-                                item.iri) == resource:
-
-                                itemAnnotations = dict(item.iri.annotationAssertionMapItems)
-                                newdict = {}
-                                for k, v in itemAnnotations.items():
-                                    if str(k) not in newdict.keys():
-                                        newdict[str(k)] = [v]
-                                    else:
-                                        newdict[str(k)].append(v)
-
-                                existing = None
-                                for k, v in newdict.items():
-                                    # k, v -> (k, [[A1],[A2], ...])
-                                    if str(annotation) == k:
-                                        currList = v
-                                        if lang:
-                                            for el in currList:
-                                                ann = el[0]
-                                                # ann -> [Ai]
-                                                if ann.language == annotationAss.language:
-                                                    existing = ann
-                                                    if existing:
-                                                        # REMOVE ALL THE EXISTING ANNOTATION ASSERTIONS WITH SAME PROPERTY-LANG
-                                                        self.session.undostack.push(
-                                                            CommandIRIRemoveAnnotationAssertion(
-                                                                self.project, item.iri,
-                                                                existing))
-
-                                # ADD NEW ANNOTATION ASSERTION FOR PROPERTY-LANG
+                            if item.isNode() and item.type() == types[type] and item.iri is annotationAss.subject:
+                                # ADD ANNOTATION ASSERTION
                                 self.session.undostack.push(
-                                    CommandIRIAddAnnotationAssertion(self.project, item.iri,
-                                                                     annotationAss))
-                                # print('final anno set for', item.iri, ':', item.iri.annotationAssertionMapItems)
-
-
-        else:
-
-            for row in rows:
-                resource = row[0]
-                simple_name = row[1]
-                type = row[2]
-                annotation = row[3]
-                datatype = row[4]
-                lang = row[5] if row[5] != '' else 'eng'
-                value = row[6]
-
-                if value == '':
-                    pass
-
-                else:
-                    # ADD ANNOTATION PROPERTY
-                    try:
-                        annIRI = str(annotation)
-                        listProperties = [str(el) for el in
-                                          list(self.project.annotationProperties)]
-
-                        if annIRI not in listProperties:
-                            self.project.isValidIdentifier(annIRI)
-
-                            command = CommandProjectAddAnnotationProperty(self.project, annIRI)
-                            self.session.undostack.beginMacro(
-                                'Add annotation property {0} '.format(annIRI))
-                            if command:
-                                self.session.undostack.push(command)
-                            self.session.undostack.endMacro()
-
-                    except IllegalNamespaceError as e:
-                        # noinspection PyArgumentList
-                        msgBox = QtWidgets.QMessageBox(
-                            QtWidgets.QMessageBox.Warning,
-                            'Entity Definition Error',
-                            'Illegal namespace defined.',
-                            informativeText='The string "{}" is not a legal IRI'.format(annIRI),
-                            detailedText=str(e),
-                            parent=self,
-                        )
-                        msgBox.exec_()
-
-                        # ADD ANNOTATION ASSERTION
-                    annotationAss = AnnotationAssertion(resource, annotation, value,
-                                                        language=lang)
-
-                    for diagram in self.project.diagrams():
-                        for item in diagram.items():
-                            if item.isNode() and item.type() == types[type] and str(
-                                item.iri) == resource:
-                                self.session.undostack.push(
-                                    CommandIRIAddAnnotationAssertion(self.project, item.iri,
-                                                                     annotationAss))
+                                    CommandIRIAddAnnotationAssertion(self.project, item.iri, annotationAss))
 
 
 class CsvLoader(TemplateLoader):

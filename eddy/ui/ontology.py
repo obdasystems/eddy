@@ -32,7 +32,6 @@
 #                                                                        #
 ##########################################################################
 
-
 from PyQt5 import (
     QtCore,
     QtGui,
@@ -41,7 +40,7 @@ from PyQt5 import (
 
 from eddy.core.commands.iri import (
     CommandCommmonSubstringIRIsRefactor,
-    CommandIRIRemoveAnnotationAssertion,
+    CommandIRIRemoveAnnotationAssertion, CommandIRIAddAnnotationAssertion,
 )
 from eddy.core.commands.project import (
     CommandProjectAddAnnotationProperty,
@@ -56,7 +55,9 @@ from eddy.core.commands.project import (
 )
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.system import File
+
 from eddy.core.exporters.metadata import (
+    AbstractMetadataExporter,
     AnnotationsOverridingDialog,
     CsvTemplateExporter,
     XlsxTemplateExporter,
@@ -70,8 +71,9 @@ from eddy.core.owl import (
     AnnotationAssertion,
     IllegalPrefixError,
     IllegalNamespaceError,
-    ImportedOntology
+    ImportedOntology, IRI
 )
+from eddy.ui.dialogs import DiagramSelectionDialog
 from eddy.ui.fields import (
     StringField,
     CheckBox,
@@ -101,7 +103,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addingNewPrefix = False
         self.prefixIndexMap = {}
         self.project = session.project
-
+        self.hiddenRows = []
         #############################################
         # GENERAL TAB
         #################################
@@ -208,6 +210,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(addBtn)
         self.addWidget(delBtn)
         self.addWidget(editBtn)
+
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
@@ -382,21 +385,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(addBtn.clicked, self.addAnnotationProperty)
         self.addWidget(addBtn)
 
-        templateBtn = QtWidgets.QPushButton('Generate Template',
-                                            objectName='annotation_create_template_button')
-        connect(templateBtn.clicked, self.createTemplate)
-        self.addWidget(templateBtn)
-
-        importBtn = QtWidgets.QPushButton('Import from Template',
-                                          objectName='annotation_import_template_button')
-        connect(importBtn.clicked, self.importTemplate)
-        self.addWidget(importBtn)
-
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(self.widget('annotation_add_button'))
-        boxlayout.addWidget(self.widget('annotation_create_template_button'))
-        boxlayout.addWidget(self.widget('annotation_import_template_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('iri_prefix_combobox_label'), self.widget('iri_prefix_switch'))
@@ -411,12 +402,70 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onAnnotationPrefixChanged)
         connect(self.widget('iri_input_field').textChanged, self.onAnnotationInputChanged)
 
+        # ANNOTATION ASSERTIONS GROUP
+        searchbar = QtWidgets.QLineEdit(objectName='searchbar_annotations')
+        searchbar.textChanged.connect(self.searchAnnotationTable)
+        self.addWidget(searchbar)
+
+        table = QtWidgets.QTableWidget(0, 7, self, objectName='annotation_assertions_table_widget')
+        table.setHorizontalHeaderLabels(['IRI', 'SimpleName', 'Type', 'AnnotationProperty', 'Datatype', 'Lang', 'Value'])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.horizontalHeader().setMinimumSectionSize(120)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.verticalHeader().setVisible(False)
+        table.verticalHeader().setSectionsClickable(False)
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        #table.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.addWidget(table)
+
+        selectBtn = QtWidgets.QPushButton('Select All', objectName = 'annotation_assertions_selectall_button')
+        connect(selectBtn.clicked, self.selectAllAnnotationAssertion)
+        self.addWidget(selectBtn)
+
+        # addBtn = QtWidgets.QPushButton('Add', objectName='annotation_properties_add_button')
+        delBtn = QtWidgets.QPushButton('Remove', objectName='annotation_assertions_delete_button')
+        # connect(addBtn.clicked, self.addAnnotationProperty)
+        connect(delBtn.clicked, self.removeAnnotationAssertion)
+        # self.addWidget(addBtn)
+        self.addWidget(delBtn)
+
+        templateBtn = QtWidgets.QPushButton('Generate Template',
+                                            objectName='annotation_create_template_button')
+        connect(templateBtn.clicked, self.createTemplate)
+        self.addWidget(templateBtn)
+
+        importBtn = QtWidgets.QPushButton('Import from Template',
+                                          objectName='annotation_import_template_button')
+        connect(importBtn.clicked, self.importTemplate)
+        self.addWidget(importBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('annotation_assertions_selectall_button'))
+        boxlayout.addStretch(5)
+        # boxlayout.addWidget(self.widget('annotation_properties_add_button'))
+        boxlayout.addWidget(self.widget('annotation_assertions_delete_button'))
+        boxlayout.addWidget(self.widget('annotation_create_template_button'))
+        boxlayout.addWidget(self.widget('annotation_import_template_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('searchbar_annotations'))
+        formlayout.addRow(self.widget('annotation_assertions_table_widget'))
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('Annotation Assertions', self,
+                                       objectName='annotation_assertions_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
         # ANNOTATIONS TAB LAYOUT CONFIGURATION
 
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('annotation_properties_widget'), 0, QtCore.Qt.AlignTop)
         layout.addWidget(self.widget('add_annotation_group_widget'), 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('annotation_assertions_widget'), 2, QtCore.Qt.AlignTop)
+
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
         widget.setObjectName('annotations_widget')
@@ -555,7 +604,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout.addWidget(self.widget('main_widget'))
         layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
         self.setLayout(layout)
-        self.setMinimumSize(800, 520)
+        self.setMinimumSize(800, 800)
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Ontology Manager')
         self.redraw()
@@ -690,6 +739,24 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
             propertyItem.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
             table.setItem(rowcount,0,propertyItem)
+            rowcount += 1
+        table.resizeColumnsToContents()
+
+        metadataExp = AbstractMetadataExporter(self.project, self.session)
+        annotationAssertions = metadataExp.metadata()
+        table = self.widget('annotation_assertions_table_widget')
+        table.clear()
+        table.setHorizontalHeaderLabels(
+            ['IRI', 'SimpleName', 'Type', 'AnnotationProperty', 'Datatype', 'Lang', 'Value'])
+        table.setRowCount(len(annotationAssertions))
+        rowcount = 0
+        for ann in annotationAssertions:
+            colcount = 0
+            for k in ann.keys():
+                annItem = QtWidgets.QTableWidgetItem(str(ann[k]))
+                annItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(rowcount, colcount, annItem)
+                colcount += 1
             rowcount += 1
         table.resizeColumnsToContents()
 
@@ -1002,37 +1069,38 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                     msgBox.exec_()
                     return
         corrNSItem = table.item(row, 1)
-        nsItemText = corrNSItem.text()
-        nsText = str(nsItemText)
-        try:
-            self.project.isValidPrefixEntry(text,nsText)
+        if corrNSItem:
+            nsItemText = corrNSItem.text()
+            nsText = str(nsItemText)
+            try:
+                self.project.isValidPrefixEntry(text,nsText)
 
-            oldPrefix = None
-            for pr,ns in self.project.prefixDictItems():
-                if ns==nsText:
-                    oldPrefix = pr
-                    break
+                oldPrefix = None
+                for pr,ns in self.project.prefixDictItems():
+                    if ns==nsText:
+                        oldPrefix = pr
+                        break
 
-            command = CommandProjectModifyNamespacePrefix(self.project,nsText,text,oldPrefix)
-            self.session.undostack.beginMacro('Replace prefix {0} '.format(oldPrefix))
-            if command:
-                self.session.undostack.push(command)
-            self.session.undostack.endMacro()
+                command = CommandProjectModifyNamespacePrefix(self.project,nsText,text,oldPrefix)
+                self.session.undostack.beginMacro('Replace prefix {0} '.format(oldPrefix))
+                if command:
+                    self.session.undostack.push(command)
+                self.session.undostack.endMacro()
 
-            #aggiorno mappa
-            self.prefixIndexMap[row]=text
-        except IllegalPrefixError as e:
-            table.setItem(row, 0, QtWidgets.QTableWidgetItem(self.prefixIndexMap[row]))
-            # noinspection PyArgumentList
-            msgBox = QtWidgets.QMessageBox(
-                QtWidgets.QMessageBox.Warning,
-                'Prefix Definition Error',
-                'Illegal prefix defined.',
-                informativeText='The string "{}" is not a legal prefix'.format(text),
-                detailedText=str(e),
-                parent=self,
-            )
-            msgBox.exec_()
+                #aggiorno mappa
+                self.prefixIndexMap[row]=text
+            except IllegalPrefixError as e:
+                table.setItem(row, 0, QtWidgets.QTableWidgetItem(self.prefixIndexMap[row]))
+                # noinspection PyArgumentList
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Prefix Definition Error',
+                    'Illegal prefix defined.',
+                    informativeText='The string "{}" is not a legal prefix'.format(text),
+                    detailedText=str(e),
+                    parent=self,
+                )
+                msgBox.exec_()
 
     def manageNamespaceModification(self, row, column):
         table = self.widget('prefixes_table_widget')
@@ -1429,7 +1497,102 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                         loader.run(file, override)
                     else:
                         loader.run(path, override)
+                    self.redraw()
                 except Exception as e:
                     print(e)
 
         return
+
+
+    @QtCore.pyqtSlot(bool)
+    def removeAnnotationAssertion(self, _):
+        """
+        Removes an annotation assertion from the ontology alphabet.
+        :type _: bool
+        """
+        table = self.widget('annotation_assertions_table_widget')
+        rowcount = table.rowCount()
+
+        selectedCells = table.selectedItems()
+        rows = list(set([x.row() for x in selectedCells]))
+        rows = sorted(rows, reverse=True)
+
+        commands = []
+        for row in rows:
+            removedItemIRI = table.item(row, 0).text()
+            removedItemAnn = table.item(row, 3).text()
+            removedItemLang = table.item(row, 5).text()
+            removedItemValue = table.item(row, 6).text()
+            for diagram in self.project.diagrams():
+                for item in self.project.iriOccurrences(diagram=diagram):
+
+                    if str(removedItemIRI) == str(item.iri):
+                        itemAnnotations = dict(item.iri.annotationAssertionMapItems)
+
+                        newdict = {}
+                        for k, v in itemAnnotations.items():
+                            if str(k) not in newdict.keys():
+                                newdict[str(k)] = [v]
+                            else:
+                                newdict[str(k)].append(v)
+
+                        for k, v in newdict.items():
+                            # k, v -> (k, [[A1],[A2], ...])
+                            if str(removedItemAnn) == k:
+                                currList = v[0]
+
+                                for annotation in currList:
+                                    if str(removedItemAnn) == str(
+                                        annotation.assertionProperty) and str(
+                                        removedItemLang) == str(annotation.language) and str(
+                                        removedItemValue) == str(annotation.value):
+                                        commands.append(
+                                            CommandIRIRemoveAnnotationAssertion(self.project,
+                                                                                item.iri,
+                                                                                annotation))
+        self.session.undostack.beginMacro('remove annotation assertions >>')
+        for command in commands:
+            if command:
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+        for row in rows:
+            table.removeRow(row)
+        table.setRowCount(rowcount - len(rows))
+
+    def searchAnnotationTable(self):
+
+        text = self.sender().text()
+
+        table = self.widget('annotation_assertions_table_widget')
+
+        rowCount = table.rowCount()
+        columnCount = table.columnCount()
+        for row in range(rowCount):
+            table.showRow(row)
+
+        self.hiddenRows = []
+
+        for row in range(rowCount):
+            contains = False
+            for col in range(columnCount):
+                item = table.item(row, col).text()
+                if text.lower() in item.lower():
+                    contains = True
+            if not contains:
+                table.hideRow(row)
+                self.hiddenRows.append(row)
+
+    def selectAllAnnotationAssertion(self):
+
+        table = self.widget('annotation_assertions_table_widget')
+        table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        table.clearSelection()
+
+        rowCount = table.rowCount()
+
+        for row in range(rowCount):
+            if row not in self.hiddenRows:
+                table.selectRow(row)
+
+        table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
