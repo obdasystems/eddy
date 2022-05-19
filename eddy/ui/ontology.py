@@ -402,8 +402,50 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onAnnotationPrefixChanged)
         connect(self.widget('iri_input_field').textChanged, self.onAnnotationInputChanged)
 
+        # IMPORT/EXPORT TEMPLATE
+        templateBtn = QtWidgets.QPushButton('Generate Template',
+                                            objectName='annotation_create_template_button')
+        connect(templateBtn.clicked, self.createTemplate)
+        self.addWidget(templateBtn)
+
+        importBtn = QtWidgets.QPushButton('Import from Template',
+                                          objectName='annotation_import_template_button')
+        connect(importBtn.clicked, self.importTemplate)
+        self.addWidget(importBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('annotation_create_template_button'))
+        boxlayout.addWidget(self.widget('annotation_import_template_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('Import/Export Template', self,
+                                       objectName='template_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        # ANNOTATIONS TAB LAYOUT CONFIGURATION
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('annotation_properties_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('add_annotation_group_widget'), 1, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('template_widget'), 2, QtCore.Qt.AlignTop)
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('annotations_widget')
+        self.addWidget(widget)
+
+        ###################################
+        # ANNOTATION ASSERTIONS TAB
+        ##################################
+
         # ANNOTATION ASSERTIONS GROUP
+
         searchbar = QtWidgets.QLineEdit(objectName='searchbar_annotations')
+        searchbar.setPlaceholderText("Search...")
         searchbar.textChanged.connect(self.searchAnnotationTable)
         self.addWidget(searchbar)
 
@@ -430,15 +472,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # self.addWidget(addBtn)
         self.addWidget(delBtn)
 
-        templateBtn = QtWidgets.QPushButton('Generate Template',
-                                            objectName='annotation_create_template_button')
-        connect(templateBtn.clicked, self.createTemplate)
-        self.addWidget(templateBtn)
-
-        importBtn = QtWidgets.QPushButton('Import from Template',
-                                          objectName='annotation_import_template_button')
-        connect(importBtn.clicked, self.importTemplate)
-        self.addWidget(importBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
@@ -446,8 +479,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         boxlayout.addStretch(5)
         # boxlayout.addWidget(self.widget('annotation_properties_add_button'))
         boxlayout.addWidget(self.widget('annotation_assertions_delete_button'))
-        boxlayout.addWidget(self.widget('annotation_create_template_button'))
-        boxlayout.addWidget(self.widget('annotation_import_template_button'))
 
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('searchbar_annotations'))
@@ -456,19 +487,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         groupbox = QtWidgets.QGroupBox('Annotation Assertions', self,
                                        objectName='annotation_assertions_widget')
         groupbox.setLayout(formlayout)
+        groupbox.setMinimumSize(400, 650)
         self.addWidget(groupbox)
 
-        # ANNOTATIONS TAB LAYOUT CONFIGURATION
+        # ANNOTATION ASSERTIONS TAB LAYOUT CONFIGURATION
 
         layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('annotation_properties_widget'), 0, QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('add_annotation_group_widget'), 1, QtCore.Qt.AlignTop)
-        layout.addWidget(self.widget('annotation_assertions_widget'), 2, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('annotation_assertions_widget'), 0, QtCore.Qt.AlignTop)
 
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
-        widget.setObjectName('annotations_widget')
+        widget.setObjectName('assertions_widget')
         self.addWidget(widget)
 
         #############################################
@@ -597,6 +627,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('prefixes_widget'), 'Prefixes')
         widget.addTab(self.widget('annotations_widget'), 'Annotations')
         widget.addTab(self.widget('iri_widget'), 'Global IRIs')
+        widget.addTab(self.widget('assertions_widget'), 'Annotation Assertions')
         self.addWidget(widget)
 
         layout = QtWidgets.QVBoxLayout()
