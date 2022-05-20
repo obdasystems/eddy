@@ -2366,21 +2366,13 @@ class Session(
                 builder.open()
 
     @QtCore.pyqtSlot(IRI)
-    def doOpenAnnotationAssertionBuilder(self, iri: IRI, assertion: AnnotationAssertion = None,):
+    def doOpenAnnotationAssertionBuilder(self, iri: IRI = None, assertion: AnnotationAssertion = None,):
         """
         Executed when annotation assertion builder needs to be displayed.
         """
-        if iri:
-            builder = AnnotationAssertionBuilderDialog(iri, self, assertion)
-            builder.open()
-            return builder
-        else:
-            diagram = self.mdi.activeDiagram()
-            if diagram:
-                diagram.setMode(DiagramMode.Idle)
-                node = first(diagram.selectedNodes())
-                builder = AnnotationAssertionBuilderDialog(node.iri, self, assertion)
-                builder.open()
+        builder = AnnotationAssertionBuilderDialog(self, iri, assertion)
+        builder.open()
+        return builder
 
     @QtCore.pyqtSlot()
     def doOpenEdgePropsAnnotationBuilder(self) -> None:

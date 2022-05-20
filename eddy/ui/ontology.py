@@ -54,6 +54,7 @@ from eddy.core.commands.project import (
     CommandProjectSetOntologyIRIAndVersion,
 )
 from eddy.core.common import HasWidgetSystem
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 
 from eddy.core.exporters.metadata import (
@@ -465,11 +466,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(selectBtn.clicked, self.selectAllAnnotationAssertion)
         self.addWidget(selectBtn)
 
-        # addBtn = QtWidgets.QPushButton('Add', objectName='annotation_properties_add_button')
+        addBtn = QtWidgets.QPushButton('Add', objectName='annotation_assertions_add_button')
         delBtn = QtWidgets.QPushButton('Remove', objectName='annotation_assertions_delete_button')
-        # connect(addBtn.clicked, self.addAnnotationProperty)
+        connect(addBtn.clicked, self.addAnnotationAssertion)
         connect(delBtn.clicked, self.removeAnnotationAssertion)
-        # self.addWidget(addBtn)
+        self.addWidget(addBtn)
         self.addWidget(delBtn)
 
 
@@ -477,7 +478,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
         boxlayout.addWidget(self.widget('annotation_assertions_selectall_button'))
         boxlayout.addStretch(5)
-        # boxlayout.addWidget(self.widget('annotation_properties_add_button'))
+        boxlayout.addWidget(self.widget('annotation_assertions_add_button'))
         boxlayout.addWidget(self.widget('annotation_assertions_delete_button'))
 
         formlayout = QtWidgets.QFormLayout()
@@ -772,6 +773,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             table.setItem(rowcount,0,propertyItem)
             rowcount += 1
         table.resizeColumnsToContents()
+
+        ###########################################
+        # ANNOTATION ASSERTIONS TAB
+        ################################
 
         metadataExp = AbstractMetadataExporter(self.project, self.session)
         annotationAssertions = metadataExp.metadata()
@@ -1533,6 +1538,67 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                     print(e)
 
         return
+
+    @QtCore.pyqtSlot(bool)
+    def addAnnotationAssertion(self):
+
+        assertionBuilder = self.session.doOpenAnnotationAssertionBuilder()
+        connect(assertionBuilder.sgnAnnotationAssertionAccepted,
+                self.onAnnotationAssertionAccepted)
+        assertionBuilder.exec_()
+
+    def onAnnotationAssertionAccepted(self, assertion):
+        """
+        :type assertion:AnnotationAssertion
+        """
+        Types = {
+            Item.AttributeNode: 'Data Property',
+            Item.ConceptNode: 'Class',
+            Item.IndividualNode: 'Named Individual',
+            Item.RoleNode: 'Object Property',
+        }
+
+
+        table = self.widget('annotation_assertions_table_widget')
+        rowcount = table.rowCount()
+        table.setRowCount(rowcount + 1)
+
+        subjectIRI = str(assertion.subject)
+        iriItem = QtWidgets.QTableWidgetItem(subjectIRI)
+        iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 0, iriItem)
+
+        simpleName = self.project.getIRI(subjectIRI).getSimpleName()
+        simpleNameItem = QtWidgets.QTableWidgetItem(str(simpleName))
+        simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 1, simpleNameItem)
+
+        for node in self.project.iriOccurrences():
+            if node.iri is self.project.getIRI(subjectIRI):
+                typeItem = QtWidgets.QTableWidgetItem(Types.get(node.type()))
+                typeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 2, typeItem)
+
+        propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 3, propertyItem)
+
+        datatype = assertion.datatype or ''
+        datatypeItem = QtWidgets.QTableWidgetItem(str(datatype))
+        datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 4, QtWidgets.QTableWidgetItem(datatypeItem))
+
+        language = assertion.language or ''
+        langItem = QtWidgets.QTableWidgetItem(str(language))
+        langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 5, QtWidgets.QTableWidgetItem(langItem))
+
+        valueItem = QtWidgets.QTableWidgetItem(str(assertion.value))
+        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 6, QtWidgets.QTableWidgetItem(valueItem))
+
+        table.scrollToItem(table.item(rowcount, 0))
+        table.resizeColumnToContents(0)
 
 
     @QtCore.pyqtSlot(bool)
