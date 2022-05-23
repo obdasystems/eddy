@@ -976,12 +976,10 @@ class AnnotationsOverridingDialog(HasWidgetSystem, QtWidgets.QDialog):
         """
         super().__init__(parent=session, **kwargs)
         self._project = project
-        self.addWidget(
-            CheckBox('Add annotations to the existing ones', self, objectName='add_annotations',
-                     checked=True, clicked=self.onOptionChecked))
-        self.addWidget(
-            CheckBox('Override existing annotations', self, objectName='override_annotations',
-                     checked=False, clicked=self.onOptionChecked))
+        addBtn = QtWidgets.QRadioButton('Add annotations to the existing ones', self, objectName='add_annotations', checked=True)
+        overrideBtn = QtWidgets.QRadioButton('Override existing annotations', self, objectName='override_annotations')
+        self.addWidget(addBtn)
+        self.addWidget(overrideBtn)
 
         diagramLayout = QtWidgets.QGridLayout(self)
         diagramLayout.setContentsMargins(8, 8, 8, 8)
@@ -1048,28 +1046,6 @@ class AnnotationsOverridingDialog(HasWidgetSystem, QtWidgets.QDialog):
     #################################
 
     @QtCore.pyqtSlot()
-    def onOptionChecked(self):
-        """
-        Executed when an diagram checkbox is clicked.
-        """
-        option = self.sender().text()
-        state = self.sender().isChecked()
-
-        if state:
-            if option == 'Add annotations to the existing ones':
-
-                self.widget('override_annotations').setChecked(False)
-
-            else:
-
-                self.widget('add_annotations').setChecked(False)
-
-            self.widget('confirmation').setEnabled(True)
-
-        else:
-
-            self.widget('confirmation').setEnabled(False)
-
     def checkedOption(self):
 
         if self.widget('override_annotations').isChecked():
