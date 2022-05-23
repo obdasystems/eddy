@@ -467,10 +467,13 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(selectBtn)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='annotation_assertions_add_button')
+        editBtn = QtWidgets.QPushButton('Edit', objectName='annotation_assertions_edit_button')
         delBtn = QtWidgets.QPushButton('Remove', objectName='annotation_assertions_delete_button')
         connect(addBtn.clicked, self.addAnnotationAssertion)
+        connect(editBtn.clicked, self.editAnnotationAssertion)
         connect(delBtn.clicked, self.removeAnnotationAssertion)
         self.addWidget(addBtn)
+        self.addWidget(editBtn)
         self.addWidget(delBtn)
 
 
@@ -479,6 +482,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         boxlayout.addWidget(self.widget('annotation_assertions_selectall_button'))
         boxlayout.addStretch(5)
         boxlayout.addWidget(self.widget('annotation_assertions_add_button'))
+        boxlayout.addWidget(self.widget('annotation_assertions_edit_button'))
         boxlayout.addWidget(self.widget('annotation_assertions_delete_button'))
 
         formlayout = QtWidgets.QFormLayout()
@@ -785,16 +789,60 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setHorizontalHeaderLabels(
             ['IRI', 'SimpleName', 'Type', 'AnnotationProperty', 'Datatype', 'Lang', 'Value'])
         table.setRowCount(len(annotationAssertions))
+
         rowcount = 0
-        for ann in annotationAssertions:
-            colcount = 0
-            for k in ann.keys():
-                annItem = QtWidgets.QTableWidgetItem(str(ann[k]))
-                annItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(rowcount, colcount, annItem)
-                colcount += 1
-            rowcount += 1
+        processed = set()
+        Types = {
+            Item.AttributeNode: 'Data Property',
+            Item.ConceptNode: 'Class',
+            Item.IndividualNode: 'Named Individual',
+            Item.RoleNode: 'Object Property',
+        }
+        items = Types.keys()
+        annotations = self.project.getAnnotationPropertyIRIs()
+
+        for diagram in self.project.diagrams():
+            for node in self.project.iriOccurrences(diagram=diagram):
+                if node.type() not in items or node.iri in processed:
+                    continue
+                for annotation in node.iri.annotationAssertions:
+                    if annotation.assertionProperty in annotations:
+
+                        iriItem = QtWidgets.QTableWidgetItem(str(node.iri))
+                        iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                        table.setItem(rowcount, 0, iriItem)
+
+                        simpleNameItem = QtWidgets.QTableWidgetItem(node.iri.getSimpleName())
+                        simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                        table.setItem(rowcount, 1, simpleNameItem)
+
+                        typeItem = QtWidgets.QTableWidgetItem(Types.get(node.type()))
+                        typeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                        table.setItem(rowcount, 2, typeItem)
+
+                        propItem = QtWidgets.QTableWidgetItem(str(annotation.assertionProperty))
+                        propItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                        propItem.setData(QtCore.Qt.UserRole, annotation)
+                        table.setItem(rowcount, 3, propItem)
+
+                        datatypeItem = QtWidgets.QTableWidgetItem(str(annotation.datatype) or '')
+                        datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                        table.setItem(rowcount, 4, datatypeItem)
+
+                        langItem = QtWidgets.QTableWidgetItem(annotation.language or '')
+                        langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                        table.setItem(rowcount, 5, langItem)
+
+                        valueItem = QtWidgets.QTableWidgetItem(str(annotation.value))
+                        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                        table.setItem(rowcount, 6, valueItem)
+
+                        rowcount += 1
+
+                processed.add(node.iri)
+
         table.resizeColumnsToContents()
+        table.sortItems(0)
 
         #############################################
         # Global IRI
@@ -1581,6 +1629,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
         propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        propertyItem.setData(QtCore.Qt.UserRole, assertion)
         table.setItem(rowcount, 3, propertyItem)
 
         datatype = assertion.datatype or ''
@@ -1600,6 +1649,80 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.scrollToItem(table.item(rowcount, 0))
         table.resizeColumnToContents(0)
 
+    def editAnnotationAssertion(self):
+
+        table = self.widget('annotation_assertions_table_widget')
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+
+                itemIri = self.project.getIRI(str(table.item(row, 0).text()))
+                editItem = table.item(row, 3)
+                assertion = editItem.data(QtCore.Qt.UserRole)
+
+                assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(itemIri,
+                                                                                 assertion)
+                connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,
+                        self.onAnnotationAssertionModified)
+                assertionBuilder.exec_()
+
+    def onAnnotationAssertionModified(self, assertion):
+        """
+        :type assertion:AnnotationAssertion
+        """
+        Types = {
+            Item.AttributeNode: 'Data Property',
+            Item.ConceptNode: 'Class',
+            Item.IndividualNode: 'Named Individual',
+            Item.RoleNode: 'Object Property',
+        }
+
+        table = self.widget('annotation_assertions_table_widget')
+        rowcount = table.rowCount()
+        for row in range(0, rowcount):
+
+            propItem = table.item(row, 3)
+            itemAssertion = propItem.data(QtCore.Qt.UserRole)
+            if itemAssertion is assertion:
+
+                subjectIRI = str(assertion.subject)
+                iriItem = QtWidgets.QTableWidgetItem(subjectIRI)
+                iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(rowcount, 0, iriItem)
+
+                simpleName = self.project.getIRI(subjectIRI).getSimpleName()
+                simpleNameItem = QtWidgets.QTableWidgetItem(str(simpleName))
+                simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(rowcount, 1, simpleNameItem)
+
+                for node in self.project.iriOccurrences():
+                    if node.iri is self.project.getIRI(subjectIRI):
+                        typeItem = QtWidgets.QTableWidgetItem(Types.get(node.type()))
+                        typeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(rowcount, 2, typeItem)
+
+                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                newPropertyItem.setData(QtCore.Qt.UserRole, assertion)
+                table.setItem(row, 3, newPropertyItem)
+
+                datatype = assertion.datatype or ''
+                datatypeItem = QtWidgets.QTableWidgetItem(str(datatype))
+                datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(rowcount, 4, QtWidgets.QTableWidgetItem(datatypeItem))
+
+                language = assertion.language or ''
+                langItem = QtWidgets.QTableWidgetItem(str(language))
+                langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(rowcount, 5, QtWidgets.QTableWidgetItem(langItem))
+
+                valueItem = QtWidgets.QTableWidgetItem(str(assertion.value))
+                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                table.setItem(row, 6, QtWidgets.QTableWidgetItem(valueItem))
+
+                table.scrollToItem(table.item(row, 0))
+                break
+
 
     @QtCore.pyqtSlot(bool)
     def removeAnnotationAssertion(self, _):
@@ -1616,37 +1739,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         commands = []
         for row in rows:
-            removedItemIRI = table.item(row, 0).text()
-            removedItemAnn = table.item(row, 3).text()
-            removedItemLang = table.item(row, 5).text()
-            removedItemValue = table.item(row, 6).text()
-            for diagram in self.project.diagrams():
-                for item in self.project.iriOccurrences(diagram=diagram):
+            itemIri = self.project.getIRI(str(table.item(row, 0).text()))
+            editItem = table.item(row, 3)
+            assertion = editItem.data(QtCore.Qt.UserRole)
+            commands.append(CommandIRIRemoveAnnotationAssertion(self.project, itemIri, assertion))
 
-                    if str(removedItemIRI) == str(item.iri):
-                        itemAnnotations = dict(item.iri.annotationAssertionMapItems)
-
-                        newdict = {}
-                        for k, v in itemAnnotations.items():
-                            if str(k) not in newdict.keys():
-                                newdict[str(k)] = [v]
-                            else:
-                                newdict[str(k)].append(v)
-
-                        for k, v in newdict.items():
-                            # k, v -> (k, [[A1],[A2], ...])
-                            if str(removedItemAnn) == k:
-                                currList = v[0]
-
-                                for annotation in currList:
-                                    if str(removedItemAnn) == str(
-                                        annotation.assertionProperty) and str(
-                                        removedItemLang) == str(annotation.language) and str(
-                                        removedItemValue) == str(annotation.value):
-                                        commands.append(
-                                            CommandIRIRemoveAnnotationAssertion(self.project,
-                                                                                item.iri,
-                                                                                annotation))
         self.session.undostack.beginMacro('remove annotation assertions >>')
         for command in commands:
             if command:
