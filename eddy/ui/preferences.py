@@ -240,8 +240,8 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         # PLUGINS TAB
         #################################
 
-        table = QtWidgets.QTableWidget(len(self.session.plugins()), 5, self, objectName='plugins_table')
-        table.setHorizontalHeaderLabels(['Name', 'Version', 'Author', 'Contact', 'Uninstall'])
+        table = QtWidgets.QTableWidget(len(self.session.plugins()), 3, self, objectName='plugins_table')
+        table.setHorizontalHeaderLabels(['Name', 'Version',  'Uninstall'])
         table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         table.setFocusPolicy(QtCore.Qt.NoFocus)
         self.addWidget(table)
@@ -249,9 +249,7 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
         header = table.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
-        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Fixed)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.Fixed)
         header.setSectionsClickable(False)
         header.setSectionsMovable(False)
         header = table.verticalHeader()
@@ -267,14 +265,6 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
             table.setItem(row, 1, item)
-            item = QtWidgets.QTableWidgetItem(plugin.author())
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
-            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            table.setItem(row, 2, item)
-            item = QtWidgets.QTableWidgetItem(plugin.contact())
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
-            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
-            table.setItem(row, 3, item)
             p_widget = QtWidgets.QWidget()
             p_checkbox = CheckBox()
             p_checkbox.setEnabled(not plugin.isBuiltIn())
@@ -282,7 +272,7 @@ class PreferencesDialog(QtWidgets.QDialog, HasWidgetSystem):
             p_layout.addWidget(p_checkbox)
             p_layout.setAlignment(QtCore.Qt.AlignCenter)
             p_layout.setContentsMargins(0, 0, 0, 0)
-            table.setCellWidget(row, 4, p_widget)
+            table.setCellWidget(row, 2, p_widget)
             self.uninstall[plugin] = p_checkbox
 
         button = QtWidgets.QToolButton(self, objectName='plugins_install_button')
