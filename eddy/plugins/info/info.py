@@ -711,7 +711,7 @@ class ProjectInfo(AbstractInfo):
         self.membershipField.setFocusPolicy(QtCore.Qt.NoFocus)
         self.membershipField.setReadOnly(True)
 
-        self.atomicPredHeader = Header('Entity Nodes', self)
+        self.atomicPredHeader = Header('Ontology Metrics', self)
         self.atomicPredLayout = QtWidgets.QFormLayout()
         self.atomicPredLayout.setSpacing(0)
         self.atomicPredLayout.addRow(self.conceptsKey, self.conceptsField)
@@ -803,10 +803,10 @@ class ProjectInfo(AbstractInfo):
         #         self.profileField.setCurrentIndex(i)
         #         break
 
-        self.attributesField.setValue(project.itemDistinctIRICount(Item.AttributeNode))
-        self.conceptsField.setValue(project.itemDistinctIRICount(Item.ConceptNode))
-        self.rolesField.setValue(project.itemDistinctIRICount(Item.RoleNode))
-        self.individualsField.setValue(project.itemDistinctIRICount(Item.IndividualNode))
+        self.attributesField.setValue(len(project.itemIRIs(Item.AttributeNode)))
+        self.conceptsField.setValue(len(project.itemIRIs(Item.ConceptNode)))
+        self.rolesField.setValue(len(project.itemIRIs(Item.RoleNode)))
+        self.individualsField.setValue(len(project.itemIRIs(Item.IndividualNode)))
         # self.inclusionsField.setValue(project.itemNum(Item.InclusionEdge))
         # self.membershipField.setValue(project.itemNum(Item.MembershipEdge))
 

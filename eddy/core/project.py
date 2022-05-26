@@ -318,9 +318,6 @@ class Project(IRIManager):
     def isDLCompliant(self) -> bool:
         return self.index.isDLCompliant()
 
-    def itemDistinctIRICount(self, item, diagram=None) -> int:
-        return self.index.itemDistinctIRICount(item, diagram)
-
     def itemIRIs(self,item, diagram=None) -> Set[IRI]:
         return self.index.itemIRIs(item, diagram)
 
@@ -860,35 +857,6 @@ class ProjectIRIIndex(ProjectIndex):
                         return True
         return False
 
-    def itemDistinctIRICount(self,item, diagram=None):
-        """
-        Returns the number of IRIs occurring as item in the given diagram.
-        If no diagram is supplied the lookup is performed across the whole Project Index.
-        :type diagram: Diagram
-        :item: Item
-        :rtype: int
-        """
-        try:
-            k_metatype = None
-            if item is Item.ConceptNode:
-                k_metatype = K_IRI_CLASS
-            elif item is Item.RoleNode:
-                k_metatype = K_IRI_OBJ_PROP
-            elif item is Item.AttributeNode:
-                k_metatype = K_IRI_DATA_PROP
-            elif item is Item.IndividualNode:
-                k_metatype = K_IRI_INDIVIDUAL
-            elif item is Item.ValueDomainNode:
-                k_metatype = K_IRI_DATATYPE
-            if not diagram:
-                result = 0
-                for diag, diagSet in self[k_metatype].items():
-                    result += len(diagSet)
-                return result
-            else:
-                return len(self[k_metatype][diagram.name])
-        except (KeyError, TypeError):
-            return 0
 
     def itemIRIs(self,item, diagram=None):
         """
