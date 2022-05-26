@@ -33,7 +33,7 @@
 ##########################################################################
 
 
-from eddy.core.datatypes.graphol import Item, Identity, Special
+from eddy.core.datatypes.graphol import Item, Identity, Special, Restriction
 from eddy.core.functions.graph import bfs
 from eddy.core.items.nodes.common.base import PredicateNodeMixin
 from eddy.core.owl import OWL2Datatype, OWL2Profiles
@@ -121,6 +121,10 @@ class EquivalenceBetweenConceptExpressionRule(ProfileEdgeRule):
                     if node.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                         if node.isRestrictionQualified():
                             raise ProfileError('Equivalence in presence of qualified {} is forbidden in OWL 2 QL'.format(node.shortName))
+                        elif node.restriction() is not Restriction.Exists:
+                            r = node.restriction()
+                            raise ProfileError('Equivalence with a {} {} is forbidden in OWL 2 QL'.format(r.shortName, node.shortName))
+
 
 
 class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
@@ -142,6 +146,15 @@ class InclusionBetweenConceptExpressionRule(ProfileEdgeRule):
                 if source.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
                     if source.isRestrictionQualified():
                         raise ProfileError('Inclusion with a qualified {} as source is forbidden in OWL 2 QL'.format(source.shortName))
+                    elif source.restriction() is not Restriction.Exists:
+                        r = source.restriction()
+                        raise ProfileError('Inclusion with a {} {} as source is forbidden in OWL 2 QL'.format(r.shortName, source.shortName))
+
+
+                if target.type() in {Item.DomainRestrictionNode, Item.RangeRestrictionNode}:
+                    if target.restriction() is not Restriction.Exists:
+                        r = target.restriction()
+                        raise ProfileError('Inclusion with a {} {} as target is forbidden in OWL 2 QL'.format(r.shortName, target.shortName))
 
 
 class InputConceptToRestrictionNodeRule(ProfileEdgeRule):
