@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QRadioButton, QButtonGroup, QAbstractButton
 
 from eddy.core.commands.project import CommandProjectAddOntologyImport
 from eddy.core.common import HasWidgetSystem, HasThreadingSystem
+from eddy.core.datatypes.system import File
 from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.owl2 import OwlOntologyImportWorker
@@ -420,7 +421,7 @@ class LocalFileWidget(QtWidgets.QWidget):
         dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        dialog.setNameFilter("OWL files (*.owl)")
+        dialog.setNameFilter(File.Owl.value)
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             path = first(dialog.selectedFiles())
             if path:
