@@ -160,6 +160,7 @@ from eddy.core.items.nodes.common.base import (
 )
 from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
+from eddy.core.loaders.annotations import CsvLoader, XlsxLoader
 from eddy.core.loaders.graphml import GraphMLOntologyLoader
 from eddy.core.loaders.graphol_iri import (
     GrapholIRIProjectLoader_v3,
@@ -1144,6 +1145,8 @@ class Session(
         """
         self.addOntologyLoader(GraphMLOntologyLoader)
         self.addOntologyLoader(GrapholOntologyIRILoader_v3)
+        self.addOntologyLoader(CsvLoader)
+        self.addOntologyLoader(XlsxLoader)
         self.addProjectLoader(GrapholIRIProjectLoader_v3)
 
     # noinspection PyArgumentList
@@ -2363,21 +2366,13 @@ class Session(
                 builder.open()
 
     @QtCore.pyqtSlot(IRI)
-    def doOpenAnnotationAssertionBuilder(self, iri: IRI, assertion: AnnotationAssertion = None,):
+    def doOpenAnnotationAssertionBuilder(self, iri: IRI = None, assertion: AnnotationAssertion = None,):
         """
         Executed when annotation assertion builder needs to be displayed.
         """
-        if iri:
-            builder = AnnotationAssertionBuilderDialog(iri, self, assertion)
-            builder.open()
-            return builder
-        else:
-            diagram = self.mdi.activeDiagram()
-            if diagram:
-                diagram.setMode(DiagramMode.Idle)
-                node = first(diagram.selectedNodes())
-                builder = AnnotationAssertionBuilderDialog(node.iri, self, assertion)
-                builder.open()
+        builder = AnnotationAssertionBuilderDialog(self, iri, assertion)
+        builder.open()
+        return builder
 
     @QtCore.pyqtSlot()
     def doOpenEdgePropsAnnotationBuilder(self) -> None:

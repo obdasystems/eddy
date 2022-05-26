@@ -45,6 +45,7 @@ from eddy.core.commands.iri import (
     CommandIRIModifyAnnotationAssertion,
 )
 from eddy.core.common import HasWidgetSystem
+from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.signals import connect
 from eddy.core.owl import (
     Annotation,
@@ -63,7 +64,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     emptyString = ''
 
-    def __init__(self,iri,session,assertion=None):
+    def __init__(self,session,iri=None,assertion=None):
         """
         Initialize the annotation assertion builder dialog (subject IRI = iri).
         :type iri: IRI
@@ -75,6 +76,34 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.project = session.project
         self.iri = iri
         self.assertion = assertion
+
+        comboBoxLabel = QtWidgets.QLabel(self, objectName='subject_combobox_label')
+        comboBoxLabel.setText('Subject')
+        self.addWidget(comboBoxLabel)
+        combobox = ComboBox(self, objectName='subject_switch')
+        combobox.setEditable(False)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setScrollEnabled(True)
+        if not self.iri:
+            combobox.addItem(self.emptyString)
+            classes = self.project.itemIRIs(Item.ConceptNode)
+            objProperties = self.project.itemIRIs(Item.RoleNode)
+            dataProperties = self.project.itemIRIs(Item.AttributeNode)
+            indiv = self.project.itemIRIs(Item.IndividualNode)
+            datatypes = self.project.itemIRIs(Item.ValueDomainNode)
+            items = list(set(classes) | set(objProperties) | set(dataProperties) | set(indiv) | set(
+                datatypes))
+            sortedItems = sorted(items, key=str)
+            combobox.addItems([str(x) for x in sortedItems])
+            combobox.setCurrentText(self.emptyString)
+        else:
+            items = [self.iri]
+            sortedItems = sorted(items, key=str)
+            combobox.addItems([str(x) for x in sortedItems])
+            combobox.setCurrentText(str(self.iri))
+
+        self.addWidget(combobox)
+        connect(combobox.currentIndexChanged, self.onSubjectSwitched)
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='property_combobox_label')
         comboBoxLabel.setText('Property')
@@ -147,13 +176,14 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
         confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
         confirmation.setContentsMargins(10, 0, 10, 10)
-        if not assertion:
+        if not assertion or not iri:
             confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
         self.addWidget(confirmation)
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
 
         formlayout = QtWidgets.QFormLayout(self)
+        formlayout.addRow(self.widget('subject_combobox_label'), self.widget('subject_switch'))
         formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
         formlayout.addRow(self.widget('value_textedit'))
         formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
@@ -211,10 +241,26 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 combobox.setCurrentText(self.emptyString)
 
     @QtCore.pyqtSlot(int)
+    def onSubjectSwitched(self, index):
+        subIRI = self.widget('subject_switch').itemText(index)
+        propIRI = self.widget('property_switch').currentText()
+        confirmation = self.widget('confirmation_widget')
+        if subIRI != self.emptyString and propIRI != self.emptyString:
+            confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(True)
+        else:
+            confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
+
+
+    @QtCore.pyqtSlot(int)
     def onPropertySwitched(self, index):
         propIRI = self.widget('property_switch').itemText(index)
+        subIRI = self.widget('subject_switch').currentText()
         confirmation = self.widget('confirmation_widget')
-        confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(bool(propIRI))
+        if subIRI != self.emptyString and propIRI != self.emptyString:
+            confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(True)
+        else:
+            confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
+
 
     @QtCore.pyqtSlot(int)
     def onTypeSwitched(self, index):
@@ -228,6 +274,9 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def accept(self):
+
+        subjectStr = self.widget('subject_switch').currentText()
+        subjectIRI = self.project.getIRI(subjectStr)
         propertyStr = self.widget('property_switch').currentText()
         propertyIRI = self.project.getIRI(propertyStr)
         value = self.widget('value_textedit').toPlainText()
@@ -243,8 +292,8 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             if language not in self.project.getLanguages():
                 self.project.addLanguageTag(language)
         if not self.assertion:
-            annAss = AnnotationAssertion(self.iri,propertyIRI,value,typeIRI,language)
-            command = CommandIRIAddAnnotationAssertion(self.project, self.iri, annAss)
+            annAss = AnnotationAssertion(subjectIRI,propertyIRI,value,typeIRI,language)
+            command = CommandIRIAddAnnotationAssertion(self.project, subjectIRI, annAss)
             self.session.undostack.push(command)
             self.sgnAnnotationAssertionAccepted.emit(annAss)
         else:
