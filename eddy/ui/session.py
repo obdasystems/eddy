@@ -283,6 +283,7 @@ class Session(
     sgnQuit = QtCore.pyqtSignal()
     sgnReady = QtCore.pyqtSignal()
     sgnSaveProject = QtCore.pyqtSignal()
+    sgnNoSaveProject = QtCore.pyqtSignal()
     sgnUpdateState = QtCore.pyqtSignal()
 
     sgnPrefixAdded = QtCore.pyqtSignal(str, str)
@@ -3420,6 +3421,8 @@ class Session(
             # SAVE THE CURRENT PROJECT IF NEEDED
             if save:
                 self.sgnSaveProject.emit()
+            else:
+                self.sgnNoSaveProject.emit()
             # DISPOSE ALL THE PLUGINS
             for plugin in self.plugins():
                 self.pmanager.dispose(plugin)
