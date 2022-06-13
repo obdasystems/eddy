@@ -128,6 +128,8 @@ def get_hidden_imports():
     # PLUGIN HIDDEN IMPORTS AND EXTRA MODULES TO BUNDLE
     imports.extend([
         'eddy.plugins',  # PLUGINS PACKAGE
+        'ast',  # Required by: ontology_importer
+        'sqlite3',  # Required by: ontology_importer
     ])
     return imports
 
