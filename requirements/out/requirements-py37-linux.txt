@@ -1,6 +1,6 @@
 altgraph==0.17.2
     # via pyinstaller
-appimage-builder==1.0.2 ; sys_platform == "linux"
+appimage-builder==1.0.3 ; sys_platform == "linux"
     # via -r requirements/in/packaging.in
 attrs==21.4.0
     # via pytest
@@ -52,6 +52,8 @@ jpype1==1.4.0
     # via -r requirements/in/base.in
 jsonpath-rw==1.4.0
     # via emrichen
+lief==0.12.1
+    # via appimage-builder
 mccabe==0.6.1
     # via flake8
 mypy==0.960
@@ -129,6 +131,8 @@ pytest-repeat==0.9.1
     # via -r requirements/in/tests.in
 pytest-xvfb==2.0.0 ; sys_platform != "win32"
     # via -r requirements/in/tests.in
+python-gnupg==0.4.9
+    # via appimage-builder
 pyvirtualdisplay==3.0
     # via pytest-xvfb
 pyyaml==6.0
@@ -179,7 +183,9 @@ typing-extensions==4.2.0
     #   jpype1
     #   mypy
 urllib3==1.26.9
-    # via requests
+    # via
+    #   appimage-builder
+    #   requests
 virtualenv==20.14.1
     # via tox
 wcwidth==0.2.5
