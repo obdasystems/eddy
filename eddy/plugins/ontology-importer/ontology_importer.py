@@ -1142,9 +1142,32 @@ class Importation():
             #print('Assiomi Inseriti')
             QtCore.QCoreApplication.processEvents()
 
-        # INSERT IMPORTATION IN DB #
-        try:
-            session = self.project.session
+        # CHECK if IMPORTATION IN Importation Table #
+        session = self.project.session
+        cursor.execute('''SELECT project_iri, project_version, ontology_iri, ontology_version, session_id
+                               FROM importation
+                               WHERE project_iri = ? and project_version = ? and ontology_iri = ? and ontology_version = ?''',
+                       (self.project_iri, self.project_version, ontology_iri, ontology_version))
+        already_importation = len(cursor.fetchall()) > 0
+
+        # IF IMPORTATION ALREADY IN DB -> MESSAGE ERROR + REMOVE NEW DIAGRAM FROM PROJECT #
+        if already_importation:
+            # MESSAGE ERROR #
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Ontology Already Imported')
+            msgbox.setText('This imported ontology is already associated with the current project')
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.exec_()
+            # REMOVE CURRENT DIAGRAM #
+            diagram = session.mdi.activeDiagram()
+            self.project.removeDiagram(diagram)
+            return
+
+        else:
+            # INSERT IMPORTATION IN DB #
             conn.execute("""
                             insert into importation (project_iri, project_version, ontology_iri, ontology_version, session_id)
                             values (?, ?, ?, ?, ?)
@@ -1153,24 +1176,7 @@ class Importation():
             conn.close()
             #print('Importazione Inserita')
 
-        # IF IMPORTATION ALREADY IN DB -> MESSAGE ERROR + REMOVE NEW DIAGRAM FROM PROJECT #
-        except Exception as e:
-            # MESSAGE ERROR #
-            msgbox = QtWidgets.QMessageBox()
-            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Ontology Already Imported')
-            msgbox.setText(str(e))
-            msgbox.setText('This imported ontology is already associated with this project')
-            msgbox.setTextFormat(QtCore.Qt.RichText)
-            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msgbox.exec_()
-            # REMOVE CURRENT DIAGRAM #
-            session = self.project.session
-            diagram = session.mdi.activeDiagram()
-            self.project.removeDiagram(diagram)
-            #sys.exit(1)
-            raise e
+
 
     def open(self):
 
