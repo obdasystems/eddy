@@ -43,7 +43,7 @@ AppDir:
   after_bundle: |
   runtime:
     # See: https://github.com/AppImageCrafters/AppRun/issues/44
-    version: "v1.2.5"
+    version: "v2.0.0"
     env:
       PATH: '${APPDIR}/usr/bin:${PATH}'
       PYTHONHOME: '${APPDIR}/usr'
