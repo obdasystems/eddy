@@ -718,255 +718,255 @@ class OntologyImporterPlugin(AbstractPlugin):
 
             self.filePath = dialog.selectedFiles()
 
-            ### CREATE NEW DIAGRAM ###
-            self.session.doNewDiagram()
-            diagram = self.session.mdi.activeDiagram()
-
             ### SET SPACE BETWEEN ITEMS ###
             space_form = SpaceForm(self.session)
             if space_form.exec_():
 
                 self.space = space_form.spaceField.value()
 
-            self.vm = getJavaVM()
-            if not self.vm.isRunning():
-                self.vm.initialize()
-            self.vm.attachThreadToJVM()
+                ### CREATE NEW DIAGRAM ###
+                self.session.doNewDiagram()
+                diagram = self.session.mdi.activeDiagram()
 
-            ### IMPORT OWL API ###
-            if True:
-                self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
-                self.JavaFileClass = self.vm.getJavaClass('java.io.File')
-                self.Type = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
-                self.Set = self.vm.getJavaClass('java.util.Set')
-                self.Searcher = self.vm.getJavaClass('org.semanticweb.owlapi.search.Searcher')
-                self.OWLObjectInverseOf = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectInverseOf")
-                self.OWLEquivalence = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom")
-                self.OWLSubObjectPropertyOf = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLSubObjectPropertyOfAxiom")
-                self.OWLSubDataPropertyOf = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLSubDataPropertyOfAxiom")
-                self.OWLEquivalentAxiom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom")
-                self.OWLDataSomeValuesFrom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLDataSomeValuesFrom")
-                self.OWLSubClassOfAxiom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLSubClassOfAxiom")
-                self.OWLObjectUnionOf = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectUnionOf")
-                self.OWLDisjointClassesAxiom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLDisjointClassesAxiom")
-                self.OWLObjectSomeValuesFrom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom")
-                self.OWLObjectPropertyDomainAxiom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom")
-                self.OWLObjectPropertyRangeAxiom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom")
-                self.OWLEquivalentObjectProperties = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom")
-                self.OWLObjectAllValuesFrom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectAllValuesFrom")
-                self.OWLRestriction = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLRestriction")
-                self.OWLObjectMaxCardinality = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectMaxCardinality")
-                self.OWLObjectMinCardinality = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectMinCardinality")
-                self.OWLObjectComplementOf = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLObjectComplementOf")
-                self.OWLDeclarationAxiom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLDeclarationAxiom")
-                self.EntityType = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.EntityType")
-                self.OWLAnnotationAssertionAxiom = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom")
-                self.AxiomType = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.model.AxiomType")
-                self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass(
-                    "org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl")
-                self.OWLSubAnnotationPropertyOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom')
+                self.vm = getJavaVM()
+                if not self.vm.isRunning():
+                    self.vm.initialize()
+                self.vm.attachThreadToJVM()
 
-            if diagram:
+                ### IMPORT OWL API ###
+                if True:
+                    self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+                    self.JavaFileClass = self.vm.getJavaClass('java.io.File')
+                    self.Type = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
+                    self.Set = self.vm.getJavaClass('java.util.Set')
+                    self.Searcher = self.vm.getJavaClass('org.semanticweb.owlapi.search.Searcher')
+                    self.OWLObjectInverseOf = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectInverseOf")
+                    self.OWLEquivalence = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom")
+                    self.OWLSubObjectPropertyOf = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLSubObjectPropertyOfAxiom")
+                    self.OWLSubDataPropertyOf = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLSubDataPropertyOfAxiom")
+                    self.OWLEquivalentAxiom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom")
+                    self.OWLDataSomeValuesFrom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLDataSomeValuesFrom")
+                    self.OWLSubClassOfAxiom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLSubClassOfAxiom")
+                    self.OWLObjectUnionOf = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectUnionOf")
+                    self.OWLDisjointClassesAxiom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLDisjointClassesAxiom")
+                    self.OWLObjectSomeValuesFrom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom")
+                    self.OWLObjectPropertyDomainAxiom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom")
+                    self.OWLObjectPropertyRangeAxiom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom")
+                    self.OWLEquivalentObjectProperties = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom")
+                    self.OWLObjectAllValuesFrom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectAllValuesFrom")
+                    self.OWLRestriction = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLRestriction")
+                    self.OWLObjectMaxCardinality = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectMaxCardinality")
+                    self.OWLObjectMinCardinality = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectMinCardinality")
+                    self.OWLObjectComplementOf = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLObjectComplementOf")
+                    self.OWLDeclarationAxiom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLDeclarationAxiom")
+                    self.EntityType = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.EntityType")
+                    self.OWLAnnotationAssertionAxiom = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom")
+                    self.AxiomType = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.model.AxiomType")
+                    self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass(
+                        "org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl")
+                    self.OWLSubAnnotationPropertyOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom')
 
-                ## show progress bar while drawing hierarchy ##
-                with BusyProgressDialog('Loading Ontology', 0.5):
+                if diagram:
 
-                    try:
+                    ## show progress bar while drawing hierarchy ##
+                    with BusyProgressDialog('Loading Ontology', 0.5):
 
-                        for x in dialog.selectedFiles():
+                        try:
 
-                            QtCore.QCoreApplication.processEvents()
+                            for x in dialog.selectedFiles():
 
-                            self.fileInstance = self.JavaFileClass(x)
-                            QtCore.QCoreApplication.processEvents()
-
-                            self.manager = self.OWLManager().createOWLOntologyManager()
-                            QtCore.QCoreApplication.processEvents()
-
-                            self.ontology = self.manager.loadOntologyFromOntologyDocument(
-                                self.fileInstance)
-
-                            self.ontology_iri = self.ontology.getOntologyID().getOntologyIRI().get().toString()
-                            try:
-                                self.ontology_version = self.ontology.getOntologyID().getVersionIRI().get().toString()
-                            except Exception:
-                                self.ontology_version = self.ontology.getOntologyID().getOntologyIRI().get().toString()
-
-
-                            QtCore.QCoreApplication.processEvents()
-
-                            db_filename = expandPath('@data/db.db')
-                            dir = db_filename[:-6]
-                            if not os.path.exists(dir):
-                                os.makedirs(dir)
-
-                            schema_script = '''
-                                            create table if not exists ontology (
-                                                iri     text,
-                                                version test,
-                                                PRIMARY KEY (iri, version)
-                                            );
-
-                                            create table if not exists project (
-                                                iri     text,
-                                                version test,
-                                                PRIMARY KEY (iri, version)
-                                            );
-
-                                            create table if not exists importation (
-                                                project_iri text,
-                                                project_version text,
-                                                ontology_iri text,
-                                                ontology_version    text,
-                                                session_id  text,
-                                                PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version),
-                                                FOREIGN KEY (project_iri, project_version) references project(iri, version),
-                                                FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
-                                            );
-
-                                            create table if not exists axiom (
-                                                axiom       text,
-                                                type_of_axiom   text,
-                                                ontology_iri    text,
-                                                ontology_version text,
-                                                iri_dict text,
-                                                PRIMARY KEY (axiom, ontology_iri, ontology_version),
-                                                FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
-                                            );
-
-                                            create table if not exists drawn (
-                                                project_iri text,
-                                                project_version text,
-                                                ontology_iri    text,
-                                                ontology_version text,
-                                                axiom text,
-                                                session_id  text,
-                                                PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom),
-                                                FOREIGN KEY (project_iri, project_version, ontology_iri, ontology_version, session_id) references importation(project_iri, project_version, ontology_iri, ontology_version, session_id) on delete cascade,
-                                                FOREIGN KEY (axiom, ontology_iri, ontology_version) references axiom(axiom, ontology_iri, ontology_version)
-                                            );'''
-
-                            db_is_new = not os.path.exists(db_filename)
-                            conn = sqlite3.connect(db_filename)
-                            cursor = conn.cursor()
-                            QtCore.QCoreApplication.processEvents()
-
-                            if db_is_new:
-                                #print('Creazione dello schema')
-                                conn.executescript(schema_script)
-                                conn.commit()
-
-
-                            QtCore.QCoreApplication.processEvents()
-
-                            #print('Nuova Importazione')
-                            self.project.version = self.project.version if len(
-                                self.project.version) > 0 else '1.0'
-
-                            importation = Importation(self.project)
-                            importation.insertInDB(self.ontology)
-
-                            QtCore.QCoreApplication.processEvents()
-
-                            self.df = self.OWLManager.getOWLDataFactory()
-
-                        QtCore.QCoreApplication.processEvents()
-
-                        ### GET ONTOLOGY AXIOMS ###
-                        self.axioms = self.ontology.getAxioms()
-                        QtCore.QCoreApplication.processEvents()
-
-                        ### BUILD TREE STRUCTURE FROM AXIOMS ###
-                        self.sorted_tree = self.getTree()
-                        QtCore.QCoreApplication.processEvents()
-
-                        y = -500.0
-                        x = 0.0
-                        drawn = []
-
-                        ### DRAW HIERARCHY ###
-                        for node in self.sorted_tree:
-                            self.draw(node, diagram, x, y, drawn)
-
-                        ## CENTER DIAGRAM ##
-                        self.session.doCenterDiagram()
-                        QtCore.QCoreApplication.processEvents()
-
-                        ### REMOVE DUPLICATE FROM IRI ###
-                        self.removeDuplicateFromIRI(diagram)
-                        QtCore.QCoreApplication.processEvents()
-
-                        ### IMPORT ANNOTATIONS ###
-                        self.importAnnotations(diagram)
-                        QtCore.QCoreApplication.processEvents()
-
-                        renderer = self.ManchesterOWLSyntaxOWLObjectRendererImpl()
-
-                        ### COUNT PROCESSED AXIOMS ###
-                        processed = []
-                        not_processed = []
-                        total = []
-
-                        for ax in self.axioms:
-
-                            total.append(ax)
-
-                            if isinstance(ax, self.OWLAnnotationAssertionAxiom) or (isinstance(ax,
-                                                                                               self.OWLSubClassOfAxiom) and not ax.getSuperClass().isAnonymous() and not ax.getSubClass().isAnonymous()) or (
-                                isinstance(ax, self.OWLDeclarationAxiom) and ax.getEntity().isType(
-                                self.EntityType.CLASS)) or (
-                                isinstance(ax, self.OWLDeclarationAxiom) and ax.getEntity().isType(
-                                self.EntityType.ANNOTATION_PROPERTY)) or (
-                            isinstance(ax, self.OWLSubAnnotationPropertyOfAxiom)):
-                                ### INSERT DRAWN AXIOMS IN Drawn Table ###
-                                # GET AXIOM IN Manchester Syntax #
-                                axiom = renderer.render(ax)
-                                # INSERT #
-                                conn.execute("""
-                                                            insert or ignore into drawn (project_iri, project_version, ontology_iri, ontology_version, axiom, session_id)
-                                                            values (?, ?, ?, ?, ?, ?)
-                                                            """, (
-                                str(self.project.ontologyIRI), self.project.version,
-                                self.ontology_iri, self.ontology_version, str(axiom),
-                                str(self.session)))
-                                conn.commit()
-                                processed.append(ax)
                                 QtCore.QCoreApplication.processEvents()
 
-                            else:
+                                self.fileInstance = self.JavaFileClass(x)
+                                QtCore.QCoreApplication.processEvents()
 
-                                not_processed.append(ax)
+                                self.manager = self.OWLManager().createOWLOntologyManager()
+                                QtCore.QCoreApplication.processEvents()
 
-                        # axs, not_dr, dr = importation.open()
-                        QtCore.QCoreApplication.processEvents()
+                                self.ontology = self.manager.loadOntologyFromOntologyDocument(
+                                    self.fileInstance)
 
-                        conn.commit()
-                        conn.close()
+                                self.ontology_iri = self.ontology.getOntologyID().getOntologyIRI().get().toString()
+                                try:
+                                    self.ontology_version = self.ontology.getOntologyID().getVersionIRI().get().toString()
+                                except Exception:
+                                    self.ontology_version = self.ontology.getOntologyID().getOntologyIRI().get().toString()
 
-                    except Exception as e:
-                        raise e
+
+                                QtCore.QCoreApplication.processEvents()
+
+                                db_filename = expandPath('@data/db.db')
+                                dir = db_filename[:-6]
+                                if not os.path.exists(dir):
+                                    os.makedirs(dir)
+
+                                schema_script = '''
+                                                create table if not exists ontology (
+                                                    iri     text,
+                                                    version test,
+                                                    PRIMARY KEY (iri, version)
+                                                );
+
+                                                create table if not exists project (
+                                                    iri     text,
+                                                    version test,
+                                                    PRIMARY KEY (iri, version)
+                                                );
+
+                                                create table if not exists importation (
+                                                    project_iri text,
+                                                    project_version text,
+                                                    ontology_iri text,
+                                                    ontology_version    text,
+                                                    session_id  text,
+                                                    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version),
+                                                    FOREIGN KEY (project_iri, project_version) references project(iri, version),
+                                                    FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
+                                                );
+
+                                                create table if not exists axiom (
+                                                    axiom       text,
+                                                    type_of_axiom   text,
+                                                    ontology_iri    text,
+                                                    ontology_version text,
+                                                    iri_dict text,
+                                                    PRIMARY KEY (axiom, ontology_iri, ontology_version),
+                                                    FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
+                                                );
+
+                                                create table if not exists drawn (
+                                                    project_iri text,
+                                                    project_version text,
+                                                    ontology_iri    text,
+                                                    ontology_version text,
+                                                    axiom text,
+                                                    session_id  text,
+                                                    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom),
+                                                    FOREIGN KEY (project_iri, project_version, ontology_iri, ontology_version, session_id) references importation(project_iri, project_version, ontology_iri, ontology_version, session_id) on delete cascade,
+                                                    FOREIGN KEY (axiom, ontology_iri, ontology_version) references axiom(axiom, ontology_iri, ontology_version)
+                                                );'''
+
+                                db_is_new = not os.path.exists(db_filename)
+                                conn = sqlite3.connect(db_filename)
+                                cursor = conn.cursor()
+                                QtCore.QCoreApplication.processEvents()
+
+                                if db_is_new:
+                                    #print('Creazione dello schema')
+                                    conn.executescript(schema_script)
+                                    conn.commit()
+
+
+                                QtCore.QCoreApplication.processEvents()
+
+                                #print('Nuova Importazione')
+                                self.project.version = self.project.version if len(
+                                    self.project.version) > 0 else '1.0'
+
+                                importation = Importation(self.project)
+                                importation.insertInDB(self.ontology)
+
+                                QtCore.QCoreApplication.processEvents()
+
+                                self.df = self.OWLManager.getOWLDataFactory()
+
+                            QtCore.QCoreApplication.processEvents()
+
+                            ### GET ONTOLOGY AXIOMS ###
+                            self.axioms = self.ontology.getAxioms()
+                            QtCore.QCoreApplication.processEvents()
+
+                            ### BUILD TREE STRUCTURE FROM AXIOMS ###
+                            self.sorted_tree = self.getTree()
+                            QtCore.QCoreApplication.processEvents()
+
+                            y = -500.0
+                            x = 0.0
+                            drawn = []
+
+                            ### DRAW HIERARCHY ###
+                            for node in self.sorted_tree:
+                                self.draw(node, diagram, x, y, drawn)
+
+                            ## CENTER DIAGRAM ##
+                            self.session.doCenterDiagram()
+                            QtCore.QCoreApplication.processEvents()
+
+                            ### REMOVE DUPLICATE FROM IRI ###
+                            self.removeDuplicateFromIRI(diagram)
+                            QtCore.QCoreApplication.processEvents()
+
+                            ### IMPORT ANNOTATIONS ###
+                            self.importAnnotations(diagram)
+                            QtCore.QCoreApplication.processEvents()
+
+                            renderer = self.ManchesterOWLSyntaxOWLObjectRendererImpl()
+
+                            ### COUNT PROCESSED AXIOMS ###
+                            processed = []
+                            not_processed = []
+                            total = []
+
+                            for ax in self.axioms:
+
+                                total.append(ax)
+
+                                if isinstance(ax, self.OWLAnnotationAssertionAxiom) or (isinstance(ax,
+                                                                                                   self.OWLSubClassOfAxiom) and not ax.getSuperClass().isAnonymous() and not ax.getSubClass().isAnonymous()) or (
+                                    isinstance(ax, self.OWLDeclarationAxiom) and ax.getEntity().isType(
+                                    self.EntityType.CLASS)) or (
+                                    isinstance(ax, self.OWLDeclarationAxiom) and ax.getEntity().isType(
+                                    self.EntityType.ANNOTATION_PROPERTY)) or (
+                                isinstance(ax, self.OWLSubAnnotationPropertyOfAxiom)):
+                                    ### INSERT DRAWN AXIOMS IN Drawn Table ###
+                                    # GET AXIOM IN Manchester Syntax #
+                                    axiom = renderer.render(ax)
+                                    # INSERT #
+                                    conn.execute("""
+                                                                insert or ignore into drawn (project_iri, project_version, ontology_iri, ontology_version, axiom, session_id)
+                                                                values (?, ?, ?, ?, ?, ?)
+                                                                """, (
+                                    str(self.project.ontologyIRI), self.project.version,
+                                    self.ontology_iri, self.ontology_version, str(axiom),
+                                    str(self.session)))
+                                    conn.commit()
+                                    processed.append(ax)
+                                    QtCore.QCoreApplication.processEvents()
+
+                                else:
+
+                                    not_processed.append(ax)
+
+                            # axs, not_dr, dr = importation.open()
+                            QtCore.QCoreApplication.processEvents()
+
+                            conn.commit()
+                            conn.close()
+
+                        except Exception as e:
+                            raise e
 
 
 
