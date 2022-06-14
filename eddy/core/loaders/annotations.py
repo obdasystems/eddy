@@ -61,12 +61,14 @@ class TemplateLoader(AbstractOntologyLoader):
             type = row[2]
             annotation = row[3]
             datatype = row[4]
-            lang = row[5] if row[5] != '' else 'eng'
+            lang = row[5] if row[5] != '' else 'en'
             value = row[6]
 
             resourceIRI = self.project.getIRI(resource)
             annotationIRI = self.project.getIRI(annotation)
-            datatypeIRI = self.project.getIRI(datatype)
+            datatypeIRI = None
+            if datatype:
+                datatypeIRI = self.project.getIRI(datatype)
 
             if value == '':
                 pass
