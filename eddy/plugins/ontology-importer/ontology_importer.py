@@ -976,9 +976,19 @@ class OntologyImporterPlugin(AbstractPlugin):
             # TRY TO OPEN IMPORTATIONS ASSOCIATED WITH THIS PROJECT #
             importation = Importation(self.project)
             axs, not_dr, dr = importation.open()
-            window = AxiomsWindow(not_dr, self.project)
-            if window.exec_():
-                print('ok')
+            if not_dr:
+                window = AxiomsWindow(not_dr, self.project)
+                if window.exec_():
+                    print('ok')
+            else:
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('No Ontology Imported')
+                msgbox.setText('There is no ontology imported in the current project')
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msgbox.exec_()
 
         except Exception as e:
 
@@ -987,8 +997,8 @@ class OntologyImporterPlugin(AbstractPlugin):
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('No Ontology Imported')
-            msgbox.setText(str(e))
-            #msgbox.setText('There is no imported ontology associated with this Project')
+            #msgbox.setText(str(e))
+            msgbox.setText('There is no ontology imported in the current project')
             msgbox.setTextFormat(QtCore.Qt.RichText)
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msgbox.exec_()
@@ -1034,6 +1044,9 @@ class Importation():
         self.project_version = self.project.version if len(self.project.version) > 0 else '1.0'
 
         self.db_filename = expandPath('@data/db.db')
+        dir = self.db_filename[:-6]
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 
         self.vm = getJavaVM()
         if not self.vm.isRunning():
@@ -1176,89 +1189,90 @@ class Importation():
             conn.close()
             #print('Importazione Inserita')
 
-
-
     def open(self):
 
-        # GET ALL AXIOMS OF IMPORTED ONTOLOGIES #
-        # (making distinction between drawn and not drawn)
-        conn = sqlite3.connect(self.db_filename)
+        db_exists = os.path.exists(self.db_filename)
+        if db_exists:
+            # GET ALL AXIOMS OF IMPORTED ONTOLOGIES #
+            # (making distinction between drawn and not drawn)
+            conn = sqlite3.connect(self.db_filename)
 
-        cursor = conn.cursor()
+            cursor = conn.cursor()
 
-        # get ontologies imported in the current project #
-        cursor.execute('''SELECT ontology_iri, ontology_version
-                        FROM importation
-                        WHERE project_iri = ? and project_version = ?
-                        ''', (self.project_iri, self.project_version))
+            # get ontologies imported in the current project #
+            cursor.execute('''SELECT ontology_iri, ontology_version
+                            FROM importation
+                            WHERE project_iri = ? and project_version = ?
+                            ''', (self.project_iri, self.project_version))
 
-        rows = cursor.fetchall()
-        imported_ontologies = []
-        for row in rows:
-            imported_ontologies.append((row[0], row[1]))
-
-        # dictionaries of axioms -> k: Ontology, value: Axioms
-        axioms = {}
-        not_drawn = {}
-        drawn = {}
-
-        # for each ontology : get ALL axioms, DRAWN axioms, NOT DRAWN axioms #
-        for ontology in imported_ontologies:
-
-            # ALL #
-            ontology_iri, ontology_version = ontology
-            cursor.execute('''SELECT axiom
-                            FROM axiom
-                            WHERE ontology_iri = ? and ontology_version = ?''', (ontology_iri, ontology_version))
             rows = cursor.fetchall()
-            axioms[ontology] = []
+            imported_ontologies = []
             for row in rows:
-                axioms[ontology].append(row[0])
-            #print('Assiomi Estratti')
+                imported_ontologies.append((row[0], row[1]))
 
-            # NOT DRAWN #
-            cursor.execute('''SELECT axiom, type_of_axiom
-                            FROM axiom
-                            WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom != 'Declaration'
-                            and type_of_axiom != 'FunctionalObjectProperty'
-                            and type_of_axiom != 'TransitiveObjectProperty'
-                            and type_of_axiom != 'SymmetricObjectProperty'
-                            and type_of_axiom != 'AsymmetricObjectProperty'
-                            and type_of_axiom != 'ReflexiveObjectProperty'
-                            and type_of_axiom != 'IrreflexiveObjectProperty'
-                            and type_of_axiom != 'InverseFunctionalObjectProperty'
-                            and type_of_axiom != 'FunctionalDataProperty'
-                            and (?, ?,  axiom) not in (SELECT project_iri, project_version, axiom
-                                                                                    FROM drawn)''', (ontology_iri, ontology_version, self.project_iri, self.project_version))
-            rows = cursor.fetchall()
-            not_drawn[ontology] = []
-            for row in rows:
-                not_drawn[ontology].append(row[0])
-                #print(row[0], row[1])
+            # dictionaries of axioms -> k: Ontology, value: Axioms
+            axioms = {}
+            not_drawn = {}
+            drawn = {}
 
-            # DRAWN #
-            drawn[ontology] = [a for a in axioms[ontology] if a not in not_drawn[ontology]]
+            # for each ontology : get ALL axioms, DRAWN axioms, NOT DRAWN axioms #
+            for ontology in imported_ontologies:
 
-        #print('Distinzione Disegnati e non')
-        return axioms, not_drawn, drawn
+                # ALL #
+                ontology_iri, ontology_version = ontology
+                cursor.execute('''SELECT axiom
+                                FROM axiom
+                                WHERE ontology_iri = ? and ontology_version = ?''', (ontology_iri, ontology_version))
+                rows = cursor.fetchall()
+                axioms[ontology] = []
+                for row in rows:
+                    axioms[ontology].append(row[0])
+                #print('Assiomi Estratti')
+
+                # NOT DRAWN #
+                cursor.execute('''SELECT axiom, type_of_axiom
+                                FROM axiom
+                                WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom != 'Declaration'
+                                and type_of_axiom != 'FunctionalObjectProperty'
+                                and type_of_axiom != 'TransitiveObjectProperty'
+                                and type_of_axiom != 'SymmetricObjectProperty'
+                                and type_of_axiom != 'AsymmetricObjectProperty'
+                                and type_of_axiom != 'ReflexiveObjectProperty'
+                                and type_of_axiom != 'IrreflexiveObjectProperty'
+                                and type_of_axiom != 'InverseFunctionalObjectProperty'
+                                and type_of_axiom != 'FunctionalDataProperty'
+                                and (?, ?,  axiom) not in (SELECT project_iri, project_version, axiom
+                                                                                        FROM drawn)''', (ontology_iri, ontology_version, self.project_iri, self.project_version))
+                rows = cursor.fetchall()
+                not_drawn[ontology] = []
+                for row in rows:
+                    not_drawn[ontology].append(row[0])
+                    #print(row[0], row[1])
+
+                # DRAWN #
+                drawn[ontology] = [a for a in axioms[ontology] if a not in not_drawn[ontology]]
+
+            #print('Distinzione Disegnati e non')
+            return axioms, not_drawn, drawn
 
     def removeFromDB(self):
 
-        db_filename = expandPath('@data/db.db')
+        db_exists = os.path.exists(self.db_filename)
+        if db_exists:
 
-        conn = sqlite3.connect(db_filename)
+            conn = sqlite3.connect(self.db_filename)
 
-        with conn:
-            ### REMOVE IMPORTATIONS NOT SAVED ###
-            conn.execute(
-                    'delete from importation where project_iri = ? and project_version = ? and session_id = ?',
-                    (self.project_iri, self.project_version, str(self.project.session)))
-            conn.commit()
-            ### REMOVE DRAWS NOT SAVED ###
-            conn.execute(
-                    'delete from drawn where project_iri = ? and project_version = ? and session_id = ?',
-                    (self.project_iri, self.project_version, str(self.project.session)))
-            conn.commit()
+            with conn:
+                ### REMOVE IMPORTATIONS NOT SAVED ###
+                conn.execute(
+                        'delete from importation where project_iri = ? and project_version = ? and session_id = ?',
+                        (self.project_iri, self.project_version, str(self.project.session)))
+                conn.commit()
+                ### REMOVE DRAWS NOT SAVED ###
+                conn.execute(
+                        'delete from drawn where project_iri = ? and project_version = ? and session_id = ?',
+                        (self.project_iri, self.project_version, str(self.project.session)))
+                conn.commit()
 
 class AxiomsWindow(QtWidgets.QDialog):
 
@@ -1305,7 +1319,11 @@ class AxiomsWindow(QtWidgets.QDialog):
                 'org.semanticweb.owlapi.model.OWLDatatype')
             self.DatatypeRestriction = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDatatypeRestriction")
             self.DataOneOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataOneOf")
+
         self.db_filename = expandPath('@data/db.db')
+        dir = self.db_filename[:-6]
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 
         self.project = project
         self.project_iri = str(project.ontologyIRI)
