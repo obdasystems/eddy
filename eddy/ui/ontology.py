@@ -1688,18 +1688,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 subjectIRI = str(assertion.subject)
                 iriItem = QtWidgets.QTableWidgetItem(subjectIRI)
                 iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(rowcount, 0, iriItem)
+                table.setItem(row, 0, iriItem)
 
                 simpleName = self.project.getIRI(subjectIRI).getSimpleName()
                 simpleNameItem = QtWidgets.QTableWidgetItem(str(simpleName))
                 simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(rowcount, 1, simpleNameItem)
+                table.setItem(row, 1, simpleNameItem)
 
                 for node in self.project.iriOccurrences():
                     if node.iri is self.project.getIRI(subjectIRI):
                         typeItem = QtWidgets.QTableWidgetItem(Types.get(node.type()))
                         typeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(rowcount, 2, typeItem)
+                table.setItem(row, 2, typeItem)
 
                 newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
                 newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
@@ -1709,12 +1709,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 datatype = assertion.datatype or ''
                 datatypeItem = QtWidgets.QTableWidgetItem(str(datatype))
                 datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(rowcount, 4, QtWidgets.QTableWidgetItem(datatypeItem))
+                table.setItem(row, 4, QtWidgets.QTableWidgetItem(datatypeItem))
 
                 language = assertion.language or ''
                 langItem = QtWidgets.QTableWidgetItem(str(language))
                 langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(rowcount, 5, QtWidgets.QTableWidgetItem(langItem))
+                table.setItem(row, 5, QtWidgets.QTableWidgetItem(langItem))
 
                 valueItem = QtWidgets.QTableWidgetItem(str(assertion.value))
                 valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
