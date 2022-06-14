@@ -818,7 +818,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 QtCore.QCoreApplication.processEvents()
 
                                 db_filename = expandPath('@data/db.db')
-                                dir = db_filename[:-6]
+                                dir = os.path.dirname(db_filename)
                                 if not os.path.exists(dir):
                                     os.makedirs(dir)
 
@@ -978,8 +978,7 @@ class OntologyImporterPlugin(AbstractPlugin):
             axs, not_dr, dr = importation.open()
             if not_dr:
                 window = AxiomsWindow(not_dr, self.project)
-                if window.exec_():
-                    print('ok')
+                window.exec_()
             else:
                 msgbox = QtWidgets.QMessageBox()
                 msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -997,7 +996,6 @@ class OntologyImporterPlugin(AbstractPlugin):
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('No Ontology Imported')
-            #msgbox.setText(str(e))
             msgbox.setText('There is no ontology imported in the current project')
             msgbox.setTextFormat(QtCore.Qt.RichText)
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -1044,7 +1042,7 @@ class Importation():
         self.project_version = self.project.version if len(self.project.version) > 0 else '1.0'
 
         self.db_filename = expandPath('@data/db.db')
-        dir = self.db_filename[:-6]
+        dir = os.path.dirname(self.db_filename)
         if not os.path.exists(dir):
             os.makedirs(dir)
 
@@ -1321,7 +1319,7 @@ class AxiomsWindow(QtWidgets.QDialog):
             self.DataOneOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataOneOf")
 
         self.db_filename = expandPath('@data/db.db')
-        dir = self.db_filename[:-6]
+        dir = os.path.dirname(self.db_filename)
         if not os.path.exists(dir):
             os.makedirs(dir)
 
