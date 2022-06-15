@@ -48,7 +48,7 @@ from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.iri import CommandChangeIRIOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.commands.nodes import CommandNodeAdd
-from eddy.core.commands.project import CommandProjectAddAnnotationProperty
+from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
@@ -705,6 +705,22 @@ class OntologyImporterPlugin(AbstractPlugin):
                 self.session.undostack.push(
                     CommandChangeIRIOfNode(self.project, el, new_iri, old_iri))
 
+    def importPrefixes(self):
+
+        format = self.manager.getOntologyFormat(self.ontology)
+        prefixesMap = format.getPrefixName2PrefixMap()
+
+        currentPrefixes = self.project.getManagedPrefixes()
+
+        for k in prefixesMap.keys():
+
+            prefix = k[:-1]
+            namespace = prefixesMap[k]
+
+            if prefix not in currentPrefixes and self.project.isValidPrefixEntry(prefix, namespace):
+                command = CommandProjectAddPrefix(self.project, prefix, namespace)
+                self.session.undostack.push(command)
+
     def onToolbarButtonClick(self):
 
         ### IMPORT FILE OWL ###
@@ -814,7 +830,6 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 except Exception:
                                     self.ontology_version = self.ontology.getOntologyID().getOntologyIRI().get().toString()
 
-
                                 QtCore.QCoreApplication.processEvents()
 
                                 db_filename = expandPath('@data/db.db')
@@ -920,6 +935,10 @@ class OntologyImporterPlugin(AbstractPlugin):
 
                             ### IMPORT ANNOTATIONS ###
                             self.importAnnotations(diagram)
+                            QtCore.QCoreApplication.processEvents()
+
+                            ### IMPORT PREFIXES ###
+                            self.importPrefixes()
                             QtCore.QCoreApplication.processEvents()
 
                             renderer = self.ManchesterOWLSyntaxOWLObjectRendererImpl()
