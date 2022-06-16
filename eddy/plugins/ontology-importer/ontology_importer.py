@@ -584,39 +584,42 @@ class OntologyImporterPlugin(AbstractPlugin):
 
             # GET IRI
             iri = ann.getSubject()
+            subjectIRI = self.project.getIRI(str(iri))
             # GET PROPERTY
             property = ann.getProperty()
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
 
+            annotation = str(property)
+            annotation = annotation.replace('<', '')
+            annotation = annotation.replace('>', '')
+
+            annotationIRI = self.project.getIRI(annotation)
+
             try:
-                annIRI = str(property)
-                annIRI = annIRI.replace('<', '')
-                annIRI = annIRI.replace('>', '')
-                listProperties = [str(el) for el in list(self.project.annotationProperties)]
 
-                if annIRI not in listProperties:
-                    self.project.isValidIdentifier(annIRI)
+                if annotationIRI not in self.project.getAnnotationPropertyIRIs():
 
-                    command = CommandProjectAddAnnotationProperty(self.project, annIRI)
+                    self.project.isValidIdentifier(annotation)
+
+                    command = CommandProjectAddAnnotationProperty(self.project, annotation)
                     self.session.undostack.beginMacro(
-                        'Add annotation property {0} '.format(annIRI))
+                        'Add annotation property {0} '.format(annotation))
                     if command:
                         self.session.undostack.push(command)
                     self.session.undostack.endMacro()
 
-
             except IllegalNamespaceError as e:
                 # noinspection PyArgumentList
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Entity Definition Error')
-                msgbox.setText('The string "{}" is not a legal IRI'.format(annIRI)+'\n'+str(e))
-                # msgbox.setText('There is no imported ontology associated with this Project')
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msgbox.exec_()
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Entity Definition Error',
+                    'Illegal namespace defined.',
+                    informativeText='The string "{}" is not a legal IRI'.format(annotation),
+                    detailedText=str(e),
+                    parent=self,
+                )
+                msgBox.exec_()
 
 
             # IF LANGUAGE, GET LANGUAGE
@@ -624,21 +627,27 @@ class OntologyImporterPlugin(AbstractPlugin):
             lang = None
             if lang_srt > 0:
                 lang = value[lang_srt + 2:]
-                value = value[0: lang_srt]
+                value = value[0: lang_srt+1]
+
+            value = value.strip('"')
 
             # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-            annotation = AnnotationAssertion(iri, annIRI, value, language=lang)
+            annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value, language=lang)
 
 
             # FOR EACH NODE WITH NODE.IRI == IRI
-            for el in diagram.items():
+            processed = set()
+            for el in self.project.iriOccurrences():
 
-                if el.isNode() and el.type() == Item.ConceptNode and str(iri) == str(el.iri):
-                    ## ADD ANNOTATION ##
-                    #el.iri.addAnnotationAssertion(annotation)
-                    self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, el.iri, annotation))
+                if el.iri not in processed:
 
+                    if el.isNode() and el.type() == Item.ConceptNode and el.iri is annotationAss.subject:
+                        ## ADD ANNOTATION ##
+                        self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, el.iri, annotationAss))
 
+                        processed.add(el.iri)
+
+        # ONTOLOGY ANNOTATIONS #
         ontoAnno = self.ontology.getAnnotations()
         for ann in ontoAnno:
             QtCore.QCoreApplication.processEvents()
@@ -650,45 +659,50 @@ class OntologyImporterPlugin(AbstractPlugin):
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
 
+            annotation = str(property)
+            annotation = annotation.replace('<', '')
+            annotation = annotation.replace('>', '')
+
+            annotationIRI = self.project.getIRI(annotation)
+
             try:
-                annIRI = str(property)
-                annIRI = annIRI.replace('<', '')
-                annIRI = annIRI.replace('>', '')
-                listProperties = [str(el) for el in list(self.project.annotationProperties)]
 
-                if annIRI not in listProperties:
-                    self.project.isValidIdentifier(annIRI)
+                if annotationIRI not in self.project.getAnnotationPropertyIRIs():
 
-                    command = CommandProjectAddAnnotationProperty(self.project, annIRI)
+                    self.project.isValidIdentifier(annotation)
+
+                    command = CommandProjectAddAnnotationProperty(self.project, annotation)
                     self.session.undostack.beginMacro(
-                            'Add annotation property {0} '.format(annIRI))
+                        'Add annotation property {0} '.format(annotation))
                     if command:
                         self.session.undostack.push(command)
                     self.session.undostack.endMacro()
 
-
             except IllegalNamespaceError as e:
                 # noinspection PyArgumentList
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Entity Definition Error')
-                msgbox.setText(
-                        'The string "{}" is not a legal IRI'.format(annIRI) + '\n' + str(e))
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msgbox.exec_()
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Entity Definition Error',
+                    'Illegal namespace defined.',
+                    informativeText='The string "{}" is not a legal IRI'.format(annotation),
+                    detailedText=str(e),
+                    parent=self,
+                )
+                msgBox.exec_()
+
             # IF LANGUAGE, GET LANGUAGE
             lang_srt = value.find('"@')
             lang = None
             if lang_srt > 0:
                 lang = value[lang_srt + 2:]
-                value = value[0: lang_srt]
+                value = value[0: lang_srt+1]
+
+            value = value.strip('"')
 
             # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-            annotation = AnnotationAssertion(iri, annIRI, value, language=lang)
+            annotationAss = AnnotationAssertion(iri, annotationIRI, value, language=lang)
 
-            self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, self.project.ontologyIRI, annotation))
+            self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, self.project.ontologyIRI, annotationAss))
 
     def removeDuplicateFromIRI(self, diagram):
 
