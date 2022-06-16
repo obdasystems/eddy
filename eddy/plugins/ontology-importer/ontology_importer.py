@@ -1050,8 +1050,11 @@ class OntologyImporterPlugin(AbstractPlugin):
         """
 
         # INITIALIZE THE WIDGETS
-        self.myButton = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/24/ic_system_update'))
-        self.myButton2 = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'))
+        self.myButton = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/24/ic_system_update'), statusTip='Import OWL file')
+        self.myButton2 = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'), statusTip='Select axioms from imported ontologies')
+        # tooltip
+        self.myButton.setToolTip('Import OWL file')
+        self.myButton2.setToolTip('Select axioms from imported ontologies')
 
         # CREATE VIEW TOOLBAR BUTTONS
         self.session.widget('view_toolbar').addSeparator()
