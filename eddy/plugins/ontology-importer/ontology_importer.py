@@ -586,7 +586,7 @@ class OntologyImporterPlugin(AbstractPlugin):
             iri = ann.getSubject()
             subjectIRI = self.project.getIRI(str(iri))
             # GET PROPERTY
-            property = ann.getProperty()
+            property = ann.getProperty().getIRI()
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
 
@@ -655,7 +655,7 @@ class OntologyImporterPlugin(AbstractPlugin):
             # GET IRI
             iri = IRI(str(self.ontology_iri))
             # GET PROPERTY
-            property = ann.getProperty()
+            property = ann.getProperty().getIRI()
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
 
@@ -915,7 +915,9 @@ class OntologyImporterPlugin(AbstractPlugin):
                                     self.project.version) > 0 else '1.0'
 
                                 importation = Importation(self.project)
-                                importation.insertInDB(self.ontology)
+                                already = importation.insertInDB(self.ontology)
+                                if already:
+                                    return
 
                                 QtCore.QCoreApplication.processEvents()
 
@@ -947,12 +949,12 @@ class OntologyImporterPlugin(AbstractPlugin):
                             self.removeDuplicateFromIRI(diagram)
                             QtCore.QCoreApplication.processEvents()
 
-                            ### IMPORT ANNOTATIONS ###
-                            self.importAnnotations(diagram)
-                            QtCore.QCoreApplication.processEvents()
-
                             ### IMPORT PREFIXES ###
                             self.importPrefixes()
+                            QtCore.QCoreApplication.processEvents()
+
+                            ### IMPORT ANNOTATIONS ###
+                            self.importAnnotations(diagram)
                             QtCore.QCoreApplication.processEvents()
 
                             renderer = self.ManchesterOWLSyntaxOWLObjectRendererImpl()
@@ -1211,7 +1213,7 @@ class Importation():
             # REMOVE CURRENT DIAGRAM #
             diagram = session.mdi.activeDiagram()
             self.project.removeDiagram(diagram)
-            return
+            return True
 
         else:
             # INSERT IMPORTATION IN DB #
@@ -1221,6 +1223,7 @@ class Importation():
                             """, (self.project_iri, self.project_version, ontology_iri, ontology_version, str(session)))
             conn.commit()
             conn.close()
+            return False
             #print('Importazione Inserita')
 
     def open(self):
