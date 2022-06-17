@@ -106,9 +106,10 @@ class TemplateLoader(AbstractOntologyLoader):
                     assertionSub = annotationAss.subject
                     assertionProp = annotationAss.assertionProperty
                     assertionLang = annotationAss.language
-                    for diagram in self.project.diagrams():
+                    processed = set()
+                    for item in self.project.iriOccurrences():
                         # LOOK FOR RESOURCE
-                        for item in diagram.items():
+                        if item.iri not in processed:
                             if item.isNode() and item.type() == types[type] and item.iri is assertionSub:
                                 existing = []
                                 # LOOK FOR ANNOTATION PROPERTY
@@ -131,15 +132,19 @@ class TemplateLoader(AbstractOntologyLoader):
                                 self.session.undostack.push(
                                     CommandIRIAddAnnotationAssertion(self.project,
                                                 item.iri, annotationAss))
+                                processed.add(item.iri)
+
                 else:
 
-                    for diagram in self.project.diagrams():
-                        # LOOK FOR RESOURCE
-                        for item in diagram.items():
+                    processed = set()
+                    for item in self.project.iriOccurrences():
+
+                        if item.iri not in processed:
+
                             if item.isNode() and item.type() == types[type] and item.iri is annotationAss.subject:
                                 # ADD ANNOTATION ASSERTION
-                                self.session.undostack.push(
-                                    CommandIRIAddAnnotationAssertion(self.project, item.iri, annotationAss))
+                                self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, item.iri, annotationAss))
+                                processed.add(item.iri)
 
 
 class CsvLoader(TemplateLoader):
