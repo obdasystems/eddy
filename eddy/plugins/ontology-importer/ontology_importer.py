@@ -1138,7 +1138,7 @@ class Importation():
             for ax in axioms:
                 # get axiom type #
                 ax_type = ax.getAxiomType()
-
+                print(ax_type)
                 # get all IRIs in axiom #
                 classes = ax.getClassesInSignature()
                 dataProperties = ax.getDataPropertiesInSignature()
@@ -1174,8 +1174,22 @@ class Importation():
                     entity = df.getOWLEntity(type, iri)
                     shortName = sfp.getShortForm(entity)
                     d[shortName] = str(iri)
+
+                if str(ax_type) == 'AnnotationAssertion':
+                    d = {}
+                    iri = ax.getSubject()
+                    d['subject'] = str(iri)
+
+                    prop = ax.getProperty().getIRI()
+                    d['property'] = str(prop)
+
+                    value = ax.getValue()
+                    d['value'] = str(value)
+
+
                 iri_dict = str(d)
                 #print(iri_dict)
+
 
                 # getting the axiom in Manchester Syntax #
                 axiom = renderer.render(ax)
@@ -5435,7 +5449,8 @@ class AxiomsWindow(QtWidgets.QDialog):
             indiv.setPos(x, y)
 
             self.session.undostack.push(CommandNodeAdd(diagram, indiv))
-
+            # ANNOTATIONS #
+            self.addAnnotationAssertions(iri)
             return indiv
 
         if ex.isType(self.EntityType.DATA_PROPERTY):
@@ -5489,6 +5504,9 @@ class AxiomsWindow(QtWidgets.QDialog):
             if str(iri) in functional_dataProp:
 
                 dataProp.setFunctional(True)
+
+            # ANNOTATIONS #
+            self.addAnnotationAssertions(iri)
 
             return dataProp
 
@@ -5630,6 +5648,7 @@ class AxiomsWindow(QtWidgets.QDialog):
                         d = ast.literal_eval(iri_dict)
                         irreflexive_objProp.extend(d.values())
 
+
             if str(iri) in functional_objProp:
                 objectProp.setFunctional(True)
             if str(iri) in inverseFunc_objProp:
@@ -5644,6 +5663,9 @@ class AxiomsWindow(QtWidgets.QDialog):
                 objectProp.setReflexive(True)
             if str(iri) in irreflexive_objProp:
                 objectProp.setIrreflexive(True)
+
+            # ANNOTATIONS #
+            self.addAnnotationAssertions(iri)
 
             return objectProp
 
@@ -5688,6 +5710,106 @@ class AxiomsWindow(QtWidgets.QDialog):
         else:
 
             return False
+
+    def addAnnotationAssertions(self, iri):
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_filename)
+        except Exception as e:
+            print(e)
+
+        cursor = conn.cursor()
+        # GET ALL THE ONTOLOGIES IMPORTED IN THE PROJECT #
+        cursor.execute('''SELECT ontology_iri, ontology_version
+                                                        FROM importation
+                                                        WHERE project_iri = ? and project_version = ?
+                                                        ''',
+                       (self.project_iri, self.project_version))
+
+        project_ontologies = []
+        rows = cursor.fetchall()
+        for row in rows:
+            project_ontologies.append((row[0], row[1]))
+
+        with conn:
+            for ontology in project_ontologies:
+                # for each imported ontology:
+                ontology_iri, ontology_version = ontology
+                cursor = conn.cursor()
+                # get all annotationAssertion axioms #
+                cursor.execute('''select iri_dict
+                                    from axiom
+                                    where ontology_iri = ? and ontology_version = ? and type_of_axiom = 'AnnotationAssertion'
+                                    ''', (ontology_iri, ontology_version))
+
+                rows = cursor.fetchall()
+                annotations = []
+                for row in rows:
+                    # for each annAss axiom, get iri_dict #
+                    iri_dict = row[0]
+                    d = ast.literal_eval(iri_dict)
+                    # if current iri == subject -> keep annAss axiom #
+                    if str(iri) == d['subject']:
+                        annotations.append(d)
+
+                for annAss in annotations:
+
+                    sub = annAss['subject']
+                    subjectIRI = self.project.getIRI(sub)
+                    # GET PROPERTY
+                    property = annAss['property']
+                    # GET VALUE
+                    value = annAss['value']
+
+                    annotation = str(property)
+                    annotation = annotation.replace('<', '')
+                    annotation = annotation.replace('>', '')
+
+                    annotationIRI = self.project.getIRI(annotation)
+
+                    try:
+
+                        if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+
+                            self.project.isValidIdentifier(annotation)
+
+                            command = CommandProjectAddAnnotationProperty(self.project,
+                                                                          annotation)
+                            self.session.undostack.beginMacro(
+                                'Add annotation property {0} '.format(annotation))
+                            if command:
+                                self.session.undostack.push(command)
+                            self.session.undostack.endMacro()
+
+                    except IllegalNamespaceError as e:
+                        # noinspection PyArgumentList
+                        msgBox = QtWidgets.QMessageBox(
+                            QtWidgets.QMessageBox.Warning,
+                            'Entity Definition Error',
+                            'Illegal namespace defined.',
+                            informativeText='The string "{}" is not a legal IRI'.format(
+                                annotation),
+                            detailedText=str(e),
+                            parent=self,
+                        )
+                        msgBox.exec_()
+
+                    # IF LANGUAGE, GET LANGUAGE
+                    lang_srt = value.find('"@')
+                    lang = None
+                    if lang_srt > 0:
+                        lang = value[lang_srt + 2:]
+                        value = value[0: lang_srt + 1]
+
+                    value = value.strip('"')
+
+                    # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+                    annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value,
+                                                        language=lang)
+
+                    self.session.undostack.push(
+                        CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
+
 
 # WIDGET FORM to set Space between Items #
 class AbstractItemSpaceForm(QtWidgets.QDialog):
