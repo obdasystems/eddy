@@ -581,12 +581,39 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         annotations = self.getAnnotations()
         # FOR EACH ANNOTATION
+        invalid_namespaces = []
         for ann in annotations:
             QtCore.QCoreApplication.processEvents()
 
             # GET IRI
             iri = ann.getSubject()
-            subjectIRI = self.project.getIRI(str(iri))
+            try:
+                subjectIRI = self.project.getIRI(str(iri))
+            except Exception:
+                invalid_namespaces.append(str(iri))
+
+        if len(invalid_namespaces) > 0:
+
+            invalid = ', '.join(invalid_namespaces)
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Illegal namespace defined.')
+            msgbox.setText('The current IRIs involved in the imported annotation assertions have an invalid namespace: '+ invalid+'. The associated annotation assertions will be ignored in the importation process.')
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.exec_()
+
+
+        for ann in annotations:
+            QtCore.QCoreApplication.processEvents()
+
+            # GET IRI
+            iri = ann.getSubject()
+            if str(iri) in invalid_namespaces:
+                continue
+            else:
+                subjectIRI = self.project.getIRI(str(iri))
             # GET PROPERTY
             property = ann.getProperty().getIRI()
             # GET VALUE
