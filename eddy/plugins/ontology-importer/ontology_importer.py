@@ -40,8 +40,9 @@ import sqlite3
 from PyQt5 import (
     QtCore,
     QtGui,
-    QtWidgets,
+    QtWidgets
 )
+from PyQt5.QtCore import Qt
 
 from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.edges import CommandEdgeAdd
@@ -49,6 +50,7 @@ from eddy.core.commands.iri import CommandChangeIRIOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
+from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
@@ -1027,6 +1029,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         except Exception as e:
 
             # IF NO IMPORTATIONS ASSOCIATED WITH THIS PROJECT -> WARNING #
+            print(e)
             msgbox = QtWidgets.QMessageBox()
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -1325,7 +1328,7 @@ class Importation():
                         (self.project_iri, self.project_version, str(self.project.session)))
                 conn.commit()
 
-class AxiomsWindow(QtWidgets.QDialog):
+class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def __init__(self, not_drawn, project):
 
@@ -1382,83 +1385,114 @@ class AxiomsWindow(QtWidgets.QDialog):
         self.session = project.session
 
         self.checkedAxioms = []
+        self.hiddenRows = []
+        self.ontologies = []
 
         ## create layout ##
         # Create an outer layout
-        layout1 = QtWidgets.QVBoxLayout()
+        self.table = QtWidgets.QTableWidget(0, 1, self, objectName='axioms_table_widget')
+        self.addWidget(self.table)
 
-        # create scroll_area
-        scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
-        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        scroll_area.setWidgetResizable(True)
-
-        scroll_area.setLayout(layout1)
-
-        innerWidget = QtWidgets.QWidget()
-        # Create a layout for the checkboxes
-        layout2 = QtWidgets.QVBoxLayout()
 
         # add OK and Cancel buttons
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        selectBtn = QtWidgets.QPushButton('Select All',
+                                          objectName='axioms_selectall_button')
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='button_box')
+        self.confirmationBox.addButton(selectBtn, QtWidgets.QDialogButtonBox.ActionRole)
+        connect(selectBtn.clicked, self.selectAllAxioms)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         # add Searchbar
-        self.searchbar = QtWidgets.QLineEdit()
+        self.searchbar = QtWidgets.QLineEdit(objectName='axioms_searchbar')
+        self.searchbar.setPlaceholderText("Search...")
         self.searchbar.textChanged.connect(self.update_display)
-        layout2.addWidget(self.searchbar)
+        self.addWidget(self.searchbar)
 
         # Add some checkboxes to the layout
         self.checkBoxes = []
 
+        axioms = sum(len(not_drawn[k]) for k in not_drawn.keys())
+        self.table.setRowCount(len(not_drawn.keys())+axioms)
         # add checkboxes with axioms
         # grouped by ontology
+        rowcount = 0
         for k in not_drawn.keys():
 
             onto = k[1]+':'
-            a = QtWidgets.QLabel(onto)
+            self.ontologies.append(onto)
+            a = QtWidgets.QTableWidgetItem(str(onto))
             a.setFont(QtGui.QFont('AnyStyle', 8, QtGui.QFont.DemiBold))
-            layout1.addWidget(a)
+            a.setFlags(Qt.ItemFlag.ItemIsEnabled)
+            self.table.setItem(rowcount, 0 , a)
+            rowcount = rowcount +1
             for ax in not_drawn[k]:
 
-                check = QtWidgets.QCheckBox(str(ax))
-                check.setChecked(False)
-                check.stateChanged.connect(self.checkAxiom)
-                layout1.addWidget(check)
-                self.checkBoxes.append(check)
+                check = QtWidgets.QTableWidgetItem(str(ax))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(Qt.CheckState.Unchecked)
 
-        # Nest the inner layouts into the outer layout
-        layout2.addWidget(scroll_area)
-        innerWidget.setLayout(layout1)
-        scroll_area.setWidget(innerWidget)
+                #check.stateChanged.connect(self.checkAxiom)
+                self.table.setItem(rowcount, 0, check)
+                self.checkBoxes.append(check)
+                rowcount = rowcount +1
+
+        self.table.verticalHeader().setVisible(False)
+        self.table.horizontalHeader().setVisible(False)
+        self.table.resizeColumnsToContents()
+        self.table.cellChanged.connect(self.checkAxiom)
+
 
         connect(self.confirmationBox.rejected, self.reject)
         connect(self.confirmationBox.accepted, self.accept)
 
-        layout2.addWidget(self.confirmationBox)
+        self.addWidget(self.confirmationBox)
 
-        # Set the window's main layout
-        self.setLayout(layout2)
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('axioms_searchbar'))
+        formlayout.addRow(self.widget('axioms_table_widget'))
+        formlayout.addRow(self.confirmationBox)
+        groupbox = QtWidgets.QGroupBox('Choose Axioms:', self,
+                                       objectName='axioms_widget')
+        groupbox.setLayout(formlayout)
+        groupbox.setMinimumSize(450, 400)
+        self.addWidget(groupbox)
+
+        # ANNOTATION ASSERTIONS TAB LAYOUT CONFIGURATION
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('axioms_widget'), 0, QtCore.Qt.AlignTop)
+
+        self.setLayout(layout)
+
 
     def update_display(self, text):
 
         # searchbar function #
-        for check in self.checkBoxes:
+        rowcount = self.table.rowCount()
+        for row in range(rowcount):
 
-            if text.lower() in check.text().lower():
+            self.table.showRow(row)
 
-                check.show()
+        self.hiddenRows = []
 
+        for row in range(rowcount):
+
+            item = self.table.item(row, 0).text()
+            if text.lower() in item.lower() or item in self.ontologies:
+                pass
             else:
+                self.table.hideRow(row)
+                self.hiddenRows.append(row)
 
-                check.hide()
+    def checkAxiom(self, row, column):
 
-    def checkAxiom(self, state):
+        axiom = self.table.item(row, column).text()
+        state = self.table.item(row, column).checkState()
 
-        axiom = self.sender().text()
-
-        if state:
+        if state == QtCore.Qt.Checked:
 
             # ON SELECTION OF AN AXIOM -> ADD TO CHECKEDAXIOMS and enable OK #
             self.checkedAxioms.append(axiom)
@@ -1466,9 +1500,27 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         else:
             # ON de-SELECTION OF AN AXIOM -> REMOVE FROM CHECKEDAXIOMS and if empty: disable OK #
-            self.checkedAxioms.remove(axiom)
+            if axiom in self.checkedAxioms:
+                self.checkedAxioms.remove(axiom)
             if len(self.checkedAxioms) == 0:
                 self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+
+    def selectAllAxioms(self):
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.table.clearSelection()
+
+        rowCount = self.table.rowCount()
+
+        for row in range(rowCount):
+            item = self.table.item(row, 0)
+            if item.text() not in self.ontologies:
+
+                #item.setCheckState(QtCore.Qt.Unchecked)
+                if row not in self.hiddenRows:
+                    item.setCheckState(QtCore.Qt.Checked)
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
     def reject(self):
 
@@ -5809,6 +5861,7 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     self.session.undostack.push(
                         CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
+
 
 
 # WIDGET FORM to set Space between Items #
