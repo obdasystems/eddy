@@ -2119,6 +2119,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         involvedDiagrams = {}
         # get all diagrams of the current project #
         project_diagrams = self.project.diagrams()
+        print(project_diagrams)
 
         # CHECK WHICH DIAGRAMS CONTAIN ONE OF THE ELEMENTS INVOLVED #
         for k in elements.keys():
@@ -2167,12 +2168,16 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             axiom = dict[str_ax]['axiom']
             diagrams = dict[str_ax]['involvedDiagrams']
             #print(axiom, diagrams)
-
             if len(diagrams) == 0:
                 # if no diagram involved:
                 # draw on the activeOne
                 diag = self.session.mdi.activeDiagram()
-                n = self.draw(axiom, diag)
+                if diag:
+                    n = self.draw(axiom, diag)
+                else:
+                    project_diagrams = list(self.project.diagrams())
+                    diag = project_diagrams[0]
+                    n = self.draw(axiom, diag)
 
             if len(diagrams) == 1:
                 # if only one diagram involved:
@@ -2192,6 +2197,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 if diag.name in diagrams:
 
                     n = self.draw(axiom, diag)
+                    print(n)
                 # else draw on any of the involved ones
                 else:
                     diag = diagrams[0]
@@ -2451,7 +2457,9 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     list_of_disjoints = axiom.asPairwiseAxioms()
                     for disjoint_axiom in list_of_disjoints:
 
-                        self.draw(disjoint_axiom, diagram, x, y)
+                        n = self.draw(disjoint_axiom, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DisjointUnion':
 
@@ -2474,7 +2482,9 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     list_of_disjoints = axiom.asPairwiseAxioms()
                     for disjoint_axiom in list_of_disjoints:
 
-                        self.draw(disjoint_axiom, diagram, x, y)
+                        n = self.draw(disjoint_axiom, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DisjointObjectProperties':
 
@@ -2490,7 +2500,9 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     list_of_disjoints = axiom.asPairwiseAxioms()
                     for disjoint_axiom in list_of_disjoints:
 
-                        self.draw(disjoint_axiom, diagram, x, y)
+                        n = self.draw(disjoint_axiom, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DifferentIndividuals':
 
@@ -2505,7 +2517,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     list_of_different = axiom.asPairwiseAxioms()
                     for different_axiom in list_of_different:
-                        self.draw(different_axiom, diagram, x, y)
+
+                        e = self.draw(different_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'SameIndividual':
 
@@ -2520,7 +2535,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     list_of_same = axiom.asPairwiseAxioms()
                     for same_axiom in list_of_same:
-                        self.draw(same_axiom, diagram, x, y)
+
+                        e =self.draw(same_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'ClassAssertion':
 
@@ -2558,7 +2576,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     list_of_equivalents = axiom.asPairwiseAxioms()
                     for equivalence_axiom in list_of_equivalents:
-                        self.draw(equivalence_axiom, diagram, x, y)
+
+                        e = self.draw(equivalence_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'EquivalentObjectProperties':
 
@@ -2572,7 +2593,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     list_of_equivalents = axiom.asPairwiseAxioms()
                     for equivalence_axiom in list_of_equivalents:
-                        self.draw(equivalence_axiom, diagram, x, y)
+
+                        e = self.draw(equivalence_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'EquivalentDataProperties':
 
@@ -2586,7 +2610,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     list_of_equivalents = axiom.asPairwiseAxioms()
                     for equivalence_axiom in list_of_equivalents:
-                        self.draw(equivalence_axiom, diagram, x, y)
+
+                        e = self.draw(equivalence_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'SubObjectPropertyOf':
 
@@ -2616,7 +2643,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     pairs = axiom.asPairwiseAxioms()
                     for pair in pairs:
-                        self.draw(pair, diagram, x, y)
+
+                        n = self.draw(pair, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DataPropertyDomain' or ax_type == 'ObjectPropertyDomain':
 
@@ -5161,7 +5191,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         dis_node.addEdge(input)
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
-
+        print(dis_node)
         return dis_node
 
     def drawDisjointUnion(self, classes, classs, diagram, x, y):
