@@ -1422,11 +1422,19 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
 
         # add OK and Cancel buttons
+
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='button_box')
+
         selectBtn = QtWidgets.QPushButton('Select All',
                                           objectName='axioms_selectall_button')
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='button_box')
         self.confirmationBox.addButton(selectBtn, QtWidgets.QDialogButtonBox.ActionRole)
         connect(selectBtn.clicked, self.selectAllAxioms)
+
+        deselectBtn = QtWidgets.QPushButton('Deselect All',
+                                          objectName='axioms_deselectall_button')
+        self.confirmationBox.addButton(deselectBtn, QtWidgets.QDialogButtonBox.ActionRole)
+        connect(deselectBtn.clicked, self.deselectAllAxioms)
+
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
@@ -1548,6 +1556,23 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     item.setCheckState(QtCore.Qt.Checked)
 
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
+    def deselectAllAxioms(self):
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.table.clearSelection()
+
+        rowCount = self.table.rowCount()
+
+        for row in range(rowCount):
+            item = self.table.item(row, 0)
+            if item.text() not in self.ontologies:
+
+                if row not in self.hiddenRows:
+                    item.setCheckState(QtCore.Qt.Unchecked)
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
 
     def reject(self):
 
