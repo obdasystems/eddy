@@ -618,63 +618,66 @@ class OntologyImporterPlugin(AbstractPlugin):
             property = ann.getProperty().getIRI()
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
-
-            annotation = str(property)
-            annotation = annotation.replace('<', '')
-            annotation = annotation.replace('>', '')
-
-            annotationIRI = self.project.getIRI(annotation)
-
-            try:
-
-                if annotationIRI not in self.project.getAnnotationPropertyIRIs():
-
-                    self.project.isValidIdentifier(annotation)
-
-                    command = CommandProjectAddAnnotationProperty(self.project, annotation)
-                    self.session.undostack.beginMacro(
-                        'Add annotation property {0} '.format(annotation))
-                    if command:
-                        self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
-
-            except IllegalNamespaceError as e:
-                # noinspection PyArgumentList
-                msgBox = QtWidgets.QMessageBox(
-                    QtWidgets.QMessageBox.Warning,
-                    'Entity Definition Error',
-                    'Illegal namespace defined.',
-                    informativeText='The string "{}" is not a legal IRI'.format(annotation),
-                    detailedText=str(e),
-                    parent=self,
-                )
-                msgBox.exec_()
-
-
             # IF LANGUAGE, GET LANGUAGE
             lang_srt = value.find('"@')
             lang = None
             if lang_srt > 0:
                 lang = value[lang_srt + 2:]
-                value = value[0: lang_srt+1]
+                value = value[0: lang_srt + 1]
 
             value = value.strip('"')
 
-            # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-            annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value, language=lang)
+            if value == '' or value is None:
+                continue
+            else:
+
+                annotation = str(property)
+                annotation = annotation.replace('<', '')
+                annotation = annotation.replace('>', '')
+
+                annotationIRI = self.project.getIRI(annotation)
+
+                try:
+
+                    if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+
+                        self.project.isValidIdentifier(annotation)
+
+                        command = CommandProjectAddAnnotationProperty(self.project, annotation)
+                        self.session.undostack.beginMacro(
+                            'Add annotation property {0} '.format(annotation))
+                        if command:
+                            self.session.undostack.push(command)
+                        self.session.undostack.endMacro()
+
+                except IllegalNamespaceError as e:
+                    # noinspection PyArgumentList
+                    msgBox = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Warning,
+                        'Entity Definition Error',
+                        'Illegal namespace defined.',
+                        informativeText='The string "{}" is not a legal IRI'.format(annotation),
+                        detailedText=str(e),
+                        parent=self,
+                    )
+                    msgBox.exec_()
 
 
-            # FOR EACH NODE WITH NODE.IRI == IRI
-            processed = set()
-            for el in self.project.iriOccurrences():
+                # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+                annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value, language=lang)
 
-                if el.iri not in processed:
 
-                    if el.isNode() and el.type() == Item.ConceptNode and el.iri is annotationAss.subject:
-                        ## ADD ANNOTATION ##
-                        self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, el.iri, annotationAss))
+                # FOR EACH NODE WITH NODE.IRI == IRI
+                processed = set()
+                for el in self.project.iriOccurrences():
 
-                        processed.add(el.iri)
+                    if el.iri not in processed:
+
+                        if el.isNode() and el.type() == Item.ConceptNode and el.iri is annotationAss.subject:
+                            ## ADD ANNOTATION ##
+                            self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, el.iri, annotationAss))
+
+                            processed.add(el.iri)
 
         # ONTOLOGY ANNOTATIONS #
         ontoAnno = self.ontology.getAnnotations()
@@ -687,51 +690,55 @@ class OntologyImporterPlugin(AbstractPlugin):
             property = ann.getProperty().getIRI()
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
-
-            annotation = str(property)
-            annotation = annotation.replace('<', '')
-            annotation = annotation.replace('>', '')
-
-            annotationIRI = self.project.getIRI(annotation)
-
-            try:
-
-                if annotationIRI not in self.project.getAnnotationPropertyIRIs():
-
-                    self.project.isValidIdentifier(annotation)
-
-                    command = CommandProjectAddAnnotationProperty(self.project, annotation)
-                    self.session.undostack.beginMacro(
-                        'Add annotation property {0} '.format(annotation))
-                    if command:
-                        self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
-
-            except IllegalNamespaceError as e:
-                # noinspection PyArgumentList
-                msgBox = QtWidgets.QMessageBox(
-                    QtWidgets.QMessageBox.Warning,
-                    'Entity Definition Error',
-                    'Illegal namespace defined.',
-                    informativeText='The string "{}" is not a legal IRI'.format(annotation),
-                    detailedText=str(e),
-                    parent=self,
-                )
-                msgBox.exec_()
-
             # IF LANGUAGE, GET LANGUAGE
             lang_srt = value.find('"@')
             lang = None
             if lang_srt > 0:
                 lang = value[lang_srt + 2:]
-                value = value[0: lang_srt+1]
+                value = value[0: lang_srt + 1]
 
             value = value.strip('"')
 
-            # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-            annotationAss = AnnotationAssertion(iri, annotationIRI, value, language=lang)
+            if value == '' or value is None:
+                continue
 
-            self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, self.project.ontologyIRI, annotationAss))
+            else:
+
+                annotation = str(property)
+                annotation = annotation.replace('<', '')
+                annotation = annotation.replace('>', '')
+
+                annotationIRI = self.project.getIRI(annotation)
+
+                try:
+
+                    if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+
+                        self.project.isValidIdentifier(annotation)
+
+                        command = CommandProjectAddAnnotationProperty(self.project, annotation)
+                        self.session.undostack.beginMacro(
+                            'Add annotation property {0} '.format(annotation))
+                        if command:
+                            self.session.undostack.push(command)
+                        self.session.undostack.endMacro()
+
+                except IllegalNamespaceError as e:
+                    # noinspection PyArgumentList
+                    msgBox = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Warning,
+                        'Entity Definition Error',
+                        'Illegal namespace defined.',
+                        informativeText='The string "{}" is not a legal IRI'.format(annotation),
+                        detailedText=str(e),
+                        parent=self,
+                    )
+                    msgBox.exec_()
+
+                # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+                annotationAss = AnnotationAssertion(iri, annotationIRI, value, language=lang)
+
+                self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, self.project.ontologyIRI, annotationAss))
 
     def removeDuplicateFromIRI(self, diagram):
 
@@ -5813,6 +5820,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             self.session.undostack.push(CommandNodeAdd(diagram, datatype))
 
             return datatype
+
         return
 
     def findNode(self, iri, diagram):
@@ -5894,40 +5902,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     property = annAss['property']
                     # GET VALUE
                     value = annAss['value']
-
-                    annotation = str(property)
-                    annotation = annotation.replace('<', '')
-                    annotation = annotation.replace('>', '')
-
-                    annotationIRI = self.project.getIRI(annotation)
-
-                    try:
-
-                        if annotationIRI not in self.project.getAnnotationPropertyIRIs():
-
-                            self.project.isValidIdentifier(annotation)
-
-                            command = CommandProjectAddAnnotationProperty(self.project,
-                                                                          annotation)
-                            self.session.undostack.beginMacro(
-                                'Add annotation property {0} '.format(annotation))
-                            if command:
-                                self.session.undostack.push(command)
-                            self.session.undostack.endMacro()
-
-                    except IllegalNamespaceError as e:
-                        # noinspection PyArgumentList
-                        msgBox = QtWidgets.QMessageBox(
-                            QtWidgets.QMessageBox.Warning,
-                            'Entity Definition Error',
-                            'Illegal namespace defined.',
-                            informativeText='The string "{}" is not a legal IRI'.format(
-                                annotation),
-                            detailedText=str(e),
-                            parent=self,
-                        )
-                        msgBox.exec_()
-
                     # IF LANGUAGE, GET LANGUAGE
                     lang_srt = value.find('"@')
                     lang = None
@@ -5937,12 +5911,51 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     value = value.strip('"')
 
-                    # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-                    annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value,
-                                                        language=lang)
+                    if value == '' or value is None:
+                        continue
 
-                    self.session.undostack.push(
-                        CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
+                    else:
+
+                        annotation = str(property)
+                        annotation = annotation.replace('<', '')
+                        annotation = annotation.replace('>', '')
+
+                        annotationIRI = self.project.getIRI(annotation)
+
+                        try:
+
+                            if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+
+                                self.project.isValidIdentifier(annotation)
+
+                                command = CommandProjectAddAnnotationProperty(self.project,
+                                                                              annotation)
+                                self.session.undostack.beginMacro(
+                                    'Add annotation property {0} '.format(annotation))
+                                if command:
+                                    self.session.undostack.push(command)
+                                self.session.undostack.endMacro()
+
+                        except IllegalNamespaceError as e:
+                            # noinspection PyArgumentList
+                            msgBox = QtWidgets.QMessageBox(
+                                QtWidgets.QMessageBox.Warning,
+                                'Entity Definition Error',
+                                'Illegal namespace defined.',
+                                informativeText='The string "{}" is not a legal IRI'.format(
+                                    annotation),
+                                detailedText=str(e),
+                                parent=self,
+                            )
+                            msgBox.exec_()
+
+
+                        # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+                        annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value,
+                                                            language=lang)
+
+                        self.session.undostack.push(
+                            CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
 
 
 
