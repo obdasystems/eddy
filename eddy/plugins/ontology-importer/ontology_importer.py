@@ -5580,6 +5580,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandNodeAdd(diagram, classs))
 
+            classs.doUpdateNodeLabel()
+
             return classs
 
         if ex.isType(self.EntityType.NAMED_INDIVIDUAL):
@@ -5592,6 +5594,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             self.session.undostack.push(CommandNodeAdd(diagram, indiv))
             # ANNOTATIONS #
             self.addAnnotationAssertions(iri)
+
+            indiv.doUpdateNodeLabel()
             return indiv
 
         if ex.isType(self.EntityType.DATA_PROPERTY):
@@ -5648,6 +5652,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             # ANNOTATIONS #
             self.addAnnotationAssertions(iri)
+
+            dataProp.doUpdateNodeLabel()
 
             return dataProp
 
@@ -5808,6 +5814,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             # ANNOTATIONS #
             self.addAnnotationAssertions(iri)
 
+            objectProp.doUpdateNodeLabel()
+
             return objectProp
 
         if ex.isType(self.EntityType.DATATYPE):
@@ -5818,6 +5826,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             datatype.setPos(x, y)
 
             self.session.undostack.push(CommandNodeAdd(diagram, datatype))
+
+            datatype.doUpdateNodeLabel()
 
             return datatype
 
