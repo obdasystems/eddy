@@ -1039,8 +1039,6 @@ class OntologyImporterPlugin(AbstractPlugin):
                         except Exception as e:
                             raise e
 
-
-
     def onSecondButtonClick(self):
 
         try:
@@ -1367,7 +1365,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
     def __init__(self, not_drawn, project):
 
         super().__init__()
-        self.resize(500, 400)
+        self.resize(600, 600)
         self.setWindowTitle("Other Axioms")
 
         # IMPORT FROM OWLAPI #
@@ -1419,16 +1417,15 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         self.session = project.session
 
         self.checkedAxioms = []
-        self.hiddenRows = []
+        self.hiddenItems = []
         self.ontologies = []
 
         ## create layout ##
         # Create an outer layout
-        self.table = QtWidgets.QTableWidget(0, 1, self, objectName='axioms_table_widget')
+        self.table = QtWidgets.QTreeWidget(objectName='axioms_table_widget')
         self.addWidget(self.table)
 
-
-        # add OK and Cancel buttons
+        # add buttons
 
         self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='button_box')
 
@@ -1455,8 +1452,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         # Add some checkboxes to the layout
         self.checkBoxes = []
 
-        axioms = sum(len(not_drawn[k]) for k in not_drawn.keys())
-        self.table.setRowCount(len(not_drawn.keys())+axioms)
         # add checkboxes with axioms
         # grouped by ontology
         rowcount = 0
@@ -1464,26 +1459,28 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             onto = k[1]+':'
             self.ontologies.append(onto)
-            a = QtWidgets.QTableWidgetItem(str(onto))
-            a.setFont(QtGui.QFont('AnyStyle', 8, QtGui.QFont.DemiBold))
-            a.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            self.table.setItem(rowcount, 0 , a)
+            a = QtWidgets.QTreeWidgetItem(self.table, [str(onto)])
+            a.setFont(0, QtGui.QFont('AnyStyle', 9.5, QtGui.QFont.DemiBold))
+            #a.setFlags(Qt.ItemFlag.ItemIsEnabled)
+
             rowcount = rowcount +1
             for ax in not_drawn[k]:
 
-                check = QtWidgets.QTableWidgetItem(str(ax))
+                check = QtWidgets.QTreeWidgetItem(a, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.5, QtGui.QFont.Normal))
                 check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(Qt.CheckState.Unchecked)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
 
-                #check.stateChanged.connect(self.checkAxiom)
-                self.table.setItem(rowcount, 0, check)
                 self.checkBoxes.append(check)
                 rowcount = rowcount +1
 
-        self.table.verticalHeader().setVisible(False)
-        self.table.horizontalHeader().setVisible(False)
-        self.table.resizeColumnsToContents()
-        self.table.cellChanged.connect(self.checkAxiom)
+            self.table.sortItems(0, Qt.AscendingOrder)
+
+        self.table.setHeaderHidden(True)
+        #self.table.resizeColumnsToContents()
+
+        self.table.itemChanged.connect(self.checkAxiom)
 
 
         connect(self.confirmationBox.rejected, self.reject)
@@ -1498,7 +1495,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         groupbox = QtWidgets.QGroupBox('Choose Axioms:', self,
                                        objectName='axioms_widget')
         groupbox.setLayout(formlayout)
-        groupbox.setMinimumSize(450, 400)
+        groupbox.setMinimumSize(500, 550)
         self.addWidget(groupbox)
 
         # ANNOTATION ASSERTIONS TAB LAYOUT CONFIGURATION
@@ -1513,26 +1510,40 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
     def update_display(self, text):
 
         # searchbar function #
-        rowcount = self.table.rowCount()
-        for row in range(rowcount):
+        topcount = self.table.topLevelItemCount()
 
-            self.table.showRow(row)
+        for top in range(topcount):
 
-        self.hiddenRows = []
+            topItem = self.table.topLevelItem(top)
+            childCount = topItem.childCount()
 
-        for row in range(rowcount):
+            for child in range(childCount):
 
-            item = self.table.item(row, 0).text()
-            if text.lower() in item.lower() or item in self.ontologies:
-                pass
-            else:
-                self.table.hideRow(row)
-                self.hiddenRows.append(row)
+                childItem = topItem.child(child)
+                childItem.setHidden(False)
 
-    def checkAxiom(self, row, column):
+        self.hiddenItems = []
 
-        axiom = self.table.item(row, column).text()
-        state = self.table.item(row, column).checkState()
+        for top in range(topcount):
+
+            topItem = self.table.topLevelItem(top)
+            childCount = topItem.childCount()
+
+            for child in range(childCount):
+
+                childItem = topItem.child(child)
+                item = childItem.text(0)
+
+                if text.lower() in item.lower():
+                    self.table.expandItem(topItem)
+                else:
+                    childItem.setHidden(True)
+                    self.hiddenItems.append(childItem)
+
+    def checkAxiom(self, item, column):
+
+        axiom = item.text(column)
+        state = item.checkState(column)
 
         if state == QtCore.Qt.Checked:
 
@@ -1552,15 +1563,19 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.table.clearSelection()
 
-        rowCount = self.table.rowCount()
+        topcount = self.table.topLevelItemCount()
 
-        for row in range(rowCount):
-            item = self.table.item(row, 0)
-            if item.text() not in self.ontologies:
+        for top in range(topcount):
 
-                #item.setCheckState(QtCore.Qt.Unchecked)
-                if row not in self.hiddenRows:
-                    item.setCheckState(QtCore.Qt.Checked)
+            topItem = self.table.topLevelItem(top)
+            childCount = topItem.childCount()
+
+            for child in range(childCount):
+                childItem = topItem.child(child)
+
+                if childItem not in self.hiddenItems:
+                    childItem.setCheckState(0, QtCore.Qt.Checked)
+                    self.table.expandItem(topItem)
 
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
@@ -1569,14 +1584,18 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.table.clearSelection()
 
-        rowCount = self.table.rowCount()
+        topcount = self.table.topLevelItemCount()
 
-        for row in range(rowCount):
-            item = self.table.item(row, 0)
-            if item.text() not in self.ontologies:
+        for top in range(topcount):
 
-                if row not in self.hiddenRows:
-                    item.setCheckState(QtCore.Qt.Unchecked)
+            topItem = self.table.topLevelItem(top)
+            childCount = topItem.childCount()
+
+            for child in range(childCount):
+                childItem = topItem.child(child)
+
+                if childItem not in self.hiddenItems:
+                    childItem.setCheckState(0, QtCore.Qt.Unchecked)
 
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
@@ -2151,7 +2170,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         involvedDiagrams = {}
         # get all diagrams of the current project #
         project_diagrams = self.project.diagrams()
-        print(project_diagrams)
 
         # CHECK WHICH DIAGRAMS CONTAIN ONE OF THE ELEMENTS INVOLVED #
         for k in elements.keys():
@@ -2229,7 +2247,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 if diag.name in diagrams:
 
                     n = self.draw(axiom, diag)
-                    print(n)
                 # else draw on any of the involved ones
                 else:
                     diag = diagrams[0]
@@ -5223,7 +5240,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         dis_node.addEdge(input)
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
-        print(dis_node)
         return dis_node
 
     def drawDisjointUnion(self, classes, classs, diagram, x, y):
