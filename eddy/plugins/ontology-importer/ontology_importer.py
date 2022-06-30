@@ -1610,15 +1610,31 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         # k: axiom (::string), value: manchester_axiom (::Axiom)
         # (to keep track of the string axiom to insert in DRAWN table)
         axiomsToDraw = {}
-
+        cantDraw = []
         for ax in self.checkedAxioms:
             # for each checked axiom:
 
             manchester_axiom = self.string2axiom(ax)
-            axiomsToDraw[ax] = manchester_axiom
+            if manchester_axiom:
+                axiomsToDraw[ax] = manchester_axiom
+            else:
+                cantDraw.append(ax)
 
         super().accept()
-        self.getInvolvedDiagrams(axiomsToDraw)
+        if cantDraw:
+
+            invalid = ', '.join(cantDraw)
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Wrong syntax')
+            msgbox.setText("The current axioms can't be parsed: "+ invalid+'. These axioms will be ignored in the importation process.')
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.exec_()
+
+        if axiomsToDraw:
+            self.getInvolvedDiagrams(axiomsToDraw)
 
     def string2axiom(self, ax):
 
@@ -2133,7 +2149,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                         manchester_axiom = parser.parseAxiom()
 
                 except Exception as e:
-
+                    '''
                     msgbox = QtWidgets.QMessageBox()
                     msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
                     msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -2143,6 +2159,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     msgbox.setTextFormat(QtCore.Qt.RichText)
                     msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msgbox.exec_()
+                    '''
+                    print(e)
 
         return manchester_axiom
 
