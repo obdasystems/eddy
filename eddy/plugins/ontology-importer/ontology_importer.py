@@ -1332,7 +1332,7 @@ class Importation():
                 rows = cursor.fetchall()
                 not_drawn[ontology] = []
                 for row in rows:
-                    not_drawn[ontology].append(row[0])
+                    not_drawn[ontology].append([row[0], row[1]])
                     #print(row[0], row[1])
 
                 # DRAWN #
@@ -1418,7 +1418,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         self.checkedAxioms = []
         self.hiddenItems = []
-        self.ontologies = []
+        self.labels = []
 
         ## create layout ##
         # Create an outer layout
@@ -1454,34 +1454,111 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         # add checkboxes with axioms
         # grouped by ontology
-        rowcount = 0
         for k in not_drawn.keys():
 
-            onto = k[1]+':'
-            self.ontologies.append(onto)
-            a = QtWidgets.QTreeWidgetItem(self.table, [str(onto)])
-            a.setFont(0, QtGui.QFont('AnyStyle', 9.5, QtGui.QFont.DemiBold))
+            onto = k[1]
+            self.labels.append(onto)
+            ontoLabel = QtWidgets.QTreeWidgetItem(self.table, [str(onto)])
+            ontoLabel.setFont(0, QtGui.QFont('AnyStyle', 9.5, QtGui.QFont.DemiBold))
             #a.setFlags(Qt.ItemFlag.ItemIsEnabled)
 
-            rowcount = rowcount +1
-            for ax in not_drawn[k]:
+            class_axioms = []
+            objProp_axioms = []
+            dataProp_axioms = []
+            individual_axioms = []
+            others = []
 
-                check = QtWidgets.QTreeWidgetItem(a, [str(ax)])
+            for pair in not_drawn[k]:
+
+                ax = pair[0]
+                ax_type = pair[1]
+
+                if ax_type in ['SubClassOf', 'EquivalentClasses', 'DisjointClasses']:
+                    class_axioms.append(ax)
+                elif ax_type in ['SubObjectProperyOf', 'EquivalentObjectProperties', 'InverseObjectProperties', 'DisjointObjectProperties', 'ObjectPropertyDomain', 'ObjectPropertyRange', 'SubPropertyChainOf']:
+                    objProp_axioms.append(ax)
+                elif ax_type in ['SubDataPropertyOf', 'EquivalentDataProperties', 'DisjointDataProperties', 'DataPropertyDomain', 'DataPropertyRange']:
+                    dataProp_axioms.append(ax)
+                elif ax_type in ['ClassAssertion', 'ObjectPropertyAssertion', 'DataPropertyAssertion', 'NegativeObjectPropertyAssertion', 'NegativeDataPropertyAssertion', 'SameIndividual', 'DifferentIndividuals']:
+                    individual_axioms.append(ax)
+                else:
+                    others.append(ax)
+
+            classLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Class Axioms'])
+            classLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Class Axioms')
+
+            for ax in class_axioms:
+
+                check = QtWidgets.QTreeWidgetItem(classLabel, [str(ax)])
                 basefont = check.font(0).family()
-                check.setFont(0, QtGui.QFont(basefont, 8.5, QtGui.QFont.Normal))
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
                 check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
                 check.setCheckState(0, Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
-                rowcount = rowcount +1
+
+            objPropLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Object Property Axioms'])
+            objPropLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Object Property Axioms')
+
+            for ax in objProp_axioms:
+                check = QtWidgets.QTreeWidgetItem(objPropLabel, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                self.checkBoxes.append(check)
+
+            dataPropLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Data Property Axioms'])
+            dataPropLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Data Property Axioms')
+
+            for ax in dataProp_axioms:
+                check = QtWidgets.QTreeWidgetItem(dataPropLabel, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                self.checkBoxes.append(check)
+
+            indivLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Individual Axioms'])
+            indivLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Individual Axioms')
+
+            for ax in individual_axioms:
+                check = QtWidgets.QTreeWidgetItem(indivLabel, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                self.checkBoxes.append(check)
+
+            if others:
+                othersLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Other Axioms'])
+                othersLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+                self.labels.append('Other Axioms')
+
+                for ax in others:
+                    check = QtWidgets.QTreeWidgetItem(othersLabel, [str(ax)])
+                    basefont = check.font(0).family()
+                    check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                    check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                    check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                    self.checkBoxes.append(check)
 
             self.table.sortItems(0, Qt.AscendingOrder)
 
         self.table.setHeaderHidden(True)
-        #self.table.resizeColumnsToContents()
+        self.table.header().setStretchLastSection(False)
+        self.table.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
 
+        self.table.doubleClicked.connect(self.checkOnClick)
         self.table.itemChanged.connect(self.checkAxiom)
-
 
         connect(self.confirmationBox.rejected, self.reject)
         connect(self.confirmationBox.accepted, self.accept)
@@ -1515,30 +1592,54 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         for top in range(topcount):
 
             topItem = self.table.topLevelItem(top)
-            childCount = topItem.childCount()
+            self.table.collapseItem(topItem)
+            middleChildCount = topItem.childCount()
 
-            for child in range(childCount):
+            for middleChild in range(middleChildCount):
 
-                childItem = topItem.child(child)
-                childItem.setHidden(False)
+                middleChildItem = topItem.child(middleChild)
+                self.table.collapseItem(middleChildItem)
+                childCount = middleChildItem.childCount()
+
+                for child in range(childCount):
+
+                    childItem = middleChildItem.child(child)
+                    childItem.setHidden(False)
 
         self.hiddenItems = []
 
         for top in range(topcount):
 
             topItem = self.table.topLevelItem(top)
-            childCount = topItem.childCount()
+            middleChildCount = topItem.childCount()
 
-            for child in range(childCount):
+            for middleChild in range(middleChildCount):
 
-                childItem = topItem.child(child)
-                item = childItem.text(0)
+                middleChildItem = topItem.child(middleChild)
+                childCount = middleChildItem.childCount()
 
-                if text.lower() in item.lower():
-                    self.table.expandItem(topItem)
-                else:
-                    childItem.setHidden(True)
-                    self.hiddenItems.append(childItem)
+                for child in range(childCount):
+                    childItem = middleChildItem.child(child)
+                    item = childItem.text(0)
+
+                    if text.lower() in item.lower():
+                        self.table.expandItem(topItem)
+                        self.table.expandItem(middleChildItem)
+                    else:
+                        childItem.setHidden(True)
+                        self.hiddenItems.append(childItem)
+
+    def checkOnClick(self, index):
+
+        item = self.table.itemFromIndex(index)
+        axiom = item.text(0)
+        state = item.checkState(0)
+
+        if axiom not in self.labels:
+            if state == QtCore.Qt.Checked:
+                item.setCheckState(0, Qt.CheckState.Unchecked)
+            else:
+                item.setCheckState(0, Qt.CheckState.Checked)
 
     def checkAxiom(self, item, column):
 
@@ -1568,14 +1669,22 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         for top in range(topcount):
 
             topItem = self.table.topLevelItem(top)
-            childCount = topItem.childCount()
+            middleChildCount = topItem.childCount()
+            if topItem.isExpanded():
 
-            for child in range(childCount):
-                childItem = topItem.child(child)
+                for middleChild in range(middleChildCount):
 
-                if childItem not in self.hiddenItems:
-                    childItem.setCheckState(0, QtCore.Qt.Checked)
-                    self.table.expandItem(topItem)
+                    middleChildItem = topItem.child(middleChild)
+                    childCount = middleChildItem.childCount()
+
+                    if middleChildItem.isExpanded():
+
+                        for child in range(childCount):
+                            childItem = middleChildItem.child(child)
+
+                            if childItem not in self.hiddenItems:
+                                childItem.setCheckState(0, QtCore.Qt.Checked)
+                                #self.table.expandItem(topItem)
 
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
@@ -1589,13 +1698,22 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         for top in range(topcount):
 
             topItem = self.table.topLevelItem(top)
-            childCount = topItem.childCount()
+            middleChildCount = topItem.childCount()
 
-            for child in range(childCount):
-                childItem = topItem.child(child)
+            if topItem.isExpanded():
 
-                if childItem not in self.hiddenItems:
-                    childItem.setCheckState(0, QtCore.Qt.Unchecked)
+                for middleChild in range(middleChildCount):
+
+                    middleChildItem = topItem.child(middleChild)
+                    childCount = middleChildItem.childCount()
+
+                    if middleChildItem.isExpanded():
+
+                        for child in range(childCount):
+                            childItem = middleChildItem.child(child)
+
+                            if childItem not in self.hiddenItems:
+                                childItem.setCheckState(0, QtCore.Qt.Unchecked)
 
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
@@ -2263,9 +2381,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 # if more than one diagram involved:
                 # draw on the activeOne if involved
                 diag = self.session.mdi.activeDiagram()
-                if diag.name in diagrams:
+                if diag:
+                    if diag.name in diagrams:
 
-                    n = self.draw(axiom, diag)
+                        n = self.draw(axiom, diag)
                 # else draw on any of the involved ones
                 else:
                     diag = diagrams[0]
