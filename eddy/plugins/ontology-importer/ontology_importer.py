@@ -44,6 +44,7 @@ from PyQt5 import (
 )
 from PyQt5.QtCore import Qt
 
+from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.iri import CommandChangeIRIOfNode
@@ -2468,6 +2469,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def drawPropertyExpression(self, axiom, diagram, x, y):
 
+        print('here')
         prop = axiom.getInverse()
 
         if self.isAtomic(prop):
@@ -2959,7 +2961,20 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             propNode = self.draw(property, diagram)
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         n.setText('self')
         n.setPos(propNode.pos().x()+50, propNode.pos().y() +50)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
@@ -3057,8 +3072,20 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+        if propNode.type() == Item.RoleInverseNode:
 
-        n = DomainRestrictionNode(diagram=diagram)
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         card = str(card)
         n.setText('('+card+' , -)')
         x = x + 300
@@ -3172,7 +3199,20 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         card = str(card)
         n.setText('(- , '+card+')')
         x = x + 300
@@ -3286,7 +3326,20 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         card = str(card)
         n.setText('('+card+' , '+card+')')
         x = x + 300
@@ -3350,6 +3403,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def drawObjSomeValuesFrom(self, property, ce, diagram, x, y):
 
+        print('here 2')
         propDrawn = False
         ceDrawn = False
 
@@ -3442,7 +3496,21 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         x = x + 300
         y = y
         if ceDrawn:
@@ -3560,7 +3628,20 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         n.setText('forall')
         x = x + 300
         y = y
