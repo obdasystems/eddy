@@ -47,7 +47,7 @@ from PyQt5.QtCore import Qt
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.edges import CommandEdgeAdd
-from eddy.core.commands.iri import CommandChangeIRIOfNode
+from eddy.core.commands.iri import CommandChangeIRIOfNode, CommandChangeLiteralOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
@@ -57,6 +57,7 @@ from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.items.nodes.attribute import AttributeNode
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.items.nodes.complement import ComplementNode
 from eddy.core.items.nodes.concept import ConceptNode
 from eddy.core.items.nodes.datatype_restriction import DatatypeRestrictionNode
@@ -2469,7 +2470,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def drawPropertyExpression(self, axiom, diagram, x, y):
 
-        print('here')
         prop = axiom.getInverse()
 
         if self.isAtomic(prop):
@@ -2886,7 +2886,34 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     if subDrawn:
 
-                        pass
+                        if self.isIsolated(subNode):
+
+                            x_tomove = supNode.pos().x()
+                            y_tomove = supNode.pos().y() +150
+                            while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                                x_tomove = x_tomove + 100
+                                if abs(supNode.pos().x() - x_tomove) > 1000:
+                                    x_tomove = supNode.pos().x()
+                                    break
+
+                            subNode.setPos(x_tomove, y_tomove)
+
+                        else:
+                            if self.isIsolated(supNode):
+
+                                x_tomove = subNode.pos().x()
+                                y_tomove = subNode.pos().y() - 150
+                                while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                                    x_tomove = x_tomove + 100
+                                    if abs(subNode.pos().x() - x_tomove) > 1000:
+                                        x_tomove = subNode.pos().x()
+                                        break
+
+                                supNode.setPos(x_tomove, y_tomove)
+                            else:
+                                pass
 
                     else:
 
@@ -3013,17 +3040,30 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         if propDrawn:
 
             if ceDrawn:
-                pass
+
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 50
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
-                        x = propNode.pos().x() + 300
+                        x = propNode.pos().x() + 200
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     ceNode = self.draw(ce, diagram, x, y)
@@ -3035,12 +3075,12 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
@@ -3058,10 +3098,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
-                x = x - 150
+                x = x - 100
                 y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                 if self.isAtomic(property):
 
@@ -3088,10 +3128,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         card = str(card)
         n.setText('('+card+' , -)')
-        x = x + 300
+        x = x + 200
         y = y
         if ceDrawn:
-            x = ceNode.pos().x() - 300
+            x = ceNode.pos().x()
             y = ceNode.pos().y()
 
         xM = (x + propNode.pos().x()) / 2
@@ -3140,17 +3180,29 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 50
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
-                        x = propNode.pos().x() + 300
+                        x = propNode.pos().x() + 200
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     ceNode = self.draw(ce, diagram, x, y)
@@ -3160,14 +3212,17 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
@@ -3185,10 +3240,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
-                x = x - 150
+                x = x - 100
                 y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                 if self.isAtomic(property):
 
@@ -3215,10 +3270,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         card = str(card)
         n.setText('(- , '+card+')')
-        x = x + 300
+        x = x + 200
         y = y
         if ceDrawn:
-            x = ceNode.pos().x() - 300
+            x = ceNode.pos().x()
             y = ceNode.pos().y()
 
         xM = (x + propNode.pos().x()) / 2
@@ -3267,17 +3322,29 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 50
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
-                        x = propNode.pos().x() + 300
+                        x = propNode.pos().x() + 200
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     ceNode = self.draw(ce, diagram, x, y)
@@ -3287,14 +3354,17 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
@@ -3312,10 +3382,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
-                x = x - 150
+                x = x - 100
                 y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                 if self.isAtomic(property):
 
@@ -3342,10 +3412,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         card = str(card)
         n.setText('('+card+' , '+card+')')
-        x = x + 300
+        x = x + 200
         y = y
         if ceDrawn:
-            x = ceNode.pos().x() - 300
+            x = ceNode.pos().x()
             y = ceNode.pos().y()
 
         xM = (x + propNode.pos().x()) / 2
@@ -3403,7 +3473,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def drawObjSomeValuesFrom(self, property, ce, diagram, x, y):
 
-        print('here 2')
         propDrawn = False
         ceDrawn = False
 
@@ -3430,19 +3499,31 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 50
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
                 # DRAW CE
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
 
-                        x = propNode.pos().x() + 300
+                        x = propNode.pos().x() + 200
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     ceNode = self.draw(ce, diagram, x, y)
@@ -3452,15 +3533,18 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -3481,10 +3565,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     ceDrawn = True
 
 
-                x = x - 150
+                x = x - 100
                 y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
 
                 if self.isAtomic(property):
@@ -3511,10 +3595,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             n = DomainRestrictionNode(diagram=diagram)
 
-        x = x + 300
+        x = x + 200
         y = y
         if ceDrawn:
-            x = ceNode.pos().x() - 300
+            x = ceNode.pos().x()
             y = ceNode.pos().y()
 
         xM = (x + propNode.pos().x()) / 2
@@ -3565,19 +3649,31 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 50
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
 
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
 
-                        x = propNode.pos().x() + 300
+                        x = propNode.pos().x() + 200
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
@@ -3586,15 +3682,18 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -3614,10 +3713,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
-                x = x - 150
+                x = x - 100
                 y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                 if self.isAtomic(property):
 
@@ -3643,10 +3742,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             n = DomainRestrictionNode(diagram=diagram)
 
         n.setText('forall')
-        x = x + 300
+        x = x + 200
         y = y
         if ceDrawn:
-            x = ceNode.pos().x() - 300
+            x = ceNode.pos().x()
             y = ceNode.pos().y()
         xM = (x + propNode.pos().x()) / 2
         yM = (y + propNode.pos().y()) / 2
@@ -4053,6 +4152,9 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             cIri = ce.getIRI()
             cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-100)
 
+            if self.isIsolated(cNode):
+                cNode.setPos(x_med, y_med-100)
+
         else:
 
             cNode = self.draw(ce, diagram)
@@ -4195,19 +4297,29 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if domDrawn:
 
-                pass
+                if self.isIsolated(domainNode):
+
+                    x_tomove = propNode.pos().x() - 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 50
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    domainNode.setPos(x_tomove, y_tomove)
 
             else:
 
                 if self.isAtomic(range):
 
-                    x = propNode.pos().x() - 300
+                    x = propNode.pos().x() - 200
                     y = propNode.pos().y()
                     domainNode = self.createNode(range, diagram, x, y)
                     domDrawn = True
 
                 else:
-                    x = propNode.pos().x() - 300
+                    x = propNode.pos().x() - 200
                     y = propNode.pos().y()
 
                     domainNode = self.draw(range, diagram, x, y)
@@ -4219,13 +4331,13 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -4247,13 +4359,13 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -4305,19 +4417,29 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if domDrawn:
 
-                pass
+                if self.isIsolated(domainNode):
+
+                    x_tomove = propNode.pos().x() +200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 50
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    domainNode.setPos(x_tomove, y_tomove)
 
             else:
 
                 if self.isAtomic(domain):
 
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
                     domainNode = self.createNode(domain, diagram, x, y)
                     domDrawn = True
 
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     domainNode = self.draw(domain, diagram, x, y)
@@ -4329,13 +4451,13 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -4357,13 +4479,13 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -4591,6 +4713,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
     def drawEquivalentClasses(self, expressions, diagram, x, y):
 
         nodes = []
+        singletons = []
 
         for e in expressions:
             if self.isAtomic(e):
@@ -4598,6 +4721,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 node = self.findNode(iri, diagram)
                 if node != 'null':
                     nodes.append(node)
+                    if self.isIsolated(node):
+                        singletons.append(node)
 
         if len(nodes) == 0:
             starting_x = x - 150
@@ -4640,6 +4765,23 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         node0 = nodes[0]
         node1 = nodes[1]
+
+        if singletons:
+
+            toMove = singletons[0]
+            fixed = node0 if node0 != toMove else node1
+
+            x_tomove = fixed.pos().x()
+            y_tomove = fixed.pos().y() -100
+            while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                x_tomove = x_tomove + 70
+                if abs(fixed.pos().x() - x_tomove) > 1000:
+
+                    x_tomove = fixed.pos().x()
+                    break
+
+            toMove.setPos(x_tomove, y_tomove)
 
         equivalence = diagram.factory.create(Item.EquivalenceEdge, source=node0, target=node1)
         node0.addEdge(equivalence)
@@ -4733,7 +4875,39 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         if classDrawn:
 
             if indivDrawn:
-                pass
+
+                if self.isIsolated(node0):
+
+                    x_tomove = node1.pos().x()
+                    y_tomove = node1.pos().y() + 100
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        x_tomove = x_tomove + 100
+                        if abs(node1.pos().x() - x_tomove) > 1000:
+                            x_tomove = node1.pos().x()
+                            break
+
+                    node0.setPos(x_tomove, y_tomove)
+
+
+
+                else:
+
+                    if self.isIsolated(node1):
+
+                        x_tomove = node0.pos().x()
+                        y_tomove = node0.pos().y() - 100
+                        while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                            x_tomove = x_tomove + 100
+                            if abs(node0.pos().x() - x_tomove) > 1000:
+                                x_tomove = node0.pos().x()
+                                break
+
+                        node1.setPos(x_tomove, y_tomove)
+
+                    else:
+                        pass
 
             else:
 
@@ -5019,7 +5193,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         instanceNode = PropertyAssertionNode(diagram=diagram)
         x = (indivNode.pos().x() + propNode.pos().x()) / 2
-        y = propNode.pos().x()
+        y = propNode.pos().y()
         instanceNode.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, instanceNode))
 
@@ -5444,15 +5618,20 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         x_positions = []
         y_positions = []
         nodes = []
+        singletons = []
 
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
                 node = self.findNode(iri, diagram)
                 if node != 'null':
+
                     nodes.append(node)
                     x_positions.append(node.pos().x())
                     y_positions.append(node.pos().y())
+
+                    if self.isIsolated(node):
+                        singletons.append(node)
 
         if len(nodes) == 0:
 
@@ -5477,12 +5656,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 n = self.draw(ex, diagram, x, y)
                 nodes.append(n)
 
-                xN = n.pos().x()
-                x_positions.append(xN)
-
-                yN = n.pos().y()
-                y_positions.append(yN)
-
             else:
 
                 if ex.isType(self.EntityType.CLASS):
@@ -5501,11 +5674,26 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                         node = self.createNode(ex, diagram, x, y)
                         nodes.append(node)
 
-                        x = node.pos().x()
-                        x_positions.append(x)
 
-                        y = node.pos().y()
-                        y_positions.append(y)
+        if singletons:
+
+            toMove = singletons[0]
+            fixed = nodes[0] if nodes[0] != toMove else nodes[1]
+
+            x_tomove = fixed.pos().x()
+            y_tomove = fixed.pos().y() -100
+            while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                x_tomove = x_tomove + 100
+                if abs(fixed.pos().x() - x_tomove) > 1000:
+
+                    x_tomove = fixed.pos().x()
+                    break
+
+            toMove.setPos(x_tomove, y_tomove)
+
+        x_positions = [n.pos().x() for n in nodes]
+        y_positions = [n.pos().y() for n in nodes]
 
        # x_med = sum(x_positions) / len(x_positions)
         maxX = max(x_positions)
@@ -5555,7 +5743,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_positions.append(node.pos().y())
 
         if len(nodes) == 0:
-
 
             starting_x = x - 150
             starting_y = y
@@ -5618,35 +5805,73 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                         y = node.pos().y()
                         y_positions.append(y)
 
-            # x_med = sum(x_positions) / len(x_positions)
-            maxX = max(x_positions)
-            minX = min(x_positions)
-            x_med = (maxX - minX) / 2
-            # y_med = sum(y_positions) / len(y_positions) -100
-            maxY = max(y_positions)
-            minY = min(y_positions)
-            y_med = (maxY - minY) / 2
+        singletons = [n for n in nodes if self.isIsolated(n)]
+        fixed = [n for n in nodes if not self.isIsolated(n)]
+        if singletons:
+            if fixed:
+                point_x = fixed[0].pos().x()
+                point_y = fixed[0].pos().y() + 50
+            else:
+                point_x = x - 150
+                point_y = y
 
-        dis_node = DisjointUnionNode(diagram=diagram)
-        dis_node.setPos(x_med, y_med)
-        self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
+            for s in singletons:
+                s.setPos(point_x, point_y)
+                point_x = point_x + 100
 
-        for n in nodes:
+        x_positions = [n.pos().x() for n in nodes]
+        y_positions = [n.pos().y() for n in nodes]
+        # x_med = sum(x_positions) / len(x_positions)
+        maxX = max(x_positions)
+        minX = min(x_positions)
+        x_med = (maxX - minX) / 2
+        # y_med = sum(y_positions) / len(y_positions) -100
+        maxY = max(y_positions)
+        minY = min(y_positions)
+        y_med = (maxY - minY) / 2
 
-            input = diagram.factory.create(Item.InputEdge, source=n, target=dis_node)
-            n.addEdge(input)
-            dis_node.addEdge(input)
-
-            self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
         if self.isAtomic(classs):
 
             cIri = classs.getIRI()
             cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(classs, diagram, x_med, y_med-100)
 
+            if self.isIsolated(cNode):
+                cNode.setPos(x_med, y_med-100)
+            else:
+                if singletons and not fixed:
+                    point_x = cNode.pos().x() - 150*len(singletons)
+                    point_y = cNode.pos().y() + 200
+                    for s in singletons:
+                        s.setPos(point_x, point_y)
+                        point_x = point_x + 100
+
+                    x_positions = [n.pos().x() for n in nodes]
+                    y_positions = [n.pos().y() for n in nodes]
+                    # x_med = sum(x_positions) / len(x_positions)
+                    maxX = max(x_positions)
+                    minX = min(x_positions)
+                    x_med = (maxX - minX) / 2
+                    # y_med = sum(y_positions) / len(y_positions) -100
+                    maxY = max(y_positions)
+                    minY = min(y_positions)
+                    y_med = (maxY - minY) / 2
+
         else:
 
             cNode = self.draw(classs, diagram)
+
+        dis_node = DisjointUnionNode(diagram=diagram)
+        dis_node.setPos(x_med, y_med)
+        self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
+
+        for n in nodes:
+            input = diagram.factory.create(Item.InputEdge, source=n, target=dis_node)
+            n.addEdge(input)
+            dis_node.addEdge(input)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
         equiv = diagram.factory.create(Item.EquivalenceEdge, source=cNode, target=dis_node)
         self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
 
@@ -5862,21 +6087,26 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         if isinstance(ex, self.OWLLiteral):
 
-            lit = ex.getLiteral()
+            lit = str(ex.getLiteral())
             DP = ex.getDatatype()
 
             iri = DP.getIRI()
 
-            datatype = IRI(str(iri))
-
-            d =[x.value for x in OWL2Datatype if str(x.value) == str(datatype)][0]
-
-            literal = Literal(lit, d)
+            d = self.project.getIRI(str(iri))
+            lang = None
+            literal = Literal(lit, d, lang)
 
             literalNode = LiteralNode(literal=literal, diagram=diagram)
             literalNode.setPos(x, y)
 
+            literalNode._literal = literal
             self.session.undostack.push(CommandNodeAdd(diagram, literalNode))
+
+            labelString = str(literal)
+            labelPos = lambda: literalNode.label.pos()
+            literalNode.label.diagram.removeItem(literalNode.label)
+            literalNode.label = NodeLabel(template=labelString, pos=labelPos, editable=False)
+            diagram.sgnUpdated.emit()
 
             literalNode.doUpdateNodeLabel()
 
@@ -6173,6 +6403,14 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         else:
 
             return False
+
+    def isIsolated(self, node):
+
+        edges = node.edges
+        if edges:
+            return False
+        else:
+            return True
 
     def addAnnotationAssertions(self, iri):
         conn = None
