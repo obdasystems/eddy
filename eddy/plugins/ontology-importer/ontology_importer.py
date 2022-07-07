@@ -855,6 +855,8 @@ class OntologyImporterPlugin(AbstractPlugin):
                     self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass(
                         "org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl")
                     self.OWLSubAnnotationPropertyOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom')
+                    self.AnnotationPropertyDomainAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyDomainAxiom')
+                    self.AnnotationPropertyRangeAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyRangeAxiom')
 
                 if diagram:
 
@@ -1012,7 +1014,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                                     self.EntityType.CLASS)) or (
                                     isinstance(ax, self.OWLDeclarationAxiom) and ax.getEntity().isType(
                                     self.EntityType.ANNOTATION_PROPERTY)) or (
-                                isinstance(ax, self.OWLSubAnnotationPropertyOfAxiom)):
+                                isinstance(ax, self.OWLSubAnnotationPropertyOfAxiom)) or (isinstance(ax, self.AnnotationPropertyDomainAxiom)) or (isinstance(ax, self.AnnotationPropertyRangeAxiom)):
                                     ### INSERT DRAWN AXIOMS IN Drawn Table ###
                                     # GET AXIOM IN Manchester Syntax #
                                     axiom = renderer.render(ax)
@@ -1175,7 +1177,6 @@ class Importation():
             for ax in axioms:
                 # get axiom type #
                 ax_type = ax.getAxiomType()
-                print(ax_type)
                 # get all IRIs in axiom #
                 classes = ax.getClassesInSignature()
                 dataProperties = ax.getDataPropertiesInSignature()
@@ -1236,7 +1237,7 @@ class Importation():
                 conn.execute("""
                             insert or ignore into axiom (axiom, type_of_axiom, ontology_iri, ontology_version, iri_dict)
                             values (?, ?, ?, ?, ?)
-                            """, (str(axiom), str(ax_type), ontology_iri, ontology_version, iri_dict))
+                            """, (str(axiom).strip(), str(ax_type), ontology_iri, ontology_version, iri_dict))
 
             conn.commit()
             #print('Assiomi Inseriti')
@@ -1477,7 +1478,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 if ax_type in ['SubClassOf', 'EquivalentClasses', 'DisjointClasses']:
                     class_axioms.append(ax)
-                elif ax_type in ['SubObjectProperyOf', 'EquivalentObjectProperties', 'InverseObjectProperties', 'DisjointObjectProperties', 'ObjectPropertyDomain', 'ObjectPropertyRange', 'SubPropertyChainOf']:
+                elif ax_type in ['SubObjectPropertyOf', 'EquivalentObjectProperties', 'InverseObjectProperties', 'DisjointObjectProperties', 'ObjectPropertyDomain', 'ObjectPropertyRange', 'SubPropertyChainOf']:
                     objProp_axioms.append(ax)
                 elif ax_type in ['SubDataPropertyOf', 'EquivalentDataProperties', 'DisjointDataProperties', 'DataPropertyDomain', 'DataPropertyRange']:
                     dataProp_axioms.append(ax)
@@ -1980,8 +1981,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     ## handle DisjointClasses and DifferentIndividuals axiom ##
                     # for each class/individual : get fullIRI, create class/individual
                     # -> machester_axiom = disjoint/different of classes/individuals
-                    if new_ax[:17] == ' DisjointClasses:':
-                        classes = [x.strip() for x in new_ax[18:].split(',')]
+                    if new_ax[:16] == 'DisjointClasses:':
+                        classes = [x.strip() for x in new_ax[17:].split(',')]
 
                         owlClasses = []
                         for cl in classes:
@@ -1992,8 +1993,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                             owlClasses.append(owlClass)
 
                         manchester_axiom = df.getOWLDisjointClassesAxiom(owlClasses)
-                    if new_ax[:22] == ' DifferentIndividuals:':
-                        individuals = [x.strip() for x in new_ax[23:].split(',')]
+                    if new_ax[:21] == 'DifferentIndividuals:':
+                        individuals = [x.strip() for x in new_ax[22:].split(',')]
 
                         owlIndividuals = []
                         for ind in individuals:
