@@ -4298,6 +4298,31 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if domDrawn:
 
+                edges = propNode.edges
+                inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+                for e in inputEdges:
+                    if e.source is propNode and e.target.type() is Item.RangeRestrictionNode:
+                        node = e.target
+                        inputEdges = [e for e in node.edges if e.type() is Item.InputEdge]
+                        if len(inputEdges) == 1:
+                            for e in node.edges:
+                                if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
+                                    return node
+                                elif e.target is domainNode and e.type() is Item.InclusionEdge:
+                                    return node
+                                elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    command = CommandItemsRemove(diagram, [e])
+                                    self.session.undostack.push(command)
+                                    equiv = diagram.factory.create(Item.EquivalenceEdge,
+                                                                   source=node,
+                                                                   target=domainNode)
+                                    domainNode.addEdge(equiv)
+                                    node.addEdge(equiv)
+                                    self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
+                                    return node
+                                else:
+                                    pass
+
                 if self.isIsolated(domainNode):
 
                     x_tomove = propNode.pos().x() - 200
@@ -4418,6 +4443,31 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             if domDrawn:
 
+                edges = propNode.edges
+                inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+                for e in inputEdges:
+                    if e.source is propNode and e.target.type() is Item.DomainRestrictionNode:
+                        node = e.target
+                        inputEdges = [e for e in node.edges if e.type() is Item.InputEdge]
+                        if len(inputEdges) == 1:
+                           for e in node.edges:
+                                if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
+                                    return node
+                                elif e.target is domainNode and e.type() is Item.InclusionEdge:
+                                    return node
+                                elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    command = CommandItemsRemove(diagram, [e])
+                                    self.session.undostack.push(command)
+                                    equiv = diagram.factory.create(Item.EquivalenceEdge,
+                                                                 source=node,
+                                                                 target=domainNode)
+                                    domainNode.addEdge(equiv)
+                                    node.addEdge(equiv)
+                                    self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
+                                    return node
+                                else:
+                                    pass
+
                 if self.isIsolated(domainNode):
 
                     x_tomove = propNode.pos().x() +200
@@ -4491,7 +4541,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
-
 
         x_med = (propNode.pos().x() + domainNode.pos().x()) /2
         y_med = (propNode.pos().y() + domainNode.pos().y()) /2
