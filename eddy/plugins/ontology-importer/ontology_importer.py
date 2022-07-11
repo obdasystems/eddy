@@ -1954,30 +1954,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 try:
                     manchester_axiom = False
-                    '''
-                    ## handle declaration axioms ##
-                    # for each type of entity declared: get fullIRI, create entity
-                    # -> manchester_axiom = declaration of entity
-
-                    if new_ax[:13] == 'DataProperty:':
-                        declaration_axiom = new_ax[14:]
-                        entity = d[declaration_axiom]
-                        iri = self.IRI.create(entity)
-                        owlDataProp = self.OWLDataPropertyImpl(iri)
-                        manchester_axiom = df.getOWLDeclarationAxiom(owlDataProp)
-                    if new_ax[:15] == 'ObjectProperty:':
-                        declaration_axiom = new_ax[16:]
-                        entity = d[declaration_axiom]
-                        iri = self.IRI.create(entity)
-                        owlObjProp = self.OWLObjectPropertyImpl(iri)
-                        manchester_axiom = df.getOWLDeclarationAxiom(owlObjProp)
-                    if new_ax[:11] == 'Individual:':
-                        declaration_axiom = new_ax[12:]
-                        entity = d[declaration_axiom]
-                        iri = self.IRI.create(entity)
-                        owlNamedInd = self.OWLNamedIndividualImpl(iri)
-                        manchester_axiom = df.getOWLDeclarationAxiom(owlNamedInd)
-                    '''
                     ## handle DisjointClasses and DifferentIndividuals axiom ##
                     # for each class/individual : get fullIRI, create class/individual
                     # -> machester_axiom = disjoint/different of classes/individuals
@@ -2929,6 +2905,45 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                             subNode = self.draw(sub, diagram, x, y)
                             subDrawn = True
+
+                            cl = supNode
+                            n = subNode
+
+                            if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                                type = n.type()
+                                restr = n.restriction()
+                                items = []
+                                for e in n.edges:
+                                    items.append(e.source)
+
+                                clEdges = [e for e in cl.edges if
+                                           e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                                for e in clEdges:
+                                    node = None
+                                    if e.source.type() is type and e.source.restriction() is restr:
+                                        node = e.source
+                                    elif e.target.type() is type and e.target.restriction() is restr:
+                                        node = e.target
+                                    else:
+                                        pass
+
+                                    if node:
+                                        found = node
+                                        inputEdges = [ie for ie in node.edges if
+                                                      ie.type() is Item.InputEdge]
+                                        for ie in inputEdges:
+                                            if ie.source not in items:
+                                                found = None
+                                        if found:
+                                            break
+
+                        if found:
+
+                            subNode = found
+                            remove = list(n.edges)
+                            remove.append(n)
+                            self.session.undostack.push(CommandItemsRemove(diagram, remove))
+
                 else:
 
                     if subDrawn:
@@ -2944,6 +2959,43 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                             supNode = self.draw(sup, diagram, x, y)
                             supDrawn = True
+
+                            cl = subNode
+                            n = supNode
+
+                            if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                                type = n.type()
+                                restr = n.restriction()
+                                items = []
+                                for e in n.edges:
+                                    items.append(e.source)
+
+                                clEdges = [e for e in cl.edges if
+                                           e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                                for e in clEdges:
+                                    node = None
+                                    if e.source.type() is type and e.source.restriction() is restr:
+                                        node = e.source
+                                    elif e.target.type() is type and e.target.restriction() is restr:
+                                        node = e.target
+                                    else:
+                                        pass
+
+                                    if node:
+                                        found = node
+                                        inputEdges = [ie for ie in node.edges if
+                                                      ie.type() is Item.InputEdge]
+                                        for ie in inputEdges:
+                                            if ie.source not in items:
+                                                found = None
+                                        if found:
+                                            break
+
+                        if found:
+                            supNode = found
+                            remove = list(n.edges)
+                            remove.append(n)
+                            self.session.undostack.push(CommandItemsRemove(diagram, remove))
 
                     else:
 
@@ -2971,8 +3023,28 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                             subNode = self.draw(sub, diagram, x, y)
                             subDrawn = True
 
-                isa = diagram.factory.create(Item.InclusionEdge, source=subNode, target=supNode)
-                self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+                if found:
+                    eqEdges = [e for e in found.edges if e.type() is Item.EquivalenceEdge]
+                    if eqEdges:
+
+                        return eqEdges[0]
+                    else:
+                        for e in found.edges:
+                            if e.type() is Item.InclusionEdge:
+                                if e.source is supNode:
+                                    self.session.undostack.push(CommandItemsRemove(diagram, [e]))
+                                    isa = diagram.factory.create(Item.EquivalenceEdge,
+                                                                         source=found,
+                                                                         target=supNode)
+                                    found.addEdge(isa)
+                                    supNode.addEdge(isa)
+                                    self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+
+                                elif e.target is supNode:
+                                    isa = e
+                else:
+                    isa = diagram.factory.create(Item.InclusionEdge, source=subNode, target=supNode)
+                    self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
                 return isa
 
@@ -4764,6 +4836,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         nodes = []
         singletons = []
+        found = None
 
         for e in expressions:
             if self.isAtomic(e):
@@ -4793,7 +4866,42 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 starting_y = y
 
                 n = self.draw(ex, diagram, x, y)
-                nodes.append(n)
+                if nodes:
+                    cl = nodes[0]
+
+                    if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                        type = n.type()
+                        restr = n.restriction()
+                        items = []
+                        for e in n.edges:
+                            items.append(e.source)
+
+                        clEdges = [e for e in cl.edges if e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                        for e in clEdges:
+                            node = None
+                            if e.source.type() is type and e.source.restriction() is restr:
+                                node = e.source
+                            elif e.target.type() is type and e.target.restriction() is restr:
+                                node = e.target
+                            else:
+                                pass
+
+                            if node:
+                                found = node
+                                inputEdges = [ie for ie in node.edges if ie.type() is Item.InputEdge]
+                                for ie in inputEdges:
+                                    if ie.source not in items:
+                                        found = None
+                                if found:
+                                    break
+
+                if found:
+                    nodes.append(found)
+                    remove = list(n.edges)
+                    remove.append(n)
+                    self.session.undostack.push(CommandItemsRemove(diagram, remove))
+                else:
+                    nodes.append(n)
 
             else:
 
@@ -4833,11 +4941,28 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
             toMove.setPos(x_tomove, y_tomove)
 
-        equivalence = diagram.factory.create(Item.EquivalenceEdge, source=node0, target=node1)
-        node0.addEdge(equivalence)
-        node1.addEdge(equivalence)
+        if found:
+            eqEdges = [e for e in found.edges if e.type() is Item.EquivalenceEdge]
+            if eqEdges:
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
+                return eqEdges[0]
+            else:
+                for e in found.edges:
+                    if e.type() is Item.InclusionEdge and (e.source is cl or e.target is cl):
+                        self.session.undostack.push(CommandItemsRemove(diagram, [e]))
+                        equivalence = diagram.factory.create(Item.EquivalenceEdge, source=found,
+                                                             target=cl)
+                        found.addEdge(equivalence)
+                        cl.addEdge(equivalence)
+                        self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
+
+
+        else:
+            equivalence = diagram.factory.create(Item.EquivalenceEdge, source=node0, target=node1)
+            node0.addEdge(equivalence)
+            node1.addEdge(equivalence)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
 
         return equivalence
 
