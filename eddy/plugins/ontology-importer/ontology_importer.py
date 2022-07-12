@@ -3120,7 +3120,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        y_tomove = y_tomove + 50
+                        y_tomove = y_tomove + 70
                         if abs(propNode.pos().y() - y_tomove) > 1000:
                             y_tomove = propNode.pos().y()
                             break
@@ -3259,7 +3259,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        y_tomove = y_tomove + 50
+                        y_tomove = y_tomove + 70
                         if abs(propNode.pos().y() - y_tomove) > 1000:
                             y_tomove = propNode.pos().y()
                             break
@@ -3401,7 +3401,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        y_tomove = y_tomove + 50
+                        y_tomove = y_tomove + 70
                         if abs(propNode.pos().y() - y_tomove) > 1000:
                             y_tomove = propNode.pos().y()
                             break
@@ -3578,7 +3578,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        y_tomove = y_tomove + 50
+                        y_tomove = y_tomove + 70
                         if abs(propNode.pos().y() - y_tomove) > 1000:
                             y_tomove = propNode.pos().y()
                             break
@@ -3728,7 +3728,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        y_tomove = y_tomove + 50
+                        y_tomove = y_tomove + 70
                         if abs(propNode.pos().y() - y_tomove) > 1000:
                             y_tomove = propNode.pos().y()
                             break
@@ -4401,7 +4401,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        y_tomove = y_tomove + 50
+                        y_tomove = y_tomove + 70
                         if abs(propNode.pos().y() - y_tomove) > 1000:
                             y_tomove = propNode.pos().y()
                             break
@@ -4546,7 +4546,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        y_tomove = y_tomove + 50
+                        y_tomove = y_tomove + 70
                         if abs(propNode.pos().y() - y_tomove) > 1000:
                             y_tomove = propNode.pos().y()
                             break
@@ -6254,7 +6254,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         starting_y = y
         while not self.isEmpty(x, y, diagram):
 
-            y = y + 50
+            y = y + 70
             if abs(starting_y - y) > 1000:
 
                 y = starting_y
