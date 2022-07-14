@@ -80,7 +80,7 @@ from eddy.core.jvm import getJavaVM
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalNamespaceError,
-    OWL2Datatype,
+    OWL2Datatype, Facet,
 )
 from eddy.core.owl import IRI
 from eddy.core.owl import Literal
@@ -918,6 +918,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                                                 create table if not exists axiom (
                                                     axiom       text,
                                                     type_of_axiom   text,
+                                                    func_axiom      text,
                                                     ontology_iri    text,
                                                     ontology_version text,
                                                     iri_dict text,
@@ -1034,7 +1035,6 @@ class OntologyImporterPlugin(AbstractPlugin):
 
                                     not_processed.append(ax)
 
-                            # axs, not_dr, dr = importation.open()
                             QtCore.QCoreApplication.processEvents()
 
                             conn.commit()
@@ -1130,11 +1130,10 @@ class Importation():
 
         self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass(
             "org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl")
+        self.FunctionalOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass("org.semanticweb.owlapi.functional.renderer.OWLFunctionalSyntaxRenderer")
         self.ShortFormProvider = self.vm.getJavaClass("org.semanticweb.owlapi.util.SimpleShortFormProvider")
         self.OWLEntity = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLEntity")
         self.DataFactoryImpl = self.vm.getJavaClass("uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl")
-
-        #self.insertInDB(project_name, diagram_name, ontology)
 
     def insertInDB(self, ontology):
 
@@ -1171,6 +1170,9 @@ class Importation():
 
             axioms = ontology.getAxioms()
             renderer = self.ManchesterOWLSyntaxOWLObjectRendererImpl()
+
+            #funcRenderer = self.FunctionalOWLSyntaxOWLObjectRendererImpl()
+
             # INSERT ALL AXIOMS OF IMPORTED ONTOLOGY IN DB #
             df = self.DataFactoryImpl()
             sfp = self.ShortFormProvider()
@@ -1231,16 +1233,17 @@ class Importation():
 
                 # getting the axiom in Manchester Syntax #
                 axiom = renderer.render(ax)
+                # keep the original form (Functional Syntax #
+                funcAxiom = ax
                 QtCore.QCoreApplication.processEvents()
 
                 # INSERT AXIOM IN DB #
                 conn.execute("""
-                            insert or ignore into axiom (axiom, type_of_axiom, ontology_iri, ontology_version, iri_dict)
-                            values (?, ?, ?, ?, ?)
-                            """, (str(axiom).strip(), str(ax_type), ontology_iri, ontology_version, iri_dict))
+                            insert or ignore into axiom (axiom, type_of_axiom, func_axiom, ontology_iri, ontology_version, iri_dict)
+                            values (?, ?, ?, ?, ?, ?)
+                            """, (str(axiom).strip(), str(ax_type), str(funcAxiom).strip(), ontology_iri, ontology_version, iri_dict))
 
             conn.commit()
-            #print('Assiomi Inseriti')
             QtCore.QCoreApplication.processEvents()
 
         # CHECK if IMPORTATION IN Importation Table #
@@ -1276,7 +1279,6 @@ class Importation():
             conn.commit()
             conn.close()
             return False
-            #print('Importazione Inserita')
 
     def open(self):
 
@@ -1316,10 +1318,9 @@ class Importation():
                 axioms[ontology] = []
                 for row in rows:
                     axioms[ontology].append(row[0])
-                #print('Assiomi Estratti')
 
                 # NOT DRAWN #
-                cursor.execute('''SELECT axiom, type_of_axiom
+                cursor.execute('''SELECT axiom, type_of_axiom, func_axiom
                                 FROM axiom
                                 WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom != 'Declaration'
                                 and type_of_axiom != 'FunctionalObjectProperty'
@@ -1335,13 +1336,11 @@ class Importation():
                 rows = cursor.fetchall()
                 not_drawn[ontology] = []
                 for row in rows:
-                    not_drawn[ontology].append([row[0], row[1]])
-                    #print(row[0], row[1])
+                    not_drawn[ontology].append([row[0], row[1], row[2]])
 
                 # DRAWN #
                 drawn[ontology] = [a for a in axioms[ontology] if a not in not_drawn[ontology]]
 
-            #print('Distinzione Disegnati e non')
             return axioms, not_drawn, drawn
 
     def removeFromDB(self):
@@ -1362,6 +1361,7 @@ class Importation():
                         'delete from drawn where project_iri = ? and project_version = ? and session_id = ?',
                         (self.project_iri, self.project_version, str(self.project.session)))
                 conn.commit()
+
 
 class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
@@ -1408,6 +1408,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 'org.semanticweb.owlapi.model.OWLDatatype')
             self.DatatypeRestriction = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDatatypeRestriction")
             self.DataOneOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataOneOf")
+            self.DataUnionOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataUnionOf")
 
         self.db_filename = expandPath('@data/db.db')
         dir = os.path.dirname(self.db_filename)
@@ -1418,6 +1419,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         self.project_iri = str(project.ontologyIRI)
         self.project_version = project.version if len(project.version) > 0 else '1.0'
         self.session = project.session
+
+        self.not_drawn = not_drawn
 
         self.checkedAxioms = []
         self.hiddenItems = []
@@ -1463,7 +1466,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             self.labels.append(onto)
             ontoLabel = QtWidgets.QTreeWidgetItem(self.table, [str(onto)])
             ontoLabel.setFont(0, QtGui.QFont('AnyStyle', 9.5, QtGui.QFont.DemiBold))
-            #a.setFlags(Qt.ItemFlag.ItemIsEnabled)
 
             class_axioms = []
             objProp_axioms = []
@@ -1730,32 +1732,154 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         # k: axiom (::string), value: manchester_axiom (::Axiom)
         # (to keep track of the string axiom to insert in DRAWN table)
-        axiomsToDraw = {}
-        cantDraw = []
-        for ax in self.checkedAxioms:
-            # for each checked axiom:
+        with BusyProgressDialog('Drawing Axioms', 0.5):
 
-            manchester_axiom = self.string2axiom(ax)
-            if manchester_axiom:
-                axiomsToDraw[ax] = manchester_axiom
-            else:
-                cantDraw.append(ax)
+            axiomsToDraw = {}
+            cantDraw = []
 
-        super().accept()
-        if cantDraw:
+            for ax in self.checkedAxioms:
+                # for each checked axiom:
+                QtCore.QCoreApplication.processEvents()
+                functional_axiom = None
+                manchester_axiom = None
 
-            invalid = ', '.join(cantDraw)
-            msgbox = QtWidgets.QMessageBox()
-            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Wrong syntax')
-            msgbox.setText("The current axioms can't be parsed: "+ invalid+'. These axioms will be ignored in the importation process.')
-            msgbox.setTextFormat(QtCore.Qt.RichText)
-            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msgbox.exec_()
+                for k in self.not_drawn.keys():
+                    for triple in self.not_drawn[k]:
+                        manch_ax = triple[0]
+                        func_ax = triple[2]
+                        if manch_ax == ax:
+                            # try to parse Functional axiom string into Axiom #
+                            functional_axiom = self.string2axiom2(func_ax)
 
-        if axiomsToDraw:
-            self.getInvolvedDiagrams(axiomsToDraw)
+                if functional_axiom:
+                    axiomsToDraw[ax] = functional_axiom
+                else:
+                    # if problems with Functional parsing -> try to parse Manchester axiom string into Axiom #
+                    manchester_axiom = self.string2axiom(ax)
+                    if manchester_axiom:
+                        axiomsToDraw[ax] = manchester_axiom
+                    else:
+                        # if axioms can't be parsed -> can't draw message #
+                        cantDraw.append(ax)
+
+            super().accept()
+            if cantDraw:
+
+                invalid = ', '.join(cantDraw)
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('Wrong syntax')
+                msgbox.setText("The current axioms can't be parsed: "+ invalid+'. These axioms will be ignored in the importation process.')
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msgbox.exec_()
+
+            if axiomsToDraw:
+                self.getInvolvedDiagrams(axiomsToDraw)
+
+    def string2axiom2(self, ax):
+
+        StringDocumentSource = self.vm.getJavaClass('org.semanticweb.owlapi.io.StringDocumentSource')
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_filename)
+        except Exception as e:
+            print(e)
+
+        cursor = conn.cursor()
+        # GET ALL THE ONTOLOGIES IMPORTED IN THE PROJECT #
+        cursor.execute('''SELECT ontology_iri, ontology_version
+                                        FROM importation
+                                        WHERE project_iri = ? and project_version = ?
+                                        ''', (self.project_iri, self.project_version))
+        QtCore.QCoreApplication.processEvents()
+
+        project_ontologies = []
+        rows = cursor.fetchall()
+        for row in rows:
+            project_ontologies.append((row[0], row[1]))
+
+        for ontology in project_ontologies:
+            # for each imported ontology:
+            # CHECK if AXIOM belongs to ONTOLOGY  #
+            QtCore.QCoreApplication.processEvents()
+
+            ontology_iri, ontology_version = ontology
+
+            cursor = conn.cursor()
+            cursor.execute('''SELECT *
+                                    FROM axiom
+                                    WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                    ''', (ontology_iri, ontology_version, ax))
+
+            if len(cursor.fetchall()) > 0:
+                # IF BELONGS to Ontology:
+                QtCore.QCoreApplication.processEvents()
+
+                # create ontology manager #
+                manager = self.OWLManager().createOWLOntologyManager()
+
+                # get all declaration axioms of the ontology to pass to parser #
+                cursor.execute('''SELECT axiom, iri_dict, func_axiom
+                                       FROM axiom
+                                        WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom = ?
+                                        ''',
+                               (ontology_iri, ontology_version, 'Declaration'))
+                rows = cursor.fetchall()
+                # DECLARE ENTITIES of the ONTOLOGY #
+                ontostr = 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>) Prefix(owl:=<http://www.w3.org/2002/07/owl#>) Ontology(<'+ ontology_iri+'> '
+                for row in rows:
+                    # for each declaration axiom :
+
+                    # get axiom string #
+                    declaration_axiom = str(row[2])
+                    ontostr = ontostr + declaration_axiom + ' '
+
+
+                ontostr = ontostr + 'Declaration(Class(<http://www.w3.org/2002/07/owl#Thing>)) Declaration(Class(<http://www.w3.org/2002/07/owl#Nothing>)) Declaration(ObjectProperty(<http://www.w3.org/2002/07/owl#topObjectProperty>)) Declaration(ObjectProperty(<http://www.w3.org/2002/07/owl#bottomObjectProperty>)) Declaration(DataProperty(<http://www.w3.org/2002/07/owl#topDataProperty>)) Declaration(DataProperty(<http://www.w3.org/2002/07/owl#bottomDataProperty>))'
+
+                new_ax = ax
+                while '(InverseOf(' in new_ax:
+                    idx = new_ax.find('(InverseOf(')
+                    idxEnd = new_ax.find(')', idx)
+                    prop = new_ax[idx+11: idxEnd]
+                    objProp = 'Declaration(ObjectProperty('+prop+'))' in ontostr
+                    if objProp:
+                        new_ax = new_ax.replace('(InverseOf(', '(ObjectInverseOf(', 1)
+                    else:
+                        dataProp = 'Declaration(DataProperty('+prop+'))' in ontostr
+                        if dataProp:
+                            new_ax = new_ax.replace('(InverseOf(', '(DataInverseOf(', 1)
+
+
+                ontostr = ontostr + new_ax + ')'
+
+                cursor.execute('''SELECT iri_dict, type_of_axiom
+                                                FROM axiom
+                                                WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                                ''',
+                               (ontology_iri, ontology_version, ax))
+                rows = cursor.fetchall()
+                for row in rows:
+
+                    axiom_type = row[1]
+
+                try:
+                    # build ontology from string #
+                    input = StringDocumentSource(ontostr)
+                    ontology = manager.loadOntologyFromOntologyDocument(input)
+                    # get functional axioms from ontology #
+                    axioms = ontology.getAxioms()
+                    for axiom in axioms:
+                        QtCore.QCoreApplication.processEvents()
+                        # get axiom we needed to parse by filtering on type #
+                        if str(axiom.getAxiomType()) == axiom_type:
+                            functional_axiom = axiom
+                            return functional_axiom
+                    return None
+                except Exception as e:
+                    print(e)
 
     def string2axiom(self, ax):
 
@@ -1911,7 +2035,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                                  'xsd:normalizedString', 'xsd:token', 'xsd:language', 'xsd:Name',
                                  'xsd:NCName', 'xsd:NMTOKEN', 'xsd:boolean', 'xsd:hexBinary',
                                  'xsd:base64Binary',
-                                 'xsd:dateTime', 'xsd: dateTimeStamp', 'rdf:XMLLiteral',
+                                 'xsd:dateTime', 'xsd:dateTimeStamp', 'rdf:XMLLiteral',
                                  'rdf:PlainLiteral', 'rdfs:Literal', 'xsd:anyURI']
                 for datatype_iri in datatypes_iri:
                     # create iri for each datatype #
@@ -2267,7 +2391,9 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         # GET ALL ELEMENTS INVOLVED IN AXIOMS #
         elements = {}
         for str_ax in axioms.keys():
-        # for each axiom :
+            QtCore.QCoreApplication.processEvents()
+
+            # for each axiom :
             elements[str_ax] = []
             ax = axioms[str_ax]
             # get all IRIs in axiom #
@@ -2301,11 +2427,14 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                         # if not already involved:
                             # check if there is an item with same IRI as element
                             for item in diagram.items():
+                                QtCore.QCoreApplication.processEvents()
+
                                 if item.isNode() and (item.type() == Item.ConceptNode or item.type() == Item.IndividualNode or item.type() == Item.AttributeNode or item.type == Item.RoleNode) and str(iri) == str(item.iri):
                                     involvedDiagrams[k].append(diagram.name)
 
         axiomsDict = {}
         for str_ax in axioms.keys():
+            QtCore.QCoreApplication.processEvents()
 
             axiomsDict[str_ax] = {}
             axiomsDict[str_ax]['axiom'] = axioms[str_ax]
@@ -2331,6 +2460,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
     def drawAxioms(self, dict):
 
         for str_ax in dict.keys():
+            QtCore.QCoreApplication.processEvents()
+
             axiom = dict[str_ax]['axiom']
             diagrams = dict[str_ax]['involvedDiagrams']
             #print(axiom, diagrams)
@@ -2401,6 +2532,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 for ontology in project_ontologies:
                 # for each imported ontology:
                     # CHECK if AXIOM belongs to ONTOLOGY  #
+                    QtCore.QCoreApplication.processEvents()
 
                     ontology_iri, ontology_version = ontology
 
@@ -2421,6 +2553,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         conn.close()
 
     def draw(self, axiom, diagram, x=0, y=0):
+        QtCore.QCoreApplication.processEvents()
+
         #print(axiom)
         #print('processing')
         if isinstance(axiom, self.Axiom):
@@ -2443,6 +2577,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             n = self.drawDataOneOf(values, diagram, x, y)
             return n
 
+        if isinstance(axiom, self.DataUnionOf):
+            operands = list(axiom.getOperands())
+            n = self.drawDataUnionOf(operands, diagram, x, y)
+            return n
     # DRAW AXIOM, CLASS EXPRESSIONS, ... #
 
     def drawPropertyExpression(self, axiom, diagram, x, y):
@@ -2477,6 +2615,18 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def drawDatatypeRestriction(self, datatype, facets, diagram, x, y):
 
+        datatypes_iri = {'owl:real':'http://www.w3.org/2002/07/owl#real', 'owl:rational':'http://www.w3.org/2002/07/owl#rational', 'xsd:decimal':'http://www.w3.org/2001/XMLSchema#decimal', 'xsd:integer':'http://www.w3.org/2001/XMLSchema#integer',
+                         'xsd:nonNegativeInteger':'http://www.w3.org/2001/XMLSchema#nonNegativeInteger', 'xsd:nonPositiveInteger':'http://www.w3.org/2001/XMLSchema#nonPositiveInteger',
+                         'xsd:positiveInteger':'http://www.w3.org/2001/XMLSchema#positiveInteger', 'xsd:negativeInteger':'http://www.w3.org/2001/XMLSchema#negativeInteger', 'xsd:long':'http://www.w3.org/2001/XMLSchema#long',
+                         'xsd:int':'http://www.w3.org/2001/XMLSchema#int', 'xsd:short':'http://www.w3.org/2001/XMLSchema#short', 'xsd:byte':'http://www.w3.org/2001/XMLSchema#byte', 'xsd:unsignedLong':'http://www.w3.org/2001/XMLSchema#unsignedLong',
+                         'xsd:unsignedInt':'http://www.w3.org/2001/XMLSchema#unsignedInt', 'xsd:unsignedShort':'http://www.w3.org/2001/XMLSchema#unsignedShort', 'xsd:unsignedByte':'http://www.w3.org/2001/XMLSchema#unsignedByte',
+                         'xsd:double':'http://www.w3.org/2001/XMLSchema#double', 'xsd:float':'http://www.w3.org/2001/XMLSchema#float', 'xsd:string':'http://www.w3.org/2001/XMLSchema#string',
+                         'xsd:normalizedString':'http://www.w3.org/2001/XMLSchema#normalizedString', 'xsd:token':'http://www.w3.org/2001/XMLSchema#token', 'xsd:language':'http://www.w3.org/2001/XMLSchema#language', 'xsd:Name':'http://www.w3.org/2001/XMLSchema#Name',
+                         'xsd:NCName':'http://www.w3.org/2001/XMLSchema#NCName', 'xsd:NMTOKEN':'http://www.w3.org/2001/XMLSchema#NMTOKEN', 'xsd:boolean':'http://www.w3.org/2001/XMLSchema#boolean', 'xsd:hexBinary':'http://www.w3.org/2001/XMLSchema#hexBinary',
+                         'xsd:base64Binary':'http://www.w3.org/2001/XMLSchema#base64Binary',
+                         'xsd:dateTime':'http://www.w3.org/2001/XMLSchema#dateTime', 'xsd:dateTimeStamp':'http://www.w3.org/2001/XMLSchema#dateTimeStamp', 'rdf:XMLLiteral':'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral',
+                         'rdf:PlainLiteral':'http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral', 'rdfs:Literal':'http://www.w3.org/2000/01/rdf-schema#Literal', 'xsd:anyURI':'http://www.w3.org/2001/XMLSchema#anyURI'}
+
         dataNode = DatatypeRestrictionNode(diagram=diagram)
         dataNode.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, dataNode))
@@ -2494,13 +2644,23 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         for f in facets:
 
-            facet = f.getFacet()
-            value = f.getFacetValue()
+            constrFacet = self.project.getIRI(str(f.getFacet().getIRI()))
 
-            fNode = FacetNode(diagram=diagram)
-            fNode.facet.constrainingFacet = facet
-            fNode.facet.literal = value
-            fNode.setPos(x+150, y+150)
+            value = f.getFacetValue()
+            lexicalForm = value.getLiteral()
+            dtype = value.getDatatype().getIRI()
+            dtypeIRI = self.project.getIRI(datatypes_iri[str(dtype)])
+            lang = value.getLang()
+
+            literal = Literal(lexicalForm, datatype=dtypeIRI, language=lang)
+
+            facet = Facet(constrFacet, literal)
+
+            fNode = FacetNode(facet=facet, diagram=diagram)
+
+            x = x +150
+            fNode.setPos(x, y+150)
+            fNode.doUpdateNodeLabel()
             self.session.undostack.push(CommandNodeAdd(diagram, fNode))
 
             inp = diagram.factory.create(Item.InputEdge, source=fNode, target=dataNode)
@@ -2512,12 +2672,20 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def drawExpression(self, ex, diagram, x, y):
 
+        QtCore.QCoreApplication.processEvents()
+
         ex_type = str(ex.getClassExpressionType())
 
         if ex_type == 'ObjectUnionOf':
 
             operands = ex.getOperandsAsList()
             n = self.drawObjUnionOf(operands, diagram, x, y)
+            return n
+
+        if ex_type == 'DataUnionOf':
+
+            operands = ex.getOperandsAsList()
+            n = self.drawDataUnionOf(operands, diagram, x, y)
             return n
 
         if ex_type == 'ObjectOneOf':
@@ -2596,7 +2764,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             return n
 
     def drawAxiom(self, axiom, diagram, x, y):
-
+        QtCore.QCoreApplication.processEvents()
         if isinstance(axiom, self.Axiom):
 
             ax_type = str(axiom.getAxiomType())
@@ -2843,6 +3011,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
                 subDrawn = False
                 supDrawn = False
+                found = None
 
                 if self.isAtomic(sub):
 
@@ -3913,6 +4082,59 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         return union_node
 
+    def drawDataUnionOf(self, operands, diagram, x, y):
+
+        nodes = []
+        xPos = []
+        yPos = []
+
+        starting_x = x - 150
+        starting_y = y
+
+        for op in operands:
+
+            if self.isAtomic(op):
+
+                x = starting_x + 150
+                y = starting_y
+
+                starting_x = x
+                starting_y = y
+
+                n = self.createNode(op, diagram, x, y)
+
+                nodes.append(n)
+                xPos.append(n.pos().x())
+                yPos.append(n.pos().y())
+
+            else:
+                x = starting_x + 150
+                y = starting_y
+
+                starting_x = x
+                starting_y = y
+
+                n = self.draw(op, diagram, x, y)
+                nodes.append(n)
+                xPos.append(n.pos().x())
+                yPos.append(n.pos().y())
+
+        x_med = (max(xPos) + min(xPos)) / 2
+        y_med = (max(yPos) + min(yPos)) / 2 - 100
+
+        union_node = UnionNode(diagram=diagram)
+        union_node.setPos(x_med, y_med)
+        self.session.undostack.push(CommandNodeAdd(diagram, union_node))
+
+        for n in nodes:
+            input = diagram.factory.create(Item.InputEdge, source=n, target=union_node)
+            n.addEdge(input)
+            union_node.addEdge(input)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+        return union_node
+
     def drawObjOneOf(self, operands, diagram, x, y):
 
         nodes = []
@@ -4451,7 +4673,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     domDrawn = True
 
                 else:
-
                     domainNode = self.draw(range, diagram, x, y)
                     domDrawn = True
 
