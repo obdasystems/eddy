@@ -40,20 +40,24 @@ import sqlite3
 from PyQt5 import (
     QtCore,
     QtGui,
-    QtWidgets,
+    QtWidgets
 )
+from PyQt5.QtCore import Qt
 
+from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.edges import CommandEdgeAdd
-from eddy.core.commands.iri import CommandChangeIRIOfNode
+from eddy.core.commands.iri import CommandChangeIRIOfNode, CommandChangeLiteralOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.commands.nodes import CommandNodeAdd
-from eddy.core.commands.project import CommandProjectAddAnnotationProperty
+from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
+from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.items.nodes.attribute import AttributeNode
+from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.items.nodes.complement import ComplementNode
 from eddy.core.items.nodes.concept import ConceptNode
 from eddy.core.items.nodes.datatype_restriction import DatatypeRestrictionNode
@@ -76,7 +80,7 @@ from eddy.core.jvm import getJavaVM
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalNamespaceError,
-    OWL2Datatype,
+    OWL2Datatype, Facet,
 )
 from eddy.core.owl import IRI
 from eddy.core.owl import Literal
@@ -579,66 +583,105 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         annotations = self.getAnnotations()
         # FOR EACH ANNOTATION
+        invalid_namespaces = []
         for ann in annotations:
             QtCore.QCoreApplication.processEvents()
 
             # GET IRI
             iri = ann.getSubject()
+            try:
+                subjectIRI = self.project.getIRI(str(iri))
+            except Exception:
+                invalid_namespaces.append(str(iri))
+
+        if len(invalid_namespaces) > 0:
+
+            invalid = ', '.join(invalid_namespaces)
+            msgbox = QtWidgets.QMessageBox()
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Illegal namespace defined.')
+            msgbox.setText('The current IRIs involved in the imported annotation assertions have an invalid namespace: '+ invalid+'. The associated annotation assertions will be ignored in the importation process.')
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.exec_()
+
+
+        for ann in annotations:
+            QtCore.QCoreApplication.processEvents()
+
+            # GET IRI
+            iri = ann.getSubject()
+            if str(iri) in invalid_namespaces:
+                continue
+            else:
+                subjectIRI = self.project.getIRI(str(iri))
             # GET PROPERTY
-            property = ann.getProperty()
+            property = ann.getProperty().getIRI()
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
-
-            try:
-                annIRI = str(property)
-                annIRI = annIRI.replace('<', '')
-                annIRI = annIRI.replace('>', '')
-                listProperties = [str(el) for el in list(self.project.annotationProperties)]
-
-                if annIRI not in listProperties:
-                    self.project.isValidIdentifier(annIRI)
-
-                    command = CommandProjectAddAnnotationProperty(self.project, annIRI)
-                    self.session.undostack.beginMacro(
-                        'Add annotation property {0} '.format(annIRI))
-                    if command:
-                        self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
-
-
-            except IllegalNamespaceError as e:
-                # noinspection PyArgumentList
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Entity Definition Error')
-                msgbox.setText('The string "{}" is not a legal IRI'.format(annIRI)+'\n'+str(e))
-                # msgbox.setText('There is no imported ontology associated with this Project')
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msgbox.exec_()
-
-
             # IF LANGUAGE, GET LANGUAGE
             lang_srt = value.find('"@')
             lang = None
             if lang_srt > 0:
                 lang = value[lang_srt + 2:]
-                value = value[0: lang_srt]
+                value = value[0: lang_srt + 1]
 
-            # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-            annotation = AnnotationAssertion(iri, annIRI, value, language=lang)
+            value = value.strip('"')
+
+            if value == '' or value is None:
+                continue
+            else:
+
+                annotation = str(property)
+                annotation = annotation.replace('<', '')
+                annotation = annotation.replace('>', '')
+
+                annotationIRI = self.project.getIRI(annotation)
+
+                try:
+
+                    if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+
+                        self.project.isValidIdentifier(annotation)
+
+                        command = CommandProjectAddAnnotationProperty(self.project, annotation)
+                        self.session.undostack.beginMacro(
+                            'Add annotation property {0} '.format(annotation))
+                        if command:
+                            self.session.undostack.push(command)
+                        self.session.undostack.endMacro()
+
+                except IllegalNamespaceError as e:
+                    # noinspection PyArgumentList
+                    msgBox = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Warning,
+                        'Entity Definition Error',
+                        'Illegal namespace defined.',
+                        informativeText='The string "{}" is not a legal IRI'.format(annotation),
+                        detailedText=str(e),
+                        parent=self,
+                    )
+                    msgBox.exec_()
 
 
-            # FOR EACH NODE WITH NODE.IRI == IRI
-            for el in diagram.items():
-
-                if el.isNode() and el.type() == Item.ConceptNode and str(iri) == str(el.iri):
-                    ## ADD ANNOTATION ##
-                    #el.iri.addAnnotationAssertion(annotation)
-                    self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, el.iri, annotation))
+                # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+                annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value, language=lang)
 
 
+                # FOR EACH NODE WITH NODE.IRI == IRI
+                processed = set()
+                for el in self.project.iriOccurrences():
+
+                    if el.iri not in processed:
+
+                        if el.isNode() and el.type() == Item.ConceptNode and el.iri is annotationAss.subject:
+                            ## ADD ANNOTATION ##
+                            self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, el.iri, annotationAss))
+
+                            processed.add(el.iri)
+
+        # ONTOLOGY ANNOTATIONS #
         ontoAnno = self.ontology.getAnnotations()
         for ann in ontoAnno:
             QtCore.QCoreApplication.processEvents()
@@ -646,49 +689,58 @@ class OntologyImporterPlugin(AbstractPlugin):
             # GET IRI
             iri = IRI(str(self.ontology_iri))
             # GET PROPERTY
-            property = ann.getProperty()
+            property = ann.getProperty().getIRI()
             # GET VALUE
             value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
-
-            try:
-                annIRI = str(property)
-                annIRI = annIRI.replace('<', '')
-                annIRI = annIRI.replace('>', '')
-                listProperties = [str(el) for el in list(self.project.annotationProperties)]
-
-                if annIRI not in listProperties:
-                    self.project.isValidIdentifier(annIRI)
-
-                    command = CommandProjectAddAnnotationProperty(self.project, annIRI)
-                    self.session.undostack.beginMacro(
-                            'Add annotation property {0} '.format(annIRI))
-                    if command:
-                        self.session.undostack.push(command)
-                    self.session.undostack.endMacro()
-
-
-            except IllegalNamespaceError as e:
-                # noinspection PyArgumentList
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Entity Definition Error')
-                msgbox.setText(
-                        'The string "{}" is not a legal IRI'.format(annIRI) + '\n' + str(e))
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msgbox.exec_()
             # IF LANGUAGE, GET LANGUAGE
             lang_srt = value.find('"@')
             lang = None
             if lang_srt > 0:
                 lang = value[lang_srt + 2:]
-                value = value[0: lang_srt]
+                value = value[0: lang_srt + 1]
 
-            # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-            annotation = AnnotationAssertion(iri, annIRI, value, language=lang)
+            value = value.strip('"')
 
-            self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, self.project.ontologyIRI, annotation))
+            if value == '' or value is None:
+                continue
+
+            else:
+
+                annotation = str(property)
+                annotation = annotation.replace('<', '')
+                annotation = annotation.replace('>', '')
+
+                annotationIRI = self.project.getIRI(annotation)
+
+                try:
+
+                    if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+
+                        self.project.isValidIdentifier(annotation)
+
+                        command = CommandProjectAddAnnotationProperty(self.project, annotation)
+                        self.session.undostack.beginMacro(
+                            'Add annotation property {0} '.format(annotation))
+                        if command:
+                            self.session.undostack.push(command)
+                        self.session.undostack.endMacro()
+
+                except IllegalNamespaceError as e:
+                    # noinspection PyArgumentList
+                    msgBox = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Warning,
+                        'Entity Definition Error',
+                        'Illegal namespace defined.',
+                        informativeText='The string "{}" is not a legal IRI'.format(annotation),
+                        detailedText=str(e),
+                        parent=self,
+                    )
+                    msgBox.exec_()
+
+                # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+                annotationAss = AnnotationAssertion(iri, annotationIRI, value, language=lang)
+
+                self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, self.project.ontologyIRI, annotationAss))
 
     def removeDuplicateFromIRI(self, diagram):
 
@@ -704,6 +756,22 @@ class OntologyImporterPlugin(AbstractPlugin):
                 # with the Command changes the Ontology Explorer as well
                 self.session.undostack.push(
                     CommandChangeIRIOfNode(self.project, el, new_iri, old_iri))
+
+    def importPrefixes(self):
+
+        format = self.manager.getOntologyFormat(self.ontology)
+        prefixesMap = format.getPrefixName2PrefixMap()
+
+        currentPrefixes = self.project.getManagedPrefixes()
+
+        for k in prefixesMap.keys():
+
+            prefix = k[:-1]
+            namespace = prefixesMap[k]
+
+            if prefix not in currentPrefixes and self.project.isValidPrefixEntry(prefix, namespace):
+                command = CommandProjectAddPrefix(self.project, prefix, namespace)
+                self.session.undostack.push(command)
 
     def onToolbarButtonClick(self):
 
@@ -787,6 +855,8 @@ class OntologyImporterPlugin(AbstractPlugin):
                     self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass(
                         "org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl")
                     self.OWLSubAnnotationPropertyOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom')
+                    self.AnnotationPropertyDomainAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyDomainAxiom')
+                    self.AnnotationPropertyRangeAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyRangeAxiom')
 
                 if diagram:
 
@@ -814,11 +884,10 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 except Exception:
                                     self.ontology_version = self.ontology.getOntologyID().getOntologyIRI().get().toString()
 
-
                                 QtCore.QCoreApplication.processEvents()
 
                                 db_filename = expandPath('@data/db.db')
-                                dir = db_filename[:-6]
+                                dir = os.path.dirname(db_filename)
                                 if not os.path.exists(dir):
                                     os.makedirs(dir)
 
@@ -849,6 +918,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                                                 create table if not exists axiom (
                                                     axiom       text,
                                                     type_of_axiom   text,
+                                                    func_axiom      text,
                                                     ontology_iri    text,
                                                     ontology_version text,
                                                     iri_dict text,
@@ -886,7 +956,9 @@ class OntologyImporterPlugin(AbstractPlugin):
                                     self.project.version) > 0 else '1.0'
 
                                 importation = Importation(self.project)
-                                importation.insertInDB(self.ontology)
+                                already = importation.insertInDB(self.ontology)
+                                if already:
+                                    return
 
                                 QtCore.QCoreApplication.processEvents()
 
@@ -918,6 +990,10 @@ class OntologyImporterPlugin(AbstractPlugin):
                             self.removeDuplicateFromIRI(diagram)
                             QtCore.QCoreApplication.processEvents()
 
+                            ### IMPORT PREFIXES ###
+                            self.importPrefixes()
+                            QtCore.QCoreApplication.processEvents()
+
                             ### IMPORT ANNOTATIONS ###
                             self.importAnnotations(diagram)
                             QtCore.QCoreApplication.processEvents()
@@ -939,7 +1015,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                                     self.EntityType.CLASS)) or (
                                     isinstance(ax, self.OWLDeclarationAxiom) and ax.getEntity().isType(
                                     self.EntityType.ANNOTATION_PROPERTY)) or (
-                                isinstance(ax, self.OWLSubAnnotationPropertyOfAxiom)):
+                                isinstance(ax, self.OWLSubAnnotationPropertyOfAxiom)) or (isinstance(ax, self.AnnotationPropertyDomainAxiom)) or (isinstance(ax, self.AnnotationPropertyRangeAxiom)):
                                     ### INSERT DRAWN AXIOMS IN Drawn Table ###
                                     # GET AXIOM IN Manchester Syntax #
                                     axiom = renderer.render(ax)
@@ -959,7 +1035,6 @@ class OntologyImporterPlugin(AbstractPlugin):
 
                                     not_processed.append(ax)
 
-                            # axs, not_dr, dr = importation.open()
                             QtCore.QCoreApplication.processEvents()
 
                             conn.commit()
@@ -968,27 +1043,34 @@ class OntologyImporterPlugin(AbstractPlugin):
                         except Exception as e:
                             raise e
 
-
-
     def onSecondButtonClick(self):
 
         try:
             # TRY TO OPEN IMPORTATIONS ASSOCIATED WITH THIS PROJECT #
             importation = Importation(self.project)
             axs, not_dr, dr = importation.open()
-            window = AxiomsWindow(not_dr, self.project)
-            if window.exec_():
-                print('ok')
+            if not_dr:
+                window = AxiomsWindow(not_dr, self.project)
+                window.exec_()
+            else:
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('No Ontology Imported')
+                msgbox.setText('There is no ontology imported in the current project')
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msgbox.exec_()
 
         except Exception as e:
 
             # IF NO IMPORTATIONS ASSOCIATED WITH THIS PROJECT -> WARNING #
+            print(e)
             msgbox = QtWidgets.QMessageBox()
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('No Ontology Imported')
-            msgbox.setText(str(e))
-            #msgbox.setText('There is no imported ontology associated with this Project')
+            msgbox.setText('There is no ontology imported in the current project')
             msgbox.setTextFormat(QtCore.Qt.RichText)
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msgbox.exec_()
@@ -1009,8 +1091,11 @@ class OntologyImporterPlugin(AbstractPlugin):
         """
 
         # INITIALIZE THE WIDGETS
-        self.myButton = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/24/ic_system_update'))
-        self.myButton2 = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'))
+        self.myButton = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/24/ic_system_update'), statusTip='Import OWL file')
+        self.myButton2 = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'), statusTip='Select axioms from imported ontologies')
+        # tooltip
+        self.myButton.setToolTip('Import OWL file')
+        self.myButton2.setToolTip('Select axioms from imported ontologies')
 
         # CREATE VIEW TOOLBAR BUTTONS
         self.session.widget('view_toolbar').addSeparator()
@@ -1034,6 +1119,9 @@ class Importation():
         self.project_version = self.project.version if len(self.project.version) > 0 else '1.0'
 
         self.db_filename = expandPath('@data/db.db')
+        dir = os.path.dirname(self.db_filename)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 
         self.vm = getJavaVM()
         if not self.vm.isRunning():
@@ -1042,11 +1130,10 @@ class Importation():
 
         self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass(
             "org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl")
+        self.FunctionalOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass("org.semanticweb.owlapi.functional.renderer.OWLFunctionalSyntaxRenderer")
         self.ShortFormProvider = self.vm.getJavaClass("org.semanticweb.owlapi.util.SimpleShortFormProvider")
         self.OWLEntity = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLEntity")
         self.DataFactoryImpl = self.vm.getJavaClass("uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl")
-
-        #self.insertInDB(project_name, diagram_name, ontology)
 
     def insertInDB(self, ontology):
 
@@ -1083,13 +1170,15 @@ class Importation():
 
             axioms = ontology.getAxioms()
             renderer = self.ManchesterOWLSyntaxOWLObjectRendererImpl()
+
+            #funcRenderer = self.FunctionalOWLSyntaxOWLObjectRendererImpl()
+
             # INSERT ALL AXIOMS OF IMPORTED ONTOLOGY IN DB #
             df = self.DataFactoryImpl()
             sfp = self.ShortFormProvider()
             for ax in axioms:
                 # get axiom type #
                 ax_type = ax.getAxiomType()
-
                 # get all IRIs in axiom #
                 classes = ax.getClassesInSignature()
                 dataProperties = ax.getDataPropertiesInSignature()
@@ -1125,21 +1214,36 @@ class Importation():
                     entity = df.getOWLEntity(type, iri)
                     shortName = sfp.getShortForm(entity)
                     d[shortName] = str(iri)
+
+                if str(ax_type) == 'AnnotationAssertion':
+                    d = {}
+                    iri = ax.getSubject()
+                    d['subject'] = str(iri)
+
+                    prop = ax.getProperty().getIRI()
+                    d['property'] = str(prop)
+
+                    value = ax.getValue()
+                    d['value'] = str(value)
+
+
                 iri_dict = str(d)
                 #print(iri_dict)
 
+
                 # getting the axiom in Manchester Syntax #
                 axiom = renderer.render(ax)
+                # keep the original form (Functional Syntax #
+                funcAxiom = ax
                 QtCore.QCoreApplication.processEvents()
 
                 # INSERT AXIOM IN DB #
                 conn.execute("""
-                            insert or ignore into axiom (axiom, type_of_axiom, ontology_iri, ontology_version, iri_dict)
-                            values (?, ?, ?, ?, ?)
-                            """, (str(axiom), str(ax_type), ontology_iri, ontology_version, iri_dict))
+                            insert or ignore into axiom (axiom, type_of_axiom, func_axiom, ontology_iri, ontology_version, iri_dict)
+                            values (?, ?, ?, ?, ?, ?)
+                            """, (str(axiom).strip(), str(ax_type), str(funcAxiom).strip(), ontology_iri, ontology_version, iri_dict))
 
             conn.commit()
-            #print('Assiomi Inseriti')
             QtCore.QCoreApplication.processEvents()
 
         # CHECK if IMPORTATION IN Importation Table #
@@ -1164,7 +1268,7 @@ class Importation():
             # REMOVE CURRENT DIAGRAM #
             diagram = session.mdi.activeDiagram()
             self.project.removeDiagram(diagram)
-            return
+            return True
 
         else:
             # INSERT IMPORTATION IN DB #
@@ -1174,98 +1278,97 @@ class Importation():
                             """, (self.project_iri, self.project_version, ontology_iri, ontology_version, str(session)))
             conn.commit()
             conn.close()
-            #print('Importazione Inserita')
-
-
+            return False
 
     def open(self):
 
-        # GET ALL AXIOMS OF IMPORTED ONTOLOGIES #
-        # (making distinction between drawn and not drawn)
-        conn = sqlite3.connect(self.db_filename)
+        db_exists = os.path.exists(self.db_filename)
+        if db_exists:
+            # GET ALL AXIOMS OF IMPORTED ONTOLOGIES #
+            # (making distinction between drawn and not drawn)
+            conn = sqlite3.connect(self.db_filename)
 
-        cursor = conn.cursor()
+            cursor = conn.cursor()
 
-        # get ontologies imported in the current project #
-        cursor.execute('''SELECT ontology_iri, ontology_version
-                        FROM importation
-                        WHERE project_iri = ? and project_version = ?
-                        ''', (self.project_iri, self.project_version))
+            # get ontologies imported in the current project #
+            cursor.execute('''SELECT ontology_iri, ontology_version
+                            FROM importation
+                            WHERE project_iri = ? and project_version = ?
+                            ''', (self.project_iri, self.project_version))
 
-        rows = cursor.fetchall()
-        imported_ontologies = []
-        for row in rows:
-            imported_ontologies.append((row[0], row[1]))
-
-        # dictionaries of axioms -> k: Ontology, value: Axioms
-        axioms = {}
-        not_drawn = {}
-        drawn = {}
-
-        # for each ontology : get ALL axioms, DRAWN axioms, NOT DRAWN axioms #
-        for ontology in imported_ontologies:
-
-            # ALL #
-            ontology_iri, ontology_version = ontology
-            cursor.execute('''SELECT axiom
-                            FROM axiom
-                            WHERE ontology_iri = ? and ontology_version = ?''', (ontology_iri, ontology_version))
             rows = cursor.fetchall()
-            axioms[ontology] = []
+            imported_ontologies = []
             for row in rows:
-                axioms[ontology].append(row[0])
-            #print('Assiomi Estratti')
+                imported_ontologies.append((row[0], row[1]))
 
-            # NOT DRAWN #
-            cursor.execute('''SELECT axiom, type_of_axiom
-                            FROM axiom
-                            WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom != 'Declaration'
-                            and type_of_axiom != 'FunctionalObjectProperty'
-                            and type_of_axiom != 'TransitiveObjectProperty'
-                            and type_of_axiom != 'SymmetricObjectProperty'
-                            and type_of_axiom != 'AsymmetricObjectProperty'
-                            and type_of_axiom != 'ReflexiveObjectProperty'
-                            and type_of_axiom != 'IrreflexiveObjectProperty'
-                            and type_of_axiom != 'InverseFunctionalObjectProperty'
-                            and type_of_axiom != 'FunctionalDataProperty'
-                            and (?, ?,  axiom) not in (SELECT project_iri, project_version, axiom
-                                                                                    FROM drawn)''', (ontology_iri, ontology_version, self.project_iri, self.project_version))
-            rows = cursor.fetchall()
-            not_drawn[ontology] = []
-            for row in rows:
-                not_drawn[ontology].append(row[0])
-                #print(row[0], row[1])
+            # dictionaries of axioms -> k: Ontology, value: Axioms
+            axioms = {}
+            not_drawn = {}
+            drawn = {}
 
-            # DRAWN #
-            drawn[ontology] = [a for a in axioms[ontology] if a not in not_drawn[ontology]]
+            # for each ontology : get ALL axioms, DRAWN axioms, NOT DRAWN axioms #
+            for ontology in imported_ontologies:
 
-        #print('Distinzione Disegnati e non')
-        return axioms, not_drawn, drawn
+                # ALL #
+                ontology_iri, ontology_version = ontology
+                cursor.execute('''SELECT axiom
+                                FROM axiom
+                                WHERE ontology_iri = ? and ontology_version = ?''', (ontology_iri, ontology_version))
+                rows = cursor.fetchall()
+                axioms[ontology] = []
+                for row in rows:
+                    axioms[ontology].append(row[0])
+
+                # NOT DRAWN #
+                cursor.execute('''SELECT axiom, type_of_axiom, func_axiom
+                                FROM axiom
+                                WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom != 'Declaration'
+                                and type_of_axiom != 'FunctionalObjectProperty'
+                                and type_of_axiom != 'TransitiveObjectProperty'
+                                and type_of_axiom != 'SymmetricObjectProperty'
+                                and type_of_axiom != 'AsymmetricObjectProperty'
+                                and type_of_axiom != 'ReflexiveObjectProperty'
+                                and type_of_axiom != 'IrreflexiveObjectProperty'
+                                and type_of_axiom != 'InverseFunctionalObjectProperty'
+                                and type_of_axiom != 'FunctionalDataProperty'
+                                and (?, ?,  axiom) not in (SELECT project_iri, project_version, axiom
+                                                                                        FROM drawn)''', (ontology_iri, ontology_version, self.project_iri, self.project_version))
+                rows = cursor.fetchall()
+                not_drawn[ontology] = []
+                for row in rows:
+                    not_drawn[ontology].append([row[0], row[1], row[2]])
+
+                # DRAWN #
+                drawn[ontology] = [a for a in axioms[ontology] if a not in not_drawn[ontology]]
+
+            return axioms, not_drawn, drawn
 
     def removeFromDB(self):
 
-        db_filename = expandPath('@data/db.db')
+        db_exists = os.path.exists(self.db_filename)
+        if db_exists:
 
-        conn = sqlite3.connect(db_filename)
+            conn = sqlite3.connect(self.db_filename)
 
-        with conn:
-            ### REMOVE IMPORTATIONS NOT SAVED ###
-            conn.execute(
-                    'delete from importation where project_iri = ? and project_version = ? and session_id = ?',
-                    (self.project_iri, self.project_version, str(self.project.session)))
-            conn.commit()
-            ### REMOVE DRAWS NOT SAVED ###
-            conn.execute(
-                    'delete from drawn where project_iri = ? and project_version = ? and session_id = ?',
-                    (self.project_iri, self.project_version, str(self.project.session)))
-            conn.commit()
+            with conn:
+                ### REMOVE IMPORTATIONS NOT SAVED ###
+                conn.execute(
+                        'delete from importation where project_iri = ? and project_version = ? and session_id = ?',
+                        (self.project_iri, self.project_version, str(self.project.session)))
+                conn.commit()
+                ### REMOVE DRAWS NOT SAVED ###
+                conn.execute(
+                        'delete from drawn where project_iri = ? and project_version = ? and session_id = ?',
+                        (self.project_iri, self.project_version, str(self.project.session)))
+                conn.commit()
 
-class AxiomsWindow(QtWidgets.QDialog):
+
+class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
     def __init__(self, not_drawn, project):
 
         super().__init__()
-        self.resize(500, 400)
+        self.resize(600, 600)
         self.setWindowTitle("Other Axioms")
 
         # IMPORT FROM OWLAPI #
@@ -1305,40 +1408,52 @@ class AxiomsWindow(QtWidgets.QDialog):
                 'org.semanticweb.owlapi.model.OWLDatatype')
             self.DatatypeRestriction = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDatatypeRestriction")
             self.DataOneOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataOneOf")
+            self.DataUnionOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataUnionOf")
+
         self.db_filename = expandPath('@data/db.db')
+        dir = os.path.dirname(self.db_filename)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 
         self.project = project
         self.project_iri = str(project.ontologyIRI)
         self.project_version = project.version if len(project.version) > 0 else '1.0'
         self.session = project.session
 
+        self.not_drawn = not_drawn
+
         self.checkedAxioms = []
+        self.hiddenItems = []
+        self.labels = []
 
         ## create layout ##
         # Create an outer layout
-        layout1 = QtWidgets.QVBoxLayout()
+        self.table = QtWidgets.QTreeWidget(objectName='axioms_table_widget')
+        self.addWidget(self.table)
 
-        # create scroll_area
-        scroll_area = QtWidgets.QScrollArea(widgetResizable=True)
-        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        scroll_area.setWidgetResizable(True)
+        # add buttons
 
-        scroll_area.setLayout(layout1)
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='button_box')
 
-        innerWidget = QtWidgets.QWidget()
-        # Create a layout for the checkboxes
-        layout2 = QtWidgets.QVBoxLayout()
+        selectBtn = QtWidgets.QPushButton('Select All',
+                                          objectName='axioms_selectall_button')
+        self.confirmationBox.addButton(selectBtn, QtWidgets.QDialogButtonBox.ActionRole)
+        connect(selectBtn.clicked, self.selectAllAxioms)
 
-        # add OK and Cancel buttons
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        deselectBtn = QtWidgets.QPushButton('Deselect All',
+                                          objectName='axioms_deselectall_button')
+        self.confirmationBox.addButton(deselectBtn, QtWidgets.QDialogButtonBox.ActionRole)
+        connect(deselectBtn.clicked, self.deselectAllAxioms)
+
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
         self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
         # add Searchbar
-        self.searchbar = QtWidgets.QLineEdit()
+        self.searchbar = QtWidgets.QLineEdit(objectName='axioms_searchbar')
+        self.searchbar.setPlaceholderText("Search...")
         self.searchbar.textChanged.connect(self.update_display)
-        layout2.addWidget(self.searchbar)
+        self.addWidget(self.searchbar)
 
         # Add some checkboxes to the layout
         self.checkBoxes = []
@@ -1347,49 +1462,196 @@ class AxiomsWindow(QtWidgets.QDialog):
         # grouped by ontology
         for k in not_drawn.keys():
 
-            onto = k[1]+':'
-            a = QtWidgets.QLabel(onto)
-            a.setFont(QtGui.QFont('AnyStyle', 8, QtGui.QFont.DemiBold))
-            layout1.addWidget(a)
-            for ax in not_drawn[k]:
+            onto = k[1]
+            self.labels.append(onto)
+            ontoLabel = QtWidgets.QTreeWidgetItem(self.table, [str(onto)])
+            ontoLabel.setFont(0, QtGui.QFont('AnyStyle', 9.5, QtGui.QFont.DemiBold))
 
-                check = QtWidgets.QCheckBox(str(ax))
-                check.setChecked(False)
-                check.stateChanged.connect(self.checkAxiom)
-                layout1.addWidget(check)
+            class_axioms = []
+            objProp_axioms = []
+            dataProp_axioms = []
+            individual_axioms = []
+            others = []
+
+            for pair in not_drawn[k]:
+
+                ax = pair[0]
+                ax_type = pair[1]
+
+                if ax_type in ['SubClassOf', 'EquivalentClasses', 'DisjointClasses']:
+                    class_axioms.append(ax)
+                elif ax_type in ['SubObjectPropertyOf', 'EquivalentObjectProperties', 'InverseObjectProperties', 'DisjointObjectProperties', 'ObjectPropertyDomain', 'ObjectPropertyRange', 'SubPropertyChainOf']:
+                    objProp_axioms.append(ax)
+                elif ax_type in ['SubDataPropertyOf', 'EquivalentDataProperties', 'DisjointDataProperties', 'DataPropertyDomain', 'DataPropertyRange']:
+                    dataProp_axioms.append(ax)
+                elif ax_type in ['ClassAssertion', 'ObjectPropertyAssertion', 'DataPropertyAssertion', 'NegativeObjectPropertyAssertion', 'NegativeDataPropertyAssertion', 'SameIndividual', 'DifferentIndividuals']:
+                    individual_axioms.append(ax)
+                else:
+                    others.append(ax)
+
+            classLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Class Axioms'])
+            classLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Class Axioms')
+
+            for ax in class_axioms:
+
+                check = QtWidgets.QTreeWidgetItem(classLabel, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
+
                 self.checkBoxes.append(check)
 
-        # Nest the inner layouts into the outer layout
-        layout2.addWidget(scroll_area)
-        innerWidget.setLayout(layout1)
-        scroll_area.setWidget(innerWidget)
+            objPropLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Object Property Axioms'])
+            objPropLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Object Property Axioms')
+
+            for ax in objProp_axioms:
+                check = QtWidgets.QTreeWidgetItem(objPropLabel, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                self.checkBoxes.append(check)
+
+            dataPropLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Data Property Axioms'])
+            dataPropLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Data Property Axioms')
+
+            for ax in dataProp_axioms:
+                check = QtWidgets.QTreeWidgetItem(dataPropLabel, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                self.checkBoxes.append(check)
+
+            indivLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Individual Axioms'])
+            indivLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            self.labels.append('Individual Axioms')
+
+            for ax in individual_axioms:
+                check = QtWidgets.QTreeWidgetItem(indivLabel, [str(ax)])
+                basefont = check.font(0).family()
+                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                self.checkBoxes.append(check)
+
+            if others:
+                othersLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Other Axioms'])
+                othersLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+                self.labels.append('Other Axioms')
+
+                for ax in others:
+                    check = QtWidgets.QTreeWidgetItem(othersLabel, [str(ax)])
+                    basefont = check.font(0).family()
+                    check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
+                    check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+                    check.setCheckState(0, Qt.CheckState.Unchecked)
+
+                    self.checkBoxes.append(check)
+
+            self.table.sortItems(0, Qt.AscendingOrder)
+
+        self.table.setHeaderHidden(True)
+        self.table.header().setStretchLastSection(False)
+        self.table.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+
+        self.table.doubleClicked.connect(self.checkOnClick)
+        self.table.itemChanged.connect(self.checkAxiom)
 
         connect(self.confirmationBox.rejected, self.reject)
         connect(self.confirmationBox.accepted, self.accept)
 
-        layout2.addWidget(self.confirmationBox)
+        self.addWidget(self.confirmationBox)
 
-        # Set the window's main layout
-        self.setLayout(layout2)
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('axioms_searchbar'))
+        formlayout.addRow(self.widget('axioms_table_widget'))
+        formlayout.addRow(self.confirmationBox)
+        groupbox = QtWidgets.QGroupBox('Choose Axioms:', self,
+                                       objectName='axioms_widget')
+        groupbox.setLayout(formlayout)
+        groupbox.setMinimumSize(500, 550)
+        self.addWidget(groupbox)
+
+        # ANNOTATION ASSERTIONS TAB LAYOUT CONFIGURATION
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('axioms_widget'), 0, QtCore.Qt.AlignTop)
+
+        self.setLayout(layout)
+
 
     def update_display(self, text):
 
         # searchbar function #
-        for check in self.checkBoxes:
+        topcount = self.table.topLevelItemCount()
 
-            if text.lower() in check.text().lower():
+        for top in range(topcount):
 
-                check.show()
+            topItem = self.table.topLevelItem(top)
+            self.table.collapseItem(topItem)
+            middleChildCount = topItem.childCount()
 
+            for middleChild in range(middleChildCount):
+
+                middleChildItem = topItem.child(middleChild)
+                self.table.collapseItem(middleChildItem)
+                childCount = middleChildItem.childCount()
+
+                for child in range(childCount):
+
+                    childItem = middleChildItem.child(child)
+                    childItem.setHidden(False)
+
+        self.hiddenItems = []
+
+        for top in range(topcount):
+
+            topItem = self.table.topLevelItem(top)
+            middleChildCount = topItem.childCount()
+
+            for middleChild in range(middleChildCount):
+
+                middleChildItem = topItem.child(middleChild)
+                childCount = middleChildItem.childCount()
+
+                for child in range(childCount):
+                    childItem = middleChildItem.child(child)
+                    item = childItem.text(0)
+
+                    if text.lower() in item.lower():
+                        self.table.expandItem(topItem)
+                        self.table.expandItem(middleChildItem)
+                    else:
+                        childItem.setHidden(True)
+                        self.hiddenItems.append(childItem)
+
+    def checkOnClick(self, index):
+
+        item = self.table.itemFromIndex(index)
+        axiom = item.text(0)
+        state = item.checkState(0)
+
+        if axiom not in self.labels:
+            if state == QtCore.Qt.Checked:
+                item.setCheckState(0, Qt.CheckState.Unchecked)
             else:
+                item.setCheckState(0, Qt.CheckState.Checked)
 
-                check.hide()
+    def checkAxiom(self, item, column):
 
-    def checkAxiom(self, state):
+        axiom = item.text(column)
+        state = item.checkState(column)
 
-        axiom = self.sender().text()
-
-        if state:
+        if state == QtCore.Qt.Checked:
 
             # ON SELECTION OF AN AXIOM -> ADD TO CHECKEDAXIOMS and enable OK #
             self.checkedAxioms.append(axiom)
@@ -1397,9 +1659,69 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         else:
             # ON de-SELECTION OF AN AXIOM -> REMOVE FROM CHECKEDAXIOMS and if empty: disable OK #
-            self.checkedAxioms.remove(axiom)
+            if axiom in self.checkedAxioms:
+                self.checkedAxioms.remove(axiom)
             if len(self.checkedAxioms) == 0:
                 self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+
+    def selectAllAxioms(self):
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.table.clearSelection()
+
+        topcount = self.table.topLevelItemCount()
+
+        for top in range(topcount):
+
+            topItem = self.table.topLevelItem(top)
+            middleChildCount = topItem.childCount()
+            if topItem.isExpanded():
+
+                for middleChild in range(middleChildCount):
+
+                    middleChildItem = topItem.child(middleChild)
+                    childCount = middleChildItem.childCount()
+
+                    if middleChildItem.isExpanded():
+
+                        for child in range(childCount):
+                            childItem = middleChildItem.child(child)
+
+                            if childItem not in self.hiddenItems:
+                                childItem.setCheckState(0, QtCore.Qt.Checked)
+                                #self.table.expandItem(topItem)
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
+    def deselectAllAxioms(self):
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.table.clearSelection()
+
+        topcount = self.table.topLevelItemCount()
+
+        for top in range(topcount):
+
+            topItem = self.table.topLevelItem(top)
+            middleChildCount = topItem.childCount()
+
+            if topItem.isExpanded():
+
+                for middleChild in range(middleChildCount):
+
+                    middleChildItem = topItem.child(middleChild)
+                    childCount = middleChildItem.childCount()
+
+                    if middleChildItem.isExpanded():
+
+                        for child in range(childCount):
+                            childItem = middleChildItem.child(child)
+
+                            if childItem not in self.hiddenItems:
+                                childItem.setCheckState(0, QtCore.Qt.Unchecked)
+
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
 
     def reject(self):
 
@@ -1410,16 +1732,154 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         # k: axiom (::string), value: manchester_axiom (::Axiom)
         # (to keep track of the string axiom to insert in DRAWN table)
-        axiomsToDraw = {}
+        with BusyProgressDialog('Drawing Axioms', 0.5):
 
-        for ax in self.checkedAxioms:
-            # for each checked axiom:
+            axiomsToDraw = {}
+            cantDraw = []
 
-            manchester_axiom = self.string2axiom(ax)
-            axiomsToDraw[ax] = manchester_axiom
+            for ax in self.checkedAxioms:
+                # for each checked axiom:
+                QtCore.QCoreApplication.processEvents()
+                functional_axiom = None
+                manchester_axiom = None
 
-        super().accept()
-        self.getInvolvedDiagrams(axiomsToDraw)
+                for k in self.not_drawn.keys():
+                    for triple in self.not_drawn[k]:
+                        manch_ax = triple[0]
+                        func_ax = triple[2]
+                        if manch_ax == ax:
+                            # try to parse Functional axiom string into Axiom #
+                            functional_axiom = self.string2axiom2(func_ax)
+
+                if functional_axiom:
+                    axiomsToDraw[ax] = functional_axiom
+                else:
+                    # if problems with Functional parsing -> try to parse Manchester axiom string into Axiom #
+                    manchester_axiom = self.string2axiom(ax)
+                    if manchester_axiom:
+                        axiomsToDraw[ax] = manchester_axiom
+                    else:
+                        # if axioms can't be parsed -> can't draw message #
+                        cantDraw.append(ax)
+
+            super().accept()
+            if cantDraw:
+
+                invalid = ', '.join(cantDraw)
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('Wrong syntax')
+                msgbox.setText("The current axioms can't be parsed: "+ invalid+'. These axioms will be ignored in the importation process.')
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msgbox.exec_()
+
+            if axiomsToDraw:
+                self.getInvolvedDiagrams(axiomsToDraw)
+
+    def string2axiom2(self, ax):
+
+        StringDocumentSource = self.vm.getJavaClass('org.semanticweb.owlapi.io.StringDocumentSource')
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_filename)
+        except Exception as e:
+            print(e)
+
+        cursor = conn.cursor()
+        # GET ALL THE ONTOLOGIES IMPORTED IN THE PROJECT #
+        cursor.execute('''SELECT ontology_iri, ontology_version
+                                        FROM importation
+                                        WHERE project_iri = ? and project_version = ?
+                                        ''', (self.project_iri, self.project_version))
+        QtCore.QCoreApplication.processEvents()
+
+        project_ontologies = []
+        rows = cursor.fetchall()
+        for row in rows:
+            project_ontologies.append((row[0], row[1]))
+
+        for ontology in project_ontologies:
+            # for each imported ontology:
+            # CHECK if AXIOM belongs to ONTOLOGY  #
+            QtCore.QCoreApplication.processEvents()
+
+            ontology_iri, ontology_version = ontology
+
+            cursor = conn.cursor()
+            cursor.execute('''SELECT *
+                                    FROM axiom
+                                    WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                    ''', (ontology_iri, ontology_version, ax))
+
+            if len(cursor.fetchall()) > 0:
+                # IF BELONGS to Ontology:
+                QtCore.QCoreApplication.processEvents()
+
+                # create ontology manager #
+                manager = self.OWLManager().createOWLOntologyManager()
+
+                # get all declaration axioms of the ontology to pass to parser #
+                cursor.execute('''SELECT axiom, iri_dict, func_axiom
+                                       FROM axiom
+                                        WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom = ?
+                                        ''',
+                               (ontology_iri, ontology_version, 'Declaration'))
+                rows = cursor.fetchall()
+                # DECLARE ENTITIES of the ONTOLOGY #
+                ontostr = 'Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>) Prefix(owl:=<http://www.w3.org/2002/07/owl#>) Ontology(<'+ ontology_iri+'> '
+                for row in rows:
+                    # for each declaration axiom :
+
+                    # get axiom string #
+                    declaration_axiom = str(row[2])
+                    ontostr = ontostr + declaration_axiom + ' '
+
+
+                ontostr = ontostr + 'Declaration(Class(<http://www.w3.org/2002/07/owl#Thing>)) Declaration(Class(<http://www.w3.org/2002/07/owl#Nothing>)) Declaration(ObjectProperty(<http://www.w3.org/2002/07/owl#topObjectProperty>)) Declaration(ObjectProperty(<http://www.w3.org/2002/07/owl#bottomObjectProperty>)) Declaration(DataProperty(<http://www.w3.org/2002/07/owl#topDataProperty>)) Declaration(DataProperty(<http://www.w3.org/2002/07/owl#bottomDataProperty>))'
+
+                new_ax = ax
+                while '(InverseOf(' in new_ax:
+                    idx = new_ax.find('(InverseOf(')
+                    idxEnd = new_ax.find(')', idx)
+                    prop = new_ax[idx+11: idxEnd]
+                    objProp = 'Declaration(ObjectProperty('+prop+'))' in ontostr
+                    if objProp:
+                        new_ax = new_ax.replace('(InverseOf(', '(ObjectInverseOf(', 1)
+                    else:
+                        dataProp = 'Declaration(DataProperty('+prop+'))' in ontostr
+                        if dataProp:
+                            new_ax = new_ax.replace('(InverseOf(', '(DataInverseOf(', 1)
+
+
+                ontostr = ontostr + new_ax + ')'
+
+                cursor.execute('''SELECT iri_dict, type_of_axiom
+                                                FROM axiom
+                                                WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                                ''',
+                               (ontology_iri, ontology_version, ax))
+                rows = cursor.fetchall()
+                for row in rows:
+
+                    axiom_type = row[1]
+
+                try:
+                    # build ontology from string #
+                    input = StringDocumentSource(ontostr)
+                    ontology = manager.loadOntologyFromOntologyDocument(input)
+                    # get functional axioms from ontology #
+                    axioms = ontology.getAxioms()
+                    for axiom in axioms:
+                        QtCore.QCoreApplication.processEvents()
+                        # get axiom we needed to parse by filtering on type #
+                        if str(axiom.getAxiomType()) == axiom_type:
+                            functional_axiom = axiom
+                            return functional_axiom
+                    return None
+                except Exception as e:
+                    print(e)
 
     def string2axiom(self, ax):
 
@@ -1575,7 +2035,7 @@ class AxiomsWindow(QtWidgets.QDialog):
                                  'xsd:normalizedString', 'xsd:token', 'xsd:language', 'xsd:Name',
                                  'xsd:NCName', 'xsd:NMTOKEN', 'xsd:boolean', 'xsd:hexBinary',
                                  'xsd:base64Binary',
-                                 'xsd:dateTime', 'xsd: dateTimeStamp', 'rdf:XMLLiteral',
+                                 'xsd:dateTime', 'xsd:dateTimeStamp', 'rdf:XMLLiteral',
                                  'rdf:PlainLiteral', 'rdfs:Literal', 'xsd:anyURI']
                 for datatype_iri in datatypes_iri:
                     # create iri for each datatype #
@@ -1618,35 +2078,11 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                 try:
                     manchester_axiom = False
-                    '''
-                    ## handle declaration axioms ##
-                    # for each type of entity declared: get fullIRI, create entity
-                    # -> manchester_axiom = declaration of entity
-
-                    if new_ax[:13] == 'DataProperty:':
-                        declaration_axiom = new_ax[14:]
-                        entity = d[declaration_axiom]
-                        iri = self.IRI.create(entity)
-                        owlDataProp = self.OWLDataPropertyImpl(iri)
-                        manchester_axiom = df.getOWLDeclarationAxiom(owlDataProp)
-                    if new_ax[:15] == 'ObjectProperty:':
-                        declaration_axiom = new_ax[16:]
-                        entity = d[declaration_axiom]
-                        iri = self.IRI.create(entity)
-                        owlObjProp = self.OWLObjectPropertyImpl(iri)
-                        manchester_axiom = df.getOWLDeclarationAxiom(owlObjProp)
-                    if new_ax[:11] == 'Individual:':
-                        declaration_axiom = new_ax[12:]
-                        entity = d[declaration_axiom]
-                        iri = self.IRI.create(entity)
-                        owlNamedInd = self.OWLNamedIndividualImpl(iri)
-                        manchester_axiom = df.getOWLDeclarationAxiom(owlNamedInd)
-                    '''
                     ## handle DisjointClasses and DifferentIndividuals axiom ##
                     # for each class/individual : get fullIRI, create class/individual
                     # -> machester_axiom = disjoint/different of classes/individuals
-                    if new_ax[:17] == ' DisjointClasses:':
-                        classes = [x.strip() for x in new_ax[18:].split(',')]
+                    if new_ax[:16] == 'DisjointClasses:':
+                        classes = [x.strip() for x in new_ax[17:].split(',')]
 
                         owlClasses = []
                         for cl in classes:
@@ -1657,8 +2093,8 @@ class AxiomsWindow(QtWidgets.QDialog):
                             owlClasses.append(owlClass)
 
                         manchester_axiom = df.getOWLDisjointClassesAxiom(owlClasses)
-                    if new_ax[:22] == ' DifferentIndividuals:':
-                        individuals = [x.strip() for x in new_ax[23:].split(',')]
+                    if new_ax[:21] == 'DifferentIndividuals:':
+                        individuals = [x.strip() for x in new_ax[22:].split(',')]
 
                         owlIndividuals = []
                         for ind in individuals:
@@ -1934,7 +2370,7 @@ class AxiomsWindow(QtWidgets.QDialog):
                         manchester_axiom = parser.parseAxiom()
 
                 except Exception as e:
-
+                    '''
                     msgbox = QtWidgets.QMessageBox()
                     msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
                     msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
@@ -1944,6 +2380,8 @@ class AxiomsWindow(QtWidgets.QDialog):
                     msgbox.setTextFormat(QtCore.Qt.RichText)
                     msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msgbox.exec_()
+                    '''
+                    print(e)
 
         return manchester_axiom
 
@@ -1953,7 +2391,9 @@ class AxiomsWindow(QtWidgets.QDialog):
         # GET ALL ELEMENTS INVOLVED IN AXIOMS #
         elements = {}
         for str_ax in axioms.keys():
-        # for each axiom :
+            QtCore.QCoreApplication.processEvents()
+
+            # for each axiom :
             elements[str_ax] = []
             ax = axioms[str_ax]
             # get all IRIs in axiom #
@@ -1979,18 +2419,22 @@ class AxiomsWindow(QtWidgets.QDialog):
             for el in elements[k]:
             # each element involved :
                 # get element iri #
-                iri = el.getIRI()
-                for diagram in project_diagrams:
-                # for each diagram of the project:
-                    if diagram.name not in involvedDiagrams[k]:
-                    # if not already involved:
-                        # check if there is an item with same IRI as element
-                        for item in diagram.items():
-                            if item.isNode() and (item.type() == Item.ConceptNode or item.type() == Item.IndividualNode or item.type() == Item.AttributeNode or item.type == Item.RoleNode) and str(iri) == str(item.iri):
-                                involvedDiagrams[k].append(diagram.name)
+                if not el.isTopEntity() and not el.isBottomEntity():
+                    iri = el.getIRI()
+                    for diagram in project_diagrams:
+                    # for each diagram of the project:
+                        if diagram.name not in involvedDiagrams[k]:
+                        # if not already involved:
+                            # check if there is an item with same IRI as element
+                            for item in diagram.items():
+                                QtCore.QCoreApplication.processEvents()
+
+                                if item.isNode() and (item.type() == Item.ConceptNode or item.type() == Item.IndividualNode or item.type() == Item.AttributeNode or item.type == Item.RoleNode) and str(iri) == str(item.iri):
+                                    involvedDiagrams[k].append(diagram.name)
 
         axiomsDict = {}
         for str_ax in axioms.keys():
+            QtCore.QCoreApplication.processEvents()
 
             axiomsDict[str_ax] = {}
             axiomsDict[str_ax]['axiom'] = axioms[str_ax]
@@ -2016,15 +2460,21 @@ class AxiomsWindow(QtWidgets.QDialog):
     def drawAxioms(self, dict):
 
         for str_ax in dict.keys():
+            QtCore.QCoreApplication.processEvents()
+
             axiom = dict[str_ax]['axiom']
             diagrams = dict[str_ax]['involvedDiagrams']
             #print(axiom, diagrams)
-
             if len(diagrams) == 0:
                 # if no diagram involved:
                 # draw on the activeOne
                 diag = self.session.mdi.activeDiagram()
-                n = self.draw(axiom, diag)
+                if diag:
+                    n = self.draw(axiom, diag)
+                else:
+                    project_diagrams = list(self.project.diagrams())
+                    diag = project_diagrams[0]
+                    n = self.draw(axiom, diag)
 
             if len(diagrams) == 1:
                 # if only one diagram involved:
@@ -2041,9 +2491,10 @@ class AxiomsWindow(QtWidgets.QDialog):
                 # if more than one diagram involved:
                 # draw on the activeOne if involved
                 diag = self.session.mdi.activeDiagram()
-                if diag.name in diagrams:
+                if diag:
+                    if diag.name in diagrams:
 
-                    n = self.draw(axiom, diag)
+                        n = self.draw(axiom, diag)
                 # else draw on any of the involved ones
                 else:
                     diag = diagrams[0]
@@ -2081,6 +2532,7 @@ class AxiomsWindow(QtWidgets.QDialog):
                 for ontology in project_ontologies:
                 # for each imported ontology:
                     # CHECK if AXIOM belongs to ONTOLOGY  #
+                    QtCore.QCoreApplication.processEvents()
 
                     ontology_iri, ontology_version = ontology
 
@@ -2101,6 +2553,8 @@ class AxiomsWindow(QtWidgets.QDialog):
         conn.close()
 
     def draw(self, axiom, diagram, x=0, y=0):
+        QtCore.QCoreApplication.processEvents()
+
         #print(axiom)
         #print('processing')
         if isinstance(axiom, self.Axiom):
@@ -2123,6 +2577,10 @@ class AxiomsWindow(QtWidgets.QDialog):
             n = self.drawDataOneOf(values, diagram, x, y)
             return n
 
+        if isinstance(axiom, self.DataUnionOf):
+            operands = list(axiom.getOperands())
+            n = self.drawDataUnionOf(operands, diagram, x, y)
+            return n
     # DRAW AXIOM, CLASS EXPRESSIONS, ... #
 
     def drawPropertyExpression(self, axiom, diagram, x, y):
@@ -2157,6 +2615,18 @@ class AxiomsWindow(QtWidgets.QDialog):
 
     def drawDatatypeRestriction(self, datatype, facets, diagram, x, y):
 
+        datatypes_iri = {'owl:real':'http://www.w3.org/2002/07/owl#real', 'owl:rational':'http://www.w3.org/2002/07/owl#rational', 'xsd:decimal':'http://www.w3.org/2001/XMLSchema#decimal', 'xsd:integer':'http://www.w3.org/2001/XMLSchema#integer',
+                         'xsd:nonNegativeInteger':'http://www.w3.org/2001/XMLSchema#nonNegativeInteger', 'xsd:nonPositiveInteger':'http://www.w3.org/2001/XMLSchema#nonPositiveInteger',
+                         'xsd:positiveInteger':'http://www.w3.org/2001/XMLSchema#positiveInteger', 'xsd:negativeInteger':'http://www.w3.org/2001/XMLSchema#negativeInteger', 'xsd:long':'http://www.w3.org/2001/XMLSchema#long',
+                         'xsd:int':'http://www.w3.org/2001/XMLSchema#int', 'xsd:short':'http://www.w3.org/2001/XMLSchema#short', 'xsd:byte':'http://www.w3.org/2001/XMLSchema#byte', 'xsd:unsignedLong':'http://www.w3.org/2001/XMLSchema#unsignedLong',
+                         'xsd:unsignedInt':'http://www.w3.org/2001/XMLSchema#unsignedInt', 'xsd:unsignedShort':'http://www.w3.org/2001/XMLSchema#unsignedShort', 'xsd:unsignedByte':'http://www.w3.org/2001/XMLSchema#unsignedByte',
+                         'xsd:double':'http://www.w3.org/2001/XMLSchema#double', 'xsd:float':'http://www.w3.org/2001/XMLSchema#float', 'xsd:string':'http://www.w3.org/2001/XMLSchema#string',
+                         'xsd:normalizedString':'http://www.w3.org/2001/XMLSchema#normalizedString', 'xsd:token':'http://www.w3.org/2001/XMLSchema#token', 'xsd:language':'http://www.w3.org/2001/XMLSchema#language', 'xsd:Name':'http://www.w3.org/2001/XMLSchema#Name',
+                         'xsd:NCName':'http://www.w3.org/2001/XMLSchema#NCName', 'xsd:NMTOKEN':'http://www.w3.org/2001/XMLSchema#NMTOKEN', 'xsd:boolean':'http://www.w3.org/2001/XMLSchema#boolean', 'xsd:hexBinary':'http://www.w3.org/2001/XMLSchema#hexBinary',
+                         'xsd:base64Binary':'http://www.w3.org/2001/XMLSchema#base64Binary',
+                         'xsd:dateTime':'http://www.w3.org/2001/XMLSchema#dateTime', 'xsd:dateTimeStamp':'http://www.w3.org/2001/XMLSchema#dateTimeStamp', 'rdf:XMLLiteral':'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral',
+                         'rdf:PlainLiteral':'http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral', 'rdfs:Literal':'http://www.w3.org/2000/01/rdf-schema#Literal', 'xsd:anyURI':'http://www.w3.org/2001/XMLSchema#anyURI'}
+
         dataNode = DatatypeRestrictionNode(diagram=diagram)
         dataNode.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, dataNode))
@@ -2174,13 +2644,23 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         for f in facets:
 
-            facet = f.getFacet()
-            value = f.getFacetValue()
+            constrFacet = self.project.getIRI(str(f.getFacet().getIRI()))
 
-            fNode = FacetNode(diagram=diagram)
-            fNode.facet.constrainingFacet = facet
-            fNode.facet.literal = value
-            fNode.setPos(x+150, y+150)
+            value = f.getFacetValue()
+            lexicalForm = value.getLiteral()
+            dtype = value.getDatatype().getIRI()
+            dtypeIRI = self.project.getIRI(datatypes_iri[str(dtype)])
+            lang = value.getLang()
+
+            literal = Literal(lexicalForm, datatype=dtypeIRI, language=lang)
+
+            facet = Facet(constrFacet, literal)
+
+            fNode = FacetNode(facet=facet, diagram=diagram)
+
+            x = x +150
+            fNode.setPos(x, y+150)
+            fNode.doUpdateNodeLabel()
             self.session.undostack.push(CommandNodeAdd(diagram, fNode))
 
             inp = diagram.factory.create(Item.InputEdge, source=fNode, target=dataNode)
@@ -2192,12 +2672,20 @@ class AxiomsWindow(QtWidgets.QDialog):
 
     def drawExpression(self, ex, diagram, x, y):
 
+        QtCore.QCoreApplication.processEvents()
+
         ex_type = str(ex.getClassExpressionType())
 
         if ex_type == 'ObjectUnionOf':
 
             operands = ex.getOperandsAsList()
             n = self.drawObjUnionOf(operands, diagram, x, y)
+            return n
+
+        if ex_type == 'DataUnionOf':
+
+            operands = ex.getOperandsAsList()
+            n = self.drawDataUnionOf(operands, diagram, x, y)
             return n
 
         if ex_type == 'ObjectOneOf':
@@ -2276,7 +2764,7 @@ class AxiomsWindow(QtWidgets.QDialog):
             return n
 
     def drawAxiom(self, axiom, diagram, x, y):
-
+        QtCore.QCoreApplication.processEvents()
         if isinstance(axiom, self.Axiom):
 
             ax_type = str(axiom.getAxiomType())
@@ -2303,7 +2791,9 @@ class AxiomsWindow(QtWidgets.QDialog):
                     list_of_disjoints = axiom.asPairwiseAxioms()
                     for disjoint_axiom in list_of_disjoints:
 
-                        self.draw(disjoint_axiom, diagram, x, y)
+                        n = self.draw(disjoint_axiom, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DisjointUnion':
 
@@ -2326,7 +2816,9 @@ class AxiomsWindow(QtWidgets.QDialog):
                     list_of_disjoints = axiom.asPairwiseAxioms()
                     for disjoint_axiom in list_of_disjoints:
 
-                        self.draw(disjoint_axiom, diagram, x, y)
+                        n = self.draw(disjoint_axiom, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DisjointObjectProperties':
 
@@ -2342,7 +2834,9 @@ class AxiomsWindow(QtWidgets.QDialog):
                     list_of_disjoints = axiom.asPairwiseAxioms()
                     for disjoint_axiom in list_of_disjoints:
 
-                        self.draw(disjoint_axiom, diagram, x, y)
+                        n = self.draw(disjoint_axiom, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DifferentIndividuals':
 
@@ -2357,7 +2851,10 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     list_of_different = axiom.asPairwiseAxioms()
                     for different_axiom in list_of_different:
-                        self.draw(different_axiom, diagram, x, y)
+
+                        e = self.draw(different_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'SameIndividual':
 
@@ -2372,7 +2869,10 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     list_of_same = axiom.asPairwiseAxioms()
                     for same_axiom in list_of_same:
-                        self.draw(same_axiom, diagram, x, y)
+
+                        e =self.draw(same_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'ClassAssertion':
 
@@ -2410,7 +2910,10 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     list_of_equivalents = axiom.asPairwiseAxioms()
                     for equivalence_axiom in list_of_equivalents:
-                        self.draw(equivalence_axiom, diagram, x, y)
+
+                        e = self.draw(equivalence_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'EquivalentObjectProperties':
 
@@ -2424,7 +2927,10 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     list_of_equivalents = axiom.asPairwiseAxioms()
                     for equivalence_axiom in list_of_equivalents:
-                        self.draw(equivalence_axiom, diagram, x, y)
+
+                        e = self.draw(equivalence_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'EquivalentDataProperties':
 
@@ -2438,7 +2944,10 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     list_of_equivalents = axiom.asPairwiseAxioms()
                     for equivalence_axiom in list_of_equivalents:
-                        self.draw(equivalence_axiom, diagram, x, y)
+
+                        e = self.draw(equivalence_axiom, diagram, x, y)
+
+                    return e
 
             if ax_type == 'SubObjectPropertyOf':
 
@@ -2468,7 +2977,10 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     pairs = axiom.asPairwiseAxioms()
                     for pair in pairs:
-                        self.draw(pair, diagram, x, y)
+
+                        n = self.draw(pair, diagram, x, y)
+
+                    return n
 
             if ax_type == 'DataPropertyDomain' or ax_type == 'ObjectPropertyDomain':
 
@@ -2499,6 +3011,7 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                 subDrawn = False
                 supDrawn = False
+                found = None
 
                 if self.isAtomic(sub):
 
@@ -2519,7 +3032,34 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                     if subDrawn:
 
-                        pass
+                        if self.isIsolated(subNode):
+
+                            x_tomove = supNode.pos().x()
+                            y_tomove = supNode.pos().y() +150
+                            while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                                x_tomove = x_tomove + 100
+                                if abs(supNode.pos().x() - x_tomove) > 1000:
+                                    x_tomove = supNode.pos().x()
+                                    break
+
+                            subNode.setPos(x_tomove, y_tomove)
+
+                        else:
+                            if self.isIsolated(supNode):
+
+                                x_tomove = subNode.pos().x()
+                                y_tomove = subNode.pos().y() - 150
+                                while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                                    x_tomove = x_tomove + 100
+                                    if abs(subNode.pos().x() - x_tomove) > 1000:
+                                        x_tomove = subNode.pos().x()
+                                        break
+
+                                supNode.setPos(x_tomove, y_tomove)
+                            else:
+                                pass
 
                     else:
 
@@ -2534,6 +3074,45 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                             subNode = self.draw(sub, diagram, x, y)
                             subDrawn = True
+
+                            cl = supNode
+                            n = subNode
+
+                            if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                                type = n.type()
+                                restr = n.restriction()
+                                items = []
+                                for e in n.edges:
+                                    items.append(e.source)
+
+                                clEdges = [e for e in cl.edges if
+                                           e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                                for e in clEdges:
+                                    node = None
+                                    if e.source.type() is type and e.source.restriction() is restr:
+                                        node = e.source
+                                    elif e.target.type() is type and e.target.restriction() is restr:
+                                        node = e.target
+                                    else:
+                                        pass
+
+                                    if node:
+                                        found = node
+                                        inputEdges = [ie for ie in node.edges if
+                                                      ie.type() is Item.InputEdge]
+                                        for ie in inputEdges:
+                                            if ie.source not in items:
+                                                found = None
+                                        if found:
+                                            break
+
+                        if found:
+
+                            subNode = found
+                            remove = list(n.edges)
+                            remove.append(n)
+                            self.session.undostack.push(CommandItemsRemove(diagram, remove))
+
                 else:
 
                     if subDrawn:
@@ -2549,6 +3128,43 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                             supNode = self.draw(sup, diagram, x, y)
                             supDrawn = True
+
+                            cl = subNode
+                            n = supNode
+
+                            if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                                type = n.type()
+                                restr = n.restriction()
+                                items = []
+                                for e in n.edges:
+                                    items.append(e.source)
+
+                                clEdges = [e for e in cl.edges if
+                                           e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                                for e in clEdges:
+                                    node = None
+                                    if e.source.type() is type and e.source.restriction() is restr:
+                                        node = e.source
+                                    elif e.target.type() is type and e.target.restriction() is restr:
+                                        node = e.target
+                                    else:
+                                        pass
+
+                                    if node:
+                                        found = node
+                                        inputEdges = [ie for ie in node.edges if
+                                                      ie.type() is Item.InputEdge]
+                                        for ie in inputEdges:
+                                            if ie.source not in items:
+                                                found = None
+                                        if found:
+                                            break
+
+                        if found:
+                            supNode = found
+                            remove = list(n.edges)
+                            remove.append(n)
+                            self.session.undostack.push(CommandItemsRemove(diagram, remove))
 
                     else:
 
@@ -2576,8 +3192,28 @@ class AxiomsWindow(QtWidgets.QDialog):
                             subNode = self.draw(sub, diagram, x, y)
                             subDrawn = True
 
-                isa = diagram.factory.create(Item.InclusionEdge, source=subNode, target=supNode)
-                self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+                if found:
+                    eqEdges = [e for e in found.edges if e.type() is Item.EquivalenceEdge]
+                    if eqEdges:
+
+                        return eqEdges[0]
+                    else:
+                        for e in found.edges:
+                            if e.type() is Item.InclusionEdge:
+                                if e.source is supNode:
+                                    self.session.undostack.push(CommandItemsRemove(diagram, [e]))
+                                    isa = diagram.factory.create(Item.EquivalenceEdge,
+                                                                         source=found,
+                                                                         target=supNode)
+                                    found.addEdge(isa)
+                                    supNode.addEdge(isa)
+                                    self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+
+                                elif e.target is supNode:
+                                    isa = e
+                else:
+                    isa = diagram.factory.create(Item.InclusionEdge, source=subNode, target=supNode)
+                    self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
                 return isa
 
@@ -2594,7 +3230,20 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             propNode = self.draw(property, diagram)
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         n.setText('self')
         n.setPos(propNode.pos().x()+50, propNode.pos().y() +50)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
@@ -2612,33 +3261,51 @@ class AxiomsWindow(QtWidgets.QDialog):
         propDrawn = False
         ceDrawn = False
 
-        if self.isAtomic(property) :
+        if self.isAtomic(property):
 
             propIri = property.getIRI()
             propNode = self.findNode(propIri, diagram)
             if propNode != 'null':
                 propDrawn = True
 
-        if self.isAtomic(ce) and not isinstance(ce, self.OWLLiteral):
+        if self.isAtomic(ce):
             ceIri = ce.getIRI()
-            ceNode = self.findNode(ceIri, diagram)
-            if ceNode != 'null':
-                ceDrawn = True
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
 
         if propDrawn:
 
             if ceDrawn:
-                pass
+
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
                 if self.isAtomic(ce):
-
-                    x = propNode.pos().x() + 300
-                    y = propNode.pos().y()
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                    if not ce.isTopEntity() and not isLiteral:
+                        x = propNode.pos().x() + 200
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     ceNode = self.draw(ce, diagram, x, y)
@@ -2650,12 +3317,12 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
@@ -2663,34 +3330,54 @@ class AxiomsWindow(QtWidgets.QDialog):
             else:
 
                 if self.isAtomic(ce):
-
-                    x = x
-                    y = y
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                    if not ce.isTopEntity() and not isLiteral:
+                        x = x
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
 
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
+                x = x - 100
+                y = y
+                if ceDrawn:
+                    x = ceNode.pos().x() - 200
+                    y = ceNode.pos().y()
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
+
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+        if propNode.type() == Item.RoleInverseNode:
 
-        n = DomainRestrictionNode(diagram=diagram)
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         card = str(card)
         n.setText('('+card+' , -)')
-        xM = (ceNode.pos().x() + propNode.pos().x()) / 2
-        yM = (ceNode.pos().y() + propNode.pos().y()) / 2
+        x = x + 200
+        y = y
+        if ceDrawn:
+            x = ceNode.pos().x()
+            y = ceNode.pos().y()
+
+        xM = (x + propNode.pos().x()) / 2
+        yM = (y + propNode.pos().y()) / 2
         n.setPos(xM, yM)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
@@ -2700,11 +3387,12 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
-        n.addEdge(input2)
-        ceNode.addEdge(input2)
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
         return n
 
@@ -2720,27 +3408,45 @@ class AxiomsWindow(QtWidgets.QDialog):
             if propNode != 'null':
                 propDrawn = True
 
-        if self.isAtomic(ce) and not isinstance(ce, self.OWLLiteral):
+        if self.isAtomic(ce):
             ceIri = ce.getIRI()
-            ceNode = self.findNode(ceIri, diagram)
-            if ceNode != 'null':
-                ceDrawn = True
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
 
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
                 if self.isAtomic(ce):
-
-                    x = propNode.pos().x() + 300
-                    y = propNode.pos().y()
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                    if not ce.isTopEntity() and not isLiteral:
+                        x = propNode.pos().x() + 200
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
+
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
@@ -2748,50 +3454,72 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
-
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
             else:
 
                 if self.isAtomic(ce):
-
-                    x = x
-                    y = y
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                    if not ce.isTopEntity() and not isLiteral:
+                        x = x
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
 
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
+                x = x - 100
+                y = y
+                if ceDrawn:
+                    x = ceNode.pos().x() - 200
+                    y = ceNode.pos().y()
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         card = str(card)
         n.setText('(- , '+card+')')
-        xM = (ceNode.pos().x() + propNode.pos().x()) / 2
-        yM = (ceNode.pos().y() + propNode.pos().y()) / 2
+        x = x + 200
+        y = y
+        if ceDrawn:
+            x = ceNode.pos().x()
+            y = ceNode.pos().y()
+
+        xM = (x + propNode.pos().x()) / 2
+        yM = (y + propNode.pos().y()) / 2
         n.setPos(xM, yM)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
@@ -2801,11 +3529,12 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
-        n.addEdge(input2)
-        ceNode.addEdge(input2)
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
         return n
 
@@ -2821,27 +3550,45 @@ class AxiomsWindow(QtWidgets.QDialog):
             if propNode != 'null':
                 propDrawn = True
 
-        if self.isAtomic(ce) and not isinstance(ce, self.OWLLiteral):
+        if self.isAtomic(ce):
             ceIri = ce.getIRI()
-            ceNode = self.findNode(ceIri, diagram)
-            if ceNode != 'null':
-                ceDrawn = True
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
 
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
                 if self.isAtomic(ce):
-
-                    x = propNode.pos().x() + 300
-                    y = propNode.pos().y()
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                    if not ce.isTopEntity() and not isLiteral:
+                        x = propNode.pos().x() + 200
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
+
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
@@ -2849,49 +3596,72 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
-
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
             else:
 
                 if self.isAtomic(ce):
-
-                    x = x
-                    y = y
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                    if not ce.isTopEntity() and not isLiteral:
+                        x = x
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
 
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
+                x = x - 100
+                y = y
+                if ceDrawn:
+                    x = ceNode.pos().x() - 200
+                    y = ceNode.pos().y()
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
+
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         card = str(card)
         n.setText('('+card+' , '+card+')')
-        xM = (ceNode.pos().x() + propNode.pos().x()) / 2
-        yM = (ceNode.pos().y() + propNode.pos().y()) / 2
+        x = x + 200
+        y = y
+        if ceDrawn:
+            x = ceNode.pos().x()
+            y = ceNode.pos().y()
+
+        xM = (x + propNode.pos().x()) / 2
+        yM = (y + propNode.pos().y()) / 2
         n.setPos(xM, yM)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
@@ -2901,11 +3671,12 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
-        n.addEdge(input2)
-        ceNode.addEdge(input2)
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
         return n
 
@@ -2954,27 +3725,47 @@ class AxiomsWindow(QtWidgets.QDialog):
             if propNode != 'null':
                 propDrawn = True
 
-        if self.isAtomic(ce) and not isinstance(ce, self.OWLLiteral):
+        if self.isAtomic(ce):
 
             ceIri = ce.getIRI()
-            ceNode = self.findNode(ceIri, diagram)
-            if ceNode != 'null':
-                ceDrawn = True
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
 
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
+                # DRAW CE
                 if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
 
-                    x = propNode.pos().x() + 300
-                    y = propNode.pos().y()
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                        x = propNode.pos().x() + 200
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     ceNode = self.draw(ce, diagram, x, y)
@@ -2984,15 +3775,18 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -3001,32 +3795,56 @@ class AxiomsWindow(QtWidgets.QDialog):
             else:
 
                 if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
 
-                    x = x
-                    y = y
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                        x = x
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
 
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
+
+                x = x - 100
+                y = y
+                if ceDrawn:
+                    x = ceNode.pos().x() - 200
+                    y = ceNode.pos().y()
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
-        xM = (ceNode.pos().x() + propNode.pos().x()) / 2
-        yM = (ceNode.pos().y() + propNode.pos().y()) / 2
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
+        x = x + 200
+        y = y
+        if ceDrawn:
+            x = ceNode.pos().x()
+            y = ceNode.pos().y()
+
+        xM = (x + propNode.pos().x()) / 2
+        yM = (y + propNode.pos().y()) / 2
         n.setPos(xM, yM)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
@@ -3036,11 +3854,12 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
-        n.addEdge(input2)
-        ceNode.addEdge(input2)
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
         return n
 
@@ -3057,27 +3876,46 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                 propDrawn = True
 
-        if self.isAtomic(ce) and not isinstance(ce, self.OWLLiteral):
-            ceIri = ce.getIRI()
-            ceNode = self.findNode(ceIri, diagram)
-            if ceNode != 'null':
+        if self.isAtomic(ce):
 
-                ceDrawn = True
+            ceIri = ce.getIRI()
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
 
         if propDrawn:
 
             if ceDrawn:
-                pass
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() + 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
 
             else:
-                if self.isAtomic(ce):
 
-                    x = propNode.pos().x() + 300
-                    y = propNode.pos().y()
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = propNode.pos().x() + 200
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
@@ -3086,15 +3924,18 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    x = ceNode.pos().x() - 300
+                    x = ceNode.pos().x() - 200
                     y = ceNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -3103,32 +3944,53 @@ class AxiomsWindow(QtWidgets.QDialog):
             else:
 
                 if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
 
-                    x = x
-                    y = y
-                    ceNode = self.createNode(ce, diagram, x, y)
-                    ceDrawn = True
+                        x = x
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
                 else:
 
                     ceNode = self.draw(ce, diagram, x, y)
                     ceDrawn = True
 
+                x = x - 100
+                y = y
+                if ceDrawn:
+                    x = ceNode.pos().x() - 200
+                    y = ceNode.pos().y()
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 300
-                    y = ceNode.pos().y()
+
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        n = DomainRestrictionNode(diagram=diagram)
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
         n.setText('forall')
-        xM = (ceNode.pos().x() + propNode.pos().x()) / 2
-        yM = (ceNode.pos().y() + propNode.pos().y()) / 2
+        x = x + 200
+        y = y
+        if ceDrawn:
+            x = ceNode.pos().x()
+            y = ceNode.pos().y()
+        xM = (x + propNode.pos().x()) / 2
+        yM = (y + propNode.pos().y()) / 2
         n.setPos(xM, yM)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
@@ -3138,11 +4000,12 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
-        n.addEdge(input2)
-        ceNode.addEdge(input2)
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
         return n
 
@@ -3191,6 +4054,59 @@ class AxiomsWindow(QtWidgets.QDialog):
                     nodes.append(n)
                     xPos.append(n.pos().x())
                     yPos.append(n.pos().y())
+            else:
+                x = starting_x + 150
+                y = starting_y
+
+                starting_x = x
+                starting_y = y
+
+                n = self.draw(op, diagram, x, y)
+                nodes.append(n)
+                xPos.append(n.pos().x())
+                yPos.append(n.pos().y())
+
+        x_med = (max(xPos) + min(xPos)) / 2
+        y_med = (max(yPos) + min(yPos)) / 2 - 100
+
+        union_node = UnionNode(diagram=diagram)
+        union_node.setPos(x_med, y_med)
+        self.session.undostack.push(CommandNodeAdd(diagram, union_node))
+
+        for n in nodes:
+            input = diagram.factory.create(Item.InputEdge, source=n, target=union_node)
+            n.addEdge(input)
+            union_node.addEdge(input)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+        return union_node
+
+    def drawDataUnionOf(self, operands, diagram, x, y):
+
+        nodes = []
+        xPos = []
+        yPos = []
+
+        starting_x = x - 150
+        starting_y = y
+
+        for op in operands:
+
+            if self.isAtomic(op):
+
+                x = starting_x + 150
+                y = starting_y
+
+                starting_x = x
+                starting_y = y
+
+                n = self.createNode(op, diagram, x, y)
+
+                nodes.append(n)
+                xPos.append(n.pos().x())
+                yPos.append(n.pos().y())
+
             else:
                 x = starting_x + 150
                 y = starting_y
@@ -3531,6 +4447,9 @@ class AxiomsWindow(QtWidgets.QDialog):
             cIri = ce.getIRI()
             cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-100)
 
+            if self.isIsolated(cNode):
+                cNode.setPos(x_med, y_med-100)
+
         else:
 
             cNode = self.draw(ce, diagram)
@@ -3673,19 +4592,54 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             if domDrawn:
 
-                pass
+                edges = propNode.edges
+                inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+                for e in inputEdges:
+                    if e.source is propNode and e.target.type() is Item.RangeRestrictionNode:
+                        node = e.target
+                        inputEdges = [e for e in node.edges if e.type() is Item.InputEdge]
+                        if len(inputEdges) == 1:
+                            for e in node.edges:
+                                if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
+                                    return node
+                                elif e.target is domainNode and e.type() is Item.InclusionEdge:
+                                    return node
+                                elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    command = CommandItemsRemove(diagram, [e])
+                                    self.session.undostack.push(command)
+                                    equiv = diagram.factory.create(Item.EquivalenceEdge,
+                                                                   source=node,
+                                                                   target=domainNode)
+                                    domainNode.addEdge(equiv)
+                                    node.addEdge(equiv)
+                                    self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
+                                    return node
+                                else:
+                                    pass
+
+                if self.isIsolated(domainNode):
+
+                    x_tomove = propNode.pos().x() - 200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    domainNode.setPos(x_tomove, y_tomove)
 
             else:
 
                 if self.isAtomic(range):
 
-                    x = propNode.pos().x() - 300
+                    x = propNode.pos().x() - 200
                     y = propNode.pos().y()
                     domainNode = self.createNode(range, diagram, x, y)
                     domDrawn = True
 
                 else:
-                    x = propNode.pos().x() - 300
+                    x = propNode.pos().x() - 200
                     y = propNode.pos().y()
 
                     domainNode = self.draw(range, diagram, x, y)
@@ -3697,13 +4651,13 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -3719,19 +4673,18 @@ class AxiomsWindow(QtWidgets.QDialog):
                     domDrawn = True
 
                 else:
-
                     domainNode = self.draw(range, diagram, x, y)
                     domDrawn = True
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() + 300
+                    x = domainNode.pos().x() + 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -3783,19 +4736,54 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             if domDrawn:
 
-                pass
+                edges = propNode.edges
+                inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+                for e in inputEdges:
+                    if e.source is propNode and e.target.type() is Item.DomainRestrictionNode:
+                        node = e.target
+                        inputEdges = [e for e in node.edges if e.type() is Item.InputEdge]
+                        if len(inputEdges) == 1:
+                           for e in node.edges:
+                                if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
+                                    return node
+                                elif e.target is domainNode and e.type() is Item.InclusionEdge:
+                                    return node
+                                elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    command = CommandItemsRemove(diagram, [e])
+                                    self.session.undostack.push(command)
+                                    equiv = diagram.factory.create(Item.EquivalenceEdge,
+                                                                 source=node,
+                                                                 target=domainNode)
+                                    domainNode.addEdge(equiv)
+                                    node.addEdge(equiv)
+                                    self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
+                                    return node
+                                else:
+                                    pass
+
+                if self.isIsolated(domainNode):
+
+                    x_tomove = propNode.pos().x() +200
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    domainNode.setPos(x_tomove, y_tomove)
 
             else:
 
                 if self.isAtomic(domain):
 
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
                     domainNode = self.createNode(domain, diagram, x, y)
                     domDrawn = True
 
                 else:
-                    x = propNode.pos().x() + 300
+                    x = propNode.pos().x() + 200
                     y = propNode.pos().y()
 
                     domainNode = self.draw(domain, diagram, x, y)
@@ -3807,13 +4795,13 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
@@ -3835,18 +4823,17 @@ class AxiomsWindow(QtWidgets.QDialog):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() - 300
+                    x = domainNode.pos().x() - 200
                     y = domainNode.pos().y()
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
-
 
         x_med = (propNode.pos().x() + domainNode.pos().x()) /2
         y_med = (propNode.pos().y() + domainNode.pos().y()) /2
@@ -4069,6 +5056,8 @@ class AxiomsWindow(QtWidgets.QDialog):
     def drawEquivalentClasses(self, expressions, diagram, x, y):
 
         nodes = []
+        singletons = []
+        found = None
 
         for e in expressions:
             if self.isAtomic(e):
@@ -4076,6 +5065,8 @@ class AxiomsWindow(QtWidgets.QDialog):
                 node = self.findNode(iri, diagram)
                 if node != 'null':
                     nodes.append(node)
+                    if self.isIsolated(node):
+                        singletons.append(node)
 
         if len(nodes) == 0:
             starting_x = x - 150
@@ -4096,7 +5087,42 @@ class AxiomsWindow(QtWidgets.QDialog):
                 starting_y = y
 
                 n = self.draw(ex, diagram, x, y)
-                nodes.append(n)
+                if nodes:
+                    cl = nodes[0]
+
+                    if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                        type = n.type()
+                        restr = n.restriction()
+                        items = []
+                        for e in n.edges:
+                            items.append(e.source)
+
+                        clEdges = [e for e in cl.edges if e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                        for e in clEdges:
+                            node = None
+                            if e.source.type() is type and e.source.restriction() is restr:
+                                node = e.source
+                            elif e.target.type() is type and e.target.restriction() is restr:
+                                node = e.target
+                            else:
+                                pass
+
+                            if node:
+                                found = node
+                                inputEdges = [ie for ie in node.edges if ie.type() is Item.InputEdge]
+                                for ie in inputEdges:
+                                    if ie.source not in items:
+                                        found = None
+                                if found:
+                                    break
+
+                if found:
+                    nodes.append(found)
+                    remove = list(n.edges)
+                    remove.append(n)
+                    self.session.undostack.push(CommandItemsRemove(diagram, remove))
+                else:
+                    nodes.append(n)
 
             else:
 
@@ -4119,11 +5145,45 @@ class AxiomsWindow(QtWidgets.QDialog):
         node0 = nodes[0]
         node1 = nodes[1]
 
-        equivalence = diagram.factory.create(Item.EquivalenceEdge, source=node0, target=node1)
-        node0.addEdge(equivalence)
-        node1.addEdge(equivalence)
+        if singletons:
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
+            toMove = singletons[0]
+            fixed = node0 if node0 != toMove else node1
+
+            x_tomove = fixed.pos().x()
+            y_tomove = fixed.pos().y() -100
+            while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                x_tomove = x_tomove + 70
+                if abs(fixed.pos().x() - x_tomove) > 1000:
+
+                    x_tomove = fixed.pos().x()
+                    break
+
+            toMove.setPos(x_tomove, y_tomove)
+
+        if found:
+            eqEdges = [e for e in found.edges if e.type() is Item.EquivalenceEdge]
+            if eqEdges:
+
+                return eqEdges[0]
+            else:
+                for e in found.edges:
+                    if e.type() is Item.InclusionEdge and (e.source is cl or e.target is cl):
+                        self.session.undostack.push(CommandItemsRemove(diagram, [e]))
+                        equivalence = diagram.factory.create(Item.EquivalenceEdge, source=found,
+                                                             target=cl)
+                        found.addEdge(equivalence)
+                        cl.addEdge(equivalence)
+                        self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
+
+
+        else:
+            equivalence = diagram.factory.create(Item.EquivalenceEdge, source=node0, target=node1)
+            node0.addEdge(equivalence)
+            node1.addEdge(equivalence)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
 
         return equivalence
 
@@ -4211,7 +5271,39 @@ class AxiomsWindow(QtWidgets.QDialog):
         if classDrawn:
 
             if indivDrawn:
-                pass
+
+                if self.isIsolated(node0):
+
+                    x_tomove = node1.pos().x()
+                    y_tomove = node1.pos().y() + 100
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        x_tomove = x_tomove + 100
+                        if abs(node1.pos().x() - x_tomove) > 1000:
+                            x_tomove = node1.pos().x()
+                            break
+
+                    node0.setPos(x_tomove, y_tomove)
+
+
+
+                else:
+
+                    if self.isIsolated(node1):
+
+                        x_tomove = node0.pos().x()
+                        y_tomove = node0.pos().y() - 100
+                        while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                            x_tomove = x_tomove + 100
+                            if abs(node0.pos().x() - x_tomove) > 1000:
+                                x_tomove = node0.pos().x()
+                                break
+
+                        node1.setPos(x_tomove, y_tomove)
+
+                    else:
+                        pass
 
             else:
 
@@ -4497,7 +5589,7 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         instanceNode = PropertyAssertionNode(diagram=diagram)
         x = (indivNode.pos().x() + propNode.pos().x()) / 2
-        y = propNode.pos().x()
+        y = propNode.pos().y()
         instanceNode.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, instanceNode))
 
@@ -4922,15 +6014,20 @@ class AxiomsWindow(QtWidgets.QDialog):
         x_positions = []
         y_positions = []
         nodes = []
+        singletons = []
 
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
                 node = self.findNode(iri, diagram)
                 if node != 'null':
+
                     nodes.append(node)
                     x_positions.append(node.pos().x())
                     y_positions.append(node.pos().y())
+
+                    if self.isIsolated(node):
+                        singletons.append(node)
 
         if len(nodes) == 0:
 
@@ -4955,12 +6052,6 @@ class AxiomsWindow(QtWidgets.QDialog):
                 n = self.draw(ex, diagram, x, y)
                 nodes.append(n)
 
-                xN = n.pos().x()
-                x_positions.append(xN)
-
-                yN = n.pos().y()
-                y_positions.append(yN)
-
             else:
 
                 if ex.isType(self.EntityType.CLASS):
@@ -4979,11 +6070,26 @@ class AxiomsWindow(QtWidgets.QDialog):
                         node = self.createNode(ex, diagram, x, y)
                         nodes.append(node)
 
-                        x = node.pos().x()
-                        x_positions.append(x)
 
-                        y = node.pos().y()
-                        y_positions.append(y)
+        if singletons:
+
+            toMove = singletons[0]
+            fixed = nodes[0] if nodes[0] != toMove else nodes[1]
+
+            x_tomove = fixed.pos().x()
+            y_tomove = fixed.pos().y() -100
+            while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                x_tomove = x_tomove + 100
+                if abs(fixed.pos().x() - x_tomove) > 1000:
+
+                    x_tomove = fixed.pos().x()
+                    break
+
+            toMove.setPos(x_tomove, y_tomove)
+
+        x_positions = [n.pos().x() for n in nodes]
+        y_positions = [n.pos().y() for n in nodes]
 
        # x_med = sum(x_positions) / len(x_positions)
         maxX = max(x_positions)
@@ -5013,7 +6119,6 @@ class AxiomsWindow(QtWidgets.QDialog):
         dis_node.addEdge(input)
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
-
         return dis_node
 
     def drawDisjointUnion(self, classes, classs, diagram, x, y):
@@ -5034,7 +6139,6 @@ class AxiomsWindow(QtWidgets.QDialog):
                     y_positions.append(node.pos().y())
 
         if len(nodes) == 0:
-
 
             starting_x = x - 150
             starting_y = y
@@ -5097,35 +6201,73 @@ class AxiomsWindow(QtWidgets.QDialog):
                         y = node.pos().y()
                         y_positions.append(y)
 
-            # x_med = sum(x_positions) / len(x_positions)
-            maxX = max(x_positions)
-            minX = min(x_positions)
-            x_med = (maxX - minX) / 2
-            # y_med = sum(y_positions) / len(y_positions) -100
-            maxY = max(y_positions)
-            minY = min(y_positions)
-            y_med = (maxY - minY) / 2
+        singletons = [n for n in nodes if self.isIsolated(n)]
+        fixed = [n for n in nodes if not self.isIsolated(n)]
+        if singletons:
+            if fixed:
+                point_x = fixed[0].pos().x()
+                point_y = fixed[0].pos().y() + 50
+            else:
+                point_x = x - 150
+                point_y = y
 
-        dis_node = DisjointUnionNode(diagram=diagram)
-        dis_node.setPos(x_med, y_med)
-        self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
+            for s in singletons:
+                s.setPos(point_x, point_y)
+                point_x = point_x + 100
 
-        for n in nodes:
+        x_positions = [n.pos().x() for n in nodes]
+        y_positions = [n.pos().y() for n in nodes]
+        # x_med = sum(x_positions) / len(x_positions)
+        maxX = max(x_positions)
+        minX = min(x_positions)
+        x_med = (maxX - minX) / 2
+        # y_med = sum(y_positions) / len(y_positions) -100
+        maxY = max(y_positions)
+        minY = min(y_positions)
+        y_med = (maxY - minY) / 2
 
-            input = diagram.factory.create(Item.InputEdge, source=n, target=dis_node)
-            n.addEdge(input)
-            dis_node.addEdge(input)
-
-            self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
         if self.isAtomic(classs):
 
             cIri = classs.getIRI()
             cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(classs, diagram, x_med, y_med-100)
 
+            if self.isIsolated(cNode):
+                cNode.setPos(x_med, y_med-100)
+            else:
+                if singletons and not fixed:
+                    point_x = cNode.pos().x() - 150*len(singletons)
+                    point_y = cNode.pos().y() + 200
+                    for s in singletons:
+                        s.setPos(point_x, point_y)
+                        point_x = point_x + 100
+
+                    x_positions = [n.pos().x() for n in nodes]
+                    y_positions = [n.pos().y() for n in nodes]
+                    # x_med = sum(x_positions) / len(x_positions)
+                    maxX = max(x_positions)
+                    minX = min(x_positions)
+                    x_med = (maxX - minX) / 2
+                    # y_med = sum(y_positions) / len(y_positions) -100
+                    maxY = max(y_positions)
+                    minY = min(y_positions)
+                    y_med = (maxY - minY) / 2
+
         else:
 
             cNode = self.draw(classs, diagram)
+
+        dis_node = DisjointUnionNode(diagram=diagram)
+        dis_node.setPos(x_med, y_med)
+        self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
+
+        for n in nodes:
+            input = diagram.factory.create(Item.InputEdge, source=n, target=dis_node)
+            n.addEdge(input)
+            dis_node.addEdge(input)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
         equiv = diagram.factory.create(Item.EquivalenceEdge, source=cNode, target=dis_node)
         self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
 
@@ -5333,7 +6475,7 @@ class AxiomsWindow(QtWidgets.QDialog):
         starting_y = y
         while not self.isEmpty(x, y, diagram):
 
-            y = y + 50
+            y = y + 70
             if abs(starting_y - y) > 1000:
 
                 y = starting_y
@@ -5341,21 +6483,26 @@ class AxiomsWindow(QtWidgets.QDialog):
 
         if isinstance(ex, self.OWLLiteral):
 
-            lit = ex.getLiteral()
+            lit = str(ex.getLiteral())
             DP = ex.getDatatype()
 
             iri = DP.getIRI()
 
-            datatype = IRI(str(iri))
-
-            d =[x.value for x in OWL2Datatype if str(x.value) == str(datatype)][0]
-
-            literal = Literal(lit, d)
+            d = self.project.getIRI(str(iri))
+            lang = None
+            literal = Literal(lit, d, lang)
 
             literalNode = LiteralNode(literal=literal, diagram=diagram)
             literalNode.setPos(x, y)
 
+            literalNode._literal = literal
             self.session.undostack.push(CommandNodeAdd(diagram, literalNode))
+
+            labelString = str(literal)
+            labelPos = lambda: literalNode.label.pos()
+            literalNode.label.diagram.removeItem(literalNode.label)
+            literalNode.label = NodeLabel(template=labelString, pos=labelPos, editable=False)
+            diagram.sgnUpdated.emit()
 
             literalNode.doUpdateNodeLabel()
 
@@ -5370,6 +6517,8 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             self.session.undostack.push(CommandNodeAdd(diagram, classs))
 
+            classs.doUpdateNodeLabel()
+
             return classs
 
         if ex.isType(self.EntityType.NAMED_INDIVIDUAL):
@@ -5380,7 +6529,10 @@ class AxiomsWindow(QtWidgets.QDialog):
             indiv.setPos(x, y)
 
             self.session.undostack.push(CommandNodeAdd(diagram, indiv))
+            # ANNOTATIONS #
+            self.addAnnotationAssertions(iri)
 
+            indiv.doUpdateNodeLabel()
             return indiv
 
         if ex.isType(self.EntityType.DATA_PROPERTY):
@@ -5434,6 +6586,11 @@ class AxiomsWindow(QtWidgets.QDialog):
             if str(iri) in functional_dataProp:
 
                 dataProp.setFunctional(True)
+
+            # ANNOTATIONS #
+            self.addAnnotationAssertions(iri)
+
+            dataProp.doUpdateNodeLabel()
 
             return dataProp
 
@@ -5575,6 +6732,7 @@ class AxiomsWindow(QtWidgets.QDialog):
                         d = ast.literal_eval(iri_dict)
                         irreflexive_objProp.extend(d.values())
 
+
             if str(iri) in functional_objProp:
                 objectProp.setFunctional(True)
             if str(iri) in inverseFunc_objProp:
@@ -5590,6 +6748,11 @@ class AxiomsWindow(QtWidgets.QDialog):
             if str(iri) in irreflexive_objProp:
                 objectProp.setIrreflexive(True)
 
+            # ANNOTATIONS #
+            self.addAnnotationAssertions(iri)
+
+            objectProp.doUpdateNodeLabel()
+
             return objectProp
 
         if ex.isType(self.EntityType.DATATYPE):
@@ -5601,7 +6764,10 @@ class AxiomsWindow(QtWidgets.QDialog):
 
             self.session.undostack.push(CommandNodeAdd(diagram, datatype))
 
+            datatype.doUpdateNodeLabel()
+
             return datatype
+
         return
 
     def findNode(self, iri, diagram):
@@ -5633,6 +6799,120 @@ class AxiomsWindow(QtWidgets.QDialog):
         else:
 
             return False
+
+    def isIsolated(self, node):
+
+        edges = node.edges
+        if edges:
+            return False
+        else:
+            return True
+
+    def addAnnotationAssertions(self, iri):
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_filename)
+        except Exception as e:
+            print(e)
+
+        cursor = conn.cursor()
+        # GET ALL THE ONTOLOGIES IMPORTED IN THE PROJECT #
+        cursor.execute('''SELECT ontology_iri, ontology_version
+                                                        FROM importation
+                                                        WHERE project_iri = ? and project_version = ?
+                                                        ''',
+                       (self.project_iri, self.project_version))
+
+        project_ontologies = []
+        rows = cursor.fetchall()
+        for row in rows:
+            project_ontologies.append((row[0], row[1]))
+
+        with conn:
+            for ontology in project_ontologies:
+                # for each imported ontology:
+                ontology_iri, ontology_version = ontology
+                cursor = conn.cursor()
+                # get all annotationAssertion axioms #
+                cursor.execute('''select iri_dict
+                                    from axiom
+                                    where ontology_iri = ? and ontology_version = ? and type_of_axiom = 'AnnotationAssertion'
+                                    ''', (ontology_iri, ontology_version))
+
+                rows = cursor.fetchall()
+                annotations = []
+                for row in rows:
+                    # for each annAss axiom, get iri_dict #
+                    iri_dict = row[0]
+                    d = ast.literal_eval(iri_dict)
+                    # if current iri == subject -> keep annAss axiom #
+                    if str(iri) == d['subject']:
+                        annotations.append(d)
+
+                for annAss in annotations:
+
+                    sub = annAss['subject']
+                    subjectIRI = self.project.getIRI(sub)
+                    # GET PROPERTY
+                    property = annAss['property']
+                    # GET VALUE
+                    value = annAss['value']
+                    # IF LANGUAGE, GET LANGUAGE
+                    lang_srt = value.find('"@')
+                    lang = None
+                    if lang_srt > 0:
+                        lang = value[lang_srt + 2:]
+                        value = value[0: lang_srt + 1]
+
+                    value = value.strip('"')
+
+                    if value == '' or value is None:
+                        continue
+
+                    else:
+
+                        annotation = str(property)
+                        annotation = annotation.replace('<', '')
+                        annotation = annotation.replace('>', '')
+
+                        annotationIRI = self.project.getIRI(annotation)
+
+                        try:
+
+                            if annotationIRI not in self.project.getAnnotationPropertyIRIs():
+
+                                self.project.isValidIdentifier(annotation)
+
+                                command = CommandProjectAddAnnotationProperty(self.project,
+                                                                              annotation)
+                                self.session.undostack.beginMacro(
+                                    'Add annotation property {0} '.format(annotation))
+                                if command:
+                                    self.session.undostack.push(command)
+                                self.session.undostack.endMacro()
+
+                        except IllegalNamespaceError as e:
+                            # noinspection PyArgumentList
+                            msgBox = QtWidgets.QMessageBox(
+                                QtWidgets.QMessageBox.Warning,
+                                'Entity Definition Error',
+                                'Illegal namespace defined.',
+                                informativeText='The string "{}" is not a legal IRI'.format(
+                                    annotation),
+                                detailedText=str(e),
+                                parent=self,
+                            )
+                            msgBox.exec_()
+
+
+                        # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+                        annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value,
+                                                            language=lang)
+
+                        self.session.undostack.push(
+                            CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
+
+
 
 # WIDGET FORM to set Space between Items #
 class AbstractItemSpaceForm(QtWidgets.QDialog):
