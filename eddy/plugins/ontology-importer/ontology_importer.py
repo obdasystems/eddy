@@ -88,6 +88,8 @@ from eddy.core.plugin import AbstractPlugin
 from eddy.ui.fields import IntegerField
 from eddy.ui.progress import BusyProgressDialog
 
+K_IMPORTS_DB = '@data/imports.sqlite'
+
 
 class OntologyImporterPlugin(AbstractPlugin):
 
@@ -886,7 +888,7 @@ class OntologyImporterPlugin(AbstractPlugin):
 
                                 QtCore.QCoreApplication.processEvents()
 
-                                db_filename = expandPath('@data/db.db')
+                                db_filename = expandPath(K_IMPORTS_DB)
                                 dir = os.path.dirname(db_filename)
                                 if not os.path.exists(dir):
                                     os.makedirs(dir)
@@ -1118,7 +1120,7 @@ class Importation():
         self.project_iri = str(self.project.ontologyIRI)
         self.project_version = self.project.version if len(self.project.version) > 0 else '1.0'
 
-        self.db_filename = expandPath('@data/db.db')
+        self.db_filename = expandPath(K_IMPORTS_DB)
         dir = os.path.dirname(self.db_filename)
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -1410,7 +1412,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             self.DataOneOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataOneOf")
             self.DataUnionOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataUnionOf")
 
-        self.db_filename = expandPath('@data/db.db')
+        self.db_filename = expandPath(K_IMPORTS_DB)
         dir = os.path.dirname(self.db_filename)
         if not os.path.exists(dir):
             os.makedirs(dir)
