@@ -36,6 +36,7 @@ from abc import ABCMeta
 import ast
 import os
 import sqlite3
+import textwrap
 
 from PyQt5 import (
     QtCore,
@@ -47,12 +48,13 @@ from PyQt5.QtCore import Qt
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.diagram import CommandDiagramResize
 from eddy.core.commands.edges import CommandEdgeAdd
-from eddy.core.commands.iri import CommandChangeIRIOfNode, CommandChangeLiteralOfNode
+from eddy.core.commands.iri import CommandChangeIRIOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
+from eddy.core.functions.fsystem import fremove
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
@@ -80,7 +82,7 @@ from eddy.core.jvm import getJavaVM
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalNamespaceError,
-    OWL2Datatype, Facet,
+    Facet,
 )
 from eddy.core.owl import IRI
 from eddy.core.owl import Literal
@@ -89,6 +91,63 @@ from eddy.ui.fields import IntegerField
 from eddy.ui.progress import BusyProgressDialog
 
 K_IMPORTS_DB = '@data/imports.sqlite'
+K_SCHEMA_SCRIPT = """
+PRAGMA user_version = {version};
+
+CREATE TABLE IF NOT EXISTS ontology (
+    iri              TEXT,
+    version          TEXT,
+    PRIMARY KEY (iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS project (
+    iri              TEXT,
+    version          TEXT,
+    PRIMARY KEY (iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS importation (
+    project_iri      TEXT,
+    project_version  TEXT,
+    ontology_iri     TEXT,
+    ontology_version TEXT,
+    session_id       TEXT,
+    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version),
+    FOREIGN KEY (project_iri, project_version)
+        REFERENCES project(iri, version),
+    FOREIGN KEY (ontology_iri, ontology_version)
+        REFERENCES ontology(iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS axiom (
+    axiom            TEXT,
+    type_of_axiom    TEXT,
+    func_axiom       TEXT,
+    ontology_iri     TEXT,
+    ontology_version TEXT,
+    iri_dict         TEXT,
+    PRIMARY KEY (axiom, ontology_iri, ontology_version),
+    FOREIGN KEY (ontology_iri, ontology_version)
+        REFERENCES ontology(iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS drawn (
+    project_iri      TEXT,
+    project_version  TEXT,
+    ontology_iri     TEXT,
+    ontology_version TEXT,
+    axiom            TEXT,
+    session_id       TEXT,
+    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom),
+    FOREIGN KEY (project_iri, project_version, ontology_iri, ontology_version, session_id)
+        REFERENCES importation(project_iri, project_version,
+                               ontology_iri, ontology_version,
+                               session_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (axiom, ontology_iri, ontology_version)
+        REFERENCES axiom(axiom, ontology_iri, ontology_version)
+);
+"""
 
 
 class OntologyImporterPlugin(AbstractPlugin):
@@ -893,67 +952,19 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 if not os.path.exists(dir):
                                     os.makedirs(dir)
 
-                                schema_script = '''
-                                                create table if not exists ontology (
-                                                    iri     text,
-                                                    version test,
-                                                    PRIMARY KEY (iri, version)
-                                                );
-
-                                                create table if not exists project (
-                                                    iri     text,
-                                                    version test,
-                                                    PRIMARY KEY (iri, version)
-                                                );
-
-                                                create table if not exists importation (
-                                                    project_iri text,
-                                                    project_version text,
-                                                    ontology_iri text,
-                                                    ontology_version    text,
-                                                    session_id  text,
-                                                    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version),
-                                                    FOREIGN KEY (project_iri, project_version) references project(iri, version),
-                                                    FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
-                                                );
-
-                                                create table if not exists axiom (
-                                                    axiom       text,
-                                                    type_of_axiom   text,
-                                                    func_axiom      text,
-                                                    ontology_iri    text,
-                                                    ontology_version text,
-                                                    iri_dict text,
-                                                    PRIMARY KEY (axiom, ontology_iri, ontology_version),
-                                                    FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
-                                                );
-
-                                                create table if not exists drawn (
-                                                    project_iri text,
-                                                    project_version text,
-                                                    ontology_iri    text,
-                                                    ontology_version text,
-                                                    axiom text,
-                                                    session_id  text,
-                                                    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom),
-                                                    FOREIGN KEY (project_iri, project_version, ontology_iri, ontology_version, session_id) references importation(project_iri, project_version, ontology_iri, ontology_version, session_id) on delete cascade,
-                                                    FOREIGN KEY (axiom, ontology_iri, ontology_version) references axiom(axiom, ontology_iri, ontology_version)
-                                                );'''
-
                                 db_is_new = not os.path.exists(db_filename)
                                 conn = sqlite3.connect(db_filename)
                                 cursor = conn.cursor()
                                 QtCore.QCoreApplication.processEvents()
 
+                                # TODO: Move to plugin init()
                                 if db_is_new:
-                                    #print('Creazione dello schema')
-                                    conn.executescript(schema_script)
+                                    conn.executescript(K_SCHEMA_SCRIPT.format(
+                                        version=self.spec.get('database', 'version')))
                                     conn.commit()
-
 
                                 QtCore.QCoreApplication.processEvents()
 
-                                #print('Nuova Importazione')
                                 self.project.version = self.project.version if len(
                                     self.project.version) > 0 else '1.0'
 
@@ -1082,6 +1093,40 @@ class OntologyImporterPlugin(AbstractPlugin):
         importation = Importation(self.project)
         importation.removeFromDB()
 
+    def checkDatabase(self):
+        """
+        Checks whether the currently stored import database is compatible
+        with the current version supported by the plugin.
+        """
+        db = expandPath(K_IMPORTS_DB)
+        if os.path.exists(db):
+            # CHECK THAT VERSION IS COMPATIBLE
+            conn = sqlite3.connect(db)
+            cursor = conn.cursor()
+            version = self.spec.getint('database', 'version')
+            nversion = int(cursor.execute('PRAGMA user_version').fetchone()[0])
+            if nversion > self.spec.getint('database', 'version'):
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('Error initializing plugin: {}'.format(self.name()))
+                msgbox.setText(textwrap.dedent("""
+                    Incompatible import database version {nversion} > {version}.<br><br>
+                    This means that it was opened with a more recent version
+                    of the {name} plugin.<br><br>
+                    In order to use this version of the {name} plugin you will
+                    need to recreate the import database.<br>
+                    Do you want to proceed?<br><br>
+                    <b>WARNING: this will delete all the OWL 2 imports in progress!</b>
+                    """.format(version=version, nversion=nversion, name=self.name())))
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if msgbox.exec_() == QtWidgets.QMessageBox.Yes:
+                    fremove(db)
+                else:
+                    raise DatabaseError(
+                        'Incompatible import database version {} > {}'.format(nversion, version))
+
     def dispose(self):
         """
         Executed whenever the plugin is going to be destroyed.
@@ -1091,6 +1136,8 @@ class OntologyImporterPlugin(AbstractPlugin):
         """
         Perform initialization tasks for the plugin.
         """
+        # VERIFY EXISTING DATABASE COMPATIBILITY
+        self.checkDatabase()
 
         # INITIALIZE THE WIDGETS
         self.myButton = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/24/ic_system_update'), statusTip='Import OWL file')
@@ -6915,7 +6962,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                             CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
 
 
-
 # WIDGET FORM to set Space between Items #
 class AbstractItemSpaceForm(QtWidgets.QDialog):
     """
@@ -7003,6 +7049,7 @@ class AbstractItemSpaceForm(QtWidgets.QDialog):
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
 
+
 class SpaceForm(AbstractItemSpaceForm):
 
     def __init__(self, parent=None):
@@ -7013,3 +7060,8 @@ class SpaceForm(AbstractItemSpaceForm):
         """
         super().__init__(parent)
         self.setWindowTitle('Set Space between ClassNodes')
+
+
+class DatabaseError(RuntimeError):
+    """Raised whenever there is a problem with the import database."""
+    pass

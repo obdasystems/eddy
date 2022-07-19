@@ -36,3 +36,6 @@ contact: fraraccio.1760072@studenti.uniroma1.it
 id: ontology_importer
 name: OntologyImporter
 version: 0.1
+
+[database]
+version: 1
