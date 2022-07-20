@@ -57,7 +57,7 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.fsystem import fremove
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.items.nodes.complement import ComplementNode
@@ -159,6 +159,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         :type session: session
         """
         super().__init__(spec, session)
+        self.afwset = set()
         self.vm = None
         self.space = 150
 
@@ -834,9 +835,10 @@ class OntologyImporterPlugin(AbstractPlugin):
                 command = CommandProjectAddPrefix(self.project, prefix, namespace)
                 self.session.undostack.push(command)
 
-    def onToolbarButtonClick(self):
-
-        ### IMPORT FILE OWL ###
+    def doOpenOntologyFile(self):
+        """
+        Starts the import process by selecting an OWL 2 ontology file.
+        """
         dialog = QtWidgets.QFileDialog(self.session.mdi, "open owl file", expandPath('~'), "owl file (*.owl)")
 
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
@@ -1056,8 +1058,10 @@ class OntologyImporterPlugin(AbstractPlugin):
                         except Exception as e:
                             raise e
 
-    def onSecondButtonClick(self):
-
+    def doOpenAxiomImportDialog(self):
+        """
+        Opens the axioms import dialog.
+        """
         try:
             # TRY TO OPEN IMPORTATIONS ASSOCIATED WITH THIS PROJECT #
             importation = Importation(self.project)
@@ -1131,6 +1135,14 @@ class OntologyImporterPlugin(AbstractPlugin):
         """
         Executed whenever the plugin is going to be destroyed.
         """
+        # DISCONNECT SIGNALS/SLOTS
+        self.debug('Disconnecting from active session')
+        disconnect(self.session.sgnNoSaveProject, self.onNoSave)
+
+        # UNINSTALL WIDGETS FROM THE ACTIVE SESSION
+        self.debug('Uninstalling OWL 2 importer controls from "view" toolbar')
+        for action in self.afwset:
+            self.session.widget('view_toolbar').removeAction(action)
 
     def start(self):
         """
@@ -1140,21 +1152,29 @@ class OntologyImporterPlugin(AbstractPlugin):
         self.checkDatabase()
 
         # INITIALIZE THE WIDGETS
-        self.myButton = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/24/ic_system_update'), statusTip='Import OWL file')
-        self.myButton2 = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'), statusTip='Select axioms from imported ontologies')
-        # tooltip
-        self.myButton.setToolTip('Import OWL file')
-        self.myButton2.setToolTip('Select axioms from imported ontologies')
+        self.debug('Creating OWL 2 importer control widgets')
+        # noinspection PyArgumentList
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/24/ic_system_update'),
+            statusTip='Import OWL file', toolTip='Import OWL file',
+            enabled=True, checkable=False, clicked=self.doOpenOntologyFile,
+            objectName='owl2_importer_open'))
+        # noinspection PyArgumentList
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'),
+            statusTip='Select axioms from imported ontologies',
+            toolTip='Select axioms from imported ontologies',
+            enabled=True, checkable=False, clicked=self.doOpenAxiomImportDialog,
+            objectName='owl2_importer_axioms'))
 
         # CREATE VIEW TOOLBAR BUTTONS
-        self.session.widget('view_toolbar').addSeparator()
-        self.session.widget('view_toolbar').addWidget(self.myButton)
-        # self.session.widget('view_toolbar').addSeparator()
-        self.session.widget('view_toolbar').addWidget(self.myButton2)
+        self.debug('Installing OWL 2 importer control widgets')
+        toolbar = self.session.widget('view_toolbar')
+        self.afwset.add(toolbar.addSeparator())
+        self.afwset.add(toolbar.addWidget(self.widget('owl2_importer_open')))
+        self.afwset.add(toolbar.addWidget(self.widget('owl2_importer_axioms')))
 
         # CONFIGURE SIGNALS/SLOTS
-        connect(self.myButton.clicked, self.onToolbarButtonClick)
-        connect(self.myButton2.clicked, self.onSecondButtonClick)
         connect(self.session.sgnNoSaveProject, self.onNoSave)
 
 
