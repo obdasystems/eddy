@@ -43,7 +43,6 @@ from PyQt5 import (
     QtGui,
     QtWidgets
 )
-from PyQt5.QtCore import Qt
 
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.diagram import CommandDiagramResize
@@ -1567,8 +1566,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(classLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1580,8 +1579,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(objPropLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1593,8 +1592,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(dataPropLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1606,8 +1605,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(indivLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1620,12 +1619,12 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     check = QtWidgets.QTreeWidgetItem(othersLabel, [str(ax)])
                     basefont = check.font(0).family()
                     check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                    check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                    check.setCheckState(0, Qt.CheckState.Unchecked)
+                    check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                    check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                     self.checkBoxes.append(check)
 
-            self.table.sortItems(0, Qt.AscendingOrder)
+            self.table.sortItems(0, QtCore.Qt.AscendingOrder)
 
         self.table.setHeaderHidden(True)
         self.table.header().setStretchLastSection(False)
@@ -1711,9 +1710,9 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         if axiom not in self.labels:
             if state == QtCore.Qt.Checked:
-                item.setCheckState(0, Qt.CheckState.Unchecked)
+                item.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
             else:
-                item.setCheckState(0, Qt.CheckState.Checked)
+                item.setCheckState(0, QtCore.Qt.CheckState.Checked)
 
     def checkAxiom(self, item, column):
 
