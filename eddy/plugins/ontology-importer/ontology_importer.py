@@ -1799,9 +1799,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         super().reject()
 
     def accept(self):
-
         # k: axiom (::string), value: manchester_axiom (::Axiom)
         # (to keep track of the string axiom to insert in DRAWN table)
+        super().accept()
+
         with BusyProgressDialog('Drawing Axioms', 0.5):
 
             axiomsToDraw = {}
@@ -1832,7 +1833,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                         # if axioms can't be parsed -> can't draw message #
                         cantDraw.append(ax)
 
-            super().accept()
             if cantDraw:
 
                 invalid = ', '.join(cantDraw)
