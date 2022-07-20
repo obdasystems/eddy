@@ -34,7 +34,7 @@
 author: Maria Rosaria
 contact: fraraccio.1760072@studenti.uniroma1.it
 id: ontology_importer
-name: OntologyImporter
+name: Ontology Importer
 version: 0.1
 
 [database]
