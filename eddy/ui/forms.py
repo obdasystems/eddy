@@ -475,6 +475,17 @@ class AbstractDiagramForm(QtWidgets.QDialog):
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
 
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def name(self):
+        """
+        Returns the new diagram name.
+        :rtype: str
+        """
+        return self.nameField.value()
+
 
 class NewDiagramForm(AbstractDiagramForm):
     """
