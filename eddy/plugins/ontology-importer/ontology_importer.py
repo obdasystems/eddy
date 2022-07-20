@@ -53,6 +53,7 @@ from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.system import File
 from eddy.core.functions.fsystem import fremove
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
@@ -87,6 +88,7 @@ from eddy.core.owl import IRI
 from eddy.core.owl import Literal
 from eddy.core.plugin import AbstractPlugin
 from eddy.ui.fields import IntegerField
+from eddy.ui.file import FileDialog
 from eddy.ui.progress import BusyProgressDialog
 
 K_IMPORTS_DB = '@data/imports.sqlite'
@@ -838,11 +840,11 @@ class OntologyImporterPlugin(AbstractPlugin):
         """
         Starts the import process by selecting an OWL 2 ontology file.
         """
-        dialog = QtWidgets.QFileDialog(self.session.mdi, "open owl file", expandPath('~'), "owl file (*.owl)")
-
+        dialog = FileDialog(self.session)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        dialog.setNameFilters([File.Owl.value])
 
         if dialog.exec_():
 
