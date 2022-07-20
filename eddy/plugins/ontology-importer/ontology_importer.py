@@ -32,7 +32,6 @@
 #                                                                        #
 ##########################################################################
 
-from abc import ABCMeta
 import ast
 import os
 import sqlite3
@@ -45,7 +44,7 @@ from PyQt5 import (
 )
 
 from eddy.core.commands.common import CommandItemsRemove
-from eddy.core.commands.diagram import CommandDiagramResize
+from eddy.core.commands.diagram import CommandDiagramResize, CommandDiagramAdd
 from eddy.core.commands.edges import CommandEdgeAdd
 from eddy.core.commands.iri import CommandChangeIRIOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
@@ -54,8 +53,8 @@ from eddy.core.commands.project import CommandProjectAddAnnotationProperty, Comm
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
+from eddy.core.diagram import Diagram
 from eddy.core.functions.fsystem import fremove
-from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.attribute import AttributeNode
@@ -87,8 +86,8 @@ from eddy.core.owl import (
 from eddy.core.owl import IRI
 from eddy.core.owl import Literal
 from eddy.core.plugin import AbstractPlugin
-from eddy.ui.fields import IntegerField
 from eddy.ui.file import FileDialog
+from eddy.ui.forms import NewDiagramForm
 from eddy.ui.progress import BusyProgressDialog
 
 K_IMPORTS_DB = '@data/imports.sqlite'
@@ -847,18 +846,20 @@ class OntologyImporterPlugin(AbstractPlugin):
         dialog.setNameFilters([File.Owl.value])
 
         if dialog.exec_():
-
             self.filePath = dialog.selectedFiles()
 
             ### SET SPACE BETWEEN ITEMS ###
-            space_form = SpaceForm(self.session)
-            if space_form.exec_():
-
-                self.space = space_form.spaceField.value()
+            form = DiagramPropertiesForm(self.project, parent=self.session)
+            if form.exec_():
+                self.space = form.spacing()
 
                 ### CREATE NEW DIAGRAM ###
-                self.session.doNewDiagram()
-                diagram = self.session.mdi.activeDiagram()
+                diagram = Diagram.create(form.name(), form.diagramSize(), self.project)
+                connect(diagram.sgnItemAdded, self.project.doAddItem)
+                connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
+                connect(diagram.selectionChanged, self.session.doUpdateState)
+                self.session.undostack.push(CommandDiagramAdd(diagram, self.project))
+                self.session.sgnFocusDiagram.emit(diagram)
 
                 self.vm = getJavaVM()
                 if not self.vm.isRunning():
@@ -1068,8 +1069,8 @@ class OntologyImporterPlugin(AbstractPlugin):
             importation = Importation(self.project)
             axs, not_dr, dr = importation.open()
             if not_dr:
-                window = AxiomsWindow(not_dr, self.project)
-                window.exec_()
+                dialog = AxiomSelectionDialog(not_dr, self.project)
+                dialog.exec_()
             else:
                 msgbox = QtWidgets.QMessageBox()
                 msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -1433,7 +1434,7 @@ class Importation():
                 conn.commit()
 
 
-class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
+class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def __init__(self, not_drawn, project):
 
@@ -6983,104 +6984,88 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                             CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
 
 
-# WIDGET FORM to set Space between Items #
-class AbstractItemSpaceForm(QtWidgets.QDialog):
+class DiagramPropertiesForm(NewDiagramForm):
     """
-    Base class for diagram dialogs.
+    Subclass of `NewDiagramForm` which allows also to input the
+    spacing between class items in the generated diagram.
     """
-    __metaclass__ = ABCMeta
+    MinSize = 5000
+    MaxSize = 50000
+    MinSpace = 150
+    MaxSpace = 500
 
-    def __init__(self, parent=None):
+    def __init__(self, project=None, **kwargs):
         """
-        Initialize the dialog.
-        :type parent: QtWidgets.QWidget
+        Initialize the new diagram properties dialog.
         """
-        super().__init__(parent)
+        super().__init__(project, **kwargs)
 
+        self.sizeLabel = QtWidgets.QLabel('Diagram size:', self)
+        # noinspection PyArgumentList
+        self.sizeSlider = QtWidgets.QSlider(
+            QtCore.Qt.Horizontal, self, toolTip='New diagram size',
+            minimum=DiagramPropertiesForm.MinSize, maximum=DiagramPropertiesForm.MaxSize,
+            objectName='size_slider')
+        self.sizeValue = QtWidgets.QLabel(f'{self.sizeSlider.value()} px', self)
+        self.spaceLabel = QtWidgets.QLabel('Item spacing:', self)
+        # noinspection PyArgumentList
+        self.spaceSlider = QtWidgets.QSlider(
+            QtCore.Qt.Horizontal, self, toolTip='Spacing between class items',
+            minimum=DiagramPropertiesForm.MinSpace, maximum=DiagramPropertiesForm.MaxSpace,
+            objectName='spacing_slider')
+        self.valueLabel = QtWidgets.QLabel(f'{self.spaceSlider.value()} px', self)
 
-        #################################
-        # FORM AREA
-        #################################
+        self.propertiesGroup = QtWidgets.QGroupBox('Properties', self)
+        self.sizeLayout = QtWidgets.QHBoxLayout()
+        self.sizeLayout.addWidget(self.sizeLabel)
+        self.sizeLayout.addWidget(self.sizeSlider)
+        self.sizeLayout.addWidget(self.sizeValue)
+        self.spacingLayout = QtWidgets.QHBoxLayout()
+        self.spacingLayout.addWidget(self.spaceLabel)
+        self.spacingLayout.addWidget(self.spaceSlider)
+        self.spacingLayout.addWidget(self.valueLabel)
+        self.propertiesLayout = QtWidgets.QVBoxLayout(self.propertiesGroup)
+        self.propertiesLayout.addLayout(self.sizeLayout)
+        self.propertiesLayout.addLayout(self.spacingLayout)
 
-        self.spaceField = IntegerField(self)
-        self.spaceField.setMinimumWidth(400)
-        self.spaceField.setMaxLength(4)
-        self.spaceField.setPlaceholderText('Space...')
-        connect(self.spaceField.textChanged, self.onSpaceFieldChanged)
-
-        self.warnLabel = QtWidgets.QLabel(self)
-        self.warnLabel.setContentsMargins(0, 0, 0, 0)
-        self.warnLabel.setProperty('class', 'invalid')
-        self.warnLabel.setVisible(False)
-
-        #############################################
-        # CONFIRMATION AREA
-        #################################
-
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-
-        #############################################
-        # SETUP DIALOG LAYOUT
-        #################################
-
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.mainLayout.setContentsMargins(10, 10, 10, 10)
-        self.mainLayout.addWidget(self.spaceField)
-        self.mainLayout.addWidget(self.warnLabel)
-        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
-
+        self.mainLayout.insertWidget(self.mainLayout.indexOf(self.warnLabel), self.propertiesGroup)
+        self.mainLayout.insertSpacing(self.mainLayout.indexOf(self.warnLabel), 4)
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-
-        connect(self.confirmationBox.accepted, self.accept)
-        connect(self.confirmationBox.rejected, self.reject)
+        self.setWindowTitle('Set new diagram properties')
+        connect(self.sizeSlider.valueChanged, self.onSizeChanged)
+        connect(self.spaceSlider.valueChanged, self.onSpacingChanged)
 
     #############################################
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot(str)
-    def onSpaceFieldChanged(self, space):
+    def onSizeChanged(self, value: int) -> None:
         """
-        Executed when the content of the input field changes.
-        :type space: int
+        Executed when the size slider value changes.
         """
-        enabled = False
-        caption = ''
+        self.sizeValue.setText(f'{self.diagramSize()} px')
 
-        if space != '':
-
-            space = int(space.strip())
-            if not space:
-                caption = ''
-                enabled = False
-            else:
-                if space < 130 or space > 500:
-                    caption = "Space must be integer in range [130, 500]"
-                    enabled = False
-                else:
-                    caption = ''
-                    enabled = True
-
-        self.warnLabel.setText(caption)
-        self.warnLabel.setVisible(not isEmpty(caption))
-        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
-        self.setFixedSize(self.sizeHint())
-
-
-class SpaceForm(AbstractItemSpaceForm):
-
-    def __init__(self, parent=None):
+    def onSpacingChanged(self, value: int) -> None:
         """
-        Initialize the new diagram dialog.
-        :type project: Project
-        :type parent: QtWidgets.QWidget
+        Executed when the spacing slider value changes.
         """
-        super().__init__(parent)
-        self.setWindowTitle('Set Space between ClassNodes')
+        self.valueLabel.setText(f'{self.spacing()} px')
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def diagramSize(self) -> int:
+        """
+        Returns the currently selected diagram size.
+        """
+        return self.sizeSlider.value()
+
+    def spacing(self) -> int:
+        """
+        Returns the currently selected spacing.
+        """
+        return self.spaceSlider.value()
 
 
 class DatabaseError(RuntimeError):
