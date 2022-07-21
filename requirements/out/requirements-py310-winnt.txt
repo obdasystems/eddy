@@ -1,25 +1,28 @@
 altgraph==0.17.2
     # via pyinstaller
-atomicwrites==1.4.0
+atomicwrites==1.4.1
     # via pytest
 attrs==21.4.0
     # via pytest
+build==0.8.0
+    # via pip-tools
 click==8.1.3
     # via pip-tools
-colorama==0.4.4
+colorama==0.4.5
     # via
+    #   build
     #   click
     #   pytest
     #   tox
-coverage[toml]==6.4
+coverage[toml]==6.4.2
     # via pytest-cov
 cython==0.29.30
     # via -r requirements/in\cython.in
-distlib==0.3.4
+distlib==0.3.5
     # via virtualenv
 et-xmlfile==1.1.0
     # via openpyxl
-filelock==3.7.0
+filelock==3.7.1
     # via
     #   tox
     #   virtualenv
@@ -35,7 +38,7 @@ jpype1==1.4.0
     # via -r requirements/in\base.in
 mccabe==0.6.1
     # via flake8
-mypy==0.960
+mypy==0.971
     # via -r requirements/in/dev.in
 mypy-extensions==0.4.3
     # via mypy
@@ -45,13 +48,14 @@ openpyxl==3.0.10
     # via -r requirements/in\base.in
 packaging==21.3
     # via
+    #   build
     #   pytest
     #   tox
-pefile==2021.9.3
+pefile==2022.5.30
     # via pyinstaller
 pep517==0.12.0
-    # via pip-tools
-pip-tools==6.6.2
+    # via build
+pip-tools==6.8.0
     # via -r requirements/in/dev.in
 platformdirs==2.5.2
     # via virtualenv
@@ -69,17 +73,17 @@ pycodestyle==2.8.0
     # via flake8
 pyflakes==2.4.0
     # via flake8
-pyinstaller==5.1
+pyinstaller==5.2
     # via -r requirements/in\packaging.in
-pyinstaller-hooks-contrib==2022.6
+pyinstaller-hooks-contrib==2022.8
     # via pyinstaller
 pyparsing==3.0.9
     # via packaging
-pyqt5==5.15.6
+pyqt5==5.15.7
     # via -r requirements/in\pyqt5.in
 pyqt5-qt5==5.15.2
     # via pyqt5
-pyqt5-sip==12.10.1
+pyqt5-sip==12.11.0
     # via pyqt5
 pytest==7.1.2
     # via
@@ -96,9 +100,9 @@ pytest-cov==3.0.0
     # via -r requirements/in\tests.in
 pytest-instafail==0.4.2
     # via -r requirements/in\tests.in
-pytest-mock==3.7.0
+pytest-mock==3.8.2
     # via -r requirements/in\tests.in
-pytest-qt==4.0.2
+pytest-qt==4.1.0
     # via -r requirements/in\tests.in
 pytest-repeat==0.9.1
     # via -r requirements/in\tests.in
@@ -116,19 +120,19 @@ toml==0.10.2
     # via tox
 tomli==2.0.1
     # via
+    #   build
     #   coverage
     #   mypy
-    #   pep517
     #   pytest
-tox==3.25.0
+tox==3.25.1
     # via
     #   -r requirements/in\tox.in
     #   tox-factor
 tox-factor==0.1.2
     # via -r requirements/in\tox.in
-typing-extensions==4.2.0
+typing-extensions==4.3.0
     # via mypy
-virtualenv==20.14.1
+virtualenv==20.15.1
     # via tox
 wheel==0.37.1
     # via pip-tools
