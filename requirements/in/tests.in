@@ -6,7 +6,7 @@ pytest==7.1.2
 pytest-benchmark==3.4.1
 pytest-cov==3.0.0
 pytest-instafail==0.4.2
-pytest-mock==3.7.0
-pytest-qt==4.0.2
+pytest-mock==3.8.2
+pytest-qt==4.1.0
 pytest-repeat==0.9.1
 pytest-xvfb==2.0.0; sys_platform != "win32"
