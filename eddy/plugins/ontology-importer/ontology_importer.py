@@ -32,30 +32,31 @@
 #                                                                        #
 ##########################################################################
 
-from abc import ABCMeta
 import ast
 import os
 import sqlite3
+import textwrap
 
 from PyQt5 import (
     QtCore,
     QtGui,
     QtWidgets
 )
-from PyQt5.QtCore import Qt
 
 from eddy.core.commands.common import CommandItemsRemove
-from eddy.core.commands.diagram import CommandDiagramResize
+from eddy.core.commands.diagram import CommandDiagramResize, CommandDiagramAdd
 from eddy.core.commands.edges import CommandEdgeAdd
-from eddy.core.commands.iri import CommandChangeIRIOfNode, CommandChangeLiteralOfNode
+from eddy.core.commands.iri import CommandChangeIRIOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
-from eddy.core.functions.misc import isEmpty
+from eddy.core.datatypes.system import File
+from eddy.core.diagram import Diagram
+from eddy.core.functions.fsystem import fremove
 from eddy.core.functions.path import expandPath
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.common.label import NodeLabel
 from eddy.core.items.nodes.complement import ComplementNode
@@ -80,13 +81,73 @@ from eddy.core.jvm import getJavaVM
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalNamespaceError,
-    OWL2Datatype, Facet,
+    Facet,
 )
 from eddy.core.owl import IRI
 from eddy.core.owl import Literal
 from eddy.core.plugin import AbstractPlugin
-from eddy.ui.fields import IntegerField
+from eddy.ui.file import FileDialog
+from eddy.ui.forms import NewDiagramForm
 from eddy.ui.progress import BusyProgressDialog
+
+K_IMPORTS_DB = '@data/imports.sqlite'
+K_SCHEMA_SCRIPT = """
+PRAGMA user_version = {version};
+
+CREATE TABLE IF NOT EXISTS ontology (
+    iri              TEXT,
+    version          TEXT,
+    PRIMARY KEY (iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS project (
+    iri              TEXT,
+    version          TEXT,
+    PRIMARY KEY (iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS importation (
+    project_iri      TEXT,
+    project_version  TEXT,
+    ontology_iri     TEXT,
+    ontology_version TEXT,
+    session_id       TEXT,
+    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version),
+    FOREIGN KEY (project_iri, project_version)
+        REFERENCES project(iri, version),
+    FOREIGN KEY (ontology_iri, ontology_version)
+        REFERENCES ontology(iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS axiom (
+    axiom            TEXT,
+    type_of_axiom    TEXT,
+    func_axiom       TEXT,
+    ontology_iri     TEXT,
+    ontology_version TEXT,
+    iri_dict         TEXT,
+    PRIMARY KEY (axiom, ontology_iri, ontology_version),
+    FOREIGN KEY (ontology_iri, ontology_version)
+        REFERENCES ontology(iri, version)
+);
+
+CREATE TABLE IF NOT EXISTS drawn (
+    project_iri      TEXT,
+    project_version  TEXT,
+    ontology_iri     TEXT,
+    ontology_version TEXT,
+    axiom            TEXT,
+    session_id       TEXT,
+    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom),
+    FOREIGN KEY (project_iri, project_version, ontology_iri, ontology_version, session_id)
+        REFERENCES importation(project_iri, project_version,
+                               ontology_iri, ontology_version,
+                               session_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (axiom, ontology_iri, ontology_version)
+        REFERENCES axiom(axiom, ontology_iri, ontology_version)
+);
+"""
 
 
 class OntologyImporterPlugin(AbstractPlugin):
@@ -98,6 +159,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         :type session: session
         """
         super().__init__(spec, session)
+        self.afwset = set()
         self.vm = None
         self.space = 150
 
@@ -773,28 +835,31 @@ class OntologyImporterPlugin(AbstractPlugin):
                 command = CommandProjectAddPrefix(self.project, prefix, namespace)
                 self.session.undostack.push(command)
 
-    def onToolbarButtonClick(self):
-
-        ### IMPORT FILE OWL ###
-        dialog = QtWidgets.QFileDialog(self.session.mdi, "open owl file", expandPath('~'), "owl file (*.owl)")
-
+    def doOpenOntologyFile(self):
+        """
+        Starts the import process by selecting an OWL 2 ontology file.
+        """
+        dialog = FileDialog(self.session)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        dialog.setNameFilters([File.Owl.value])
 
         if dialog.exec_():
-
             self.filePath = dialog.selectedFiles()
 
             ### SET SPACE BETWEEN ITEMS ###
-            space_form = SpaceForm(self.session)
-            if space_form.exec_():
-
-                self.space = space_form.spaceField.value()
+            form = DiagramPropertiesForm(self.project, parent=self.session)
+            if form.exec_():
+                self.space = form.spacing()
 
                 ### CREATE NEW DIAGRAM ###
-                self.session.doNewDiagram()
-                diagram = self.session.mdi.activeDiagram()
+                diagram = Diagram.create(form.name(), form.diagramSize(), self.project)
+                connect(diagram.sgnItemAdded, self.project.doAddItem)
+                connect(diagram.sgnItemRemoved, self.project.doRemoveItem)
+                connect(diagram.selectionChanged, self.session.doUpdateState)
+                self.session.undostack.push(CommandDiagramAdd(diagram, self.project))
+                self.session.sgnFocusDiagram.emit(diagram)
 
                 self.vm = getJavaVM()
                 if not self.vm.isRunning():
@@ -886,72 +951,24 @@ class OntologyImporterPlugin(AbstractPlugin):
 
                                 QtCore.QCoreApplication.processEvents()
 
-                                db_filename = expandPath('@data/db.db')
+                                db_filename = expandPath(K_IMPORTS_DB)
                                 dir = os.path.dirname(db_filename)
                                 if not os.path.exists(dir):
                                     os.makedirs(dir)
-
-                                schema_script = '''
-                                                create table if not exists ontology (
-                                                    iri     text,
-                                                    version test,
-                                                    PRIMARY KEY (iri, version)
-                                                );
-
-                                                create table if not exists project (
-                                                    iri     text,
-                                                    version test,
-                                                    PRIMARY KEY (iri, version)
-                                                );
-
-                                                create table if not exists importation (
-                                                    project_iri text,
-                                                    project_version text,
-                                                    ontology_iri text,
-                                                    ontology_version    text,
-                                                    session_id  text,
-                                                    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version),
-                                                    FOREIGN KEY (project_iri, project_version) references project(iri, version),
-                                                    FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
-                                                );
-
-                                                create table if not exists axiom (
-                                                    axiom       text,
-                                                    type_of_axiom   text,
-                                                    func_axiom      text,
-                                                    ontology_iri    text,
-                                                    ontology_version text,
-                                                    iri_dict text,
-                                                    PRIMARY KEY (axiom, ontology_iri, ontology_version),
-                                                    FOREIGN KEY (ontology_iri, ontology_version) references ontology(iri, version)
-                                                );
-
-                                                create table if not exists drawn (
-                                                    project_iri text,
-                                                    project_version text,
-                                                    ontology_iri    text,
-                                                    ontology_version text,
-                                                    axiom text,
-                                                    session_id  text,
-                                                    PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom),
-                                                    FOREIGN KEY (project_iri, project_version, ontology_iri, ontology_version, session_id) references importation(project_iri, project_version, ontology_iri, ontology_version, session_id) on delete cascade,
-                                                    FOREIGN KEY (axiom, ontology_iri, ontology_version) references axiom(axiom, ontology_iri, ontology_version)
-                                                );'''
 
                                 db_is_new = not os.path.exists(db_filename)
                                 conn = sqlite3.connect(db_filename)
                                 cursor = conn.cursor()
                                 QtCore.QCoreApplication.processEvents()
 
+                                # TODO: Move to plugin init()
                                 if db_is_new:
-                                    #print('Creazione dello schema')
-                                    conn.executescript(schema_script)
+                                    conn.executescript(K_SCHEMA_SCRIPT.format(
+                                        version=self.spec.get('database', 'version')))
                                     conn.commit()
-
 
                                 QtCore.QCoreApplication.processEvents()
 
-                                #print('Nuova Importazione')
                                 self.project.version = self.project.version if len(
                                     self.project.version) > 0 else '1.0'
 
@@ -1043,15 +1060,17 @@ class OntologyImporterPlugin(AbstractPlugin):
                         except Exception as e:
                             raise e
 
-    def onSecondButtonClick(self):
-
+    def doOpenAxiomImportDialog(self):
+        """
+        Opens the axioms import dialog.
+        """
         try:
             # TRY TO OPEN IMPORTATIONS ASSOCIATED WITH THIS PROJECT #
             importation = Importation(self.project)
             axs, not_dr, dr = importation.open()
             if not_dr:
-                window = AxiomsWindow(not_dr, self.project)
-                window.exec_()
+                dialog = AxiomSelectionDialog(not_dr, self.project)
+                dialog.exec_()
             else:
                 msgbox = QtWidgets.QMessageBox()
                 msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -1080,32 +1099,84 @@ class OntologyImporterPlugin(AbstractPlugin):
         importation = Importation(self.project)
         importation.removeFromDB()
 
+    def checkDatabase(self):
+        """
+        Checks whether the currently stored import database is compatible
+        with the current version supported by the plugin.
+        """
+        db = expandPath(K_IMPORTS_DB)
+        if os.path.exists(db):
+            # CHECK THAT VERSION IS COMPATIBLE
+            conn = sqlite3.connect(db)
+            cursor = conn.cursor()
+            version = self.spec.getint('database', 'version')
+            nversion = int(cursor.execute('PRAGMA user_version').fetchone()[0])
+            if nversion > self.spec.getint('database', 'version'):
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('Error initializing plugin: {}'.format(self.name()))
+                msgbox.setText(textwrap.dedent("""
+                    Incompatible import database version {nversion} > {version}.<br><br>
+                    This means that it was opened with a more recent version
+                    of the {name} plugin.<br><br>
+                    In order to use this version of the {name} plugin you will
+                    need to recreate the import database.<br>
+                    Do you want to proceed?<br><br>
+                    <b>WARNING: this will delete all the OWL 2 imports in progress!</b>
+                    """.format(version=version, nversion=nversion, name=self.name())))
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if msgbox.exec_() == QtWidgets.QMessageBox.Yes:
+                    fremove(db)
+                else:
+                    raise DatabaseError(
+                        'Incompatible import database version {} > {}'.format(nversion, version))
+
     def dispose(self):
         """
         Executed whenever the plugin is going to be destroyed.
         """
+        # DISCONNECT SIGNALS/SLOTS
+        self.debug('Disconnecting from active session')
+        disconnect(self.session.sgnNoSaveProject, self.onNoSave)
+
+        # UNINSTALL WIDGETS FROM THE ACTIVE SESSION
+        self.debug('Uninstalling OWL 2 importer controls from "view" toolbar')
+        for action in self.afwset:
+            self.session.widget('view_toolbar').removeAction(action)
 
     def start(self):
         """
         Perform initialization tasks for the plugin.
         """
+        # VERIFY EXISTING DATABASE COMPATIBILITY
+        self.checkDatabase()
 
         # INITIALIZE THE WIDGETS
-        self.myButton = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/24/ic_system_update'), statusTip='Import OWL file')
-        self.myButton2 = QtWidgets.QToolButton(self.session, icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'), statusTip='Select axioms from imported ontologies')
-        # tooltip
-        self.myButton.setToolTip('Import OWL file')
-        self.myButton2.setToolTip('Select axioms from imported ontologies')
+        self.debug('Creating OWL 2 importer control widgets')
+        # noinspection PyArgumentList
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/24/ic_system_update'),
+            statusTip='Import OWL file', toolTip='Import OWL file',
+            enabled=True, checkable=False, clicked=self.doOpenOntologyFile,
+            objectName='owl2_importer_open'))
+        # noinspection PyArgumentList
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/48/ic_format_list_bulleted_black'),
+            statusTip='Select axioms from imported ontologies',
+            toolTip='Select axioms from imported ontologies',
+            enabled=True, checkable=False, clicked=self.doOpenAxiomImportDialog,
+            objectName='owl2_importer_axioms'))
 
         # CREATE VIEW TOOLBAR BUTTONS
-        self.session.widget('view_toolbar').addSeparator()
-        self.session.widget('view_toolbar').addWidget(self.myButton)
-        # self.session.widget('view_toolbar').addSeparator()
-        self.session.widget('view_toolbar').addWidget(self.myButton2)
+        self.debug('Installing OWL 2 importer control widgets')
+        toolbar = self.session.widget('view_toolbar')
+        self.afwset.add(toolbar.addSeparator())
+        self.afwset.add(toolbar.addWidget(self.widget('owl2_importer_open')))
+        self.afwset.add(toolbar.addWidget(self.widget('owl2_importer_axioms')))
 
         # CONFIGURE SIGNALS/SLOTS
-        connect(self.myButton.clicked, self.onToolbarButtonClick)
-        connect(self.myButton2.clicked, self.onSecondButtonClick)
         connect(self.session.sgnNoSaveProject, self.onNoSave)
 
 
@@ -1118,7 +1189,7 @@ class Importation():
         self.project_iri = str(self.project.ontologyIRI)
         self.project_version = self.project.version if len(self.project.version) > 0 else '1.0'
 
-        self.db_filename = expandPath('@data/db.db')
+        self.db_filename = expandPath(K_IMPORTS_DB)
         dir = os.path.dirname(self.db_filename)
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -1363,7 +1434,7 @@ class Importation():
                 conn.commit()
 
 
-class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
+class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def __init__(self, not_drawn, project):
 
@@ -1410,7 +1481,7 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
             self.DataOneOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataOneOf")
             self.DataUnionOf = self.vm.getJavaClass("org.semanticweb.owlapi.model.OWLDataUnionOf")
 
-        self.db_filename = expandPath('@data/db.db')
+        self.db_filename = expandPath(K_IMPORTS_DB)
         dir = os.path.dirname(self.db_filename)
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -1498,8 +1569,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(classLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1511,8 +1582,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(objPropLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1524,8 +1595,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(dataPropLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1537,8 +1608,8 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                 check = QtWidgets.QTreeWidgetItem(indivLabel, [str(ax)])
                 basefont = check.font(0).family()
                 check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                check.setCheckState(0, Qt.CheckState.Unchecked)
+                check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
@@ -1551,12 +1622,12 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                     check = QtWidgets.QTreeWidgetItem(othersLabel, [str(ax)])
                     basefont = check.font(0).family()
                     check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
-                    check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
-                    check.setCheckState(0, Qt.CheckState.Unchecked)
+                    check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                    check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                     self.checkBoxes.append(check)
 
-            self.table.sortItems(0, Qt.AscendingOrder)
+            self.table.sortItems(0, QtCore.Qt.AscendingOrder)
 
         self.table.setHeaderHidden(True)
         self.table.header().setStretchLastSection(False)
@@ -1642,9 +1713,9 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
 
         if axiom not in self.labels:
             if state == QtCore.Qt.Checked:
-                item.setCheckState(0, Qt.CheckState.Unchecked)
+                item.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
             else:
-                item.setCheckState(0, Qt.CheckState.Checked)
+                item.setCheckState(0, QtCore.Qt.CheckState.Checked)
 
     def checkAxiom(self, item, column):
 
@@ -1729,9 +1800,10 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
         super().reject()
 
     def accept(self):
-
         # k: axiom (::string), value: manchester_axiom (::Axiom)
         # (to keep track of the string axiom to insert in DRAWN table)
+        super().accept()
+
         with BusyProgressDialog('Drawing Axioms', 0.5):
 
             axiomsToDraw = {}
@@ -1762,7 +1834,6 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                         # if axioms can't be parsed -> can't draw message #
                         cantDraw.append(ax)
 
-            super().accept()
             if cantDraw:
 
                 invalid = ', '.join(cantDraw)
@@ -6913,101 +6984,90 @@ class AxiomsWindow(QtWidgets.QDialog, HasWidgetSystem):
                             CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
 
 
-
-# WIDGET FORM to set Space between Items #
-class AbstractItemSpaceForm(QtWidgets.QDialog):
+class DiagramPropertiesForm(NewDiagramForm):
     """
-    Base class for diagram dialogs.
+    Subclass of `NewDiagramForm` which allows also to input the
+    spacing between class items in the generated diagram.
     """
-    __metaclass__ = ABCMeta
+    MinSize = 5000
+    MaxSize = 50000
+    MinSpace = 150
+    MaxSpace = 500
 
-    def __init__(self, parent=None):
+    def __init__(self, project=None, **kwargs):
         """
-        Initialize the dialog.
-        :type parent: QtWidgets.QWidget
+        Initialize the new diagram properties dialog.
         """
-        super().__init__(parent)
+        super().__init__(project, **kwargs)
 
+        self.sizeLabel = QtWidgets.QLabel('Diagram size:', self)
+        # noinspection PyArgumentList
+        self.sizeSlider = QtWidgets.QSlider(
+            QtCore.Qt.Horizontal, self, toolTip='New diagram size',
+            minimum=DiagramPropertiesForm.MinSize, maximum=DiagramPropertiesForm.MaxSize,
+            objectName='size_slider')
+        self.sizeValue = QtWidgets.QLabel(f'{self.sizeSlider.value()} px', self)
+        self.spaceLabel = QtWidgets.QLabel('Item spacing:', self)
+        # noinspection PyArgumentList
+        self.spaceSlider = QtWidgets.QSlider(
+            QtCore.Qt.Horizontal, self, toolTip='Spacing between class items',
+            minimum=DiagramPropertiesForm.MinSpace, maximum=DiagramPropertiesForm.MaxSpace,
+            objectName='spacing_slider')
+        self.valueLabel = QtWidgets.QLabel(f'{self.spaceSlider.value()} px', self)
 
-        #################################
-        # FORM AREA
-        #################################
+        self.propertiesGroup = QtWidgets.QGroupBox('Properties', self)
+        self.sizeLayout = QtWidgets.QHBoxLayout()
+        self.sizeLayout.addWidget(self.sizeLabel)
+        self.sizeLayout.addWidget(self.sizeSlider)
+        self.sizeLayout.addWidget(self.sizeValue)
+        self.spacingLayout = QtWidgets.QHBoxLayout()
+        self.spacingLayout.addWidget(self.spaceLabel)
+        self.spacingLayout.addWidget(self.spaceSlider)
+        self.spacingLayout.addWidget(self.valueLabel)
+        self.propertiesLayout = QtWidgets.QVBoxLayout(self.propertiesGroup)
+        self.propertiesLayout.addLayout(self.sizeLayout)
+        self.propertiesLayout.addLayout(self.spacingLayout)
 
-        self.spaceField = IntegerField(self)
-        self.spaceField.setMinimumWidth(400)
-        self.spaceField.setMaxLength(4)
-        self.spaceField.setPlaceholderText('Space...')
-        connect(self.spaceField.textChanged, self.onSpaceFieldChanged)
-
-        self.warnLabel = QtWidgets.QLabel(self)
-        self.warnLabel.setContentsMargins(0, 0, 0, 0)
-        self.warnLabel.setProperty('class', 'invalid')
-        self.warnLabel.setVisible(False)
-
-        #############################################
-        # CONFIRMATION AREA
-        #################################
-
-        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
-        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-
-        #############################################
-        # SETUP DIALOG LAYOUT
-        #################################
-
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.mainLayout.setContentsMargins(10, 10, 10, 10)
-        self.mainLayout.addWidget(self.spaceField)
-        self.mainLayout.addWidget(self.warnLabel)
-        self.mainLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
-
+        self.mainLayout.insertWidget(self.mainLayout.indexOf(self.warnLabel), self.propertiesGroup)
+        self.mainLayout.insertSpacing(self.mainLayout.indexOf(self.warnLabel), 4)
         self.setFixedSize(self.sizeHint())
-        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-
-        connect(self.confirmationBox.accepted, self.accept)
-        connect(self.confirmationBox.rejected, self.reject)
+        self.setWindowTitle('Set new diagram properties')
+        connect(self.sizeSlider.valueChanged, self.onSizeChanged)
+        connect(self.spaceSlider.valueChanged, self.onSpacingChanged)
 
     #############################################
     #   SLOTS
     #################################
 
-    @QtCore.pyqtSlot(str)
-    def onSpaceFieldChanged(self, space):
+    def onSizeChanged(self, value: int) -> None:
         """
-        Executed when the content of the input field changes.
-        :type space: int
+        Executed when the size slider value changes.
         """
-        enabled = False
-        caption = ''
+        self.sizeValue.setText(f'{self.diagramSize()} px')
 
-        if space != '':
-
-            space = int(space.strip())
-            if not space:
-                caption = ''
-                enabled = False
-            else:
-                if space < 130 or space > 500:
-                    caption = "Space must be integer in range [130, 500]"
-                    enabled = False
-                else:
-                    caption = ''
-                    enabled = True
-
-        self.warnLabel.setText(caption)
-        self.warnLabel.setVisible(not isEmpty(caption))
-        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
-        self.setFixedSize(self.sizeHint())
-
-class SpaceForm(AbstractItemSpaceForm):
-
-    def __init__(self, parent=None):
+    def onSpacingChanged(self, value: int) -> None:
         """
-        Initialize the new diagram dialog.
-        :type project: Project
-        :type parent: QtWidgets.QWidget
+        Executed when the spacing slider value changes.
         """
-        super().__init__(parent)
-        self.setWindowTitle('Set Space between ClassNodes')
+        self.valueLabel.setText(f'{self.spacing()} px')
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def diagramSize(self) -> int:
+        """
+        Returns the currently selected diagram size.
+        """
+        return self.sizeSlider.value()
+
+    def spacing(self) -> int:
+        """
+        Returns the currently selected spacing.
+        """
+        return self.spaceSlider.value()
+
+
+class DatabaseError(RuntimeError):
+    """Raised whenever there is a problem with the import database."""
+    pass
