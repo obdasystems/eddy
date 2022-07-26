@@ -176,6 +176,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('swap_edge'))
             menu.addAction(self.session.action('focus_on_source'))
+            menu.addAction(self.session.action('focus_on_target'))
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
 
@@ -198,6 +199,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('swap_edge'))
             menu.addAction(self.session.action('focus_on_source'))
+            menu.addAction(self.session.action('focus_on_target'))
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
 
@@ -219,6 +221,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('edge_annotations_refactor'))
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('focus_on_source'))
+            menu.addAction(self.session.action('focus_on_target'))
         return menu
 
     def buildSameEdgeMenu(self, diagram, edge, pos):
@@ -239,6 +242,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('edge_annotations_refactor'))
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('focus_on_source'))
+            menu.addAction(self.session.action('focus_on_target'))
             menu.addAction(self.session.action('switch_same_to_different'))
 
         return menu
@@ -261,6 +265,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('edge_annotations_refactor'))
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('focus_on_source'))
+            menu.addAction(self.session.action('focus_on_target'))
             menu.addAction(self.session.action('switch_different_to_same'))
         return menu
 

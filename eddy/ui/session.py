@@ -840,6 +840,11 @@ class Session(
             objectName='focus_on_source', statusTip='Focus on the source node',
             triggered=self.doFocusOnSource))
 
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/18/ic_zoom_black'), 'Focus on target', self,
+            objectName='focus_on_target', statusTip='Focus on the target node',
+            triggered=self.doFocusOnTarget))
+
         #############################################
         # SAME/DIFFERENT SPECIFIC
         #################################
@@ -2044,6 +2049,20 @@ class Session(
                 self.doFocusItem(sourceNode)
 
     @QtCore.pyqtSlot()
+    def doFocusOnTarget(self) -> None:
+        """
+        Focus on the target node of the selected edge.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedEdges()
+            if len(selected) == 1:
+                edge = selected[0]
+                targetNode = edge.target
+                self.doFocusItem(targetNode)
+
+    @QtCore.pyqtSlot()
     def doImport(self) -> None:
         """
         Import an ontology into the currently active Project.
@@ -3182,6 +3201,7 @@ class Session(
         self.action('dl_check').setEnabled(not isProjectEmpty)
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
         self.action('focus_on_source').setEnabled(isEdgeSelected)
+        self.action('focus_on_target').setEnabled(isEdgeSelected)
         self.action('switch_same_to_different').setEnabled(isSwitchToDifferentEnabled)
         self.action('switch_different_to_same').setEnabled(isSwitchToSameEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
