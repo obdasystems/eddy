@@ -3427,6 +3427,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+
         if propNode.type() == Item.RoleInverseNode:
 
             edges = propNode.edges
@@ -3443,15 +3455,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         card = str(card)
         n.setText('('+card+' , -)')
-        x = x + 200
-        y = y
-        if ceDrawn:
-            x = ceNode.pos().x()
-            y = ceNode.pos().y()
 
-        xM = (x + propNode.pos().x()) / 2
-        yM = (y + propNode.pos().y()) / 2
-        n.setPos(xM, yM)
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
         input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
@@ -3569,6 +3575,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+
         if propNode.type() == Item.RoleInverseNode:
 
             edges = propNode.edges
@@ -3585,15 +3603,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         card = str(card)
         n.setText('(- , '+card+')')
-        x = x + 200
-        y = y
-        if ceDrawn:
-            x = ceNode.pos().x()
-            y = ceNode.pos().y()
 
-        xM = (x + propNode.pos().x()) / 2
-        yM = (y + propNode.pos().y()) / 2
-        n.setPos(xM, yM)
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
         input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
@@ -3711,6 +3723,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+
         if propNode.type() == Item.RoleInverseNode:
 
             edges = propNode.edges
@@ -3727,15 +3751,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         card = str(card)
         n.setText('('+card+' , '+card+')')
-        x = x + 200
-        y = y
-        if ceDrawn:
-            x = ceNode.pos().x()
-            y = ceNode.pos().y()
 
-        xM = (x + propNode.pos().x()) / 2
-        yM = (y + propNode.pos().y()) / 2
-        n.setPos(xM, yM)
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
         input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
@@ -3895,6 +3913,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+
         if propNode.type() == Item.RoleInverseNode:
 
             edges = propNode.edges
@@ -3910,15 +3940,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             n = DomainRestrictionNode(diagram=diagram)
 
-        x = x + 200
-        y = y
-        if ceDrawn:
-            x = ceNode.pos().x()
-            y = ceNode.pos().y()
-
-        xM = (x + propNode.pos().x()) / 2
-        yM = (y + propNode.pos().y()) / 2
-        n.setPos(xM, yM)
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
         input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
@@ -4042,6 +4065,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+
         if propNode.type() == Item.RoleInverseNode:
 
             edges = propNode.edges
@@ -4057,14 +4092,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = DomainRestrictionNode(diagram=diagram)
 
         n.setText('forall')
-        x = x + 200
-        y = y
-        if ceDrawn:
-            x = ceNode.pos().x()
-            y = ceNode.pos().y()
-        xM = (x + propNode.pos().x()) / 2
-        yM = (y + propNode.pos().y()) / 2
-        n.setPos(xM, yM)
+
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
         input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
@@ -4763,11 +4793,21 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
-        x_med = (propNode.pos().x() + domainNode.pos().x()) /2
-        y_med = (propNode.pos().y() + domainNode.pos().y()) /2
+            if domDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = domainNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - domainNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
 
         restrNode = RangeRestrictionNode(diagram=diagram)
-        restrNode.setPos(x_med, y_med)
+        pos = self.restrictionPos(restrNode, propNode, diagram)
+        restrNode.setPos(pos)
 
         self.session.undostack.push(CommandNodeAdd(diagram, restrNode))
 
@@ -6914,7 +6954,6 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         num = sys.maxsize
         rad = QtCore.QPointF(restriction.width() / 2, restriction.height() / 2)
         for o in offsets:
-            print(o)
             p = source.pos() + o
             if self.isEmpty(p.x(), p.y(), scene):
                 count = len(scene.items(
@@ -6923,6 +6962,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     num = count
                     pos = source.pos() + o
                     return pos
+        return pos
 
     def addAnnotationAssertions(self, iri):
         conn = None
