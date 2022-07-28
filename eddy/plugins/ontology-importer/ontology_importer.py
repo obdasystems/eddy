@@ -2679,7 +2679,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 return e.target
 
         inv = RoleInverseNode(diagram=diagram)
-        inv.setPos(propNode.pos().x()+150, propNode.pos().y())
+        x = propNode.pos().x()+150
+        y = propNode.pos().y()
+        starting_y = y
+        while not self.isEmpty(x, y, diagram):
+            y = y - 30
+            if abs(starting_y - y) >1000:
+                y = starting_y
+                break
+
+        inv.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, inv))
 
         input = diagram.factory.create(Item.InputEdge, source=propNode, target=inv)
@@ -2704,6 +2713,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                          'rdf:PlainLiteral':'http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral', 'rdfs:Literal':'http://www.w3.org/2000/01/rdf-schema#Literal', 'xsd:anyURI':'http://www.w3.org/2001/XMLSchema#anyURI'}
 
         dataNode = DatatypeRestrictionNode(diagram=diagram)
+        starting_y = y
+        while not self.isEmpty(x, y, diagram):
+            y = y - 30
+            if abs(starting_y - y) > 1000:
+                y = starting_y
+                break
         dataNode.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, dataNode))
 
@@ -2735,7 +2750,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             fNode = FacetNode(facet=facet, diagram=diagram)
 
             x = x +150
-            fNode.setPos(x, y+150)
+            y = y + 150
+            starting_y = y
+            while not self.isEmpty(x, y, diagram):
+                y = y - 30
+                if abs(starting_y - y) > 1000:
+                    y = starting_y
+                    break
+            fNode.setPos(x, y)
             fNode.doUpdateNodeLabel()
             self.session.undostack.push(CommandNodeAdd(diagram, fNode))
 
@@ -3796,7 +3818,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if not notDrawn:
 
             notNode = ComplementNode(diagram=diagram)
-            notNode.setPos(node.pos().x()+50, node.pos().y())
+            x = node.pos().x()+50
+            y = node.pos().y()
+            starting_y = y
+            while not self.isEmpty(x, y, diagram):
+                y = y - 30
+                if abs(starting_y - y) > 1000:
+                    y = starting_y
+                    break
+            notNode.setPos(x, y)
             self.session.undostack.push(CommandNodeAdd(diagram, notNode))
 
             input = diagram.factory.create(Item.InputEdge, source=node, target=notNode)
@@ -4174,7 +4204,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         x_med = (max(xPos) + min(xPos)) / 2
         y_med = (max(yPos) + min(yPos)) / 2 - 100
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         union_node = UnionNode(diagram=diagram)
         union_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, union_node))
@@ -4227,7 +4262,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         x_med = (max(xPos) + min(xPos)) / 2
         y_med = (max(yPos) + min(yPos)) / 2 - 100
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         union_node = UnionNode(diagram=diagram)
         union_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, union_node))
@@ -4303,7 +4343,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         x_med = (max(xPos) + min(xPos)) / 2
         y_med = (max(yPos) + min(yPos)) / 2 - 100
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         oneof_node = EnumerationNode(diagram=diagram)
         oneof_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, oneof_node))
@@ -4357,7 +4402,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         x_med = (max(xPos) + min(xPos)) / 2
         y_med = (max(yPos) + min(yPos)) / 2 - 100
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         oneof_node = EnumerationNode(diagram=diagram)
         oneof_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, oneof_node))
@@ -4433,7 +4483,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         x_med = (max(xPos)+min(xPos)) / 2
         y_med = (max(yPos)+min(yPos)) / 2 - 100
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         intersect_node = IntersectionNode(diagram=diagram)
         intersect_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, intersect_node))
@@ -4535,7 +4590,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         maxY = max(y_positions)
         minY = min(y_positions)
         y_med = (maxY + minY) / 2
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         key_node = HasKeyNode(diagram=diagram)
         key_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, key_node))
@@ -4647,7 +4707,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         x_med = (max(x_positions) + min(x_positions)) / 2
         y_med = ((max(y_positions) + min(y_positions)) / 2) - 100
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         chain_node = RoleChainNode(diagram=diagram)
         chain_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, chain_node))
@@ -5074,6 +5139,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         inv = RoleInverseNode(diagram=diagram)
         x = (firstNode.pos().x() + secondNode.pos().x()) /2
         y = (firstNode.pos().y() + secondNode.pos().y()) /2
+        starting_y = y
+        while not self.isEmpty(x, y, diagram):
+            y = y - 30
+            if abs(starting_y - y) > 1000:
+                y = starting_y
+                break
         inv.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, inv))
 
@@ -5718,6 +5789,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         instanceNode = PropertyAssertionNode(diagram=diagram)
         x = (indivNode.pos().x() + propNode.pos().x()) / 2
         y = propNode.pos().y()
+        starting_y = y
+        while not self.isEmpty(x, y, diagram):
+            y = y - 30
+            if abs(starting_y - y) > 1000:
+                y = starting_y
+                break
         instanceNode.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, instanceNode))
 
@@ -5984,6 +6061,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         instanceNode = PropertyAssertionNode(diagram=diagram)
         x = (indivNode.pos().x() + propNode.pos().x()) / 2
         y = propNode.pos().x()
+        starting_y = y
+        while not self.isEmpty(x, y, diagram):
+            y = y - 30
+            if abs(starting_y - y) > 1000:
+                y = starting_y
+                break
         instanceNode.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, instanceNode))
 
@@ -6227,7 +6310,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         maxY = max(y_positions)
         minY = min(y_positions)
         y_med = (maxY + minY) / 2
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         dis_node = ComplementNode(diagram=diagram)
         dis_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
@@ -6385,6 +6473,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             cNode = self.draw(classs, diagram)
 
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         dis_node = DisjointUnionNode(diagram=diagram)
         dis_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
@@ -6474,7 +6568,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         maxY = max(y_positions)
         minY = min(y_positions)
         y_med = (maxY - minY) / 2
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         dis_node = ComplementNode(diagram=diagram)
         dis_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
@@ -6571,7 +6670,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         maxY = max(y_positions)
         minY = min(y_positions)
         y_med = (maxY - minY) / 2
-
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 30
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
         dis_node = ComplementNode(diagram=diagram)
         dis_node.setPos(x_med, y_med)
         self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
@@ -6913,19 +7017,47 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         # check if position x, y of diagram is empty #
         for el in diagram.items():
 
-            if el.isNode() and el.type() == Item.ConceptNode and abs(el.pos().y() - y) < 50 and abs(el.pos().x() - x) < 110:
+            if el.isNode() and el.type() == Item.ConceptNode and abs(el.pos().y() - y) < 52 and abs(
+                el.pos().x() - x) < 112:
                 return False
 
-            if el.isNode() and el.type() == Item.IndividualNode and abs(el.pos().y() - y) < 60 and abs(el.pos().x() - x) < 60:
+            if el.isNode() and (
+                el.type() == Item.IndividualNode or el.type() == Item.LiteralNode) and abs(
+                el.pos().y() - y) < 62 and abs(el.pos().x() - x) < 62:
                 return False
 
-            if el.isNode() and el.type() == Item.RoleNode and abs(el.pos().y() - y) < 50 and abs(el.pos().x() - x) < 70:
+            if el.isNode() and el.type() == Item.RoleNode and abs(el.pos().y() - y) < 52 and abs(
+                el.pos().x() - x) < 72:
                 return False
 
-            if el.isNode() and el.type() == Item.AttributeNode and abs(el.pos().y() - y) < 20 and abs(el.pos().x() - x) < 20:
+            if el.isNode() and el.type() == Item.AttributeNode and abs(
+                el.pos().y() - y) < 22 and abs(el.pos().x() - x) < 22:
                 return False
 
-            if el.isNode() and (el.type() == Item.RangeRestrictionNode or el.type() == Item.DomainRestrictionNode) and abs(el.pos().y() - y) < 20 and abs(el.pos().x() - x) < 20:
+            if el.isNode() and (
+                el.type() == Item.RangeRestrictionNode or el.type() == Item.DomainRestrictionNode) and abs(
+                el.pos().y() - y) < 22 and abs(el.pos().x() - x) < 22:
+                return False
+
+            if el.isNode() and el.type() == Item.ValueDomainNode and abs(
+                el.pos().y() - y) < 42 and abs(el.pos().x() - x) < 92:
+                return False
+
+            if el.isNode() and el.type() in [Item.ComplementNode, Item.RoleInverseNode,
+                                             Item.RoleChainNode, Item.DisjointUnionNode,
+                                             Item.ConceptNode, Item.UnionNode,
+                                             Item.IntersectionNode, Item.HasKeyNode,
+                                             Item.EnumerationNode,
+                                             Item.DatatypeRestrictionNode] and abs(
+                el.pos().y() - y) < 32 and abs(el.pos().x() - x) < 52:
+                return False
+
+            if el.isNode() and el.type() == Item.PropertyAssertionNode and abs(
+                el.pos().y() - y) < 32 and abs(el.pos().x() - x) < 54:
+                return False
+
+            if el.isNode() and el.type() == Item.FacetNode and abs(
+                el.pos().y() - y) < 42 and abs(el.pos().x() - x) < 82:
                 return False
 
         return True
