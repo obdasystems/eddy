@@ -6913,9 +6913,21 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         # check if position x, y of diagram is empty #
         for el in diagram.items():
 
-            if el.isNode() and el.pos().y() == y and abs(el.pos().x() - x) < 80:
+            if el.isNode() and el.type() == Item.ConceptNode and abs(el.pos().y() - y) < 50 and abs(el.pos().x() - x) < 110:
+                return False
 
-                    return False
+            if el.isNode() and el.type() == Item.IndividualNode and abs(el.pos().y() - y) < 60 and abs(el.pos().x() - x) < 60:
+                return False
+
+            if el.isNode() and el.type() == Item.RoleNode and abs(el.pos().y() - y) < 50 and abs(el.pos().x() - x) < 70:
+                return False
+
+            if el.isNode() and el.type() == Item.AttributeNode and abs(el.pos().y() - y) < 20 and abs(el.pos().x() - x) < 20:
+                return False
+
+            if el.isNode() and (el.type() == Item.RangeRestrictionNode or el.type() == Item.DomainRestrictionNode) and abs(el.pos().y() - y) < 20 and abs(el.pos().x() - x) < 20:
+                return False
+
         return True
 
     def isAtomic(self, operand):
