@@ -161,7 +161,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         super().__init__(spec, session)
         self.afwset = set()
         self.vm = None
-        self.space = 150
+        self.space = 250
 
     def printConceptNode(self, iri, x, y, diagram):
 
@@ -6991,7 +6991,7 @@ class DiagramPropertiesForm(NewDiagramForm):
     """
     MinSize = 5000
     MaxSize = 50000
-    MinSpace = 150
+    MinSpace = 250
     MaxSpace = 500
 
     def __init__(self, project=None, **kwargs):
