@@ -46,7 +46,7 @@ from PyQt5 import (
 
 from eddy.core.commands.common import CommandItemsRemove
 from eddy.core.commands.diagram import CommandDiagramResize, CommandDiagramAdd
-from eddy.core.commands.edges import CommandEdgeAdd
+from eddy.core.commands.edges import CommandEdgeAdd, CommandEdgeBreakpointAdd
 from eddy.core.commands.iri import CommandChangeIRIOfNode
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.commands.nodes import CommandNodeAdd
@@ -210,9 +210,23 @@ class OntologyImporterPlugin(AbstractPlugin):
         source_node.addEdge(isa)
         target_node.addEdge(isa)
 
+
         ## CALL CommandEdgeAdd TO ADD ISA ##
 
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+        if source_node.pos().x() != target_node.pos().x():
+
+            y = source_node.pos().y() + (target_node.pos().y() - source_node.pos().y())/2
+
+            bp1 = QtCore.QPointF(source_node.pos().x(), y)
+            b1 = CommandEdgeBreakpointAdd(diagram, isa, 0, bp1)
+
+            bp2 = QtCore.QPointF(target_node.pos().x(), y)
+            b2 = CommandEdgeBreakpointAdd(diagram, isa, 1, bp2)
+
+            self.session.undostack.push(b1)
+            self.session.undostack.push(b2)
+
 
     def findNode(self, iri, diagram):
 
