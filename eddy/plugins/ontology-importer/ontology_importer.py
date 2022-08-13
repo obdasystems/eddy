@@ -1004,6 +1004,10 @@ class OntologyImporterPlugin(AbstractPlugin):
                             self.session.doCenterDiagram()
                             QtCore.QCoreApplication.processEvents()
 
+                            ## SNAP TO GRID ##
+                            self.session.doSnapTopGrid()
+                            QtCore.QCoreApplication.processEvents()
+
                             ### REMOVE DUPLICATE FROM IRI ###
                             self.removeDuplicateFromIRI(diagram)
                             QtCore.QCoreApplication.processEvents()
@@ -2571,6 +2575,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                             diagram = d
                             break
                     n = self.draw(axiom, diagram)
+
+        # snap to grid #
+        self.session.doSnapTopGrid()
 
         # focus on the last drawn element #
         self.session.doFocusItem(n)
