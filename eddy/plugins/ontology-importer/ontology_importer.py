@@ -52,6 +52,7 @@ from eddy.core.commands.nodes import CommandNodeAdd
 from eddy.core.commands.project import CommandProjectAddAnnotationProperty, CommandProjectAddPrefix
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
+from eddy.core.datatypes.qt import Font
 from eddy.core.datatypes.system import File
 from eddy.core.diagram import Diagram
 from eddy.core.functions.fsystem import fremove
@@ -1536,7 +1537,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             onto = k[1]
             self.labels.append(onto)
             ontoLabel = QtWidgets.QTreeWidgetItem(self.table, [str(onto)])
-            ontoLabel.setFont(0, QtGui.QFont('AnyStyle', 9.5, QtGui.QFont.DemiBold))
+            ontoLabel.setFont(0, Font(bold=True, scale=1.25))
 
             class_axioms = []
             objProp_axioms = []
@@ -1561,53 +1562,49 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     others.append(ax)
 
             classLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Class Axioms'])
-            classLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            classLabel.setFont(0, Font(scale=1.25))
             self.labels.append('Class Axioms')
 
             for ax in class_axioms:
 
                 check = QtWidgets.QTreeWidgetItem(classLabel, [str(ax)])
                 basefont = check.font(0).family()
-                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
                 check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
             objPropLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Object Property Axioms'])
-            objPropLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            objPropLabel.setFont(0, Font(scale=1.25))
             self.labels.append('Object Property Axioms')
 
             for ax in objProp_axioms:
                 check = QtWidgets.QTreeWidgetItem(objPropLabel, [str(ax)])
                 basefont = check.font(0).family()
-                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
                 check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
             dataPropLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Data Property Axioms'])
-            dataPropLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            dataPropLabel.setFont(0, Font(scale=1.25))
             self.labels.append('Data Property Axioms')
 
             for ax in dataProp_axioms:
                 check = QtWidgets.QTreeWidgetItem(dataPropLabel, [str(ax)])
                 basefont = check.font(0).family()
-                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
                 check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
                 self.checkBoxes.append(check)
 
             indivLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Individual Axioms'])
-            indivLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+            indivLabel.setFont(0, Font(scale=1.25))
             self.labels.append('Individual Axioms')
 
             for ax in individual_axioms:
                 check = QtWidgets.QTreeWidgetItem(indivLabel, [str(ax)])
                 basefont = check.font(0).family()
-                check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
                 check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                 check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
@@ -1615,13 +1612,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             if others:
                 othersLabel = QtWidgets.QTreeWidgetItem(ontoLabel, ['Other Axioms'])
-                othersLabel.setFont(0, QtGui.QFont('AnyStyle', 9, QtGui.QFont.Medium))
+                othersLabel.setFont(0, Font(scale=1.25))
                 self.labels.append('Other Axioms')
 
                 for ax in others:
                     check = QtWidgets.QTreeWidgetItem(othersLabel, [str(ax)])
                     basefont = check.font(0).family()
-                    check.setFont(0, QtGui.QFont(basefont, 8.7, QtGui.QFont.Normal))
                     check.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
                     check.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
 
