@@ -218,7 +218,8 @@ class OntologyImporterPlugin(AbstractPlugin):
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
         if source_node.pos().x() != target_node.pos().x():
 
-            y = source_node.pos().y() + (target_node.pos().y() - source_node.pos().y())/2
+            #y = source_node.pos().y() + (target_node.pos().y() - source_node.pos().y())/2
+            y = target_node.pos().y() + 40
 
             bp1 = QtCore.QPointF(source_node.pos().x(), y)
             b1 = CommandEdgeBreakpointAdd(diagram, isa, 0, bp1)
