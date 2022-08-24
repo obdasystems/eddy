@@ -4835,14 +4835,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(rang):
 
-                    x = propNode.pos().x() - 180
-                    y = propNode.pos().y()
+                    x = propNode.pos().x()
+                    y = propNode.pos().y() - 125
                     domainNode = self.createNode(rang, diagram, x, y)
                     domDrawn = True
 
                 else:
-                    x = propNode.pos().x() - 180
-                    y = propNode.pos().y()
+                    x = propNode.pos().x()
+                    y = propNode.pos().y() - 125
 
                     domainNode = self.draw(rang, diagram, x, y)
                     domDrawn = True
@@ -4853,14 +4853,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() + 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() + 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
@@ -4880,18 +4880,19 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() + 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() + 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
 
+            '''
             if domDrawn and propDrawn:
                 offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 50, Diagram.GridSize), snapF(+propNode.height() / 2 + 50, Diagram.GridSize))
                 pos = domainNode.pos() + offset
@@ -4903,6 +4904,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         break
 
                 propNode.setPos(pos)
+            '''
 
         restrNode = RangeRestrictionNode(diagram=diagram)
         pos = self.restrictionPos(restrNode, propNode, diagram)
@@ -4920,6 +4922,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         restrNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
+        self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
 
         return restrNode
 
@@ -5143,14 +5146,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(domain):
 
-                    x = propNode.pos().x() + 200
-                    y = propNode.pos().y()
+                    x = propNode.pos().x()
+                    y = propNode.pos().y() - 125
                     domainNode = self.createNode(domain, diagram, x, y)
                     domDrawn = True
 
                 else:
-                    x = propNode.pos().x() + 200
-                    y = propNode.pos().y()
+                    x = propNode.pos().x()
+                    y = propNode.pos().y() - 125
 
                     domainNode = self.draw(domain, diagram, x, y)
                     domDrawn = True
@@ -5161,15 +5164,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() - 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
 
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() - 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
@@ -5190,18 +5193,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = domainNode.pos().x() - 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
 
                 else:
-                    x = domainNode.pos().x() - 180
-                    y = domainNode.pos().y()
+                    x = domainNode.pos().x()
+                    y = domainNode.pos().y() + 125
 
                     propNode = self.draw(property, diagram, x, y)
                     propDrawn = True
-
+            '''
             if domDrawn and propDrawn:
                 offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 50, Diagram.GridSize), snapF(+propNode.height() / 2 + 50, Diagram.GridSize))
                 pos = domainNode.pos() + offset
@@ -5213,6 +5216,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         break
 
                 propNode.setPos(pos)
+            '''
 
         restrNode = DomainRestrictionNode(diagram=diagram)
         pos = self.restrictionPos(restrNode, propNode, diagram)
@@ -5231,6 +5235,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         restrNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
+        self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
 
         return restrNode
 
@@ -7059,7 +7064,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         # create atomic node: Class, Attribute, Role, Individual, Literal, Datatype #
         move = 70
         if ex.isType(self.EntityType.DATA_PROPERTY):
-            move = -45
+            move = -50
+        if ex.isType(self.EntityType.OBJECT_PROPERTY):
+            move = 125
         starting_y = y
         while not self.isEmpty(x, y, diagram):
 
@@ -7571,187 +7578,81 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         self.session.undostack.push(
                             CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
 
-    def addBreakpoints(self, diagram, domainNode, restrNode, isa):
-        # BREAKPOINTS #
-        breakpoints = False
-        '''
-        if domainNode.pos().x() != restrNode.pos().x():
-            breakpoints = True
-            bp1 = QtCore.QPointF(restrNode.pos().x() - 40, restrNode.pos().y())
+    def addBreakpoints(self, diagram, propNode, restrNode, domainNode, isa):
+
+        if propNode.pos().x() == domainNode.pos().x():
+            if restrNode.pos().x() > domainNode.pos().x():
+                # x = restrNode.pos().x() + 40
+                x = domainNode.pos().x() + 68
+            else:
+                # x = restrNode.pos().x() - 40
+                x = domainNode.pos().x() - 68
+
+            y1 = restrNode.pos().y()
+            y2 = domainNode.pos().y()
+
+            bp1 = QtCore.QPointF(x, y1)
             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
 
-            bp2 = QtCore.QPointF(restrNode.pos().x() - 40, restrNode.pos().y() - 40)
+            bp2 = QtCore.QPointF(x, y2)
             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
-            bp5 = QtCore.QPointF(domainNode.pos().x(), restrNode.pos().y() - 40)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp5))
-        '''
-        if domainNode.pos().x() != restrNode.pos().x() and domainNode.pos().y() != restrNode.pos().y():
-            breakpoints = True
-            bp5 = QtCore.QPointF(domainNode.pos().x(), restrNode.pos().y())
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp5))
+        elif restrNode.pos().y() == domainNode.pos().y():
 
-        intersections = []
-        intersections_before_bp = []
-        intersections_after_bp = []
+            if restrNode.pos().x() > domainNode.pos().x():
+                # x = restrNode.pos().x() + 40
+                x = restrNode.pos().x() + 30
+            else:
+                # x = restrNode.pos().x() - 40
+                x = restrNode.pos().x() - 30
 
-        for el in diagram.items():
+            y1 = restrNode.pos().y()
+            y2 = restrNode.pos().y() - 40
+            x3 = domainNode.pos().x()
+            y3 = y2
 
-            if el.isNode() and (el is not restrNode) and (
-                el is not domainNode) and isa in el.collidingItems():
-                intersections.append(el)
+            bp1 = QtCore.QPointF(x, y1)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
 
-                if (el.pos().x() > restrNode.pos().x() and el.pos().x() < domainNode.pos().x()) or (
-                    el.pos().x() < restrNode.pos().x() and el.pos().x() > domainNode.pos().x()):
-                    intersections_before_bp.append(el)
+            bp2 = QtCore.QPointF(x, y2)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+            bp3 = QtCore.QPointF(x3, y3)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+
+        elif propNode.pos().x() != domainNode.pos().x() and restrNode.pos().y() != domainNode.pos().y():
+            if restrNode.pos().x() > propNode.pos().x():
+                x1 = restrNode.pos().x() + 30
+
+            else:
+                x1 = restrNode.pos().x() - 30
+
+            y1 = restrNode.pos().y()
+            x2 = x1
+            # y2 = restrNode.pos().y() - 28
+            y2 = restrNode.pos().y() - 40
+            if restrNode.pos().y() != propNode.pos().y():
+                if restrNode.pos().y() > propNode.pos().y():
+                    y2 = restrNode.pos().y() - 30
                 else:
-                    intersections_after_bp.append(el)
+                    y2 = restrNode.pos().y() + 40
+            x3 = domainNode.pos().x() + 70
+            y3 = y2
+            x4 = x3
+            y4 = domainNode.pos().y()
 
-        print(intersections)
+            bp1 = QtCore.QPointF(x1, y1)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
 
-        def sorting_x(e):
-            return e.pos().x()
+            bp2 = QtCore.QPointF(x2, y2)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
-        def sorting_y(e):
-            return e.pos().y()
+            bp3 = QtCore.QPointF(x3, y3)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
 
-        if intersections_before_bp:
-            if intersections_before_bp[0].pos().x() > restrNode.pos().x():
-                intersections_before_bp.sort(key=sorting_x)
-            else:
-                intersections_before_bp.sort(reverse=True, key=sorting_x)
-        if intersections_after_bp:
-            if intersections_after_bp[0].pos().y() > domainNode.pos().y():
-                intersections_after_bp.sort(reverse=True, key=sorting_y)
-            else:
-                intersections_after_bp.sort(key=sorting_y)
-
-        # BRING TO FRONT INTERSECTED NODES
-        '''
-        commands = []
-        diagram.setMode(DiagramMode.Idle)
-        for node in intersections:
-            zValue = 0
-            for item in [x for x in node.collidingItems() if x.type() is not Item.Label]:
-                if item.zValue() >= zValue:
-                    zValue = item.zValue() + 0.2
-            if zValue != node.zValue():
-                commands.append(CommandNodeSetDepth(diagram, node, zValue))
-
-        if commands:
-            if len(commands) > 1:
-                self.session.undostack.beginMacro('change the depth of {0} nodes'.format(len(commands)))
-                for command in commands:
-                    self.session.undostack.push(command)
-                self.session.undostack.endMacro()
-            else:
-                self.session.undostack.push(first(commands))
-        '''
-        # AVOID INTERSECATED NODES
-        '''
-        y14 = restrNode.pos().y() - 40
-        if intersections:
-            node = intersections[0]
-            data = {}
-            x1 = bp2.x()
-            y14 = node.pos().y()
-            data['redo'] = QtCore.QPointF(x1, y14)
-            data['undo'] = bp2
-            self.session.undostack.push(CommandEdgeBreakpointMove(diagram, isa, 1, data))
-        '''
-
-        if breakpoints and intersections_before_bp:
-            self.session.undostack.push(CommandEdgeBreakpointRemove(diagram, isa, 0))
-            breakpoints = False
-
-        for node in intersections_before_bp:
-
-            right, left = False, False
-            if (breakpoints and isa.breakpoints[-1].x() < node.pos().x()) or (
-                restrNode.pos().x() < node.pos().x()):
-                left = True
-            if (breakpoints and isa.breakpoints[-1].x() > node.pos().x()) or (
-                restrNode.pos().x() > node.pos().x()):
-                right = True
-
-            if right:
-                x12 = node.pos().x() + node.width() / 2 + 2
-                x34 = node.pos().x() - node.width() / 2 - 2
-                y14 = restrNode.pos().y()
-                # y14 = node.pos().y()
-                y23 = node.pos().y() - node.height() / 2 - 2
-
-                bp1 = QtCore.QPointF(x12, y14)
-                bp2 = QtCore.QPointF(x12, y23)
-                bp3 = QtCore.QPointF(x34, y23)
-                bp4 = QtCore.QPointF(x34, y14)
-
-            if left:
-                x12 = node.pos().x() - node.width() / 2 - 2
-                x34 = node.pos().x() + node.width() / 2 + 2
-                y14 = restrNode.pos().y()
-                y23 = node.pos().y() - node.height() / 2 - 2
-
-                bp1 = QtCore.QPointF(x12, y14)
-                bp2 = QtCore.QPointF(x12, y23)
-                bp3 = QtCore.QPointF(x34, y23)
-                bp4 = QtCore.QPointF(x34, y14)
-
-            if right or left:
-                i = len(isa.breakpoints)
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i + 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i + 2, bp3))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i + 3, bp4))
-
-                breakpoints = True
-
-        if breakpoints and intersections_before_bp:
-            if domainNode.pos().x() != restrNode.pos().x() and domainNode.pos().y() != restrNode.pos().y():
-                i = len(isa.breakpoints)
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i, bp5))
-
-        for node in intersections_after_bp:
-
-            up, down = False, False
-            if (breakpoints and isa.breakpoints[-1].y() > node.pos().y()) or (
-                restrNode.pos().y() > node.pos().y()):
-                down = True
-            if (breakpoints and isa.breakpoints[-1].y() < node.pos().y()) or (
-                restrNode.pos().y() < node.pos().y()):
-                up = True
-
-            if up:
-                x14 = domainNode.pos().x()
-                x23 = node.pos().x() + node.width() / 2 + 2
-                y12 = node.pos().y() - node.height() / 2 - 2
-                y34 = node.pos().y() + node.height() / 2 + 2
-
-                bp1 = QtCore.QPointF(x14, y12)
-                bp2 = QtCore.QPointF(x23, y12)
-                bp3 = QtCore.QPointF(x23, y34)
-                bp4 = QtCore.QPointF(x14, y34)
-
-            if down:
-                x14 = domainNode.pos().x()
-                x23 = node.pos().x() + node.width() / 2 + 2
-                y12 = node.pos().y() + node.height() / 2 + 2
-                y34 = node.pos().y() - node.height() / 2 - 2
-
-                bp1 = QtCore.QPointF(x14, y12)
-                bp2 = QtCore.QPointF(x23, y12)
-                bp3 = QtCore.QPointF(x23, y34)
-                bp4 = QtCore.QPointF(x14, y34)
-
-            if up or down:
-                i = len(isa.breakpoints)
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i + 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i + 2, bp3))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i + 3, bp4))
-
-                breakpoints = True
-
+            bp4 = QtCore.QPointF(x4, y4)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
+        return
 
 class DiagramPropertiesForm(NewDiagramForm):
     """
