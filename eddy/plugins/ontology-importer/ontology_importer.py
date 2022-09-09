@@ -2560,11 +2560,13 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 # draw on the activeOne
                 diag = self.session.mdi.activeDiagram()
                 if diag:
-                    n = self.draw(axiom, diag)
+                    res = self.draw(axiom, diag)
+                    n = res[0]
                 else:
                     project_diagrams = list(self.project.diagrams())
                     diag = project_diagrams[0]
-                    n = self.draw(axiom, diag)
+                    res = self.draw(axiom, diag)
+                    n = res[0]
 
             if len(diagrams) == 1:
                 # if only one diagram involved:
@@ -2575,7 +2577,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     if d.name == diag:
                         diagram = d
                         break
-                n = self.draw(axiom, diagram)
+                res = self.draw(axiom, diagram)
+                n = res[0]
 
             if len(diagrams) > 1:
                 # if more than one diagram involved:
@@ -2584,7 +2587,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if diag:
                     if diag.name in diagrams:
 
-                        n = self.draw(axiom, diag)
+                        res = self.draw(axiom, diag)
+                        n = res[0]
                 # else draw on any of the involved ones
                 else:
                     diag = diagrams[0]
@@ -2593,7 +2597,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         if d.name == diag:
                             diagram = d
                             break
-                    n = self.draw(axiom, diagram)
+                    res = self.draw(axiom, diagram)
+                    n = res[0]
 
         # snap to grid #
         self.session.doSnapTopGrid()
@@ -2687,20 +2692,22 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             propNode = self.findNode(propIRI, diagram) if self.findNode(propIRI, diagram) != 'null' else self.createNode(prop, diagram, x, y)
 
         else:
-            propNode = self.draw(prop, diagram, x, y)
+            res = self.draw(prop, diagram, x, y)
+            propNode = res[0]
 
         edges = propNode.edges
         inputEdges = [e for e in edges if e.type() is Item.InputEdge]
         for e in inputEdges:
             if e.target.type() is Item.RoleInverseNode:
-                return e.target
+                return [e.target]
+
 
         inv = RoleInverseNode(diagram=diagram)
-        x = propNode.pos().x()+150
+        x = propNode.pos().x() + propNode.width() + 50
         y = propNode.pos().y()
         starting_y = y
         while not self.isEmpty(x, y, diagram):
-            y = y - 30
+            y = y - 50
             if abs(starting_y - y) >1000:
                 y = starting_y
                 break
@@ -2713,7 +2720,19 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         inv.addEdge(input)
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return inv
+        if propNode.pos().y() != inv.pos().y():
+
+            x = propNode.pos().x() + 68
+            y1 = propNode.pos().y()
+            y2 = inv.pos().y()
+
+            bp1 = QtCore.QPointF(x, y1)
+            bp2 = QtCore.QPointF(x, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+
+        return [inv]
 
     def drawDatatypeRestriction(self, datatype, facets, diagram, x, y):
 
@@ -2732,7 +2751,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         dataNode = DatatypeRestrictionNode(diagram=diagram)
         starting_y = y
         while not self.isEmpty(x, y, diagram):
-            y = y - 30
+            y = y - 50
             if abs(starting_y - y) > 1000:
                 y = starting_y
                 break
@@ -2740,10 +2759,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.undostack.push(CommandNodeAdd(diagram, dataNode))
 
         if not self.isAtomic(datatype):
-            dNode = self.draw(datatype, x+150, y)
+            res = self.draw(datatype, x+180, y)
+            dNode = res[0]
 
         else:
-            dNode = self.createNode(datatype, diagram, x+150, y)
+            dNode = self.createNode(datatype, diagram, x+180, y)
 
         input = diagram.factory.create(Item.InputEdge, source=dNode, target=dataNode)
         dNode.addEdge(input)
@@ -2766,11 +2786,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             fNode = FacetNode(facet=facet, diagram=diagram)
 
-            x = x +150
-            y = y + 150
+            x = x + 180
+            y = y + 125
             starting_y = y
             while not self.isEmpty(x, y, diagram):
-                y = y - 30
+                y = y - 50
+
                 if abs(starting_y - y) > 1000:
                     y = starting_y
                     break
@@ -2783,7 +2804,13 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             dataNode.addEdge(inp)
             self.session.undostack.push(CommandEdgeAdd(diagram, inp))
 
-        return dataNode
+            x1 = fNode.pos().x()
+            y1 = dataNode.pos().y()
+
+            bp = QtCore.QPointF(x1, y1)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, inp, 0, bp))
+
+        return [dataNode]
 
     def drawExpression(self, ex, diagram, x, y):
 
@@ -2820,18 +2847,32 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = self.drawObjIntersectionOf(operands, diagram, x, y)
             return n
 
-        if ex_type == 'ObjectSomeValuesFrom' or ex_type == 'DataSomeValuesFrom':
+        if ex_type == 'ObjectSomeValuesFrom':
 
             property = ex.getProperty()
             ce = ex.getFiller()
             n = self.drawObjSomeValuesFrom(property, ce, diagram, x, y)
             return n
 
-        if ex_type == 'ObjectAllValuesFrom' or ex_type == 'DataAllValuesFrom':
+        if ex_type == 'DataSomeValuesFrom':
+
+            property = ex.getProperty()
+            ce = ex.getFiller()
+            n = self.drawDataSomeValuesFrom(property, ce, diagram, x, y)
+            return n
+
+        if ex_type == 'ObjectAllValuesFrom':
 
             property = ex.getProperty()
             ce = ex.getFiller()
             n = self.drawObjAllValuesFrom(property, ce, diagram, x, y)
+            return n
+
+        if ex_type == 'DataAllValuesFrom':
+
+            property = ex.getProperty()
+            ce = ex.getFiller()
+            n = self.drawDataAllValuesFrom(property, ce, diagram, x, y)
             return n
 
         if ex_type == 'ObjectComplementOf':
@@ -2840,7 +2881,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = self.drawObjComplementOf(operand, diagram, x, y)
             return n
 
-        if ex_type == 'ObjectMinCardinality' or ex_type == 'DataMinCardinality':
+        if ex_type == 'ObjectMinCardinality':
 
             card = ex.getCardinality()
             property = ex.getProperty()
@@ -2848,7 +2889,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = self.drawObjMinCardinality(card, property, ce, diagram, x, y)
             return n
 
-        if ex_type == 'ObjectMaxCardinality' or ex_type == 'DataMaxCardinality':
+        if ex_type == 'DataMinCardinality':
+
+            card = ex.getCardinality()
+            property = ex.getProperty()
+            ce = ex.getFiller()
+            n = self.drawDataMinCardinality(card, property, ce, diagram, x, y)
+            return n
+
+        if ex_type == 'ObjectMaxCardinality':
 
             card = ex.getCardinality()
             property = ex.getProperty()
@@ -2856,12 +2905,28 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = self.drawObjMaxCardinality(card, property, ce, diagram, x, y)
             return n
 
-        if ex_type == 'ObjectExactCardinality' or ex_type == 'DataExactCardinality':
+        if ex_type == 'DataMaxCardinality':
+
+            card = ex.getCardinality()
+            property = ex.getProperty()
+            ce = ex.getFiller()
+            n = self.drawDataMaxCardinality(card, property, ce, diagram, x, y)
+            return n
+
+        if ex_type == 'ObjectExactCardinality':
 
             card = ex.getCardinality()
             property = ex.getProperty()
             ce = ex.getFiller()
             n = self.drawObjExactCardinality(card, property, ce, diagram, x, y)
+            return n
+
+        if ex_type == 'DataExactCardinality':
+
+            card = ex.getCardinality()
+            property = ex.getProperty()
+            ce = ex.getFiller()
+            n = self.drawDataExactCardinality(card, property, ce, diagram, x, y)
             return n
 
         if ex_type == 'ObjectHasSelf':
@@ -2870,12 +2935,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = self.drawObjHasSelf(property, diagram, x, y)
             return n
 
-        if ex_type == 'ObjectHasValue' or ex_type == 'DataHasValue':
+        if ex_type == 'ObjectHasValue':
 
             ex  = ex.asSomeValuesFrom()
             property = ex.getProperty()
             ce = ex.getFiller()
             n = self.drawObjSomeValuesFrom(property, ce, diagram, x, y)
+            return n
+
+        if ex_type == 'DataHasValue':
+
+            ex  = ex.asSomeValuesFrom()
+            property = ex.getProperty()
+            ce = ex.getFiller()
+            n = self.drawDataSomeValuesFrom(property, ce, diagram, x, y)
             return n
 
     def drawAxiom(self, axiom, diagram, x, y):
@@ -3130,7 +3203,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 chain = axiom.getPropertyChain()
                 property = axiom.getSuperProperty()
 
-                n = self.drawChain(chain, property, diagram, x, y)
+                n = self.drawChain(chain, property, diagram, x, y)[0]
                 return n
 
             if ax_type == 'SubClassOf':
@@ -3141,6 +3214,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 subDrawn = False
                 supDrawn = False
                 found = None
+                propNode = None
 
                 if self.isAtomic(sub):
 
@@ -3193,7 +3267,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     else:
 
                         x = supNode.pos().x()
-                        y = supNode.pos().y() + 150
+                        y = supNode.pos().y()
                         if self.isAtomic(sub):
 
                             subNode = self.createNode(sub, diagram, x, y)
@@ -3201,7 +3275,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                         else:
 
-                            subNode = self.draw(sub, diagram, x, y)
+                            res = self.draw(sub, diagram, x, y)
+                            if len(res) > 1:
+                                subNode = res[0]
+                                propNode = res[1]
+                            else:
+                                subNode = res[0]
                             subDrawn = True
 
                             cl = supNode
@@ -3247,7 +3326,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     if subDrawn:
 
                         x = subNode.pos().x()
-                        y = subNode.pos().y() - 150
+                        y = subNode.pos().y()
                         if self.isAtomic(sup):
 
                             supNode = self.createNode(sup, diagram, x, y)
@@ -3255,7 +3334,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                         else:
 
-                            supNode = self.draw(sup, diagram, x, y)
+                            res = self.draw(sup, diagram, x, y)
+                            if len(res) > 1:
+                                supNode = res[0]
+                                propNode = res[1]
+                            else:
+                                supNode = res[0]
                             supDrawn = True
 
                             cl = subNode
@@ -3306,11 +3390,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                         else:
 
-                            supNode = self.draw(sup, diagram, x, y)
+                            res = self.draw(sup, diagram, x, y)
+                            if len(res) > 1:
+                                supNode = res[0]
+                                propNode = res[1]
+                            else:
+                                supNode = res[0]
                             supDrawn = True
 
                         x = supNode.pos().x()
-                        y = supNode.pos().y() + 150
+                        y = supNode.pos().y()
                         if self.isAtomic(sub):
 
                             subNode = self.createNode(sub, diagram, x, y)
@@ -3318,7 +3407,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                         else:
 
-                            subNode = self.draw(sub, diagram, x, y)
+                            res = self.draw(sub, diagram, x, y)
+                            if len(res) > 1:
+                                subNode = res[0]
+                                propNode = res[1]
+                            else:
+                                subNode = res[0]
                             subDrawn = True
 
                 if found:
@@ -3330,13 +3424,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         for e in found.edges:
                             if e.type() is Item.InclusionEdge:
                                 if e.source is supNode:
+                                    breakpoints = e.breakpoints
                                     self.session.undostack.push(CommandItemsRemove(diagram, [e]))
                                     isa = diagram.factory.create(Item.EquivalenceEdge,
-                                                                         source=found,
+                                                                         source=subNode,
                                                                          target=supNode)
                                     found.addEdge(isa)
                                     supNode.addEdge(isa)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+
+                                    i = 0
+                                    breakpoints.reverse()
+                                    for b in breakpoints:
+                                        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i, b))
+                                        i = i +1
 
                                 elif e.target is supNode:
                                     isa = e
@@ -3344,7 +3445,17 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     isa = diagram.factory.create(Item.InclusionEdge, source=subNode, target=supNode)
                     self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-                return isa
+                    if propNode:
+                        bps = self.addBreakpoints(diagram, propNode, supNode, subNode, None)
+                        bps.reverse()
+
+                        i = len(isa.breakpoints)
+                        for b in bps:
+                            self.session.undostack.push(
+                                CommandEdgeBreakpointAdd(diagram, isa, i, b))
+                            i = i + 1
+
+                return [isa]
 
     # DRAW CLASS EXPRESSIONS #
 
@@ -3357,7 +3468,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         else:
 
-            propNode = self.draw(property, diagram)
+            res = self.draw(property, diagram, x, y+125)
+            propNode = res[0]
 
         if propNode.type() == Item.RoleInverseNode:
 
@@ -3374,7 +3486,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = DomainRestrictionNode(diagram=diagram)
 
         n.setText('self')
-        n.setPos(propNode.pos().x()+50, propNode.pos().y() +50)
+
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
         self.session.undostack.push(CommandNodeAdd(diagram, n))
 
         input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
@@ -3383,7 +3497,177 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return n
+        return [n, propNode]
+
+    def drawDataMinCardinality(self, card, property, ce, diagram, x, y):
+
+        propDrawn = False
+        ceDrawn = False
+
+        if self.isAtomic(property):
+
+            propIri = property.getIRI()
+            propNode = self.findNode(propIri, diagram)
+            if propNode != 'null':
+
+                propDrawn = True
+
+        if self.isAtomic(ce):
+
+            ceIri = ce.getIRI()
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
+
+        if propDrawn:
+
+            if ceDrawn:
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() - 180
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
+
+            else:
+
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = propNode.pos().x() - 180
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+                    x = propNode.pos().x() -180
+                    y = propNode.pos().y()
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+        else:
+
+            if ceDrawn:
+
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
+                if self.isAtomic(property):
+
+                    x = ceNode.pos().x() + 180
+                    y = ceNode.pos().y()
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    x = ceNode.pos().x() + 180
+                    y = ceNode.pos().y()
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+
+            else:
+
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = x
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+                #x = x - 100
+                #y = y
+                if ceDrawn:
+                    x = ceNode.pos().x() + 180
+                    y = ceNode.pos().y()
+                else:
+                    x = x -180
+                    y = y
+                if self.isAtomic(property):
+
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 50, Diagram.GridSize), snapF(+propNode.height() / 2 + 50, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+50, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
+        card = str(card)
+        n.setText('(' + card + ' , -)')
+
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
+        self.session.undostack.push(CommandNodeAdd(diagram, n))
+
+        input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
+        n.addEdge(input)
+        propNode.addEdge(input)
+
+        self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
 
     def drawObjMinCardinality(self, card, property, ce, diagram, x, y):
 
@@ -3398,6 +3682,177 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 propDrawn = True
 
         if self.isAtomic(ce):
+
+            ceIri = ce.getIRI()
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
+
+        if propDrawn:
+
+            if ceDrawn:
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() - 180
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
+
+            else:
+                # DRAW CE
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = propNode.pos().x() -180
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+                    x = propNode.pos().x() -180
+                    y = propNode.pos().y()
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+        else:
+
+            if ceDrawn:
+
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x - 180, y)
+
+                if self.isAtomic(property):
+
+                    x = x
+                    y = y + 125
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    x = x
+                    y = y + 125
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+
+            else:
+
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = x + 180
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+
+                if ceDrawn:
+                    x = x
+                    y = y + 125
+
+                if self.isAtomic(property):
+
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+            '''
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+        '''
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
+        card = str(card)
+        n.setText('(' + card + ' , -)')
+
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
+        self.session.undostack.push(CommandNodeAdd(diagram, n))
+
+        input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
+        n.addEdge(input)
+        propNode.addEdge(input)
+
+        self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
+
+    def drawDataMaxCardinality(self, card, property, ce, diagram, x, y):
+
+        propDrawn = False
+        ceDrawn = False
+
+        if self.isAtomic(property):
+
+            propIri = property.getIRI()
+            propNode = self.findNode(propIri, diagram)
+            if propNode != 'null':
+
+                propDrawn = True
+
+        if self.isAtomic(ce):
+
             ceIri = ce.getIRI()
             isLiteral = False
             if str(ceIri) == 'rdfs:Literal':
@@ -3411,10 +3866,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if propDrawn:
 
             if ceDrawn:
-
                 if self.isIsolated(ceNode):
 
-                    x_tomove = propNode.pos().x() + 200
+                    x_tomove = propNode.pos().x() - 180
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
@@ -3427,68 +3881,82 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     pass
 
             else:
+
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
-                        x = propNode.pos().x() + 200
+
+                        x = propNode.pos().x() - 180
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 200
+                    x = propNode.pos().x() -180
                     y = propNode.pos().y()
-
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
         else:
 
             if ceDrawn:
 
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 200
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 200
+
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
-                    propNode = self.draw(property, diagram, x, y)
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
 
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
+
                         x = x
                         y = y
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
 
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
-                x = x - 100
-                y = y
+                #x = x - 100
+                #y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 200
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
+                else:
+                    x = x -180
+                    y = y
                 if self.isAtomic(property):
 
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             if ceDrawn and propDrawn:
-                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 50, Diagram.GridSize), snapF(+propNode.height() / 2 + 50, Diagram.GridSize))
                 pos = ceNode.pos() + offset
 
                 while not self.isEmpty(pos.x(), pos.y(), diagram):
-                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    diff = QtCore.QPointF(0, snapF(+50, Diagram.GridSize))
                     pos = pos + diff
                     if abs(pos.y() - ceNode.pos().y()) > 1000:
                         break
@@ -3510,7 +3978,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = DomainRestrictionNode(diagram=diagram)
 
         card = str(card)
-        n.setText('('+card+' , -)')
+        n.setText('(- , ' + card + ')')
 
         pos = self.restrictionPos(n, propNode, diagram)
         n.setPos(pos)
@@ -3529,7 +3997,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-        return n
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
 
     def drawObjMaxCardinality(self, card, property, ce, diagram, x, y):
 
@@ -3544,6 +4021,177 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 propDrawn = True
 
         if self.isAtomic(ce):
+
+            ceIri = ce.getIRI()
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
+
+        if propDrawn:
+
+            if ceDrawn:
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() - 180
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
+
+            else:
+                # DRAW CE
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = propNode.pos().x() -180
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+                    x = propNode.pos().x() -180
+                    y = propNode.pos().y()
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+        else:
+
+            if ceDrawn:
+
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x - 180, y)
+
+                if self.isAtomic(property):
+
+                    x = x
+                    y = y + 125
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    x = x
+                    y = y + 125
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+
+            else:
+
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = x + 180
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+
+                if ceDrawn:
+                    x = x
+                    y = y + 125
+
+                if self.isAtomic(property):
+
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+            '''
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+        '''
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
+        card = str(card)
+        n.setText('(- , ' + card + ')')
+
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
+        self.session.undostack.push(CommandNodeAdd(diagram, n))
+
+        input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
+        n.addEdge(input)
+        propNode.addEdge(input)
+
+        self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
+
+    def drawDataExactCardinality(self, card, property, ce, diagram, x, y):
+
+        propDrawn = False
+        ceDrawn = False
+
+        if self.isAtomic(property):
+
+            propIri = property.getIRI()
+            propNode = self.findNode(propIri, diagram)
+            if propNode != 'null':
+
+                propDrawn = True
+
+        if self.isAtomic(ce):
+
             ceIri = ce.getIRI()
             isLiteral = False
             if str(ceIri) == 'rdfs:Literal':
@@ -3559,7 +4207,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if ceDrawn:
                 if self.isIsolated(ceNode):
 
-                    x_tomove = propNode.pos().x() + 200
+                    x_tomove = propNode.pos().x() - 180
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
@@ -3572,17 +4220,19 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     pass
 
             else:
+
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
-                        x = propNode.pos().x() + 200
+
+                        x = propNode.pos().x() - 180
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 200
+                    x = propNode.pos().x() -180
                     y = propNode.pos().y()
-
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
         else:
@@ -3594,49 +4244,58 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 200
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 200
+
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
-                    propNode = self.draw(property, diagram, x, y)
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
 
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
+
                         x = x
                         y = y
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
 
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
-                x = x - 100
-                y = y
+                #x = x - 100
+                #y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 200
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
+                else:
+                    x = x -180
+                    y = y
                 if self.isAtomic(property):
 
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             if ceDrawn and propDrawn:
-                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 50, Diagram.GridSize), snapF(+propNode.height() / 2 + 50, Diagram.GridSize))
                 pos = ceNode.pos() + offset
 
                 while not self.isEmpty(pos.x(), pos.y(), diagram):
-                    diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    diff = QtCore.QPointF(0, snapF(+50, Diagram.GridSize))
                     pos = pos + diff
                     if abs(pos.y() - ceNode.pos().y()) > 1000:
                         break
@@ -3658,7 +4317,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = DomainRestrictionNode(diagram=diagram)
 
         card = str(card)
-        n.setText('(- , '+card+')')
+        n.setText('(' + card + ' , ' + card + ')')
 
         pos = self.restrictionPos(n, propNode, diagram)
         n.setPos(pos)
@@ -3677,7 +4336,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-        return n
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
 
     def drawObjExactCardinality(self, card, property, ce, diagram, x, y):
 
@@ -3692,9 +4360,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 propDrawn = True
 
         if self.isAtomic(ce):
+
             ceIri = ce.getIRI()
             isLiteral = False
             if str(ceIri) == 'rdfs:Literal':
+
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
@@ -3707,7 +4377,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if ceDrawn:
                 if self.isIsolated(ceNode):
 
-                    x_tomove = propNode.pos().x() + 200
+                    x_tomove = propNode.pos().x() - 180
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
@@ -3720,17 +4390,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     pass
 
             else:
+                # DRAW CE
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
-                        x = propNode.pos().x() + 200
+
+                        x = propNode.pos().x() -180
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 200
+                    x = propNode.pos().x() -180
                     y = propNode.pos().y()
 
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
         else:
@@ -3738,47 +4411,53 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if ceDrawn:
 
                 if self.isIsolated(ceNode):
-                    ceNode.setPos(x, y)
+                    ceNode.setPos(x - 180, y)
 
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 200
-                    y = ceNode.pos().y()
+                    x = x
+                    y = y + 125
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
-                    x = ceNode.pos().x() - 200
-                    y = ceNode.pos().y()
-                    propNode = self.draw(property, diagram, x, y)
+
+                    x = x
+                    y = y + 125
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
 
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
-                        x = x
+
+                        x = x + 180
                         y = y
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
 
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
-                x = x - 100
-                y = y
+
                 if ceDrawn:
-                    x = ceNode.pos().x() - 200
-                    y = ceNode.pos().y()
+                    x = x
+                    y = y + 125
+
                 if self.isAtomic(property):
 
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
-
+            '''
             if ceDrawn and propDrawn:
                 offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
                 pos = ceNode.pos() + offset
@@ -3790,13 +4469,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         break
 
                 propNode.setPos(pos)
-
+        '''
         if propNode.type() == Item.RoleInverseNode:
 
             edges = propNode.edges
             inputEdges = [e for e in edges if e.type() is Item.InputEdge]
             for e in inputEdges:
                 if e.source.type() is Item.RoleNode:
+
                     self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
                     propNode = e.source
                     n = RangeRestrictionNode(diagram=diagram)
@@ -3806,7 +4486,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             n = DomainRestrictionNode(diagram=diagram)
 
         card = str(card)
-        n.setText('('+card+' , '+card+')')
+        n.setText('(' + card + ' , ' + card + ')')
 
         pos = self.restrictionPos(n, propNode, diagram)
         n.setPos(pos)
@@ -3825,7 +4505,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-        return n
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
 
     def drawObjComplementOf(self, operand, diagram, x, y):
 
@@ -3836,7 +4525,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         else:
 
-            node = self.draw(operand, diagram)
+            res = self.draw(operand, diagram)
+            node = res[0]
 
         notDrawn = False
         edges = node.edges
@@ -3849,11 +4539,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if not notDrawn:
 
             notNode = ComplementNode(diagram=diagram)
-            x = node.pos().x()+50
+            x = node.pos().x()+70
             y = node.pos().y()
             starting_y = y
             while not self.isEmpty(x, y, diagram):
-                y = y - 30
+                y = y - 50
                 if abs(starting_y - y) > 1000:
                     y = starting_y
                     break
@@ -3866,7 +4556,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return notNode
+            if notNode.pos().y() != node.pos().y():
+                x1 = node.pos().x() + 60
+                y1 = node.pos().y()
+                y2 = notNode.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x1, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+
+        return [notNode]
 
     def drawObjSomeValuesFrom(self, property, ce, diagram, x, y):
 
@@ -3898,7 +4599,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if ceDrawn:
                 if self.isIsolated(ceNode):
 
-                    x_tomove = propNode.pos().x() + 200
+                    x_tomove = propNode.pos().x() - 180
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
@@ -3915,15 +4616,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
 
-                        x = propNode.pos().x() + 200
+                        x = propNode.pos().x() -180
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 200
+                    x = propNode.pos().x() -180
                     y = propNode.pos().y()
 
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
         else:
@@ -3931,20 +4633,21 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if ceDrawn:
 
                 if self.isIsolated(ceNode):
-                    ceNode.setPos(x, y)
+                    ceNode.setPos(x - 180, y)
 
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 200
-                    y = ceNode.pos().y()
+                    x = x
+                    y = y + 125
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    x = ceNode.pos().x() - 200
-                    y = ceNode.pos().y()
+                    x = x
+                    y = y + 125
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
@@ -3952,21 +4655,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
 
-                        x = x
+                        x = x + 180
                         y = y
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
 
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
 
-                x = x - 100
-                y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 200
-                    y = ceNode.pos().y()
+                    x = x
+                    y = y + 125
 
                 if self.isAtomic(property):
 
@@ -3974,9 +4676,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     propDrawn = True
                 else:
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
-
+            '''
             if ceDrawn and propDrawn:
                 offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
                 pos = ceNode.pos() + offset
@@ -3988,7 +4691,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         break
 
                 propNode.setPos(pos)
-
+        '''
         if propNode.type() == Item.RoleInverseNode:
 
             edges = propNode.edges
@@ -4021,9 +4724,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-        return n
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
 
-    def drawObjAllValuesFrom(self, property, ce, diagram, x, y):
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
+
+    def drawDataSomeValuesFrom(self, property, ce, diagram, x, y):
 
         propDrawn = False
         ceDrawn = False
@@ -4053,7 +4765,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if ceDrawn:
                 if self.isIsolated(ceNode):
 
-                    x_tomove = propNode.pos().x() + 200
+                    x_tomove = propNode.pos().x() - 180
                     y_tomove = propNode.pos().y()
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
@@ -4070,14 +4782,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(ce):
                     if not ce.isTopEntity() and not isLiteral:
 
-                        x = propNode.pos().x() + 200
+                        x = propNode.pos().x() - 180
                         y = propNode.pos().y()
                         ceNode = self.createNode(ce, diagram, x, y)
                         ceDrawn = True
                 else:
-                    x = propNode.pos().x() + 200
+                    x = propNode.pos().x() - 180
                     y = propNode.pos().y()
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
         else:
@@ -4089,16 +4802,17 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(property):
 
-                    x = ceNode.pos().x() - 200
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    x = ceNode.pos().x() - 200
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
@@ -4112,29 +4826,370 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         ceDrawn = True
                 else:
 
-                    ceNode = self.draw(ce, diagram, x, y)
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
                     ceDrawn = True
 
-                x = x - 100
-                y = y
+                #x = x - 100
+                #y = y
                 if ceDrawn:
-                    x = ceNode.pos().x() - 200
+                    x = ceNode.pos().x() + 180
                     y = ceNode.pos().y()
+                else:
+                    x = x -180
+                    y = y
                 if self.isAtomic(property):
 
                     propNode = self.createNode(property, diagram, x, y)
                     propDrawn = True
                 else:
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+            '''
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 50, Diagram.GridSize), snapF(+propNode.height() / 2 + 50, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+50, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+            '''
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
+        self.session.undostack.push(CommandNodeAdd(diagram, n))
+
+        input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
+        n.addEdge(input)
+        propNode.addEdge(input)
+
+        self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
+
+    def drawObjAllValuesFrom(self, property, ce, diagram, x, y):
+
+        propDrawn = False
+        ceDrawn = False
+
+        if self.isAtomic(property):
+
+            propIri = property.getIRI()
+            propNode = self.findNode(propIri, diagram)
+            if propNode != 'null':
+                propDrawn = True
+
+        if self.isAtomic(ce):
+
+            ceIri = ce.getIRI()
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
+
+        if propDrawn:
+
+            if ceDrawn:
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() - 180
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
+
+            else:
+                # DRAW CE
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = propNode.pos().x() -180
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+                    x = propNode.pos().x() -180
+                    y = propNode.pos().y()
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+        else:
+
+            if ceDrawn:
+
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x - 180, y)
+
+                if self.isAtomic(property):
+
+                    x = x
+                    y = y + 125
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    x = x
+                    y = y + 125
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
+            else:
+
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = x + 180
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+
+                if ceDrawn:
+                    x = x
+                    y = y + 125
+
+                if self.isAtomic(property):
+
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+            '''
             if ceDrawn and propDrawn:
                 offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 70, Diagram.GridSize), snapF(+propNode.height() / 2 + 70, Diagram.GridSize))
                 pos = ceNode.pos() + offset
 
                 while not self.isEmpty(pos.x(), pos.y(), diagram):
                     diff = QtCore.QPointF(0, snapF(+70, Diagram.GridSize))
+                    pos = pos + diff
+                    if abs(pos.y() - ceNode.pos().y()) > 1000:
+                        break
+
+                propNode.setPos(pos)
+        '''
+        if propNode.type() == Item.RoleInverseNode:
+
+            edges = propNode.edges
+            inputEdges = [e for e in edges if e.type() is Item.InputEdge]
+            for e in inputEdges:
+                if e.source.type() is Item.RoleNode:
+
+                    self.session.undostack.push(CommandItemsRemove(diagram, [propNode, e]))
+                    propNode = e.source
+                    n = RangeRestrictionNode(diagram=diagram)
+
+        else:
+
+            n = DomainRestrictionNode(diagram=diagram)
+
+        n.setText('forall')
+
+        pos = self.restrictionPos(n, propNode, diagram)
+        n.setPos(pos)
+        self.session.undostack.push(CommandNodeAdd(diagram, n))
+
+        input = diagram.factory.create(Item.InputEdge, source=propNode, target=n)
+        n.addEdge(input)
+        propNode.addEdge(input)
+
+        self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+        if ceDrawn:
+            input2 = diagram.factory.create(Item.InputEdge, source=ceNode, target=n)
+            n.addEdge(input2)
+            ceNode.addEdge(input2)
+
+            self.session.undostack.push(CommandEdgeAdd(diagram, input2))
+
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
+
+    def drawDataAllValuesFrom(self, property, ce, diagram, x, y):
+
+        propDrawn = False
+        ceDrawn = False
+
+        if self.isAtomic(property):
+
+            propIri = property.getIRI()
+            propNode = self.findNode(propIri, diagram)
+            if propNode != 'null':
+
+                propDrawn = True
+
+        if self.isAtomic(ce):
+
+            ceIri = ce.getIRI()
+            isLiteral = False
+            if str(ceIri) == 'rdfs:Literal':
+                isLiteral = True
+            if not ce.isTopEntity() and not isLiteral:
+
+                ceNode = self.findNode(ceIri, diagram)
+                if ceNode != 'null':
+                    ceDrawn = True
+
+        if propDrawn:
+
+            if ceDrawn:
+                if self.isIsolated(ceNode):
+
+                    x_tomove = propNode.pos().x() - 180
+                    y_tomove = propNode.pos().y()
+                    while not self.isEmpty(x_tomove, y_tomove, diagram):
+
+                        y_tomove = y_tomove + 70
+                        if abs(propNode.pos().y() - y_tomove) > 1000:
+                            y_tomove = propNode.pos().y()
+                            break
+                    ceNode.setPos(x_tomove, y_tomove)
+                else:
+                    pass
+
+            else:
+
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = propNode.pos().x() - 180
+                        y = propNode.pos().y()
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+                    x = propNode.pos().x() -180
+                    y = propNode.pos().y()
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+        else:
+
+            if ceDrawn:
+
+                if self.isIsolated(ceNode):
+                    ceNode.setPos(x, y)
+
+                if self.isAtomic(property):
+
+                    x = ceNode.pos().x() + 180
+                    y = ceNode.pos().y()
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    x = ceNode.pos().x() + 180
+                    y = ceNode.pos().y()
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+
+            else:
+
+                if self.isAtomic(ce):
+                    if not ce.isTopEntity() and not isLiteral:
+
+                        x = x
+                        y = y
+                        ceNode = self.createNode(ce, diagram, x, y)
+                        ceDrawn = True
+                else:
+
+                    res = self.draw(ce, diagram, x, y)
+                    ceNode = res[0]
+                    ceDrawn = True
+
+                #x = x - 100
+                #y = y
+                if ceDrawn:
+                    x = ceNode.pos().x() + 180
+                    y = ceNode.pos().y()
+
+                else:
+                    x = x -180
+                    y = y
+                if self.isAtomic(property):
+
+                    propNode = self.createNode(property, diagram, x, y)
+                    propDrawn = True
+                else:
+
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+
+            if ceDrawn and propDrawn:
+                offset = QtCore.QPointF(snapF(-propNode.width() / 2 - 50, Diagram.GridSize), snapF(+propNode.height() / 2 + 50, Diagram.GridSize))
+                pos = ceNode.pos() + offset
+
+                while not self.isEmpty(pos.x(), pos.y(), diagram):
+                    diff = QtCore.QPointF(0, snapF(+50, Diagram.GridSize))
                     pos = pos + diff
                     if abs(pos.y() - ceNode.pos().y()) > 1000:
                         break
@@ -4174,14 +5229,23 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-        return n
+            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            bps.reverse()
+
+            i = len(input2.breakpoints)
+            for b in bps:
+                self.session.undostack.push(
+                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
+                i = i + 1
+
+        return [n, propNode]
 
     def drawObjUnionOf(self, operands, diagram, x, y):
 
         nodes = []
         xPos = []
         yPos = []
-
+        original_x = x
         for e in operands:
 
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
@@ -4228,16 +5292,19 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(op, diagram, x, y)
+                res = self.draw(op, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
                 xPos.append(n.pos().x())
                 yPos.append(n.pos().y())
 
-        x_med = (max(xPos) + min(xPos)) / 2
-        y_med = (max(yPos) + min(yPos)) / 2 - 100
+        #x_med = (max(xPos) + min(xPos)) / 2
+        x_med = original_x + 130
+        #y_med = (max(yPos) + min(yPos)) / 2 - 100
+        y_med = max(yPos) - 50
         starting_y = y_med
         while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
+            y_med = y_med - 50
             if abs(starting_y - y_med) > 1000:
                 y_med = starting_y
                 break
@@ -4252,26 +5319,66 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return union_node
+            if n.pos().x() != union_node.pos().x():
+
+                if n.pos().x() > union_node.pos().x():
+                    x1 = union_node.pos().x() + 60
+                    x3 = n.pos().x() - 70
+
+                else:
+                    x1 = union_node.pos().x() - 60
+                    x3 = n.pos().x() + 70
+
+                y1 = union_node.pos().y()
+                x2 = x1
+                y2 = union_node.pos().y() + 12
+                y3 = y2
+                x4 = x3
+                y4 = n.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+                bp4 = QtCore.QPointF(x4, y4)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+
+        return [union_node]
 
     def drawDataUnionOf(self, operands, diagram, x, y):
 
+        x_med = x + 130
+        # y_med = (max(yPos) + min(yPos)) / 2 - 100
+        y_med = max(y) - 50
+        starting_y = y_med
+        while not self.isEmpty(x_med, y_med, diagram):
+            y_med = y_med - 50
+            if abs(starting_y - y_med) > 1000:
+                y_med = starting_y
+                break
+        union_node = UnionNode(diagram=diagram)
+        union_node.setPos(x_med, y_med)
+        self.session.undostack.push(CommandNodeAdd(diagram, union_node))
+
         nodes = []
         xPos = []
         yPos = []
 
-        starting_x = x - 150
-        starting_y = y
+        starting_x = union_node.pos().x() + 130
+        starting_y = union_node.pos().y()
 
         for op in operands:
 
             if self.isAtomic(op):
 
-                x = starting_x + 150
+                x = starting_x
                 y = starting_y
 
                 starting_x = x
-                starting_y = y
+                starting_y = y + 50
 
                 n = self.createNode(op, diagram, x, y)
 
@@ -4280,28 +5387,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 yPos.append(n.pos().y())
 
             else:
-                x = starting_x + 150
+                x = starting_x
                 y = starting_y
 
                 starting_x = x
-                starting_y = y
+                starting_y = y + 50
 
-                n = self.draw(op, diagram, x, y)
+                res = self.draw(op, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
                 xPos.append(n.pos().x())
                 yPos.append(n.pos().y())
 
-        x_med = (max(xPos) + min(xPos)) / 2
-        y_med = (max(yPos) + min(yPos)) / 2 - 100
-        starting_y = y_med
-        while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
-            if abs(starting_y - y_med) > 1000:
-                y_med = starting_y
-                break
-        union_node = UnionNode(diagram=diagram)
-        union_node.setPos(x_med, y_med)
-        self.session.undostack.push(CommandNodeAdd(diagram, union_node))
 
         for n in nodes:
             input = diagram.factory.create(Item.InputEdge, source=n, target=union_node)
@@ -4310,9 +5407,33 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return union_node
+            x = union_node.pos().x() + 60
+            y2 = union_node.pos().y()
+            y1 = n.pos().y()
+            if y1 != y2:
+                bp1 = QtCore.QPointF(x, y1)
+                bp2 = QtCore.QPointF(x, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+
+        return [union_node]
 
     def drawObjOneOf(self, operands, diagram, x, y):
+
+        oneof_node = EnumerationNode(diagram=diagram)
+        one_x = x +120
+        one_y = y +125
+
+        starting_y = one_y
+        while not self.isEmpty(one_x, one_y, diagram):
+            one_y = one_y + 50
+            if abs(starting_y - one_y) > 1000:
+                one_y = starting_y
+                break
+
+        oneof_node.setPos(one_x, one_y)
+        self.session.undostack.push(CommandNodeAdd(diagram, oneof_node))
 
         nodes = []
         xPos = []
@@ -4340,6 +5461,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             starting_x = min(xPos)
             starting_y = min(yPos)
 
+        starting_x = oneof_node.pos().x() + 130
+        starting_y = oneof_node.pos().y()
+
         for op in operands:
 
             if self.isAtomic(op):
@@ -4347,11 +5471,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 nIri = op.getIRI()
                 if self.findNode(nIri, diagram) == 'null':
 
-                    x = starting_x + 150
+                    x = starting_x
                     y = starting_y
 
                     starting_x = x
-                    starting_y = y
+                    starting_y = y + 75
 
                     n = self.createNode(op, diagram, x, y)
 
@@ -4367,22 +5491,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(op, diagram, x, y)
+                res = self.draw(op, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
                 xPos.append(n.pos().x())
                 yPos.append(n.pos().y())
 
-        x_med = (max(xPos) + min(xPos)) / 2
-        y_med = (max(yPos) + min(yPos)) / 2 - 100
-        starting_y = y_med
-        while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
-            if abs(starting_y - y_med) > 1000:
-                y_med = starting_y
-                break
-        oneof_node = EnumerationNode(diagram=diagram)
-        oneof_node.setPos(x_med, y_med)
-        self.session.undostack.push(CommandNodeAdd(diagram, oneof_node))
 
         for n in nodes:
             input = diagram.factory.create(Item.InputEdge, source=n, target=oneof_node)
@@ -4391,32 +5505,96 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return oneof_node
+            x = oneof_node.pos().x() + 60
+            y2 = oneof_node.pos().y()
+            y1 = n.pos().y()
+            if y1 != y2:
+                bp1 = QtCore.QPointF(x, y1)
+                bp2 = QtCore.QPointF(x, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+
+
+        return [oneof_node]
 
     def drawDataOneOf(self, operands, diagram, x, y):
+
+        oneof_node = EnumerationNode(diagram=diagram)
+        one_x = x +120
+        one_y = y +125
+
+        starting_y = one_y
+        while not self.isEmpty(one_x, one_y, diagram):
+            one_y = one_y + 50
+            if abs(starting_y - one_y) > 1000:
+                one_y = starting_y
+                break
+
+        oneof_node.setPos(one_x, one_y)
+        self.session.undostack.push(CommandNodeAdd(diagram, oneof_node))
 
         nodes = []
         xPos = []
         yPos = []
 
-        starting_x = x - 150
-        starting_y = y
+        for e in operands:
+
+            if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
+
+                iri = e.getIRI()
+                node = self.findNode(iri, diagram)
+                if node != 'null':
+
+                    nodes.append(node)
+                    xPos.append(node.pos().x())
+                    yPos.append(node.pos().y())
+
+        if len(nodes) == 0:
+
+            starting_x = x - 150
+            starting_y = y
+
+        if len(nodes) > 0:
+
+            starting_x = min(xPos)
+            starting_y = min(yPos)
+
+        starting_x = oneof_node.pos().x() + 130
+        starting_y = oneof_node.pos().y()
 
         for op in operands:
 
-            if self.isAtomic(op):
+            if isinstance(op, self.OWLLiteral):
 
-                x = starting_x + 150
+                x = starting_x
                 y = starting_y
 
                 starting_x = x
-                starting_y = y
+                starting_y = y + 75
 
                 n = self.createNode(op, diagram, x, y)
 
                 nodes.append(n)
                 xPos.append(n.pos().x())
                 yPos.append(n.pos().y())
+
+            elif self.isAtomic(op):
+
+                nIri = op.getIRI()
+                if self.findNode(nIri, diagram) == 'null':
+
+                    x = starting_x
+                    y = starting_y
+
+                    starting_x = x
+                    starting_y = y + 75
+
+                    n = self.createNode(op, diagram, x, y)
+
+                    nodes.append(n)
+                    xPos.append(n.pos().x())
+                    yPos.append(n.pos().y())
 
             else:
 
@@ -4426,22 +5604,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(op, diagram, x, y)
+                res = self.draw(op, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
                 xPos.append(n.pos().x())
                 yPos.append(n.pos().y())
 
-        x_med = (max(xPos) + min(xPos)) / 2
-        y_med = (max(yPos) + min(yPos)) / 2 - 100
-        starting_y = y_med
-        while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
-            if abs(starting_y - y_med) > 1000:
-                y_med = starting_y
-                break
-        oneof_node = EnumerationNode(diagram=diagram)
-        oneof_node.setPos(x_med, y_med)
-        self.session.undostack.push(CommandNodeAdd(diagram, oneof_node))
 
         for n in nodes:
             input = diagram.factory.create(Item.InputEdge, source=n, target=oneof_node)
@@ -4450,14 +5618,25 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return oneof_node
+            x = oneof_node.pos().x() + 60
+            y2 = oneof_node.pos().y()
+            y1 = n.pos().y()
+            if y1 != y2:
+                bp1 = QtCore.QPointF(x, y1)
+                bp2 = QtCore.QPointF(x, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+
+
+        return [oneof_node]
 
     def drawObjIntersectionOf(self, operands, diagram, x, y):
 
         nodes = []
         xPos = []
         yPos = []
-
+        original_x = x
         for e in operands:
 
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
@@ -4465,18 +5644,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 iri = e.getIRI()
                 node = self.findNode(iri, diagram)
                 if node != 'null':
-
                     nodes.append(node)
                     xPos.append(node.pos().x())
                     yPos.append(node.pos().y())
 
         if len(nodes) == 0:
-
             starting_x = x - 150
             starting_y = y
 
         if len(nodes) > 0:
-
             starting_x = min(xPos)
             starting_y = min(yPos)
 
@@ -4485,9 +5661,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(op):
 
                 nIri = op.getIRI()
-
                 if self.findNode(nIri, diagram) == 'null':
-
                     x = starting_x + 150
                     y = starting_y
 
@@ -4499,7 +5673,6 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     nodes.append(n)
                     xPos.append(n.pos().x())
                     yPos.append(n.pos().y())
-
             else:
                 x = starting_x + 150
                 y = starting_y
@@ -4507,16 +5680,19 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(op, diagram, x, y)
+                res = self.draw(op, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
                 xPos.append(n.pos().x())
                 yPos.append(n.pos().y())
 
-        x_med = (max(xPos)+min(xPos)) / 2
-        y_med = (max(yPos)+min(yPos)) / 2 - 100
+        # x_med = (max(xPos) + min(xPos)) / 2
+        x_med = original_x + 130
+        # y_med = (max(yPos) + min(yPos)) / 2 - 100
+        y_med = max(yPos) - 50
         starting_y = y_med
         while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
+            y_med = y_med - 50
             if abs(starting_y - y_med) > 1000:
                 y_med = starting_y
                 break
@@ -4531,7 +5707,35 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return intersect_node
+            if n.pos().x() != intersect_node.pos().x():
+
+                if n.pos().x() > intersect_node.pos().x():
+                    x1 = intersect_node.pos().x() + 60
+                    x3 = n.pos().x() - 70
+
+                else:
+                    x1 = intersect_node.pos().x() - 60
+                    x3 = n.pos().x() + 70
+
+                y1 = intersect_node.pos().y()
+                x2 = x1
+                y2 = intersect_node.pos().y() + 12
+                y3 = y2
+                x4 = x3
+                y4 = n.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+                bp4 = QtCore.QPointF(x4, y4)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+
+
+        return [intersect_node]
 
     # DRAW AXIOMS #
 
@@ -4563,8 +5767,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 cNode = self.findNode(cIRI, diagram)
 
                 if cNode != 'null':
-                    starting_x = cNode.pos().x() - (150 * len(keys))
-                    starting_y = cNode.pos().y() + 150
+                    starting_x = cNode.pos().x() - (125 * len(keys)/2)
+                    starting_y = cNode.pos().y() + 125
 
 
         if len(nodes) > 0:
@@ -4575,13 +5779,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             if not self.isAtomic(c):
 
-                x = starting_x + 150
+                x = starting_x + 125
                 y = starting_y
 
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(c, diagram, x, y)
+                res = self.draw(c, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
                 xN = n.pos().x()
@@ -4598,7 +5803,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if node == 'null':
 
-                        x = starting_x + 150
+                        x = starting_x + 125
                         y = starting_y
 
                         starting_x = x
@@ -4623,7 +5828,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         y_med = (maxY + minY) / 2
         starting_y = y_med
         while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
+            y_med = y_med + 50
             if abs(starting_y - y_med) > 1000:
                 y_med = starting_y
                 break
@@ -4639,22 +5844,28 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
+            x = n.pos().x()
+            y = key_node.pos().y()
+            bp = QtCore.QPointF(x, y)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp))
+
         if self.isAtomic(ce):
 
             cIri = ce.getIRI()
-            cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-100)
+            cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-75)
 
             if self.isIsolated(cNode):
-                cNode.setPos(x_med, y_med-100)
+                cNode.setPos(x_med, y_med-75)
 
         else:
 
-            cNode = self.draw(ce, diagram)
+            res = self.draw(ce, diagram)
+            cNode = res[0]
 
         in2 = diagram.factory.create(Item.InputEdge, source=cNode, target=key_node)
         self.session.undostack.push(CommandEdgeAdd(diagram, in2))
 
-        return key_node
+        return [key_node]
 
     def drawChain(self, chain, property, diagram, x, y):
 
@@ -4675,7 +5886,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if len(nodes) == 0:
 
-            starting_x = x - 150
+            starting_x = x - 125
             starting_y = y
             if self.isAtomic(property):
 
@@ -4684,8 +5895,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if cNode != 'null':
 
-                    starting_x = cNode.pos().x() - (150*len(chain))
-                    starting_y = cNode.pos().x() + 150
+                    starting_x = cNode.pos().x() - (125*len(chain)/2)
+                    starting_y = cNode.pos().x() + 125
 
 
 
@@ -4699,13 +5910,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             #if not prop.isType(self.EntityType.OBJECT_PROPERTY):
             if not self.isAtomic(prop):
 
-                x = starting_x + 150
+                x = starting_x + 125
                 y = starting_y
 
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(prop, diagram, x, y)
+                res = self.draw(prop, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
                 xN = n.pos().x()
@@ -4721,7 +5933,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if node == 'null':
 
-                    x = starting_x + 150
+                    x = starting_x + 125
                     y = starting_y
 
                     starting_x = x
@@ -4740,7 +5952,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         y_med = ((max(y_positions) + min(y_positions)) / 2) - 100
         starting_y = y_med
         while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
+            y_med = y_med + 50
             if abs(starting_y - y_med) > 1000:
                 y_med = starting_y
                 break
@@ -4755,19 +5967,25 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
+            x = n.pos().x()
+            y = chain_node.pos().y()
+            bp = QtCore.QPointF(x, y)
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp))
+
         if self.isAtomic(property):
             pIri = property.getIRI()
             pNode = self.findNode(pIri, diagram) if self.findNode(pIri,
                                                                   diagram) != 'null' else self.createNode(
-                property, diagram, x_med, y_med - 100)
+                property, diagram, x_med, y_med - 75)
 
         else:
-            pNode = self.draw(property, diagram)
+            res = self.draw(property, diagram)
+            pNode = res[0]
 
         isa = diagram.factory.create(Item.InclusionEdge, source=chain_node, target=pNode)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        return chain_node
+        return [chain_node]
 
     def drawObjPropertyRange(self, property, rang, diagram, x, y):
 
@@ -4803,10 +6021,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         if len(inputEdges) == 1:
                             for e in node.edges:
                                 if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
-                                    return node
+                                    return [node]
                                 elif e.target is domainNode and e.type() is Item.InclusionEdge:
-                                    return node
+                                    return [node]
                                 elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    e_breakpoints = e.breakpoints
                                     command = CommandItemsRemove(diagram, [e])
                                     self.session.undostack.push(command)
                                     equiv = diagram.factory.create(Item.EquivalenceEdge,
@@ -4815,7 +6034,13 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     domainNode.addEdge(equiv)
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
-                                    return node
+                                    i = len(equiv.breakpoints)
+                                    for b in e_breakpoints:
+                                        self.session.undostack.push(
+                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                        i = i + 1
+
+                                    return [node]
                                 else:
                                     pass
 
@@ -4844,7 +6069,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = propNode.pos().x()
                     y = propNode.pos().y() - 125
 
-                    domainNode = self.draw(rang, diagram, x, y)
+                    res = self.draw(rang, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
         else:
@@ -4862,7 +6088,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x()
                     y = domainNode.pos().y() + 125
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
@@ -4875,7 +6102,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     domDrawn = True
 
                 else:
-                    domainNode = self.draw(rang, diagram, x, y)
+                    res = self.draw(rang, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
                 if self.isAtomic(property):
@@ -4889,7 +6117,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x()
                     y = domainNode.pos().y() + 125
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             '''
@@ -4924,7 +6153,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
 
-        return restrNode
+        return [restrNode]
 
     def drawDataPropertyRange(self, property, range, diagram, x, y):
 
@@ -4960,10 +6189,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         if len(inputEdges) == 1:
                             for e in node.edges:
                                 if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
-                                    return node
+                                    return [node]
                                 elif e.target is domainNode and e.type() is Item.InclusionEdge:
-                                    return node
+                                    return [node]
                                 elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    e_breakpoints = e.breakpoints
                                     command = CommandItemsRemove(diagram, [e])
                                     self.session.undostack.push(command)
                                     equiv = diagram.factory.create(Item.EquivalenceEdge,
@@ -4972,7 +6202,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     domainNode.addEdge(equiv)
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
-                                    return node
+                                    i = len(equiv.breakpoints)
+                                    for b in e_breakpoints:
+                                        self.session.undostack.push(
+                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                        i = i + 1
+                                    return [node]
                                 else:
                                     pass
 
@@ -5001,7 +6236,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = propNode.pos().x() - 180
                     y = propNode.pos().y()
 
-                    domainNode = self.draw(range, diagram, x, y)
+                    res = self.draw(range, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
         else:
@@ -5019,7 +6255,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x() + 180
                     y = domainNode.pos().y()
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
@@ -5032,7 +6269,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     domDrawn = True
 
                 else:
-                    domainNode = self.draw(range, diagram, x, y)
+                    res = self.draw(range, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
                 if self.isAtomic(property):
@@ -5046,7 +6284,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x() + 180
                     y = domainNode.pos().y()
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             if domDrawn and propDrawn:
@@ -5077,7 +6316,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         restrNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        return restrNode
+        if domainNode.pos().x() != restrNode.pos().x() and domainNode.pos().y() != restrNode.pos().y():
+
+            bp1 = QtCore.QPointF(domainNode.pos().x() + 50, restrNode.pos().y())
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+
+            bp2 = QtCore.QPointF(domainNode.pos().x() + 50, domainNode.pos().y())
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+        return [restrNode]
 
     def drawObjPropertyDomain(self, property, domain, diagram, x, y):
 
@@ -5114,10 +6361,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         if len(inputEdges) == 1:
                            for e in node.edges:
                                 if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
-                                    return node
+                                    return [node]
                                 elif e.target is domainNode and e.type() is Item.InclusionEdge:
-                                    return node
+                                    return [node]
                                 elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    e_breakpoints = e.breakpoints
                                     command = CommandItemsRemove(diagram, [e])
                                     self.session.undostack.push(command)
                                     equiv = diagram.factory.create(Item.EquivalenceEdge,
@@ -5126,7 +6374,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     domainNode.addEdge(equiv)
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
-                                    return node
+                                    i = len(equiv.breakpoints)
+                                    for b in e_breakpoints:
+                                        self.session.undostack.push(
+                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                        i = i + 1
+                                    return [node]
                                 else:
                                     pass
 
@@ -5155,7 +6408,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = propNode.pos().x()
                     y = propNode.pos().y() - 125
 
-                    domainNode = self.draw(domain, diagram, x, y)
+                    res = self.draw(domain, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
         else:
@@ -5174,7 +6428,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x()
                     y = domainNode.pos().y() + 125
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
@@ -5188,7 +6443,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 else:
 
-                    domainNode = self.draw(domain, diagram, x, y)
+                    res = self.draw(domain, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
                 if self.isAtomic(property):
@@ -5202,7 +6458,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x()
                     y = domainNode.pos().y() + 125
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
             '''
             if domDrawn and propDrawn:
@@ -5237,7 +6494,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
 
-        return restrNode
+        return [restrNode]
 
     def drawDataPropertyDomain(self, property, domain, diagram, x, y):
 
@@ -5274,10 +6531,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         if len(inputEdges) == 1:
                            for e in node.edges:
                                 if e.target is domainNode or e.source is domainNode and e.type() is Item.EquivalenceEdge:
-                                    return node
+                                    return [node]
                                 elif e.target is domainNode and e.type() is Item.InclusionEdge:
-                                    return node
+                                    return [node]
                                 elif e.source is domainNode and e.type() is Item.InclusionEdge:
+                                    e_breakpoints = e.breakpoints
                                     command = CommandItemsRemove(diagram, [e])
                                     self.session.undostack.push(command)
                                     equiv = diagram.factory.create(Item.EquivalenceEdge,
@@ -5286,7 +6544,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     domainNode.addEdge(equiv)
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
-                                    return node
+                                    i = len(equiv.breakpoints)
+                                    for b in e_breakpoints:
+                                        self.session.undostack.push(
+                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                        i = i + 1
+                                    return [node]
                                 else:
                                     pass
 
@@ -5315,7 +6578,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = propNode.pos().x() + 180
                     y = propNode.pos().y()
 
-                    domainNode = self.draw(domain, diagram, x, y)
+                    res = self.draw(domain, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
         else:
@@ -5334,7 +6598,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x() - 180
                     y = domainNode.pos().y()
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
 
             else:
@@ -5348,7 +6613,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 else:
 
-                    domainNode = self.draw(domain, diagram, x, y)
+                    res = self.draw(domain, diagram, x, y)
+                    domainNode = res[0]
                     domDrawn = True
 
                 if self.isAtomic(property):
@@ -5362,7 +6628,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     x = domainNode.pos().x() - 180
                     y = domainNode.pos().y()
 
-                    propNode = self.draw(property, diagram, x, y)
+                    res = self.draw(property, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
             '''
             if domDrawn and propDrawn:
@@ -5404,8 +6671,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
 
-        return restrNode
-
+        return [restrNode]
 
     def drawInverseObjProperties(self, first, second, diagram, x, y):
 
@@ -5438,17 +6704,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(second):
 
-                    x = firstNode.pos().x() + 300
+                    x = firstNode.pos().x() + 125
                     y = firstNode.pos().y()
                     secondNode = self.createNode(second, diagram, x, y)
                     secondDrawn = True
 
                 else:
 
-                    x = firstNode.pos().x() + 300
+                    x = firstNode.pos().x() + 125
                     y = firstNode.pos().y()
 
-                    secondNode = self.draw(second, diagram, x, y)
+                    res = self.draw(second, diagram, x, y)
+                    secondNode = res[0]
                     secondDrawn = True
 
         else:
@@ -5457,67 +6724,130 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 if self.isAtomic(first):
 
-                    x = secondNode.pos().x() - 300
+                    x = secondNode.pos().x() - 125
                     y = secondNode.pos().y()
                     firstNode = self.createNode(first, diagram, x, y)
                     firstDrawn = True
 
                 else:
-                    x = secondNode.pos().x() - 300
+                    x = secondNode.pos().x() - 125
                     y = secondNode.pos().y()
-                    firstNode = self.draw(second, diagram, x, y)
+                    res = self.draw(second, diagram, x, y)
+                    firstNode = res[0]
                     firstDrawn = True
 
             else:
 
                 if self.isAtomic(first):
 
-                    x = x + 300
-                    y = y + 300
+                    x = x + 125
+                    y = y
                     firstNode = self.createNode(first, diagram, x, y)
                     firstDrawn = True
 
                 else:
 
-                    firstNode = self.draw(second, diagram, x+300, y+300)
+                    res = self.draw(second, diagram, x+125, y)
+                    firstNode = res[0]
                     firstDrawn = True
 
                 if self.isAtomic(second):
 
-                    x = firstNode.pos().x() + 300
+                    x = firstNode.pos().x() + 125
                     y = firstNode.pos().y()
                     secondNode = self.createNode(second, diagram, x, y)
                     secondDrawn = True
 
                 else:
-                    x = firstNode.pos().x() + 300
+                    x = firstNode.pos().x() + 125
                     y = firstNode.pos().y()
-                    secondNode = self.draw(second, diagram, x, y)
+                    res = self.draw(second, diagram, x, y)
+                    secondNode = res[0]
                     secondDrawn = True
 
         inv = RoleInverseNode(diagram=diagram)
-        x = (firstNode.pos().x() + secondNode.pos().x()) /2
-        y = (firstNode.pos().y() + secondNode.pos().y()) /2
+        #x = (firstNode.pos().x() + secondNode.pos().x()) /2
+        x = firstNode.pos().x() + 125
+        #y = (firstNode.pos().y() + secondNode.pos().y()) /2
+        y = firstNode.pos().y()
         starting_y = y
         while not self.isEmpty(x, y, diagram):
-            y = y - 30
+            y = y - 50
             if abs(starting_y - y) > 1000:
                 y = starting_y
                 break
         inv.setPos(x, y)
         self.session.undostack.push(CommandNodeAdd(diagram, inv))
 
+        equiv = diagram.factory.create(Item.EquivalenceEdge, source=firstNode, target=inv)
+        inv.addEdge(equiv)
+        firstNode.addEdge(equiv)
+        self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
+
+        if inv.pos().y() != firstNode.pos().y():
+            x = firstNode.pos().x() + 70
+            y1 = firstNode.pos().y()
+            y2 = inv.pos().y()
+
+            bp1 = QtCore.QPointF(x, y1)
+            bp2 = QtCore.QPointF(x, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equiv, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equiv, 1, bp2))
+
         input = diagram.factory.create(Item.InputEdge, source=secondNode, target=inv)
         secondNode.addEdge(input)
         inv.addEdge(input)
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        equiv = diagram.factory.create(Item.EquivalenceEdge, source=inv, target=firstNode)
-        inv.addEdge(equiv)
-        firstNode.addEdge(equiv)
-        self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
+        x1 = inv.pos().x() + 65
+        y1 = inv.pos().y()
+        bp1 = QtCore.QPointF(x1, y1)
 
-        return inv
+        if inv.pos().y() == secondNode.pos().y():
+            x2 = x1
+            y2 = inv.pos().y() - 30
+
+            y3 = y2
+            x3 = secondNode.pos().x() - 70
+
+            x4 = x3
+            y4 = secondNode.pos().y()
+
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+            bp4 = QtCore.QPointF(x4, y4)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+
+        elif secondNode.pos().x() == firstNode.pos().x():
+
+            x2 = x1
+            y2 = secondNode.pos().y()
+            bp2 = QtCore.QPointF(x2, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+
+        else:
+
+            x2 = x1
+            y2 = secondNode.pos().y() + 40
+
+            x3 = secondNode.pos().x()
+            y3 = y2
+
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
+
+        return [inv]
 
     def drawSubProperty(self, sub, sup, diagram, x, y):
 
@@ -5549,14 +6879,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(sup):
 
                     x = node0.pos().x()
-                    y = node0.pos().y() - 150
+                    y = node0.pos().y() - 250
                     node1 = self.createNode(sup, diagram, x, y)
                     supDrawn = True
 
                 else:
                     x = node0.pos().x()
-                    y = node0.pos().y() - 150
-                    node1 = self.draw(sup, diagram, x, y)
+                    y = node0.pos().y() - 250
+                    res = self.draw(sup, diagram, x, y)
+                    node1 = res[0]
                     supDrawn = True
 
         else:
@@ -5566,14 +6897,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(sub):
 
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
+                    y = node1.pos().y() + 250
                     node0 = self.createNode(sub, diagram, x, y)
                     subDrawn = True
 
                 else:
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
-                    node0 = self.draw(sub, diagram, x, y)
+                    y = node1.pos().y() + 250
+                    res = self.draw(sub, diagram, x, y)
+                    node0 = res[0]
                     subDrawn = True
 
             else:
@@ -5587,20 +6919,22 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 else:
 
-                    node1 = self.draw(sup, diagram, x, y)
+                    res = self.draw(sup, diagram, x, y)
+                    node1 = res[0]
                     supDrawn = True
 
                 if self.isAtomic(sub):
 
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
+                    y = node1.pos().y() + 250
                     node0 = self.createNode(sub, diagram, x, y)
                     subDrawn = True
 
                 else:
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
-                    node0 = self.draw(sub, diagram, x, y)
+                    y = node1.pos().y() + 250
+                    res = self.draw(sub, diagram, x, y)
+                    node0 = res[0]
                     subDrawn = True
 
         isa = diagram.factory.create(Item.InclusionEdge, source=node0, target=node1)
@@ -5609,13 +6943,99 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        return isa
+        if node0.type() is Item.RoleNode:
+            if node0.pos().y() == node1.pos().y() and abs(node0.pos().x() - node1.pos().x()) < 130:
+                pass
+
+            elif node0.pos().x() == node1.pos().x():
+
+                x1 = node0.pos().x() - 70
+                y1 = node0.pos().y()
+                y2 = node1.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x1, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+            elif node0.pos().y() == node1.pos().y():
+
+                x1 = node0.pos().x() - 40
+                y1 = node0.pos().y()
+                x2 = x1
+                y2 = node0.pos().y() - 35
+                x3 = node1.pos().x() + 40
+                y3 = y2
+                x4 = x3
+                y4 = node1.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+                bp4 = QtCore.QPointF(x4, y4)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
+
+            else:
+
+                x1 = node0.pos().x() - 70
+                y1 = node0.pos().y()
+                x2 = x1
+                y2 = node1.pos().y() + 35
+                x3 = node1.pos().x()
+                y3 = y2
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+
+        else:
+            if node0.pos().x() == node1.pos().x():
+
+                x1 = node0.pos().x() + 30
+                y1 = node0.pos().y()
+                x2 = x1
+                y2 = node1.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+
+            else:
+                x1 = node0.pos().x() + 30
+                y1 = node0.pos().y()
+                x2 = node1.pos().x() + 30
+                y2 = y1
+                x3 = x2
+                y3 = node1.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+
+        return [isa]
 
     def drawEquivalentClasses(self, expressions, diagram, x, y):
 
         nodes = []
         singletons = []
         found = None
+        propNode = None
 
         for e in expressions:
             if self.isAtomic(e):
@@ -5627,24 +7047,28 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         singletons.append(node)
 
         if len(nodes) == 0:
-            starting_x = x - 150
+            starting_x = x - 125
             starting_y = y
 
         if len(nodes) > 0:
-            starting_x = nodes[0].pos().x() - 150
-            starting_y = nodes[0].pos().y() + 150
+            starting_x = nodes[0].pos().x() - 125
+            starting_y = nodes[0].pos().y() + 125
 
         for ex in expressions:
 
             if not self.isAtomic(ex):
 
-                x = starting_x + 150
+                x = starting_x + 125
                 y = starting_y
 
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(ex, diagram, x, y)
+                res = self.draw(ex, diagram, x, y)
+                n = res[0]
+                if len(res) > 1:
+                    restrNode = res[0]
+                    propNode = res[1]
                 if nodes:
                     cl = nodes[0]
 
@@ -5691,7 +7115,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if node == 'null':
 
-                        x = starting_x + 150
+                        x = starting_x + 125
                         y = starting_y
 
                         starting_x = x
@@ -5700,8 +7124,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         node = self.createNode(ex, diagram, x, y)
                         nodes.append(node)
 
-        node0 = nodes[0]
-        node1 = nodes[1]
+        node0 = nodes[1] if nodes[0].type() == Item.ConceptNode else nodes[0]
+        node1 = nodes[1] if node0 != nodes[1] else nodes[0]
 
         if singletons:
 
@@ -5709,31 +7133,37 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             fixed = node0 if node0 != toMove else node1
 
             x_tomove = fixed.pos().x()
-            y_tomove = fixed.pos().y() -100
+            y_tomove = fixed.pos().y() - 125
             while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                x_tomove = x_tomove + 70
-                if abs(fixed.pos().x() - x_tomove) > 1000:
+                y_tomove = y_tomove + 125
+                if abs(fixed.pos().y() - y_tomove) > 1000:
 
-                    x_tomove = fixed.pos().x()
+                    y_tomove = fixed.pos().y()
                     break
 
             toMove.setPos(x_tomove, y_tomove)
 
+        breakpoints = None
         if found:
             eqEdges = [e for e in found.edges if e.type() is Item.EquivalenceEdge]
             if eqEdges:
 
-                return eqEdges[0]
+                return [eqEdges[0]]
             else:
                 for e in found.edges:
                     if e.type() is Item.InclusionEdge and (e.source is cl or e.target is cl):
                         self.session.undostack.push(CommandItemsRemove(diagram, [e]))
-                        equivalence = diagram.factory.create(Item.EquivalenceEdge, source=found,
-                                                             target=cl)
-                        found.addEdge(equivalence)
-                        cl.addEdge(equivalence)
+                        breakpoints = e.breakpoints
+                        equivalence = diagram.factory.create(Item.EquivalenceEdge, source=node0,
+                                                             target=node1)
+                        node0.addEdge(equivalence)
+                        node1.addEdge(equivalence)
                         self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
+                        i = 0
+                        for b in breakpoints:
+                            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, i, b))
+                            i = i + 1
 
 
         else:
@@ -5743,11 +7173,87 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
 
-        return equivalence
+        if not breakpoints:
+            if propNode:
+                if propNode.type() is Item.RoleNode:
+                    bps = self.addBreakpoints(diagram, propNode, restrNode, node1, None)
+
+                    #bps.reverse()
+
+                    i = len(equivalence.breakpoints)
+                    for b in bps:
+                        self.session.undostack.push(
+                            CommandEdgeBreakpointAdd(diagram, equivalence, i, b))
+                        i = i + 1
+                else:
+                    if node1.pos().x() != restrNode.pos().x() and node1.pos().y() != restrNode.pos().y():
+                        bp1 = QtCore.QPointF(node1.pos().x() - 70, restrNode.pos().y())
+                        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+
+                        bp2 = QtCore.QPointF(node1.pos().x() - 70, node1.pos().y())
+                        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+
+            else:
+                if node0.pos().y() == node1.pos().y() and abs(node0.pos().x() - node1.pos().x()) < 130:
+                    pass
+
+                elif node0.pos().x() == node1.pos().x():
+
+                    x1 = node0.pos().x() + 68
+                    y1 = node0.pos().y()
+                    y2 = node1.pos().y()
+
+
+                    bp1 = QtCore.QPointF(x1, y1)
+                    bp2 = QtCore.QPointF(x1, y2)
+
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+
+                elif node0.pos().y() == node1.pos().y():
+
+                    x1 = node0.pos().x() + 68
+                    y1 = node0.pos().y()
+                    x2 = x1
+                    y2 = node0.pos().y() - 35
+                    x3 = node1.pos().x() - 70
+                    y3 = y2
+                    x4 = x3
+                    y4 = node1.pos().y()
+
+                    bp1 = QtCore.QPointF(x1, y1)
+                    bp2 = QtCore.QPointF(x2, y2)
+                    bp3 = QtCore.QPointF(x3, y3)
+                    bp4 = QtCore.QPointF(x4, y4)
+
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 3, bp4))
+
+                else:
+
+                    x1 = node0.pos().x() + 68
+                    y1 = node0.pos().y()
+                    x2 = x1
+                    y2 = node1.pos().y() + 40
+                    x3 = node1.pos().x()
+                    y3 = y2
+
+                    bp1 = QtCore.QPointF(x1, y1)
+                    bp2 = QtCore.QPointF(x2, y2)
+                    bp3 = QtCore.QPointF(x3, y3)
+
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+
+        return [equivalence]
 
     def drawEquivalentProperties(self, expressions, diagram, x, y):
 
         nodes = []
+        propNode = None
 
         for e in expressions:
             if self.isAtomic(e):
@@ -5757,7 +7263,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     nodes.append(node)
 
         if len(nodes) == 0:
-            starting_x = x - 150
+            starting_x = x - 125
             starting_y = y
 
         if len(nodes) > 0:
@@ -5768,12 +7274,13 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             if not self.isAtomic(ex):
 
-                x = starting_x + 150
+                x = starting_x + 125
                 y = starting_y
 
                 starting_x = x
                 starting_y = y
-                n = self.draw(ex, diagram, x, y)
+                res = self.draw(ex, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
             else:
@@ -5785,7 +7292,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if node == 'null':
 
-                        x = starting_x + 150
+                        x = starting_x + 125
                         y = starting_y
 
                         starting_x = x
@@ -5803,7 +7310,93 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
 
-        return equivalence
+        if node0.type() is Item.RoleNode:
+            if node0.pos().y() == node1.pos().y() and abs(node0.pos().x() - node1.pos().x()) < 130:
+                pass
+
+            elif node0.pos().x() == node1.pos().x():
+
+                x1 = node0.pos().x() - 70
+                y1 = node0.pos().y()
+                y2 = node1.pos().y()
+
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x1, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+
+            elif node0.pos().y() == node1.pos().y():
+
+                x1 = node0.pos().x() - 40
+                y1 = node0.pos().y()
+                x2 = x1
+                y2 = node0.pos().y() - 35
+                x3 = node1.pos().x() + 40
+                y3 = y2
+                x4 = x3
+                y4 = node1.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+                bp4 = QtCore.QPointF(x4, y4)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 3, bp4))
+
+            else:
+
+                x1 = node0.pos().x() - 70
+                y1 = node0.pos().y()
+                x2 = x1
+                y2 = node1.pos().y() + 35
+                x3 = node1.pos().x()
+                y3 = y2
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+
+        else:
+            if node0.pos().x() == node1.pos().x():
+
+                x1 = node0.pos().x() + 30
+                y1 = node0.pos().y()
+                x2 = x1
+                y2 = node1.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+
+
+            else:
+                x1 = node0.pos().x() + 30
+                y1 = node0.pos().y()
+                x2 = node1.pos().x() + 30
+                y2 = y1
+                x3 = x2
+                y3 = node1.pos().y()
+
+                bp1 = QtCore.QPointF(x1, y1)
+                bp2 = QtCore.QPointF(x2, y2)
+                bp3 = QtCore.QPointF(x3, y3)
+
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+
+        return [equivalence]
 
     def drawClassAssertion(self, indiv, classs, diagram, x, y):
 
@@ -5833,12 +7426,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isIsolated(node0):
 
                     x_tomove = node1.pos().x()
-                    y_tomove = node1.pos().y() + 100
+                    y_tomove = node1.pos().y() + 125
                     while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                        x_tomove = x_tomove + 100
-                        if abs(node1.pos().x() - x_tomove) > 1000:
-                            x_tomove = node1.pos().x()
+                        y_tomove = y_tomove + 125
+                        if abs(node1.pos().y() - y_tomove) > 1000:
+                            y_tomove = node1.pos().y()
                             break
 
                     node0.setPos(x_tomove, y_tomove)
@@ -5850,12 +7443,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     if self.isIsolated(node1):
 
                         x_tomove = node0.pos().x()
-                        y_tomove = node0.pos().y() - 100
+                        y_tomove = node0.pos().y() - 125
                         while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                            x_tomove = x_tomove + 100
-                            if abs(node0.pos().x() - x_tomove) > 1000:
-                                x_tomove = node0.pos().x()
+                            y_tomove = y_tomove + 125
+                            if abs(node0.pos().y() - y_tomove) > 1000:
+                                y_tomove = node0.pos().y()
                                 break
 
                         node1.setPos(x_tomove, y_tomove)
@@ -5868,14 +7461,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(indiv):
 
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
+                    y = node1.pos().y() + 125
                     node0 = self.createNode(indiv, diagram, x, y)
                     indivDrawn = True
 
                 else:
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
-                    node0 = self.draw(indiv, diagram, x, y)
+                    y = node1.pos().y() + 125
+                    res = self.draw(indiv, diagram, x, y)
+                    node0 = res[0]
                     indivDrawn = True
 
         else:
@@ -5885,15 +7479,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(classs):
 
                     x = node0.pos().x()
-                    y = node0.pos().y() - 150
+                    y = node0.pos().y() - 125
                     node1 = self.createNode(classs, diagram, x, y)
                     classDrawn = True
 
                 else:
 
                     x = node0.pos().x()
-                    y = node0.pos().y() - 150
-                    node1 = self.draw(classs, diagram, x, y)
+                    y = node0.pos().y() - 125
+                    res = self.draw(classs, diagram, x, y)
+                    node1 = res[0]
                     classDrawn = True
 
             else:
@@ -5907,21 +7502,23 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 else:
 
-                    node1 = self.draw(classs, diagram, x, y)
+                    res = self.draw(classs, diagram, x, y)
+                    node1 = res[0]
                     classDrawn = True
 
                 if self.isAtomic(indiv):
 
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
+                    y = node1.pos().y() + 125
                     node0 = self.createNode(indiv, diagram, x, y)
                     indivDrawn = True
 
                 else:
                     x = node1.pos().x()
-                    y = node1.pos().y() + 150
+                    y = node1.pos().y() + 125
 
-                    node0 = self.draw(indiv, diagram, x, y)
+                    res = self.draw(indiv, diagram, x, y)
+                    node0 = res[0]
                     indivDrawn = True
 
         isa = diagram.factory.create(Item.MembershipEdge, source=node0, target=node1)
@@ -5930,7 +7527,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        return isa
+        x = node0.pos().x() + 68
+        y1 = node0.pos().y()
+        y2 = node1.pos().y()
+
+        bp1 = QtCore.QPointF(x, y1)
+        bp2 = QtCore.QPointF(x, y2)
+
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+
+        return [isa]
 
     def drawPropertyAssertion(self, prop, indiv, value, diagram, x, y):
 
@@ -5975,15 +7583,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if self.isAtomic(value):
 
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
+                        x = propNode.pos().x() + propNode.width()/2 + 50
+                        y = propNode.pos().y() + propNode.height()/2 + 50
                         valueNode = self.createNode(value, diagram, x, y)
                         valueDrawn = True
 
                     else:
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
-                        valueNode = self.draw(value, diagram, x, y)
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
                         valueDrawn = True
 
             else:
@@ -5992,45 +7601,47 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if self.isAtomic(indiv):
 
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         indivNode = self.createNode(indiv, diagram, x, y)
                         indivDrawn = True
                     else:
 
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-                        indivNode = self.draw(indiv, diagram, x, y)
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
                         indivDrawn = True
                 else:
 
                     if self.isAtomic(value):
 
-                        x = propNode.pos().x() - 150
-                        y = propNode.pos().y() - 150
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         valueNode = self.createNode(value, diagram, x, y)
                         valueDrawn = True
 
 
                     else:
-                        x = propNode.pos().x() - 150
-                        y = propNode.pos().y() - 150
-
-                        valueNode = self.draw(value, diagram, x, y)
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
                         valueDrawn = True
 
                     if self.isAtomic(indiv):
 
-                        x = propNode.pos().x()
-                        y = propNode.pos().y() - 150
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         indivNode = self.createNode(indiv, diagram, x, y)
                         indivDrawn = True
 
                     else:
 
-                        x = propNode.pos().x()
-                        y = propNode.pos().y() - 150
-                        indivNode = self.draw(indiv, diagram, x, y)
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
                         indivDrawn = True
         else:
 
@@ -6042,13 +7653,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     y = indivNode.pos().y() + 150
                     propNode = self.createNode(prop, diagram, x, y)
                     propDrawn = True
+                    x = indivNode.pos().x() + propNode.width()/2 + 50
+                    y = indivNode.pos().y() - propNode.height()/2 - 50
+                    propNode.setPos(x, y)
 
                 else:
 
                     x = indivNode.pos().x()
                     y = indivNode.pos().y() + 150
-                    propNode = self.draw(prop, diagram, x, y)
+                    res = self.draw(prop, diagram, x, y)
+                    propNode = res[0]
                     propDrawn = True
+                    x = indivNode.pos().x() + propNode.width() / 2 + 50
+                    y = indivNode.pos().y() - propNode.height() / 2 - 50
+                    propNode.setPos(x, y)
 
                 if valueDrawn:
 
@@ -6058,99 +7676,110 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if self.isAtomic(value):
 
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         valueNode = self.createNode(value, diagram, x, y)
                         valueDrawn = True
 
                     else:
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
-                        valueNode = self.draw(value, diagram, x, y)
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
                         valueDrawn = True
 
             else:
 
                 if valueDrawn:
 
-                    if self.isAtomic(indiv):
-
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-                        indivNode = self.createNode(indiv, diagram, x, y)
-                        indivDrawn = True
-
-                    else:
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-                        indivNode = self.draw(indiv, diagram, x, y)
-                        indivDrawn = True
-
                     if self.isAtomic(prop):
 
                         x = indivNode.pos().x()
                         y = indivNode.pos().y() + 150
                         propNode = self.createNode(prop, diagram, x, y)
                         propDrawn = True
+                        x = valueNode.pos().x() - propNode.width() / 2 - 50
+                        y = valueNode.pos().y() - propNode.height() / 2 - 50
+                        propNode.setPos(x, y)
 
                     else:
 
                         x = indivNode.pos().x()
                         y = indivNode.pos().y() + 150
-                        propNode = self.draw(prop, diagram, x, y)
-
-                else:
-
-                    if self.isAtomic(value):
-
-                        x = x
-                        y = y
-                        #print(value)
-                        valueNode = self.createNode(value, diagram, x, y)
-                        valueDrawn = True
-
-                    else:
-
-                        valueNode = self.draw(value, diagram, x, y)
-                        valueDrawn = True
+                        res = self.draw(prop, diagram, x, y)
+                        propNode = res[0]
+                        x = valueNode.pos().x() - propNode.width() / 2 - 50
+                        y = valueNode.pos().y() - propNode.height() / 2 - 50
+                        propNode.setPos(x, y)
 
                     if self.isAtomic(indiv):
 
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         indivNode = self.createNode(indiv, diagram, x, y)
-                        #print(indivNode)
                         indivDrawn = True
 
                     else:
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-
-                        indivNode = self.draw(indiv, diagram, x, y)
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
                         indivDrawn = True
+
+
+                else:
 
                     if self.isAtomic(prop):
 
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() + 150
+                        x = x
+                        y = y
                         propNode = self.createNode(prop, diagram, x, y)
                         #print(propNode)
                         propDrawn = True
 
                     else:
 
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() + 150
-                        propNode = self.draw(prop, diagram, x, y)
+                        x = x
+                        y = y
+                        res = self.draw(prop, diagram, x, y)
+                        propNode = res[0]
                         propDrawn = True
 
+                    if self.isAtomic(value):
+
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        valueNode = self.createNode(value, diagram, x, y)
+                        valueDrawn = True
+
+                    else:
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
+                        valueDrawn = True
+
+                    if self.isAtomic(indiv):
+
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        indivNode = self.createNode(indiv, diagram, x, y)
+                        #print(indivNode)
+                        indivDrawn = True
+
+                    else:
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
+                        indivDrawn = True
 
         instanceNode = PropertyAssertionNode(diagram=diagram)
-        x = (indivNode.pos().x() + propNode.pos().x()) / 2
-        y = propNode.pos().y()
+        x = propNode.pos().x()
+        y = propNode.pos().y() + propNode.width()/2 + 50
         starting_y = y
         while not self.isEmpty(x, y, diagram):
-            y = y - 30
+            y = y + 125
             if abs(starting_y - y) > 1000:
                 y = starting_y
                 break
@@ -6174,40 +7803,72 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         propNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        return instanceNode
+        x = propNode.pos().x() + 68
+        y1 = instanceNode.pos().y()
+        y2 = propNode.pos().y()
+
+        bp1 = QtCore.QPointF(x, y1)
+        bp2 = QtCore.QPointF(x, y2)
+
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+        x1 = instanceNode.pos().x()
+        y1 = instanceNode.pos().y() - 40
+        x2 = instanceNode.pos().x() + 70
+        y2 = y1
+        x3 = x2
+        y3 = indivNode.pos().y()
+
+        bp3 = QtCore.QPointF(x1, y1)
+        bp2 = QtCore.QPointF(x2, y2)
+        bp1 = QtCore.QPointF(x3, y3)
+
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 0, bp1))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 1, bp2))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 2, bp3))
+
+        x1 = instanceNode.pos().x()
+        y1 = instanceNode.pos().y() - 40
+        x2 = instanceNode.pos().x() - 70
+        y2 = y1
+        x3 = x2
+        y3 = valueNode.pos().y()
+
+        bp3 = QtCore.QPointF(x1, y1)
+        bp2 = QtCore.QPointF(x2, y2)
+        bp1 = QtCore.QPointF(x3, y3)
+
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 0, bp1))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 1, bp2))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 2, bp3))
+
+        return [instanceNode]
 
     def drawNegativePropertyAssertion(self, prop, indiv, value, diagram, x, y):
 
         propDrawn = False
-        notDrawn = False
         indivDrawn = False
         valueDrawn = False
 
-        if self.isAtomic(prop):
 
+        if self.isAtomic(prop):
             propIri = prop.getIRI()
             propNode = self.findNode(propIri, diagram)
             if propNode != 'null':
 
                 propDrawn = True
 
-                edges = propNode.edges
-                inputEdges = [e for e in edges if e.type() is Item.InputEdge]
-                for e in inputEdges:
-                    if e.target.type() is Item.ComplementNode:
-
-                        notNode = e.target
-                        notDrawn = True
-
         if self.isAtomic(indiv):
 
-            indvIri = prop.getIRI()
+            indvIri = indiv.getIRI()
             indivNode = self.findNode(indvIri, diagram)
             if indivNode != 'null':
                 indivDrawn = True
 
         if self.isAtomic(value):
-            if value.isType(self.EntityType.NAMED_INDIVIDUAL):
+
+            if isinstance(value, self.OWLNamedIndividual):
 
                 valueIri = value.getIRI()
                 valueNode = self.findNode(valueIri, diagram)
@@ -6216,16 +7877,6 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     valueDrawn = True
 
         if propDrawn:
-
-            if notDrawn:
-                pass
-
-            else:
-
-                x = propNode.pos().x() + 50
-                y = propNode.pos().y() + 50
-                notNode = self.drawObjComplementOf(prop, diagram, x, y)
-                notDrawn = True
 
             if indivDrawn:
 
@@ -6237,14 +7888,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if self.isAtomic(value):
 
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
+                        x = propNode.pos().x() + propNode.width()/2 + 50
+                        y = propNode.pos().y() + propNode.height()/2 + 50
                         valueNode = self.createNode(value, diagram, x, y)
                         valueDrawn = True
+
                     else:
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
-                        valueNode = self.draw(value, diagram)
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
                         valueDrawn = True
 
             else:
@@ -6253,43 +7906,47 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if self.isAtomic(indiv):
 
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         indivNode = self.createNode(indiv, diagram, x, y)
                         indivDrawn = True
                     else:
 
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-                        indivNode = self.draw(indiv, diagram, x, y)
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
                         indivDrawn = True
                 else:
 
                     if self.isAtomic(value):
 
-                        x = propNode.pos().x() - 150
-                        y = propNode.pos().y() - 150
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         valueNode = self.createNode(value, diagram, x, y)
                         valueDrawn = True
 
+
                     else:
-                        x = propNode.pos().x() - 150
-                        y = propNode.pos().y() - 150
-                        valueNode = self.draw(value, diagram, x, y)
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
                         valueDrawn = True
 
                     if self.isAtomic(indiv):
 
-                        x = propNode.pos().x()
-                        y = propNode.pos().y() - 150
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         indivNode = self.createNode(indiv, diagram, x, y)
                         indivDrawn = True
 
                     else:
 
-                        x = propNode.pos().x()
-                        y = propNode.pos().y() - 150
-                        indivNode = self.draw(indiv, diagram, x, y)
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
                         indivDrawn = True
         else:
 
@@ -6301,16 +7958,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     y = indivNode.pos().y() + 150
                     propNode = self.createNode(prop, diagram, x, y)
                     propDrawn = True
-
-                    notNode = self.drawObjComplementOf(prop, diagram, x+50, y+50)
-                    notDrawn = True
+                    x = indivNode.pos().x() + propNode.width()/2 + 50
+                    y = indivNode.pos().y() - propNode.height()/2 - 50
+                    propNode.setPos(x, y)
 
                 else:
-                    propNode = self.draw(prop, diagram, x, y)
-                    propDrawn = True
 
-                    notNode = self.drawObjComplementOf(prop, diagram, x+50, y+50)
-                    notDrawn = True
+                    x = indivNode.pos().x()
+                    y = indivNode.pos().y() + 150
+                    res = self.draw(prop, diagram, x, y)
+                    propNode = res[0]
+                    propDrawn = True
+                    x = indivNode.pos().x() + propNode.width() / 2 + 50
+                    y = indivNode.pos().y() - propNode.height() / 2 - 50
+                    propNode.setPos(x, y)
 
                 if valueDrawn:
 
@@ -6320,109 +7981,112 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if self.isAtomic(value):
 
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         valueNode = self.createNode(value, diagram, x, y)
                         valueDrawn = True
 
                     else:
-
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() - 150
-                        valueNode = self.draw(value, diagram, x, y)
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
                         valueDrawn = True
 
             else:
 
                 if valueDrawn:
 
-                    if self.isAtomic(indiv):
-
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-                        indivNode = self.createNode(indiv, diagram, x, y)
-                        indivDrawn = True
-
-                    else:
-
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-
-                        indivNode = self.draw(indiv, diagram, x, y)
-                        indivDrawn = True
-
                     if self.isAtomic(prop):
 
                         x = indivNode.pos().x()
                         y = indivNode.pos().y() + 150
                         propNode = self.createNode(prop, diagram, x, y)
                         propDrawn = True
-
-                        notNode = self.drawObjComplementOf(prop, diagram, x+50, y+50)
-                        notDrawn = True
+                        x = valueNode.pos().x() - propNode.width() / 2 - 50
+                        y = valueNode.pos().y() - propNode.height() / 2 - 50
+                        propNode.setPos(x, y)
 
                     else:
+
                         x = indivNode.pos().x()
                         y = indivNode.pos().y() + 150
-                        propNode = self.draw(prop, diagram, x, y)
+                        res = self.draw(prop, diagram, x, y)
+                        propNode = res[0]
+                        x = valueNode.pos().x() - propNode.width() / 2 - 50
+                        y = valueNode.pos().y() - propNode.height() / 2 - 50
+                        propNode.setPos(x, y)
 
-                        notNode = self.drawObjComplementOf(prop, diagram, x+50, y+50)
-                        notDrawn = True
+                    if self.isAtomic(indiv):
+
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        indivNode = self.createNode(indiv, diagram, x, y)
+                        indivDrawn = True
+
+                    else:
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
+                        indivDrawn = True
+
 
                 else:
 
-                    if self.isAtomic(value):
+                    if self.isAtomic(prop):
 
                         x = x
                         y = y
+                        propNode = self.createNode(prop, diagram, x, y)
+                        #print(propNode)
+                        propDrawn = True
+
+                    else:
+
+                        x = x
+                        y = y
+                        res = self.draw(prop, diagram, x, y)
+                        propNode = res[0]
+                        propDrawn = True
+
+                    if self.isAtomic(value):
+
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         valueNode = self.createNode(value, diagram, x, y)
                         valueDrawn = True
 
                     else:
-                        x = x
-                        y = y
-                        valueNode = self.draw(value, diagram, x, y)
+                        x = propNode.pos().x() + propNode.width() / 2 + 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(value, diagram, x, y)
+                        valueNode = res[0]
                         valueDrawn = True
 
                     if self.isAtomic(indiv):
 
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
                         indivNode = self.createNode(indiv, diagram, x, y)
+                        #print(indivNode)
                         indivDrawn = True
 
                     else:
-                        x = valueNode.pos().x()
-                        y = valueNode.pos().y() - 150
-                        indivNode = self.draw(indiv, diagram, x, y)
+                        x = propNode.pos().x() - propNode.width() / 2 - 50
+                        y = propNode.pos().y() + propNode.height() / 2 + 50
+                        res = self.draw(indiv, diagram, x, y)
+                        indivNode = res[0]
                         indivDrawn = True
 
-                    if self.isAtomic(prop):
-
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() + 150
-                        propNode = self.createNode(prop, diagram, x, y)
-                        propDrawn = True
-
-                        notNode = self.drawObjComplementOf(prop, diagram, x+50, y+50)
-                        notDrawn = True
-
-                    else:
-
-                        x = indivNode.pos().x()
-                        y = indivNode.pos().y() + 150
-                        propNode = self.draw(prop, diagram, x, y)
-                        propDrawn = True
-
-                        notNode = self.drawObjComplementOf(prop, diagram, x+50, y+50)
-                        notDrawn = True
+        notNode = self.drawObjComplementOf(propNode, diagram, propNode.x(), propNode.y())
 
         instanceNode = PropertyAssertionNode(diagram=diagram)
-        x = (indivNode.pos().x() + propNode.pos().x()) / 2
-        y = propNode.pos().x()
+        x = propNode.pos().x()
+        y = propNode.pos().y() + propNode.width()/2 + 50
         starting_y = y
         while not self.isEmpty(x, y, diagram):
-            y = y - 30
+            y = y + 125
             if abs(starting_y - y) > 1000:
                 y = starting_y
                 break
@@ -6440,18 +8104,57 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         instanceNode.addEdge(input2)
         self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-
-        isa = diagram.factory.create(Item.MembershipEdge, source=instanceNode, target=notNode)
-        instanceNode.addEdge(isa)
-        notNode.addEdge(isa)
-        self.session.undostack.push(CommandEdgeAdd(diagram, isa))
-
         input3 = diagram.factory.create(Item.InputEdge, source=propNode, target=notNode)
         propNode.addEdge(input3)
         notNode.addEdge(input3)
         self.session.undostack.push(CommandEdgeAdd(diagram, input3))
 
-        return instanceNode
+        isa = diagram.factory.create(Item.MembershipEdge, source=instanceNode, target=notNode)
+        instanceNode.addEdge(isa)
+        propNode.addEdge(isa)
+        self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+
+        x = propNode.pos().x() + 65
+        y1 = instanceNode.pos().y()
+        y2 = propNode.pos().y()
+
+        bp1 = QtCore.QPointF(x, y1)
+        bp2 = QtCore.QPointF(x, y2)
+
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+        x1 = instanceNode.pos().x()
+        y1 = instanceNode.pos().y() - 40
+        x2 = indivNode.pos().x() + 70
+        y2 = y1
+        x3 = x2
+        y3 = indivNode.pos().y()
+
+        bp3 = QtCore.QPointF(x1, y1)
+        bp2 = QtCore.QPointF(x2, y2)
+        bp1 = QtCore.QPointF(x3, y3)
+
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 0, bp1))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 1, bp2))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 2, bp3))
+
+        x1 = instanceNode.pos().x()
+        y1 = instanceNode.pos().y() - 40
+        x2 = valueNode.pos().x() - 70
+        y2 = y1
+        x3 = x2
+        y3 = valueNode.pos().y()
+
+        bp3 = QtCore.QPointF(x1, y1)
+        bp2 = QtCore.QPointF(x2, y2)
+        bp1 = QtCore.QPointF(x3, y3)
+
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 0, bp1))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 1, bp2))
+        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 2, bp3))
+
+        return [instanceNode]
 
     def drawDiffIndiv(self, individuals, diagram, x, y):
 
@@ -6466,7 +8169,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     nodes.append(node)
 
         if len(nodes) == 0:
-            starting_x = x - 150
+            starting_x = x - 125
             starting_y = y
 
         if len(nodes) > 0:
@@ -6478,13 +8181,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             # if not i.isType(self.EntityType.NAMED_INDIVIDUAL):
             if not self.isAtomic(i):
 
-                x = starting_x + 150
+                x = starting_x + 125
                 y = starting_y
 
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(i, diagram, x, y)
+                res = self.draw(i, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
             else:
@@ -6494,7 +8198,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     node = self.findNode(iri, diagram)
 
                     if node == 'null':
-                        x = starting_x + 150
+                        x = starting_x + 125
                         y = starting_y
 
                         starting_x = x
@@ -6513,7 +8217,61 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, different))
 
-        return different
+        if node0.pos().y() == node1.pos().y() and abs(node0.pos().x() - node1.pos().x()) < 130:
+            pass
+
+        elif node0.pos().x() == node1.pos().x():
+
+            x1 = node0.pos().x() + 70
+            y1 = node0.pos().y()
+            y2 = node1.pos().y()
+
+
+            bp1 = QtCore.QPointF(x1, y1)
+            bp2 = QtCore.QPointF(x1, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
+
+        elif node0.pos().y() == node1.pos().y():
+
+            x1 = node0.pos().x() + 68
+            y1 = node0.pos().y()
+            x2 = x1
+            y2 = node0.pos().y() - 35
+            x3 = node1.pos().x() - 70
+            y3 = y2
+            x4 = x3
+            y4 = node1.pos().y()
+
+            bp1 = QtCore.QPointF(x1, y1)
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+            bp4 = QtCore.QPointF(x4, y4)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 2, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 3, bp4))
+
+        else:
+
+            x1 = node0.pos().x() + 68
+            y1 = node0.pos().y()
+            x2 = x1
+            y2 = node1.pos().y() + 35
+            x3 = node1.pos().x()
+            y3 = y2
+
+            bp1 = QtCore.QPointF(x1, y1)
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 2, bp3))
+
+        return [different]
 
     def drawSameIndiv(self, individuals, diagram, x, y):
 
@@ -6529,7 +8287,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if len(nodes) == 0:
 
-            starting_x = x - 150
+            starting_x = x - 125
             starting_y = y
 
         if len(nodes) > 0:
@@ -6541,13 +8299,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             if not self.isAtomic(i):
 
-                x = starting_x + 150
+                x = starting_x + 125
                 y = starting_y
 
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(i, diagram, x, y)
+                res = self.draw(i, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
             else:
@@ -6558,7 +8317,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if node == 'null':
 
-                        x = starting_x + 150
+                        x = starting_x + 125
                         y = starting_y
 
                         starting_x = x
@@ -6577,7 +8336,61 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, same))
 
-        return same
+        if node0.pos().y() == node1.pos().y() and abs(node0.pos().x() - node1.pos().x()) < 130:
+            pass
+
+        elif node0.pos().x() == node1.pos().x():
+
+            x1 = node0.pos().x() + 70
+            y1 = node0.pos().y()
+            y2 = node1.pos().y()
+
+
+            bp1 = QtCore.QPointF(x1, y1)
+            bp2 = QtCore.QPointF(x1, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
+
+        elif node0.pos().y() == node1.pos().y():
+
+            x1 = node0.pos().x() + 68
+            y1 = node0.pos().y()
+            x2 = x1
+            y2 = node0.pos().y() - 35
+            x3 = node1.pos().x() - 70
+            y3 = y2
+            x4 = x3
+            y4 = node1.pos().y()
+
+            bp1 = QtCore.QPointF(x1, y1)
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+            bp4 = QtCore.QPointF(x4, y4)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 2, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 3, bp4))
+
+        else:
+
+            x1 = node0.pos().x() + 68
+            y1 = node0.pos().y()
+            x2 = x1
+            y2 = node1.pos().y() + 35
+            x3 = node1.pos().x()
+            y3 = y2
+
+            bp1 = QtCore.QPointF(x1, y1)
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 2, bp3))
+
+        return [same]
 
     def drawDisjointClasses(self, expressions, diagram, x, y):
 
@@ -6601,7 +8414,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if len(nodes) == 0:
 
-            starting_x = x - 150
+            starting_x = x - 125
             starting_y = y
 
         if len(nodes) > 0:
@@ -6613,13 +8426,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             if not self.isAtomic(ex):
 
-                x = starting_x + 150
+                x = starting_x + 125
                 y = starting_y
 
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(ex, diagram, x, y)
+                res = self.draw(ex, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
             else:
@@ -6631,7 +8445,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if node == 'null':
 
-                        x = starting_x + 150
+                        x = starting_x + 125
                         y = starting_y
 
                         starting_x = x
@@ -6640,17 +8454,17 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         node = self.createNode(ex, diagram, x, y)
                         nodes.append(node)
 
-
+        fixed = nodes[0]
         if singletons:
 
             toMove = singletons[0]
             fixed = nodes[0] if nodes[0] != toMove else nodes[1]
 
             x_tomove = fixed.pos().x()
-            y_tomove = fixed.pos().y() -100
+            y_tomove = fixed.pos().y() - 125
             while not self.isEmpty(x_tomove, y_tomove, diagram):
 
-                x_tomove = x_tomove + 100
+                x_tomove = x_tomove + 125
                 if abs(fixed.pos().x() - x_tomove) > 1000:
 
                     x_tomove = fixed.pos().x()
@@ -6661,17 +8475,19 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         x_positions = [n.pos().x() for n in nodes]
         y_positions = [n.pos().y() for n in nodes]
 
-       # x_med = sum(x_positions) / len(x_positions)
+        #x_med = sum(x_positions) / len(x_positions)
         maxX = max(x_positions)
         minX = min(x_positions)
-        x_med = (maxX + minX) / 2
+        #x_med = (maxX + minX) / 2
+        x_med = fixed.pos().x() + 125
         # y_med = sum(y_positions) / len(y_positions)
         maxY = max(y_positions)
         minY = min(y_positions)
-        y_med = (maxY + minY) / 2
+        #y_med = (maxY + minY) / 2
+        y_med = fixed.pos().y()
         starting_y = y_med
         while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
+            y_med = y_med - 50
             if abs(starting_y - y_med) > 1000:
                 y_med = starting_y
                 break
@@ -6687,6 +8503,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
+        if dis_node.pos().y() != node0.pos().y():
+            x = node0.pos().x() + 70
+            y1 = node0.pos().y()
+            y2 = dis_node.pos().y()
+
+            bp1 = QtCore.QPointF(x, y1)
+            bp2 = QtCore.QPointF(x, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
+
         node1 = nodes[1]
 
         input = diagram.factory.create(Item.InputEdge, source=node1, target=dis_node)
@@ -6694,7 +8522,55 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         dis_node.addEdge(input)
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
-        return dis_node
+
+        x1 = dis_node.pos().x() + 65
+        y1 = dis_node.pos().y()
+        bp1 = QtCore.QPointF(x1, y1)
+
+        if dis_node.pos().y() == node1.pos().y():
+            x2 = x1
+            y2 = dis_node.pos().y() - 30
+
+            y3 = y2
+            x3 = node1.pos().x() - 70
+
+            x4 = x3
+            y4 = node1.pos().y()
+
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+            bp4 = QtCore.QPointF(x4, y4)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+
+        elif node1.pos().x() == node0.pos().x():
+
+            x2 = x1
+            y2 = node1.pos().y()
+            bp2 = QtCore.QPointF(x2, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+
+        else:
+
+            x2 = x1
+            y2 = node1.pos().y() + 40
+
+            x3 = node1.pos().x()
+            y3 = y2
+
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
+
+        return [dis_node]
 
     def drawDisjointUnion(self, classes, classs, diagram, x, y):
 
@@ -6744,7 +8620,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(c, diagram, x, y)
+                res = self.draw(c, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
                 xN = n.pos().x()
@@ -6830,11 +8707,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         else:
 
-            cNode = self.draw(classs, diagram)
+            res = self.draw(classs, diagram)
+            cNode = res[0]
+
+        x_med = cNode.pos().x()
+        y_med = cNode.pos().y() + 40
 
         starting_y = y_med
         while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
+            y_med = y_med - 50
             if abs(starting_y - y_med) > 1000:
                 y_med = starting_y
                 break
@@ -6849,10 +8730,17 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
+            y = dis_node.pos().y()
+
+            bp1 = QtCore.QPointF(n.pos().x(), y)
+            b1 = CommandEdgeBreakpointAdd(diagram, input, 0, bp1)
+
+            self.session.undostack.push(b1)
+
         equiv = diagram.factory.create(Item.EquivalenceEdge, source=cNode, target=dis_node)
         self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
 
-        return dis_node
+        return [dis_node]
 
     def drawDisjointDataProperties(self, expressions, diagram, x, y):
 
@@ -6871,8 +8759,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if len(nodes) == 0:
 
-            starting_x = x - 150
-            starting_y = y
+            starting_x = x
+            starting_y = y - 50
 
         if len(nodes) > 0:
 
@@ -6883,13 +8771,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             if not self.isAtomic(ex):
 
-                x = starting_x + 150
-                y = starting_y
+                x = starting_x
+                y = starting_y + 50
 
                 starting_x = x
                 starting_y = y
 
-                n = self.draw(ex, diagram, x, y)
+                res = self.draw(ex, diagram, x, y)
+                n = res[0]
                 nodes.append(n)
 
                 xN = n.pos().x()
@@ -6905,8 +8794,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if node == 'null':
 
-                        x = starting_x + 150
-                        y = starting_y
+                        x = starting_x
+                        y = starting_y + 50
 
                         starting_x = x
                         starting_y = y
@@ -6919,41 +8808,89 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         y = node.pos().y()
                         y_positions.append(y)
 
-        # x_med = sum(x_positions) / len(x_positions)
-        maxX = max(x_positions)
-        minX = min(x_positions)
-        x_med = (maxX - minX) / 2
-        # y_med = sum(y_positions) / len(y_positions)
-        maxY = max(y_positions)
-        minY = min(y_positions)
-        y_med = (maxY - minY) / 2
-        starting_y = y_med
-        while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
-            if abs(starting_y - y_med) > 1000:
-                y_med = starting_y
-                break
-        dis_node = ComplementNode(diagram=diagram)
-        dis_node.setPos(x_med, y_med)
-        self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
+                fixed = nodes[0]
+                # x_med = sum(x_positions) / len(x_positions)
+                maxX = max(x_positions)
+                minX = min(x_positions)
+                # x_med = (maxX + minX) / 2
+                x_med = fixed.pos().x() - 180
+                # y_med = sum(y_positions) / len(y_positions)
+                maxY = max(y_positions)
+                minY = min(y_positions)
+                # y_med = (maxY + minY) / 2
+                y_med = fixed.pos().y()
+                starting_y = y_med
+                while not self.isEmpty(x_med, y_med, diagram):
+                    y_med = y_med - 50
+                    if abs(starting_y - y_med) > 1000:
+                        y_med = starting_y
+                        break
+                dis_node = ComplementNode(diagram=diagram)
+                dis_node.setPos(x_med, y_med)
+                self.session.undostack.push(CommandNodeAdd(diagram, dis_node))
 
-        node0 = nodes[0]
+                node0 = nodes[0]
 
-        isa = diagram.factory.create(Item.InclusionEdge, source=node0, target=dis_node)
-        node0.addEdge(isa)
-        dis_node.addEdge(isa)
+                isa = diagram.factory.create(Item.InclusionEdge, source=node0, target=dis_node)
+                node0.addEdge(isa)
+                dis_node.addEdge(isa)
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, isa))
+                self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        node1 = nodes[1]
+                if dis_node.pos().y() != node0.pos().y():
+                    x = node0.pos().x() - 12
+                    y1 = node0.pos().y()
+                    y2 = dis_node.pos().y()
 
-        input = diagram.factory.create(Item.InputEdge, source=node1, target=dis_node)
-        node1.addEdge(input)
-        dis_node.addEdge(input)
+                    bp1 = QtCore.QPointF(x, y1)
+                    bp2 = QtCore.QPointF(x, y2)
 
-        self.session.undostack.push(CommandEdgeAdd(diagram, input))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
-        return dis_node
+                node1 = nodes[1]
+
+                input = diagram.factory.create(Item.InputEdge, source=node1, target=dis_node)
+                node1.addEdge(input)
+                dis_node.addEdge(input)
+
+                self.session.undostack.push(CommandEdgeAdd(diagram, input))
+
+                x1 = dis_node.pos().x() + 30
+                y1 = dis_node.pos().y()
+                bp1 = QtCore.QPointF(x1, y1)
+
+
+                if node1.pos().x() == node0.pos().x():
+
+                    x2 = x1
+                    y2 = node1.pos().y()
+                    bp2 = QtCore.QPointF(x2, y2)
+
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+
+                else:
+
+                    x2 = x1
+                    y2 = node1.pos().y() + 40
+
+                    x3 = node1.pos().x() - 12
+                    y3 = y2
+
+                    x4 = x3
+                    y4 = node1.pos().y()
+
+                    bp2 = QtCore.QPointF(x2, y2)
+                    bp3 = QtCore.QPointF(x3, y3)
+                    bp4 = QtCore.QPointF(x4, y4)
+
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+
+                return [dis_node]
 
     def drawDisjointObjectProperties(self, expressions, diagram, x, y):
 
@@ -6972,7 +8909,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if len(nodes) == 0:
 
-            starting_x = x - 150
+            starting_x = x - 125
             starting_y = y
 
         if len(nodes) > 0:
@@ -6985,9 +8922,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             if not self.isAtomic(ex):
 
-                n = self.draw(ex, diagram, starting_x+150, starting_y)
+                res = self.draw(ex, diagram, starting_x+125, starting_y)
+                n = res[0]
 
-                starting_x = starting_x+150
+                starting_x = starting_x+125
 
                 nodes.append(n)
 
@@ -7005,7 +8943,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                     if node == 'null':
 
-                        x = starting_x + 150
+                        x = starting_x + 125
                         y = starting_y
 
                         starting_x = x
@@ -7020,18 +8958,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         y = node.pos().y()
                         y_positions.append(y)
 
-
-        #x_med = sum(x_positions) / len(x_positions)
+        fixed = nodes[0]
+        # x_med = sum(x_positions) / len(x_positions)
         maxX = max(x_positions)
         minX = min(x_positions)
-        x_med = (maxX - minX) / 2
-        #y_med = sum(y_positions) / len(y_positions)
+        # x_med = (maxX + minX) / 2
+        x_med = fixed.pos().x() + 125
+        # y_med = sum(y_positions) / len(y_positions)
         maxY = max(y_positions)
         minY = min(y_positions)
-        y_med = (maxY - minY) / 2
+        # y_med = (maxY + minY) / 2
+        y_med = fixed.pos().y()
         starting_y = y_med
         while not self.isEmpty(x_med, y_med, diagram):
-            y_med = y_med - 30
+            y_med = y_med - 50
             if abs(starting_y - y_med) > 1000:
                 y_med = starting_y
                 break
@@ -7047,6 +8987,17 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
+        if dis_node.pos().y() != node0.pos().y():
+            x = node0.pos().x() + 70
+            y1 = node0.pos().y()
+            y2 = dis_node.pos().y()
+
+            bp1 = QtCore.QPointF(x, y1)
+            bp2 = QtCore.QPointF(x, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+
         node1 = nodes[1]
 
         input = diagram.factory.create(Item.InputEdge, source=node1, target=dis_node)
@@ -7055,7 +9006,54 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.session.undostack.push(CommandEdgeAdd(diagram, input))
 
-        return dis_node
+        x1 = dis_node.pos().x() + 65
+        y1 = dis_node.pos().y()
+        bp1 = QtCore.QPointF(x1, y1)
+
+        if dis_node.pos().y() == node1.pos().y():
+            x2 = x1
+            y2 = dis_node.pos().y() - 30
+
+            y3 = y2
+            x3 = node1.pos().x() - 70
+
+            x4 = x3
+            y4 = node1.pos().y()
+
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+            bp4 = QtCore.QPointF(x4, y4)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+
+        elif node1.pos().x() == node0.pos().x():
+
+            x2 = x1
+            y2 = node1.pos().y()
+            bp2 = QtCore.QPointF(x2, y2)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+
+        else:
+
+            x2 = x1
+            y2 = node1.pos().y() + 40
+
+            x3 = node1.pos().x()
+            y3 = y2
+
+            bp2 = QtCore.QPointF(x2, y2)
+            bp3 = QtCore.QPointF(x3, y3)
+
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
+
+        return [dis_node]
 
     # ATOMIC OPERATIONS #
 
@@ -7063,10 +9061,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         # create atomic node: Class, Attribute, Role, Individual, Literal, Datatype #
         move = 70
-        if ex.isType(self.EntityType.DATA_PROPERTY):
+        if isinstance(ex, self.OWLLiteral):
+            move = 50
+        elif ex.isType(self.EntityType.DATA_PROPERTY):
             move = -50
-        if ex.isType(self.EntityType.OBJECT_PROPERTY):
+        elif ex.isType(self.EntityType.OBJECT_PROPERTY) or ex.isType(self.EntityType.NAMED_INDIVIDUAL):
             move = 125
+        elif ex.isType(self.EntityType.CLASS):
+            move = 250
         starting_y = y
         while not self.isEmpty(x, y, diagram):
 
@@ -7580,6 +9582,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     def addBreakpoints(self, diagram, propNode, restrNode, domainNode, isa):
 
+        bps = []
+
         if propNode.pos().x() == domainNode.pos().x():
             if restrNode.pos().x() > domainNode.pos().x():
                 # x = restrNode.pos().x() + 40
@@ -7592,10 +9596,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y2 = domainNode.pos().y()
 
             bp1 = QtCore.QPointF(x, y1)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+            bps.append(bp1)
 
             bp2 = QtCore.QPointF(x, y2)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+            bps.append(bp2)
+
+            if isa:
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
         elif restrNode.pos().y() == domainNode.pos().y():
 
@@ -7612,15 +9620,21 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y3 = y2
 
             bp1 = QtCore.QPointF(x, y1)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+            bps.append(bp1)
 
             bp2 = QtCore.QPointF(x, y2)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+            bps.append(bp2)
 
             bp3 = QtCore.QPointF(x3, y3)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+            bps.append(bp3)
+
+            if isa:
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
 
         elif propNode.pos().x() != domainNode.pos().x() and restrNode.pos().y() != domainNode.pos().y():
+
             if restrNode.pos().x() > propNode.pos().x():
                 x1 = restrNode.pos().x() + 30
 
@@ -7642,17 +9656,25 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y4 = domainNode.pos().y()
 
             bp1 = QtCore.QPointF(x1, y1)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+            bps.append(bp1)
 
             bp2 = QtCore.QPointF(x2, y2)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+            bps.append(bp2)
 
             bp3 = QtCore.QPointF(x3, y3)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+            bps.append(bp3)
 
             bp4 = QtCore.QPointF(x4, y4)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
-        return
+            bps.append(bp4)
+
+            if isa:
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
+
+        return bps
+
 
 class DiagramPropertiesForm(NewDiagramForm):
     """
