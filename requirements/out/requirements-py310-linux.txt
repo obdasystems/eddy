@@ -44,7 +44,7 @@ jpype1==1.4.0
     # via -r requirements/in/base.in
 jsonpath-rw==1.4.0
     # via emrichen
-lief==0.12.1
+lief==0.12.2
     # via appimage-builder
 mccabe==0.6.1
     # via flake8
