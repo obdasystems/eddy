@@ -191,3 +191,100 @@ class NewProjectDialog(QtWidgets.QDialog):
         self.caption.setVisible(not isEmpty(caption))
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
+
+
+class ProjectFromOWLDialog(QtWidgets.QDialog):
+    """
+    This class is used to display a modal window to enter new project specific data.
+    """
+    def __init__(self, parent: QtWidgets.QWidget = None) -> None:
+        """
+        Initialize the project dialog.
+        :type parent: QWidget
+        """
+        super().__init__(parent)
+
+        #############################################
+        # FORM AREA
+        #################################
+
+        self.nameLabel = QtWidgets.QLabel(self)
+        self.nameLabel.setText('Project name')
+        self.nameField = StringField(self)
+        self.nameField.setMinimumWidth(400)
+        self.nameField.setMaxLength(64)
+
+        connect(self.nameField.textChanged, self.doValidateForm)
+
+        self.formWidget = QtWidgets.QWidget(self)
+        self.formLayout = QtWidgets.QFormLayout(self.formWidget)
+        self.formLayout.addRow(self.nameLabel, self.nameField)
+
+        #############################################
+        # CONFIRMATION AREA
+        #################################
+
+        self.confirmationBox = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Ok)
+        self.confirmationBox.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        self.confirmationBox.setContentsMargins(10, 0, 10, 10)
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+
+        #############################################
+        # SETUP DIALOG LAYOUT
+        #################################
+
+        self.caption = QtWidgets.QLabel(self)
+        self.caption.setContentsMargins(8, 0, 8, 0)
+        self.caption.setProperty('class', 'invalid')
+        self.caption.setVisible(False)
+
+        self.gridLayout = QtWidgets.QVBoxLayout(self)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.addWidget(self.formWidget)
+        self.gridLayout.addWidget(self.caption)
+        self.gridLayout.addWidget(self.confirmationBox, 0, QtCore.Qt.AlignRight)
+
+        self.setFixedSize(self.sizeHint())
+        self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        self.setWindowTitle('New project from OWL file')
+
+        connect(self.confirmationBox.accepted, self.accept)
+        connect(self.confirmationBox.rejected, self.reject)
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def name(self) -> str:
+        """
+        Returns the value of the name field (trimmed).
+        """
+        return self.nameField.value()
+
+    #############################################
+    # SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def doValidateForm(self) -> None:
+        """
+        Validate project settings.
+        """
+        caption = ''
+        enabled = True
+
+        #############################################
+        # CHECK NAME
+        #################################
+
+        if not self.name():
+            caption = ''
+            enabled = False
+
+        #############################################
+
+        self.caption.setText(caption)
+        self.caption.setVisible(not isEmpty(caption))
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
+        self.setFixedSize(self.sizeHint())
