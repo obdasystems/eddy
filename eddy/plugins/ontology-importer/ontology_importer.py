@@ -37,6 +37,7 @@ import os
 import sqlite3
 import sys
 import textwrap
+from typing import Optional
 
 from PyQt5 import (
     QtCore,
@@ -855,19 +856,25 @@ class OntologyImporterPlugin(AbstractPlugin):
                 command = CommandProjectAddPrefix(self.project, prefix, namespace)
                 self.session.undostack.push(command)
 
-    def doOpenOntologyFile(self):
+    @QtCore.pyqtSlot(str)
+    @QtCore.pyqtSlot()
+    def doOpenOntologyFile(self, my_owl_file: Optional[str] = None):
         """
         Starts the import process by selecting an OWL 2 ontology file.
         """
-        dialog = FileDialog(self.session)
-        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        dialog.setNameFilters([File.Owl.value])
+        if my_owl_file:
+            self.filePath = [my_owl_file]
+        else:
+            dialog = FileDialog(self.session)
+            dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+            dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+            dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+            dialog.setNameFilters([File.Owl.value])
 
-        if dialog.exec_():
-            self.filePath = dialog.selectedFiles()
+            if dialog.exec_():
+                self.filePath = dialog.selectedFiles()
 
+        if self.filePath:
             ### SET SPACE BETWEEN ITEMS ###
             form = DiagramPropertiesForm(self.project, parent=self.session)
             if form.exec_():
@@ -950,8 +957,7 @@ class OntologyImporterPlugin(AbstractPlugin):
 
                         try:
 
-                            for x in dialog.selectedFiles():
-
+                            for x in self.filePath:
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.fileInstance = self.JavaFileClass(x)
@@ -1202,7 +1208,7 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         # CONFIGURE SIGNALS/SLOTS
         connect(self.session.sgnNoSaveProject, self.onNoSave)
-
+        connect(self.session.sgnStartOwlImport, self.doOpenOntologyFile)
 
 # importation in DB #
 class Importation():
