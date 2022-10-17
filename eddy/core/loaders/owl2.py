@@ -44,10 +44,13 @@ class OwlProjectLoader(AbstractProjectLoader):
         """
         Create the Project by reading data from the parsed Owl File.
         """
+        ontologyIRI, ontologyV = self.getOntologyIRI()
         self.nproject = Project(
             parent=self.session,
             profile=self.session.createProfile('OWL 2'),
-            ontologyIRI=self.getOntologyIRI()
+            ontologyIRI=ontologyIRI,
+            version=ontologyV,
+            imports=self.addImports()
         )
         LOGGER.info('Loaded project from ontology: %s...', self.path)
 
@@ -67,17 +70,59 @@ class OwlProjectLoader(AbstractProjectLoader):
         vm.attachThreadToJVM()
 
         OWLManager = vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        MissingImportHandlingStrategy = vm.getJavaClass('org.semanticweb.owlapi.model.MissingImportHandlingStrategy')
+        JavaFileClass = vm.getJavaClass('java.io.File')
+        fileInstance = JavaFileClass(self.path)
+        manager = OWLManager().createOWLOntologyManager()
+        manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT)
+        ontology = manager.loadOntologyFromOntologyDocument(fileInstance)
+        ontologyID = ontology.getOntologyID()
+        if ontologyID.isAnonymous():
+            ontologyIRI = None
+            ontologyV = None
+        else:
+            ontologyIRI = ontologyID.getOntologyIRI().get().toString()
+            if ontologyID.getVersionIRI().isPresent():
+                ontologyV = ontologyID.getVersionIRI().get().toString()
+            else:
+                ontologyV = None
+
+        return ontologyIRI, ontologyV
+
+    def addImports(self):
+        """
+        Add imported ontologies.
+        """
+        vm = getJavaVM()
+        if not vm.isRunning():
+            vm.initialize()
+        vm.attachThreadToJVM()
+
+        OWLManager = vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
         JavaFileClass = vm.getJavaClass('java.io.File')
         fileInstance = JavaFileClass(self.path)
         manager = OWLManager().createOWLOntologyManager()
         ontology = manager.loadOntologyFromOntologyDocument(fileInstance)
-        try:
-            ontology_version = ontology.getOntologyID().getVersionIRI().get().toString()
-        except Exception:
-            ontology_version = ontology.getOntologyID().getOntologyIRI().get().toString()
 
-        return ontology_version
+        directImports = ontology.getDirectImports()
+        importedOnto = set()
+        for imp in directImports:
+            ontologyID = imp.getOntologyID()
+            if ontologyID.isAnonymous():
+                ontologyIRI = None
+                ontologyURI = None
+                ontologyV = None
+            else:
+                ontologyIRI = ontologyID.getOntologyIRI().get().toString()
+                ontologyURI = ontologyID.getOntologyIRI().get().toURI().toString()
+                if ontologyID.getVersionIRI().isPresent():
+                    ontologyV = ontologyID.getVersionIRI().get().toString()
+                else:
+                    ontologyV = None
+            impOnto = ImportedOntology(ontologyIRI, ontologyURI, ontologyV, False)
+            importedOnto.add(impOnto)
 
+        return importedOnto
 
 class OwlOntologyImportWorker(AbstractWorker):
     """
