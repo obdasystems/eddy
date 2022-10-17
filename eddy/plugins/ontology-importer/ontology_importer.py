@@ -87,7 +87,7 @@ from eddy.core.jvm import getJavaVM
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalNamespaceError,
-    Facet,
+    Facet, ImportedOntology,
 )
 from eddy.core.owl import IRI
 from eddy.core.owl import Literal
@@ -856,6 +856,26 @@ class OntologyImporterPlugin(AbstractPlugin):
                 command = CommandProjectAddPrefix(self.project, prefix, namespace)
                 self.session.undostack.push(command)
 
+    def addImportedOntologies(self):
+        directImports = self.ontology.getDirectImports()
+        importedOnto = set()
+        for imp in directImports:
+            ontologyID = imp.getOntologyID()
+            if ontologyID.isAnonymous():
+                ontologyIRI = None
+                ontologyURI = None
+                ontologyV = None
+            else:
+                ontologyIRI = ontologyID.getOntologyIRI().get().toString()
+                ontologyURI = ontologyID.getOntologyIRI().get().toURI().toString()
+                if ontologyID.getVersionIRI().isPresent():
+                    ontologyV = ontologyID.getVersionIRI().get().toString()
+                else:
+                    ontologyV = None
+            impOnto = ImportedOntology(ontologyIRI, ontologyURI, ontologyV, False)
+            self.project.addImportedOntology(impOnto)
+
+
     @QtCore.pyqtSlot(str)
     @QtCore.pyqtSlot()
     def doOpenOntologyFile(self, my_owl_file: Optional[str] = None):
@@ -896,6 +916,8 @@ class OntologyImporterPlugin(AbstractPlugin):
                 ### IMPORT OWL API ###
                 if True:
                     self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+                    self.MissingImportHandlingStrategy = self.vm.getJavaClass(
+                        'org.semanticweb.owlapi.model.MissingImportHandlingStrategy')
                     self.JavaFileClass = self.vm.getJavaClass('java.io.File')
                     self.Type = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
                     self.Set = self.vm.getJavaClass('java.util.Set')
@@ -964,6 +986,9 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.manager = self.OWLManager().createOWLOntologyManager()
+                                self.manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(
+                                    self.MissingImportHandlingStrategy.SILENT)
+
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.ontology = self.manager.loadOntologyFromOntologyDocument(
@@ -1006,6 +1031,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.df = self.OWLManager.getOWLDataFactory()
+                                self.addImportedOntologies()
 
                             QtCore.QCoreApplication.processEvents()
 
