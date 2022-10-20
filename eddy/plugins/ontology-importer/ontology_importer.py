@@ -84,6 +84,7 @@ from eddy.core.items.nodes.role_inverse import RoleInverseNode
 from eddy.core.items.nodes.union import UnionNode
 from eddy.core.items.nodes.value_domain import ValueDomainNode
 from eddy.core.jvm import getJavaVM
+from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalNamespaceError,
@@ -856,25 +857,34 @@ class OntologyImporterPlugin(AbstractPlugin):
                 command = CommandProjectAddPrefix(self.project, prefix, namespace)
                 self.session.undostack.push(command)
 
-    def addImportedOntologies(self):
+    def getImportedOntologies(self):
+        """
+        Get set of Imported Ontologies.
+        """
+        folder = self.JavaFileClass(str(os.path.expanduser('~')))
+        iriMapper = self.AutoIRIMapper(folder, True)
+        self.manager.getIRIMappers().add(iriMapper)
+
         directImports = self.ontology.getDirectImports()
         importedOnto = set()
         for imp in directImports:
             ontologyID = imp.getOntologyID()
-            if ontologyID.isAnonymous():
-                ontologyIRI = None
-                ontologyURI = None
-                ontologyV = None
-            else:
+            if not ontologyID.isAnonymous():
                 ontologyIRI = ontologyID.getOntologyIRI().get().toString()
                 ontologyURI = ontologyID.getOntologyIRI().get().toURI().toString()
                 if ontologyID.getVersionIRI().isPresent():
                     ontologyV = ontologyID.getVersionIRI().get().toString()
                 else:
                     ontologyV = None
-            impOnto = ImportedOntology(ontologyIRI, ontologyURI, ontologyV, False)
-            self.project.addImportedOntology(impOnto)
-
+                ontologyPath = iriMapper.getDocumentIRI(ontologyID.getOntologyIRI().get())
+                if ontologyPath:
+                    ontologyPath = ontologyPath.toString().replace('file:', '', 1)
+                    impOnto = ImportedOntology(ontologyIRI, ontologyPath, ontologyV, True)
+                    importedOnto.add(impOnto)
+                else:
+                    impOnto = ImportedOntology(ontologyIRI, ontologyURI, ontologyV, False)
+                    importedOnto.add(impOnto)
+        return importedOnto
 
     @QtCore.pyqtSlot(str)
     @QtCore.pyqtSlot()
@@ -918,6 +928,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                     self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
                     self.MissingImportHandlingStrategy = self.vm.getJavaClass(
                         'org.semanticweb.owlapi.model.MissingImportHandlingStrategy')
+                    self.AutoIRIMapper = self.vm.getJavaClass('org.semanticweb.owlapi.util.AutoIRIMapper')
                     self.JavaFileClass = self.vm.getJavaClass('java.io.File')
                     self.Type = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
                     self.Set = self.vm.getJavaClass('java.util.Set')
@@ -1031,7 +1042,6 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.df = self.OWLManager.getOWLDataFactory()
-                                self.addImportedOntologies()
 
                             QtCore.QCoreApplication.processEvents()
 
@@ -1070,6 +1080,18 @@ class OntologyImporterPlugin(AbstractPlugin):
                             ### IMPORT ANNOTATIONS ###
                             self.importAnnotations(diagram)
                             QtCore.QCoreApplication.processEvents()
+
+                            ### IMPORT IMPORTED ONTOLOGIES ###
+                            imported = self.getImportedOntologies()
+                            for imp in imported:
+                                self.project.addImportedOntology(imp)
+                                QtCore.QCoreApplication.processEvents()
+                            worker = OwlOntologyImportSetWorker(self.project)
+                            worker.run()
+                            self.session.owlOntologyImportSize = worker.importSize
+                            self.session.owlOntologyImportLoadedCount = worker.loadCount
+                            if self.session.owlOntologyImportSize > self.session.owlOntologyImportLoadedCount:
+                                self.session.owlOntologyImportErrors = worker.owlOntologyImportErrors
 
                             renderer = self.ManchesterOWLSyntaxOWLObjectRendererImpl()
 
