@@ -1,3 +1,6 @@
+import os
+import sys
+
 from PyQt5 import QtCore
 from jpype import JImplements, JOverride
 
@@ -44,13 +47,12 @@ class OwlProjectLoader(AbstractProjectLoader):
         """
         Create the Project by reading data from the parsed Owl File.
         """
-        ontologyIRI, ontologyV = self.getOntologyIRI()
+        ontologyIRI, ontologyV = self.getOntologyID()
         self.nproject = Project(
             parent=self.session,
             profile=self.session.createProfile('OWL 2'),
             ontologyIRI=ontologyIRI,
-            version=ontologyV,
-            imports=self.addImports()
+            version=ontologyV
         )
         LOGGER.info('Loaded project from ontology: %s...', self.path)
 
@@ -60,7 +62,7 @@ class OwlProjectLoader(AbstractProjectLoader):
         """
         self.session.project = self.nproject
 
-    def getOntologyIRI(self):
+    def getOntologyID(self):
         """
         Get Ontology IRI from Owl File.
         """
@@ -89,40 +91,6 @@ class OwlProjectLoader(AbstractProjectLoader):
 
         return ontologyIRI, ontologyV
 
-    def addImports(self):
-        """
-        Add imported ontologies.
-        """
-        vm = getJavaVM()
-        if not vm.isRunning():
-            vm.initialize()
-        vm.attachThreadToJVM()
-
-        OWLManager = vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
-        JavaFileClass = vm.getJavaClass('java.io.File')
-        fileInstance = JavaFileClass(self.path)
-        manager = OWLManager().createOWLOntologyManager()
-        ontology = manager.loadOntologyFromOntologyDocument(fileInstance)
-
-        directImports = ontology.getDirectImports()
-        importedOnto = set()
-        for imp in directImports:
-            ontologyID = imp.getOntologyID()
-            if ontologyID.isAnonymous():
-                ontologyIRI = None
-                ontologyURI = None
-                ontologyV = None
-            else:
-                ontologyIRI = ontologyID.getOntologyIRI().get().toString()
-                ontologyURI = ontologyID.getOntologyIRI().get().toURI().toString()
-                if ontologyID.getVersionIRI().isPresent():
-                    ontologyV = ontologyID.getVersionIRI().get().toString()
-                else:
-                    ontologyV = None
-            impOnto = ImportedOntology(ontologyIRI, ontologyURI, ontologyV, False)
-            importedOnto.add(impOnto)
-
-        return importedOnto
 
 class OwlOntologyImportWorker(AbstractWorker):
     """
@@ -381,6 +349,7 @@ class OwlOntologyImportSetWorker(AbstractWorker):
                     else:
                         self._loadCount += 1
                         impOnt.correctlyLoaded = True
+                        self.project.sgnImportedOntologyLoaded.emit(impOnt)
         except Exception as e:
             LOGGER.exception('Fatal exception while resolving ontology imports: {}'.format(str(e)))
         else:
