@@ -997,9 +997,10 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.manager = self.OWLManager().createOWLOntologyManager()
-                                self.manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(
+                                config = self.manager.getOntologyLoaderConfiguration()
+                                config = config.setMissingImportHandlingStrategy(
                                     self.MissingImportHandlingStrategy.SILENT)
-
+                                self.manager.setOntologyLoaderConfiguration(config)
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.ontology = self.manager.loadOntologyFromOntologyDocument(

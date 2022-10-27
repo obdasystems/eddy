@@ -76,7 +76,9 @@ class OwlProjectLoader(AbstractProjectLoader):
         JavaFileClass = vm.getJavaClass('java.io.File')
         fileInstance = JavaFileClass(self.path)
         manager = OWLManager().createOWLOntologyManager()
-        manager.getOntologyLoaderConfiguration().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT)
+        config = manager.getOntologyLoaderConfiguration()
+        config = config.setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT)
+        manager.setOntologyLoaderConfiguration(config)
         ontology = manager.loadOntologyFromOntologyDocument(fileInstance)
         ontologyID = ontology.getOntologyID()
         if ontologyID.isAnonymous():
