@@ -33,9 +33,13 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
 
 from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.misc import isEmpty
 from eddy.core.items.common import AbstractLabel
@@ -100,6 +104,23 @@ class NodeLabel(AbstractLabel):
         if not moved:
             self.setPos(self.defaultPos())
 
+    def wrapLabel(self):
+        """
+        Wrap label into node.
+        """
+        super().wrapLabel()
+        if self.parentItem() and self.parentItem().type() in [Item.ConceptNode,
+                                                              Item.IndividualNode,
+                                                              Item.ValueDomainNode,
+                                                              Item.LiteralNode,
+                                                              Item.FacetNode]:
+            self.setTextWidth(max(60, self.parentItem().boundingRect().width()))
+            fm = QtGui.QFontMetrics(self.font())
+            lines = max(40, self.parentItem().height()) // fm.height() - 1
+            maxLen = int(self.textWidth() * lines)
+            elidedText = fm.elidedText(self.template, QtCore.Qt.ElideRight, maxLen)
+            self.setText(elidedText)
+        self.setAlignment(self.alignment())
 
 class PredicateLabel(NodeLabel):
     """
