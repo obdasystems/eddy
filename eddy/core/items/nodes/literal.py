@@ -691,6 +691,7 @@ class LiteralNode(AbstractResizableNode):
         self.polygon.setGeometry(polygon)
 
         self.updateNode(selected=True, handle=self.mp_Handle, anchors=(self.mp_Data, D))
+        self.label.wrapLabel()
         self.updateTextPos(moved=moved)
 
     def setIdentity(self, identity):
