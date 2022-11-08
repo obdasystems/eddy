@@ -310,12 +310,14 @@ class Eddy(QtWidgets.QApplication):
 
     @QtCore.pyqtSlot(str)
     @QtCore.pyqtSlot(str, str, str, str)
+    @QtCore.pyqtSlot(str, str, str, str, str)
     def doCreateSession(
         self,
         path: Optional[str] = None,
         name: Optional[str] = None,
         iri: Optional[str] = None,
         prefix: Optional[str] = None,
+        owl_path: Optional[str] = None
     ) -> None:
         """
         Create a session using the given project path.
@@ -335,7 +337,7 @@ class Eddy(QtWidgets.QApplication):
             # If we do not have a session for the given project we'll create one.
             with BusyProgressDialog('Loading project: {0}'.format(path)):
                 try:
-                    session = Session(self, path, name=name, iri=iri, prefix=prefix)
+                    session = Session(self, path, name=name, iri=iri, prefix=prefix, owl_path=owl_path)
                 except ProjectStopLoadingError:
                     pass
                 except (ProjectNotFoundError, ProjectNotValidError, ProjectVersionError) as e:
@@ -387,6 +389,8 @@ class Eddy(QtWidgets.QApplication):
                     self.sessions.append(session)
                     self.sgnSessionCreated.emit(session)
                     session.show()
+                    if owl_path:
+                        session.sgnStartOwlImport[str].emit(owl_path)
 
     @QtCore.pyqtSlot()
     def doQuit(self) -> None:

@@ -166,7 +166,10 @@ from eddy.core.loaders.graphol_iri import (
     GrapholIRIProjectLoader_v3,
     GrapholOntologyIRILoader_v3,
 )
-from eddy.core.loaders.owl2 import OwlOntologyImportSetWorker
+from eddy.core.loaders.owl2 import (
+    OwlOntologyImportSetWorker,
+    OwlProjectLoader,
+)
 from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
 from eddy.core.owl import (
@@ -293,6 +296,8 @@ class Session(
     sgnIRIRemovedFromAllDiagrams = QtCore.pyqtSignal(IRI)
     sgnSingleNodeSwitchIRI = QtCore.pyqtSignal(AbstractNode, IRI)
 
+    sgnStartOwlImport = QtCore.pyqtSignal(str)
+
     # Signals related to rendering options
     sgnRenderingModified = QtCore.pyqtSignal(str)
 
@@ -314,6 +319,7 @@ class Session(
         name: Optional[str] = None,
         iri: Optional[str] = None,
         prefix: Optional[str] = None,
+        owl_path: Optional[str] = None,
         **kwargs: str,
     ) -> None:
         """
@@ -381,15 +387,11 @@ class Session(
             self.projectFromFile = True
             worker = self.createProjectLoader(File.Graphol, path, self)
             worker.run()
-            worker = OwlOntologyImportSetWorker(self.project)
+        elif owl_path:
+            self.projectFromFile = True
+            worker = self.createProjectLoader(File.Owl, owl_path, self)
             worker.run()
-            self.owlOntologyImportSize = worker.importSize
-            self.owlOntologyImportLoadedCount = worker.loadCount
-            if (
-                self.owlOntologyImportSize > 0
-                and self.owlOntologyImportSize != self.owlOntologyImportLoadedCount
-            ):
-                self.owlOntologyImportErrors = worker.owlOntologyImportErrors
+            self.project.name = name
         else:
             self.project = Project(
                 parent=self,
@@ -398,6 +400,14 @@ class Session(
                 ontologyPrefix=prefix,
                 profile=OWL2Profile(),
             )
+
+        if self.projectFromFile:
+            worker = OwlOntologyImportSetWorker(self.project)
+            worker.run()
+            self.owlOntologyImportSize = worker.importSize
+            self.owlOntologyImportLoadedCount = worker.loadCount
+            if self.owlOntologyImportSize > self.owlOntologyImportLoadedCount:
+                self.owlOntologyImportErrors = worker.owlOntologyImportErrors
 
         #############################################
         # CONNECT PROJECT SIGNALS
@@ -1159,6 +1169,7 @@ class Session(
         self.addOntologyLoader(CsvLoader)
         self.addOntologyLoader(XlsxLoader)
         self.addProjectLoader(GrapholIRIProjectLoader_v3)
+        self.addProjectLoader(OwlProjectLoader)
 
     # noinspection PyArgumentList
     def initMenus(self) -> None:

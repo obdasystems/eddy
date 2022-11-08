@@ -71,14 +71,17 @@ from eddy.core.functions.path import (
 )
 from eddy.core.functions.signals import connect
 from eddy.ui.file import FileDialog
-from eddy.ui.project import NewProjectDialog
+from eddy.ui.project import (
+    NewProjectDialog,
+    ProjectFromOWLDialog,
+)
 
 
 class Welcome(QtWidgets.QDialog):
     """
     This class is used to display the welcome screen of Eddy.
     """
-    sgnCreateSession = QtCore.pyqtSignal([str], [str, str, str, str])
+    sgnCreateSession = QtCore.pyqtSignal([str], [str, str, str, str], [str, str, str, str, str])
     sgnOpenProject = QtCore.pyqtSignal(str)
     sgnUpdateRecentProjects = QtCore.pyqtSignal()
 
@@ -152,6 +155,11 @@ class Welcome(QtWidgets.QDialog):
         self.buttonOpenProject.setIconSize(QtCore.QSize(24, 24))
         self.buttonOpenProject.setText('&Open project')
         connect(self.buttonOpenProject.clicked, self.doOpen)
+        self.buttonImportProject = PHCQPushButton(self)
+        self.buttonImportProject.setIcon(QtGui.QIcon(':/icons/24/ic_system_update'))
+        self.buttonImportProject.setIconSize(QtCore.QSize(24, 24))
+        self.buttonImportProject.setText('Create project from OWL &file')
+        connect(self.buttonImportProject.clicked, self.doImportFromOWL)
 
         self.buttonHelp = PHCQToolButton(self)
         self.buttonHelp.setIcon(QtGui.QIcon(':/icons/24/ic_help_outline_black'))
@@ -164,6 +172,7 @@ class Welcome(QtWidgets.QDialog):
         self.buttonLayoutRT = QtWidgets.QVBoxLayout()
         self.buttonLayoutRT.addWidget(self.buttonNewProject)
         self.buttonLayoutRT.addWidget(self.buttonOpenProject)
+        self.buttonLayoutRT.addWidget(self.buttonImportProject)
         self.buttonLayoutRT.setContentsMargins(0, 38, 0, 0)
         self.buttonLayoutRT.setAlignment(QtCore.Qt.AlignHCenter)
         self.buttonLayoutRB = QtWidgets.QHBoxLayout()
@@ -217,6 +226,7 @@ class Welcome(QtWidgets.QDialog):
 
         connect(self.sgnCreateSession[str], application.doCreateSession)
         connect(self.sgnCreateSession[str, str, str, str], application.doCreateSession)
+        connect(self.sgnCreateSession[str, str, str, str, str], application.doCreateSession)
 
         connect(self.sgnOpenProject, self.doOpenProject)
         connect(self.sgnUpdateRecentProjects, self.doUpdateRecentProjects)
@@ -325,6 +335,22 @@ class Welcome(QtWidgets.QDialog):
         weburl = action.data()
         if weburl:
             QtGui.QDesktopServices.openUrl(QtCore.QUrl(weburl))
+
+    def doImportFromOWL(self):
+        """
+        Bring up a modal dialog to create a new project from an OWL 2 file.
+        """
+        dialog = FileDialog(self)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        dialog.setNameFilters([File.Owl.value])
+        if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
+            filePath = dialog.selectedFiles()[0]
+            form = ProjectFromOWLDialog(self)
+            if form.exec_() == ProjectFromOWLDialog.Accepted:
+                self.sgnCreateSession[str, str, str, str, str].emit(
+                    None, form.name(), None, None, str(filePath))
 
     @QtCore.pyqtSlot(str)
     def doRemoveProject(self, path: str) -> None:

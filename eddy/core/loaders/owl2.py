@@ -1,15 +1,97 @@
+import os
+import sys
+
 from PyQt5 import QtCore
 from jpype import JImplements, JOverride
 
-from eddy.core.common import HasThreadingSystem
 from eddy.core.datatypes.system import File
 from eddy.core.jvm import getJavaVM
-from eddy.core.loaders.common import AbstractOntologyLoader
+from eddy.core.loaders.common import AbstractProjectLoader
 from eddy.core.output import getLogger
 from eddy.core.owl import ImportedOntology
+from eddy.core.project import Project
 from eddy.core.worker import AbstractWorker
 
 LOGGER = getLogger()
+
+
+class OwlProjectLoader(AbstractProjectLoader):
+    """
+    Extends AbstractProjectLoader with facilities to create a project from Owl file.
+    """
+    def __init__(self, path, session):
+        """
+        Initialize the loader.
+        :param path: path to the OWL 2 file
+        :param session: session
+        """
+        super().__init__(path, session)
+        self.nproject = None
+
+    def run(self):
+        """
+        Perform project import.
+        """
+        self.createProject()
+        self.projectLoaded()
+
+    @classmethod
+    def filetype(cls):
+        """
+        Returns the type of the file that will be used for the import.
+        :return: File
+        """
+        return File.Owl
+
+    def createProject(self):
+        """
+        Create the Project by reading data from the parsed Owl File.
+        """
+        ontologyIRI, ontologyV = self.getOntologyID()
+        self.nproject = Project(
+            parent=self.session,
+            profile=self.session.createProfile('OWL 2'),
+            ontologyIRI=ontologyIRI,
+            version=ontologyV
+        )
+        LOGGER.info('Loaded project from ontology: %s...', self.path)
+
+    def projectLoaded(self):
+        """
+        Initialize the Session Project to be the loaded one.
+        """
+        self.session.project = self.nproject
+
+    def getOntologyID(self):
+        """
+        Get Ontology IRI from Owl File.
+        """
+        vm = getJavaVM()
+        if not vm.isRunning():
+            vm.initialize()
+        vm.attachThreadToJVM()
+
+        OWLManager = vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+        MissingImportHandlingStrategy = vm.getJavaClass('org.semanticweb.owlapi.model.MissingImportHandlingStrategy')
+        JavaFileClass = vm.getJavaClass('java.io.File')
+        fileInstance = JavaFileClass(self.path)
+        manager = OWLManager().createOWLOntologyManager()
+        config = manager.getOntologyLoaderConfiguration()
+        config = config.setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT)
+        manager.setOntologyLoaderConfiguration(config)
+        ontology = manager.loadOntologyFromOntologyDocument(fileInstance)
+        ontologyID = ontology.getOntologyID()
+        if ontologyID.isAnonymous():
+            ontologyIRI = None
+            ontologyV = None
+        else:
+            ontologyIRI = ontologyID.getOntologyIRI().get().toString()
+            if ontologyID.getVersionIRI().isPresent():
+                ontologyV = ontologyID.getVersionIRI().get().toString()
+            else:
+                ontologyV = None
+
+        return ontologyIRI, ontologyV
 
 
 class OwlOntologyImportWorker(AbstractWorker):
@@ -269,6 +351,7 @@ class OwlOntologyImportSetWorker(AbstractWorker):
                     else:
                         self._loadCount += 1
                         impOnt.correctlyLoaded = True
+                        self.project.sgnImportedOntologyLoaded.emit(impOnt)
         except Exception as e:
             LOGGER.exception('Fatal exception while resolving ontology imports: {}'.format(str(e)))
         else:
