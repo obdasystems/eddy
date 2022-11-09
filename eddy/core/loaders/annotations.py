@@ -118,7 +118,7 @@ class TemplateLoader(AbstractOntologyLoader):
                 if datatype:
                     datatypeIRI = self.project.getIRI(datatype)
 
-                if value == '':
+                if value == '' or value == 'None':
                     pass
                 else:
                     # ADD ANNOTATION PROPERTY
