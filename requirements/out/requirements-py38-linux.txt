@@ -1,54 +1,52 @@
-altgraph==0.17.2
+altgraph==0.17.3
     # via pyinstaller
 appimage-builder==1.1.0 ; sys_platform == "linux"
     # via -r requirements/in/packaging.in
-attrs==21.4.0
+attrs==22.1.0
     # via pytest
-build==0.8.0
+build==0.9.0
     # via pip-tools
-certifi==2022.6.15
+certifi==2022.9.24
     # via requests
-charset-normalizer==2.1.0
+charset-normalizer==2.1.1
     # via requests
 click==8.1.3
     # via pip-tools
 contextlib2==21.6.0
     # via schema
-coverage[toml]==6.4.2
+coverage[toml]==6.5.0
     # via pytest-cov
-cython==0.29.30
+cython==0.29.32
     # via -r requirements/in/cython.in
 decorator==5.1.1
     # via jsonpath-rw
-distlib==0.3.5
+distlib==0.3.6
     # via virtualenv
-docker==5.0.3
+docker==6.0.1
     # via appimage-builder
-emrichen==0.2.3
+emrichen==0.3.0
     # via appimage-builder
 et-xmlfile==1.1.0
     # via openpyxl
-filelock==3.7.1
+exceptiongroup==1.0.1
+    # via pytest
+filelock==3.8.0
     # via
     #   tox
     #   virtualenv
-flake8==4.0.1
-    # via -r requirements/in/dev.in
-graphviz==0.20
+graphviz==0.20.1
     # via objgraph
-idna==3.3
+idna==3.4
     # via requests
 iniconfig==1.1.1
     # via pytest
-jpype1==1.4.0
+jpype1==1.4.1
     # via -r requirements/in/base.in
 jsonpath-rw==1.4.0
     # via emrichen
-lief==0.12.1
+lief==0.12.3
     # via appimage-builder
-mccabe==0.6.1
-    # via flake8
-mypy==0.971
+mypy==0.990
     # via -r requirements/in/dev.in
 mypy-extensions==0.4.3
     # via mypy
@@ -60,13 +58,15 @@ packaging==21.3
     # via
     #   appimage-builder
     #   build
+    #   docker
+    #   jpype1
     #   pytest
     #   tox
-pep517==0.12.0
+pep517==0.13.0
     # via build
-pip-tools==6.8.0
+pip-tools==6.9.0
     # via -r requirements/in/dev.in
-platformdirs==2.5.2
+platformdirs==2.5.3
     # via virtualenv
 pluggy==1.0.0
     # via
@@ -74,23 +74,17 @@ pluggy==1.0.0
     #   tox
 ply==3.11
     # via jsonpath-rw
-prompt-toolkit==3.0.30
+prompt-toolkit==3.0.32
     # via questionary
 py==1.11.0
-    # via
-    #   pytest
-    #   tox
-py-cpuinfo==8.0.0
+    # via tox
+py-cpuinfo==9.0.0
     # via pytest-benchmark
 pyaml==21.10.1
     # via emrichen
-pycodestyle==2.8.0
-    # via flake8
-pyflakes==2.4.0
-    # via flake8
-pyinstaller==5.2
+pyinstaller==5.6.2
     # via -r requirements/in/packaging.in
-pyinstaller-hooks-contrib==2022.8
+pyinstaller-hooks-contrib==2022.13
     # via pyinstaller
 pyparsing==3.0.9
     # via packaging
@@ -100,7 +94,7 @@ pyqt5-qt5==5.15.2
     # via pyqt5
 pyqt5-sip==12.11.0
     # via pyqt5
-pytest==7.1.2
+pytest==7.2.0
     # via
     #   -r requirements/in/tests.in
     #   pytest-benchmark
@@ -110,21 +104,21 @@ pytest==7.1.2
     #   pytest-qt
     #   pytest-repeat
     #   pytest-xvfb
-pytest-benchmark==3.4.1
+pytest-benchmark==4.0.0
     # via -r requirements/in/tests.in
-pytest-cov==3.0.0
+pytest-cov==4.0.0
     # via -r requirements/in/tests.in
 pytest-instafail==0.4.2
     # via -r requirements/in/tests.in
-pytest-mock==3.8.2
+pytest-mock==3.10.0
     # via -r requirements/in/tests.in
-pytest-qt==4.1.0
+pytest-qt==4.2.0
     # via -r requirements/in/tests.in
 pytest-repeat==0.9.1
     # via -r requirements/in/tests.in
 pytest-xvfb==2.0.0 ; sys_platform != "win32"
     # via -r requirements/in/tests.in
-python-gnupg==0.4.9
+python-gnupg==0.5.0
     # via appimage-builder
 pyvirtualdisplay==3.0
     # via pytest-xvfb
@@ -145,7 +139,7 @@ roam==0.3.1
     # via appimage-builder
 ruamel-yaml==0.17.21
     # via appimage-builder
-ruamel-yaml-clib==0.2.6
+ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
 schema==0.7.5
     # via appimage-builder
@@ -153,9 +147,6 @@ six==1.16.0
     # via
     #   jsonpath-rw
     #   tox
-    #   virtualenv
-toml==0.10.2
-    # via tox
 tomli==2.0.1
     # via
     #   build
@@ -163,25 +154,27 @@ tomli==2.0.1
     #   mypy
     #   pep517
     #   pytest
-tox==3.25.1
+    #   tox
+tox==3.27.0
     # via
     #   -r requirements/in/tox.in
     #   tox-factor
 tox-factor==0.1.2
     # via -r requirements/in/tox.in
-typing-extensions==4.3.0
+typing-extensions==4.4.0
     # via mypy
-urllib3==1.26.10
+urllib3==1.26.12
     # via
     #   appimage-builder
+    #   docker
     #   requests
-virtualenv==20.15.1
+virtualenv==20.16.6
     # via tox
 wcwidth==0.2.5
     # via prompt-toolkit
-websocket-client==1.3.3
+websocket-client==1.4.2
     # via docker
-wheel==0.37.1
+wheel==0.38.4
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
