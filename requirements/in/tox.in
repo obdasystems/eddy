@@ -3,5 +3,5 @@
 #
 
 # From PyPI
-tox==3.25.1
+tox==3.27.0
 tox-factor==0.1.2
