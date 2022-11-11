@@ -12,4 +12,4 @@
 flake8==4.0.1
 mypy==0.990
 objgraph==3.5.0
-pip-tools==6.8.0
+pip-tools==6.9.0
