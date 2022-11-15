@@ -130,6 +130,7 @@ from eddy.core.exporters.image import (
     PngDiagramExporter,
 )
 from eddy.core.exporters.metadata import (
+    AnnotationsOverridingDialog,
     CsvProjectExporter,
     XlsxProjectExporter,
 )
@@ -2093,22 +2094,34 @@ class Session(
                             progress.setWindowTitle(
                                 'Importing {0}...'.format(os.path.basename(path)))
                             worker = self.createOntologyLoader(filetype, path, self.project, self)
-                            worker.run()
-                            if worker.owlOntologyImportErrors:
-                                msgbox = QtWidgets.QMessageBox(self)
-                                msgbox.setDetailedText(
-                                    '{} OWL 2 ontologies declared as imports have not been loaded. Please open the ontology manager for more details '
-                                    ' and to retry loading'.format(
-                                        len(worker.owlOntologyImportErrors)))
-                                msgbox.setIconPixmap(
-                                    QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                                msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-                                msgbox.setText(
-                                    'Eddy could not correctly load some of the declared OWL ontology imports')
-                                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                                msgbox.setWindowTitle(
-                                    'Problem managing OWL ontology import declaration(s)')
-                                msgbox.exec_()
+                            if filetype == File.Csv or filetype == File.Xlsx:
+                                progress.close()
+                                dialog = AnnotationsOverridingDialog(self)
+                                if not dialog.exec_():
+                                    return
+                                override = dialog.checkedOption()
+                            if filetype == File.Csv:
+                                worker.run(path, override)
+                            elif filetype == File.Xlsx:
+                                worker.run(expandPath(path), override)
+                            else:
+                                worker.run()
+                                if worker.owlOntologyImportErrors:
+                                    msgbox = QtWidgets.QMessageBox(self)
+                                    msgbox.setDetailedText(
+                                        '{} OWL 2 ontologies declared as imports '
+                                        'have not been loaded. Please open the ontology manager '
+                                        'for more details and to retry loading'
+                                        .format(len(worker.owlOntologyImportErrors)))
+                                    msgbox.setIconPixmap(
+                                        QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+                                    msgbox.setText('Eddy could not correctly load some of '
+                                                   'the declared OWL ontology imports')
+                                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                                    msgbox.setWindowTitle('Problem managing OWL ontology '
+                                                          'import declaration(s)')
+                                    msgbox.exec_()
                 except Exception as e:
                     msgbox = QtWidgets.QMessageBox(self)
                     msgbox.setDetailedText(format_exception(e))
@@ -3372,13 +3385,14 @@ class Session(
             and self.owlOntologyImportSize != self.owlOntologyImportLoadedCount
         ):
             msgbox = QtWidgets.QMessageBox(self)
-            msgbox.setDetailedText('{} OWL 2 ontologies declared as imports have not been loaded. '
-                                   'Please open the ontology manager for more details '
-                                   'and to retry loading'.format(
-                self.owlOntologyImportSize - self.owlOntologyImportLoadedCount))
+            msgbox.setDetailedText(
+                '{} OWL 2 ontologies declared as imports have not been loaded. '
+                'Please open the ontology manager for more details and to retry loading'
+                .format(self.owlOntologyImportSize - self.owlOntologyImportLoadedCount))
             msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-            msgbox.setText('Eddy could not correctly load some of the declared OWL ontology imports')
+            msgbox.setText('Eddy could not correctly load some of '
+                           'the declared OWL ontology imports')
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.setWindowTitle('Problem managing OWL ontology import declaration(s)')
             msgbox.exec_()
