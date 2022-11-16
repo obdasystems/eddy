@@ -398,6 +398,9 @@ class AbstractEdge(AbstractItem):
         :type hoverEvent: QGraphicsSceneHoverEvent
         """
         self.setCursor(QtCore.Qt.PointingHandCursor)
+        if not self.breakpoints and self.source.pos() != self.target.pos():
+            self.session.statusBar().showMessage(
+                'Double-click to add breakpoint and obtain right-angled edge')
         super().hoverEnterEvent(hoverEvent)
 
     def hoverMoveEvent(self, hoverEvent):
@@ -414,6 +417,7 @@ class AbstractEdge(AbstractItem):
         :type hoverEvent: QGraphicsSceneHoverEvent
         """
         self.setCursor(QtCore.Qt.ArrowCursor)
+        self.session.statusBar().clearMessage()
         super().hoverLeaveEvent(hoverEvent)
 
     def itemChange(self, change, value):
