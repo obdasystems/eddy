@@ -427,6 +427,15 @@ class AbstractEdge(AbstractItem):
             self.updateEdge(selected=value)
         return super().itemChange(change, value)
 
+    def mouseDoubleClickEvent(self, mouseEvent):
+        """
+        Add breakpoint to create right angle when the mouse is double clicked on the text item.
+        :type mouseEvent: QGraphicsSceneMouseEvent
+        """
+        if not self.breakpoints and self.source.pos() != self.target.pos():
+            pos = QtCore.QPointF(self.source.pos().x(), self.target.pos().y())
+            self.session.undostack.push(CommandEdgeBreakpointAdd(self.diagram, self, 0, pos))
+
     def mousePressEvent(self, mouseEvent):
         """
         Executed when the mouse is pressed on the selection box.
