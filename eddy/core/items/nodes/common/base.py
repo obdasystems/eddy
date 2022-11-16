@@ -908,3 +908,22 @@ class PredicateNodeMixin:
         rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
         if rendering==IRIRender.PREFIX.value or rendering==IRIRender.LABEL.value:
             self.doUpdateNodeLabel()
+
+    #############################################
+    #   EVENTS
+    #################################
+    def hoverEnterEvent(self, hoverEvent):
+        """
+        Executed when the mouse enters the shape (NOT PRESSED).
+        :type hoverEvent: QGraphicsSceneHoverEvent
+        """
+        self.session.statusBar().showMessage('Hold Shift ⇧ and drag the label to move it')
+        super().hoverEnterEvent(hoverEvent)
+
+    def hoverLeaveEvent(self, hoverEvent):
+        """
+        Executed when the mouse leaves the shape (NOT PRESSED).
+        :type hoverEvent: QGraphicsSceneHoverEvent
+        """
+        self.session.statusBar().clearMessage()
+        super().hoverLeaveEvent(hoverEvent)
