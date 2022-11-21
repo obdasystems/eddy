@@ -31,18 +31,23 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-from enum import unique
 
-from PyQt5 import QtCore
-from PyQt5 import QtXmlPatterns
-from eddy.core.datatypes.owl import Namespace
+
+from enum import unique
+import re
+
+from PyQt5 import (
+    QtCore,
+    QtXmlPatterns,
+)
+from rfc3987 import (
+    compose,
+    parse,
+    resolve,
+)
 
 from eddy.core.datatypes.common import Enum_
-
-from rfc3987 import compose
-from rfc3987 import parse
-from rfc3987 import resolve
-
+from eddy.core.datatypes.owl import Namespace
 from eddy.core.functions.signals import connect
 
 K_FUNCTIONAL = 'functional'
@@ -1194,6 +1199,9 @@ class IRIManager(QtCore.QObject):
         self._addLabelFromUserInput = addLabelFromUserInput
         self._importedOntologies = imports or set()
 
+        self.convertCamel = False
+        self.convertSnake = False
+
     #############################################
     #   IMPORTED ONTOLOGIES
     #################################
@@ -1240,6 +1248,15 @@ class IRIManager(QtCore.QObject):
     @addLabelFromUserInput.setter
     def addLabelFromUserInput(self, addLabelFromUserInput):
         self._addLabelFromUserInput = addLabelFromUserInput
+
+    def convertCase(self, btn):
+        if btn.text() == "convert snake_case to space separated values":
+            self.convertSnake = btn.isChecked()
+            self.convertCamel = not btn.isChecked()
+
+        if btn.text() == "convert camelCase to space separated values":
+            self.convertSnake = not btn.isChecked()
+            self.convertCamel = btn.isChecked()
 
     @property
     def defaultLanguage(self):
@@ -1355,7 +1372,13 @@ class IRIManager(QtCore.QObject):
                 if simpleNameLabel:
                     iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri,labelLang))
                 if userInputLabel:
-                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
+                    if self.convertCamel:
+                        label = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput)
+                    elif self.convertSnake:
+                        label = userInput.replace('_',' ')
+                    else:
+                        label = userInput
+                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, label,
                                                  OWL2Datatype.PlainLiteral.value, labelLang)
                     iri.addAnnotationAssertion(annAss)
             connect(iri.sgnIRIModified,self.onIRIModified)
