@@ -342,6 +342,18 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                             objectName='label_userinput_checkbox')
         self.addWidget(checkBox)
 
+        snakeCheckbox = CheckBox('convert snake_case to space separated values', self, checked=self.project.convertSnake,
+                                 objectName='convert_snake')
+        snakeCheckbox.clicked.connect(lambda: self.project.convertCase(snakeCheckbox))
+        self.addWidget(snakeCheckbox)
+        snakeCheckbox.setVisible(checked)
+
+        camelCheckbox = CheckBox('convert camelCase to space separated values', self, checked=self.project.convertCamel,
+                                 objectName='convert_camel')
+        camelCheckbox.clicked.connect(lambda: self.project.convertCase(camelCheckbox))
+        self.addWidget(camelCheckbox)
+        camelCheckbox.setVisible(checked)
+
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
         comboBoxLabel.setText('rdfs:label language')
         self.addWidget(comboBoxLabel)
@@ -371,6 +383,8 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                               self.widget('label_simplename_checkbox'))
         iriLabelLayout.addRow(self.widget('checkBox_label_userinput'),
                               self.widget('label_userinput_checkbox'))
+        iriLabelLayout.addRow(self.widget('convert_snake'))
+        iriLabelLayout.addRow(self.widget('convert_camel'))
         iriLabelLayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
 
         groupbox = QtWidgets.QGroupBox('', self, objectName='iri_label_group_widget')
@@ -589,31 +603,22 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
             if checkBoxUserInput.isChecked():
-                if self.widget('convert_snake'):
+                if self.widget('convert_snake') and not self.widget('convert_snake').isVisible():
                     self.widget('convert_snake').setVisible(True)
                     self.widget('convert_camel').setVisible(True)
-                else:
-                    radiobox1 = QtWidgets.QRadioButton('convert snake_case to space separated values', self, objectName='convert_snake')
-                    radiobox1.toggled.connect(lambda: self.project.convertCase(radiobox1))
-                    radiobox2 = QtWidgets.QRadioButton('convert camelCase to space separated values', self, objectName='convert_camel')
-                    radiobox2.toggled.connect(lambda: self.project.convertCase(radiobox2))
-                    self.addWidget(radiobox1)
-                    self.addWidget(radiobox2)
-                    layout = self.widget('iri_label_group_widget').layout()
-                    layout.removeWidget(self.widget('lang_combobox_label'))
-                    layout.removeWidget(self.widget('lang_switch'))
-                    layout.addWidget(radiobox1)
-                    layout.addWidget(radiobox2)
-                    layout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
             else:
                 if self.widget('convert_snake') and self.widget('convert_snake').isVisible():
+                    self.widget('convert_snake').setChecked(False)
                     self.widget('convert_snake').setHidden(True)
+                    self.widget('convert_camel').setChecked(False)
                     self.widget('convert_camel').setHidden(True)
         else:
             self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
             if self.widget('convert_snake') and self.widget('convert_snake').isVisible():
+                self.widget('convert_snake').setChecked(False)
                 self.widget('convert_snake').setHidden(True)
+                self.widget('convert_camel').setChecked(False)
                 self.widget('convert_camel').setHidden(True)
 
     @QtCore.pyqtSlot()
