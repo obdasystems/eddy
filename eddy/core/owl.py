@@ -1136,6 +1136,8 @@ class IRIManager(QtCore.QObject):
         defaultLanguage='en',
         addLabelFromSimpleName=False,
         addLabelFromUserInput=False,
+        convertSnake=False,
+        convertCamel=False,
         **kwargs,
     ):
         """
@@ -1198,9 +1200,11 @@ class IRIManager(QtCore.QObject):
         self._addLabelFromSimpleName = addLabelFromSimpleName
         self._addLabelFromUserInput = addLabelFromUserInput
         self._importedOntologies = imports or set()
+        self._convertCamel = convertCamel
+        self._convertSnake = convertSnake
 
-        self.convertCamel = False
-        self.convertSnake = False
+        self.converttCamel = convertCamel
+        self.converttSnake = convertSnake
 
     #############################################
     #   IMPORTED ONTOLOGIES
@@ -1248,15 +1252,26 @@ class IRIManager(QtCore.QObject):
     @addLabelFromUserInput.setter
     def addLabelFromUserInput(self, addLabelFromUserInput):
         self._addLabelFromUserInput = addLabelFromUserInput
-
+    @property
+    def convertSnake(self):
+        return self._convertSnake
+    @convertSnake.setter
+    def convertSnake(self, convertSnake):
+        self.converttSnake = convertSnake
+        self._convertSnake = convertSnake
+    @property
+    def convertCamel(self):
+        return self._convertCamel
+    @convertCamel.setter
+    def convertCamel(self, convertCamel):
+        self.converttCamel = convertCamel
+        self._convertCamel = convertCamel
     def convertCase(self, btn):
         if btn.text() == "convert snake_case to space separated values":
-            self.convertSnake = btn.isChecked()
-            self.convertCamel = not btn.isChecked()
+            self.converttSnake = btn.isChecked()
 
         if btn.text() == "convert camelCase to space separated values":
-            self.convertSnake = not btn.isChecked()
-            self.convertCamel = btn.isChecked()
+            self.converttCamel = btn.isChecked()
 
     @property
     def defaultLanguage(self):
@@ -1372,13 +1387,11 @@ class IRIManager(QtCore.QObject):
                 if simpleNameLabel:
                     iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri,labelLang))
                 if userInputLabel:
-                    if self.convertCamel:
-                        label = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput)
-                    elif self.convertSnake:
-                        label = userInput.replace('_',' ')
-                    else:
-                        label = userInput
-                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, label,
+                    if self.converttCamel:
+                        userInput = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput)
+                    if self.converttSnake:
+                        userInput = userInput.replace('_',' ')
+                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
                                                  OWL2Datatype.PlainLiteral.value, labelLang)
                     iri.addAnnotationAssertion(annAss)
             connect(iri.sgnIRIModified,self.onIRIModified)
