@@ -2603,63 +2603,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             msgbox.exec_()
 
     def drawAxioms(self, dict):
-
-        for str_ax in dict.keys():
-            QtCore.QCoreApplication.processEvents()
-
-            axiom = dict[str_ax]['axiom']
-            diagrams = dict[str_ax]['involvedDiagrams']
-            #print(axiom, diagrams)
-            if len(diagrams) == 0:
-                # if no diagram involved:
-                # draw on the activeOne
-                diag = self.session.mdi.activeDiagram()
-                if diag:
-                    res = self.draw(axiom, diag)
-                    n = res[0]
-                else:
-                    project_diagrams = list(self.project.diagrams())
-                    diag = project_diagrams[0]
-                    res = self.draw(axiom, diag)
-                    n = res[0]
-
-            if len(diagrams) == 1:
-                # if only one diagram involved:
-                # draw on the one
-                diag = diagrams[0]
-                project_diagrams = self.project.diagrams()
-                for d in project_diagrams:
-                    if d.name == diag:
-                        diagram = d
-                        break
-                res = self.draw(axiom, diagram)
-                n = res[0]
-
-            if len(diagrams) > 1:
-                # if more than one diagram involved:
-                # draw on the activeOne if involved
-                diag = self.session.mdi.activeDiagram()
-                if diag:
-                    if diag.name in diagrams:
-
-                        res = self.draw(axiom, diag)
-                        n = res[0]
-                # else draw on any of the involved ones
-                else:
-                    diag = diagrams[0]
-                    project_diagrams = self.project.diagrams()
-                    for d in project_diagrams:
-                        if d.name == diag:
-                            diagram = d
-                            break
-                    res = self.draw(axiom, diagram)
-                    n = res[0]
-
-        # snap to grid #
-        self.session.doSnapTopGrid()
-
-        # focus on the last drawn element #
-        self.session.doFocusItem(n)
+        '''
+        Draw each axiom in the related diagram and insert in db.
+        '''
         conn = None
         try:
             conn = sqlite3.connect(self.db_filename)
@@ -2682,6 +2628,55 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         with conn:
             for ax in dict.keys():
             # for each checked axiom:
+                QtCore.QCoreApplication.processEvents()
+
+                axiom = dict[ax]['axiom']
+                diagrams = dict[ax]['involvedDiagrams']
+                # print(axiom, diagrams)
+                if len(diagrams) == 0:
+                    # if no diagram involved:
+                    # draw on the activeOne
+                    diag = self.session.mdi.activeDiagram()
+                    if diag:
+                        res = self.draw(axiom, diag)
+                        n = res[0]
+                    else:
+                        project_diagrams = list(self.project.diagrams())
+                        diag = project_diagrams[0]
+                        res = self.draw(axiom, diag)
+                        n = res[0]
+
+                if len(diagrams) == 1:
+                    # if only one diagram involved:
+                    # draw on the one
+                    diag = diagrams[0]
+                    project_diagrams = self.project.diagrams()
+                    for d in project_diagrams:
+                        if d.name == diag:
+                            diagram = d
+                            break
+                    res = self.draw(axiom, diagram)
+                    n = res[0]
+
+                if len(diagrams) > 1:
+                    # if more than one diagram involved:
+                    # draw on the activeOne if involved
+                    diag = self.session.mdi.activeDiagram()
+                    if diag:
+                        if diag.name in diagrams:
+                            res = self.draw(axiom, diag)
+                            n = res[0]
+                    # else draw on any of the involved ones
+                    else:
+                        diag = diagrams[0]
+                        project_diagrams = self.project.diagrams()
+                        for d in project_diagrams:
+                            if d.name == diag:
+                                diagram = d
+                                break
+                        res = self.draw(axiom, diagram)
+                        n = res[0]
+
                 for ontology in project_ontologies:
                 # for each imported ontology:
                     # CHECK if AXIOM belongs to ONTOLOGY  #
@@ -2704,6 +2699,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         self.project_iri, self.project_version, ontology_iri, ontology_version, str(ax), str(self.session)))
                         conn.commit()
         conn.close()
+
+        # snap to grid #
+        self.session.doSnapTopGrid()
+
+        # focus on the last drawn element #
+        self.session.doFocusItem(n)
 
     def draw(self, axiom, diagram, x=0, y=0):
         QtCore.QCoreApplication.processEvents()
@@ -3258,7 +3259,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 chain = axiom.getPropertyChain()
                 property = axiom.getSuperProperty()
 
-                n = self.drawChain(chain, property, diagram, x, y)[0]
+                n = self.drawChain(chain, property, diagram, x, y)
                 return n
 
             if ax_type == 'SubClassOf':
