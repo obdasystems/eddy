@@ -1137,7 +1137,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         lang = literal.language
         datatype = literal.datatype
         if lang:
-            return self.df.getOWLLiteral(lexForm, lang)
+            return self.df.getOWLLiteral(lexForm, str(lang))
         else:
             if datatype:
                 owlApiDatatype = self.df.getOWLDatatype(self.IRI.create(str(datatype)))
