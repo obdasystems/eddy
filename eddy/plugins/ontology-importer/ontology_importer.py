@@ -1471,9 +1471,9 @@ class Importation():
                     axioms[ontology].append(row[0])
 
                 # NOT DRAWN #
-                cursor.execute('''SELECT axiom, type_of_axiom, func_axiom
+                cursor.execute('''SELECT axiom, type_of_axiom, func_axiom, iri_dict
                                 FROM axiom
-                                WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom != 'Declaration'
+                                WHERE ontology_iri = ? and ontology_version = ?
                                 and type_of_axiom != 'FunctionalObjectProperty'
                                 and type_of_axiom != 'TransitiveObjectProperty'
                                 and type_of_axiom != 'SymmetricObjectProperty'
@@ -1485,9 +1485,25 @@ class Importation():
                                 and (?, ?,  axiom) not in (SELECT project_iri, project_version, axiom
                                                                                         FROM drawn)''', (ontology_iri, ontology_version, self.project_iri, self.project_version))
                 rows = cursor.fetchall()
+                all_dicts = []
+                for r in rows:
+                    iri_dict = r[3]
+                    d = ast.literal_eval(iri_dict)
+                    iris = [d[k] for k in d.keys()]
+                    all_dicts.append(iris)
                 not_drawn[ontology] = []
-                for row in rows:
-                    not_drawn[ontology].append([row[0], row[1], row[2]])
+                for r in rows:
+                    if r[1] == 'Declaration':
+                        iri_dict = r[3]
+                        d = ast.literal_eval(iri_dict)
+                        if d:
+                            entityIRI = d[list(d.keys())[0]]
+                            countList = [entityIRI in el for el in all_dicts]
+                            count = countList.count(True)
+                            if count == 1:
+                                not_drawn[ontology].append([r[0], r[1], r[2]])
+                    else:
+                        not_drawn[ontology].append([r[0], r[1], r[2]])
 
                 # DRAWN #
                 drawn[ontology] = [a for a in axioms[ontology] if a not in not_drawn[ontology]]
@@ -2020,7 +2036,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     for axiom in axioms:
                         QtCore.QCoreApplication.processEvents()
                         # get axiom we needed to parse by filtering on type #
-                        if str(axiom.getAxiomType()) == axiom_type:
+                        if axiom_type == 'Declaration':
+                            if str(axiom) == ax:
+                                return axiom
+                        elif str(axiom.getAxiomType()) == axiom_type:
                             functional_axiom = axiom
                             return functional_axiom
                     return None
@@ -3014,6 +3033,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             ax_type = str(axiom.getAxiomType())
             #print(ax_type)
+            if ax_type == 'Declaration':
+                entity = axiom.getEntity()
+                return [self.createNode(entity, diagram, x, y)]
 
             if ax_type == 'HasKey':
 
