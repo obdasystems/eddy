@@ -169,6 +169,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         self.afwset = set()
         self.vm = None
         self.space = DiagramPropertiesForm.MinSpace
+        self.filePath = None
 
     def printConceptNode(self, iri, x, y, diagram):
 
