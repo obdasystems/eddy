@@ -98,9 +98,9 @@ class LiteralNode(AbstractResizableNode):
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
         self._literal = literal
-        self.labelString = str(literal)
+        self.labelString = str(literal) if literal else 'Empty'
 
-        self.label = NodeLabel(template='Empty', pos=self.center, editable=False, parent=self)
+        self.label = NodeLabel(template=self.labelString, pos=self.center, editable=False, parent=self)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()

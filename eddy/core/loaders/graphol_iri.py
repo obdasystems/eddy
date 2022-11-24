@@ -2413,7 +2413,7 @@ class GrapholProjectIRILoaderMixin_3(object):
             'id': nodeElement.attribute('id'),
             'height': int(geometryElement.attribute('height')),
             'width': int(geometryElement.attribute('width')),
-            'literal': None
+            'literal': literal
         })
         node.literal = literal
         node.setPos(QtCore.QPointF(int(geometryElement.attribute('x')), int(geometryElement.attribute('y'))))
