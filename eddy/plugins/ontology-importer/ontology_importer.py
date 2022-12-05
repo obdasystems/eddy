@@ -2765,7 +2765,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             propIRI = prop.getIRI()
 
-            propNode = self.findNode(propIRI, diagram) if self.findNode(propIRI, diagram) != 'null' else self.createNode(prop, diagram, x, y)
+            propNode = self.findNode(prop, diagram) if self.findNode(prop, diagram) != 'null' else self.createNode(prop, diagram, x, y)
 
         else:
             res = self.draw(prop, diagram, x, y)
@@ -3298,7 +3298,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(sub):
 
                     subIRI = sub.getIRI()
-                    subNode = self.findNode(subIRI, diagram)
+                    subNode = self.findNode(sub, diagram)
                     if subNode != 'null':
 
                         subDrawn = True
@@ -3306,7 +3306,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(sup):
 
                     supIRI = sup.getIRI()
-                    supNode = self.findNode(supIRI, diagram)
+                    supNode = self.findNode(sup, diagram)
                     if supNode != 'null':
                         supDrawn = True
 
@@ -3543,7 +3543,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram) if self.findNode(propIri, diagram) != 'null' else self.createNode(property, diagram, x, y)
+            propNode = self.findNode(property, diagram) if self.findNode(property, diagram) != 'null' else self.createNode(property, diagram, x, y)
 
         else:
 
@@ -3586,7 +3586,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -3599,7 +3599,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -3756,7 +3756,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -3769,7 +3769,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -3925,7 +3925,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -3938,7 +3938,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4095,7 +4095,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -4108,7 +4108,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4264,7 +4264,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -4277,7 +4277,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4434,7 +4434,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -4447,7 +4447,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4600,7 +4600,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(operand):
 
             iri = operand.getIRI()
-            node = self.findNode(iri, diagram) if self.findNode(iri, diagram) !='null' else self.createNode(operand, diagram, x, y)
+            node = self.findNode(operand, diagram) if self.findNode(operand, diagram) !='null' else self.createNode(operand, diagram, x, y)
 
         else:
 
@@ -4656,7 +4656,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -4669,7 +4669,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4822,7 +4822,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -4835,7 +4835,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4989,7 +4989,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -5002,7 +5002,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -5157,7 +5157,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -5170,7 +5170,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -5330,7 +5330,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -5352,7 +5352,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
                     x = starting_x + 150
                     y = starting_y
 
@@ -5523,7 +5523,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -5548,7 +5548,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
 
                     x = starting_x
                     y = starting_y
@@ -5622,7 +5622,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -5661,7 +5661,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             elif self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
 
                     x = starting_x
                     y = starting_y
@@ -5721,7 +5721,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     xPos.append(node.pos().x())
@@ -5740,7 +5740,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
                     x = starting_x + 150
                     y = starting_y
 
@@ -5829,7 +5829,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -5843,7 +5843,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(ce):
 
                 cIRI = ce.getIRI()
-                cNode = self.findNode(cIRI, diagram)
+                cNode = self.findNode(ce, diagram)
 
                 if cNode != 'null':
                     starting_x = cNode.pos().x() - (125 * len(keys)/2)
@@ -5878,7 +5878,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(c):
 
                     iri = c.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(c, diagram)
 
                     if node == 'null':
 
@@ -5931,7 +5931,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(ce):
 
             cIri = ce.getIRI()
-            cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-75)
+            cNode = self.findNode(ce, diagram) if self.findNode(ce, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-75)
 
             if self.isIsolated(cNode):
                 cNode.setPos(x_med, y_med-75)
@@ -5957,7 +5957,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -5970,7 +5970,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(property):
 
                 cIRI = property.getIRI()
-                cNode = self.findNode(cIRI, diagram)
+                cNode = self.findNode(property, diagram)
 
                 if cNode != 'null':
 
@@ -6008,7 +6008,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
 
                 iri = prop.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(prop, diagram)
 
                 if node == 'null':
 
@@ -6053,7 +6053,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if self.isAtomic(property):
             pIri = property.getIRI()
-            pNode = self.findNode(pIri, diagram) if self.findNode(pIri,
+            pNode = self.findNode(property, diagram) if self.findNode(property,
                                                                   diagram) != 'null' else self.createNode(
                 property, diagram, x_med, y_med - 75)
 
@@ -6074,7 +6074,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6082,7 +6082,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(rang) and not isinstance(rang, self.OWLLiteral):
 
             iri = rang.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(rang, diagram)
 
             if domainNode != 'null':
                 domDrawn = True
@@ -6242,7 +6242,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6250,7 +6250,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(range) and not isinstance(range, self.OWLLiteral):
 
             iri = range.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(range, diagram)
 
             if domainNode != 'null':
                 domDrawn = True
@@ -6413,7 +6413,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6421,7 +6421,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(domain) and not isinstance(domain, self.OWLLiteral):
 
             iri = domain.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(domain, diagram)
 
             if domainNode != 'null':
 
@@ -6583,7 +6583,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6591,7 +6591,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(domain) and not isinstance(domain, self.OWLLiteral):
 
             iri = domain.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(domain, diagram)
 
             if domainNode != 'null':
 
@@ -6760,7 +6760,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(first):
 
             firstIRI = first.getIRI()
-            firstNode = self.findNode(firstIRI, diagram)
+            firstNode = self.findNode(first, diagram)
             if firstNode != 'null':
 
                 firstDrawn = True
@@ -6768,7 +6768,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(second):
 
             secondIRI = second.getIRI()
-            secondNode = self.findNode(secondIRI, diagram)
+            secondNode = self.findNode(second, diagram)
 
             if secondNode != 'null':
                 secondDrawn = True
@@ -6936,14 +6936,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(sub):
 
             sub_iri = sub.getIRI()
-            node0 = self.findNode(sub_iri, diagram)
+            node0 = self.findNode(sub, diagram)
             if node0 != 'null':
                 subDrawn = True
 
         if self.isAtomic(sup):
 
             sup_iri = sup.getIRI()
-            node1 = self.findNode(sup_iri, diagram)
+            node1 = self.findNode(sup, diagram)
             if node1 != 'null':
                 supDrawn = True
 
@@ -7119,7 +7119,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     if self.isIsolated(node):
@@ -7190,7 +7190,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.CLASS):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -7337,7 +7337,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
 
@@ -7367,7 +7367,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.DATA_PROPERTY) or ex.isType(self.EntityType.OBJECT_PROPERTY):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -7485,17 +7485,17 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(classs):
 
             class_iri = classs.getIRI()
-            if self.findNode(class_iri, diagram) != 'null':
+            if self.findNode(classs, diagram) != 'null':
 
-                node1 = self.findNode(class_iri, diagram)
+                node1 = self.findNode(classs, diagram)
                 classDrawn = True
 
         if self.isAtomic(indiv):
 
             indiv_iri = indiv.getIRI()
-            if self.findNode(indiv_iri, diagram) != 'null':
+            if self.findNode(indiv, diagram) != 'null':
 
-                node0 = self.findNode(indiv_iri, diagram)
+                node0 = self.findNode(indiv, diagram)
                 indivDrawn = True
 
         if classDrawn:
@@ -7628,7 +7628,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if self.isAtomic(prop):
             propIri = prop.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(prop, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -7636,7 +7636,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(indiv):
 
             indvIri = indiv.getIRI()
-            indivNode = self.findNode(indvIri, diagram)
+            indivNode = self.findNode(indiv, diagram)
             if indivNode != 'null':
                 indivDrawn = True
 
@@ -7645,7 +7645,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if isinstance(value, self.OWLNamedIndividual):
 
                 valueIri = value.getIRI()
-                valueNode = self.findNode(valueIri, diagram)
+                valueNode = self.findNode(value, diagram)
 
                 if valueNode != 'null':
                     valueDrawn = True
@@ -7933,7 +7933,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if self.isAtomic(prop):
             propIri = prop.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(prop, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -7941,7 +7941,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(indiv):
 
             indvIri = indiv.getIRI()
-            indivNode = self.findNode(indvIri, diagram)
+            indivNode = self.findNode(indiv, diagram)
             if indivNode != 'null':
                 indivDrawn = True
 
@@ -7950,7 +7950,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if isinstance(value, self.OWLNamedIndividual):
 
                 valueIri = value.getIRI()
-                valueNode = self.findNode(valueIri, diagram)
+                valueNode = self.findNode(value, diagram)
 
                 if valueNode != 'null':
                     valueDrawn = True
@@ -8243,7 +8243,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
 
@@ -8274,7 +8274,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if i.isType(self.EntityType.NAMED_INDIVIDUAL):
 
                     iri = i.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(i, diagram)
 
                     if node == 'null':
                         x = starting_x + 125
@@ -8359,7 +8359,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in individuals:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
 
@@ -8392,7 +8392,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if i.isType(self.EntityType.NAMED_INDIVIDUAL):
 
                     iri = i.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(i, diagram)
 
                     if node == 'null':
 
@@ -8481,7 +8481,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -8520,7 +8520,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.CLASS):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -8662,7 +8662,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -8676,7 +8676,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(classs):
 
                 cIRI = classs.getIRI()
-                cNode = self.findNode(cIRI, diagram)
+                cNode = self.findNode(classs, diagram)
 
                 if cNode != 'null':
 
@@ -8713,7 +8713,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if c.isType(self.EntityType.CLASS):
 
                     iri = c.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(c, diagram)
 
                     if node == 'null':
 
@@ -8761,7 +8761,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(classs):
 
             cIri = classs.getIRI()
-            cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(classs, diagram, x_med, y_med-100)
+            cNode = self.findNode(classs, diagram) if self.findNode(classs, diagram) != 'null' else self.createNode(classs, diagram, x_med, y_med-100)
 
             if self.isIsolated(cNode):
                 cNode.setPos(x_med, y_med-100)
@@ -8830,7 +8830,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -8869,7 +8869,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 if ex.isType(self.EntityType.DATA_PROPERTY):
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -8980,7 +8980,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -9018,7 +9018,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.OBJECT_PROPERTY):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -9446,12 +9446,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         return
 
-    def findNode(self, iri, diagram):
+    def findNode(self, item, diagram):
+        Types = {
+            Item.AttributeNode: 'DataProperty',
+            Item.ConceptNode: 'Class',
+            Item.IndividualNode: 'NamedIndividual',
+            Item.RoleNode: 'ObjectProperty',
+        }
 
         ### FIND NODE BY IRI IN THE DIAGRAM ###
         for el in diagram.items():
 
-            if el.isNode() and (el.type() == Item.ConceptNode or el.type() == Item.IndividualNode or el.type() == Item.RoleNode or el.type() == Item.AttributeNode) and str(iri) == str(el.iri):
+            if el.isNode() and  el.type() in Types.keys() and (Types[el.type()] == str(item.getEntityType())) and str(item.getIRI()) == str(el.iri):
                 return el
 
         # IF NOT FOUND, RETURN 'NULL'
