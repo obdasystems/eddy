@@ -1462,13 +1462,18 @@ class Importation():
 
                 # ALL #
                 ontology_iri, ontology_version = ontology
-                cursor.execute('''SELECT axiom
+                cursor.execute('''SELECT axiom, iri_dict
                                 FROM axiom
                                 WHERE ontology_iri = ? and ontology_version = ?''', (ontology_iri, ontology_version))
                 rows = cursor.fetchall()
                 axioms[ontology] = []
+                all_dicts = []
                 for row in rows:
                     axioms[ontology].append(row[0])
+                    iri_dict = row[1]
+                    d = ast.literal_eval(iri_dict)
+                    iris = [d[k] for k in d.keys()]
+                    all_dicts.append(iris)
 
                 # NOT DRAWN #
                 cursor.execute('''SELECT axiom, type_of_axiom, func_axiom, iri_dict
@@ -1485,12 +1490,6 @@ class Importation():
                                 and (?, ?,  axiom) not in (SELECT project_iri, project_version, axiom
                                                                                         FROM drawn)''', (ontology_iri, ontology_version, self.project_iri, self.project_version))
                 rows = cursor.fetchall()
-                all_dicts = []
-                for r in rows:
-                    iri_dict = r[3]
-                    d = ast.literal_eval(iri_dict)
-                    iris = [d[k] for k in d.keys()]
-                    all_dicts.append(iris)
                 not_drawn[ontology] = []
                 for r in rows:
                     if r[1] == 'Declaration':
@@ -1499,8 +1498,8 @@ class Importation():
                         if d:
                             entityIRI = d[list(d.keys())[0]]
                             countList = [entityIRI in el for el in all_dicts]
-                            count = countList.count(True)
-                            if count == 1:
+                            cnt = countList.count(True)
+                            if cnt == 1:
                                 not_drawn[ontology].append([r[0], r[1], r[2]])
                     else:
                         not_drawn[ontology].append([r[0], r[1], r[2]])
