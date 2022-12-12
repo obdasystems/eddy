@@ -530,14 +530,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                                  objectName='convert_snake')
         snakeCheckbox.clicked.connect(lambda: self.onCaseCheckBoxClicked(snakeCheckbox))
         self.addWidget(snakeCheckbox)
-        snakeCheckbox.setVisible(checked)
+        snakeCheckbox.setEnabled(checked)
 
         camelCheckbox = CheckBox('convert camelCase to space separated values', self,
                                  checked=self.project.convertCamel,
                                  objectName='convert_camel')
         camelCheckbox.clicked.connect(lambda: self.onCaseCheckBoxClicked(camelCheckbox))
         self.addWidget(camelCheckbox)
-        camelCheckbox.setVisible(checked)
+        camelCheckbox.setEnabled(checked)
 
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
         comboBoxLabel.setText('Default rdfs:label language')
@@ -1512,23 +1512,23 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
             if checkBoxUserInput.isChecked():
-                if self.widget('convert_snake') and not self.widget('convert_snake').isVisible():
-                    self.widget('convert_snake').setVisible(True)
-                    self.widget('convert_camel').setVisible(True)
+                if self.widget('convert_snake') and not self.widget('convert_snake').isEnabled():
+                    self.widget('convert_snake').setEnabled(True)
+                    self.widget('convert_camel').setEnabled(True)
             else:
-                if self.widget('convert_snake') and self.widget('convert_snake').isVisible():
+                if self.widget('convert_snake') and self.widget('convert_snake').isEnabled():
                     self.widget('convert_snake').setChecked(False)
-                    self.widget('convert_snake').setHidden(True)
+                    self.widget('convert_snake').setEnabled(False)
                     self.widget('convert_camel').setChecked(False)
-                    self.widget('convert_camel').setHidden(True)
+                    self.widget('convert_camel').setEnabled(False)
         else:
             self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
-            if self.widget('convert_snake') and self.widget('convert_snake').isVisible():
+            if self.widget('convert_snake') and self.widget('convert_snake').isEnabled():
                 self.widget('convert_snake').setChecked(False)
-                self.widget('convert_snake').setHidden(True)
+                self.widget('convert_snake').setEnabled(False)
                 self.widget('convert_camel').setChecked(False)
-                self.widget('convert_camel').setHidden(True)
+                self.widget('convert_camel').setEnabled(False)
         self.widget('iri_label_button').setEnabled(True)
 
     def onCaseCheckBoxClicked(self, checkbox):
