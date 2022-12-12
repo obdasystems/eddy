@@ -1391,7 +1391,7 @@ class IRIManager(QtCore.QObject):
                         userInput = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput)
                     if self.converttSnake:
                         userInput = userInput.replace('_',' ')
-                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
+                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput.lower(),
                                                  OWL2Datatype.PlainLiteral.value, labelLang)
                     iri.addAnnotationAssertion(annAss)
             connect(iri.sgnIRIModified,self.onIRIModified)
