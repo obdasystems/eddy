@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS importation (
 CREATE TABLE IF NOT EXISTS axiom (
     axiom            TEXT,
     type_of_axiom    TEXT,
-    func_axiom       TEXT,
+    manch_axiom       TEXT,
     ontology_iri     TEXT,
     ontology_version TEXT,
     iri_dict         TEXT,
@@ -1122,7 +1122,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                                                                 values (?, ?, ?, ?, ?, ?)
                                                                 """, (
                                     str(self.project.ontologyIRI), self.project.version,
-                                    self.ontology_iri, self.ontology_version, str(axiom),
+                                    self.ontology_iri, self.ontology_version, str(ax),
                                     str(self.session)))
                                     conn.commit()
                                     processed.append(ax)
@@ -1191,6 +1191,27 @@ class OntologyImporterPlugin(AbstractPlugin):
             cursor = conn.cursor()
             version = self.spec.getint('database', 'version')
             nversion = int(cursor.execute('PRAGMA user_version').fetchone()[0])
+            upgrade_commands = {1 : """
+                                BEGIN TRANSACTION;
+
+                                UPDATE drawn
+                                SET axiom = (SELECT a.func_axiom
+                                    FROM axiom a
+                                    WHERE a.axiom = drawn.axiom
+                                      AND a.ontology_iri = drawn.ontology_iri
+                                      AND a.ontology_version = drawn.ontology_version
+                                    );
+
+                                -- Scambia axiom con func_axiom nella tabella axiom
+
+                                UPDATE axiom SET axiom = func_axiom, func_axiom = axiom;
+
+                                -- Rinomina func_axiom
+
+                                ALTER TABLE axiom RENAME COLUMN func_axiom TO manch_axiom;
+
+                                COMMIT;
+                                """}
             if nversion > self.spec.getint('database', 'version'):
                 msgbox = QtWidgets.QMessageBox()
                 msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -1212,7 +1233,12 @@ class OntologyImporterPlugin(AbstractPlugin):
                 else:
                     raise DatabaseError(
                         'Incompatible import database version {} > {}'.format(nversion, version))
-
+            else:
+                while nversion != version:
+                    cursor.executescript(upgrade_commands[nversion])
+                    nversion = nversion + 1
+                    conn.executescript("PRAGMA user_version = {version};".format(
+                        version=nversion))
     def dispose(self):
         """
         Executed whenever the plugin is going to be destroyed.
@@ -1383,16 +1409,16 @@ class Importation():
 
 
                 # getting the axiom in Manchester Syntax #
-                axiom = renderer.render(ax)
+                manch_axiom = renderer.render(ax)
                 # keep the original form (Functional Syntax #
                 funcAxiom = ax
                 QtCore.QCoreApplication.processEvents()
 
                 # INSERT AXIOM IN DB #
                 conn.execute("""
-                            insert or ignore into axiom (axiom, type_of_axiom, func_axiom, ontology_iri, ontology_version, iri_dict)
+                            insert or ignore into axiom (axiom, type_of_axiom, manch_axiom, ontology_iri, ontology_version, iri_dict)
                             values (?, ?, ?, ?, ?, ?)
-                            """, (str(axiom).strip(), str(ax_type), str(funcAxiom).strip(), ontology_iri, ontology_version, iri_dict))
+                            """, (str(funcAxiom).strip(), str(ax_type), str(manch_axiom).strip(), ontology_iri, ontology_version, iri_dict))
 
             conn.commit()
             QtCore.QCoreApplication.processEvents()
@@ -1476,7 +1502,7 @@ class Importation():
                     all_dicts.append(iris)
 
                 # NOT DRAWN #
-                cursor.execute('''SELECT axiom, type_of_axiom, func_axiom, iri_dict
+                cursor.execute('''SELECT axiom, type_of_axiom, manch_axiom, iri_dict
                                 FROM axiom
                                 WHERE ontology_iri = ? and ontology_version = ?
                                 and type_of_axiom != 'FunctionalObjectProperty'
@@ -1641,7 +1667,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             for pair in not_drawn[k]:
 
-                ax = pair[0]
+                ax = pair[2]
                 ax_type = pair[1]
 
                 if ax_type in ['SubClassOf', 'EquivalentClasses', 'DisjointClasses']:
@@ -1898,7 +1924,6 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             axiomsToDraw = {}
             cantDraw = []
-
             for ax in self.checkedAxioms:
                 # for each checked axiom:
                 QtCore.QCoreApplication.processEvents()
@@ -1907,19 +1932,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 for k in self.not_drawn.keys():
                     for triple in self.not_drawn[k]:
-                        manch_ax = triple[0]
-                        func_ax = triple[2]
-                        if manch_ax == ax:
+                        manch_ax = triple[2]
+                        func_ax = triple[0]
+                        if manch_ax == ax and func_ax not in axiomsToDraw.keys():
                             # try to parse Functional axiom string into Axiom #
                             functional_axiom = self.string2axiom2(func_ax)
+                            break;
 
                 if functional_axiom:
-                    axiomsToDraw[ax] = functional_axiom
+                    axiomsToDraw[func_ax] = functional_axiom
                 else:
                     # if problems with Functional parsing -> try to parse Manchester axiom string into Axiom #
                     manchester_axiom = self.string2axiom(ax)
                     if manchester_axiom:
-                        axiomsToDraw[ax] = manchester_axiom
+                        axiomsToDraw[func_ax] = manchester_axiom
                     else:
                         # if axioms can't be parsed -> can't draw message #
                         cantDraw.append(ax)
@@ -1971,7 +1997,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             cursor = conn.cursor()
             cursor.execute('''SELECT *
                                     FROM axiom
-                                    WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                    WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
                                     ''', (ontology_iri, ontology_version, ax))
 
             if len(cursor.fetchall()) > 0:
@@ -1982,7 +2008,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 manager = self.OWLManager().createOWLOntologyManager()
 
                 # get all declaration axioms of the ontology to pass to parser #
-                cursor.execute('''SELECT axiom, iri_dict, func_axiom
+                cursor.execute('''SELECT manch_axiom, iri_dict, axiom
                                        FROM axiom
                                         WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom = ?
                                         ''',
@@ -2018,7 +2044,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 cursor.execute('''SELECT iri_dict, type_of_axiom
                                                 FROM axiom
-                                                WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                                WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
                                                 ''',
                                (ontology_iri, ontology_version, ax))
                 rows = cursor.fetchall()
@@ -2074,7 +2100,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             cursor = conn.cursor()
             cursor.execute('''SELECT *
                             FROM axiom
-                            WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
+                            WHERE ontology_iri = ? and ontology_version = ? and manch_axiom = ?
                             ''', (ontology_iri, ontology_version, ax))
 
             if len(cursor.fetchall()) > 0:
@@ -2087,7 +2113,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 # create new ontology #
                 o = manager.createOntology()
                 # get all declaration axioms of the ontology to pass to parser #
-                cursor.execute('''SELECT axiom, iri_dict
+                cursor.execute('''SELECT manch_axiom, iri_dict
                                FROM axiom
                                 WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom = ?
                                 ''',
@@ -2231,7 +2257,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 # get fullIRIs dict and type of axiom #
                 cursor.execute('''SELECT iri_dict, type_of_axiom
                                 FROM axiom
-                                WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
+                                WHERE ontology_iri = ? and ontology_version = ? and manch_axiom = ?
                                 ''',
                                (ontology_iri, ontology_version, ax))
                 rows = cursor.fetchall()
