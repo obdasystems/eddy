@@ -1389,9 +1389,12 @@ class IRIManager(QtCore.QObject):
                 if userInputLabel:
                     if self.converttCamel:
                         userInput = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput)
+                        userInput = userInput.split()
+                        userInput[1:] = [w.lower() if not w.isupper() else w for w in userInput[1:]]
+                        userInput = ' '.join(userInput)
                     if self.converttSnake:
                         userInput = userInput.replace('_',' ')
-                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput.lower(),
+                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
                                                  OWL2Datatype.PlainLiteral.value, labelLang)
                     iri.addAnnotationAssertion(annAss)
             connect(iri.sgnIRIModified,self.onIRIModified)
