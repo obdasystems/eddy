@@ -765,11 +765,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # ANNOTATIONS TAB
         #################################
 
-        annotationProperties = self.project.getAnnotationPropertyIRIs()
+        annotationProperties = [str(e) for e in self.project.getAnnotationPropertyIRIs()]
         table = self.widget('annotation_properties_table_widget')
         table.clear()
         table.setHorizontalHeaderLabels(['IRI', 'Comment'])
         table.setRowCount(len(annotationProperties))
+        annotationProperties.sort()
         rowcount = 0
         for annIRI in annotationProperties:
             propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
@@ -1343,9 +1344,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 table.setRowCount(rowcount + 1)
                 propertyItem = QtWidgets.QTableWidgetItem(str(annIRI))
                 propertyItem.setFlags(QtCore.Qt.ItemIsEnabled)
-                table.setItem(rowcount, 0, propertyItem)
-                table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(''))
-                table.scrollToItem(table.item(rowcount, 0))
+                annotationProperties = [str(e) for e in self.project.getAnnotationPropertyIRIs()]
+                annotationProperties.sort()
+                idx = annotationProperties.index(str(annIRI)) if str(annIRI) in annotationProperties else rowcount
+                table.setItem(idx, 0, propertyItem)
+                table.setItem(idx, 1, QtWidgets.QTableWidgetItem(''))
+                table.scrollToItem(table.item(idx, 0))
             self.widget('iri_prefix_switch').setCurrentText(self.noPrefixString)
             self.widget('iri_input_field').setText('')
         except IllegalNamespaceError as e:
