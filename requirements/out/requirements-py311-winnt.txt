@@ -4,10 +4,6 @@ attrs==22.1.0
     # via pytest
 build==0.9.0
     # via pip-tools
-cachetools==5.2.0
-    # via tox
-chardet==5.1.0
-    # via tox
 click==8.1.3
     # via pip-tools
 colorama==0.4.6
@@ -48,7 +44,6 @@ packaging==22.0
     # via
     #   build
     #   jpype1
-    #   pyproject-api
     #   pytest
     #   tox
 pefile==2022.5.30
@@ -58,21 +53,19 @@ pep517==0.13.0
 pip-tools==6.12.0
     # via -r requirements/in/dev.in
 platformdirs==2.6.0
-    # via
-    #   tox
-    #   virtualenv
+    # via virtualenv
 pluggy==1.0.0
     # via
     #   pytest
     #   tox
+py==1.11.0
+    # via tox
 py-cpuinfo==9.0.0
     # via pytest-benchmark
 pyinstaller==5.7.0
     # via -r requirements/in\packaging.in
 pyinstaller-hooks-contrib==2022.14
     # via pyinstaller
-pyproject-api==1.2.1
-    # via tox
 pyqt5==5.15.7
     # via -r requirements/in\pyqt5.in
 pyqt5-qt5==5.15.2
@@ -106,7 +99,9 @@ pyyaml==6.0 ; sys_platform == "win32"
     # via -r requirements/in\packaging.in
 rfc3987==1.3.8
     # via -r requirements/in\base.in
-tox==4.0.11
+six==1.16.0
+    # via tox
+tox==3.27.1
     # via
     #   -r requirements/in\tox.in
     #   tox-factor
