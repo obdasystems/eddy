@@ -364,8 +364,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
     def getDiagramDomElement(self,diagram):
         diagramEl = self.getDomElement('diagram')
         diagramEl.setAttribute('name', diagram.name)
-        diagramEl.setAttribute('width', diagram.width())
-        diagramEl.setAttribute('height', diagram.height())
+        diagramEl.setAttribute('width', int(diagram.width()))
+        diagramEl.setAttribute('height', int(diagram.height()))
         for node in sorted(diagram.nodes(), key=lambda n:n.id):
             func = self.exportFuncForItem[node.type()]
             diagramEl.appendChild(func(node))
@@ -472,10 +472,10 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         position = node.mapToScene(node.textPos())
         label = self.document.createElement('label')
-        label.setAttribute('height', node.labelA.height())
-        label.setAttribute('width', node.labelA.width() + node.labelB.width())
-        label.setAttribute('x', position.x())
-        label.setAttribute('y', position.y())
+        label.setAttribute('height', int(node.labelA.height()))
+        label.setAttribute('width', int(node.labelA.width() + node.labelB.width()))
+        label.setAttribute('x', int(position.x()))
+        label.setAttribute('y', int(position.y()))
         label.appendChild(self.document.createTextNode(node.text()))
         nodeEl.appendChild(label)
         element = self.getFacetDomElement(node)
@@ -677,19 +677,12 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         :type node: AbstractNode
         :rtype: QDomElement
         """
-        #TODO position arriva sbagliata molte volte (Dopo che si è spostata label da posizione di default)!
         position = node.mapToScene(node.textPos())
         label = self.document.createElement('label')
-        label.setAttribute('height', node.label.height())
-        label.setAttribute('width', node.label.width())
-        '''
-        if isinstance(node, ConceptNode):
-            label.setAttribute('x', position.x()-30)
-        else:
-            label.setAttribute('x', position.x())
-        '''
-        label.setAttribute('x', position.x())
-        label.setAttribute('y', position.y())
+        label.setAttribute('height', int(node.label.height()))
+        label.setAttribute('width', int(node.label.width()))
+        label.setAttribute('x', int(position.x()))
+        label.setAttribute('y', int(position.y()))
         label.setAttribute('customSize', 1 if node.label.customFont else 0)
         label.setAttribute('size', node.label.font().pixelSize())
         if labelText:
@@ -710,8 +703,8 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         for p in [edge.source.anchor(edge)] + edge.breakpoints + [edge.target.anchor(edge)]:
             point = self.document.createElement('point')
-            point.setAttribute('x', p.x())
-            point.setAttribute('y', p.y())
+            point.setAttribute('x', int(p.x()))
+            point.setAttribute('y', int(p.y()))
             element.appendChild(point)
         return element
 
@@ -741,10 +734,10 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         element.setAttribute('type', self.itemToXml[node.type()])
         element.setAttribute('color', node.brush().color().name())
         geometry = self.document.createElement('geometry')
-        geometry.setAttribute('height', node.height())
-        geometry.setAttribute('width', node.width())
-        geometry.setAttribute('x', node.pos().x())
-        geometry.setAttribute('y', node.pos().y())
+        geometry.setAttribute('height', int(node.height()))
+        geometry.setAttribute('width', int(node.width()))
+        geometry.setAttribute('x', int(node.pos().x()))
+        geometry.setAttribute('y', int(node.pos().y()))
         element.appendChild(geometry)
         return element
 
