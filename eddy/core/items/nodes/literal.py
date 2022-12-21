@@ -98,9 +98,8 @@ class LiteralNode(AbstractResizableNode):
         self.polygon = Polygon(createPolygon(w, h), brush, pen)
 
         self._literal = literal
-        self.labelString = str(literal)
 
-        self.label = NodeLabel(template='Empty', pos=self.center, editable=False, parent=self)
+        self.label = NodeLabel(template=str(literal), pos=self.center, editable=False, parent=self)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.updateNode()
         self.updateTextPos()
@@ -145,12 +144,7 @@ class LiteralNode(AbstractResizableNode):
         :type literal:Literal
         """
         self._literal = literal
-        if self.diagram:
-            self.doUpdateNodeLabel()
-            self.diagram.project.sgnUpdated.emit()
-
-    def initialLabelPosition(self):
-        return self.center()
+        self.doUpdateNodeLabel()
 
     #############################################
     #   SLOTS
@@ -158,15 +152,8 @@ class LiteralNode(AbstractResizableNode):
 
     @QtCore.pyqtSlot()
     def doUpdateNodeLabel(self):
-        if self.label and not self.labelString == str(self.literal):
-            self.labelString = str(self.literal)
-            labelPos = lambda: self.label.pos()
-            self.label.diagram.removeItem(self.label)
-            self.label = NodeLabel(template=self.labelString, pos=labelPos, editable=False, parent=self)
-            self.diagram.sgnUpdated.emit()
-        else:
-            self.labelString = str(self.literal)
-            self.label = NodeLabel(template=self.labelString, pos=self.initialLabelPosition, editable=False, parent=self)
+        self.label.setText(str(self.literal))
+        if self.diagram:
             self.diagram.sgnUpdated.emit()
 
     #############################################
