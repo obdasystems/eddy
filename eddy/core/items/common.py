@@ -296,6 +296,8 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         self.setFont(Font(weight=Font.Light))
         self.setText(self.template)
         self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
+        self.setToolTip(template)
+        self.wrapLabel()
 
         self.customFont = False
 
@@ -306,7 +308,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         if not font==self.font():
             npos = self.pos()
             self.setFont(font)
-            self.setAlignment(self.alignment())
+            self.wrapLabel()
             self.setPos(npos)
         self.customFont = True
 
@@ -327,7 +329,7 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
                 # UPDATE THE DOCUMENT FONT AND ADJUST ITEM SIZE AND POSITION
                 npos = self.pos()
                 self.setFont(nfont)
-                self.setAlignment(self.alignment())
+                self.wrapLabel()
                 self.setPos(npos)
             # CASCADE THE EVENT TO EACH CHILD ITEM
             for item in self.childItems():
@@ -380,12 +382,12 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
 
             self.focusInData = None
             self.setSelectedText(False)
-            self.setAlignment(self.alignment())
+            self.wrapLabel()
             self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
             self.diagram.setMode(DiagramMode.Idle)
             self.diagram.sgnUpdated.emit()
 
-        self.setAlignment(self.alignment())
+        self.wrapLabel()
         self.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         super().focusOutEvent(focusEvent)
 
@@ -525,8 +527,6 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :type alignment: int
         """
         self._alignment = alignment
-        self.setTextWidth(-1)
-        self.setTextWidth(self.boundingRect().width())
         format_ = QtGui.QTextBlockFormat()
         format_.setAlignment(alignment)
         cursor = self.textCursor()
@@ -601,6 +601,14 @@ class AbstractLabel(QtWidgets.QGraphicsTextItem, DiagramItemMixin):
         :rtype: int
         """
         return self.boundingRect().width()
+
+    def wrapLabel(self):
+        """
+        Wrap label into node.
+        """
+        self.setTextWidth(-1)
+        self.setTextWidth(self.boundingRect().width())
+        self.setAlignment(self.alignment())
 
     def __repr__(self):
         """

@@ -33,9 +33,15 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
+from math import ceil
+
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
 
 from eddy.core.commands.labels import CommandLabelChange
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.misc import DiagramMode
 from eddy.core.functions.misc import isEmpty
 from eddy.core.items.common import AbstractLabel
@@ -45,6 +51,9 @@ class NodeLabel(AbstractLabel):
     """
     This class implements the label to be attached to the graphol nodes.
     """
+    MinWidth = 60.0  # Minimum label width (in pixels)
+    MinHeight = 40.0  # Minimum label height (in pixels)
+
     def __init__(self, template='', pos=None, movable=True, editable=True, parent=None):
         """
         Initialize the label.
@@ -100,6 +109,24 @@ class NodeLabel(AbstractLabel):
         if not moved:
             self.setPos(self.defaultPos())
 
+    def wrapLabel(self):
+        """
+        Wrap label into node.
+        """
+        super().wrapLabel()
+        if self.parentItem() and self.parentItem().type() in [Item.ConceptNode,
+                                                              Item.IndividualNode,
+                                                              Item.ValueDomainNode,
+                                                              Item.LiteralNode,
+                                                              Item.FacetNode]:
+            width = max(self.MinWidth, self.parentItem().width())
+            height = max(self.MinHeight, self.parentItem().height())
+            fm = QtGui.QFontMetrics(self.font())
+            lineWidth = fm.width(self.template) / ceil(fm.width(self.template) / width)
+            maxWidth = int(lineWidth * (height // fm.lineSpacing()))
+            self.setText(fm.elidedText(self.template, QtCore.Qt.TextElideMode.ElideRight, maxWidth))
+            self.setTextWidth(width)
+        self.setAlignment(self.alignment())
 
 class PredicateLabel(NodeLabel):
     """
