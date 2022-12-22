@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from math import ceil
+
 from PyQt5 import (
     QtCore,
     QtGui,
@@ -49,6 +51,9 @@ class NodeLabel(AbstractLabel):
     """
     This class implements the label to be attached to the graphol nodes.
     """
+    MinWidth = 60.0  # Minimum label width (in pixels)
+    MinHeight = 40.0  # Minimum label height (in pixels)
+
     def __init__(self, template='', pos=None, movable=True, editable=True, parent=None):
         """
         Initialize the label.
@@ -114,12 +119,13 @@ class NodeLabel(AbstractLabel):
                                                               Item.ValueDomainNode,
                                                               Item.LiteralNode,
                                                               Item.FacetNode]:
-            self.setTextWidth(max(60, self.parentItem().boundingRect().width()))
+            width = max(self.MinWidth, self.parentItem().width())
+            height = max(self.MinHeight, self.parentItem().height())
             fm = QtGui.QFontMetrics(self.font())
-            lines = max(40, self.parentItem().height()) // fm.height() - 1
-            maxLen = int(self.textWidth() * lines)
-            elidedText = fm.elidedText(self.template, QtCore.Qt.ElideRight, maxLen)
-            self.setText(elidedText)
+            lineWidth = fm.width(self.template) / ceil(fm.width(self.template) / width)
+            maxWidth = int(lineWidth * (height // fm.lineSpacing()))
+            self.setText(fm.elidedText(self.template, QtCore.Qt.TextElideMode.ElideRight, maxWidth))
+            self.setTextWidth(width)
         self.setAlignment(self.alignment())
 
 class PredicateLabel(NodeLabel):
