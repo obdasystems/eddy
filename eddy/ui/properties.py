@@ -149,7 +149,7 @@ class DiagramProperty(PropertyDialog):
         self.diagramSizeField = SpinBox(self)
         self.diagramSizeField.setRange(Diagram.MinSize, Diagram.MaxSize)
         self.diagramSizeField.setSingleStep(100)
-        self.diagramSizeField.setValue(max(sceneRect.width(), sceneRect.height()))
+        self.diagramSizeField.setValue(int(max(sceneRect.width(), sceneRect.height())))
 
         self.geometryWidget = QtWidgets.QWidget()
         self.geometryLayout = QtWidgets.QFormLayout(self.geometryWidget)
