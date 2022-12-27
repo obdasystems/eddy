@@ -46,7 +46,7 @@ class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoComm
     """
     This command is used to set the IRI identifying the ontology.
     """
-    def __init__(self, project, labelFromSimpleNameRedo, labelFromUserInputRedo, languageRedo, labelFromSimpleNameUndo, labelFromUserInputUndo, languageUndo, name=None):
+    def __init__(self, project, labelFromSimpleNameRedo, labelFromUserInputRedo, languageRedo, snakeConversionRedo, camelConversionRedo, labelFromSimpleNameUndo, labelFromUserInputUndo, languageUndo, snakeConversionUndo, camelConversionUndo, name=None):
         """
         Initialize the command.
         :type project: Project
@@ -63,21 +63,28 @@ class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoComm
         self._labelFromSimpleNameRedo = labelFromSimpleNameRedo
         self._labelFromUserInputRedo = labelFromUserInputRedo
         self._languageRedo = languageRedo
+        self._snakeConversionRedo = snakeConversionRedo
+        self._camelConversionRedo = camelConversionRedo
         self._labelFromSimpleNameUndo = labelFromSimpleNameUndo
         self._labelFromUserInputUndo = labelFromUserInputUndo
         self._languageUndo = languageUndo
-
+        self._snakeConversionUndo = snakeConversionUndo
+        self._camelConversionUndo = camelConversionUndo
     def redo(self):
         """redo the command"""
         self._project.addLabelFromSimpleName = self._labelFromSimpleNameRedo
         self._project.addLabelFromUserInput = self._labelFromUserInputRedo
         self._project.defaultLanguage = self._languageRedo
+        self._project.convertSnake = self._snakeConversionRedo
+        self._project.convertCamel = self._camelConversionRedo
 
     def undo(self):
         """undo the command"""
         self._project.addLabelFromSimpleName = self._labelFromSimpleNameUndo
         self._project.addLabelFromUserInput = self._labelFromUserInputUndo
         self._project.defaultLanguage = self._languageUndo
+        self._project.convertSnake = self._snakeConversionUndo
+        self._project.convertCamel = self._camelConversionUndo
 
 class CommandProjectSetOntologyIRIAndVersion(QtWidgets.QUndoCommand):
     """

@@ -31,18 +31,23 @@
 #     - Marco Console <console@dis.uniroma1.it>                          #
 #                                                                        #
 ##########################################################################
-from enum import unique
 
-from PyQt5 import QtCore
-from PyQt5 import QtXmlPatterns
-from eddy.core.datatypes.owl import Namespace
+
+from enum import unique
+import re
+
+from PyQt5 import (
+    QtCore,
+    QtXmlPatterns,
+)
+from rfc3987 import (
+    compose,
+    parse,
+    resolve,
+)
 
 from eddy.core.datatypes.common import Enum_
-
-from rfc3987 import compose
-from rfc3987 import parse
-from rfc3987 import resolve
-
+from eddy.core.datatypes.owl import Namespace
 from eddy.core.functions.signals import connect
 
 K_FUNCTIONAL = 'functional'
@@ -1131,6 +1136,8 @@ class IRIManager(QtCore.QObject):
         defaultLanguage='en',
         addLabelFromSimpleName=False,
         addLabelFromUserInput=False,
+        convertSnake=False,
+        convertCamel=False,
         **kwargs,
     ):
         """
@@ -1193,6 +1200,11 @@ class IRIManager(QtCore.QObject):
         self._addLabelFromSimpleName = addLabelFromSimpleName
         self._addLabelFromUserInput = addLabelFromUserInput
         self._importedOntologies = imports or set()
+        self._convertCamel = convertCamel
+        self._convertSnake = convertSnake
+
+        self.converttCamel = convertCamel
+        self.converttSnake = convertSnake
 
     #############################################
     #   IMPORTED ONTOLOGIES
@@ -1240,6 +1252,26 @@ class IRIManager(QtCore.QObject):
     @addLabelFromUserInput.setter
     def addLabelFromUserInput(self, addLabelFromUserInput):
         self._addLabelFromUserInput = addLabelFromUserInput
+    @property
+    def convertSnake(self):
+        return self._convertSnake
+    @convertSnake.setter
+    def convertSnake(self, convertSnake):
+        self.converttSnake = convertSnake
+        self._convertSnake = convertSnake
+    @property
+    def convertCamel(self):
+        return self._convertCamel
+    @convertCamel.setter
+    def convertCamel(self, convertCamel):
+        self.converttCamel = convertCamel
+        self._convertCamel = convertCamel
+    def convertCase(self, btn):
+        if btn.text() == "convert snake_case to space separated values":
+            self.converttSnake = btn.isChecked()
+
+        if btn.text() == "convert camelCase to space separated values":
+            self.converttCamel = btn.isChecked()
 
     @property
     def defaultLanguage(self):
@@ -1355,6 +1387,13 @@ class IRIManager(QtCore.QObject):
                 if simpleNameLabel:
                     iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri,labelLang))
                 if userInputLabel:
+                    if self.converttCamel:
+                        userInput = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput)
+                        userInput = userInput.split()
+                        userInput[1:] = [w.lower() if not w.isupper() else w for w in userInput[1:]]
+                        userInput = ' '.join(userInput)
+                    if self.converttSnake:
+                        userInput = userInput.replace('_',' ')
                     annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
                                                  OWL2Datatype.PlainLiteral.value, labelLang)
                     iri.addAnnotationAssertion(annAss)

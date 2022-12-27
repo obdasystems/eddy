@@ -525,6 +525,20 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                             objectName='label_userinput_checkbox')
         self.addWidget(checkBox)
 
+        snakeCheckbox = CheckBox('convert snake_case to space separated values', self,
+                                 checked=self.project.convertSnake,
+                                 objectName='convert_snake')
+        snakeCheckbox.clicked.connect(lambda: self.onCaseCheckBoxClicked(snakeCheckbox))
+        self.addWidget(snakeCheckbox)
+        snakeCheckbox.setEnabled(checked)
+
+        camelCheckbox = CheckBox('convert camelCase to space separated values', self,
+                                 checked=self.project.convertCamel,
+                                 objectName='convert_camel')
+        camelCheckbox.clicked.connect(lambda: self.onCaseCheckBoxClicked(camelCheckbox))
+        self.addWidget(camelCheckbox)
+        camelCheckbox.setEnabled(checked)
+
         comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
         comboBoxLabel.setText('Default rdfs:label language')
         self.addWidget(comboBoxLabel)
@@ -550,6 +564,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         iriLabelLayout = QtWidgets.QFormLayout()
         iriLabelLayout.addRow(self.widget('checkBox_label_simplename'), self.widget('label_simplename_checkbox'))
         iriLabelLayout.addRow(self.widget('checkBox_label_userinput'), self.widget('label_userinput_checkbox'))
+        iriLabelLayout.addRow(self.widget('convert_snake'))
+        iriLabelLayout.addRow(self.widget('convert_camel'))
         iriLabelLayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
 
         applyBtn = QtWidgets.QPushButton('Apply', objectName='iri_label_button')
@@ -1499,11 +1515,29 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
             self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
+            if checkBoxUserInput.isChecked():
+                if self.widget('convert_snake') and not self.widget('convert_snake').isEnabled():
+                    self.widget('convert_snake').setEnabled(True)
+                    self.widget('convert_camel').setEnabled(True)
+            else:
+                if self.widget('convert_snake') and self.widget('convert_snake').isEnabled():
+                    self.widget('convert_snake').setChecked(False)
+                    self.widget('convert_snake').setEnabled(False)
+                    self.widget('convert_camel').setChecked(False)
+                    self.widget('convert_camel').setEnabled(False)
         else:
             self.widget('lang_switch').setStyleSheet("background:#808080")
             self.widget('lang_switch').setEnabled(False)
+            if self.widget('convert_snake') and self.widget('convert_snake').isEnabled():
+                self.widget('convert_snake').setChecked(False)
+                self.widget('convert_snake').setEnabled(False)
+                self.widget('convert_camel').setChecked(False)
+                self.widget('convert_camel').setEnabled(False)
         self.widget('iri_label_button').setEnabled(True)
 
+    def onCaseCheckBoxClicked(self, checkbox):
+        self.widget('iri_label_button').setEnabled(True)
+        self.project.convertCase(checkbox)
     @QtCore.pyqtSlot(int)
     def onLanguageSwitched(self,index):
         self.widget('iri_label_button').setEnabled(True)
@@ -1514,7 +1548,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         userInputCheckBox = self.widget('label_userinput_checkbox')
         undoLanguage = self.project.defaultLanguage
         redoLanguage = str(self.widget('lang_switch').currentText())
-        command = CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(self.project, simpleNameCheckBox.isChecked(), userInputCheckBox.isChecked(),redoLanguage, not simpleNameCheckBox.isChecked(), not userInputCheckBox.isChecked(), undoLanguage)
+        snakeCheckBox = self.widget('convert_snake')
+        camelCheckBox = self.widget('convert_camel')
+        command = CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(self.project, simpleNameCheckBox.isChecked(), userInputCheckBox.isChecked(),redoLanguage, snakeCheckBox.isChecked(), camelCheckBox.isChecked(), not simpleNameCheckBox.isChecked(), not userInputCheckBox.isChecked(), undoLanguage, not snakeCheckBox.isChecked(), not camelCheckBox.isChecked())
         self.session.undostack.beginMacro('Set automatic rdfs:label management')
         if command:
             self.session.undostack.push(command)
