@@ -1195,13 +1195,41 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         importation = Importation(self.project)
         importation.removeFromDB()
+        self.onSave()
+
+    @QtCore.pyqtSlot()
+    def onSave(self):
         db = expandPath(K_IMPORTS_DB)
         if os.path.exists(db):
             conn = sqlite3.connect(db)
-            conn.executescript("""DROP TABLE IF EXISTS temp_importation;""")
-            conn.commit()
-            conn.executescript("""DROP TABLE IF EXISTS temp_drawn;""")
-            conn.commit()
+            cursor = conn.cursor()
+            # check if there is any temporary importation
+            cursor.execute(
+                """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_importation';""")
+            temp_impo = len(cursor.fetchall()) > 0
+            if temp_impo:
+                # remove all the importations of the saved session from temp table -> make them permanent
+                cursor.execute("delete from temp_importation where session_id = ?", (str(self.project.session),))
+                conn.commit()
+                cursor.execute("select * from temp_importation")
+                if not cursor.fetchall():
+                    # if no more temporary importations -> drop temp table
+                    conn.executescript("""DROP TABLE IF EXISTS temp_importation;""")
+                    conn.commit()
+            # check if there is any temporary draw
+            cursor.execute(
+                        """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_drawn';""")
+            temp_drawn = len(cursor.fetchall()) > 0
+            if temp_drawn:
+                # remove all the drawn axioms of the saved session from temp table -> make them permanent
+                cursor.execute("delete from temp_drawn where session_id = ?",
+                               (str(self.project.session),))
+                conn.commit()
+                cursor.execute("select * from temp_drawn")
+                if not cursor.fetchall():
+                    # if no more temporary drawn -> drop temp table
+                    conn.executescript("""DROP TABLE IF EXISTS temp_drawn;""")
+                    conn.commit()
             conn.close()
 
     def checkDatabase(self):
@@ -1271,6 +1299,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         # DISCONNECT SIGNALS/SLOTS
         self.debug('Disconnecting from active session')
         disconnect(self.session.sgnNoSaveProject, self.onNoSave)
+        disconnect(self.session.sgnProjectSaved, self.onSave)
 
         # UNINSTALL WIDGETS FROM THE ACTIVE SESSION
         self.debug('Uninstalling OWL 2 importer controls from "view" toolbar')
@@ -1309,6 +1338,7 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         # CONFIGURE SIGNALS/SLOTS
         connect(self.session.sgnNoSaveProject, self.onNoSave)
+        connect(self.session.sgnProjectSaved, self.onSave)
         connect(self.session.sgnStartOwlImport, self.doOpenOntologyFile)
 
 # importation in DB #
@@ -1579,16 +1609,17 @@ class Importation():
 
         db_exists = os.path.exists(self.db_filename)
         if db_exists:
-
             conn = sqlite3.connect(self.db_filename)
 
             with conn:
                 cursor = conn.cursor()
+                # check if there are temporary importations
                 cursor.execute("""SELECT name FROM sqlite_master WHERE type='table' AND name='temp_importation';""")
                 temp_impo = len(cursor.fetchall()) > 0
                 if temp_impo:
+                    # get the temporary importations of the current session
                     cursor.execute('''SELECT project_iri, project_version, ontology_iri, ontology_version, session_id
-                                                FROM temp_importation''')
+                                                FROM temp_importation where session_id = ?''', (str(self.project.session),))
                     rows = cursor.fetchall()
                     ### REMOVE IMPORTATIONS NOT SAVED ###
                     for row in rows:
@@ -1597,15 +1628,16 @@ class Importation():
                                 (row[0], row[1], row[2], row[3], row[4]))
                         conn.commit()
 
+                # check if there are temporary drawn axioms
                 cursor.execute(
                     """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_drawn';""")
                 temp_drawn = len(cursor.fetchall()) > 0
                 if temp_drawn:
-                    ### REMOVE DRAWS NOT SAVED ###
+                    # get the temporary draws of the current session
                     cursor.execute('''SELECT project_iri, project_version, ontology_iri, ontology_version, axiom, session_id
-                                                                FROM temp_drawn''')
+                                                                FROM temp_drawn where session_id = ?''', (str(self.project.session),))
                     rows = cursor.fetchall()
-                    ### REMOVE IMPORTATIONS NOT SAVED ###
+                    ### REMOVE DRAWS NOT SAVED ###
                     for row in rows:
                         conn.execute(
                             'delete from drawn where project_iri = ? and project_version = ? and ontology_iri = ? and ontology_version = ? and axiom = ? and session_id = ?',
