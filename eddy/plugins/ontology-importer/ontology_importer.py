@@ -1101,7 +1101,15 @@ class OntologyImporterPlugin(AbstractPlugin):
                             processed = []
                             not_processed = []
                             total = []
-
+                            conn.executescript("""CREATE TABLE IF NOT EXISTS temp_drawn (
+                                                project_iri      TEXT,
+                                                project_version  TEXT,
+                                                ontology_iri     TEXT,
+                                                ontology_version TEXT,
+                                                axiom            TEXT,
+                                                session_id       TEXT,
+                                                PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom));""")
+                            conn.commit()
                             for ax in self.axioms:
 
                                 total.append(ax)
@@ -1124,6 +1132,15 @@ class OntologyImporterPlugin(AbstractPlugin):
                                     str(self.project.ontologyIRI), self.project.version,
                                     self.ontology_iri, self.ontology_version, str(ax),
                                     str(self.session)))
+                                    conn.commit()
+                                    conn.execute("""insert or ignore into temp_drawn (project_iri, project_version, ontology_iri, ontology_version, axiom, session_id)
+                                                 values (?, ?, ?, ?, ?, ?)""",
+                                                 (
+                                                     str(self.project.ontologyIRI),
+                                                     self.project.version,
+                                                     self.ontology_iri, self.ontology_version,
+                                                     str(ax),
+                                                     str(self.session)))
                                     conn.commit()
                                     processed.append(ax)
                                     QtCore.QCoreApplication.processEvents()
@@ -1178,6 +1195,14 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         importation = Importation(self.project)
         importation.removeFromDB()
+        db = expandPath(K_IMPORTS_DB)
+        if os.path.exists(db):
+            conn = sqlite3.connect(db)
+            conn.executescript("""DROP TABLE IF EXISTS temp_importation;""")
+            conn.commit()
+            conn.executescript("""DROP TABLE IF EXISTS temp_drawn;""")
+            conn.commit()
+            conn.close()
 
     def checkDatabase(self):
         """
@@ -1454,6 +1479,21 @@ class Importation():
                             values (?, ?, ?, ?, ?)
                             """, (self.project_iri, self.project_version, ontology_iri, ontology_version, str(session)))
             conn.commit()
+            conn.executescript("""CREATE TABLE IF NOT EXISTS temp_importation(
+                          project_iri      TEXT,
+                            project_version  TEXT,
+                            ontology_iri     TEXT,
+                            ontology_version TEXT,
+                            session_id       TEXT,
+                            PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version)
+                        );""")
+            conn.commit()
+            conn.execute("""
+                            insert into temp_importation (project_iri, project_version, ontology_iri, ontology_version, session_id)
+                            values (?, ?, ?, ?, ?)
+                            """, (self.project_iri, self.project_version, ontology_iri, ontology_version, str(session)))
+            conn.commit()
+
             conn.close()
             return False
 
@@ -1543,16 +1583,34 @@ class Importation():
             conn = sqlite3.connect(self.db_filename)
 
             with conn:
-                ### REMOVE IMPORTATIONS NOT SAVED ###
-                conn.execute(
-                        'delete from importation where project_iri = ? and project_version = ? and session_id = ?',
-                        (self.project_iri, self.project_version, str(self.project.session)))
-                conn.commit()
-                ### REMOVE DRAWS NOT SAVED ###
-                conn.execute(
-                        'delete from drawn where project_iri = ? and project_version = ? and session_id = ?',
-                        (self.project_iri, self.project_version, str(self.project.session)))
-                conn.commit()
+                cursor = conn.cursor()
+                cursor.execute("""SELECT name FROM sqlite_master WHERE type='table' AND name='temp_importation';""")
+                temp_impo = len(cursor.fetchall()) > 0
+                if temp_impo:
+                    cursor.execute('''SELECT project_iri, project_version, ontology_iri, ontology_version, session_id
+                                                FROM temp_importation''')
+                    rows = cursor.fetchall()
+                    ### REMOVE IMPORTATIONS NOT SAVED ###
+                    for row in rows:
+                        conn.execute(
+                                'delete from importation where project_iri = ? and project_version = ? and ontology_iri = ? and ontology_version = ? and session_id = ?',
+                                (row[0], row[1], row[2], row[3], row[4]))
+                        conn.commit()
+
+                cursor.execute(
+                    """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_drawn';""")
+                temp_drawn = len(cursor.fetchall()) > 0
+                if temp_drawn:
+                    ### REMOVE DRAWS NOT SAVED ###
+                    cursor.execute('''SELECT project_iri, project_version, ontology_iri, ontology_version, axiom, session_id
+                                                                FROM temp_drawn''')
+                    rows = cursor.fetchall()
+                    ### REMOVE IMPORTATIONS NOT SAVED ###
+                    for row in rows:
+                        conn.execute(
+                            'delete from drawn where project_iri = ? and project_version = ? and ontology_iri = ? and ontology_version = ? and axiom = ? and session_id = ?',
+                            (row[0], row[1], row[2], row[3], row[4], row[5]))
+                        conn.commit()
 
 
 class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -2657,6 +2715,16 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         except Exception as e:
             print(e)
 
+        conn.executescript("""CREATE TABLE IF NOT EXISTS temp_drawn (
+                                                        project_iri      TEXT,
+                                                        project_version  TEXT,
+                                                        ontology_iri     TEXT,
+                                                        ontology_version TEXT,
+                                                        axiom            TEXT,
+                                                        session_id       TEXT,
+                                                        PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom));""")
+        conn.commit()
+
         # INSERT AXIOMS IN THE DRAWN TABLE #
         cursor = conn.cursor()
         # GET ALL THE ONTOLOGIES IMPORTED IN THE PROJECT #
@@ -2742,6 +2810,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         cur = conn.cursor()
                         cur.execute(sql, (
                         self.project_iri, self.project_version, ontology_iri, ontology_version, str(ax), str(self.session)))
+                        conn.commit()
+                        sql2 = 'INSERT INTO temp_drawn (project_iri, project_version, ontology_iri, ontology_version, axiom, session_id) VALUES (?, ?, ?, ?, ?, ?)'
+                        cur.execute(sql2, (
+                            self.project_iri, self.project_version, ontology_iri, ontology_version,
+                            str(ax), str(self.session)))
                         conn.commit()
         conn.close()
 
