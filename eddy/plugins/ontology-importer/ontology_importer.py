@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS importation (
 CREATE TABLE IF NOT EXISTS axiom (
     axiom            TEXT,
     type_of_axiom    TEXT,
-    func_axiom       TEXT,
+    manch_axiom       TEXT,
     ontology_iri     TEXT,
     ontology_version TEXT,
     iri_dict         TEXT,
@@ -169,6 +169,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         self.afwset = set()
         self.vm = None
         self.space = DiagramPropertiesForm.MinSpace
+        self.filePath = None
 
     def printConceptNode(self, iri, x, y, diagram):
 
@@ -1100,7 +1101,15 @@ class OntologyImporterPlugin(AbstractPlugin):
                             processed = []
                             not_processed = []
                             total = []
-
+                            conn.executescript("""CREATE TABLE IF NOT EXISTS temp_drawn (
+                                                project_iri      TEXT,
+                                                project_version  TEXT,
+                                                ontology_iri     TEXT,
+                                                ontology_version TEXT,
+                                                axiom            TEXT,
+                                                session_id       TEXT,
+                                                PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom));""")
+                            conn.commit()
                             for ax in self.axioms:
 
                                 total.append(ax)
@@ -1121,8 +1130,17 @@ class OntologyImporterPlugin(AbstractPlugin):
                                                                 values (?, ?, ?, ?, ?, ?)
                                                                 """, (
                                     str(self.project.ontologyIRI), self.project.version,
-                                    self.ontology_iri, self.ontology_version, str(axiom),
+                                    self.ontology_iri, self.ontology_version, str(ax),
                                     str(self.session)))
+                                    conn.commit()
+                                    conn.execute("""insert or ignore into temp_drawn (project_iri, project_version, ontology_iri, ontology_version, axiom, session_id)
+                                                 values (?, ?, ?, ?, ?, ?)""",
+                                                 (
+                                                     str(self.project.ontologyIRI),
+                                                     self.project.version,
+                                                     self.ontology_iri, self.ontology_version,
+                                                     str(ax),
+                                                     str(self.session)))
                                     conn.commit()
                                     processed.append(ax)
                                     QtCore.QCoreApplication.processEvents()
@@ -1177,6 +1195,42 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         importation = Importation(self.project)
         importation.removeFromDB()
+        self.onSave()
+
+    @QtCore.pyqtSlot()
+    def onSave(self):
+        db = expandPath(K_IMPORTS_DB)
+        if os.path.exists(db):
+            conn = sqlite3.connect(db)
+            cursor = conn.cursor()
+            # check if there is any temporary importation
+            cursor.execute(
+                """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_importation';""")
+            temp_impo = len(cursor.fetchall()) > 0
+            if temp_impo:
+                # remove all the importations of the saved session from temp table -> make them permanent
+                cursor.execute("delete from temp_importation where session_id = ?", (str(self.project.session),))
+                conn.commit()
+                cursor.execute("select * from temp_importation")
+                if not cursor.fetchall():
+                    # if no more temporary importations -> drop temp table
+                    conn.executescript("""DROP TABLE IF EXISTS temp_importation;""")
+                    conn.commit()
+            # check if there is any temporary draw
+            cursor.execute(
+                        """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_drawn';""")
+            temp_drawn = len(cursor.fetchall()) > 0
+            if temp_drawn:
+                # remove all the drawn axioms of the saved session from temp table -> make them permanent
+                cursor.execute("delete from temp_drawn where session_id = ?",
+                               (str(self.project.session),))
+                conn.commit()
+                cursor.execute("select * from temp_drawn")
+                if not cursor.fetchall():
+                    # if no more temporary drawn -> drop temp table
+                    conn.executescript("""DROP TABLE IF EXISTS temp_drawn;""")
+                    conn.commit()
+            conn.close()
 
     def checkDatabase(self):
         """
@@ -1190,6 +1244,27 @@ class OntologyImporterPlugin(AbstractPlugin):
             cursor = conn.cursor()
             version = self.spec.getint('database', 'version')
             nversion = int(cursor.execute('PRAGMA user_version').fetchone()[0])
+            upgrade_commands = {1 : """
+                                BEGIN TRANSACTION;
+
+                                UPDATE drawn
+                                SET axiom = (SELECT a.func_axiom
+                                    FROM axiom a
+                                    WHERE a.axiom = drawn.axiom
+                                      AND a.ontology_iri = drawn.ontology_iri
+                                      AND a.ontology_version = drawn.ontology_version
+                                    );
+
+                                -- Scambia axiom con func_axiom nella tabella axiom
+
+                                UPDATE axiom SET axiom = func_axiom, func_axiom = axiom;
+
+                                -- Rinomina func_axiom
+
+                                ALTER TABLE axiom RENAME COLUMN func_axiom TO manch_axiom;
+
+                                COMMIT;
+                                """}
             if nversion > self.spec.getint('database', 'version'):
                 msgbox = QtWidgets.QMessageBox()
                 msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
@@ -1211,7 +1286,12 @@ class OntologyImporterPlugin(AbstractPlugin):
                 else:
                     raise DatabaseError(
                         'Incompatible import database version {} > {}'.format(nversion, version))
-
+            else:
+                while nversion != version:
+                    cursor.executescript(upgrade_commands[nversion])
+                    nversion = nversion + 1
+                    conn.executescript("PRAGMA user_version = {version};".format(
+                        version=nversion))
     def dispose(self):
         """
         Executed whenever the plugin is going to be destroyed.
@@ -1219,6 +1299,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         # DISCONNECT SIGNALS/SLOTS
         self.debug('Disconnecting from active session')
         disconnect(self.session.sgnNoSaveProject, self.onNoSave)
+        disconnect(self.session.sgnProjectSaved, self.onSave)
 
         # UNINSTALL WIDGETS FROM THE ACTIVE SESSION
         self.debug('Uninstalling OWL 2 importer controls from "view" toolbar')
@@ -1257,6 +1338,7 @@ class OntologyImporterPlugin(AbstractPlugin):
 
         # CONFIGURE SIGNALS/SLOTS
         connect(self.session.sgnNoSaveProject, self.onNoSave)
+        connect(self.session.sgnProjectSaved, self.onSave)
         connect(self.session.sgnStartOwlImport, self.doOpenOntologyFile)
 
 # importation in DB #
@@ -1382,16 +1464,16 @@ class Importation():
 
 
                 # getting the axiom in Manchester Syntax #
-                axiom = renderer.render(ax)
+                manch_axiom = renderer.render(ax)
                 # keep the original form (Functional Syntax #
                 funcAxiom = ax
                 QtCore.QCoreApplication.processEvents()
 
                 # INSERT AXIOM IN DB #
                 conn.execute("""
-                            insert or ignore into axiom (axiom, type_of_axiom, func_axiom, ontology_iri, ontology_version, iri_dict)
+                            insert or ignore into axiom (axiom, type_of_axiom, manch_axiom, ontology_iri, ontology_version, iri_dict)
                             values (?, ?, ?, ?, ?, ?)
-                            """, (str(axiom).strip(), str(ax_type), str(funcAxiom).strip(), ontology_iri, ontology_version, iri_dict))
+                            """, (str(funcAxiom).strip(), str(ax_type), str(manch_axiom).strip(), ontology_iri, ontology_version, iri_dict))
 
             conn.commit()
             QtCore.QCoreApplication.processEvents()
@@ -1427,6 +1509,21 @@ class Importation():
                             values (?, ?, ?, ?, ?)
                             """, (self.project_iri, self.project_version, ontology_iri, ontology_version, str(session)))
             conn.commit()
+            conn.executescript("""CREATE TABLE IF NOT EXISTS temp_importation(
+                          project_iri      TEXT,
+                            project_version  TEXT,
+                            ontology_iri     TEXT,
+                            ontology_version TEXT,
+                            session_id       TEXT,
+                            PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version)
+                        );""")
+            conn.commit()
+            conn.execute("""
+                            insert into temp_importation (project_iri, project_version, ontology_iri, ontology_version, session_id)
+                            values (?, ?, ?, ?, ?)
+                            """, (self.project_iri, self.project_version, ontology_iri, ontology_version, str(session)))
+            conn.commit()
+
             conn.close()
             return False
 
@@ -1461,18 +1558,23 @@ class Importation():
 
                 # ALL #
                 ontology_iri, ontology_version = ontology
-                cursor.execute('''SELECT axiom
+                cursor.execute('''SELECT axiom, iri_dict
                                 FROM axiom
                                 WHERE ontology_iri = ? and ontology_version = ?''', (ontology_iri, ontology_version))
                 rows = cursor.fetchall()
                 axioms[ontology] = []
+                all_dicts = []
                 for row in rows:
                     axioms[ontology].append(row[0])
+                    iri_dict = row[1]
+                    d = ast.literal_eval(iri_dict)
+                    iris = [d[k] for k in d.keys()]
+                    all_dicts.append(iris)
 
                 # NOT DRAWN #
-                cursor.execute('''SELECT axiom, type_of_axiom, func_axiom
+                cursor.execute('''SELECT axiom, type_of_axiom, manch_axiom, iri_dict
                                 FROM axiom
-                                WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom != 'Declaration'
+                                WHERE ontology_iri = ? and ontology_version = ?
                                 and type_of_axiom != 'FunctionalObjectProperty'
                                 and type_of_axiom != 'TransitiveObjectProperty'
                                 and type_of_axiom != 'SymmetricObjectProperty'
@@ -1485,8 +1587,18 @@ class Importation():
                                                                                         FROM drawn)''', (ontology_iri, ontology_version, self.project_iri, self.project_version))
                 rows = cursor.fetchall()
                 not_drawn[ontology] = []
-                for row in rows:
-                    not_drawn[ontology].append([row[0], row[1], row[2]])
+                for r in rows:
+                    if r[1] == 'Declaration':
+                        iri_dict = r[3]
+                        d = ast.literal_eval(iri_dict)
+                        if d:
+                            entityIRI = d[list(d.keys())[0]]
+                            countList = [entityIRI in el for el in all_dicts]
+                            cnt = countList.count(True)
+                            if cnt == 1:
+                                not_drawn[ontology].append([r[0], r[1], r[2]])
+                    else:
+                        not_drawn[ontology].append([r[0], r[1], r[2]])
 
                 # DRAWN #
                 drawn[ontology] = [a for a in axioms[ontology] if a not in not_drawn[ontology]]
@@ -1497,20 +1609,40 @@ class Importation():
 
         db_exists = os.path.exists(self.db_filename)
         if db_exists:
-
             conn = sqlite3.connect(self.db_filename)
 
             with conn:
-                ### REMOVE IMPORTATIONS NOT SAVED ###
-                conn.execute(
-                        'delete from importation where project_iri = ? and project_version = ? and session_id = ?',
-                        (self.project_iri, self.project_version, str(self.project.session)))
-                conn.commit()
-                ### REMOVE DRAWS NOT SAVED ###
-                conn.execute(
-                        'delete from drawn where project_iri = ? and project_version = ? and session_id = ?',
-                        (self.project_iri, self.project_version, str(self.project.session)))
-                conn.commit()
+                cursor = conn.cursor()
+                # check if there are temporary importations
+                cursor.execute("""SELECT name FROM sqlite_master WHERE type='table' AND name='temp_importation';""")
+                temp_impo = len(cursor.fetchall()) > 0
+                if temp_impo:
+                    # get the temporary importations of the current session
+                    cursor.execute('''SELECT project_iri, project_version, ontology_iri, ontology_version, session_id
+                                                FROM temp_importation where session_id = ?''', (str(self.project.session),))
+                    rows = cursor.fetchall()
+                    ### REMOVE IMPORTATIONS NOT SAVED ###
+                    for row in rows:
+                        conn.execute(
+                                'delete from importation where project_iri = ? and project_version = ? and ontology_iri = ? and ontology_version = ? and session_id = ?',
+                                (row[0], row[1], row[2], row[3], row[4]))
+                        conn.commit()
+
+                # check if there are temporary drawn axioms
+                cursor.execute(
+                    """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_drawn';""")
+                temp_drawn = len(cursor.fetchall()) > 0
+                if temp_drawn:
+                    # get the temporary draws of the current session
+                    cursor.execute('''SELECT project_iri, project_version, ontology_iri, ontology_version, axiom, session_id
+                                                                FROM temp_drawn where session_id = ?''', (str(self.project.session),))
+                    rows = cursor.fetchall()
+                    ### REMOVE DRAWS NOT SAVED ###
+                    for row in rows:
+                        conn.execute(
+                            'delete from drawn where project_iri = ? and project_version = ? and ontology_iri = ? and ontology_version = ? and axiom = ? and session_id = ?',
+                            (row[0], row[1], row[2], row[3], row[4], row[5]))
+                        conn.commit()
 
 
 class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -1625,7 +1757,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             for pair in not_drawn[k]:
 
-                ax = pair[0]
+                ax = pair[2]
                 ax_type = pair[1]
 
                 if ax_type in ['SubClassOf', 'EquivalentClasses', 'DisjointClasses']:
@@ -1882,7 +2014,6 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             axiomsToDraw = {}
             cantDraw = []
-
             for ax in self.checkedAxioms:
                 # for each checked axiom:
                 QtCore.QCoreApplication.processEvents()
@@ -1891,19 +2022,20 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 for k in self.not_drawn.keys():
                     for triple in self.not_drawn[k]:
-                        manch_ax = triple[0]
-                        func_ax = triple[2]
-                        if manch_ax == ax:
+                        manch_ax = triple[2]
+                        func_ax = triple[0]
+                        if manch_ax == ax and func_ax not in axiomsToDraw.keys():
                             # try to parse Functional axiom string into Axiom #
                             functional_axiom = self.string2axiom2(func_ax)
+                            break;
 
                 if functional_axiom:
-                    axiomsToDraw[ax] = functional_axiom
+                    axiomsToDraw[func_ax] = functional_axiom
                 else:
                     # if problems with Functional parsing -> try to parse Manchester axiom string into Axiom #
                     manchester_axiom = self.string2axiom(ax)
                     if manchester_axiom:
-                        axiomsToDraw[ax] = manchester_axiom
+                        axiomsToDraw[func_ax] = manchester_axiom
                     else:
                         # if axioms can't be parsed -> can't draw message #
                         cantDraw.append(ax)
@@ -1955,7 +2087,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             cursor = conn.cursor()
             cursor.execute('''SELECT *
                                     FROM axiom
-                                    WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                    WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
                                     ''', (ontology_iri, ontology_version, ax))
 
             if len(cursor.fetchall()) > 0:
@@ -1966,7 +2098,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 manager = self.OWLManager().createOWLOntologyManager()
 
                 # get all declaration axioms of the ontology to pass to parser #
-                cursor.execute('''SELECT axiom, iri_dict, func_axiom
+                cursor.execute('''SELECT manch_axiom, iri_dict, axiom
                                        FROM axiom
                                         WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom = ?
                                         ''',
@@ -2002,7 +2134,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                 cursor.execute('''SELECT iri_dict, type_of_axiom
                                                 FROM axiom
-                                                WHERE ontology_iri = ? and ontology_version = ? and func_axiom = ?
+                                                WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
                                                 ''',
                                (ontology_iri, ontology_version, ax))
                 rows = cursor.fetchall()
@@ -2019,7 +2151,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     for axiom in axioms:
                         QtCore.QCoreApplication.processEvents()
                         # get axiom we needed to parse by filtering on type #
-                        if str(axiom.getAxiomType()) == axiom_type:
+                        if axiom_type == 'Declaration':
+                            if str(axiom) == ax:
+                                return axiom
+                        elif str(axiom.getAxiomType()) == axiom_type:
                             functional_axiom = axiom
                             return functional_axiom
                     return None
@@ -2055,7 +2190,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             cursor = conn.cursor()
             cursor.execute('''SELECT *
                             FROM axiom
-                            WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
+                            WHERE ontology_iri = ? and ontology_version = ? and manch_axiom = ?
                             ''', (ontology_iri, ontology_version, ax))
 
             if len(cursor.fetchall()) > 0:
@@ -2068,7 +2203,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 # create new ontology #
                 o = manager.createOntology()
                 # get all declaration axioms of the ontology to pass to parser #
-                cursor.execute('''SELECT axiom, iri_dict
+                cursor.execute('''SELECT manch_axiom, iri_dict
                                FROM axiom
                                 WHERE ontology_iri = ? and ontology_version = ? and type_of_axiom = ?
                                 ''',
@@ -2212,7 +2347,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 # get fullIRIs dict and type of axiom #
                 cursor.execute('''SELECT iri_dict, type_of_axiom
                                 FROM axiom
-                                WHERE ontology_iri = ? and ontology_version = ? and axiom = ?
+                                WHERE ontology_iri = ? and ontology_version = ? and manch_axiom = ?
                                 ''',
                                (ontology_iri, ontology_version, ax))
                 rows = cursor.fetchall()
@@ -2603,68 +2738,24 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             msgbox.exec_()
 
     def drawAxioms(self, dict):
-
-        for str_ax in dict.keys():
-            QtCore.QCoreApplication.processEvents()
-
-            axiom = dict[str_ax]['axiom']
-            diagrams = dict[str_ax]['involvedDiagrams']
-            #print(axiom, diagrams)
-            if len(diagrams) == 0:
-                # if no diagram involved:
-                # draw on the activeOne
-                diag = self.session.mdi.activeDiagram()
-                if diag:
-                    res = self.draw(axiom, diag)
-                    n = res[0]
-                else:
-                    project_diagrams = list(self.project.diagrams())
-                    diag = project_diagrams[0]
-                    res = self.draw(axiom, diag)
-                    n = res[0]
-
-            if len(diagrams) == 1:
-                # if only one diagram involved:
-                # draw on the one
-                diag = diagrams[0]
-                project_diagrams = self.project.diagrams()
-                for d in project_diagrams:
-                    if d.name == diag:
-                        diagram = d
-                        break
-                res = self.draw(axiom, diagram)
-                n = res[0]
-
-            if len(diagrams) > 1:
-                # if more than one diagram involved:
-                # draw on the activeOne if involved
-                diag = self.session.mdi.activeDiagram()
-                if diag:
-                    if diag.name in diagrams:
-
-                        res = self.draw(axiom, diag)
-                        n = res[0]
-                # else draw on any of the involved ones
-                else:
-                    diag = diagrams[0]
-                    project_diagrams = self.project.diagrams()
-                    for d in project_diagrams:
-                        if d.name == diag:
-                            diagram = d
-                            break
-                    res = self.draw(axiom, diagram)
-                    n = res[0]
-
-        # snap to grid #
-        self.session.doSnapTopGrid()
-
-        # focus on the last drawn element #
-        self.session.doFocusItem(n)
+        '''
+        Draw each axiom in the related diagram and insert in db.
+        '''
         conn = None
         try:
             conn = sqlite3.connect(self.db_filename)
         except Exception as e:
             print(e)
+
+        conn.executescript("""CREATE TABLE IF NOT EXISTS temp_drawn (
+                                                        project_iri      TEXT,
+                                                        project_version  TEXT,
+                                                        ontology_iri     TEXT,
+                                                        ontology_version TEXT,
+                                                        axiom            TEXT,
+                                                        session_id       TEXT,
+                                                        PRIMARY KEY (project_iri, project_version, ontology_iri, ontology_version, axiom));""")
+        conn.commit()
 
         # INSERT AXIOMS IN THE DRAWN TABLE #
         cursor = conn.cursor()
@@ -2682,6 +2773,55 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         with conn:
             for ax in dict.keys():
             # for each checked axiom:
+                QtCore.QCoreApplication.processEvents()
+
+                axiom = dict[ax]['axiom']
+                diagrams = dict[ax]['involvedDiagrams']
+                # print(axiom, diagrams)
+                if len(diagrams) == 0:
+                    # if no diagram involved:
+                    # draw on the activeOne
+                    diag = self.session.mdi.activeDiagram()
+                    if diag:
+                        res = self.draw(axiom, diag)
+                        n = res[0]
+                    else:
+                        project_diagrams = list(self.project.diagrams())
+                        diag = project_diagrams[0]
+                        res = self.draw(axiom, diag)
+                        n = res[0]
+
+                if len(diagrams) == 1:
+                    # if only one diagram involved:
+                    # draw on the one
+                    diag = diagrams[0]
+                    project_diagrams = self.project.diagrams()
+                    for d in project_diagrams:
+                        if d.name == diag:
+                            diagram = d
+                            break
+                    res = self.draw(axiom, diagram)
+                    n = res[0]
+
+                if len(diagrams) > 1:
+                    # if more than one diagram involved:
+                    # draw on the activeOne if involved
+                    diag = self.session.mdi.activeDiagram()
+                    if diag:
+                        if diag.name in diagrams:
+                            res = self.draw(axiom, diag)
+                            n = res[0]
+                    # else draw on any of the involved ones
+                    else:
+                        diag = diagrams[0]
+                        project_diagrams = self.project.diagrams()
+                        for d in project_diagrams:
+                            if d.name == diag:
+                                diagram = d
+                                break
+                        res = self.draw(axiom, diagram)
+                        n = res[0]
+
                 for ontology in project_ontologies:
                 # for each imported ontology:
                     # CHECK if AXIOM belongs to ONTOLOGY  #
@@ -2703,7 +2843,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         cur.execute(sql, (
                         self.project_iri, self.project_version, ontology_iri, ontology_version, str(ax), str(self.session)))
                         conn.commit()
+                        sql2 = 'INSERT INTO temp_drawn (project_iri, project_version, ontology_iri, ontology_version, axiom, session_id) VALUES (?, ?, ?, ?, ?, ?)'
+                        cur.execute(sql2, (
+                            self.project_iri, self.project_version, ontology_iri, ontology_version,
+                            str(ax), str(self.session)))
+                        conn.commit()
         conn.close()
+
+        # snap to grid #
+        self.session.doSnapTopGrid()
+
+        # focus on the last drawn element #
+        self.session.doFocusItem(n)
 
     def draw(self, axiom, diagram, x=0, y=0):
         QtCore.QCoreApplication.processEvents()
@@ -2744,7 +2895,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             propIRI = prop.getIRI()
 
-            propNode = self.findNode(propIRI, diagram) if self.findNode(propIRI, diagram) != 'null' else self.createNode(prop, diagram, x, y)
+            propNode = self.findNode(prop, diagram) if self.findNode(prop, diagram) != 'null' else self.createNode(prop, diagram, x, y)
 
         else:
             res = self.draw(prop, diagram, x, y)
@@ -3012,6 +3163,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             ax_type = str(axiom.getAxiomType())
             #print(ax_type)
+            if ax_type == 'Declaration':
+                entity = axiom.getEntity()
+                return [self.createNode(entity, diagram, x, y)]
 
             if ax_type == 'HasKey':
 
@@ -3258,7 +3412,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 chain = axiom.getPropertyChain()
                 property = axiom.getSuperProperty()
 
-                n = self.drawChain(chain, property, diagram, x, y)[0]
+                n = self.drawChain(chain, property, diagram, x, y)
                 return n
 
             if ax_type == 'SubClassOf':
@@ -3274,7 +3428,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(sub):
 
                     subIRI = sub.getIRI()
-                    subNode = self.findNode(subIRI, diagram)
+                    subNode = self.findNode(sub, diagram)
                     if subNode != 'null':
 
                         subDrawn = True
@@ -3282,7 +3436,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(sup):
 
                     supIRI = sup.getIRI()
-                    supNode = self.findNode(supIRI, diagram)
+                    supNode = self.findNode(sup, diagram)
                     if supNode != 'null':
                         supDrawn = True
 
@@ -3519,7 +3673,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram) if self.findNode(propIri, diagram) != 'null' else self.createNode(property, diagram, x, y)
+            propNode = self.findNode(property, diagram) if self.findNode(property, diagram) != 'null' else self.createNode(property, diagram, x, y)
 
         else:
 
@@ -3562,7 +3716,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -3575,7 +3729,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -3732,7 +3886,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -3745,7 +3899,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -3901,7 +4055,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -3914,7 +4068,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4071,7 +4225,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -4084,7 +4238,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4240,7 +4394,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -4253,7 +4407,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4410,7 +4564,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -4423,7 +4577,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4576,7 +4730,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(operand):
 
             iri = operand.getIRI()
-            node = self.findNode(iri, diagram) if self.findNode(iri, diagram) !='null' else self.createNode(operand, diagram, x, y)
+            node = self.findNode(operand, diagram) if self.findNode(operand, diagram) !='null' else self.createNode(operand, diagram, x, y)
 
         else:
 
@@ -4632,7 +4786,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -4645,7 +4799,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4798,7 +4952,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -4811,7 +4965,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -4965,7 +5119,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
                 propDrawn = True
 
@@ -4978,7 +5132,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -5133,7 +5287,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             propIri = property.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(property, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -5146,7 +5300,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 isLiteral = True
             if not ce.isTopEntity() and not isLiteral:
 
-                ceNode = self.findNode(ceIri, diagram)
+                ceNode = self.findNode(ce, diagram)
                 if ceNode != 'null':
                     ceDrawn = True
 
@@ -5306,7 +5460,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -5328,7 +5482,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
                     x = starting_x + 150
                     y = starting_y
 
@@ -5499,7 +5653,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -5524,7 +5678,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
 
                     x = starting_x
                     y = starting_y
@@ -5598,7 +5752,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -5637,7 +5791,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             elif self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
 
                     x = starting_x
                     y = starting_y
@@ -5697,7 +5851,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e) and not isinstance(e, self.OWLLiteral):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     xPos.append(node.pos().x())
@@ -5716,7 +5870,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(op):
 
                 nIri = op.getIRI()
-                if self.findNode(nIri, diagram) == 'null':
+                if self.findNode(op, diagram) == 'null':
                     x = starting_x + 150
                     y = starting_y
 
@@ -5805,7 +5959,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -5819,7 +5973,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(ce):
 
                 cIRI = ce.getIRI()
-                cNode = self.findNode(cIRI, diagram)
+                cNode = self.findNode(ce, diagram)
 
                 if cNode != 'null':
                     starting_x = cNode.pos().x() - (125 * len(keys)/2)
@@ -5854,7 +6008,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.isAtomic(c):
 
                     iri = c.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(c, diagram)
 
                     if node == 'null':
 
@@ -5907,7 +6061,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(ce):
 
             cIri = ce.getIRI()
-            cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-75)
+            cNode = self.findNode(ce, diagram) if self.findNode(ce, diagram) != 'null' else self.createNode(ce, diagram, x_med, y_med-75)
 
             if self.isIsolated(cNode):
                 cNode.setPos(x_med, y_med-75)
@@ -5933,7 +6087,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -5946,7 +6100,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(property):
 
                 cIRI = property.getIRI()
-                cNode = self.findNode(cIRI, diagram)
+                cNode = self.findNode(property, diagram)
 
                 if cNode != 'null':
 
@@ -5984,7 +6138,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
 
                 iri = prop.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(prop, diagram)
 
                 if node == 'null':
 
@@ -6029,7 +6183,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if self.isAtomic(property):
             pIri = property.getIRI()
-            pNode = self.findNode(pIri, diagram) if self.findNode(pIri,
+            pNode = self.findNode(property, diagram) if self.findNode(property,
                                                                   diagram) != 'null' else self.createNode(
                 property, diagram, x_med, y_med - 75)
 
@@ -6050,7 +6204,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6058,7 +6212,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(rang) and not isinstance(rang, self.OWLLiteral):
 
             iri = rang.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(rang, diagram)
 
             if domainNode != 'null':
                 domDrawn = True
@@ -6218,7 +6372,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6226,7 +6380,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(range) and not isinstance(range, self.OWLLiteral):
 
             iri = range.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(range, diagram)
 
             if domainNode != 'null':
                 domDrawn = True
@@ -6389,7 +6543,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6397,7 +6551,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(domain) and not isinstance(domain, self.OWLLiteral):
 
             iri = domain.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(domain, diagram)
 
             if domainNode != 'null':
 
@@ -6559,7 +6713,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(property):
 
             iri = property.getIRI()
-            propNode = self.findNode(iri, diagram)
+            propNode = self.findNode(property, diagram)
 
             if propNode != 'null':
                 propDrawn = True
@@ -6567,7 +6721,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(domain) and not isinstance(domain, self.OWLLiteral):
 
             iri = domain.getIRI()
-            domainNode = self.findNode(iri, diagram)
+            domainNode = self.findNode(domain, diagram)
 
             if domainNode != 'null':
 
@@ -6736,7 +6890,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(first):
 
             firstIRI = first.getIRI()
-            firstNode = self.findNode(firstIRI, diagram)
+            firstNode = self.findNode(first, diagram)
             if firstNode != 'null':
 
                 firstDrawn = True
@@ -6744,7 +6898,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(second):
 
             secondIRI = second.getIRI()
-            secondNode = self.findNode(secondIRI, diagram)
+            secondNode = self.findNode(second, diagram)
 
             if secondNode != 'null':
                 secondDrawn = True
@@ -6912,14 +7066,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(sub):
 
             sub_iri = sub.getIRI()
-            node0 = self.findNode(sub_iri, diagram)
+            node0 = self.findNode(sub, diagram)
             if node0 != 'null':
                 subDrawn = True
 
         if self.isAtomic(sup):
 
             sup_iri = sup.getIRI()
-            node1 = self.findNode(sup_iri, diagram)
+            node1 = self.findNode(sup, diagram)
             if node1 != 'null':
                 supDrawn = True
 
@@ -7095,7 +7249,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     if self.isIsolated(node):
@@ -7166,7 +7320,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.CLASS):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -7313,7 +7467,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
 
@@ -7343,7 +7497,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.DATA_PROPERTY) or ex.isType(self.EntityType.OBJECT_PROPERTY):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -7461,17 +7615,17 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(classs):
 
             class_iri = classs.getIRI()
-            if self.findNode(class_iri, diagram) != 'null':
+            if self.findNode(classs, diagram) != 'null':
 
-                node1 = self.findNode(class_iri, diagram)
+                node1 = self.findNode(classs, diagram)
                 classDrawn = True
 
         if self.isAtomic(indiv):
 
             indiv_iri = indiv.getIRI()
-            if self.findNode(indiv_iri, diagram) != 'null':
+            if self.findNode(indiv, diagram) != 'null':
 
-                node0 = self.findNode(indiv_iri, diagram)
+                node0 = self.findNode(indiv, diagram)
                 indivDrawn = True
 
         if classDrawn:
@@ -7604,7 +7758,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if self.isAtomic(prop):
             propIri = prop.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(prop, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -7612,7 +7766,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(indiv):
 
             indvIri = indiv.getIRI()
-            indivNode = self.findNode(indvIri, diagram)
+            indivNode = self.findNode(indiv, diagram)
             if indivNode != 'null':
                 indivDrawn = True
 
@@ -7621,7 +7775,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if isinstance(value, self.OWLNamedIndividual):
 
                 valueIri = value.getIRI()
-                valueNode = self.findNode(valueIri, diagram)
+                valueNode = self.findNode(value, diagram)
 
                 if valueNode != 'null':
                     valueDrawn = True
@@ -7909,7 +8063,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         if self.isAtomic(prop):
             propIri = prop.getIRI()
-            propNode = self.findNode(propIri, diagram)
+            propNode = self.findNode(prop, diagram)
             if propNode != 'null':
 
                 propDrawn = True
@@ -7917,7 +8071,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(indiv):
 
             indvIri = indiv.getIRI()
-            indivNode = self.findNode(indvIri, diagram)
+            indivNode = self.findNode(indiv, diagram)
             if indivNode != 'null':
                 indivDrawn = True
 
@@ -7926,7 +8080,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if isinstance(value, self.OWLNamedIndividual):
 
                 valueIri = value.getIRI()
-                valueNode = self.findNode(valueIri, diagram)
+                valueNode = self.findNode(value, diagram)
 
                 if valueNode != 'null':
                     valueDrawn = True
@@ -8219,7 +8373,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
 
@@ -8250,7 +8404,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if i.isType(self.EntityType.NAMED_INDIVIDUAL):
 
                     iri = i.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(i, diagram)
 
                     if node == 'null':
                         x = starting_x + 125
@@ -8335,7 +8489,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in individuals:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
 
@@ -8368,7 +8522,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if i.isType(self.EntityType.NAMED_INDIVIDUAL):
 
                     iri = i.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(i, diagram)
 
                     if node == 'null':
 
@@ -8457,7 +8611,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
 
                     nodes.append(node)
@@ -8496,7 +8650,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.CLASS):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -8638,7 +8792,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(e):
 
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -8652,7 +8806,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             if self.isAtomic(classs):
 
                 cIRI = classs.getIRI()
-                cNode = self.findNode(cIRI, diagram)
+                cNode = self.findNode(classs, diagram)
 
                 if cNode != 'null':
 
@@ -8689,7 +8843,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if c.isType(self.EntityType.CLASS):
 
                     iri = c.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(c, diagram)
 
                     if node == 'null':
 
@@ -8737,7 +8891,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if self.isAtomic(classs):
 
             cIri = classs.getIRI()
-            cNode = self.findNode(cIri, diagram) if self.findNode(cIri, diagram) != 'null' else self.createNode(classs, diagram, x_med, y_med-100)
+            cNode = self.findNode(classs, diagram) if self.findNode(classs, diagram) != 'null' else self.createNode(classs, diagram, x_med, y_med-100)
 
             if self.isIsolated(cNode):
                 cNode.setPos(x_med, y_med-100)
@@ -8806,7 +8960,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -8845,7 +8999,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 if ex.isType(self.EntityType.DATA_PROPERTY):
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -8956,7 +9110,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         for e in expressions:
             if self.isAtomic(e):
                 iri = e.getIRI()
-                node = self.findNode(iri, diagram)
+                node = self.findNode(e, diagram)
                 if node != 'null':
                     nodes.append(node)
                     x_positions.append(node.pos().x())
@@ -8994,7 +9148,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if ex.isType(self.EntityType.OBJECT_PROPERTY):
 
                     iri = ex.getIRI()
-                    node = self.findNode(iri, diagram)
+                    node = self.findNode(ex, diagram)
 
                     if node == 'null':
 
@@ -9422,12 +9576,18 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         return
 
-    def findNode(self, iri, diagram):
+    def findNode(self, item, diagram):
+        Types = {
+            Item.AttributeNode: 'DataProperty',
+            Item.ConceptNode: 'Class',
+            Item.IndividualNode: 'NamedIndividual',
+            Item.RoleNode: 'ObjectProperty',
+        }
 
         ### FIND NODE BY IRI IN THE DIAGRAM ###
         for el in diagram.items():
 
-            if el.isNode() and (el.type() == Item.ConceptNode or el.type() == Item.IndividualNode or el.type() == Item.RoleNode or el.type() == Item.AttributeNode) and str(iri) == str(el.iri):
+            if el.isNode() and  el.type() in Types.keys() and (Types[el.type()] == str(item.getEntityType())) and str(item.getIRI()) == str(el.iri):
                 return el
 
         # IF NOT FOUND, RETURN 'NULL'
