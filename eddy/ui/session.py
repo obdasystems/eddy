@@ -3472,6 +3472,7 @@ class Session(
                 close = False
             elif msgbox.result() == QtWidgets.QMessageBox.No:
                 save = False
+                self.sgnNoSaveProject.emit()
             elif msgbox.result() == QtWidgets.QMessageBox.Yes:
                 save = True
 
@@ -3481,8 +3482,6 @@ class Session(
             # SAVE THE CURRENT PROJECT IF NEEDED
             if save:
                 self.sgnSaveProject.emit()
-            else:
-                self.sgnNoSaveProject.emit()
             # DISPOSE ALL THE PLUGINS
             for plugin in self.plugins():
                 self.pmanager.dispose(plugin)
