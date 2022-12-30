@@ -109,7 +109,7 @@ jobs:
           ARCH="${{ matrix.architecture }}"
           TYPE="${{ matrix.type }}"
           NAME="Eddy-$PLATFORM-$ARCH-$TYPE-$SHA"
-          echo "::set-output name=name::$(echo "$NAME")"
+          echo "name=$(echo "$NAME")" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
