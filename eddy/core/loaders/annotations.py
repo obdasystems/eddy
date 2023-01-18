@@ -303,12 +303,18 @@ class XlsxLoader(TemplateLoader):
             number_of_columns = sheet.max_column + 1
 
             rows = []
+            breakFlag = False
             for i in range(1, number_of_rows):
                 row = []
-                for x in range(1, number_of_columns):
+                for x in range(1, 8):
                     QtCore.QCoreApplication.processEvents()
                     value = sheet.cell(row=i, column=x).value
+                    if x == 1 and (value == 'None' or value is None):
+                        breakFlag = True
+                        break
                     row.append(value)
+                if breakFlag:
+                    break
                 rows.append(row)
 
             header = rows[0]
