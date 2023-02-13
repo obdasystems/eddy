@@ -177,6 +177,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('swap_edge'))
             menu.addAction(self.session.action('focus_on_source'))
             menu.addAction(self.session.action('focus_on_target'))
+            menu.addAction(self.session.action('remove_all_breakpoints'))
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
 
@@ -200,6 +201,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('swap_edge'))
             menu.addAction(self.session.action('focus_on_source'))
             menu.addAction(self.session.action('focus_on_target'))
+            menu.addAction(self.session.action('remove_all_breakpoints'))
             self.session.action('swap_edge').setVisible(edge.isSwapAllowed())
         return menu
 
@@ -222,6 +224,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('focus_on_source'))
             menu.addAction(self.session.action('focus_on_target'))
+            menu.addAction(self.session.action('remove_all_breakpoints'))
         return menu
 
     def buildSameEdgeMenu(self, diagram, edge, pos):
@@ -243,6 +246,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('focus_on_source'))
             menu.addAction(self.session.action('focus_on_target'))
+            menu.addAction(self.session.action('remove_all_breakpoints'))
             menu.addAction(self.session.action('switch_same_to_different'))
 
         return menu
@@ -266,6 +270,7 @@ class MenuFactory(QtCore.QObject):
             menu.addAction(self.session.action('delete'))
             menu.addAction(self.session.action('focus_on_source'))
             menu.addAction(self.session.action('focus_on_target'))
+            menu.addAction(self.session.action('remove_all_breakpoints'))
             menu.addAction(self.session.action('switch_different_to_same'))
         return menu
 
