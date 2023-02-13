@@ -856,6 +856,11 @@ class Session(
             objectName='focus_on_target', statusTip='Focus on the target node',
             triggered=self.doFocusOnTarget))
 
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_delete_black'), 'Remove all breakpoints', self,
+            objectName='remove_all_breakpoints', statusTip='Remove all the breakpoints',
+            triggered=self.doRemoveAllBreakpoints))
+
         #############################################
         # SAME/DIFFERENT SPECIFIC
         #################################
@@ -2605,6 +2610,23 @@ class Session(
                 self.undostack.push(CommandEdgeBreakpointRemove(diagram, edge, breakpoint))
 
     @QtCore.pyqtSlot()
+    def doRemoveAllBreakpoints(self) -> None:
+        """
+        Focus on the source node of the selected edge.
+        """
+        diagram = self.mdi.activeDiagram()
+        if diagram:
+            diagram.setMode(DiagramMode.Idle)
+            selected = diagram.selectedEdges()
+            if len(selected) == 1:
+                edge = selected[0]
+                breakpoints = edge.breakpoints
+                while breakpoints:
+                    remove = CommandEdgeBreakpointRemove(diagram, edge, 0)
+                    self.undostack.push(remove)
+
+
+    @QtCore.pyqtSlot()
     def doRemoveDiagram(self) -> None:
         """
         Removes a diagram from the current project.
@@ -3226,6 +3248,7 @@ class Session(
         self.action('swap_edge').setEnabled(isEdgeSelected and isEdgeSwapEnabled)
         self.action('focus_on_source').setEnabled(isEdgeSelected)
         self.action('focus_on_target').setEnabled(isEdgeSelected)
+        self.action('remove_all_breakpoints').setEnabled(isEdgeSelected)
         self.action('switch_same_to_different').setEnabled(isSwitchToDifferentEnabled)
         self.action('switch_different_to_same').setEnabled(isSwitchToSameEnabled)
         self.action('toggle_grid').setEnabled(isDiagramActive)
