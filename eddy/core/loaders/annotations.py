@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import re
 ##########################################################################
 #                                                                        #
 #  Eddy: a graphical editor for the specification of Graphol ontologies  #
@@ -101,7 +101,7 @@ class TemplateLoader(AbstractOntologyLoader):
             'Object Property': Item.RoleNode
         }
         for row in rows:
-            resource = str(row[0])
+            resource = str(row[0]) if len(row) > 0 else None
             if resource and resource != 'None':
                 QtCore.QCoreApplication.processEvents()
 
@@ -242,26 +242,27 @@ class CsvLoader(TemplateLoader):
             QtCore.QCoreApplication.processEvents()
 
             header = next(csvreader)
-            if header == ['RESOURCE', 'SIMPLE_NAME', 'TYPE', 'ANNOTATION',
-                          'DATATYPE', 'LANG', 'VALUE']:
-                pass
-            else:
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Template Mismatch')
-                msgbox.setText('The imported file does not match the predifined template.\n'
-                               'Please fill the predifined template and try again.')
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msgbox.exec_()
-                return
+            checkArray = ['RESOURCE', 'SIMPLE_NAME', 'TYPE', 'ANNOTATION', 'DATATYPE', 'LANG',
+                          'VALUE']
+            for i in range(0, len(header)):
+                if checkArray[i] in header[i]:
+                    continue
+                else:
+                    msgbox = QtWidgets.QMessageBox()
+                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowTitle('Template Mismatch')
+                    msgbox.setText('The imported file does not match the predifined template.\n'
+                                   'Please fill the predifined template and try again.')
+                    msgbox.setTextFormat(QtCore.Qt.RichText)
+                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msgbox.exec_()
+                    return
 
             rows = []
             for row in csvreader:
                 QtCore.QCoreApplication.processEvents()
                 rows.append(row)
-            # print(rows)
             file.close()
             self.importAnnotations(rows, override)
 
@@ -312,20 +313,21 @@ class XlsxLoader(TemplateLoader):
                 rows.append(row)
 
             header = rows[0]
-            if header == ['RESOURCE', 'SIMPLE_NAME', 'TYPE', 'ANNOTATION',
-                          'DATATYPE', 'LANG', 'VALUE']:
-                pass
-            else:
-                msgbox = QtWidgets.QMessageBox()
-                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-                msgbox.setWindowTitle('Template Mismatch')
-                msgbox.setText('The imported file does not match the predifined template.\n'
-                               'Please fill the predifined template and try again.')
-                msgbox.setTextFormat(QtCore.Qt.RichText)
-                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                msgbox.exec_()
-                return
+            checkArray = ['RESOURCE', 'SIMPLE_NAME', 'TYPE', 'ANNOTATION','DATATYPE', 'LANG', 'VALUE']
+            for i in range(0, len(header)):
+                if checkArray[i] in header[i]:
+                    continue
+                else:
+                    msgbox = QtWidgets.QMessageBox()
+                    msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                    msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                    msgbox.setWindowTitle('Template Mismatch')
+                    msgbox.setText('The imported file does not match the predifined template.\n'
+                                   'Please fill the predifined template and try again.')
+                    msgbox.setTextFormat(QtCore.Qt.RichText)
+                    msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msgbox.exec_()
+                    return
 
             rows = rows[1:]
             self.importAnnotations(rows, override)
