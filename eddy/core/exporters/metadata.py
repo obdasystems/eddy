@@ -259,7 +259,8 @@ class CsvProjectExporter(AbstractMetadataExporter):
         writer = csv.writer(buffer, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
         writer.writerow(self.metadataHeader())
         writer.writerows(map(lambda row: row.values(), self.metadata()))
-        fwrite(buffer.getvalue(), path)
+        with open(path, 'w', newline='') as f:
+            f.write(buffer.getvalue())
         if self.open:
             openPath(path)
 
@@ -461,7 +462,8 @@ class CsvTemplateExporter(AbstractTemplateExporter):
 
         meta = self.data()
         writer.writerows(map(lambda row: row.values(), meta))
-        fwrite(buffer.getvalue(), path)
+        with open(path, 'w', newline='') as f:
+            f.write(buffer.getvalue())
         if self.open:
             openPath(path)
 
