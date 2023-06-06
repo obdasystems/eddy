@@ -3495,33 +3495,34 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                             cl = supNode
                             n = subNode
 
-                            if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
-                                type = n.type()
-                                restr = n.restriction()
-                                items = []
-                                for e in n.edges:
-                                    items.append(e.source)
+                            if len(res) == 2:
+                                if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                                    type = n.type()
+                                    restr = n.restriction()
+                                    items = []
+                                    for e in n.edges:
+                                        items.append(e.source)
 
-                                clEdges = [e for e in cl.edges if
-                                           e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
-                                for e in clEdges:
-                                    node = None
-                                    if e.source.type() is type and e.source.restriction() is restr:
-                                        node = e.source
-                                    elif e.target.type() is type and e.target.restriction() is restr:
-                                        node = e.target
-                                    else:
-                                        pass
+                                    clEdges = [e for e in cl.edges if
+                                               e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                                    for e in clEdges:
+                                        node = None
+                                        if e.source.type() is type and e.source.restriction() is restr:
+                                            node = e.source
+                                        elif e.target.type() is type and e.target.restriction() is restr:
+                                            node = e.target
+                                        else:
+                                            pass
 
-                                    if node:
-                                        found = node
-                                        inputEdges = [ie for ie in node.edges if
-                                                      ie.type() is Item.InputEdge]
-                                        for ie in inputEdges:
-                                            if ie.source not in items:
-                                                found = None
-                                        if found:
-                                            break
+                                        if node:
+                                            found = node
+                                            inputEdges = [ie for ie in node.edges if
+                                                          ie.type() is Item.InputEdge]
+                                            for ie in inputEdges:
+                                                if ie.source not in items:
+                                                    found = None
+                                            if found:
+                                                break
 
                         if found:
 
@@ -3554,33 +3555,34 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                             cl = subNode
                             n = supNode
 
-                            if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
-                                type = n.type()
-                                restr = n.restriction()
-                                items = []
-                                for e in n.edges:
-                                    items.append(e.source)
+                            if len(res) == 2:
+                                if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                                    type = n.type()
+                                    restr = n.restriction()
+                                    items = []
+                                    for e in n.edges:
+                                        items.append(e.source)
 
-                                clEdges = [e for e in cl.edges if
-                                           e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
-                                for e in clEdges:
-                                    node = None
-                                    if e.source.type() is type and e.source.restriction() is restr:
-                                        node = e.source
-                                    elif e.target.type() is type and e.target.restriction() is restr:
-                                        node = e.target
-                                    else:
-                                        pass
+                                    clEdges = [e for e in cl.edges if
+                                               e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                                    for e in clEdges:
+                                        node = None
+                                        if e.source.type() is type and e.source.restriction() is restr:
+                                            node = e.source
+                                        elif e.target.type() is type and e.target.restriction() is restr:
+                                            node = e.target
+                                        else:
+                                            pass
 
-                                    if node:
-                                        found = node
-                                        inputEdges = [ie for ie in node.edges if
-                                                      ie.type() is Item.InputEdge]
-                                        for ie in inputEdges:
-                                            if ie.source not in items:
-                                                found = None
-                                        if found:
-                                            break
+                                        if node:
+                                            found = node
+                                            inputEdges = [ie for ie in node.edges if
+                                                          ie.type() is Item.InputEdge]
+                                            for ie in inputEdges:
+                                                if ie.source not in items:
+                                                    found = None
+                                            if found:
+                                                break
 
                         if found:
                             supNode = found
@@ -3875,7 +3877,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
-
+            return [n, propNode, ceNode]
         return [n, propNode]
 
     def drawObjMinCardinality(self, card, property, ce, diagram, x, y):
@@ -4044,7 +4046,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
-
+            return [n, propNode, ceNode]
         return [n, propNode]
 
     def drawDataMaxCardinality(self, card, property, ce, diagram, x, y):
@@ -4214,6 +4216,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
+            return [n, propNode, ceNode]
 
         return [n, propNode]
 
@@ -4383,7 +4386,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
-
+            return [n, propNode, ceNode]
         return [n, propNode]
 
     def drawDataExactCardinality(self, card, property, ce, diagram, x, y):
@@ -4553,7 +4556,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
-
+            return [n, propNode, ceNode]
         return [n, propNode]
 
     def drawObjExactCardinality(self, card, property, ce, diagram, x, y):
@@ -4722,6 +4725,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
+            return [n, propNode, ceNode]
 
         return [n, propNode]
 
@@ -4941,6 +4945,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
+            return [n, propNode, ceNode]
 
         return [n, propNode]
 
@@ -5108,6 +5113,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
+            return [n, propNode, ceNode]
 
         return [n, propNode]
 
@@ -5276,7 +5282,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
-
+            return [n, propNode, ceNode]
         return [n, propNode]
 
     def drawDataAllValuesFrom(self, property, ce, diagram, x, y):
@@ -5446,6 +5452,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.session.undostack.push(
                     CommandEdgeBreakpointAdd(diagram, input2, i, b))
                 i = i + 1
+            return [n, propNode, ceNode]
 
         return [n, propNode]
 
@@ -7281,31 +7288,32 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if nodes:
                     cl = nodes[0]
 
-                    if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
-                        type = n.type()
-                        restr = n.restriction()
-                        items = []
-                        for e in n.edges:
-                            items.append(e.source)
+                    if len(res) == 2:
+                        if n.type() is Item.DomainRestrictionNode or n.type() is Item.RangeRestrictionNode:
+                            type = n.type()
+                            restr = n.restriction()
+                            items = []
+                            for e in n.edges:
+                                items.append(e.source)
 
-                        clEdges = [e for e in cl.edges if e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
-                        for e in clEdges:
-                            node = None
-                            if e.source.type() is type and e.source.restriction() is restr:
-                                node = e.source
-                            elif e.target.type() is type and e.target.restriction() is restr:
-                                node = e.target
-                            else:
-                                pass
+                            clEdges = [e for e in cl.edges if e.type() is Item.InclusionEdge or e.type() is Item.EquivalenceEdge]
+                            for e in clEdges:
+                                node = None
+                                if e.source.type() is type and e.source.restriction() is restr:
+                                    node = e.source
+                                elif e.target.type() is type and e.target.restriction() is restr:
+                                    node = e.target
+                                else:
+                                    pass
 
-                            if node:
-                                found = node
-                                inputEdges = [ie for ie in node.edges if ie.type() is Item.InputEdge]
-                                for ie in inputEdges:
-                                    if ie.source not in items:
-                                        found = None
-                                if found:
-                                    break
+                                if node:
+                                    found = node
+                                    inputEdges = [ie for ie in node.edges if ie.type() is Item.InputEdge]
+                                    for ie in inputEdges:
+                                        if ie.source not in items:
+                                            found = None
+                                    if found:
+                                        break
 
                 if found:
                     nodes.append(found)
