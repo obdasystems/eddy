@@ -37,6 +37,7 @@ from PyQt5 import (
     QtCore,
     QtWidgets,
 )
+from rfc3987 import parse
 
 from eddy.core.commands.iri import (
     CommandEdgeAddAnnotation,
@@ -49,7 +50,7 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.signals import connect
 from eddy.core.owl import (
     Annotation,
-    AnnotationAssertion,
+    AnnotationAssertion, IRI,
 )
 from eddy.ui.fields import ComboBox
 
@@ -282,6 +283,12 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         value = self.widget('value_textedit').toPlainText()
         if not value:
             value = ' '
+        else:
+            try:
+                parse(value, rule='IRI')
+                value = self.project.getIRI(value)
+            except:
+                pass
         typeStr = self.widget('type_switch').currentText()
         typeIRI = None
         if typeStr:
