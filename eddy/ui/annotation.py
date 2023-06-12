@@ -53,6 +53,8 @@ from eddy.core.owl import (
     AnnotationAssertion, IRI,
 )
 from eddy.ui.fields import ComboBox
+from eddy.ui.iri import getIRIPrefixComboBoxLabel, getIRIPrefixComboBox, getInputLabel, \
+    getInputField, getFullIRILabel, getFullIRIField, resolvePrefix
 
 
 class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -123,6 +125,14 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged, self.onPropertySwitched)
 
+        valueLabel = QtWidgets.QLabel(self, objectName='value_label')
+        valueLabel.setText('Value')
+        self.addWidget(valueLabel)
+
+        #############################################
+        # LITERAL TAB
+        #################################
+
         textArea = QtWidgets.QTextEdit(self, objectName='value_textedit')
         if self.assertion:
             if self.assertion.value:
@@ -168,6 +178,64 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 combobox.setCurrentText(self.emptyString)
         self.addWidget(combobox)
 
+        formlayout = QtWidgets.QFormLayout(self)
+        #formlayout.addRow(self.widget('subject_combobox_label'), self.widget('subject_switch'))
+        #formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
+        formlayout.addRow(self.widget('value_textedit'))
+        formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
+        formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('literal_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # IRI TAB
+        #################################
+
+        comboBoxLabel = getIRIPrefixComboBoxLabel(self)
+        self.addWidget(comboBoxLabel)
+
+        combobox = getIRIPrefixComboBox(self)
+        combobox.clear()
+        combobox.addItem('')
+        combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
+        ontPrefix = self.project.ontologyPrefix
+        if ontPrefix is not None:
+            combobox.setCurrentText(
+                        ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>'
+                    )
+        else:
+            combobox.setCurrentText('')
+        self.addWidget(combobox)
+
+        inputLabel = getInputLabel(self)
+        self.addWidget(inputLabel)
+
+        inputField = getInputField(self)
+        inputField.setText('')
+        self.addWidget(inputField)
+
+        fullIriLabel = getFullIRILabel(self)
+        self.addWidget(fullIriLabel)
+
+        fullIriField = getFullIRIField(self)
+        fullIriField.setText('')
+        self.addWidget(fullIriField)
+
+        formlayout2 = QtWidgets.QFormLayout()
+        formlayout2.addRow(self.widget('iri_prefix_combobox_label'),
+                          self.widget('iri_prefix_switch'))
+        formlayout2.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
+        formlayout2.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
+        widget2 = QtWidgets.QWidget()
+        widget2.setLayout(formlayout2)
+        widget2.setObjectName('iri_widget')
+        self.addWidget(widget2)
+
+        connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onPrefixChanged)
+        connect(self.widget('iri_input_field').textChanged, self.onInputChanged)
+
         #############################################
         # CONFIRMATION BOX
         #################################
@@ -183,13 +251,25 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
 
-        formlayout = QtWidgets.QFormLayout(self)
-        formlayout.addRow(self.widget('subject_combobox_label'), self.widget('subject_switch'))
-        formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
-        formlayout.addRow(self.widget('value_textedit'))
-        formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
-        formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
-        formlayout.addRow(self.widget('confirmation_widget'))
+        #############################################
+        # MAIN WIDGET
+        #################################
+
+        main_widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        main_widget.addTab(self.widget('literal_widget'), 'Literal')
+        main_widget.addTab(self.widget('iri_widget'), 'IRI')
+        self.addWidget(main_widget)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.addWidget(self.widget('subject_combobox_label'))
+        layout.addWidget(self.widget('subject_switch'))
+        layout.addWidget(self.widget('property_combobox_label'))
+        layout.addWidget(self.widget('property_switch'))
+        layout.addWidget(self.widget('value_label'))
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
 
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Annotation assertion builder <{}>'.format(str(iri)))
@@ -212,16 +292,17 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText(str(self.assertion.assertionProperty))
 
         textArea = self.widget('value_textedit')
-        if self.assertion:
-            if self.assertion.value:
-                textArea.setText(str(self.assertion.value))
+        if self.assertion and not self.assertion.isIRIValued():
+            textArea.setText(str(self.assertion.value))
+        else:
+            textArea.setText('')
 
         combobox = self.widget('type_switch')
         combobox.clear()
         combobox.addItem(self.emptyString)
         sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
         combobox.addItems([str(x) for x in sortedItems])
-        if not self.assertion:
+        if not self.assertion or self.assertion.isIRIValued():
             combobox.setCurrentText(self.emptyString)
         else:
             if self.assertion.datatype:
@@ -233,13 +314,43 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.clear()
         combobox.addItem(self.emptyString)
         combobox.addItems([x for x in self.project.getLanguages()])
-        if not self.assertion:
+        if not self.assertion or self.assertion.isIRIValued():
             combobox.setCurrentText(self.emptyString)
         else:
             if self.assertion.language:
                 combobox.setCurrentText(str(self.assertion.language))
             else:
                 combobox.setCurrentText(self.emptyString)
+
+        combobox = self.widget('iri_prefix_switch')
+        combobox.clear()
+        combobox.addItem(self.emptyString)
+        combobox.addItems(
+            [x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
+
+        shortest = None
+        if self.assertion and self.assertion.isIRIValued():
+            shortest = self.project.getShortestPrefixedForm(self.assertion.value)
+
+        if shortest:
+            combobox.setCurrentText(
+                    shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
+        else:
+            combobox.setCurrentText(self.emptyString)
+
+        inputField = self.widget('iri_input_field')
+        if shortest:
+            inputField.setText(shortest.suffix)
+        elif self.assertion and self.assertion.isIRIValued():
+            inputField.setText(str(self.assertion.value))
+        else:
+            inputField.setText('')
+
+        fullIriField = self.widget('full_iri_field')
+        if self.assertion and self.assertion.isIRIValued():
+            fullIriField.setText(str(self.assertion.value))
+        else:
+            fullIriField.setText('')
 
     @QtCore.pyqtSlot(int)
     def onSubjectSwitched(self, index):
@@ -273,6 +384,18 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
             self.widget('lang_switch').setEnabled(True)
 
+    @QtCore.pyqtSlot(int)
+    def onPrefixChanged(self, _):
+        self.onInputChanged('')
+
+    @QtCore.pyqtSlot(str)
+    def onInputChanged(self, _):
+        prefix = self.widget('iri_prefix_switch').currentText()
+        input = self.widget('iri_input_field').value()
+        resolvedPrefix = resolvePrefix(self.project, prefix)
+        fullIri = '{}{}'.format(resolvedPrefix, input)
+        self.widget('full_iri_field').setValue(fullIri)
+
     @QtCore.pyqtSlot()
     def accept(self):
 
@@ -280,24 +403,31 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         subjectIRI = self.project.getIRI(subjectStr)
         propertyStr = self.widget('property_switch').currentText()
         propertyIRI = self.project.getIRI(propertyStr)
-        value = self.widget('value_textedit').toPlainText()
-        if not value:
-            value = ' '
+        activeTab = self.widget('main_widget').currentWidget()
+        if activeTab is self.widget('literal_widget'):
+            value = self.widget('value_textedit').toPlainText()
+            if not value:
+                value = ' '
+            typeStr = self.widget('type_switch').currentText()
+            typeIRI = None
+            if typeStr:
+                typeIRI = self.project.getIRI(typeStr)
+            language = None
+            if self.widget('lang_switch').isEnabled():
+                language = self.widget('lang_switch').currentText()
+                if language not in self.project.getLanguages():
+                    self.project.addLanguageTag(language)
         else:
+            value = self.widget('full_iri_field').value()
             try:
                 parse(value, rule='IRI')
                 value = self.project.getIRI(value)
+                typeIRI = self.project.getIRI('http://www.w3.org/2001/XMLSchema#anyURI')
+                language = ''
             except:
                 pass
-        typeStr = self.widget('type_switch').currentText()
-        typeIRI = None
-        if typeStr:
-            typeIRI = self.project.getIRI(typeStr)
-        language = None
-        if self.widget('lang_switch').isEnabled():
-            language = self.widget('lang_switch').currentText()
-            if language not in self.project.getLanguages():
-                self.project.addLanguageTag(language)
+
+
         if not self.assertion:
             annAss = AnnotationAssertion(subjectIRI,propertyIRI,value,typeIRI,language)
             command = CommandIRIAddAnnotationAssertion(self.project, subjectIRI, annAss)
