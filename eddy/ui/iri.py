@@ -749,6 +749,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         table = getAnnotationAssertionsTable(self)
         table.clear()
+        connect(table.cellDoubleClicked, self.editAnnotation)
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='annotations_add_button')
@@ -929,6 +930,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
 
     @QtCore.pyqtSlot(bool)
+    @QtCore.pyqtSlot(int, int)
     def editAnnotation(self, _):
         table = self.widget('annotation_assertions_table_widget')
         selectedRanges = table.selectedRanges()
@@ -1507,6 +1509,7 @@ class EdgeAxiomDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         table = getAnnotationsTable(self)
         table.clear()
+        connect(table.cellDoubleClicked, self.editAnnotation)
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='annotations_add_button')
@@ -1651,6 +1654,7 @@ class EdgeAxiomDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setRowCount(rowcount - sum(map(lambda x: x.rowCount(), selectedRanges)))
 
     @QtCore.pyqtSlot(bool)
+    @QtCore.pyqtSlot(int, int)
     def editAnnotation(self, _):
         table = self.widget('annotations_table_widget')
         selectedRanges = table.selectedRanges()
