@@ -50,11 +50,19 @@ from eddy.core.datatypes.graphol import Item
 from eddy.core.functions.signals import connect
 from eddy.core.owl import (
     Annotation,
-    AnnotationAssertion, IRI,
+    AnnotationAssertion,
+    IRI,
 )
 from eddy.ui.fields import ComboBox
-from eddy.ui.iri import getIRIPrefixComboBoxLabel, getIRIPrefixComboBox, getInputLabel, \
-    getInputField, getFullIRILabel, getFullIRIField, resolvePrefix
+from eddy.ui.iri import (
+    getFullIRIField,
+    getFullIRILabel,
+    getIRIPrefixComboBox,
+    getIRIPrefixComboBoxLabel,
+    getInputField,
+    getInputLabel,
+    resolvePrefix,
+)
 
 
 class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -258,6 +266,8 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         main_widget = QtWidgets.QTabWidget(self, objectName='main_widget')
         main_widget.addTab(self.widget('literal_widget'), 'Literal')
         main_widget.addTab(self.widget('iri_widget'), 'IRI')
+        if self.assertion and self.assertion.isIRIValued():
+            main_widget.setCurrentWidget(self.widget('iri_widget'))
         self.addWidget(main_widget)
 
         layout = QtWidgets.QVBoxLayout()
@@ -362,7 +372,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
 
-
     @QtCore.pyqtSlot(int)
     def onPropertySwitched(self, index):
         propIRI = self.widget('property_switch').itemText(index)
@@ -372,7 +381,6 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(True)
         else:
             confirmation.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
-
 
     @QtCore.pyqtSlot(int)
     def onTypeSwitched(self, index):
@@ -424,9 +432,14 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 value = self.project.getIRI(value)
                 typeIRI = self.project.getIRI('http://www.w3.org/2001/XMLSchema#anyURI')
                 language = ''
-            except:
-                pass
-
+            except ValueError:
+                dialog = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'IRI Definition Error',
+                    'The input string is not a valid IRI',
+                    parent=self)
+                dialog.open()
+                return
 
         if not self.assertion:
             annAss = AnnotationAssertion(subjectIRI,propertyIRI,value,typeIRI,language)
