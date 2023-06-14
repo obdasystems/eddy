@@ -277,6 +277,7 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         if annotation.isIRIValued():
             objecIriEl = self.getDomElement('iri')
             objecIriEl.appendChild(self.getDomTextNode(str(annotation.value)))
+            objectEl.appendChild(objecIriEl)
         else:
             lexicalFormEl = self.getDomElement('lexicalForm')
             lexicalFormEl.appendChild(self.getDomTextNode(str(annotation.value)))

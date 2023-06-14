@@ -414,7 +414,7 @@ class AnnotationAssertion(QtCore.QObject):
         """
         if self._value:
             if isinstance(self._value, IRI):
-                prefixedIRI = self._value.manager.getShortestPrefixedForm(self._value)
+                prefixedIRI = self._value.manager.getShortestPrefixedForm(self._value) if self._value.manager else None
                 if prefixedForm and prefixedIRI:
                     return str(prefixedIRI)
                 else:
