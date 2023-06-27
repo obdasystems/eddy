@@ -355,26 +355,17 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot(AnnotationAssertion)
     def onIRIAnnotationAssertionAdded(self, _):
         iri = self.sender()
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
-            self.redrawIRIItem(iri)
+        self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot(AnnotationAssertion)
     def onIRIAnnotationAssertionRemoved(self, _):
         iri = self.sender()
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
-            self.redrawIRIItem(iri)
+        self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot(AnnotationAssertion)
     def onIRIAnnotationAssertionModified(self, _):
         iri = self.sender()
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
-            self.redrawIRIItem(iri)
+        self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot()
     def onNodeIRISwitched(self):
