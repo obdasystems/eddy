@@ -853,9 +853,9 @@ class IRI(QtCore.QObject):
                 currList.remove(annotation)
                 if len(currList) < 1:
                     self._annotationAssertionsMap.pop(annotation.assertionProperty, None)
-                self.sgnAnnotationRemoved.emit(annotation)
             if annotation in self._annotationAssertions:
                 self.annotationAssertions.remove(annotation)
+                self.sgnAnnotationRemoved.emit(annotation)
         else:
             raise KeyError('Cannot find the annotation assertion')
 
