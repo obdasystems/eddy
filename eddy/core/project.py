@@ -69,6 +69,7 @@ from eddy.core.owl import (
     IRIManager,
     IRI,
     K_ASYMMETRIC,
+    K_DEPRECATED,
     K_INVERSE_FUNCTIONAL,
     K_IRREFLEXIVE,
     K_REFLEXIVE,

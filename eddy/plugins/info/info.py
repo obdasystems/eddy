@@ -74,6 +74,7 @@ from eddy.core.owl import OWL2Profiles
 from eddy.core.plugin import AbstractPlugin
 from eddy.core.project import (
     K_ASYMMETRIC,
+    K_DEPRECATED,
     K_FUNCTIONAL,
     K_INVERSE_FUNCTIONAL,
     K_IRREFLEXIVE,
@@ -950,6 +951,13 @@ class IRIInfo(NodeInfo):
         self.fullIRIField.setReadOnly(True)
         # connect(self.fullIRIField.editingFinished, self.editingFinished)
 
+        self.deprKey = Key('Deprecated', self)
+        deprParent = Parent(self)
+        self.deprBox = CheckBox(deprParent)
+        self.deprBox.setCheckable(True)
+        self.deprBox.setProperty('key', K_DEPRECATED)
+        connect(self.deprBox.clicked, self.onFlagChanged)
+
         self.predPropHeader = Header('IRI properties', self)
         self.labelKey = Key('Label', self)
         self.labelField = String(self)
@@ -963,6 +971,7 @@ class IRIInfo(NodeInfo):
         self.predPropLayout.addRow(self.fullIRIKey, self.fullIRIField)
         self.predPropLayout.addRow(self.nameKey, self.nameField)
         self.predPropLayout.addRow(self.labelKey, self.labelField)
+        self.predPropLayout.addRow(self.deprKey, deprParent)
 
         self.mainLayout.insertWidget(0, self.predPropHeader)
         self.mainLayout.insertLayout(1, self.predPropLayout)
@@ -997,6 +1006,24 @@ class IRIInfo(NodeInfo):
 
         self.nameField.clearFocus()
         self.textField.clearFocus()
+
+    @QtCore.pyqtSlot()
+    def onFlagChanged(self) -> None:
+        """
+        Executed whenever one of the property fields changes.
+        """
+        sender = self.sender()
+        checked = sender.isChecked()
+        key = sender.property('key')
+        undo = self.node.iri.getMetaProperties()
+        redo = undo.copy()
+        redo[key] = checked
+        if redo != undo:
+            prop = RE_CAMEL_SPACE.sub(r'\g<1> \g<2>', key).lower()
+            name = "{0}set '{1}' {2} property".format('' if checked else 'un', self.node.iri, prop)
+            self.session.undostack.push(
+                CommandIRISetMeta(self.project, self.node.type(), self.node.iri, undo, redo, name)
+            )
 
     #############################################
     #   INTERFACE
@@ -1036,6 +1063,7 @@ class IRIInfo(NodeInfo):
                 self.labelField.setValue(labelAssertion.getObjectResourceString(True))
             else:
                 self.labelField.setValue('')
+            self.deprBox.setChecked(node.iri.deprecated)
 
 
 class FacetIRIInfo(NodeInfo):
