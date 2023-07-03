@@ -80,14 +80,16 @@ def fexists(path):
     return os.path.isfile(expandPath(path))
 
 
-def fread(path):
+def fread(path, newline=None):
     """
     Read the file identified by the given 'path' and returns its content.
+    Optional newline parameter has the same role as `newline` in :func:`io.open`.
     :type path: str
+    :type newline: str, optional
     :rtype: str
     """
     path = expandPath(path)
-    with io.open(path, 'r', encoding='utf8') as ptr:
+    with io.open(path, 'r', encoding='utf8', newline=newline) as ptr:
         return ptr.read()
 
 
@@ -109,17 +111,19 @@ def frename(src, dst):
     os.rename(expandPath(src), expandPath(dst))
 
 
-def fwrite(content, path):
+def fwrite(content, path, newline=None):
     """
     Safely write the given 'content' in the file identified by the given 'path'.
     If the given path identifies an already existing file, its content is not
     truncated unless the writing operation is completed successfully.
+    Optional newline parameter has the same role as `newline` in :func:`io.open`.
     :type content: T <= bytes|str|unicode
     :type path: str
+    :type newline: str, optional
     """
     components = os.path.split(expandPath(path))
     stage = os.path.join(components[0], '.{0}'.format(components[1]))
-    with io.open(stage, 'w', encoding='utf8') as ptr:
+    with io.open(stage, 'w', encoding='utf8', newline=newline) as ptr:
         ptr.write(content)
     fremove(path)
     frename(stage, path)
