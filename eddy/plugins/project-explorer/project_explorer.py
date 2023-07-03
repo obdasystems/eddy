@@ -320,12 +320,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         """
         self.model.clear()
         self.model.appendRow(self.root)
-        if str(project.ontologyIRI) != 'None':
-            text = str(project.getShortestPrefixedForm(project.ontologyIRI))
-            if text == ':' or text == 'None':
-                text = project.name
-        else:
-            text = project.name
+        text = project.getIRI(project.name).getSimpleName()
         self.root.setText(text)
         connect(self.sgnFakeDiagramAdded, self.doAddDiagram)
         for diagram in project.diagrams():
