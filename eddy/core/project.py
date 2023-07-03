@@ -188,10 +188,11 @@ class Project(IRIManager):
     def name(self):
         try:
             parse(str(self.ontologyIRI), rule='IRI')
-            return str(self.ontologyIRI)
+            name = str(self.ontologyIRI)
         except ValueError:
-             return "http://obda.org/"+self.oldName
-
+            name = "http://obda.org/"+self.oldName
+        simpleName = self.getIRI(name).getSimpleName()
+        return simpleName if len(simpleName) > 0 else self.oldName
     @name.setter
     def name(self, value):
         try:

@@ -320,7 +320,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         """
         self.model.clear()
         self.model.appendRow(self.root)
-        text = project.getIRI(project.name).getSimpleName()
+        text = project.name
         self.root.setText(text)
         connect(self.sgnFakeDiagramAdded, self.doAddDiagram)
         for diagram in project.diagrams():
