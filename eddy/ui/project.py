@@ -39,6 +39,7 @@ from PyQt5 import (
     QtWidgets,
     QtXmlPatterns,
 )
+from rfc3987 import parse
 
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
@@ -124,13 +125,21 @@ class NewProjectDialog(QtWidgets.QDialog):
         """
         Returns the value of the iri field (trimmed).
         """
-        return self.iriField.value()
+        try:
+            parse(self.iriField.value(), rule='IRI')
+            return self.iriField.value()
+        except ValueError:
+            return "http://obda.org/" + self.iriField.value()
 
     def name(self) -> str:
         """
         Returns the value of the name field (trimmed).
         """
-        return self.iriField.value()
+        try:
+            parse(self.iriField.value(), rule='IRI')
+            return self.iriField.value()
+        except ValueError:
+            return "http://obda.org/" + self.iriField.value()
 
     def prefix(self) -> str:
         """
