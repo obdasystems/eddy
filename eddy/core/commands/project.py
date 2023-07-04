@@ -38,6 +38,33 @@ from PyQt5 import QtWidgets
 from eddy.core.datatypes.graphol import Item
 
 
+class CommandProjectRename(QtWidgets.QUndoCommand):
+    """
+    Extends QtWidgets.QUndoCommand with facilities to rename the Project.
+    """
+    def __init__(self, undo, redo, project):
+        """
+        Initialize the command.
+        :type undo: str
+        :type redo: str
+        :type project: Project
+        """
+        super().__init__("rename project '{0}' to '{1}'".format(undo, redo))
+        self.project = project
+        self.undo = undo
+        self.redo = redo
+
+    def redo(self):
+        """redo the command"""
+        self.project.name = self.redo
+        self.project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self.project.name = self.undo
+        self.project.sgnUpdated.emit()
+
+
 #############################################
 #   Ontology IRI
 #################################
