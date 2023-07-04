@@ -8,7 +8,7 @@ Eddy can be installed via one of the following methods:
 Standalone releases come with all the required dependencies already bundled.
 This is the simplest way to get up and running with Eddy.
 However, if you prefer manually installing from source, then you will need to have
-Python 3.5 or later, and Java 1.8 or later already installed on your system.
+Python 3.7 or later, and Java 1.8 or later already installed on your system.
 
 If you encounter issues with the installation, please report them using the [issue tracker].
 
@@ -40,21 +40,26 @@ Alternatively, you can download the standalone version provided as a tarball
 from [GitHub releases] and unpack it anywhere on your system.
 You can start Eddy by running the `Eddy` executable.
 
+**NOTE**: standalone tarball releases have been deprecated and will be removed in future versions of Eddy.
+It is recommended to switch AppImage builds as these work more reliably between the different distros.
+
 ## Installing from a source tarball
 
-In order to install Eddy from a source tarball you will need to have Python 3.5 or later,
+In order to install Eddy from a source tarball you will need to have Python 3.7 or later,
 and a Java Runtime Environment 1.8 or later already installed on your system.
 
 The following additional Python requirements are needed:
- * PyQt5 >= 5.8
+ * PyQt5 >= 5.11
  * jpype1 >= 0.7.1
+ * openpyxl
  * rfc3987
 
- You can either choose to install Eddy as a system python module, or by using a
- virtual environment. The advantage is that using this method the application
- will be available to all users on the system, without having to activate
- the virtual environment first.
- The recommended option is to install using a virtual environment.
+You can either choose to install Eddy as a system python module, or by using a
+virtual environment. The advantage of installing as a system python module is
+that using this method the application will be available to all users on the system,
+without having to activate the virtual environment first, however this can cause issues
+if your system provides conflicting versions of the python dependencies.
+Hence, the recommended option is to install using a virtual environment.
 
 ### Installing using a virtual environment
 
@@ -77,13 +82,33 @@ or, on Windows:
 2. Download a source tarball from [GitHub releases] and install Eddy:
 
  ```bash
- $ pip install PyQt5 >= 5.8 # Only if not already provided by the system installation
+ $ pip install "PyQt5>=5.11" # Only if not already provided by the system installation
  $ pip install https://github.com/obdasystems/eddy/archive/<version>.tar.gz
  ```
 e.g.:
 ```bash
- $ pip install https://github.com/obdasystems/eddy/archive/v1.2.0.tar.gz
+ $ pip install https://github.com/obdasystems/eddy/archive/v3.4.tar.gz
 ```
+
+**NOTE**: Depending on your platform, you may encounter an issue during the installation of PyQt5 where
+the corresponding command gets stuck indefinitely. This seems to be related with `pip` failing to detect
+a prebuilt wheel for your platform, and trying to compile the PyQt5 module from sources which then gets stuck
+at the license agreement prompt.
+
+If you happen to stumble upon this issue, first try to update the pip module and repeat the PyQt5 installation step:
+```bash
+$ python -m pip install --upgrade pip
+```
+If this does not solve the issue (e.g. if there are really no prebuilt wheels available for your platform
+from [PyPI], such as is the case for aarch64 Linux hosts), you can try to get past the PyQt5 license agreement
+prompt by running the following command:
+```bash
+$ pip install pyqt5 --config-settings --confirm-license= --verbose
+```
+GNU/Linux users can also use the version of PyQt5 provided by their distribution by creating the virtual environment
+with the `--system-site-packages` option.
+Note that compiling PyQt5 from sources can potentially take a long time.
+More details on the issue are available [here](https://stackoverflow.com/questions/66546886/pip-install-stuck-on-preparing-wheel-metadata-when-trying-to-install-pyqt5).
 
 To use a specific JRE installation, simply point the `JAVA_HOME` environment variable
 to it before starting Eddy.
@@ -119,3 +144,4 @@ branch:
 [GitHub repository]: https://github.com/obdasystems/eddy
 [GitHub releases]: https://github.com/obdasystems/eddy/releases
 [issue tracker]: https://github.com/obdasystems/eddy/issues
+[PyPI]: https://pypi.org

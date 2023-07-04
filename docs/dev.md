@@ -3,10 +3,10 @@
 This guide will help you in setting up a development environment
 to work on Eddy.
 
-At a minimum, you need to have [git](http://git-scm.com/), and [Python 3.5](https://www.python.org) or later
-installed on your system. Some of the features will also require a Java Runtime Environment
-1.8 or later to be present. You can either use the system-wide installation, or directly
-unpack a copy inside Eddy's repository checkout.
+At a minimum, you need to have [git](http://git-scm.com/), [Python 3.7](https://www.python.org) or later
+and a Java Development Kit (JDK) 1.8 or later installed on your system.
+
+For the JDK, you can either use the system-wide installation, or directly unpack a copy inside Eddy's repository checkout.
 
 The recommended way to setup a development environment for Eddy is to use an isolated
 [virtual environment](https://docs.python.org/3/tutorial/venv.html). This makes
@@ -17,9 +17,9 @@ and PyQt5 dependencies, without having to break your system installation.
 
 ## On Windows
 
-Install [Python 3.5](https://www.python.org/downloads/release/) or later, [Git](https://git-scm.com/downloads),
-and a JDK 1.8 or later. We recommend downloading either the latest OpenJDK 11 or OpenJDK 1.8 from [AdoptOpenJDK]
-or the latest JDK 11 from Oracle. Make sure the corresponding executables can be found in your `PATH`.
+Install [Python 3.7](https://www.python.org/downloads/release/) or later, [Git](https://git-scm.com/downloads),
+and a JDK 1.8 or later. We recommend downloading the latest OpenJDK 11 build from [Adoptium] or the latest
+JDK 11 from Oracle. Make sure the corresponding executables can be found in your `PATH`.
 
 Make sure to set the `JAVA_HOME` environment variable to point to the location where the JDK is installed.
 
@@ -59,7 +59,7 @@ Activate the virtual environment with:
 
 Clone Eddy using your preferred IDE, or by running the command:
 
-    C:\> git clone --recursive https://github.com/obdasystems/eddy.git
+    C:\> git clone https://github.com/obdasystems/eddy.git
 
 Update `pip` and synchronize the required Python dependencies from PyPI:
 
@@ -74,13 +74,12 @@ the `develop` branch:
 
     C:\> git checkout develop
 
-If you prefer to use a local copy of the JDK, simply download one and and unpack it
+If you prefer to use a local copy of the JDK, simply download one and unpack it
 inside the `eddy/resources/java` folder (you will have to create it).
 If you prefer to use the system-wide Java installation instead, you only need to set the
 `JAVA_HOME` environment variable for your user to point to the JDK installation directory.
 
-To start Eddy, simply *cd* to the root of the repository copy, and execute
-the command:
+To start Eddy, simply *cd* to the root of the repository, and execute the command:
 
     C:\> python run.py
 
@@ -91,7 +90,8 @@ Make sure Xcode command line tools are installed. From a terminal window, type:
     $ xcode-select --install
 
 Install [Homebrew](http://brew.sh/).
-Install [Python 3.5](https://www.python.org/downloads/release/) or later using your
+
+Install [Python 3.7](https://www.python.org/downloads/release/) or later using your
 preferred method. In this guide we'll show how to install a Python interpreter by
 compiling it from sources using [pyenv](https://github.com/pyenv/pyenv).
 
@@ -112,18 +112,18 @@ Install `pyenv` formula via Homebrew or by cloning the [repository](https://gith
 
     $ brew install pyenv
     $ pyenv init
-    $ # compile and install a python version, e.g. 3.7.7
-    $ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.7.7
+    $ # compile and install a python version, e.g. 3.7.16
+    $ env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.7.16
 
-**NOTE**: Make sure to to add the `PYTHON_CONFIGURE_OPTS="--enable-framework"` to the `pyenv` command
+**NOTE**: Make sure to add the `PYTHON_CONFIGURE_OPTS="--enable-framework"` to the `pyenv` command
 if you intend to use PyInstaller to build standalone releases.
 
-Install a JDK 1.8 or later. We recommend installing either the latest OpenJDK 11
-or OpenJDK 1.8 from [AdoptOpenJDK](https://adoptopenjdk.net) using Homebrew cask:
+Install a JDK 1.8 or later.
+We recommend installing either the latest OpenJDK 11 or 1.8 build from [Adoptium] using Homebrew cask:
 
-    $ brew tap AdoptOpenJDK/openjdk
-    $ brew cask install adoptopenjdk8   # For JDK 1.8
-    $ brew cask install adoptopenjdk11  # For JDK 11
+    $ brew tap homebrew/cask-versions
+    $ brew cask install temurin8        # For JDK 1.8
+    $ brew cask install temurin11       # For JDK 11
 
 Set the `JAVA_HOME` environment variable to point to the location where the JDK is installed.
 
@@ -131,9 +131,9 @@ Set the `JAVA_HOME` environment variable to point to the location where the JDK 
     $ export JAVA_HOME="`/usr/libexec/java_home -v 11`"  # For JDK 11
 
 Choose a location where to store the virtualenv and create it.
-The following command creates a new virtualenv inside $HOME/eddy-venv:
+The following command creates a new virtualenv inside `$HOME/eddy-venv`:
 
-    $ PYENV_VERSION=3.7.7 pyenv exec python -m venv $HOME/eddy-venv
+    $ PYENV_VERSION=3.7.16 pyenv exec python -m venv $HOME/eddy-venv
 
 You can change the `PYENV_VERSION` variable to match the python version you want to use.
 
@@ -143,7 +143,7 @@ Activate the virtual environment with:
 
 Clone Eddy repository using your favorite IDE, or from the terminal by running the command:
 
-    $ git clone --recursive https://github.com/obdasystems/eddy.git
+    $ git clone https://github.com/obdasystems/eddy.git
 
 Update `pip` and install required Python dependencies from PyPI:
 
@@ -183,7 +183,7 @@ Here are the commands to install Python3 via the package manager for some of the
 ###### On ArchLinux / Manjaro
     $ sudo pacman -Sy python
 
-#### Installing Python using pyenv
+#### Installing Python using pyenv (optional)
 If your system does not provide a recent enough version of Python, or you wish
 to use a more recent one, you can install python by compiling it from sources
 using *pyenv*.
@@ -206,20 +206,20 @@ Clone [pyenv](https://github.com/pyenv/pyenv) repository:
 
     $ git clone https://github.com/pyenv/pyenv ~/.pyenv
 
-Compile and install a Python interpreter, e.g. 3.7.7:
+Compile and install a Python interpreter, e.g. 3.7.16:
 
     $ export PYENV_ROOT="$HOME/.pyenv"
     $ export PATH="$PYENV_ROOT/bin:$PATH"
     $ pyenv init
-    $ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.7
+    $ env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.16
 
 **NOTE**: Make sure to add the `PYTHON_CONFIGURE_OPTS="--enable-shared""` environment variable
  to the `pyenv` command if you intend to use PyInstaller to build standalone releases.
 
 Choose a location for the virtualenv and create it. In what follows we show how to create it
-it a directory named `eddy-venv` inside the user's home folder:
+in a directory named `eddy-venv` inside the user's home folder:
 
-    $ PYENV_VERSION=3.7.7 pyenv exec python -m venv $HOME/eddy-venv
+    $ PYENV_VERSION=3.7.16 pyenv exec python -m venv $HOME/eddy-venv
 
 Activate the virtual environment:
 
@@ -227,7 +227,7 @@ Activate the virtual environment:
 
 Clone Eddy using your favorite IDE, or via the commandline by running the command:
 
-    $ git clone --recursive https://github.com/obdasystems/eddy.git
+    $ git clone https://github.com/obdasystems/eddy.git
 
 Update `pip` and install required Python dependencies from PyPI:
 
@@ -237,9 +237,8 @@ Update `pip` and install required Python dependencies from PyPI:
 
 where `<python_version>` corresponds to the venv python version (e.g. `py37` for Python 3.7.x).
 
-Install a JDK 1.8 or later. You can download a prebuilt one from [AdoptOpenJDK](https://adoptopenjdk.net),
-or use your distribution package manager to install it. We recommend installing either
-a JDK 11 LTS, or a JDK 1.8:
+Install a JDK 1.8 or later. You can download a prebuilt one from [Adoptium], or use your distribution package
+manager to install it. We recommend installing either a JDK 11 LTS, or a JDK 1.8:
 
 ###### On Debian, Ubuntu, and derivatives
 
@@ -256,7 +255,7 @@ a JDK 11 LTS, or a JDK 1.8:
     $ sudo pacman -Sy jdk8-openjdk   # For JDK 1.8
     $ sudo pacman -Sy jdk11-openjdk  # For JDK 11
 
-If you prefer to use a local copy of the JDK, simply download one and and unpack it
+If you prefer to use a local copy of the JDK, simply download one and unpack it
 inside the `eddy/resources/java` folder (you will have to create it).
 If you prefer to use the system-wide Java installation instead, you only need to set the
 `JAVA_HOME` environment variable for your user to point to the JDK installation directory.
@@ -324,6 +323,6 @@ Once the building process is completed you will find the built
 package(s) inside the *dist* directory.
 
 
-[AdoptOpenJDK]: https://adoptopenjdk.net
+[Adoptium]: https://adoptium.net/
 [GitHub releases]: https://github.com/obdasystems/eddy/releases
 [appimagetool]: https://appimage.github.io/appimagetool
