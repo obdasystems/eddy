@@ -57,6 +57,7 @@ K_IRREFLEXIVE = 'irreflexive'
 K_REFLEXIVE = 'reflexive'
 K_SYMMETRIC = 'symmetric'
 K_TRANSITIVE = 'transitive'
+K_DEPRECATED = 'deprecated'
 
 class Literal(QtCore.QObject):
     """
@@ -468,7 +469,11 @@ class AnnotationAssertion(QtCore.QObject):
     def __eq__(self, other):
         if not isinstance(other, AnnotationAssertion):
             return False
-        return self.assertionProperty == other.assertionProperty and self.subject == other.subject and self.value == other.value and self.datatype == other.datatype and self.language == other.value
+        return (self.assertionProperty == other.assertionProperty and
+                self.subject == other.subject and
+                self.value == other.value and
+                self.datatype == other.datatype and
+                self.language == other.language)
 
     def __str__(self):
         return 'AnnotationAssertion(<{}> <{}> {})'.format(self.assertionProperty,self.subject,self.getObjectResourceString(True))
@@ -674,6 +679,35 @@ class IRI(QtCore.QObject):
         self.sgnIRIPropModified.emit()
 
     @property
+    def deprecated(self):
+        """
+        Returns `True` whenever this IRI has been deprecated.
+        :rtype: bool
+        """
+        return len([x for x in self.annotationAssertions if
+                    x.assertionProperty == AnnotationAssertionProperty.Deprecated.value and
+                    x.value == 'true' and
+                    x.datatype == OWL2Datatype.boolean.value]) > 0
+
+    @deprecated.setter
+    def deprecated(self, depr):
+        """
+        Set the deprecation status for this IRI to `depr`. This amounts to either inserting
+        or removing the annotation `owl:deprecated` with value `"true"^^xsd:boolean` on this IRI.
+        :type depr: bool
+        """
+        if depr and not self.deprecated:
+            self.addAnnotationAssertion(AnnotationAssertion(
+                self, AnnotationAssertionProperty.Deprecated.value,
+                'true', OWL2Datatype.boolean.value))
+        elif not depr and self.deprecated:
+            for ann in self.annotationAssertions[:]:
+                if (ann.assertionProperty == AnnotationAssertionProperty.Deprecated.value
+                    and ann.value == 'true'
+                    and ann.datatype == OWL2Datatype.boolean.value):
+                    self.removeAnnotationAssertion(ann)
+
+    @property
     def annotationAssertions(self):
         return self._annotationAssertions
 
@@ -743,6 +777,8 @@ class IRI(QtCore.QObject):
                 self.irreflexive = v
             if k==K_TRANSITIVE:
                 self.transitive = v
+            if k==K_DEPRECATED:
+                self.deprecated = v
 
     def getMetaProperties(self):
         """
@@ -756,6 +792,7 @@ class IRI(QtCore.QObject):
         result[K_REFLEXIVE] = self.reflexive
         result[K_IRREFLEXIVE] = self.irreflexive
         result[K_TRANSITIVE] = self.transitive
+        result[K_DEPRECATED] = self.deprecated
         return result
 
     def getSimpleName(self):
@@ -853,9 +890,9 @@ class IRI(QtCore.QObject):
                 currList.remove(annotation)
                 if len(currList) < 1:
                     self._annotationAssertionsMap.pop(annotation.assertionProperty, None)
-                self.sgnAnnotationRemoved.emit(annotation)
             if annotation in self._annotationAssertions:
                 self.annotationAssertions.remove(annotation)
+                self.sgnAnnotationRemoved.emit(annotation)
         else:
             raise KeyError('Cannot find the annotation assertion')
 

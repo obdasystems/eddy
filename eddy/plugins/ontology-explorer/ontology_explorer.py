@@ -319,6 +319,9 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             data = item.data(OntologyExplorerView.IRIRole)
             if isinstance(data, IRI):
                 item.setText(self.parentKeyForIRI(data))
+                f = item.font()
+                f.setStrikeOut(True)
+                item.setFont(f)
         self.model.dataChanged.emit(self.model.index(0, 0),
                                     self.model.index(self.model.rowCount() - 1, 0))
         self.ontoview.setVisible(True)
@@ -355,26 +358,17 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot(AnnotationAssertion)
     def onIRIAnnotationAssertionAdded(self, _):
         iri = self.sender()
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
-            self.redrawIRIItem(iri)
+        self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot(AnnotationAssertion)
     def onIRIAnnotationAssertionRemoved(self, _):
         iri = self.sender()
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
-            self.redrawIRIItem(iri)
+        self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot(AnnotationAssertion)
     def onIRIAnnotationAssertionModified(self, _):
         iri = self.sender()
-        settings = QtCore.QSettings()
-        rendering = settings.value('ontology/iri/render', IRIRender.PREFIX.value, str)
-        if rendering == IRIRender.PREFIX.value or rendering == IRIRender.LABEL.value:
-            self.redrawIRIItem(iri)
+        self.redrawIRIItem(iri)
 
     @QtCore.pyqtSlot()
     def onNodeIRISwitched(self):
@@ -446,6 +440,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(classIRI))
                 parent.setData(classIRI, OntologyExplorerView.IRIRole)
+                iri = self.project.getIRI(str(classIRI))
+                f = parent.font()
+                f.setStrikeOut(iri.deprecated)
+                parent.setFont(f)
                 self.connectIRISignals(classIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,classIRI))
@@ -461,6 +459,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(objPropIRI))
                 parent.setData(objPropIRI, OntologyExplorerView.IRIRole)
+                iri = self.project.getIRI(str(objPropIRI))
+                f = parent.font()
+                f.setStrikeOut(iri.deprecated)
+                parent.setFont(f)
                 self.connectIRISignals(objPropIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,objPropIRI))
@@ -476,6 +478,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(dataPropIRI))
                 parent.setData(dataPropIRI, OntologyExplorerView.IRIRole)
+                iri = self.project.getIRI(str(dataPropIRI))
+                f = parent.font()
+                f.setStrikeOut(iri.deprecated)
+                parent.setFont(f)
                 self.connectIRISignals(dataPropIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,dataPropIRI))
@@ -491,6 +497,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if not parent:
                 parent = QtGui.QStandardItem(self.parentKeyForIRI(indIRI))
                 parent.setData(indIRI, OntologyExplorerView.IRIRole)
+                iri = self.project.getIRI(str(indIRI))
+                f = parent.font()
+                f.setStrikeOut(iri.deprecated)
+                parent.setFont(f)
                 self.connectIRISignals(indIRI)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKeyForImported(impOnt,indIRI))
@@ -569,6 +579,10 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 else:
                     parent = QtGui.QStandardItem(self.parentKeyForIRI(node.iri))
                     parent.setData(node.iri, OntologyExplorerView.IRIRole)
+                    iri = self.project.getIRI(str(node.iri))
+                    f = parent.font()
+                    f.setStrikeOut(iri.deprecated)
+                    parent.setFont(f)
                     self.connectIRISignals(node.iri)
                 self.model.appendRow(parent)
             child = QtGui.QStandardItem(self.childKey(diagram, node))
@@ -722,10 +736,17 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
                 currIRI = currItem.data(OntologyExplorerView.IRIRole)
                 if currIRI is iri:
                     currItem.setText(self.parentKeyForIRI(iri))
+                    f = currItem.font()
+                    f.setStrikeOut(iri.deprecated)
+                    currItem.setFont(f)
                     break
             else:
                 if isinstance(currItem.data(OntologyExplorerView.IRIRole), IRI):
                     currItem.setText(self.parentKeyForIRI(currItem.data(OntologyExplorerView.IRIRole)))
+                    iri = self.project.getIRI(str(currItem.data(OntologyExplorerView.IRIRole)))
+                    f = currItem.font()
+                    f.setStrikeOut(iri.deprecated)
+                    currItem.setFont(f)
         self.ontoview.setSortingEnabled(True)
         if self.sender() != self.plugin:
             self.proxy.invalidateFilter()
