@@ -546,3 +546,42 @@ class RenameDiagramForm(AbstractDiagramForm):
         self.warnLabel.setVisible(not isEmpty(caption))
         self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
         self.setFixedSize(self.sizeHint())
+
+
+class RenameProjectForm(AbstractDiagramForm):
+    """
+    This class is used to display a modal window used to rename the project.
+    """
+
+    def __init__(self, project, parent=None):
+        """
+        Initialize the new dialog.
+        :type project: Project
+        :type parent: QtWidgets.QWidget
+        """
+        super().__init__(project, parent)
+        self.project = project
+        self.nameField.setText(self.project.name)
+        self.setWindowTitle('Rename project: {0}'.format(self.project.name))
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot(str)
+    def onNameFieldChanged(self, name):
+        """
+        Executed when the content of the input field changes.
+        :type name: str
+        """
+        name = name.strip()
+        if not name:
+            caption = ''
+            enabled = False
+        else:
+            caption = ''
+            enabled = True
+        self.warnLabel.setText(caption)
+        self.warnLabel.setVisible(not isEmpty(caption))
+        self.confirmationBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enabled)
+        self.setFixedSize(self.sizeHint())
