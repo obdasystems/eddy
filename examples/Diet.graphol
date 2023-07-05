@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="3">
-  <project name="Diet" version="1.0">
-    <ontology iri="None" lang="en" addLabelFromUserInput="0" addLabelFromSimpleName="0">
+  <project name="Diet" version="urn:graphol:examples:Diet:1.0">
+    <ontology iri="urn:graphol:examples:Diet" lang="en">
       <imports/>
       <prefixes>
         <prefix>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <graphol version="3">
-  <project name="Family" version="1.0">
-    <ontology iri="None" lang="en" addLabelFromUserInput="0" addLabelFromSimpleName="0">
+  <project name="Family" version="urn:graphol:examples:Family:1.0">
+    <ontology iri="urn:graphol:examples:Family" lang="en">
       <imports/>
       <prefixes>
         <prefix>
