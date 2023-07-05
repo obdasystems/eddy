@@ -84,6 +84,7 @@ from eddy.core.commands.nodes import (
     CommandNodeSwitchTo,
 )
 from eddy.core.commands.project import (
+    CommandProjectRename,
     CommandProjectSetProfile,
 )
 from eddy.core.common import (
@@ -215,6 +216,7 @@ from eddy.ui.forms import (
     NewDiagramForm,
     RefactorNameForm,
     RenameDiagramForm,
+    RenameProjectForm,
 )
 from eddy.ui.import_ontology import ImportOntologyDialog
 from eddy.ui.iri import (
@@ -652,6 +654,11 @@ class Session(
             self, objectName='open', shortcut=QtGui.QKeySequence.Open,
             statusTip='Open a diagram and add it to the current project',
             triggered=self.doOpen))
+
+        self.addAction(QtWidgets.QAction(
+            QtGui.QIcon(':/icons/24/ic_label_outline_black'), 'Rename...',
+            self, objectName='rename_project', statusTip='Rename project',
+            triggered=self.doRenameProject))
 
         self.addAction(QtWidgets.QAction(
             QtGui.QIcon(':/icons/24/ic_close_black'), 'Close Project', self,
@@ -2650,6 +2657,19 @@ class Session(
                 self.undostack.push(CommandDiagramRename(diagram.name, name, diagram, self.project))
 
     @QtCore.pyqtSlot()
+    def doRenameProject(self) -> None:
+        """
+        Renames a project.
+        """
+        action = self.sender()
+        project = action.data()
+        if project:
+            form = RenameProjectForm(project, self)
+            if form.exec_() == RenameProjectForm.Accepted:
+                name = form.nameField.value()
+                self.undostack.push(CommandProjectRename(project.name, name, project))
+
+    @QtCore.pyqtSlot()
     def doSave(self) -> None:
         """
         Save the current project.
@@ -3265,6 +3285,7 @@ class Session(
         self.widget('select_reasoner').setEnabled(not isProjectEmpty)
         # self.action('reset_reasoner').setEnabled(not isProjectEmpty)
         self.action('ontology_consistency_check').setEnabled(not isProjectEmpty)
+        self.setWindowTitle(self.project)
 
     @QtCore.pyqtSlot()
     def doRenderByFullIRI(self) -> None:

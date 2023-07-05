@@ -33,14 +33,18 @@
 ##########################################################################
 
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
 
 from eddy.core.datatypes.qt import Font
+from eddy.core.diagram import Diagram
 from eddy.core.functions.misc import first, natsorted
 from eddy.core.functions.signals import connect, disconnect
 from eddy.core.plugin import AbstractPlugin
+from eddy.core.project import Project
 from eddy.ui.dock import DockWidget
 
 
@@ -61,6 +65,7 @@ class ProjectExplorerPlugin(AbstractPlugin):
         self.debug('Connecting to project: %s', self.project.name)
         connect(self.project.sgnDiagramAdded, widget.doAddDiagram)
         connect(self.project.sgnDiagramRemoved, widget.doRemoveDiagram)
+        connect(self.project.sgnUpdated, widget.onProjectUpdated)
         widget.setProject(self.project)
 
     #############################################
@@ -76,6 +81,7 @@ class ProjectExplorerPlugin(AbstractPlugin):
         self.debug('Disconnecting from project: %s', self.project.name)
         disconnect(self.project.sgnDiagramAdded, widget.doAddDiagram)
         disconnect(self.project.sgnDiagramRemoved, widget.doRemoveDiagram)
+        disconnect(self.project.sgnUpdated, widget.onProjectUpdated)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')
@@ -246,7 +252,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() == QtCore.Qt.NoButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data():
+            if item and isinstance(item.data(), Diagram):
                 self.sgnItemActivated.emit(item.data())
                 # KEEP FOCUS ON THE TREE VIEW UNLESS SHIFT IS PRESSED
                 if QtWidgets.QApplication.queryKeyboardModifiers() & QtCore.Qt.SHIFT:
@@ -268,7 +274,7 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data():
+            if item and isinstance(item.data(), Diagram):
                 self.sgnItemDoubleClicked.emit(item.data())
 
     @QtCore.pyqtSlot('QModelIndex')
@@ -280,8 +286,15 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         # noinspection PyArgumentList
         if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.LeftButton:
             item = self.model.itemFromIndex(self.proxy.mapToSource(index))
-            if item and item.data():
+            if item and isinstance(item.data(), Diagram):
                 self.sgnItemClicked.emit(item.data())
+
+    @QtCore.pyqtSlot()
+    def onProjectUpdated(self):
+        """
+        Executed when the project is updated.
+        """
+        self.root.setText(self.project.name)
 
     #############################################
     #   EVENTS
@@ -318,9 +331,11 @@ class ProjectExplorerWidget(QtWidgets.QWidget):
         Set the project explorer to browse the given project.
         :type project: Project
         """
+        self.project = project
         self.model.clear()
         self.model.appendRow(self.root)
         self.root.setText(project.name)
+        self.root.setData(project)
         connect(self.sgnFakeDiagramAdded, self.doAddDiagram)
         for diagram in project.diagrams():
             self.sgnFakeDiagramAdded.emit(diagram)
@@ -400,8 +415,8 @@ class ProjectExplorerView(QtWidgets.QTreeView):
                 model = self.model().sourceModel()
                 index = self.model().mapToSource(index)
                 item = model.itemFromIndex(index)
-                diagram = item.data()
-                if diagram:
+                itemData = item.data()
+                if isinstance(itemData, Diagram):
                     menu = QtWidgets.QMenu()
                     menu.addAction(self.session.action('new_diagram'))
                     menu.addSeparator()
@@ -409,9 +424,14 @@ class ProjectExplorerView(QtWidgets.QTreeView):
                     menu.addAction(self.session.action('remove_diagram'))
                     menu.addSeparator()
                     menu.addAction(self.session.action('diagram_properties'))
-                    self.session.action('rename_diagram').setData(diagram)
-                    self.session.action('remove_diagram').setData(diagram)
-                    self.session.action('diagram_properties').setData(diagram)
+                    self.session.action('rename_diagram').setData(itemData)
+                    self.session.action('remove_diagram').setData(itemData)
+                    self.session.action('diagram_properties').setData(itemData)
+                    menu.exec_(mouseEvent.screenPos().toPoint())
+                elif isinstance(itemData, Project):
+                    menu = QtWidgets.QMenu()
+                    menu.addAction(self.session.action('rename_project'))
+                    self.session.action('rename_project').setData(itemData)
                     menu.exec_(mouseEvent.screenPos().toPoint())
 
         super().mouseReleaseEvent(mouseEvent)
