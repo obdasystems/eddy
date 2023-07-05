@@ -3,4 +3,4 @@
 #
 
 # From PyPI
-tox==4.5.1
+tox==4.6.3
