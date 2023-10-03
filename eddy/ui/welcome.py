@@ -70,6 +70,7 @@ from eddy.core.functions.path import (
     shortPath,
 )
 from eddy.core.functions.signals import connect
+from eddy.core.jvm import getJavaVM
 from eddy.ui.file import FileDialog
 from eddy.ui.project import (
     NewProjectDialog,
@@ -347,10 +348,28 @@ class Welcome(QtWidgets.QDialog):
         dialog.setNameFilters([File.Owl.value])
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             filePath = dialog.selectedFiles()[0]
-            form = ProjectFromOWLDialog(self)
-            if form.exec_() == ProjectFromOWLDialog.Accepted:
-                self.sgnCreateSession[str, str, str, str, str].emit(
-                    None, form.name(), None, None, str(filePath))
+            # get ontology IRI to assign as project name
+            vm = getJavaVM()
+            if not vm.isRunning():
+                vm.initialize()
+            vm.attachThreadToJVM()
+            JavaFileClass = vm.getJavaClass('java.io.File')
+            OWLManager = vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+            MissingImportHandlingStrategy = vm.getJavaClass(
+                'org.semanticweb.owlapi.model.MissingImportHandlingStrategy')
+            fileInstance = JavaFileClass(filePath)
+            manager = OWLManager().createOWLOntologyManager()
+            config = manager.getOntologyLoaderConfiguration()
+            config = config.setMissingImportHandlingStrategy(
+                        MissingImportHandlingStrategy.SILENT)
+            manager.setOntologyLoaderConfiguration(config)
+            ontology = manager.loadOntologyFromOntologyDocument(
+                        fileInstance)
+
+            ontology_iri = ontology.getOntologyID().getOntologyIRI().get().toString()
+            self.sgnCreateSession[str, str, str, str, str].emit(
+                    None, ontology_iri, None, None, str(filePath))
+
 
     @QtCore.pyqtSlot(str)
     def doRemoveProject(self, path: str) -> None:
