@@ -39,7 +39,7 @@ __email__ = 'info@obdasystems.com'
 __license__ = 'GPL'
 __organization__ = 'OBDA Systems'
 __status__ = 'Beta'
-__version__ = '3.5.1'
+__version__ = '3.6.dev0'
 
 
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
