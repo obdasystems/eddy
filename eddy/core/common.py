@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from __future__ import annotations
+
 import time
 from typing import (
     Any,
@@ -268,7 +270,7 @@ class HasPluginSystem(object):
         self._pluginDict = {}  # type: Dict[str, AbstractPlugin]
         self._pluginList = []  # type: List[AbstractPlugin]
 
-    def addPlugin(self, plugin: 'AbstractPlugin') -> 'AbstractPlugin':
+    def addPlugin(self, plugin: AbstractPlugin) -> AbstractPlugin:
         """
         Add a plugin to the set.
         """
@@ -281,7 +283,7 @@ class HasPluginSystem(object):
         self._pluginDict[plugin.objectName()] = plugin
         return plugin
 
-    def addPlugins(self, plugins: Iterable['AbstractPlugin']) -> None:
+    def addPlugins(self, plugins: Iterable[AbstractPlugin]) -> None:
         """
         Add the given group of plugins to the set.
         """
@@ -297,9 +299,9 @@ class HasPluginSystem(object):
 
     def insertPlugin(
         self,
-        plugin: 'AbstractPlugin',
-        before: 'AbstractPlugin',
-    ) -> 'AbstractPlugin':
+        plugin: AbstractPlugin,
+        before: AbstractPlugin,
+    ) -> AbstractPlugin:
         """
         Insert the given plugin before the given one.
         """
@@ -313,8 +315,8 @@ class HasPluginSystem(object):
 
     def insertPlugins(
         self,
-        plugins: Iterable['AbstractPlugin'],
-        before: 'AbstractPlugin',
+        plugins: Iterable[AbstractPlugin],
+        before: AbstractPlugin,
     ) -> None:
         """
         Insert the given group of plugins before the given one.
@@ -322,19 +324,19 @@ class HasPluginSystem(object):
         for plugin in plugins:
             self.insertPlugin(plugin, before)
 
-    def plugin(self, objectName: str) -> 'AbstractPlugin':
+    def plugin(self, objectName: str) -> AbstractPlugin:
         """
         Returns the reference to a plugin given it's objectName.
         """
         return self._pluginDict.get(objectName, None)
 
-    def plugins(self) -> List['AbstractPlugin']:
+    def plugins(self) -> List[AbstractPlugin]:
         """
         Returns the list of plugins.
         """
         return self._pluginList
 
-    def removePlugin(self, plugin: 'AbstractPlugin') -> 'AbstractPlugin':
+    def removePlugin(self, plugin: AbstractPlugin) -> AbstractPlugin:
         """
         Removes the given plugin from the set.
         """
@@ -535,8 +537,8 @@ class HasDiagramExportSystem(object):
     def createDiagramExporter(
         self,
         filetype: File,
-        diagram: 'Diagram',
-        session: 'Session' = None,
+        diagram: Diagram,
+        session: Session = None,
     ) -> AbstractDiagramExporter:
         """
         Creates an instance of a diagram exporter for the given filetype.
@@ -655,8 +657,8 @@ class HasOntologyExportSystem(object):
     def createOntologyExporter(
         self,
         filetype: File,
-        project: 'Project',
-        session: 'Session' = None,
+        project: Project,
+        session: Session = None,
     ) -> AbstractOntologyExporter:
         """
         Creates an instance of an ontology exporter for the given filetype.
@@ -775,8 +777,8 @@ class HasProjectExportSystem(object):
     def createProjectExporter(
         self,
         filetype: File,
-        project: 'Project',
-        session: 'Session' = None,
+        project: Project,
+        session: Session = None,
         # FIXME: Remove next two parameters, they are not part of the generic API
         exportPath: str = None,
         selectDiagrams: bool = False,
@@ -899,8 +901,8 @@ class HasDiagramLoadSystem(object):
         self,
         filetype: File,
         path: str,
-        project: 'Project',
-        session: 'Session' = None,
+        project: Project,
+        session: Session = None,
     ) -> AbstractDiagramLoader:
         """
         Creates an instance of a diagram loader for the given filetype.
@@ -1020,8 +1022,8 @@ class HasOntologyLoadSystem(object):
         self,
         filetype: File,
         path: str,
-        project: 'Project',
-        session: 'Session' = None,
+        project: Project,
+        session: Session = None,
     ) -> AbstractOntologyLoader:
         """
         Creates an instance of a ontology loader for the given filetype.
@@ -1141,7 +1143,7 @@ class HasProjectLoadSystem(object):
         self,
         filetype: File,
         path: str,
-        session: 'Session' = None,
+        session: Session = None,
     ) -> AbstractProjectLoader:
         """
         Creates an instance of a diagram loader for the given filetype.

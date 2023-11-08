@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from __future__ import annotations
+
 from typing import (
     cast,
     Dict,
@@ -78,7 +80,7 @@ class MenuFactory(QtCore.QObject):
     This class can be used to produce diagram items contextual menus.
     """
 
-    def __init__(self, session: 'Session') -> None:
+    def __init__(self, session: Session) -> None:
         """
         Initialize the factory.
         """
@@ -99,14 +101,14 @@ class MenuFactory(QtCore.QObject):
     #################################
 
     @property
-    def project(self) -> 'Project':
+    def project(self) -> Project:
         """
         Returns the project loaded in the active session.
         """
         return self.session.project
 
     @property
-    def session(self) -> 'Session':
+    def session(self) -> Session:
         """
         Returns the reference to the currently active session.
         """
@@ -787,7 +789,7 @@ class MenuFactory(QtCore.QObject):
 
     def create(
         self,
-        diagram: 'Diagram',
+        diagram: Diagram,
         items: Sequence[AbstractItem],
         pos: QtCore.QPointF = None,
     ) -> QtWidgets.QMenu:
@@ -870,7 +872,7 @@ class PropertyFactory(QtCore.QObject):
     This class can be used to produce properties dialog windows.
     """
 
-    def __init__(self, session: 'Session') -> None:
+    def __init__(self, session: Session) -> None:
         """
         Initialize the factory.
         """
@@ -881,14 +883,14 @@ class PropertyFactory(QtCore.QObject):
     #################################
 
     @property
-    def project(self) -> 'Project':
+    def project(self) -> Project:
         """
         Returns the project loaded in the active session.
         """
         return self.session.project
 
     @property
-    def session(self) -> 'Session':
+    def session(self) -> Session:
         """
         Returns the active session.
         """
@@ -898,7 +900,7 @@ class PropertyFactory(QtCore.QObject):
     #   INTERFACE
     #################################
 
-    def create(self, diagram: 'Diagram', node: AbstractNode = None) -> QtWidgets.QDialog:
+    def create(self, diagram: Diagram, node: AbstractNode = None) -> QtWidgets.QDialog:
         """
         Build and return a property dialog according to the given parameters.
         """

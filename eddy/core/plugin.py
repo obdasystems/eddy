@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from __future__ import annotations
+
 from abc import ABCMeta
 from configparser import (
     ConfigParser,
@@ -113,7 +115,7 @@ class AbstractPlugin(
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, spec: 'PluginSpec', session: 'Session') -> None:
+    def __init__(self, spec: PluginSpec, session: Session) -> None:
         """
         Initialize the plugin.
         """
@@ -125,14 +127,14 @@ class AbstractPlugin(
     #################################
 
     @property
-    def project(self) -> 'Project':
+    def project(self) -> Project:
         """
         Returns the reference to the active project.
         """
         return self.session.project
 
     @property
-    def session(self) -> 'Session':
+    def session(self) -> Session:
         """
         Returns the reference to the plugin session.
         """
@@ -192,7 +194,7 @@ class AbstractPlugin(
         return os.path.join(root, home)
 
     @classmethod
-    def subclasses(cls) -> List[Type['AbstractPlugin']]:
+    def subclasses(cls) -> List[Type[AbstractPlugin]]:
         """
         Returns the list of subclasses subclassing this very class.
         """
@@ -297,7 +299,7 @@ class PluginManager(QtCore.QObject):
     """
     info = {}  # type: Dict[str, Tuple]
 
-    def __init__(self, session: 'Session') -> None:
+    def __init__(self, session: Session) -> None:
         """
         Initialize the plugin manager.
         """
@@ -308,7 +310,7 @@ class PluginManager(QtCore.QObject):
     #################################
 
     @property
-    def session(self) -> 'Session':
+    def session(self) -> Session:
         """
         Returns the reference to the plugin manager session.
         """
@@ -346,7 +348,7 @@ class PluginManager(QtCore.QObject):
             return True
 
     @classmethod
-    def find_class(cls, mod: 'ModuleType', name: str) -> Type[AbstractPlugin]:
+    def find_class(cls, mod: ModuleType, name: str) -> Type[AbstractPlugin]:
         """
         Find and returns the reference to the plugin class in the given module.
         """
@@ -407,7 +409,7 @@ class PluginManager(QtCore.QObject):
             LOGGER.exception('Failed to import plugin: %s', e)
 
     @classmethod
-    def import_plugin_from_entry_point(cls, entry_point: 'EntryPoint') -> Tuple:
+    def import_plugin_from_entry_point(cls, entry_point: EntryPoint) -> Tuple:
         """
         Import a plugin from the given entry point:
         * Lookup for the plugin .spec configuration file from the entry point distribution.
