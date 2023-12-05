@@ -320,7 +320,7 @@ class OntologyExplorerWidget(QtWidgets.QWidget):
             if isinstance(data, IRI):
                 item.setText(self.parentKeyForIRI(data))
                 f = item.font()
-                f.setStrikeOut(True)
+                f.setStrikeOut(data.deprecated)
                 item.setFont(f)
         self.model.dataChanged.emit(self.model.index(0, 0),
                                     self.model.index(self.model.rowCount() - 1, 0))
