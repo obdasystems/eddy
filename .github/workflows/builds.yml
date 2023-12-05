@@ -10,19 +10,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             python-version: '3.8'
             architecture: x64
             platform: Linux
             type: AppImage
             appimage: true
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             python-version: '3.8'
             architecture: x64
             platform: Linux
             type: Standalone
             archive: true
-          - os: macos-11
+          - os: macos-12
             python-version: '3.8'
             architecture: x64
             platform: macOS
