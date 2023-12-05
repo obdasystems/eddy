@@ -843,26 +843,25 @@ class OntologyImporterPlugin(AbstractPlugin):
                     CommandChangeIRIOfNode(self.project, el, new_iri, old_iri))
 
     def importPrefixes(self):
-
         format = self.manager.getOntologyFormat(self.ontology)
-        prefixesMap = format.getPrefixName2PrefixMap()
+        if format:
+            prefixMap = format.getPrefixName2PrefixMap()
+            currentPrefixes = self.project.getManagedPrefixes()
 
-        currentPrefixes = self.project.getManagedPrefixes()
+            for k in prefixMap.keys():
+                prefix = k[:-1]
+                namespace = prefixMap[k]
 
-        for k in prefixesMap.keys():
-
-            prefix = k[:-1]
-            namespace = prefixesMap[k]
-
-            if prefix not in currentPrefixes and self.project.isValidPrefixEntry(prefix, namespace):
-                command = CommandProjectAddPrefix(self.project, prefix, namespace)
-                self.session.undostack.push(command)
+                if prefix and self.project.isValidPrefixEntry(prefix, namespace):
+                    if prefix not in currentPrefixes:
+                        command = CommandProjectAddPrefix(self.project, prefix, namespace)
+                        self.session.undostack.push(command)
 
     def getImportedOntologies(self):
         """
         Get set of Imported Ontologies.
         """
-        folder = self.JavaFileClass(str(os.path.expanduser('~')))
+        folder = self.File(str(os.path.expanduser('~')))
         iriMapper = self.AutoIRIMapper(folder, True)
         self.manager.getIRIMappers().add(iriMapper)
 
@@ -925,64 +924,41 @@ class OntologyImporterPlugin(AbstractPlugin):
                 self.vm.attachThreadToJVM()
 
                 ### IMPORT OWL API ###
-                if True:
-                    self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
-                    self.MissingImportHandlingStrategy = self.vm.getJavaClass(
-                        'org.semanticweb.owlapi.model.MissingImportHandlingStrategy')
-                    self.AutoIRIMapper = self.vm.getJavaClass('org.semanticweb.owlapi.util.AutoIRIMapper')
-                    self.JavaFileClass = self.vm.getJavaClass('java.io.File')
-                    self.Type = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
-                    self.Set = self.vm.getJavaClass('java.util.Set')
-                    self.Searcher = self.vm.getJavaClass('org.semanticweb.owlapi.search.Searcher')
-                    self.OWLObjectInverseOf = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectInverseOf")
-                    self.OWLEquivalence = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom")
-                    self.OWLSubObjectPropertyOf = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLSubObjectPropertyOfAxiom")
-                    self.OWLSubDataPropertyOf = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLSubDataPropertyOfAxiom")
-                    self.OWLEquivalentAxiom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom")
-                    self.OWLDataSomeValuesFrom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLDataSomeValuesFrom")
-                    self.OWLSubClassOfAxiom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLSubClassOfAxiom")
-                    self.OWLObjectUnionOf = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectUnionOf")
-                    self.OWLDisjointClassesAxiom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLDisjointClassesAxiom")
-                    self.OWLObjectSomeValuesFrom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom")
-                    self.OWLObjectPropertyDomainAxiom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom")
-                    self.OWLObjectPropertyRangeAxiom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom")
-                    self.OWLEquivalentObjectProperties = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom")
-                    self.OWLObjectAllValuesFrom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectAllValuesFrom")
-                    self.OWLRestriction = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLRestriction")
-                    self.OWLObjectMaxCardinality = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectMaxCardinality")
-                    self.OWLObjectMinCardinality = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectMinCardinality")
-                    self.OWLObjectComplementOf = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLObjectComplementOf")
-                    self.OWLDeclarationAxiom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLDeclarationAxiom")
-                    self.EntityType = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.EntityType")
-                    self.OWLAnnotationAssertionAxiom = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom")
-                    self.AxiomType = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.model.AxiomType")
-                    self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass(
-                        "org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl")
-                    self.OWLSubAnnotationPropertyOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom')
-                    self.AnnotationPropertyDomainAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyDomainAxiom')
-                    self.AnnotationPropertyRangeAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyRangeAxiom')
+                self.OWLManager = self.vm.getJavaClass('org.semanticweb.owlapi.apibinding.OWLManager')
+                self.MissingImportHandlingStrategy = self.vm.getJavaClass('org.semanticweb.owlapi.model.MissingImportHandlingStrategy')
+                self.AutoIRIMapper = self.vm.getJavaClass('org.semanticweb.owlapi.util.AutoIRIMapper')
+                self.File = self.vm.getJavaClass('java.io.File')
+                self.Type = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
+                self.Set = self.vm.getJavaClass('java.util.Set')
+                self.IRI = self.vm.getJavaClass('org.semanticweb.owlapi.model.IRI')
+                self.Searcher = self.vm.getJavaClass('org.semanticweb.owlapi.search.Searcher')
+                self.OWLObjectInverseOf = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectInverseOf')
+                self.OWLEquivalence = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom')
+                self.OWLSubObjectPropertyOf = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubObjectPropertyOfAxiom')
+                self.OWLSubDataPropertyOf = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubDataPropertyOfAxiom')
+                self.OWLEquivalentAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom')
+                self.OWLDataSomeValuesFrom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLDataSomeValuesFrom')
+                self.OWLSubClassOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubClassOfAxiom')
+                self.OWLObjectUnionOf = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectUnionOf')
+                self.OWLDisjointClassesAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLDisjointClassesAxiom')
+                self.OWLObjectSomeValuesFrom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom')
+                self.OWLObjectPropertyDomainAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom')
+                self.OWLObjectPropertyRangeAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom')
+                self.OWLEquivalentObjectProperties = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLEquivalentObjectPropertiesAxiom')
+                self.OWLObjectAllValuesFrom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectAllValuesFrom')
+                self.OWLRestriction = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLRestriction')
+                self.OWLObjectMaxCardinality = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectMaxCardinality')
+                self.OWLObjectMinCardinality = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectMinCardinality')
+                self.OWLObjectComplementOf = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLObjectComplementOf')
+                self.OWLDeclarationAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLDeclarationAxiom')
+                self.SetOntologyID = self.vm.getJavaClass('org.semanticweb.owlapi.model.SetOntologyID')
+                self.EntityType = self.vm.getJavaClass('org.semanticweb.owlapi.model.EntityType')
+                self.OWLAnnotationAssertionAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom')
+                self.AxiomType = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
+                self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass('org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl')
+                self.OWLSubAnnotationPropertyOfAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLSubAnnotationPropertyOfAxiom')
+                self.AnnotationPropertyDomainAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyDomainAxiom')
+                self.AnnotationPropertyRangeAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationPropertyRangeAxiom')
 
                 if diagram:
 
@@ -991,10 +967,10 @@ class OntologyImporterPlugin(AbstractPlugin):
 
                         try:
 
-                            for x in self.filePath:
+                            for path in self.filePath:
                                 QtCore.QCoreApplication.processEvents()
 
-                                self.fileInstance = self.JavaFileClass(x)
+                                self.fileInstance = self.File(path)
                                 QtCore.QCoreApplication.processEvents()
 
                                 self.manager = self.OWLManager().createOWLOntologyManager()
@@ -1007,11 +983,19 @@ class OntologyImporterPlugin(AbstractPlugin):
                                 self.ontology = self.manager.loadOntologyFromOntologyDocument(
                                     self.fileInstance)
 
-                                self.ontology_iri = self.ontology.getOntologyID().getOntologyIRI().get().toString()
-                                try:
-                                    self.ontology_version = self.ontology.getOntologyID().getVersionIRI().get().toString()
-                                except Exception:
-                                    self.ontology_version = self.ontology.getOntologyID().getOntologyIRI().get().toString()
+                                if self.ontology.isAnonymous():
+                                    self.ontology_iri = f'file://{expandPath(path)}'
+                                    self.ontology_version = f'file://{expandPath(path)}'
+                                    self.ontology.applyChange(self.SetOntologyID(
+                                        self.ontology,
+                                        self.IRI.create(self.ontology_iri)
+                                    ))
+                                else:
+                                    self.ontology_iri = self.ontology.getOntologyID().getOntologyIRI().get().toString()
+                                    try:
+                                        self.ontology_version = self.ontology.getOntologyID().getVersionIRI().get().toString()
+                                    except Exception:
+                                        self.ontology_version = self.ontology_iri
 
                                 QtCore.QCoreApplication.processEvents()
 
