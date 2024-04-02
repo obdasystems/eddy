@@ -7,5 +7,5 @@
 appimage-builder==1.1.0; sys_platform == 'linux'
 dmgbuild==1.6.1; sys_platform == 'darwin'
 Pillow==9.5.0; sys_platform == 'darwin'
-PyInstaller==5.13.0
-PyYAML==6.0; sys_platform == 'win32'
+PyInstaller==6.5.0
+PyYAML==6.0.1; sys_platform == 'win32'
