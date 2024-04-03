@@ -94,7 +94,7 @@ from eddy.core.output import getLogger
 
 if TYPE_CHECKING:
     from types import ModuleType
-    from pkg_resources import EntryPoint
+    from importlib.metadata import EntryPoint
     from eddy.core.project import Project
     from eddy.ui.session import Session
 
@@ -418,16 +418,15 @@ class PluginManager(QtCore.QObject):
         """
         try:
             if not IS_FROZEN:
-                # We attempt to load pkg_resources only if the application is not frozen,
-                # since no its not supported by most of the freezing tools
-                from pkg_resources import resource_exists, resource_string
-                if resource_exists(entry_point.dist.key, 'plugin.spec'):
-                    plugin_spec = PluginManager.spec(resource_string(entry_point.dist.key, 'plugin.spec').decode('utf8'))
-                    plugin_class = entry_point.load()
-                    if isinstance(plugin_class, AbstractPlugin):
-                        return plugin_spec, None, plugin_class
-                    else:
-                        raise PluginError('Invalid plugin class: %s' % plugin_class)
+                # We search for entry points only if the application is not frozen.
+                for pkg_file in entry_point.dist.files:
+                    if pkg_file.match('plugin.spec'):
+                        plugin_spec = PluginManager.spec(pkg_file.read_text())
+                        plugin_class = entry_point.load()
+                        if isinstance(plugin_class, AbstractPlugin):
+                            return plugin_spec, None, plugin_class
+                        else:
+                            raise PluginError('Invalid plugin class: %s' % plugin_class)
         except Exception as e:
             LOGGER.exception('Failed to import plugin: %s', e)
 
@@ -547,11 +546,11 @@ class PluginManager(QtCore.QObject):
                     info.append(cls.import_plugin_from_path(file_or_directory_path))
         # SCAN THEN GIVEN ENTRY POINTS
         if not IS_FROZEN:
-            from pkg_resources import iter_entry_points
-            entry_point_name = kwargs.get('entry_point', None)
+            from importlib.metadata import entry_points
+            entry_point_name = kwargs.get('entry_point')
             if entry_point_name:
                 LOGGER.info('Looking for plugins in entry point %s', entry_point_name)
-                for entry_point in iter_entry_points(group=os.path.basename(entry_point_name)):
+                for entry_point in entry_points().get(entry_point_name, []):
                     info.append(PluginManager.import_plugin_from_entry_point(entry_point))
         # BUILD THE PLUGIN CACHE
         for entry in filter(None, info):
