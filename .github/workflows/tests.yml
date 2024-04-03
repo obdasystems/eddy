@@ -11,34 +11,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: '3.7'
-            pyqt-version: '511'
-          - os: ubuntu-latest
-            python-version: '3.7'
-            pyqt-version: '512'
-          - os: ubuntu-latest
-            python-version: '3.7'
-            pyqt-version: '513'
-          - os: ubuntu-latest
-            python-version: '3.7'
-            pyqt-version: '514'
-
-          - os: ubuntu-latest
-            python-version: '3.8'
-            pyqt-version: '512'
-          - os: ubuntu-latest
-            python-version: '3.8'
-            pyqt-version: '513'
-          - os: ubuntu-latest
-            python-version: '3.8'
-            pyqt-version: '514'
-          - os: ubuntu-latest
-            python-version: '3.8'
-            pyqt-version: '515'
-
-          - os: ubuntu-latest
             python-version: '3.9'
             pyqt-version: '514'
+
           - os: ubuntu-latest
             python-version: '3.9'
             pyqt-version: '515'
@@ -51,19 +26,28 @@ jobs:
             python-version: '3.11'
             pyqt-version: '515'
 
+          - os: ubuntu-latest
+            python-version: '3.12'
+            pyqt-version: '515'
+
           - os: macos-latest
-            python-version: '3.8'
-            pyqt-version: '514'
+            python-version: '3.10'
+            pyqt-version: '515'
+
           - os: macos-latest
-            python-version: '3.8'
+            python-version: '3.11'
+            pyqt-version: '515'
+
+          - os: macos-latest
+            python-version: '3.12'
             pyqt-version: '515'
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 

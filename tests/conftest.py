@@ -33,15 +33,15 @@
 ##########################################################################
 
 
+from importlib.resources import files
 import os
 import platform
 
-import pkg_resources
-import pytest
 from PyQt5 import (
     QtCore,
     QtWidgets,
 )
+import pytest
 
 import eddy
 from eddy import APPNAME
@@ -102,9 +102,9 @@ def qapp(qapp_args, tmpdir_factory):
                 path.insert(0, os.path.join(bindir, 'server'))
             os.environ['PATH'] = os.pathsep.join(path)
 
-        for path in pkg_resources.resource_listdir(eddy.core.jvm.__name__, 'lib'):
-            if File.forPath(path) is File.Jar:
-                addJVMClasspath(pkg_resources.resource_filename(eddy.core.jvm.__name__, os.path.join('lib', path)))
+        for path in files(eddy.core.jvm.__name__).joinpath('lib').iterdir():
+            if File.forPath(path.as_posix()) is File.Jar:
+                addJVMClasspath(path.as_posix())
         # noinspection PyTypeChecker
         addJVMOptions('-ea', '-Xmx512m')
 
