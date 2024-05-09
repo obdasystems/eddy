@@ -607,6 +607,7 @@ setuptools.setup(
     python_requires='>=3.9',
     install_requires=[
         'jpype1>=1.4.1',
+        'rdflib>=6.2.0',
         'rfc3987',
         'openpyxl',
     ],
