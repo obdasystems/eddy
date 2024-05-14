@@ -1552,6 +1552,7 @@ class IRIManager(QtCore.QObject):
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.Comment.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.IsDefinedBy.value)
         self.addAnnotationPropertyIRI(AnnotationAssertionProperty.seeAlso.value)
+        self.addAnnotationPropertyIRI(AnnotationAssertionProperty.fetchedFrom.value)
 
     ##FACETS
     def addConstrainingFacet(self, iriString, addLabelFromSimpleName=False):
@@ -2134,6 +2135,7 @@ class AnnotationAssertionProperty(Enum_):
     IsDefinedBy = IRI(Namespace.RDFS.value, 'isDefinedBy')
     Label = IRI(Namespace.RDFS.value, 'label')
     seeAlso = IRI(Namespace.RDFS.value, 'backwardCompatibleWith')
+    fetchedFrom = IRI(Namespace.OWL.value, 'fetchedFrom')
 
     @staticmethod
     def forString(iriStr):
@@ -2156,6 +2158,8 @@ class AnnotationAssertionProperty(Enum_):
             result = AnnotationAssertionProperty.Label.value
         elif iriStr == str(AnnotationAssertionProperty.seeAlso.value):
             result = AnnotationAssertionProperty.seeAlso.value
+        elif iriStr == str(AnnotationAssertionProperty.fetchedFrom.value):
+            result = AnnotationAssertionProperty.fetchedFrom.value
         return result
 
 @unique

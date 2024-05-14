@@ -72,7 +72,7 @@ from eddy.core.owl import (
     IllegalNamespaceError,
     IRI,
     Literal,
-    OWL2Datatype,
+    OWL2Datatype, AnnotationAssertionProperty,
 )
 from eddy.ui.fields import (
     ComboBox,
@@ -204,7 +204,17 @@ def getAnnotationAssertionsTable(parent):
     table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
     return table
 
-
+def getImportedAnnotationAssertionsTable(parent):
+    table = QtWidgets.QTableWidget(0, 2, parent, objectName='imported_annotation_assertions_table_widget')
+    table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
+    table.horizontalHeader().setStretchLastSection(True)
+    table.horizontalHeader().setSectionsClickable(False)
+    table.horizontalHeader().setMinimumSectionSize(170)
+    table.horizontalHeader().setSectionsClickable(False)
+    table.verticalHeader().setVisible(False)
+    table.verticalHeader().setSectionsClickable(False)
+    table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+    return table
 # noinspection PyArgumentList
 def getAnnotationsTable(parent):
     table = QtWidgets.QTableWidget(0, 2, parent, objectName='annotations_table_widget')
@@ -808,6 +818,21 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(widget)
 
         #############################################
+        # IMPORTED ANNOTATIONS TAB
+        #################################
+
+        table = getImportedAnnotationAssertionsTable(self)
+        table.clear()
+        self.addWidget(table)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('imported_annotation_assertions_table_widget'))
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('imported_annotation_widget')
+        self.addWidget(widget)
+
+        #############################################
         # CONFIRMATION BOX
         #################################
 
@@ -898,6 +923,15 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
             table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
             rowcount += 1
+            if str(assertion.assertionProperty) == str(AnnotationAssertionProperty.fetchedFrom.value):
+                # TODO: fetch annotation assertions from source
+                source = assertion.getObjectResourceString(True)
+                main_widget = self.widget('main_widget')
+                main_widget.addTab(self.widget('imported_annotation_widget'),
+                      QtGui.QIcon(':/icons/24/ic_settings_black'), 'Imported Annotations')
+                imported_ann_table = self.widget('imported_annotation_assertions_table_widget')
+                imported_ann_table.clear()
+                imported_ann_table.setHorizontalHeaderLabels(['Property', 'Connected Resource'])
         table.resizeColumnToContents(0)
 
         if self.focusOnAnnotation:
