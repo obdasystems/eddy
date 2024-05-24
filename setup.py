@@ -571,6 +571,8 @@ setuptools.setup(
     version=VERSION,
     author="Daniele Pantaleone",
     author_email="pantaleone@dis.uniroma1.it",
+    maintainer="Manuel Namici",
+    maintainer_email="namici@diag.uniroma1.it",
     description="Eddy is a graphical editor for the specification and visualization of Graphol ontologies.",
     long_description="Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features a "
                      "design environment specifically thought out for generating Graphol ontologies through ad-hoc "
@@ -585,7 +587,7 @@ setuptools.setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X :: Cocoa',
-        'Environment :: Win32 (MS Windows)'
+        'Environment :: Win32 (MS Windows)',
         'Environment :: X11 Applications :: Qt',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
@@ -600,7 +602,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Utilities'
+        'Topic :: Utilities',
     ],
     python_requires='>=3.9',
     install_requires=[
