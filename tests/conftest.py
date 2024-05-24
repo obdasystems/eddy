@@ -102,7 +102,7 @@ def qapp(qapp_args, tmpdir_factory):
                 path.insert(0, os.path.join(bindir, 'server'))
             os.environ['PATH'] = os.pathsep.join(path)
 
-        for path in files(eddy.core.jvm.__name__).joinpath('lib').iterdir():
+        for path in files(eddy.core.jvm.__name__).iterdir():
             if File.forPath(path.as_posix()) is File.Jar:
                 addJVMClasspath(path.as_posix())
         # noinspection PyTypeChecker

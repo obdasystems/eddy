@@ -95,7 +95,7 @@ excludes = [
 
 datas = [
     (os.path.relpath(os.path.join(WORK_PATH, 'plugins')), 'plugins'),
-    ('eddy/core/jvm/lib/*.jar', 'resources/lib'),
+    ('eddy/core/jvm/*.jar', 'resources/lib'),
     ('eddy/ui/style/*.qss', 'resources/styles'),
     ('examples', 'examples'),
     ('LICENSE', '.'),

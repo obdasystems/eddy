@@ -613,7 +613,7 @@ def main() -> int:
                     addJVMClasspath(path)
     else:
         from importlib.resources import files
-        for path in files(eddy.core.jvm.__name__).joinpath('lib').iterdir():
+        for path in files(eddy.core.jvm.__name__).iterdir():
             if File.forPath(path.as_posix()) is File.Jar:
                 addJVMClasspath(path.as_posix())
 

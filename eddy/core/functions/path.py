@@ -47,7 +47,7 @@ from eddy.core.datatypes.system import (
 )
 
 if IS_FROZEN:
-    __MODULE_PATH = os.path.normpath(os.path.expanduser(os.path.dirname(sys.executable)))
+    __MODULE_PATH = os.path.normpath(os.path.expanduser(sys._MEIPASS))
     __ROOT_PATH = __MODULE_PATH
 else:
     __MODULE_PATH = os.path.normpath(os.path.expanduser(os.path.dirname(sys.modules['eddy'].__file__)))
