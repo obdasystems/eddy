@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 import csv
 import io
@@ -98,7 +100,7 @@ class AbstractMetadataExporter(AbstractProjectExporter):
         Item.RoleNode: 'Object Property',
     }
 
-    def __init__(self, project: 'Project', session: 'Session' = None, **kwargs: Any) -> None:
+    def __init__(self, project: Project, session: Session = None, **kwargs: Any) -> None:
         """
         Initialize the metadata exporter.
         """
@@ -619,7 +621,7 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
 
     def __init__(
         self,
-        project: 'Project',
+        project: Project,
         parent: QtWidgets.QWidget = None,
         **kwargs: Any
     ) -> None:
@@ -699,7 +701,7 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
     #################################
 
     @property
-    def project(self) -> 'Project':
+    def project(self) -> Project:
         """
         Returns the active project.
         """
@@ -741,7 +743,7 @@ class AnnotationListWidget(HasWidgetSystem, QtWidgets.QWidget):
 
     def __init__(
         self,
-        project: 'Project',
+        project: Project,
         parent: QtWidgets.QWidget = None,
         **kwargs: Any
     ) -> None:
@@ -808,7 +810,7 @@ class AnnotationListWidget(HasWidgetSystem, QtWidgets.QWidget):
     #################################
 
     @property
-    def project(self) -> 'Project':
+    def project(self) -> Project:
         """
         Returns the active project.
         """

@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from PyQt5 import (
@@ -240,7 +242,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self,
         node: AbstractNode,
         diagram: Diagram,
-        session: 'Session',
+        session: Session,
     ) -> None:
         """
         Initialize the IRI builder dialog.
