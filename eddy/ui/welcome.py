@@ -344,7 +344,7 @@ class Welcome(QtWidgets.QDialog):
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
-        dialog.setNameFilters([File.Owl.value])
+        dialog.setNameFilters([File.Owl.value, File.Any.value])
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             filePath = dialog.selectedFiles()[0]
             form = ProjectFromOWLDialog(self)
