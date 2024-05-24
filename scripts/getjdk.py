@@ -247,7 +247,7 @@ def main(args):
                         archive.extractall(options.extract_to)
                 else:
                     with tarfile.open(path, 'r:gz') as archive:
-                        archive.extractall(options.extract_to)
+                        archive.extractall(options.extract_to, filter='tar')
             # OR MOVE FROM TEMP AS IS
             else:
                 if options.output_file:
