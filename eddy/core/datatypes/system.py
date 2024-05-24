@@ -77,6 +77,7 @@ class File(Enum_):
     Zip = 'ZIP (*.zip)'
     Xlsx = 'Excel Spreadsheet (*.xlsx)'
     Xml = 'XML (*.xml)'
+    Any = 'All Files (*)'
 
     @classmethod
     def forPath(cls, path):
@@ -86,7 +87,7 @@ class File(Enum_):
         :rtype: File
         """
         for x in cls:
-            if path.endswith(x.extension):
+            if x.extension and path.endswith(x.extension):
                 return x
         return None
 
