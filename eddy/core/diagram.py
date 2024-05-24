@@ -33,6 +33,8 @@
 ##########################################################################
 
 
+from __future__ import annotations
+
 from typing import (
     cast,
     Dict,
@@ -116,7 +118,7 @@ class Diagram(QtWidgets.QGraphicsScene):
     sgnUpdated = QtCore.pyqtSignal()
 
     # noinspection PyUnresolvedReferences
-    def __init__(self, name: str, parent: 'Project') -> None:
+    def __init__(self, name: str, parent: Project) -> None:
         """
         Initialize the diagram.
         """
@@ -157,7 +159,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
     # noinspection PyUnresolvedReferences
     @classmethod
-    def create(cls, name: str, size: int, project: 'Project') -> 'Diagram':
+    def create(cls, name: str, size: int, project: Project) -> Diagram:
         """
         Build and returns a new Diagram instance, using the given parameters.
         """
@@ -173,7 +175,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
     # noinspection PyUnresolvedReferences
     @property
-    def project(self) -> 'Project':
+    def project(self) -> Project:
         """
         Returns the project this diagram belongs to.
         """
@@ -181,7 +183,7 @@ class Diagram(QtWidgets.QGraphicsScene):
 
     # noinspection PyUnresolvedReferences
     @property
-    def session(self) -> 'Session':
+    def session(self) -> Session:
         """
         Returns the session this diagram belongs to.
         """
@@ -621,7 +623,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                 node.setIdentity(computed)
 
     @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
-    def onItemAdded(self, _: 'Diagram', item: AbstractItem) -> None:
+    def onItemAdded(self, _: Diagram, item: AbstractItem) -> None:
         """
         Executed whenever a connection is created/removed.
         """
@@ -635,7 +637,7 @@ class Diagram(QtWidgets.QGraphicsScene):
                     self.sgnNodeIdentification.emit(node)
 
     @QtCore.pyqtSlot(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
-    def onItemRemoved(self, _: 'Diagram', item: AbstractItem) -> None:
+    def onItemRemoved(self, _: Diagram, item: AbstractItem) -> None:
         """
         Executed whenever a connection is created/removed.
         """
