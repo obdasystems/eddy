@@ -421,7 +421,7 @@ class LocalFileWidget(QtWidgets.QWidget):
         dialog = FileDialog(self)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        dialog.setNameFilter(File.Owl.value)
+        dialog.setNameFilters([File.Owl.value, File.Any.value])
         if dialog.exec_() == QtWidgets.QFileDialog.Accepted:
             path = first(dialog.selectedFiles())
             if path:
