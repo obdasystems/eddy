@@ -14,7 +14,7 @@ colorama==0.4.6
     #   click
     #   pytest
     #   tox
-coverage[toml]==7.4.4
+coverage[toml]==7.5.3
     # via pytest-cov
 cython==3.0.10
     # via -r requirements/in\cython.in
@@ -22,17 +22,19 @@ distlib==0.3.8
     # via virtualenv
 et-xmlfile==1.1.0
     # via openpyxl
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via pytest
-filelock==3.13.3
+filelock==3.14.0
     # via
     #   tox
     #   virtualenv
 iniconfig==2.0.0
     # via pytest
+isodate==0.6.1
+    # via rdflib
 jpype1==1.5.0
     # via -r requirements/in\base.in
-mypy==1.9.0
+mypy==1.10.0
     # via -r requirements/in/dev.in
 mypy-extensions==1.0.0
     # via mypy
@@ -53,24 +55,26 @@ pefile==2023.2.7
     # via pyinstaller
 pip-tools==7.4.1
     # via -r requirements/in/dev.in
-platformdirs==4.2.0
+platformdirs==4.2.2
     # via
     #   tox
     #   virtualenv
-pluggy==1.4.0
+pluggy==1.5.0
     # via
     #   pytest
     #   pytest-qt
     #   tox
 py-cpuinfo==9.0.0
     # via pytest-benchmark
-pyinstaller==6.5.0
+pyinstaller==6.7.0
     # via -r requirements/in\packaging.in
-pyinstaller-hooks-contrib==2024.3
+pyinstaller-hooks-contrib==2024.6
     # via pyinstaller
+pyparsing==3.1.2
+    # via rdflib
 pyproject-api==1.6.1
     # via tox
-pyproject-hooks==1.0.0
+pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
@@ -80,7 +84,7 @@ pyqt5-qt5==5.15.2
     # via pyqt5
 pyqt5-sip==12.13.0
     # via pyqt5
-pytest==8.1.1
+pytest==8.2.1
     # via
     #   -r requirements/in\tests.in
     #   pytest-benchmark
@@ -105,8 +109,12 @@ pywin32-ctypes==0.2.2
     # via pyinstaller
 pyyaml==6.0.1 ; sys_platform == "win32"
     # via -r requirements/in\packaging.in
+rdflib==7.0.0
+    # via -r requirements/in\base.in
 rfc3987==1.3.8
     # via -r requirements/in\base.in
+six==1.16.0
+    # via isodate
 tomli==2.0.1
     # via
     #   build
@@ -114,14 +122,13 @@ tomli==2.0.1
     #   mypy
     #   pip-tools
     #   pyproject-api
-    #   pyproject-hooks
     #   pytest
     #   tox
-tox==4.14.2
+tox==4.15.0
     # via -r requirements/in\tox.in
-typing-extensions==4.10.0
+typing-extensions==4.12.0
     # via mypy
-virtualenv==20.25.1
+virtualenv==20.26.2
     # via tox
 wheel==0.43.0
     # via pip-tools
