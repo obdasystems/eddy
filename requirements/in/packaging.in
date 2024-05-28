@@ -6,6 +6,6 @@
 # From PyPi
 appimage-builder@git+https://github.com/appimagecrafters/appimage-builder@9733877; sys_platform == 'linux'
 dmgbuild==1.6.1; sys_platform == 'darwin'
-Pillow==9.5.0; sys_platform == 'darwin'
-PyInstaller==6.5.0
+Pillow==10.3.0; sys_platform == 'darwin'
+PyInstaller==6.7.0
 PyYAML==6.0.1; sys_platform == 'win32'
