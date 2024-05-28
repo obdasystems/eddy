@@ -660,172 +660,106 @@ class OntologyImporterPlugin(AbstractPlugin):
             QtCore.QCoreApplication.processEvents()
 
             if isinstance(ax, self.OWLAnnotationAssertionAxiom):
-                #print('annotation:', ax)
                 annotations.append(ax)
         return annotations
 
     def importAnnotations(self, diagram):
+        rejected = []
 
-        annotations = self.getAnnotations()
-        # FOR EACH ANNOTATION
-        invalid_namespaces = []
-        for ann in annotations:
+        # FOR EACH ANNOTATION AXIOM
+        self.session.undostack.beginMacro(f'Import annotations from {self.ontology_iri}')
+        for ax in self.getAnnotations():
             QtCore.QCoreApplication.processEvents()
+            if not self.importAnnotation(ax):
+                rejected.append(ax)
 
-            # GET IRI
-            iri = ann.getSubject()
-            try:
-                subjectIRI = self.project.getIRI(str(iri))
-            except Exception:
-                invalid_namespaces.append(str(iri))
-
-        if len(invalid_namespaces) > 0:
-
-            invalid = ', '.join(invalid_namespaces)
-            msgbox = QtWidgets.QMessageBox()
-            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
-            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Illegal namespace defined.')
-            msgbox.setText('The current IRIs involved in the imported annotation assertions have an invalid namespace: '+ invalid+'. The associated annotation assertions will be ignored in the importation process.')
-            msgbox.setTextFormat(QtCore.Qt.RichText)
-            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msgbox.exec_()
-
-
-        for ann in annotations:
+        # ONTOLOGY ANNOTATIONS
+        for ax in self.ontology.getAnnotations():
             QtCore.QCoreApplication.processEvents()
+            if not self.importAnnotation(ax, subject=self.ontology_iri):
+                rejected.append(ax)
+        self.session.undostack.endMacro()
 
-            # GET IRI
-            iri = ann.getSubject()
-            if str(iri) in invalid_namespaces:
+        # FEEDBACK FOR REJECTED TRIPLES
+        details = []
+        for ax in rejected:
+            if isinstance(ax, self.OWLAnnotationAssertionAxiom):
+                details.append(f"{ax.getSubject()} {ax.getProperty()} {ax.getValue()}")
+            elif isinstance(ax, self.OWLAnnotation):
+                details.append(f"{self.ontology_iri} {ax.getProperty()} {ax.getValue()}")
+        detailsMsg = '\n'.join(details)
+        msgbox = QtWidgets.QMessageBox(
+            QtWidgets.QMessageBox.Icon.Warning,
+            'Rejected Annotations',
+            'The imported ontology contains annotations of anonymous individuals which are '
+            'currently not supported. The ontology import will continue, but these annotations '
+            'will be rejected.',
+            QtWidgets.QMessageBox.Close,
+        )
+        msgbox.setDetailedText(
+            'The following annotations where rejected during import:\n\n'
+            f'{detailsMsg}'
+        )
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        msgbox.exec_()
+
+    def importAnnotation(self, ax, subject=None):
+        """Imports an OWLAPI annotation axiom in the project."""
+        # GET SUBJECT
+        if isinstance(ax, self.OWLAnnotation):
+            if not subject:
+                raise ValueError('OWLAnnotation require an explicit subject')
+            subject = self.project.getIRI(subject)
+        elif ax.getSubject().isIRI():
+            subject = self.project.getIRI(str(ax.getSubject().asIRI().get()))
+        else:  # is anonymous
+            return False
+
+        # GET PREDICATE
+        predicate = self.project.getIRI(str(ax.getProperty().getIRI()))
+        # Add annotation property if not already in project
+        if predicate not in self.project.getAnnotationPropertyIRIs():
+            command = CommandProjectAddAnnotationProperty(self.project, str(predicate))
+            self.session.undostack.push(command)
+
+        # GET VALUE
+        value = ax.getValue()
+        if value.isLiteral():
+            jliteral = value.asLiteral().get()
+            value = Literal(
+                jliteral.getLiteral(),
+                datatype=self.project.getIRI(str(jliteral.getDatatype().getIRI())),
+                language=jliteral.getLang(),
+            )
+        elif value.isIRI():
+            value = self.project.getIRI(str(value.asIRI().get()))
+        else:  # is anonymous
+            return False
+
+        # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
+        # FIXME: Why does an AnnotationAssertion not take a Literal instance????
+        if isinstance(value, IRI):
+            assertion = AnnotationAssertion(subject, predicate, value)
+        else:
+            assertion = AnnotationAssertion(
+                subject,
+                predicate,
+                value.lexicalForm,
+                language=value.language,
+                type=value.datatype,
+            )
+
+        processed = set()  # To avoid adding multiple times
+        # FOR EACH NODE WITH NODE.IRI == IRI
+        for el in self.project.iriOccurrences():
+            if el.iri in processed:
                 continue
-            else:
-                subjectIRI = self.project.getIRI(str(iri))
-            # GET PROPERTY
-            property = ann.getProperty().getIRI()
-            # GET VALUE
-            value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
-            # IF LANGUAGE, GET LANGUAGE
-            lang_srt = value.find('"@')
-            lang = None
-            if lang_srt > 0:
-                lang = value[lang_srt + 2:]
-                value = value[0: lang_srt + 1]
-
-            value = value.strip('"')
-
-            if value == '' or value is None:
-                continue
-            else:
-
-                annotation = str(property)
-                annotation = annotation.replace('<', '')
-                annotation = annotation.replace('>', '')
-
-                annotationIRI = self.project.getIRI(annotation)
-
-                try:
-
-                    if annotationIRI not in self.project.getAnnotationPropertyIRIs():
-
-                        self.project.isValidIdentifier(annotation)
-
-                        command = CommandProjectAddAnnotationProperty(self.project, annotation)
-                        self.session.undostack.beginMacro(
-                            'Add annotation property {0} '.format(annotation))
-                        if command:
-                            self.session.undostack.push(command)
-                        self.session.undostack.endMacro()
-
-                except IllegalNamespaceError as e:
-                    # noinspection PyArgumentList
-                    msgBox = QtWidgets.QMessageBox(
-                        QtWidgets.QMessageBox.Warning,
-                        'Entity Definition Error',
-                        'Illegal namespace defined.',
-                        informativeText='The string "{}" is not a legal IRI'.format(annotation),
-                        detailedText=str(e),
-                        parent=self,
-                    )
-                    msgBox.exec_()
-
-
-                # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-                annotationAss = AnnotationAssertion(subjectIRI, annotationIRI, value, language=lang)
-
-
-                # FOR EACH NODE WITH NODE.IRI == IRI
-                processed = set()
-                for el in self.project.iriOccurrences():
-
-                    if el.iri not in processed:
-
-                        if el.isNode() and el.type() == Item.ConceptNode and el.iri is annotationAss.subject:
-                            ## ADD ANNOTATION ##
-                            self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, el.iri, annotationAss))
-
-                            processed.add(el.iri)
-
-        # ONTOLOGY ANNOTATIONS #
-        ontoAnno = self.ontology.getAnnotations()
-        for ann in ontoAnno:
-            QtCore.QCoreApplication.processEvents()
-
-            # GET IRI
-            iri = IRI(str(self.ontology_iri))
-            # GET PROPERTY
-            property = ann.getProperty().getIRI()
-            # GET VALUE
-            value = ann.getValue() if isinstance(ann.getValue(), str) else str(ann.getValue())
-            # IF LANGUAGE, GET LANGUAGE
-            lang_srt = value.find('"@')
-            lang = None
-            if lang_srt > 0:
-                lang = value[lang_srt + 2:]
-                value = value[0: lang_srt + 1]
-
-            value = value.strip('"')
-
-            if value == '' or value is None:
-                continue
-
-            else:
-
-                annotation = str(property)
-                annotation = annotation.replace('<', '')
-                annotation = annotation.replace('>', '')
-
-                annotationIRI = self.project.getIRI(annotation)
-
-                try:
-
-                    if annotationIRI not in self.project.getAnnotationPropertyIRIs():
-
-                        self.project.isValidIdentifier(annotation)
-
-                        command = CommandProjectAddAnnotationProperty(self.project, annotation)
-                        self.session.undostack.beginMacro(
-                            'Add annotation property {0} '.format(annotation))
-                        if command:
-                            self.session.undostack.push(command)
-                        self.session.undostack.endMacro()
-
-                except IllegalNamespaceError as e:
-                    # noinspection PyArgumentList
-                    msgBox = QtWidgets.QMessageBox(
-                        QtWidgets.QMessageBox.Warning,
-                        'Entity Definition Error',
-                        'Illegal namespace defined.',
-                        informativeText='The string "{}" is not a legal IRI'.format(annotation),
-                        detailedText=str(e),
-                        parent=self,
-                    )
-                    msgBox.exec_()
-
-                # INSTANCE OF ANNOTATION WITH IRI, PROPERTY, VALUE, LANGUAGE
-                annotationAss = AnnotationAssertion(iri, annotationIRI, value, language=lang)
-
-                self.session.undostack.push(CommandIRIAddAnnotationAssertion(self.project, self.project.ontologyIRI, annotationAss))
+            if el.isNode() and el.type() == Item.ConceptNode and el.iri is assertion.subject:
+                # ADD ANNOTATION
+                command = CommandIRIAddAnnotationAssertion(self.project, el.iri, assertion)
+                self.session.undostack.push(command)
+                processed.add(el.iri)
+        return True
 
     def removeDuplicateFromIRI(self, diagram):
 
@@ -953,6 +887,7 @@ class OntologyImporterPlugin(AbstractPlugin):
                 self.OWLDeclarationAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLDeclarationAxiom')
                 self.SetOntologyID = self.vm.getJavaClass('org.semanticweb.owlapi.model.SetOntologyID')
                 self.EntityType = self.vm.getJavaClass('org.semanticweb.owlapi.model.EntityType')
+                self.OWLAnnotation = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotation')
                 self.OWLAnnotationAssertionAxiom = self.vm.getJavaClass('org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom')
                 self.AxiomType = self.vm.getJavaClass('org.semanticweb.owlapi.model.AxiomType')
                 self.ManchesterOWLSyntaxOWLObjectRendererImpl = self.vm.getJavaClass('org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl')
