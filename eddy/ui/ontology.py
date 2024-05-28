@@ -32,6 +32,8 @@
 #                                                                        #
 ##########################################################################
 
+import textwrap
+
 from PyQt5 import (
     QtCore,
     QtGui,
@@ -77,6 +79,7 @@ from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
+from eddy.core.metadata import Repository
 from eddy.core.ndc import (
     ADMS,
     NDCDataset,
@@ -1149,6 +1152,67 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.setProjectSuggestions()
 
         #############################################
+        # METADATA REPOSITORIES
+        #################################
+
+        table = QtWidgets.QTableWidget(0, 2, self, objectName='repository_table_widget')
+        table.setHorizontalHeaderLabels(['Name', 'Endpoint'])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.horizontalHeader().setMinimumSectionSize(100)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.verticalHeader().setVisible(False)
+        table.verticalHeader().setSectionsClickable(False)
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.addWidget(table)
+
+        delBtn = QtWidgets.QPushButton('Remove', objectName='repository_del_button')
+        delBtn.setEnabled(False)
+        connect(delBtn.clicked, self.removeRepository)
+        self.addWidget(delBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(delBtn)
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('repository_table_widget'))
+        formlayout.addRow(boxlayout)
+
+        groupbox = QtWidgets.QGroupBox('Repositories', self)
+        groupbox.setObjectName('repository_list_groupbox')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        nameField = StringField(self, objectName='repository_name_field')
+        uriField = StringField(self, objectName='repository_uri_field')
+        addBtn = QtWidgets.QPushButton('Add', objectName='repository_add_button')
+        connect(addBtn.clicked, self.addRepository)
+        self.addWidget(nameField)
+        self.addWidget(uriField)
+        self.addWidget(addBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(addBtn)
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(QtWidgets.QLabel('Name'), nameField)
+        formlayout.addRow(QtWidgets.QLabel('URI'), uriField)
+        formlayout.addRow(boxlayout)
+
+        groupbox = QtWidgets.QGroupBox('Add Repository', self)
+        groupbox.setObjectName('repository_add_groupbox')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.widget('repository_list_groupbox'))
+        layout.addWidget(self.widget('repository_add_groupbox'))
+        widget = QtWidgets.QWidget()
+        widget.setObjectName('repositories_widget')
+        widget.setLayout(layout)
+        self.addWidget(widget)
+
+        #############################################
         # CONFIRMATION BOX
         #################################
 
@@ -1170,6 +1234,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('annotations_widget'), 'Annotations')
         widget.addTab(self.widget('iri_widget'), 'Global IRIs')
         widget.addTab(self.widget('assertions_widget'), 'Annotation Assertions')
+        widget.addTab(self.widget('repositories_widget'), 'Metadata Repositories')
         widget.addTab(self.widget('NDCmetadata_widget'), 'NDC Metadata')
         self.addWidget(widget)
 
@@ -1372,6 +1437,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.widget('iri_label_button').setEnabled(False)
         preField = self.widget('pre_input_field')
         postField = self.widget('post_input_field')
+
+        #############################################
+        # METADATA REPOSITORIES
+        #################################
+
+        widget = self.widget('repository_table_widget')  # type: QtWidgets.QTableWidget
+        widget.clearContents()
+        repos = Repository.load()
+        widget.setRowCount(len(repos))
+        for index, repo in enumerate(repos):
+            nameItem = QtWidgets.QTableWidgetItem(repo.name)
+            nameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            uriItem = QtWidgets.QTableWidgetItem(repo.uri)
+            uriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            widget.setItem(index, 0, nameItem)
+            widget.setItem(index, 1, uriItem)
+        widget.resizeColumnsToContents()
+        widget.sortItems(0)
+        self.widget('repository_del_button').setEnabled(len(repos) > 0)
 
     #############################################
     # GENERAL TAB
@@ -2624,3 +2708,82 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.undostack.endMacro()
         # self.redraw()
         self.session.addNotification('Metadata added to the current project!')
+
+    #############################################
+    # METADATA REPOSITORIES
+    #################################
+
+    @QtCore.pyqtSlot()
+    def addRepository(self):
+        """Shows a dialog to insert a add a new repository."""
+        nameField = self.widget('repository_name_field')  # type: StringField
+        uriField = self.widget('repository_uri_field')  # type: StringField
+
+        # Validate user input
+        if len(nameField.text()) == 0:
+            msgBox = QtWidgets.QMessageBox(  # noqa
+                QtWidgets.QMessageBox.Warning,
+                'Invalid Repository Name',
+                'Please specify a repository name.',
+                informativeText=textwrap.dedent("""
+                The repository name can be any string that is used to easily
+                reference the repository.
+                """),
+                parent=self,
+            )
+            msgBox.open()
+        elif not QtCore.QUrl(uriField.text()).isValid():
+            msgBox = QtWidgets.QMessageBox(  # noqa
+                QtWidgets.QMessageBox.Warning,
+                'Invalid Repository URI',
+                'Please specify a valid repository URI.',
+                informativeText=textwrap.dedent("""
+                The repository URI is the base path at which the repository API is accessible,
+                and must include protocol, domain and port (if any).
+
+                e.g.:
+                    https://example.com:5000/
+                    https://example.com/myrepo/
+                """),
+                parent=self,
+            )
+            msgBox.open()
+        else:
+            # Add new repository
+            repos = Repository.load()
+            if any(map(lambda r: r.name == nameField.text(), repos)):
+                msgBox = QtWidgets.QMessageBox(  # noqa
+                    QtWidgets.QMessageBox.Warning,
+                    'Duplicate Repository Error',
+                    f'A repository named {nameField.text()} already exists.',
+                    informativeText=textwrap.dedent("""
+                    Repository names must be unique to avoid abiguity in the user interface.
+                    """),
+                    parent=self,
+                )
+                msgBox.open()
+            else:
+                repos.append(Repository(name=nameField.text(), uri=uriField.text()))
+                Repository.save(repos)
+                self.redraw()
+                self.project.sgnUpdated.emit()
+
+    @QtCore.pyqtSlot()
+    def removeRepository(self):
+        """Remove selected repositories."""
+        # Delete selected repositories
+        widget = self.widget('repository_table_widget')  # type: QtWidgets.QTableWidget
+        selections = widget.selectedRanges()
+        for sel in selections:
+            for row in range(sel.bottomRow(), sel.topRow() + 1):
+                widget.removeRow(row)
+        # Save the current repositories list
+        repos = []
+        for row in range(widget.rowCount()):
+            repos.append(Repository(
+                name=widget.item(row, 0).text(),
+                uri=widget.item(row, 1).text(),
+            ))
+        Repository.save(repos)
+        self.redraw()
+        self.project.sgnUpdated.emit()
