@@ -87,7 +87,11 @@ class MetadataImporterPlugin(AbstractPlugin):
         widget = self.widget('metadata_importer')  # type: MetadataImporterWidget
         # CONNECT TO PROJECT SPECIFIC SIGNALS
         self.debug('Connecting to project: %s', self.project.name)
+        connect(self.project.sgnPrefixAdded, widget.onPrefixChanged)
+        connect(self.project.sgnPrefixModified, widget.onPrefixChanged)
+        connect(self.project.sgnPrefixRemoved, widget.onPrefixChanged)
         connect(self.project.sgnUpdated, widget.doUpdateState)
+        widget.onPrefixChanged()
         widget.doUpdateState()
 
     @QtCore.pyqtSlot()
@@ -108,11 +112,10 @@ class MetadataImporterPlugin(AbstractPlugin):
         # DISCONNECT FROM CURRENT PROJECT
         widget = self.widget('metadata_importer')  # type: MetadataImporterWidget
         self.debug('Disconnecting from project: %s', self.project.name)
+        disconnect(self.project.sgnPrefixAdded, widget.onPrefixChanged)
+        disconnect(self.project.sgnPrefixModified, widget.onPrefixChanged)
+        disconnect(self.project.sgnPrefixRemoved, widget.onPrefixChanged)
         disconnect(self.project.sgnUpdated, widget.doUpdateState)
-        # disconnect(self.project.sgnDiagramAdded, self.onDiagramAdded)
-        # disconnect(self.project.sgnDiagramRemoved, self.onDiagramRemoved)
-        # disconnect(self.project.sgnItemAdded, self.onProjectItemAdded)
-        # disconnect(self.project.sgnItemRemoved, self.onProjectItemRemoved)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')

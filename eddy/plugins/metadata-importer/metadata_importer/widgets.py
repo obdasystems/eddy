@@ -46,6 +46,8 @@ from PyQt5 import (
     QtNetwork,
     QtWidgets,
 )
+from rdflib import Graph
+from rdflib.namespace import NamespaceManager
 
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.datatypes.graphol import Item
@@ -53,6 +55,7 @@ from eddy.core.functions.misc import first
 from eddy.core.functions.signals import connect
 from eddy.core.metadata import (
     Entity,
+    K_GRAPH,
     MetadataRequest,
     NamedEntity,
     Repository,
@@ -84,6 +87,7 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         super().__init__(plugin.session)
 
         self.plugin = plugin
+        self.settings = QtCore.QSettings()
         self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
         self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
         self.iconInstance = QtGui.QIcon(':/icons/18/ic_treeview_instance')
@@ -96,6 +100,8 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         self.search.setPlaceholderText('Search...')
         self.search.setFixedHeight(30)
         self.combobox = QtWidgets.QComboBox(self)
+        self.combobox.addItems(map(lambda r: r.name, Repository.load()))
+        self.combobox.setCurrentIndex(self.settings.value('metadata/index', 0, int))
         self.model = QtGui.QStandardItemModel(self)
         self.proxy = MetadataImporterFilterProxyModel(self)
         self.proxy.setDynamicSortFilter(False)
@@ -199,10 +205,16 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         Executed to refresh the metadata widget.
         """
         repos = Repository.load()
-        self.combobox.clear()
         if len(repos) > 0:
+            index = self.combobox.currentIndex()
+            # Prevent signals while refreshing the combobox
+            status = self.combobox.blockSignals(True)
+            self.combobox.clear()
             self.combobox.addItems(map(lambda r: r.name, repos))
-            self.combobox.currentIndexChanged.emit(self.combobox.currentIndex())
+            self.combobox.blockSignals(status)
+            # Force repetition of current selection to trigger refresh
+            self.combobox.setCurrentIndex(index)
+            self.combobox.currentIndexChanged.emit(index)
         else:
             self.model.clear()
             self.details.repository = None
@@ -258,6 +270,21 @@ class MetadataImporterWidget(QtWidgets.QWidget):
                 self.details.stack()
 
     @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(str)
+    @QtCore.pyqtSlot(str, str)
+    def onPrefixChanged(self, _name: str = None, _ns: str = None):
+        """
+        Executed when a project prefix is changed to update the medatata namespace manager.
+        """
+        # There is currently no support for unbinding a namespace in rdflib,
+        # so we have to resort to recreating it from scratch.
+        # See: https://github.com/RDFLib/rdflib/issues/1932
+        K_GRAPH.namespace_manager = NamespaceManager(Graph(), bind_namespaces='none')
+        for prefix, ns in self.project.prefixDictItems():
+            K_GRAPH.bind(prefix, ns, override=True)
+        self.redraw()
+
+    @QtCore.pyqtSlot()
     def onReturnPressed(self):
         """
         Executed when the Return or Enter key is pressed in the search field.
@@ -273,6 +300,7 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         repo = first(Repository.load(), filter_on_item=lambda i: i.name == name)
         self.model.clear()
         if repo:
+            self.settings.setValue('metadata/index', self.combobox.currentIndex())
             url = QtCore.QUrl(repo.uri)
             url.setPath('/classes')
             request = QtNetwork.QNetworkRequest(url)
@@ -298,7 +326,11 @@ class MetadataImporterWidget(QtWidgets.QWidget):
                 entities = [NamedEntity.from_dict(d) for d in data if "iri" in d]
                 for e in entities:
                     e.repository = reply.request().attribute(MetadataRequest.RepositoryAttribute)
-                    item = QtGui.QStandardItem(self.iconConcept, f"{e.iri}")
+                    try:
+                        itemText = K_GRAPH.namespace_manager.curie(e.iri, generate=False)
+                    except KeyError:
+                        itemText = e.iri
+                    item = QtGui.QStandardItem(self.iconConcept, f"{itemText}")
                     item.setData(e)
                     self.model.appendRow(item)
                 self.session.statusBar().showMessage('Metadata fetch completed')
@@ -317,6 +349,15 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         """
         Redraw the content of the widget.
         """
+        for index in range(self.model.rowCount()):
+            item = self.model.item(index, 0)
+            if isinstance(item.data(), NamedEntity):
+                try:
+                    itemText = K_GRAPH.namespace_manager.curie(item.data().iri, generate=False)
+                except KeyError:
+                    itemText = item.data().iri
+                item.setText(itemText)
+        self.entityview.update()
         self.details.redraw()
 
     def sizeHint(self):
