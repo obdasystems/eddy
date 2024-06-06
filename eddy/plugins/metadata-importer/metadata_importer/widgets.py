@@ -37,6 +37,7 @@ from abc import (
     abstractmethod,
 )
 import json
+import textwrap
 from typing import Any
 
 from PyQt5 import (
@@ -101,8 +102,8 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         self.proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.proxy.setSortCaseSensitivity(QtCore.Qt.CaseSensitive)
         self.proxy.setSourceModel(self.model)
-        self.ontoview = MetadataImporterView(self)
-        self.ontoview.setModel(self.proxy)
+        self.entityview = MetadataImporterView(self)
+        self.entityview.setModel(self.proxy)
         self.details = MetadataInfoWidget(self)
 
         self.searchLayout = QtWidgets.QHBoxLayout()
@@ -112,11 +113,11 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.addLayout(self.searchLayout)
-        self.mainLayout.addWidget(self.ontoview)
+        self.mainLayout.addWidget(self.entityview)
         self.mainLayout.addWidget(self.details)
         self.setTabOrder(self.search, self.combobox)
-        self.setTabOrder(self.combobox, self.ontoview)
-        self.setTabOrder(self.ontoview, self.details)
+        self.setTabOrder(self.combobox, self.entityview)
+        self.setTabOrder(self.entityview, self.details)
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setMinimumWidth(216)
@@ -134,9 +135,9 @@ class MetadataImporterWidget(QtWidgets.QWidget):
             }
         """)
 
-        connect(self.ontoview.activated, self.onItemActivated)
-        connect(self.ontoview.doubleClicked, self.onItemDoubleClicked)
-        connect(self.ontoview.pressed, self.onItemPressed)
+        connect(self.entityview.activated, self.onItemActivated)
+        connect(self.entityview.doubleClicked, self.onItemDoubleClicked)
+        connect(self.entityview.pressed, self.onItemPressed)
         connect(self.search.textChanged, self.doFilterItem)
         connect(self.search.returnPressed, self.onReturnPressed)
         connect(self.combobox.currentIndexChanged, self.onRepositoryChanged)
@@ -198,10 +199,15 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         Executed to refresh the metadata widget.
         """
         repos = Repository.load()
+        self.combobox.clear()
         if len(repos) > 0:
-            self.combobox.clear()
             self.combobox.addItems(map(lambda r: r.name, repos))
             self.combobox.currentIndexChanged.emit(self.combobox.currentIndex())
+        else:
+            self.model.clear()
+            self.details.repository = None
+            self.details.entity = None
+            self.details.stack()
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def onItemActivated(self, index):
@@ -218,7 +224,7 @@ class MetadataImporterWidget(QtWidgets.QWidget):
                 # KEEP FOCUS ON THE TREE VIEW UNLESS SHIFT IS PRESSED
                 if QtWidgets.QApplication.queryKeyboardModifiers() & QtCore.Qt.SHIFT:
                     return
-                self.ontoview.setFocus()
+                self.entityview.setFocus()
                 self.details.stack()
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
@@ -261,20 +267,23 @@ class MetadataImporterWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot(int)
     def onRepositoryChanged(self, index):
         """
-        Executed when the selected repository changes.
+        Executed when the selected repository in the combobox changes.
         """
         name = self.combobox.itemText(index)
         repo = first(Repository.load(), filter_on_item=lambda i: i.name == name)
+        self.model.clear()
         if repo:
-            self.model.clear()
             url = QtCore.QUrl(repo.uri)
             url.setPath('/classes')
             request = QtNetwork.QNetworkRequest(url)
             request.setAttribute(MetadataRequest.RepositoryAttribute, repo)
             reply = self.session.nmanager.get(request)
             connect(reply.finished, self.onRequestCompleted)
-            self.details.repository = repo
-            self.details.stack()
+        else:
+            repo = None
+        self.details.repository = repo
+        self.details.entity = None
+        self.details.stack()
 
     @QtCore.pyqtSlot()
     def onRequestCompleted(self):
@@ -474,9 +483,10 @@ class MetadataInfoWidget(QtWidgets.QScrollArea):
         self.entity = None
         self.stacked = QtWidgets.QStackedWidget(self)
         self.stacked.setContentsMargins(0, 0, 0, 0)
-        self.infoEmpty = QtWidgets.QWidget(self.stacked)
+        self.infoEmpty = EmptyInfo(self.stacked)
         self.infoRepository = RepositoryInfo(self.stacked)
         self.infoEntity = EntityInfo(self.stacked)
+        self.stacked.addWidget(self.infoEmpty)
         self.stacked.addWidget(self.infoRepository)
         self.stacked.addWidget(self.infoEntity)
         self.setContentsMargins(0, 0, 0, 0)
@@ -590,7 +600,7 @@ class MetadataInfoWidget(QtWidgets.QScrollArea):
             show = self.infoRepository
             show.updateData(self.repository)
         else:
-            return
+            show = self.infoEmpty
 
         prev = self.stacked.currentWidget()
         self.stacked.setCurrentWidget(show)
@@ -741,7 +751,11 @@ class RepositoryInfo(AbstractInfo):
         """
         super().__init__(parent)
 
-        self.uriKey = Key('Repository', self)
+        self.nameKey = Key('Name', self)
+        self.nameField = String(self)
+        self.nameField.setReadOnly(True)
+
+        self.uriKey = Key('Location', self)
         self.uriField = String(self)
         self.uriField.setReadOnly(True)
 
@@ -749,40 +763,31 @@ class RepositoryInfo(AbstractInfo):
         self.versionField = String(self)
         self.versionField.setReadOnly(True)
 
-        self.entitiesKey = Key('Entity Count', self)
-        self.entitiesField = Integer(self)
-
-        self.metricsHeader = Header('Repository Metrics', self)
-        self.metricsLayout = QtWidgets.QFormLayout()
-        self.metricsLayout.setSpacing(0)
-        self.metricsLayout.addRow(self.entitiesKey, self.entitiesField)
+        self.infoHeader = Header('Repository Info', self)
+        self.infoLayout = QtWidgets.QFormLayout()
+        self.infoLayout.setSpacing(0)
+        self.infoLayout.addRow(self.nameKey, self.nameField)
+        self.infoLayout.addRow(self.uriKey, self.uriField)
+        self.infoLayout.addRow(self.versionKey, self.versionField)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
-        self.mainLayout.insertWidget(0, self.metricsHeader)
-        self.mainLayout.insertLayout(1, self.metricsLayout)
+        self.mainLayout.insertWidget(0, self.infoHeader)
+        self.mainLayout.insertLayout(1, self.infoLayout)
 
     #############################################
     #   INTERFACE
     #################################
 
-    def updateData(self, repository) -> None:
+    def updateData(self, repository: Repository) -> None:
         """
         Fetch new information and fill the widget with data.
         """
-        self.uriField.setValue(str(repository.uri))
-        self.uriField.home(True)
-        self.uriField.clearFocus()
-        self.uriField.deselect()
-
-        self.versionField.setValue("1.0")
-        self.versionField.home(True)
-        self.versionField.clearFocus()
-        self.versionField.deselect()
-
-        #self.entitiesField.setValue(len(repository.entities))
+        self.nameField.setValue(repository.name)
+        self.uriField.setValue(repository.uri)
+        self.versionField.setValue('1.0')
 
 
 class EntityInfo(AbstractInfo):
@@ -859,3 +864,30 @@ class EntityInfo(AbstractInfo):
             self.metadataLayout.addRow(Key('Property', self), String(a.predicate.n3(), self))
             self.metadataLayout.addRow(Key('Value', self), String(a.object.n3(), self))
             self.metadataLayout.addItem(QtWidgets.QSpacerItem(10, 2))
+
+
+class EmptyInfo(QtWidgets.QTextEdit):
+    """
+    This class implements the information box when there is no metadata repository.
+    """
+
+    #############################################
+    #   INTERFACE
+    #################################
+
+    def paintEvent(self, event: QtGui.QPaintEvent):
+        """
+        Overrides paintEvent to display a placeholder text.
+        """
+        super().paintEvent(event)
+        painter = QtGui.QPainter(self.viewport())
+        painter.save()
+        painter.setPen(self.palette().placeholderText().color())
+        fm = self.fontMetrics()
+        bgMsg = textwrap.dedent("""
+        To start using the 'Metadata Importer', add a repository location
+        in the 'Ontology Manager -> Metadata Repositories' tab.
+        """)
+        elided_text = fm.elidedText(bgMsg, QtCore.Qt.ElideRight, self.viewport().width())
+        painter.drawText(self.viewport().rect(), QtCore.Qt.AlignCenter, elided_text)
+        painter.restore()
