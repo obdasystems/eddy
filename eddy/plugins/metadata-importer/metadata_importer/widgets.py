@@ -38,7 +38,10 @@ from abc import (
 )
 import json
 import textwrap
-from typing import Any
+from typing import (
+    Any,
+    cast,
+)
 
 from PyQt5 import (
     QtCore,
@@ -56,6 +59,7 @@ from eddy.core.functions.signals import connect
 from eddy.core.metadata import (
     Entity,
     K_GRAPH,
+    LiteralValue,
     MetadataRequest,
     NamedEntity,
     Repository,
@@ -65,6 +69,7 @@ from eddy.ui.fields import (
     ComboBox,
     IntegerField,
     StringField,
+    TextField,
 )
 
 LOGGER = getLogger()
@@ -537,7 +542,6 @@ class MetadataInfoWidget(QtWidgets.QScrollArea):
         self.setWidget(self.stacked)
         self.setWidgetResizable(True)
 
-        # TODO: fix stylesheet
         self.setStyleSheet("""
         MetadataInfoWidget {
           background: #FFFFFF;
@@ -561,6 +565,7 @@ class MetadataInfoWidget(QtWidgets.QScrollArea):
         MetadataInfoWidget Button:hover:focus,
         MetadataInfoWidget Button:pressed,
         MetadataInfoWidget Button:pressed:focus,
+        MetadataInfoWidget Text,
         MetadataInfoWidget Integer,
         MetadataInfoWidget String,
         MetadataInfoWidget Select,
@@ -714,6 +719,20 @@ class String(StringField):
         """
         super().__init__(*args)
         self.setFixedHeight(20)
+        self.setReadOnly(True)
+
+
+class Text(TextField):
+    """
+    This class implements the string value of an info field.
+    """
+    def __init__(self,  *args: Any) -> None:
+        """
+        Initialize the field.
+        """
+        super().__init__(*args)
+        self.setFixedHeight(20 * (self.document().lineCount() + 1))
+        self.setReadOnly(True)
 
 
 class Select(ComboBox):
@@ -903,7 +922,16 @@ class EntityInfo(AbstractInfo):
             self.metadataLayout.removeRow(0)
         for a in entity.annotations:
             self.metadataLayout.addRow(Key('Property', self), String(a.predicate.n3(), self))
-            self.metadataLayout.addRow(Key('Value', self), String(a.object.n3(), self))
+            if isinstance(a.object, LiteralValue):
+                literal = cast(LiteralValue, a.object)
+                value, lang, dtype = literal.value, literal.language, literal.datatype
+                self.metadataLayout.addRow(Key('Value', self), Text(value, self))
+                if lang:
+                    self.metadataLayout.addRow(Key('lang', self), String(lang, self))
+                if dtype:
+                    self.metadataLayout.addRow(Key('dtype', self), String(dtype.n3(), self))
+            else:
+                self.metadataLayout.addRow(Key('Entity', self), String(a.object.n3(), self))
             self.metadataLayout.addItem(QtWidgets.QSpacerItem(10, 2))
 
 
