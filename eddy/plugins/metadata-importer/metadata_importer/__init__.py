@@ -37,12 +37,12 @@ from PyQt5 import (
     QtGui,
 )
 
-from .widgets import MetadataImporterWidget  # noqa
-
 from eddy.core.functions.signals import connect, disconnect
+from eddy.core.metadata import K_REPO_MONITOR
 from eddy.core.output import getLogger
 from eddy.core.plugin import AbstractPlugin
 from eddy.ui.dock import DockWidget
+from .widgets import MetadataImporterWidget  # noqa
 
 LOGGER = getLogger()
 
@@ -90,7 +90,7 @@ class MetadataImporterPlugin(AbstractPlugin):
         connect(self.project.sgnPrefixAdded, widget.onPrefixChanged)
         connect(self.project.sgnPrefixModified, widget.onPrefixChanged)
         connect(self.project.sgnPrefixRemoved, widget.onPrefixChanged)
-        connect(self.project.sgnUpdated, widget.doUpdateState)
+        connect(K_REPO_MONITOR.sgnUpdated, widget.doUpdateState)
         widget.onPrefixChanged()
         widget.doUpdateState()
 
@@ -115,7 +115,7 @@ class MetadataImporterPlugin(AbstractPlugin):
         disconnect(self.project.sgnPrefixAdded, widget.onPrefixChanged)
         disconnect(self.project.sgnPrefixModified, widget.onPrefixChanged)
         disconnect(self.project.sgnPrefixRemoved, widget.onPrefixChanged)
-        disconnect(self.project.sgnUpdated, widget.doUpdateState)
+        disconnect(K_REPO_MONITOR.sgnUpdated, widget.doUpdateState)
 
         # DISCONNECT FROM ACTIVE SESSION
         self.debug('Disconnecting from active session')
