@@ -63,6 +63,25 @@ from eddy.core.datatypes.common import IntEnum_
 K_GRAPH = Graph(bind_namespaces='none')
 
 
+class RepositoryMonitor(QtCore.QObject):
+    """
+    This class can be used to listen for changes in the saved repository list.
+    """
+    sgnUpdated = QtCore.pyqtSignal()
+    _instance = None
+
+    def __new__(cls):
+        """
+        Implements the singleton pattern.
+        """
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+
+K_REPO_MONITOR = RepositoryMonitor()
+
+
 @unique
 class MetadataRequest(IntEnum_):
     """
@@ -119,6 +138,7 @@ class Repository:
             settings.setValue('name', repo.name)
             settings.setValue('uri', repo.uri)
         settings.endArray()
+        K_REPO_MONITOR.sgnUpdated.emit()
 
 
 class Node(metaclass=ABCMeta):
