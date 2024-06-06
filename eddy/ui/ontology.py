@@ -2766,7 +2766,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 repos.append(Repository(name=nameField.text(), uri=uriField.text()))
                 Repository.save(repos)
                 self.redraw()
-                self.project.sgnUpdated.emit()
 
     @QtCore.pyqtSlot()
     def removeRepository(self):
@@ -2786,4 +2785,3 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             ))
         Repository.save(repos)
         self.redraw()
-        self.project.sgnUpdated.emit()
