@@ -307,7 +307,7 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         if repo:
             self.settings.setValue('metadata/index', self.combobox.currentIndex())
             url = QtCore.QUrl(repo.uri)
-            url.setPath('/classes')
+            url.setPath(f'{url.path()}/classes')
             request = QtNetwork.QNetworkRequest(url)
             request.setAttribute(MetadataRequest.RepositoryAttribute, repo)
             reply = self.session.nmanager.get(request)
@@ -457,7 +457,7 @@ class MetadataImporterView(QtWidgets.QListView):
                             subj = self.session.project.getIRI(str(data.name))  # type: IRI
                             pred = self.session.project.getIRI('urn:x-graphol:origin')
                             loc = QtCore.QUrl(data.repository.uri)
-                            loc.setPath(f'/entities/{data.id}')
+                            loc.setPath(f'{loc.path()}/entities/{data.id}'.replace('//', '/'))
                             obj = IRI(loc.toString())
                             ast = AnnotationAssertion(subj, pred, obj)
                             cmd = CommandIRIAddAnnotationAssertion(self.session.project, subj, ast)
