@@ -307,7 +307,7 @@ class MetadataImporterWidget(QtWidgets.QWidget):
         if repo:
             self.settings.setValue('metadata/index', self.combobox.currentIndex())
             url = QtCore.QUrl(repo.uri)
-            url.setPath('/classes')
+            url.setPath(f'{url.path()}/classes')
             request = QtNetwork.QNetworkRequest(url)
             request.setAttribute(MetadataRequest.RepositoryAttribute, repo)
             reply = self.session.nmanager.get(request)
