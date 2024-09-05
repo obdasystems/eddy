@@ -3,4 +3,4 @@
 #
 
 # From PyPi
-Cython==3.0.10
+Cython==3.0.11

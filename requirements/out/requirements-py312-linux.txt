@@ -6,11 +6,11 @@ arpy==2.3.0
     # via pydpkg
 build==1.2.1
     # via pip-tools
-cachetools==5.3.3
+cachetools==5.5.0
     # via tox
-certifi==2024.2.2
+certifi==2024.8.30
     # via requests
-cffi==1.16.0
+cffi==1.17.0
     # via cryptography
 chardet==5.2.0
     # via tox
@@ -20,13 +20,13 @@ click==8.1.7
     # via pip-tools
 colorama==0.4.6
     # via tox
-coverage[toml]==7.5.3
+coverage[toml]==7.6.1
     # via pytest-cov
-cryptography==42.0.7
+cryptography==43.0.1
     # via
     #   pgpy
     #   pydpkg
-cython==3.0.10
+cython==3.0.11
     # via -r requirements/in/cython.in
 decorator==5.1.1
     # via jsonpath-rw
@@ -38,11 +38,11 @@ emrichen==0.4.0
     # via appimage-builder
 et-xmlfile==1.1.0
     # via openpyxl
-filelock==3.14.0
+filelock==3.15.4
     # via
     #   tox
     #   virtualenv
-idna==3.7
+idna==3.8
     # via requests
 iniconfig==2.0.0
     # via pytest
@@ -54,17 +54,17 @@ jsonpath-rw==1.4.0
     # via emrichen
 libconf==2.0.1
     # via appimage-builder
-lief==0.14.1
+lief==0.15.1
     # via appimage-builder
-mypy==1.10.0
+mypy==1.11.2
     # via -r requirements/in/dev.in
 mypy-extensions==1.0.0
     # via mypy
 objgraph==3.6.1
     # via -r requirements/in/dev.in
-openpyxl==3.1.2
+openpyxl==3.1.5
     # via -r requirements/in/base.in
-packaging==24.0
+packaging==24.1
     # via
     #   appimage-builder
     #   build
@@ -101,25 +101,25 @@ pycparser==2.22
     # via cffi
 pydpkg==1.9.3
     # via appimage-builder
-pyinstaller==6.7.0
+pyinstaller==6.10.0
     # via -r requirements/in/packaging.in
-pyinstaller-hooks-contrib==2024.6
+pyinstaller-hooks-contrib==2024.8
     # via pyinstaller
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via rdflib
-pyproject-api==1.6.1
+pyproject-api==1.7.1
     # via tox
 pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pyqt5==5.15.10
+pyqt5==5.15.11
     # via -r requirements/in/pyqt5.in
-pyqt5-qt5==5.15.2
+pyqt5-qt5==5.15.14
     # via pyqt5
-pyqt5-sip==12.13.0
+pyqt5-sip==12.15.0
     # via pyqt5
-pytest==8.2.1
+pytest==8.3.2
     # via
     #   -r requirements/in/tests.in
     #   pytest-benchmark
@@ -147,7 +147,7 @@ python-gnupg==0.5.2
     # via appimage-builder
 pyvirtualdisplay==3.0
     # via pytest-xvfb
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   appimage-builder
     #   emrichen
@@ -156,7 +156,7 @@ questionary==2.0.1
     # via appimage-builder
 rdflib==7.0.0
     # via -r requirements/in/base.in
-requests==2.32.2
+requests==2.32.3
     # via
     #   appimage-builder
     #   docker
@@ -175,20 +175,20 @@ six==1.16.0
     #   isodate
     #   jsonpath-rw
     #   pydpkg
-tox==4.15.0
+tox==4.18.0
     # via -r requirements/in/tox.in
-typing-extensions==4.12.0
+typing-extensions==4.12.2
     # via mypy
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   appimage-builder
     #   docker
     #   requests
-virtualenv==20.26.2
+virtualenv==20.26.3
     # via tox
 wcwidth==0.2.13
     # via prompt-toolkit
-wheel==0.43.0
+wheel==0.44.0
     # via pip-tools
 zstandard==0.22.0
     # via pydpkg
