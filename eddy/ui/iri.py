@@ -65,8 +65,6 @@ from eddy.core.items.nodes.facet import FacetNode
 from eddy.core.items.nodes.literal import LiteralNode
 from eddy.core.items.nodes.value_domain import ValueDomainNode
 from eddy.core.owl import (
-    Annotation,
-    AnnotationAssertion,
     Facet,
     IllegalLiteralError,
     IllegalNamespaceError,
@@ -1596,26 +1594,8 @@ class EdgeAxiomDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type _: bool
         """
         annotationBuilder = self.session.doOpenAnnotationBuilder(self.edge)
-        connect(annotationBuilder.sgnAnnotationAccepted, self.onAnnotationAccepted)
+        connect(annotationBuilder.sgnAnnotationAccepted, self.redraw)
         annotationBuilder.exec_()
-
-    @QtCore.pyqtSlot(AnnotationAssertion)
-    def onAnnotationAccepted(self, annotation):
-        """
-        :type annotation:Annotation
-        """
-        table = self.widget('annotations_table_widget')
-        rowcount = table.rowCount()
-        table.setRowCount(rowcount + 1)
-        propertyItem = QtWidgets.QTableWidgetItem(str(annotation.assertionProperty))
-        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        propertyItem.setData(QtCore.Qt.UserRole, annotation)
-        table.setItem(rowcount, 0, propertyItem)
-        valueItem = QtWidgets.QTableWidgetItem(str(annotation.getObjectResourceString(True)))
-        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
-        table.scrollToItem(table.item(rowcount, 0))
-        table.resizeColumnToContents(0)
 
     @QtCore.pyqtSlot(bool)
     def removeAnnotation(self, _):
@@ -1655,28 +1635,8 @@ class EdgeAxiomDialog(QtWidgets.QDialog, HasWidgetSystem):
                 editItem = table.item(row, 0)
                 annotation = editItem.data(QtCore.Qt.UserRole)
                 annotationBuilder = self.session.doOpenAnnotationBuilder(self.edge, annotation)
-                connect(annotationBuilder.sgnAnnotationCorrectlyModified, self.onAnnotationModified)
+                connect(annotationBuilder.sgnAnnotationCorrectlyModified, self.redraw)
                 annotationBuilder.exec_()
-
-    @QtCore.pyqtSlot(Annotation)
-    def onAnnotationModified(self, assertion):
-        """
-        :type assertion:Annotation
-        """
-        table = self.widget('annotations_table_widget')
-        rowcount = table.rowCount()
-        for row in range(0, rowcount):
-            propItem = table.item(row, 0)
-            itemAssertion = propItem.data(QtCore.Qt.UserRole)
-            if itemAssertion is assertion:
-                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                newPropertyItem.setData(QtCore.Qt.UserRole, assertion)
-                table.setItem(row, 0, newPropertyItem)
-                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
-                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
-                break
 
     @QtCore.pyqtSlot(int)
     def onPrefixChanged(self, _):
