@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+from collections import defaultdict
 from enum import unique
 import re
 
@@ -48,7 +49,10 @@ from rfc3987 import (
 
 from eddy.core.datatypes.common import Enum_
 from eddy.core.datatypes.owl import Namespace
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import (
+    connect,
+    disconnect,
+)
 
 K_FUNCTIONAL = 'functional'
 K_ASYMMETRIC = 'asymmetric'
@@ -59,11 +63,13 @@ K_SYMMETRIC = 'symmetric'
 K_TRANSITIVE = 'transitive'
 K_DEPRECATED = 'deprecated'
 
+
 class Literal(QtCore.QObject):
     """
     Represents Literals
     """
     sgnLiteralModified = QtCore.pyqtSignal()
+
     def __init__(self, lexicalForm, datatype=None, language=None, parent=None):
         """
         :type lexicalForm:str
@@ -141,6 +147,7 @@ class Literal(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+
 class Facet(QtCore.QObject):
     """
     Represents Annotation Assertions
@@ -188,6 +195,7 @@ class Facet(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+
 class Annotation(QtCore.QObject):
     """
     Represents Annotations
@@ -206,6 +214,10 @@ class Annotation(QtCore.QObject):
         self._property = property
         if not (isinstance(value, IRI) or isinstance(value, str)):
             raise ValueError('The value of an annotation must be either an IRI or a string')
+        if isinstance(type, str) and type.isspace():
+            type = None
+        if isinstance(language, str) and language.isspace():
+            language = None
         self._value = value
         self._datatype = type
         self._language = language
@@ -291,20 +303,6 @@ class Annotation(QtCore.QObject):
                         else:
                             result += '^^<{}>'.format(self.datatype)
                 return result
-                '''
-                result = ''
-                if self._language:
-                    result += '"{}@{}"'.format(self._value,self._language)
-                else:
-                    result = '"{}"'.format(self._value)
-                if self._datatype:
-                    prefixedType = self._datatype.manager.getShortestPrefixedForm(self._datatype)
-                    if prefixedForm and prefixedType:
-                        result += '^^{}'.format(str(prefixedType))
-                    else:
-                        result += '^^<{}>'.format(self._datatype)
-                return result
-                '''
 
     def __hash__(self):
         result = self._property.__hash__()
@@ -320,15 +318,20 @@ class Annotation(QtCore.QObject):
         return result
 
     def __eq__(self, other):
-        if not isinstance(other, AnnotationAssertion):
-            return False
-        return self.assertionProperty == other.assertionProperty and self.value == other.value and self.datatype == other.datatype and self.language == other.value
+        return (
+            isinstance(other, Annotation)
+            and self.assertionProperty == other.assertionProperty
+            and self.value == other.value
+            and self.datatype == other.datatype
+            and self.language == other.language
+        )
 
     def __str__(self):
         return 'Annotation(<{}> {})'.format(self.assertionProperty,self.getObjectResourceString(True))
 
     def __repr__(self):
         return str(self)
+
 
 class AnnotationAssertion(QtCore.QObject):
     """
@@ -349,6 +352,10 @@ class AnnotationAssertion(QtCore.QObject):
         self._property = property
         if not (isinstance(value, IRI) or isinstance(value, str)):
             raise ValueError('The value of an annotation assertion must be either an IRI or a string')
+        if isinstance(type, str) and type.isspace():
+            type = None
+        if isinstance(language, str) and language.isspace():
+            language = None
         self._value = value
         self._datatype = type
         self._language = language
@@ -438,20 +445,6 @@ class AnnotationAssertion(QtCore.QObject):
                         else:
                             result += '^^<{}>'.format(self.datatype)
                 return result
-                '''
-                result = ''
-                if self._language:
-                    result += '"{}@{}"'.format(self._value,self._language)
-                else:
-                    result = '"{}"'.format(self._value)
-                if self._datatype:
-                    prefixedType = self._datatype.manager.getShortestPrefixedForm(self._datatype)
-                    if prefixedForm and prefixedType:
-                        result += '^^{}'.format(str(prefixedType))
-                    else:
-                        result += '^^<{}>'.format(self._datatype)
-                return result
-                '''
 
     def __hash__(self):
         result = self._property.__hash__()
@@ -467,19 +460,24 @@ class AnnotationAssertion(QtCore.QObject):
         return result
 
     def __eq__(self, other):
-        if not isinstance(other, AnnotationAssertion):
-            return False
-        return (self.assertionProperty == other.assertionProperty and
-                self.subject == other.subject and
-                self.value == other.value and
-                self.datatype == other.datatype and
-                self.language == other.language)
+        return (
+            isinstance(other, AnnotationAssertion)
+            and self.assertionProperty == other.assertionProperty
+            and self.subject == other.subject
+            and self.value == other.value
+            and self.datatype == other.datatype
+            and self.language == other.language
+        )
 
     def __str__(self):
-        return 'AnnotationAssertion(<{}> <{}> {})'.format(self.assertionProperty,self.subject,self.getObjectResourceString(True))
+        return 'AnnotationAssertion(<{}> <{}> {})'.format(
+            self.assertionProperty,self.subject,
+            self.getObjectResourceString(True),
+        )
 
     def __repr__(self):
         return str(self)
+
 
 class IRI(QtCore.QObject):
     """
@@ -513,7 +511,7 @@ class IRI(QtCore.QObject):
         self._isTransitive = transitive
         self._manager = None
         self.components = parse(IRI.concat(self._namespace, self._suffix))
-        self._annotationAssertionsMap = {}
+        self._annotationAssertionsMap = defaultdict(list)
         self._annotationAssertions = []
 
     @staticmethod
@@ -759,9 +757,9 @@ class IRI(QtCore.QObject):
     #   INTERFACE
     #################################
     def setMetaProperties(self, metaDict):
-        '''
+        """
         :type: metaDict: dict
-        '''
+        """
         for k,v in metaDict.items():
             if k==K_FUNCTIONAL:
                 self.functional = v
@@ -847,10 +845,10 @@ class IRI(QtCore.QObject):
         return None
 
     def getLabelAnnotationAssertion(self, lang=None):
-        '''
+        """
         :type lang:str
         :rtype AnnotationAssertion
-        '''
+        """
         return self.getAnnotationAssertion(AnnotationAssertionProperty.Label.value, lang=lang)
 
     def getAnnotationAssertion(self, annotationProperty, lang=None):
@@ -868,33 +866,24 @@ class IRI(QtCore.QObject):
         Add an annotation assertion regarding self
         :type: annotation: AnnotationAssertion
         """
-        if annotation.assertionProperty in self._annotationAssertionsMap:
-            if not annotation in self._annotationAssertionsMap[annotation.assertionProperty]:
-                self._annotationAssertionsMap[annotation.assertionProperty].append(annotation)
-        else:
-            currList = list()
-            currList.append(annotation)
-            self._annotationAssertionsMap[annotation.assertionProperty] = currList
-        self._annotationAssertions.append(annotation)
-        self.sgnAnnotationAdded.emit(annotation)
-        connect(annotation.sgnAnnotationModified, self.onAnnotationAssertionModified)
+        if annotation not in self._annotationAssertions:
+            self._annotationAssertions.append(annotation)
+            self._annotationAssertionsMap[annotation.assertionProperty].append(annotation)
+            self.sgnAnnotationAdded.emit(annotation)
+            connect(annotation.sgnAnnotationModified, self.onAnnotationAssertionModified)
 
     def removeAnnotationAssertion(self, annotation):
         """
         Remove an annotation assertion regarding self
         :type: annotation: AnnotationAssertion
         """
-        if annotation.assertionProperty in self._annotationAssertionsMap:
-            currList = self._annotationAssertionsMap[annotation.assertionProperty]
-            if annotation in currList:
-                currList.remove(annotation)
-                if len(currList) < 1:
-                    self._annotationAssertionsMap.pop(annotation.assertionProperty, None)
-            if annotation in self._annotationAssertions:
-                self.annotationAssertions.remove(annotation)
-                self.sgnAnnotationRemoved.emit(annotation)
-        else:
-            raise KeyError('Cannot find the annotation assertion')
+        if annotation in self._annotationAssertions:
+            self.annotationAssertions.remove(annotation)
+            self._annotationAssertionsMap[annotation.assertionProperty].remove(annotation)
+            if not self._annotationAssertionsMap[annotation.assertionProperty]:
+                del self._annotationAssertionsMap[annotation.assertionProperty]
+            self.sgnAnnotationRemoved.emit(annotation)
+            disconnect(annotation.sgnAnnotationModified, self.onAnnotationAssertionModified)
 
     def isAbsolute(self):
         """
