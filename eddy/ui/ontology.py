@@ -1047,27 +1047,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type _: bool
         """
         LOGGER.debug("addOntologyAnnotation called")
-        assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI) #AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
-        connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onOntologyAnnotationAssertionAccepted)
+        assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI)
+        connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.redraw)
         assertionBuilder.exec_()
-
-    #@QtCore.pyqtSlot(AnnotationAssertion)
-    def onOntologyAnnotationAssertionAccepted(self,assertion):
-        """
-        :type assertion:AnnotationAssertion
-        """
-        table = self.widget('annotations_table_widget')
-        rowcount = table.rowCount()
-        table.setRowCount(rowcount + 1)
-        propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        propertyItem.setData(QtCore.Qt.UserRole,assertion)
-        table.setItem(rowcount, 0, propertyItem)
-        valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
-        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
-        table.scrollToItem(table.item(rowcount, 0))
-        table.resizeColumnToContents(0)
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):
@@ -1111,30 +1093,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 editItem = table.item(row, 0)
                 assertion = editItem.data(QtCore.Qt.UserRole)
-                #editItem.setData(None)
-                assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI,assertion)
-                connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,self.onOntologyAnnotationAssertionModified)
+                assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(
+                    self.project.ontologyIRI,
+                    assertion,
+                )
+                connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,self.redraw)
                 assertionBuilder.exec_()
-
-    @QtCore.pyqtSlot(AnnotationAssertion)
-    def onOntologyAnnotationAssertionModified(self,assertion):
-        """
-        :type assertion:AnnotationAssertion
-        """
-        table = self.widget('annotations_table_widget')
-        rowcount = table.rowCount()
-        for row in range(0,rowcount):
-            propItem = table.item(row, 0)
-            itemAssertion = propItem.data(QtCore.Qt.UserRole)
-            if itemAssertion is assertion:
-                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                newPropertyItem.setData(QtCore.Qt.UserRole, assertion)
-                table.setItem(row, 0, newPropertyItem)
-                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
-                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
-                break
 
     #############################################
     # PREFIXES TAB
