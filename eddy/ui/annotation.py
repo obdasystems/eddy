@@ -406,24 +406,21 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def accept(self):
-
-        subjectStr = self.widget('subject_switch').currentText()
+        subjectStr = self.widget('subject_switch').currentText().strip()
         subjectIRI = self.project.getIRI(subjectStr)
-        propertyStr = self.widget('property_switch').currentText()
+        propertyStr = self.widget('property_switch').currentText().strip()
         propertyIRI = self.project.getIRI(propertyStr)
         activeTab = self.widget('main_widget').currentWidget()
         if activeTab is self.widget('literal_widget'):
             value = self.widget('value_textedit').toPlainText()
             if not value:
                 value = ' '
-            typeStr = self.widget('type_switch').currentText()
-            typeIRI = None
-            if typeStr:
-                typeIRI = self.project.getIRI(typeStr)
-            language = None
+            typeStr = self.widget('type_switch').currentText().strip()
+            typeIRI = self.project.getIRI(typeStr) if typeStr else None
             if self.widget('lang_switch').isEnabled():
-                language = self.widget('lang_switch').currentText()
-                if language not in self.project.getLanguages():
+                langStr = self.widget('lang_switch').currentText().strip()
+                language = langStr if langStr else None
+                if language and language not in self.project.getLanguages():
                     self.project.addLanguageTag(language)
         else:
             value = self.widget('full_iri_field').value()
@@ -431,7 +428,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 parse(value, rule='IRI')
                 value = self.project.getIRI(value)
                 typeIRI = self.project.getIRI('http://www.w3.org/2001/XMLSchema#anyURI')
-                language = ''
+                language = None
             except ValueError:
                 dialog = QtWidgets.QMessageBox(
                     QtWidgets.QMessageBox.Warning,
@@ -640,19 +637,17 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def accept(self):
-        propertyStr = self.widget('property_switch').currentText()
+        propertyStr = self.widget('property_switch').currentText().strip()
         propertyIRI = self.project.getIRI(propertyStr)
         value = self.widget('value_textedit').toPlainText()
         if not value:
             value = ' '
-        typeStr = self.widget('type_switch').currentText()
-        typeIRI = None
-        if typeStr:
-            typeIRI = self.project.getIRI(typeStr)
-        language = None
+        typeStr = self.widget('type_switch').currentText().strip()
+        typeIRI = self.project.getIRI(typeStr) if typeStr else None
         if self.widget('lang_switch').isEnabled():
-            language = self.widget('lang_switch').currentText()
-            if language not in self.project.getLanguages():
+            langStr = self.widget('lang_switch').currentText().strip()
+            language = langStr if langStr else None
+            if language and language not in self.project.getLanguages():
                 self.project.addLanguageTag(language)
         if not self.annotation:
             annotation = Annotation(propertyIRI, value, typeIRI, language)
