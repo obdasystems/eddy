@@ -147,6 +147,7 @@ class Literal(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+
 class Facet(QtCore.QObject):
     """
     Represents Annotation Assertions
@@ -194,6 +195,7 @@ class Facet(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+
 class Annotation(QtCore.QObject):
     """
     Represents Annotations
@@ -212,6 +214,10 @@ class Annotation(QtCore.QObject):
         self._property = property
         if not (isinstance(value, IRI) or isinstance(value, str)):
             raise ValueError('The value of an annotation must be either an IRI or a string')
+        if isinstance(type, str) and type.isspace():
+            type = None
+        if isinstance(language, str) and language.isspace():
+            language = None
         self._value = value
         self._datatype = type
         self._language = language
@@ -297,20 +303,6 @@ class Annotation(QtCore.QObject):
                         else:
                             result += '^^<{}>'.format(self.datatype)
                 return result
-                '''
-                result = ''
-                if self._language:
-                    result += '"{}@{}"'.format(self._value,self._language)
-                else:
-                    result = '"{}"'.format(self._value)
-                if self._datatype:
-                    prefixedType = self._datatype.manager.getShortestPrefixedForm(self._datatype)
-                    if prefixedForm and prefixedType:
-                        result += '^^{}'.format(str(prefixedType))
-                    else:
-                        result += '^^<{}>'.format(self._datatype)
-                return result
-                '''
 
     def __hash__(self):
         result = self._property.__hash__()
@@ -326,15 +318,20 @@ class Annotation(QtCore.QObject):
         return result
 
     def __eq__(self, other):
-        if not isinstance(other, AnnotationAssertion):
-            return False
-        return self.assertionProperty == other.assertionProperty and self.value == other.value and self.datatype == other.datatype and self.language == other.value
+        return (
+            isinstance(other, Annotation)
+            and self.assertionProperty == other.assertionProperty
+            and self.value == other.value
+            and self.datatype == other.datatype
+            and self.language == other.language
+        )
 
     def __str__(self):
         return 'Annotation(<{}> {})'.format(self.assertionProperty,self.getObjectResourceString(True))
 
     def __repr__(self):
         return str(self)
+
 
 class AnnotationAssertion(QtCore.QObject):
     """
@@ -355,6 +352,10 @@ class AnnotationAssertion(QtCore.QObject):
         self._property = property
         if not (isinstance(value, IRI) or isinstance(value, str)):
             raise ValueError('The value of an annotation assertion must be either an IRI or a string')
+        if isinstance(type, str) and type.isspace():
+            type = None
+        if isinstance(language, str) and language.isspace():
+            language = None
         self._value = value
         self._datatype = type
         self._language = language
@@ -444,20 +445,6 @@ class AnnotationAssertion(QtCore.QObject):
                         else:
                             result += '^^<{}>'.format(self.datatype)
                 return result
-                '''
-                result = ''
-                if self._language:
-                    result += '"{}@{}"'.format(self._value,self._language)
-                else:
-                    result = '"{}"'.format(self._value)
-                if self._datatype:
-                    prefixedType = self._datatype.manager.getShortestPrefixedForm(self._datatype)
-                    if prefixedForm and prefixedType:
-                        result += '^^{}'.format(str(prefixedType))
-                    else:
-                        result += '^^<{}>'.format(self._datatype)
-                return result
-                '''
 
     def __hash__(self):
         result = self._property.__hash__()
@@ -473,19 +460,24 @@ class AnnotationAssertion(QtCore.QObject):
         return result
 
     def __eq__(self, other):
-        if not isinstance(other, AnnotationAssertion):
-            return False
-        return (self.assertionProperty == other.assertionProperty and
-                self.subject == other.subject and
-                self.value == other.value and
-                self.datatype == other.datatype and
-                self.language == other.language)
+        return (
+            isinstance(other, AnnotationAssertion)
+            and self.assertionProperty == other.assertionProperty
+            and self.subject == other.subject
+            and self.value == other.value
+            and self.datatype == other.datatype
+            and self.language == other.language
+        )
 
     def __str__(self):
-        return 'AnnotationAssertion(<{}> <{}> {})'.format(self.assertionProperty,self.subject,self.getObjectResourceString(True))
+        return 'AnnotationAssertion(<{}> <{}> {})'.format(
+            self.assertionProperty,self.subject,
+            self.getObjectResourceString(True),
+        )
 
     def __repr__(self):
         return str(self)
+
 
 class IRI(QtCore.QObject):
     """
@@ -765,9 +757,9 @@ class IRI(QtCore.QObject):
     #   INTERFACE
     #################################
     def setMetaProperties(self, metaDict):
-        '''
+        """
         :type: metaDict: dict
-        '''
+        """
         for k,v in metaDict.items():
             if k==K_FUNCTIONAL:
                 self.functional = v
@@ -853,10 +845,10 @@ class IRI(QtCore.QObject):
         return None
 
     def getLabelAnnotationAssertion(self, lang=None):
-        '''
+        """
         :type lang:str
         :rtype AnnotationAssertion
-        '''
+        """
         return self.getAnnotationAssertion(AnnotationAssertionProperty.Label.value, lang=lang)
 
     def getAnnotationAssertion(self, annotationProperty, lang=None):
