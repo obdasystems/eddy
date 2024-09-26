@@ -33,6 +33,7 @@
 ##########################################################################
 
 
+from collections import defaultdict
 from enum import unique
 import re
 
@@ -48,7 +49,10 @@ from rfc3987 import (
 
 from eddy.core.datatypes.common import Enum_
 from eddy.core.datatypes.owl import Namespace
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import (
+    connect,
+    disconnect,
+)
 
 K_FUNCTIONAL = 'functional'
 K_ASYMMETRIC = 'asymmetric'
@@ -59,11 +63,13 @@ K_SYMMETRIC = 'symmetric'
 K_TRANSITIVE = 'transitive'
 K_DEPRECATED = 'deprecated'
 
+
 class Literal(QtCore.QObject):
     """
     Represents Literals
     """
     sgnLiteralModified = QtCore.pyqtSignal()
+
     def __init__(self, lexicalForm, datatype=None, language=None, parent=None):
         """
         :type lexicalForm:str
@@ -513,7 +519,7 @@ class IRI(QtCore.QObject):
         self._isTransitive = transitive
         self._manager = None
         self.components = parse(IRI.concat(self._namespace, self._suffix))
-        self._annotationAssertionsMap = {}
+        self._annotationAssertionsMap = defaultdict(list)
         self._annotationAssertions = []
 
     @staticmethod
@@ -868,33 +874,24 @@ class IRI(QtCore.QObject):
         Add an annotation assertion regarding self
         :type: annotation: AnnotationAssertion
         """
-        if annotation.assertionProperty in self._annotationAssertionsMap:
-            if not annotation in self._annotationAssertionsMap[annotation.assertionProperty]:
-                self._annotationAssertionsMap[annotation.assertionProperty].append(annotation)
-        else:
-            currList = list()
-            currList.append(annotation)
-            self._annotationAssertionsMap[annotation.assertionProperty] = currList
-        self._annotationAssertions.append(annotation)
-        self.sgnAnnotationAdded.emit(annotation)
-        connect(annotation.sgnAnnotationModified, self.onAnnotationAssertionModified)
+        if annotation not in self._annotationAssertions:
+            self._annotationAssertions.append(annotation)
+            self._annotationAssertionsMap[annotation.assertionProperty].append(annotation)
+            self.sgnAnnotationAdded.emit(annotation)
+            connect(annotation.sgnAnnotationModified, self.onAnnotationAssertionModified)
 
     def removeAnnotationAssertion(self, annotation):
         """
         Remove an annotation assertion regarding self
         :type: annotation: AnnotationAssertion
         """
-        if annotation.assertionProperty in self._annotationAssertionsMap:
-            currList = self._annotationAssertionsMap[annotation.assertionProperty]
-            if annotation in currList:
-                currList.remove(annotation)
-                if len(currList) < 1:
-                    self._annotationAssertionsMap.pop(annotation.assertionProperty, None)
-            if annotation in self._annotationAssertions:
-                self.annotationAssertions.remove(annotation)
-                self.sgnAnnotationRemoved.emit(annotation)
-        else:
-            raise KeyError('Cannot find the annotation assertion')
+        if annotation in self._annotationAssertions:
+            self.annotationAssertions.remove(annotation)
+            self._annotationAssertionsMap[annotation.assertionProperty].remove(annotation)
+            if not self._annotationAssertionsMap[annotation.assertionProperty]:
+                del self._annotationAssertionsMap[annotation.assertionProperty]
+            self.sgnAnnotationRemoved.emit(annotation)
+            disconnect(annotation.sgnAnnotationModified, self.onAnnotationAssertionModified)
 
     def isAbsolute(self):
         """
