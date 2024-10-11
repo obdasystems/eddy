@@ -698,7 +698,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if annotation.isIRIValued():
             value = self.IRI.create(str(annotation.value))
         else:
-            lexicalForm = annotation.value.replace('\n', '')
+            lexicalForm = annotation.value
             if annotation.language:
                 value = self.df.getOWLLiteral(lexicalForm, annotation.language)
             else:
