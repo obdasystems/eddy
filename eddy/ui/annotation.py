@@ -322,84 +322,10 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             langCombo.setEnabled(False)
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Annotation assertion builder <{}>'.format(str(iri)))
-        self.redraw()
 
     #############################################
     #   SLOTS
     #################################
-
-    @QtCore.pyqtSlot()
-    def redraw(self):
-        combobox = self.widget('property_switch')
-        combobox.clear()
-        combobox.addItem('')
-        sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
-        combobox.addItems([str(x) for x in sortedItems])
-        if not self.assertion:
-            combobox.setCurrentText('')
-        else:
-            combobox.setCurrentText(str(self.assertion.assertionProperty))
-
-        textArea = self.widget('value_textedit')
-        if self.assertion and not self.assertion.isIRIValued():
-            textArea.setText(str(self.assertion.value))
-        else:
-            textArea.setText('')
-
-        combobox = self.widget('type_switch')
-        combobox.clear()
-        combobox.addItem('')
-        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
-        combobox.addItems([str(x) for x in sortedItems])
-        if not self.assertion or self.assertion.isIRIValued():
-            combobox.setCurrentText('')
-        else:
-            if self.assertion.datatype:
-                combobox.setCurrentText(str(self.assertion.datatype))
-            else:
-                combobox.setCurrentText('')
-
-        combobox = self.widget('lang_switch')
-        combobox.clear()
-        combobox.addItem('')
-        combobox.addItems([x for x in self.project.getLanguages()])
-        if not self.assertion or self.assertion.isIRIValued():
-            combobox.setCurrentText('')
-        else:
-            if self.assertion.language:
-                combobox.setCurrentText(str(self.assertion.language))
-            else:
-                combobox.setCurrentText('')
-
-        combobox = self.widget('iri_prefix_switch')
-        combobox.clear()
-        combobox.addItem('')
-        combobox.addItems(
-            [x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
-
-        shortest = None
-        if self.assertion and self.assertion.isIRIValued():
-            shortest = self.project.getShortestPrefixedForm(self.assertion.value)
-
-        if shortest:
-            combobox.setCurrentText(
-                    shortest.prefix + ':' + '  <' + self.project.getNamespace(shortest.prefix) + '>')
-        else:
-            combobox.setCurrentText('')
-
-        inputField = self.widget('iri_input_field')
-        if shortest:
-            inputField.setText(shortest.suffix)
-        elif self.assertion and self.assertion.isIRIValued():
-            inputField.setText(str(self.assertion.value))
-        else:
-            inputField.setText('')
-
-        fullIriField = self.widget('full_iri_field')
-        if self.assertion and self.assertion.isIRIValued():
-            fullIriField.setText(str(self.assertion.value))
-        else:
-            fullIriField.setText('')
 
     @QtCore.pyqtSlot(int)
     def onSubjectSwitched(self, index):
