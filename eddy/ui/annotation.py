@@ -463,22 +463,46 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.edge = edge
         self.annotation = annotation
 
-        comboBoxLabel = QtWidgets.QLabel(self, objectName='property_combobox_label')
-        comboBoxLabel.setText('Property')
+        self.iconAttribute = QtGui.QIcon(':/icons/18/ic_treeview_attribute')
+        self.iconConcept = QtGui.QIcon(':/icons/18/ic_treeview_concept')
+        self.iconInstance = QtGui.QIcon(':/icons/18/ic_treeview_instance')
+        self.iconRole = QtGui.QIcon(':/icons/18/ic_treeview_role')
+        self.iconValue = QtGui.QIcon(':/icons/18/ic_treeview_value')
+
+        # Occurrences in diagrams
+        self.individuals = sorted(self.project.itemIRIs(Item.IndividualNode), key=str)
+        self.datatypes = sorted(self.project.itemIRIs(Item.ValueDomainNode), key=str)
+        self.annotations = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
+
+        self.predicates = QtGui.QStandardItemModel(self)
+        self.types = QtGui.QStandardItemModel(self)
+
+        comboBoxLabel = QtWidgets.QLabel('&Property', self, objectName='property_combobox_label')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='property_switch')
-        combobox.setEditable(False)
-        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(True)
+        comboBoxLabel.setBuddy(combobox)
+        combobox.setModel(self.predicates)
+        combobox.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         combobox.addItem('')
-        sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
-        combobox.addItems([str(x) for x in sortedItems])
+        for p in self.annotations:
+            self.predicates.appendRow(QtGui.QStandardItem(str(p)))
         if not self.annotation:
             combobox.setCurrentText('')
+        elif self.annotation.assertionProperty not in self.annotations:
+            combobox.addItem(str(self.annotation.assertionProperty))
+            combobox.setCurrentText(str(self.annotation.assertionProperty))
+            combobox.setEnabled(False)
         else:
             combobox.setCurrentText(str(self.annotation.assertionProperty))
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged, self.onPropertySwitched)
+
+        valueLabel = QtWidgets.QLabel('Value', self, objectName='value_label')
+        self.addWidget(valueLabel)
+
+        #############################################
+        # LITERAL TAB
+        #################################
 
         textArea = QtWidgets.QTextEdit(self, objectName='value_textedit')
         if self.annotation:
@@ -486,17 +510,21 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 textArea.setText(str(self.annotation.value))
         self.addWidget(textArea)
 
-        comboBoxLabel = QtWidgets.QLabel(self, objectName='type_combobox_label')
-        comboBoxLabel.setText('Type')
+        comboBoxLabel = QtWidgets.QLabel('&Type', self, objectName='type_combobox_label')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='type_switch')
+        comboBoxLabel.setBuddy(combobox)
         combobox.setEditable(False)
-        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(True)
+        combobox.setModel(self.types)
+        combobox.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         combobox.addItem('')
-
-        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
-        combobox.addItems([str(x) for x in sortedItems])
+        # Declared or used first
+        for d in self.datatypes:
+            self.types.appendRow(QtGui.QStandardItem(self.iconValue, str(d)))
+        # Remaining not used
+        for d in OWL2Datatype:
+            if d.value not in self.datatypes:
+                self.types.appendRow(QtGui.QStandardItem(self.iconValue, str(d.value)))
         if not self.annotation:
             combobox.setCurrentText('')
         else:
@@ -507,13 +535,12 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(combobox)
         connect(combobox.currentIndexChanged, self.onTypeSwitched)
 
-        comboBoxLabel = QtWidgets.QLabel(self, objectName='lang_combobox_label')
-        comboBoxLabel.setText('Lang')
+        comboBoxLabel = QtWidgets.QLabel('&Lang', self, objectName='lang_combobox_label')
         self.addWidget(comboBoxLabel)
         combobox = ComboBox(self, objectName='lang_switch')
+        comboBoxLabel.setBuddy(combobox)
         combobox.setEditable(True)
-        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        combobox.setScrollEnabled(True)
+        combobox.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         combobox.addItem('')
         combobox.addItems([x for x in self.project.getLanguages()])
         if not self.annotation:
@@ -524,6 +551,63 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 combobox.setCurrentText('')
         self.addWidget(combobox)
+        connect(combobox.editTextChanged, self.onLangChanged)
+
+        formlayout = QtWidgets.QFormLayout(self)
+        formlayout.addRow(self.widget('value_textedit'))
+        formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
+        formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('literal_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # IRI TAB
+        #################################
+
+        comboBoxLabel = getIRIPrefixComboBoxLabel(self)
+        self.addWidget(comboBoxLabel)
+
+        combobox = getIRIPrefixComboBox(self)
+        combobox.clear()
+        combobox.addItem('')
+        combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
+        ontPrefix = self.project.ontologyPrefix
+        if ontPrefix is not None:
+            combobox.setCurrentText(
+                ontPrefix + ':' + '  <' + self.project.getNamespace(ontPrefix) + '>'
+            )
+        else:
+            combobox.setCurrentText('')
+        self.addWidget(combobox)
+
+        inputLabel = getInputLabel(self)
+        self.addWidget(inputLabel)
+
+        inputField = getInputField(self)
+        inputField.setText('')
+        self.addWidget(inputField)
+
+        fullIriLabel = getFullIRILabel(self)
+        self.addWidget(fullIriLabel)
+
+        fullIriField = getFullIRIField(self)
+        fullIriField.setText('')
+        self.addWidget(fullIriField)
+
+        formlayout2 = QtWidgets.QFormLayout()
+        formlayout2.addRow(self.widget('iri_prefix_combobox_label'),
+                           self.widget('iri_prefix_switch'))
+        formlayout2.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
+        formlayout2.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
+        widget2 = QtWidgets.QWidget()
+        widget2.setLayout(formlayout2)
+        widget2.setObjectName('iri_widget')
+        self.addWidget(widget2)
+
+        connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onPrefixChanged)
+        connect(self.widget('iri_input_field').textChanged, self.onInputChanged)
 
         #############################################
         # CONFIRMATION BOX
@@ -540,62 +624,42 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(confirmation.accepted, self.accept)
         connect(confirmation.rejected, self.reject)
 
-        formlayout = QtWidgets.QFormLayout(self)
-        formlayout.addRow(self.widget('property_combobox_label'), self.widget('property_switch'))
-        formlayout.addRow(self.widget('value_textedit'))
-        formlayout.addRow(self.widget('type_combobox_label'), self.widget('type_switch'))
-        formlayout.addRow(self.widget('lang_combobox_label'), self.widget('lang_switch'))
-        formlayout.addRow(self.widget('confirmation_widget'))
+        #############################################
+        # MAIN WIDGET
+        #################################
 
+        main_widget = QtWidgets.QTabWidget(self, objectName='main_widget')
+        main_widget.addTab(self.widget('literal_widget'), 'Literal')
+        main_widget.addTab(self.widget('iri_widget'), 'IRI')
+        if self.annotation and self.annotation.isIRIValued():
+            main_widget.setCurrentWidget(self.widget('iri_widget'))
+        self.addWidget(main_widget)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.addWidget(self.widget('subject_combobox_label'))
+        layout.addWidget(self.widget('subject_switch'))
+        layout.addWidget(self.widget('property_combobox_label'))
+        layout.addWidget(self.widget('property_switch'))
+        layout.addWidget(self.widget('value_label'))
+        layout.addWidget(self.widget('main_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+
+        typeCombo = self.widget('type_switch')
+        langCombo = self.widget('lang_switch')
+        if langCombo.currentText():
+            typeCombo.setStyleSheet("background: #808080")
+            typeCombo.setEnabled(False)
+        if typeCombo.currentText():
+            langCombo.setStyleSheet("background: #808080")
+            langCombo.setEnabled(False)
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Annotation builder <{}>'.format(str(edge)))
-        self.redraw()
 
     #############################################
     #   SLOTS
     #################################
-
-    @QtCore.pyqtSlot()
-    def redraw(self):
-        combobox = self.widget('property_switch')
-        combobox.clear()
-        combobox.addItem('')
-        sortedItems = sorted(self.project.getAnnotationPropertyIRIs(), key=str)
-        combobox.addItems([str(x) for x in sortedItems])
-        if not self.annotation:
-            combobox.setCurrentText('')
-        else:
-            combobox.setCurrentText(str(self.annotation.assertionProperty))
-
-        textArea = self.widget('value_textedit')
-        if self.annotation:
-            if self.annotation.value:
-                textArea.setText(str(self.annotation.value))
-
-        combobox = self.widget('type_switch')
-        combobox.clear()
-        combobox.addItem('')
-        sortedItems = sorted(self.project.getDatatypeIRIs(), key=str)
-        combobox.addItems([str(x) for x in sortedItems])
-        if not self.annotation:
-            combobox.setCurrentText('')
-        else:
-            if self.annotation.datatype:
-                combobox.setCurrentText(str(self.annotation.datatype))
-            else:
-                combobox.setCurrentText('')
-
-        combobox = self.widget('lang_switch')
-        combobox.clear()
-        combobox.addItem('')
-        combobox.addItems([x for x in self.project.getLanguages()])
-        if not self.annotation:
-            combobox.setCurrentText('')
-        else:
-            if self.annotation.language:
-                combobox.setCurrentText(str(self.annotation.language))
-            else:
-                combobox.setCurrentText('')
 
     @QtCore.pyqtSlot(int)
     def onPropertySwitched(self, index):
@@ -605,28 +669,70 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot(int)
     def onTypeSwitched(self, index):
-        typeIRI = self.widget('type_switch').itemText(index)
-        if not self.project.canAddLanguageTag(typeIRI):
-            self.widget('lang_switch').setStyleSheet("background:#808080")
-            self.widget('lang_switch').setEnabled(False)
+        typeCombo: QtWidgets.QComboBox = self.widget('type_switch')
+        langCombo: QtWidgets.QComboBox = self.widget('lang_switch')
+        langCombo.setCurrentText('')
+        if typeCombo.itemText(index):
+            langCombo.setStyleSheet("background: #808080")
+            langCombo.setEnabled(False)
         else:
-            self.widget('lang_switch').setStyleSheet("background:#FFFFFF")
-            self.widget('lang_switch').setEnabled(True)
+            langCombo.setStyleSheet("background: #FFFFFF")
+            langCombo.setEnabled(True)
+
+    @QtCore.pyqtSlot(str)
+    def onLangChanged(self, text):
+        typeCombo: QtWidgets.QComboBox = self.widget('type_switch')
+        typeCombo.setCurrentText('')
+        if text:
+            typeCombo.setStyleSheet("background: #808080")
+            typeCombo.setEnabled(False)
+        else:
+            typeCombo.setStyleSheet("background: #FFFFFF")
+            typeCombo.setEnabled(True)
+
+    @QtCore.pyqtSlot(int)
+    def onPrefixChanged(self, _):
+        self.onInputChanged('')
+
+    @QtCore.pyqtSlot(str)
+    def onInputChanged(self, _):
+        prefix = self.widget('iri_prefix_switch').currentText()
+        input = self.widget('iri_input_field').value()
+        resolvedPrefix = resolvePrefix(self.project, prefix)
+        fullIri = '{}{}'.format(resolvedPrefix, input)
+        self.widget('full_iri_field').setValue(fullIri)
 
     @QtCore.pyqtSlot()
     def accept(self):
         propertyStr = self.widget('property_switch').currentText().strip()
         propertyIRI = self.project.getIRI(propertyStr)
-        value = self.widget('value_textedit').toPlainText()
-        if not value:
-            value = ' '
-        typeStr = self.widget('type_switch').currentText().strip()
-        typeIRI = self.project.getIRI(typeStr) if typeStr else None
-        if self.widget('lang_switch').isEnabled():
-            langStr = self.widget('lang_switch').currentText().strip()
-            language = langStr if langStr else None
-            if language and language not in self.project.getLanguages():
-                self.project.addLanguageTag(language)
+        activeTab = self.widget('main_widget').currentWidget()
+        if activeTab is self.widget('literal_widget'):
+            value = self.widget('value_textedit').toPlainText().strip()
+            typeStr = self.widget('type_switch').currentText().strip()
+            typeIRI = self.project.getIRI(typeStr) if typeStr else None
+            if self.widget('lang_switch').isEnabled():
+                langStr = self.widget('lang_switch').currentText().strip()
+                language = langStr if langStr else None
+                if language and language not in self.project.getLanguages():
+                    self.project.addLanguageTag(language)
+            else:
+                language = None
+        else:
+            value = self.widget('full_iri_field').value()
+            try:
+                parse(value, rule='IRI')
+                value = self.project.getIRI(value)
+                typeIRI = self.project.getIRI('http://www.w3.org/2001/XMLSchema#anyURI')
+                language = None
+            except ValueError:
+                dialog = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'IRI Definition Error',
+                    'The input string is not a valid IRI',
+                    parent=self)
+                dialog.open()
+                return
         if not self.annotation:
             annotation = Annotation(propertyIRI, value, typeIRI, language)
             command = CommandEdgeAddAnnotation(self.project, self.edge, annotation)
