@@ -59,16 +59,11 @@ from eddy.core.owl import (
     IRI,
     OWL2Datatype,
 )
-from eddy.ui.fields import ComboBox
-from eddy.ui.iri import (
-    getFullIRIField,
-    getFullIRILabel,
-    getIRIPrefixComboBox,
-    getIRIPrefixComboBoxLabel,
-    getInputField,
-    getInputLabel,
-    resolvePrefix,
+from eddy.ui.fields import (
+    ComboBox,
+    StringField,
 )
+from eddy.ui.iri import resolvePrefix
 
 if TYPE_CHECKING:
     from eddy.ui.session import Session
@@ -171,9 +166,8 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         textArea = QtWidgets.QTextEdit(self, objectName='value_textedit')
-        if self.assertion:
-            if self.assertion.value:
-                textArea.setText(str(self.assertion.value))
+        if self.assertion and not self.assertion.isIRIValued():
+            textArea.setText(str(self.assertion.value))
         self.addWidget(textArea)
 
         comboBoxLabel = QtWidgets.QLabel('&Type', self, objectName='type_combobox_label')
@@ -232,11 +226,12 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         # IRI TAB
         #################################
 
-        comboBoxLabel = getIRIPrefixComboBoxLabel(self)
+        comboBoxLabel = QtWidgets.QLabel('Pre&fix', self, objectName='iri_prefix_combobox_label')
         self.addWidget(comboBoxLabel)
-
-        combobox = getIRIPrefixComboBox(self)
-        combobox.clear()
+        combobox = ComboBox(self, objectName='iri_prefix_switch')
+        comboBoxLabel.setBuddy(combobox)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setEditable(False)
         combobox.addItem('')
         combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
         ontPrefix = self.project.ontologyPrefix
@@ -248,18 +243,16 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText('')
         self.addWidget(combobox)
 
-        inputLabel = getInputLabel(self)
+        inputLabel = QtWidgets.QLabel('&Input', self, objectName='input_field_label')
         self.addWidget(inputLabel)
-
-        inputField = getInputField(self)
-        inputField.setText('')
+        inputField = StringField('', self, objectName='iri_input_field')
+        inputLabel.setBuddy(inputField)
         self.addWidget(inputField)
 
-        fullIriLabel = getFullIRILabel(self)
+        fullIriLabel = QtWidgets.QLabel('Full IRI', self, objectName='full_iri_label')
         self.addWidget(fullIriLabel)
-
-        fullIriField = getFullIRIField(self)
-        fullIriField.setText('')
+        fullIriField = StringField('', self, objectName='full_iri_field')
+        fullIriField.setReadOnly(True)
         self.addWidget(fullIriField)
 
         formlayout2 = QtWidgets.QFormLayout()
@@ -274,6 +267,16 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onPrefixChanged)
         connect(self.widget('iri_input_field').textChanged, self.onInputChanged)
+
+        if self.assertion and self.assertion.isIRIValued():
+            prefixed = self.project.getLongestSuffixPrefixedForm(self.assertion.value)
+            if prefixed:
+                self.widget('iri_prefix_switch').setCurrentText(
+                    f'{prefixed.prefix}:  <{str(self.project.getNamespace(prefixed.prefix))}>'
+                )
+                self.widget('iri_input_field').setText(prefixed.suffix)
+            else:
+                self.widget('iri_input_field').setText(str(self.assertion.value))
 
         #############################################
         # CONFIRMATION BOX
@@ -405,7 +408,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             try:
                 parse(value, rule='IRI')
                 value = self.project.getIRI(value)
-                typeIRI = self.project.getIRI('http://www.w3.org/2001/XMLSchema#anyURI')
+                typeIRI = None
                 language = None
             except ValueError:
                 dialog = QtWidgets.QMessageBox(
@@ -505,9 +508,8 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         #################################
 
         textArea = QtWidgets.QTextEdit(self, objectName='value_textedit')
-        if self.annotation:
-            if self.annotation.value:
-                textArea.setText(str(self.annotation.value))
+        if self.annotation and not self.annotation.isIRIValued():
+            textArea.setText(str(self.annotation.value))
         self.addWidget(textArea)
 
         comboBoxLabel = QtWidgets.QLabel('&Type', self, objectName='type_combobox_label')
@@ -566,11 +568,12 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         # IRI TAB
         #################################
 
-        comboBoxLabel = getIRIPrefixComboBoxLabel(self)
+        comboBoxLabel = QtWidgets.QLabel('Pre&fix', self, objectName='iri_prefix_combobox_label')
         self.addWidget(comboBoxLabel)
-
-        combobox = getIRIPrefixComboBox(self)
-        combobox.clear()
+        combobox = ComboBox(self, objectName='iri_prefix_switch')
+        comboBoxLabel.setBuddy(combobox)
+        combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+        combobox.setEditable(False)
         combobox.addItem('')
         combobox.addItems([x + ':' + '  <' + y + '>' for x, y in self.project.prefixDictItems()])
         ontPrefix = self.project.ontologyPrefix
@@ -582,18 +585,16 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             combobox.setCurrentText('')
         self.addWidget(combobox)
 
-        inputLabel = getInputLabel(self)
+        inputLabel = QtWidgets.QLabel('&Input', self, objectName='input_field_label')
         self.addWidget(inputLabel)
-
-        inputField = getInputField(self)
-        inputField.setText('')
+        inputField = StringField('', self, objectName='iri_input_field')
+        inputLabel.setBuddy(inputField)
         self.addWidget(inputField)
 
-        fullIriLabel = getFullIRILabel(self)
+        fullIriLabel = QtWidgets.QLabel('Full IRI', self, objectName='full_iri_label')
         self.addWidget(fullIriLabel)
-
-        fullIriField = getFullIRIField(self)
-        fullIriField.setText('')
+        fullIriField = StringField('', self, objectName='full_iri_field')
+        fullIriField.setReadOnly(True)
         self.addWidget(fullIriField)
 
         formlayout2 = QtWidgets.QFormLayout()
@@ -608,6 +609,16 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         connect(self.widget('iri_prefix_switch').currentIndexChanged, self.onPrefixChanged)
         connect(self.widget('iri_input_field').textChanged, self.onInputChanged)
+
+        if self.annotation and self.annotation.isIRIValued():
+            prefixed = self.project.getLongestSuffixPrefixedForm(self.annotation.value)
+            if prefixed:
+                self.widget('iri_prefix_switch').setCurrentText(
+                    f'{prefixed.prefix}:  <{str(self.project.getNamespace(prefixed.prefix))}>'
+                )
+                self.widget('iri_input_field').setText(prefixed.suffix)
+            else:
+                self.widget('iri_input_field').setText(str(self.annotation.value))
 
         #############################################
         # CONFIRMATION BOX
@@ -723,7 +734,7 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             try:
                 parse(value, rule='IRI')
                 value = self.project.getIRI(value)
-                typeIRI = self.project.getIRI('http://www.w3.org/2001/XMLSchema#anyURI')
+                typeIRI = None
                 language = None
             except ValueError:
                 dialog = QtWidgets.QMessageBox(
