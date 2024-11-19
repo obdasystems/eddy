@@ -464,6 +464,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         #table.setSelectionMode(QAbstractItemView.MultiSelection)
+        connect(table.cellDoubleClicked, self.onAssertionCellDoubleClicked)
         self.addWidget(table)
 
         selectBtn = QtWidgets.QPushButton('Select All', objectName = 'annotation_assertions_selectall_button')
@@ -1044,6 +1045,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     def onAnnotationCellClicked(self,row,column):
         self.widget('ontology_annotations_delete_button').setEnabled(True)
         self.widget('ontology_annotations_edit_button').setEnabled(True)
+
+    @QtCore.pyqtSlot(int, int)
+    def onAssertionCellDoubleClicked(self, row: int, _col: int) -> None:
+        table: QtWidgets.QTableWidget = self.widget('annotation_assertions_table_widget')
+        assertion = table.item(row, 2).data(QtCore.Qt.ItemDataRole.UserRole)
+        assertionBuilder = AnnotationAssertionBuilderDialog(
+            self.session,
+            self.project.ontologyIRI,
+            assertion,
+        )
+        connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified, self.redraw)
+        assertionBuilder.open()
 
     @QtCore.pyqtSlot(bool)
     def editOntologyAnnotation(self, _):
