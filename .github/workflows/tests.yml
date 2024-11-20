@@ -38,10 +38,6 @@ jobs:
             python-version: '3.12'
             pyqt-version: '515'
 
-          - os: macos-latest
-            python-version: '3.13'
-            pyqt-version: '515'
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
