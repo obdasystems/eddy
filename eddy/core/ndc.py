@@ -36,8 +36,10 @@
 from SPARQLWrapper import SPARQLWrapper, RDF as rdf
 from rdflib import Graph, RDF, FOAF, URIRef, Literal
 
+from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.path import expandPath
+from eddy.core.owl import AnnotationAssertion, OWL2Datatype
 
 # Create the default store if not exists yet
 if not fexists(expandPath('@data/rdf-store.ttl')):
@@ -238,9 +240,9 @@ def addAgentToStore(iri, nameIT, nameEN, id):
     g = Graph()
     g.parse(dest)
     iriRef = URIRef(iri)
-    nameITlit = Literal(nameIT)
-    nameENlit = Literal(nameEN)
-    idLit = Literal(id)
+    nameITlit = Literal(nameIT, lang='it')
+    nameENlit = Literal(nameEN,  lang='en')
+    idLit = Literal(id, datatype=RDF.PlainLiteral)
     g.add((iriRef, RDF.type, FOAF.Agent))
     g.add((iriRef, FOAF.name, nameITlit))
     g.add((iriRef, FOAF.name, nameENlit))
@@ -254,8 +256,8 @@ def addProjectToStore(iri, nameIT, nameEN):
     g = Graph()
     g.parse(dest)
     iriRef = URIRef(iri)
-    nameITlit = Literal(nameIT)
-    nameENlit = Literal(nameEN)
+    nameITlit = Literal(nameIT,  lang='it')
+    nameENlit = Literal(nameEN,  lang='en')
     g.add((iriRef, RDF.type, URIRef("https://w3id.org/italia/onto/ADMS/Project")))
     g.add((iriRef, URIRef("https://w3id.org/italia/onto/l0/name"), nameITlit))
     g.add((iriRef, URIRef("https://w3id.org/italia/onto/l0/name"), nameENlit))
@@ -268,14 +270,14 @@ def addDistributionToStore(iri, titleIT, titleEN, descriptionIT, descriptionEN, 
     g = Graph()
     g.parse(dest)
     iriRef = URIRef(iri)
-    titleITlit = Literal(titleIT)
-    titleENlit = Literal(titleEN)
-    descriptionITlit = Literal(descriptionIT)
-    descriptionENlit = Literal(descriptionEN)
-    formatLit = Literal(format)
-    licenseLit = Literal(license)
-    accessURLlit = Literal(accessURL)
-    downloadURLlit = Literal(downloadURL)
+    titleITlit = Literal(titleIT, lang='it')
+    titleENlit = Literal(titleEN,  lang='en')
+    descriptionITlit = Literal(descriptionIT, lang='it')
+    descriptionENlit = Literal(descriptionEN, lang='en')
+    formatLit = URIRef(format)
+    licenseLit = URIRef(license)
+    accessURLlit = URIRef(accessURL)
+    downloadURLlit = URIRef(downloadURL)
     g.add((iriRef, RDF.type, URIRef("https://w3id.org/italia/onto/ADMS/SemanticAssetDistribution")))
     g.add((iriRef, URIRef('http://purl.org/dc/terms/title'), titleITlit))
     g.add((iriRef, URIRef('http://purl.org/dc/terms/title'), titleENlit))
@@ -294,9 +296,9 @@ def addContactToStore(iri, nameIT, nameEN, email, telephone):
     g = Graph()
     g.parse(dest)
     iriRef = URIRef(iri)
-    nameITlit = Literal(nameIT)
-    nameENlit = Literal(nameEN)
-    emailLit = Literal(email)
+    nameITlit = Literal(nameIT,  lang='it')
+    nameENlit = Literal(nameEN,  lang='en')
+    emailLit = URIRef(email)
     telephoneLit = Literal(telephone)
     g.add((iriRef, RDF.type, URIRef("http://www.w3.org/2006/vcard/ns#Kind")))
     g.add((iriRef, URIRef("http://www.w3.org/2006/vcard/ns#fn"), nameITlit))
@@ -304,4 +306,18 @@ def addContactToStore(iri, nameIT, nameEN, email, telephone):
     g.add((iriRef, URIRef("http://www.w3.org/2006/vcard/ns#hasEmail"), emailLit))
     g.add((iriRef, URIRef("http://www.w3.org/2006/vcard/ns#hasTelephone"), telephoneLit))
     g.serialize(dest)
+    return
+
+def addIriAnnotationsToProject(url, project, subjectIri):
+    graphName = url.replace('https://', '[').replace('/', ']')
+    g1 = Graph()
+    g1.parse(expandPath(f'@data/{graphName}.ttl'))
+    g2 = Graph()
+    g2.parse(expandPath('@data/rdf-store.ttl'))
+    g = g1 + g2
+    for s, p, o in g.triples((URIRef(subjectIri), None, None)):
+        annotationAssertion = AnnotationAssertion(project.getIRI(subjectIri), project.getIRI(p.toPython()),
+                                                  o.toPython() if isinstance(o, Literal) else project.getIRI(o.toPython()), OWL2Datatype.PlainLiteral.value if isinstance(o, Literal) else None, o.language if isinstance(o, Literal) else None)
+        command = CommandIRIAddAnnotationAssertion(project, project.getIRI(subjectIri), annotationAssertion)
+        project.session.undostack.push(command)
     return

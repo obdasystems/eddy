@@ -4,7 +4,7 @@ from PyQt5 import (
     QtWidgets,
 )
 
-from core.functions.signals import connect
+from eddy.core.functions.signals import connect
 
 
 class CheckableComboBox(QtWidgets.QComboBox):

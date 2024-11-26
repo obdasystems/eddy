@@ -40,7 +40,7 @@ from PyQt5 import (
 
 from eddy.core.commands.iri import (
     CommandCommmonSubstringIRIsRefactor,
-    CommandIRIRemoveAnnotationAssertion,
+    CommandIRIRemoveAnnotationAssertion, CommandIRIAddAnnotationAssertion,
 )
 from eddy.core.commands.project import (
     CommandProjectAddAnnotationProperty,
@@ -54,6 +54,7 @@ from eddy.core.commands.project import (
     CommandProjectSetOntologyIRIAndVersion,
 )
 from eddy.core.common import HasWidgetSystem
+from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
 from eddy.core.exporters.metadata import (
     AnnotationsOverridingDialog,
@@ -69,14 +70,14 @@ from eddy.core.ndc import (
     getContactPointsFromStore,
     getProjectsFromStore,
     getDataFromEndpoint,
-    getDistributionsFromStore,
+    getDistributionsFromStore, addIriAnnotationsToProject,
 )
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalPrefixError,
     IllegalNamespaceError,
-    ImportedOntology,
+    ImportedOntology, IRI, OWL2Datatype,
 )
 from eddy.ui.annotation import AnnotationAssertionBuilderDialog
 from eddy.ui.checkable_combobox import CheckableComboBox
@@ -770,8 +771,13 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         ndcVersionInfo.setText('Version Info')
         self.addWidget(ndcVersionInfo)
 
-        ndcVersionInfoField = StringField(self, objectName='ndc_versionInfo_field')
-        self.addWidget(ndcVersionInfoField)
+        ndcVersionInfoITField = StringField(self, objectName='ndc_ITversionInfo_field')
+        ndcVersionInfoITField.setPlaceholderText('@it')
+        self.addWidget(ndcVersionInfoITField)
+
+        ndcVersionInfoENField = StringField(self, objectName='ndc_ENversionInfo_field')
+        ndcVersionInfoENField.setPlaceholderText('@en')
+        self.addWidget(ndcVersionInfoENField)
 
         ndcAccrualPeriodicity = QtWidgets.QLabel(self, objectName='ndc_accrualPeriodicity_label')
         ndcAccrualPeriodicity.setText('Accrual Periodicity')
@@ -948,7 +954,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         NDCLayout.addRow(self.widget('ndc_rightsHolder_label'), layout_rightsHolder)
         NDCLayout.addRow(self.widget('ndc_creationDate_label'), self.widget('ndc_creationDate_field'))
         NDCLayout.addRow(self.widget('ndc_lastModifiedDate_label'), self.widget('ndc_lastModifiedDate_field'))
-        NDCLayout.addRow(self.widget('ndc_versionInfo_label'), self.widget('ndc_versionInfo_field'))
+        NDCLayout.addRow(self.widget('ndc_versionInfo_label'), self.widget('ndc_ITversionInfo_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENversionInfo_field'))
         NDCLayout.addRow(self.widget('ndc_accrualPeriodicity_label'), self.widget('ndc_accrualPeriodicity_field'))
         NDCLayout.addRow(self.widget('ndc_contacts_label'), layout_contact)
         NDCLayout.addRow(self.widget('ndc_publisher_label'), layout_publisher)
@@ -961,8 +968,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
 
         applyBtn = QtWidgets.QPushButton('Apply', objectName='ndc_apply_button')
-        applyBtn.setEnabled(False)
-        connect(applyBtn.clicked, self.doApplyIriLabel)
+        applyBtn.setEnabled(True)
+        connect(applyBtn.clicked, self.doAddMetadata)
         self.addWidget(applyBtn)
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
@@ -2140,3 +2147,195 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             msgbox.setText('Triples retrieved from endpoint!')
             msgbox.setTextFormat(QtCore.Qt.RichText)
             msgbox.exec_()
+    def doAddMetadata(self):
+        annotations = []
+        subjectIRI = self.project.ontologyIRI
+        url = self.widget('endpoint_field').text()
+        titleIT = self.widget('ndc_ITtitle_field').text()
+        annotations.append({
+            'prop': 'http://purl.org/dc/terms/title',
+            'value': titleIT,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'it'})
+        titleEN = self.widget('ndc_ENtitle_field').text()
+        annotations.append({
+            'prop': 'http://purl.org/dc/terms/title',
+            'value': titleEN,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'en'
+        })
+        labelIT = self.widget('ndc_ITlabel_field').text()
+        annotations.append({
+            'prop': 'http://www.w3.org/2000/01/rdf-schema#label',
+            'value': labelIT,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'it'
+        })
+        labelEN = self.widget('ndc_ENlabel_field').text()
+        annotations.append({
+            'prop': 'http://www.w3.org/2000/01/rdf-schema#label',
+            'value': labelEN,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'en'
+        })
+        commentIT = self.widget('ndc_ITcomment_field').text()
+        annotations.append({
+            'prop': 'http://www.w3.org/2000/01/rdf-schema#comment',
+            'value': commentIT,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'it'
+        })
+        commentEN = self.widget('ndc_ENcomment_field').text()
+        annotations.append({
+            'prop': 'http://www.w3.org/2000/01/rdf-schema#comment',
+            'value': commentEN,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'en'
+        })
+        officialURI = self.widget('ndc_officialURI_field').text()
+        annotations.append({
+            'prop': 'https://w3id.org/italia/onto/ADMS/officialURI',
+            'value': officialURI,
+            'type': OWL2Datatype.anyURI.value,
+            'lang': ''
+        })
+        identifier = self.widget('ndc_id_field').text()
+        annotations.append({
+            'prop': 'http://purl.org/dc/terms/identifier',
+            'value': identifier,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': ''
+        })
+        creationDate = self.widget('ndc_creationDate_field').date().toString("yyyy-MM-dd")
+        annotations.append({
+            'prop': 'http://purl.org/dc/terms/issued',
+            'value': creationDate+'T00:00:00+00:00',
+            'type': OWL2Datatype.dateTime.value,
+            'lang': ''
+        })
+        lastModifiedDate = self.widget('ndc_lastModifiedDate_field').date().toString("yyyy-MM-dd")
+        annotations.append({
+            'prop': 'http://purl.org/dc/terms/modified',
+            'value': lastModifiedDate + 'T00:00:00+00:00',
+            'type': OWL2Datatype.dateTime.value,
+            'lang': ''
+        })
+        versionInfoIT = self.widget('ndc_ITversionInfo_field').text()
+        annotations.append({
+            'prop': 'http://www.w3.org/2002/07/owl#versionInfo',
+            'value': versionInfoIT,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'it'
+        })
+        versionInfoEN = self.widget('ndc_ENversionInfo_field').text()
+        annotations.append({
+            'prop': 'http://www.w3.org/2002/07/owl#versionInfo',
+            'value': versionInfoEN,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'en'
+        })
+        accrualPeriodicity = self.widget('ndc_accrualPeriodicity_field').currentText()
+        annotations.append({
+            'prop': 'http://purl.org/dc/terms/accrualPeriodicity',
+            'value':  self.project.getIRI(accrualPeriodicity) if accrualPeriodicity else '',
+            'type': None,
+            'lang': ''
+        })
+        languages = self.widget('ndc_languages_field').currentData()
+        for l in languages:
+            annotations.append({
+                'prop': 'http://purl.org/dc/terms/language',
+                'value': self.project.getIRI(l),
+                'type': None,
+                'lang': ''
+            })
+        keyClasses = self.widget('ndc_mainClasses_field').currentData()
+        for c in keyClasses:
+            annotations.append({
+                'prop': 'https://w3id.org/italia/onto/ADMS/hasKeyClass',
+                'value': self.project.getIRI(c),
+                'type': None,
+                'lang': ''
+            })
+        prefix = self.widget('ndc_prefix_field').text()
+        annotations.append({
+            'prop': 'https://w3id.org/italia/onto/ADMS/prefix',
+            'value': prefix,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': ''
+        })
+        rightsHolders = self.widget('ndc_rightsHolder_field').currentData()
+        for r in rightsHolders:
+            self.project.addIRI(self.project.getIRI(r))
+            addIriAnnotationsToProject(url, self.project, r)
+            self.redraw()
+            annotations.append({
+                'prop': 'http://purl.org/dc/terms/rightsHolder',
+                'value': self.project.getIRI(r),
+                'type': None,
+                'lang': ''
+            })
+        publishers = self.widget('ndc_publisher_field').currentData()
+        for p in publishers:
+            self.project.addIRI(self.project.getIRI(p))
+            addIriAnnotationsToProject(url, self.project, p)
+            self.redraw()
+            annotations.append({
+                'prop': 'http://purl.org/dc/terms/publisher',
+                'value': self.project.getIRI(p),
+                'type': None,
+                'lang': ''
+            })
+        creators = self.widget('ndc_creator_field').currentData()
+        for c in creators:
+            self.project.addIRI(self.project.getIRI(c))
+            addIriAnnotationsToProject(url, self.project, c)
+            self.redraw()
+            annotations.append({
+                'prop': 'http://purl.org/dc/terms/creator',
+                'value': self.project.getIRI(c),
+                'type': None,
+                'lang': ''
+            })
+        projects = self.widget('ndc_projects_field').currentData()
+        for p in projects:
+            self.project.addIRI(self.project.getIRI(p))
+            addIriAnnotationsToProject(url, self.project, p)
+            self.redraw()
+            annotations.append({
+                'prop': 'https://w3id.org/italia/onto/ADMS/semanticAssetInUse',
+                'value': self.project.getIRI(p),
+                'type': None,
+                'lang': ''
+            })
+        distributions = self.widget('ndc_distributions_field').currentData()
+        for d in distributions:
+            self.project.addIRI(self.project.getIRI(d))
+            addIriAnnotationsToProject(url, self.project, d)
+            self.redraw()
+            annotations.append({
+                'prop': 'https://w3id.org/italia/onto/ADMS/hasSemanticAssetDistribution',
+                'value': self.project.getIRI(d),
+                'type': None,
+                'lang': ''
+            })
+        contacts = self.widget('ndc_contacts_field').currentData()
+        for c in contacts:
+            self.project.addIRI(self.project.getIRI(c))
+            addIriAnnotationsToProject(url, self.project, c)
+            self.redraw()
+            annotations.append({
+                'prop': 'http://www.w3.org/ns/dcat#contactPoint',
+                'value': self.project.getIRI(c),
+                'type': None,
+                'lang': ''
+            })
+        for a in annotations:
+            if(a['value']):
+                annotationAssertion = AnnotationAssertion(subjectIRI, self.project.getIRI(a['prop']), a['value'], a['type'], a['lang'])
+                command = CommandIRIAddAnnotationAssertion(self.project, subjectIRI, annotationAssertion)
+                self.session.undostack.push(command)
+                self.redraw()
+
+
+
