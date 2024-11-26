@@ -64,6 +64,13 @@ from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
+from eddy.core.ndc import (
+    getAgentsFromStore,
+    getContactPointsFromStore,
+    getProjectsFromStore,
+    getDataFromEndpoint,
+    getDistributionsFromStore,
+)
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     AnnotationAssertion,
@@ -72,12 +79,17 @@ from eddy.core.owl import (
     ImportedOntology,
 )
 from eddy.ui.annotation import AnnotationAssertionBuilderDialog
+from eddy.ui.checkable_combobox import CheckableComboBox
 from eddy.ui.fields import (
     StringField,
     CheckBox,
     ComboBox,
 )
 from eddy.ui.file import FileDialog
+from eddy.ui.ndc.agent import AgentBuilderDialog
+from eddy.ui.ndc.contact import ContactBuilderDialog
+from eddy.ui.ndc.distribution import DistributionBuilderDialog
+from eddy.ui.ndc.project import ProjectBuilderDialog
 
 LOGGER = getLogger()
 
@@ -631,6 +643,356 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.setObjectName('iri_widget')
         self.addWidget(widget)
 
+        ###################################
+        # NDC Metadata
+        ###################################
+
+        #ENDPOINT
+        endpoint = QtWidgets.QLabel(self, objectName='endpoint_label')
+        endpoint.setText('Endpoint')
+        self.addWidget(endpoint)
+
+        #linewidget = QtWidgets.QWidget()
+        layout_h = QtWidgets.QHBoxLayout()
+
+        endpointField = StringField(self, objectName='endpoint_field')
+        endpointField.setText('https://schema.gov.it/sparql')
+        #endpointField.setPlaceholderText('@it')
+        self.addWidget(endpointField)
+
+        connectBtn = QtWidgets.QPushButton(objectName='endpoint_connect_button')
+        connectBtn.setIcon(QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'))
+        connect(connectBtn.clicked, self.doConnectEndpoint)
+        self.addWidget(connectBtn)
+
+        #refreshBtn = QtWidgets.QPushButton(objectName='endpoint_refresh_button')
+        #refreshBtn.setIcon(QtGui.QIcon(':/icons/24/ic_refresh_black'))
+        #self.addWidget(refreshBtn)
+
+        layout_h.addWidget(endpointField)
+        layout_h.addWidget(connectBtn)
+        #layout_h.addWidget(refreshBtn)
+
+        linelayout = QtWidgets.QFormLayout()
+        linelayout.addRow(self.widget('endpoint_label'), layout_h)
+        groupbox0 = QtWidgets.QGroupBox('Metadata Endpoint', self,
+                                       objectName='ndc_metadata_endpoint')
+        groupbox0.setLayout(linelayout)
+        self.addWidget(groupbox0)
+
+        #FORM
+
+        ndcTitle = QtWidgets.QLabel(self, objectName='ndc_title_label')
+        ndcTitle.setText('Title')
+        self.addWidget(ndcTitle)
+
+        ndcITtitleField = StringField(self, objectName='ndc_ITtitle_field')
+        ndcITtitleField.setPlaceholderText('@it')
+        self.addWidget(ndcITtitleField)
+
+        ndcENtitleField = StringField(self, objectName='ndc_ENtitle_field')
+        ndcENtitleField.setPlaceholderText('@en')
+        self.addWidget(ndcENtitleField)
+
+        ndcLabel = QtWidgets.QLabel(self, objectName='ndc_label_label')
+        ndcLabel.setText('Label')
+        self.addWidget(ndcLabel)
+
+        ndcITLabelField = StringField(self, objectName='ndc_ITlabel_field')
+        ndcITLabelField.setPlaceholderText('@it')
+        self.addWidget(ndcITLabelField)
+
+        noLabel = QtWidgets.QLabel(self, objectName='no_label')
+        self.addWidget(noLabel)
+
+        ndcENLabelField = StringField(self, objectName='ndc_ENlabel_field')
+        ndcENLabelField.setPlaceholderText('@en')
+        self.addWidget(ndcENLabelField)
+
+        ndcComment = QtWidgets.QLabel(self, objectName='ndc_comment_label')
+        ndcComment.setText('Comment')
+        self.addWidget(ndcComment)
+
+        ndcITCommentField = StringField(self, objectName='ndc_ITcomment_field')
+        ndcITCommentField.setPlaceholderText('@it')
+        self.addWidget(ndcITCommentField)
+
+        ndcENCommentField = StringField(self, objectName='ndc_ENcomment_field')
+        ndcENCommentField.setPlaceholderText('@en')
+        self.addWidget(ndcENCommentField)
+
+        ndcOfficialURI = QtWidgets.QLabel(self, objectName='ndc_officialURI_label')
+        ndcOfficialURI.setText('Official URI')
+        self.addWidget(ndcOfficialURI)
+
+        ndcOfficialURIField = StringField(self, objectName='ndc_officialURI_field')
+        self.addWidget(ndcOfficialURIField)
+
+        ndcIdentifier = QtWidgets.QLabel(self, objectName='ndc_id_label')
+        ndcIdentifier.setText('Identifier')
+        self.addWidget(ndcIdentifier)
+
+        ndcIdentifierField = StringField(self, objectName='ndc_id_field')
+        self.addWidget(ndcIdentifierField)
+
+        ndcRightsHolder = QtWidgets.QLabel(self, objectName='ndc_rightsHolder_label')
+        ndcRightsHolder.setText('Rights Holder')
+        self.addWidget(ndcRightsHolder)
+
+        ndcRightsHolderField = CheckableComboBox(self, objectName='ndc_rightsHolder_field')
+        self.addWidget(ndcRightsHolderField)
+
+        addRightsHolderBtn = QtWidgets.QPushButton(objectName='add_rightsHolder_button')
+        addRightsHolderBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addRightsHolderBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addRightsHolderBtn.clicked, self.doAddAgent)
+        self.addWidget(addRightsHolderBtn)
+
+        layout_rightsHolder = QtWidgets.QHBoxLayout()
+        layout_rightsHolder.addWidget(ndcRightsHolderField)
+        layout_rightsHolder.addWidget(addRightsHolderBtn)
+
+        ndcCreationDate = QtWidgets.QLabel(self, objectName='ndc_creationDate_label')
+        ndcCreationDate.setText('Creation Date')
+        self.addWidget(ndcCreationDate)
+
+        ndcCreationDateField = QtWidgets.QDateEdit(self, objectName='ndc_creationDate_field')
+        self.addWidget(ndcCreationDateField)
+
+        ndcLastModifiedDate = QtWidgets.QLabel(self, objectName='ndc_lastModifiedDate_label')
+        ndcLastModifiedDate.setText('Last Modified Date')
+        self.addWidget(ndcLastModifiedDate)
+
+        ndcLastModifiedDateField = QtWidgets.QDateEdit(self, objectName='ndc_lastModifiedDate_field')
+        self.addWidget(ndcLastModifiedDateField)
+
+        ndcVersionInfo = QtWidgets.QLabel(self, objectName='ndc_versionInfo_label')
+        ndcVersionInfo.setText('Version Info')
+        self.addWidget(ndcVersionInfo)
+
+        ndcVersionInfoField = StringField(self, objectName='ndc_versionInfo_field')
+        self.addWidget(ndcVersionInfoField)
+
+        ndcAccrualPeriodicity = QtWidgets.QLabel(self, objectName='ndc_accrualPeriodicity_label')
+        ndcAccrualPeriodicity.setText('Accrual Periodicity')
+        self.addWidget(ndcAccrualPeriodicity)
+
+        ndcAccrualPeriodicityField = QtWidgets.QComboBox(self, objectName='ndc_accrualPeriodicity_field')
+        periodicities = ["", "http://publications.europa.eu/resource/authority/frequency/TRIDECENNIAL",
+                         "http://publications.europa.eu/resource/authority/frequency/BIHOURLY",
+                         "http://publications.europa.eu/resource/authority/frequency/TRIHOURLY",
+                         "http://publications.europa.eu/resource/authority/frequency/OTHER",
+                            "http://publications.europa.eu/resource/authority/frequency/WEEKLY",
+                         "http://publications.europa.eu/resource/authority/frequency/NOT_PLANNED",
+                         "http://publications.europa.eu/resource/authority/frequency/AS_NEEDED",
+                         "http://publications.europa.eu/resource/authority/frequency/5MIN",
+                         "http://publications.europa.eu/resource/authority/frequency/30MIN",
+                         "http://publications.europa.eu/resource/authority/frequency/HOURLY",
+                         "http://publications.europa.eu/resource/authority/frequency/QUADRENNIAL",
+                         "http://publications.europa.eu/resource/authority/frequency/QUINQUENNIAL",
+                         "http://publications.europa.eu/resource/authority/frequency/DECENNIAL",
+                         "http://publications.europa.eu/resource/authority/frequency/1MIN",
+"http://publications.europa.eu/resource/authority/frequency/15MIN",
+"http://publications.europa.eu/resource/authority/frequency/WEEKLY_2",
+"http://publications.europa.eu/resource/authority/frequency/WEEKLY_3",
+"http://publications.europa.eu/resource/authority/frequency/12HRS",
+"http://publications.europa.eu/resource/authority/frequency/UNKNOWN",
+"http://publications.europa.eu/resource/authority/frequency/10MIN",
+"http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT",
+"http://publications.europa.eu/resource/authority/frequency/QUARTERLY",
+"http://publications.europa.eu/resource/authority/frequency/TRIENNIAL",
+"http://publications.europa.eu/resource/authority/frequency/NEVER",
+"http://publications.europa.eu/resource/authority/frequency/OP_DATPRO",
+"http://publications.europa.eu/resource/authority/frequency/MONTHLY_2",
+"http://publications.europa.eu/resource/authority/frequency/MONTHLY_3",
+"http://publications.europa.eu/resource/authority/frequency/IRREG",
+"http://publications.europa.eu/resource/authority/frequency/MONTHLY",
+"http://publications.europa.eu/resource/authority/frequency/DAILY",
+"http://publications.europa.eu/resource/authority/frequency/DAILY_2",
+"http://publications.europa.eu/resource/authority/frequency/BIWEEKLY",
+"http://publications.europa.eu/resource/authority/frequency/CONT",
+"http://publications.europa.eu/resource/authority/frequency/BIENNIAL",
+"http://publications.europa.eu/resource/authority/frequency/BIMONTHLY",
+"http://publications.europa.eu/resource/authority/frequency/ANNUAL_2",
+"http://publications.europa.eu/resource/authority/frequency/ANNUAL_3",
+"http://publications.europa.eu/resource/authority/frequency/ANNUAL"]
+        ndcAccrualPeriodicityField.addItems(periodicities)
+        self.addWidget(ndcAccrualPeriodicityField)
+
+        ndcContacts = QtWidgets.QLabel(self, objectName='ndc_contacts_label')
+        ndcContacts.setText('Contact Point')
+        self.addWidget(ndcContacts)
+
+        ndcContactsField = CheckableComboBox(self, objectName='ndc_contacts_field')
+        self.addWidget(ndcContactsField)
+
+        addContactBtn = QtWidgets.QPushButton(objectName='add_contact_button')
+        addContactBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addContactBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addContactBtn.clicked, self.doAddContact)
+        self.addWidget(addContactBtn)
+
+        layout_contact = QtWidgets.QHBoxLayout()
+        layout_contact.addWidget(ndcContactsField)
+        layout_contact.addWidget(addContactBtn)
+
+        ndcPublisher = QtWidgets.QLabel(self, objectName='ndc_publisher_label')
+        ndcPublisher.setText('Publisher')
+        self.addWidget(ndcPublisher)
+
+        ndcPublisherField = CheckableComboBox(self, objectName='ndc_publisher_field')
+        self.addWidget(ndcPublisherField)
+
+        addPublisherBtn = QtWidgets.QPushButton(objectName='add_publisher_button')
+        addPublisherBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addPublisherBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addPublisherBtn.clicked, self.doAddAgent)
+        self.addWidget(addPublisherBtn)
+
+        layout_publisher = QtWidgets.QHBoxLayout()
+        layout_publisher.addWidget(ndcPublisherField)
+        layout_publisher.addWidget(addPublisherBtn)
+
+        ndcCreator = QtWidgets.QLabel(self, objectName='ndc_creator_label')
+        ndcCreator.setText('Creator')
+        self.addWidget(ndcCreator)
+
+        ndcCreatorField = CheckableComboBox(self, objectName='ndc_creator_field')
+        self.addWidget(ndcCreatorField)
+
+        addCreatorBtn = QtWidgets.QPushButton(objectName='add_creator_button')
+        addCreatorBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addCreatorBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addCreatorBtn.clicked, self.doAddAgent)
+        self.addWidget(addCreatorBtn)
+
+        layout_creator = QtWidgets.QHBoxLayout()
+        layout_creator.addWidget(ndcCreatorField)
+        layout_creator.addWidget(addCreatorBtn)
+
+        ndcLanguages = QtWidgets.QLabel(self, objectName='ndc_languages_label')
+        ndcLanguages.setText('Languages')
+        self.addWidget(ndcLanguages)
+
+        ndcLanguagesField = CheckableComboBox(self, objectName='ndc_languages_field')
+        languages = ["http://publications.europa.eu/resource/authority/language/ITA","http://publications.europa.eu/resource/authority/language/ENG"]
+        ndcLanguagesField.addItems(languages)
+        self.addWidget(ndcLanguagesField)
+
+        ndcMainClasses = QtWidgets.QLabel(self, objectName='ndc_mainClasses_label')
+        ndcMainClasses.setText('Key Classes')
+        self.addWidget(ndcMainClasses)
+
+        ndcMainClassesField = CheckableComboBox(self, objectName='ndc_mainClasses_field')
+        classes = []
+        for diagram in self.project.diagrams():
+            for node in self.project.iriOccurrences(diagram=diagram):
+                if node.type() == Item.ConceptNode and str(node.iri) not in classes:
+                    classes.append(str(node.iri))
+        ndcMainClassesField.addItems(classes)
+        self.addWidget(ndcMainClassesField)
+
+        ndcPrefix = QtWidgets.QLabel(self, objectName='ndc_prefix_label')
+        ndcPrefix.setText('Prefix')
+        self.addWidget(ndcPrefix)
+
+        ndcPrefixField = StringField(self, objectName='ndc_prefix_field')
+        if self.project.ontologyPrefix is not None:
+            prefix = str(self.project.ontologyPrefix)
+            ndcPrefixField.setValue(prefix)
+        self.addWidget(ndcPrefixField)
+
+        ndcProjects = QtWidgets.QLabel(self, objectName='ndc_projects_label')
+        ndcProjects.setText('Projects')
+        self.addWidget(ndcProjects)
+
+        ndcProjectsField = CheckableComboBox(self, objectName='ndc_projects_field')
+        self.addWidget(ndcProjectsField)
+
+        addProjectBtn = QtWidgets.QPushButton(objectName='add_project_button')
+        addProjectBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addProjectBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addProjectBtn.clicked, self.doAddProject)
+        self.addWidget(addProjectBtn)
+
+        layout_projects = QtWidgets.QHBoxLayout()
+        layout_projects.addWidget(ndcProjectsField)
+        layout_projects.addWidget(addProjectBtn)
+
+        ndcDistributions = QtWidgets.QLabel(self, objectName='ndc_distributions_label')
+        ndcDistributions.setText('Distributions')
+        self.addWidget(ndcDistributions)
+
+        ndcDistributionsField = CheckableComboBox(self, objectName='ndc_distributions_field')
+        self.addWidget(ndcDistributionsField)
+
+        addDistributionBtn = QtWidgets.QPushButton(objectName='add_distribution_button')
+        addDistributionBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addDistributionBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addDistributionBtn.clicked, self.doAddDistribution)
+        self.addWidget(addDistributionBtn)
+
+        layout_distributions = QtWidgets.QHBoxLayout()
+        layout_distributions.addWidget(ndcDistributionsField)
+        layout_distributions.addWidget(addDistributionBtn)
+
+        NDCLayout = QtWidgets.QFormLayout()
+        NDCLayout.addRow(self.widget('ndc_title_label'), self.widget('ndc_ITtitle_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENtitle_field'))
+        NDCLayout.addRow(self.widget('ndc_label_label'), self.widget('ndc_ITlabel_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENlabel_field'))
+        NDCLayout.addRow(self.widget('ndc_comment_label'), self.widget('ndc_ITcomment_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENcomment_field'))
+        NDCLayout.addRow(self.widget('ndc_officialURI_label'), self.widget('ndc_officialURI_field'))
+        NDCLayout.addRow(self.widget('ndc_id_label'), self.widget('ndc_id_field'))
+        NDCLayout.addRow(self.widget('ndc_rightsHolder_label'), layout_rightsHolder)
+        NDCLayout.addRow(self.widget('ndc_creationDate_label'), self.widget('ndc_creationDate_field'))
+        NDCLayout.addRow(self.widget('ndc_lastModifiedDate_label'), self.widget('ndc_lastModifiedDate_field'))
+        NDCLayout.addRow(self.widget('ndc_versionInfo_label'), self.widget('ndc_versionInfo_field'))
+        NDCLayout.addRow(self.widget('ndc_accrualPeriodicity_label'), self.widget('ndc_accrualPeriodicity_field'))
+        NDCLayout.addRow(self.widget('ndc_contacts_label'), layout_contact)
+        NDCLayout.addRow(self.widget('ndc_publisher_label'), layout_publisher)
+        NDCLayout.addRow(self.widget('ndc_creator_label'), layout_creator)
+        NDCLayout.addRow(self.widget('ndc_languages_label'), self.widget('ndc_languages_field'))
+        NDCLayout.addRow(self.widget('ndc_mainClasses_label'), self.widget('ndc_mainClasses_field'))
+        NDCLayout.addRow(self.widget('ndc_prefix_label'), self.widget('ndc_prefix_field'))
+        NDCLayout.addRow(self.widget('ndc_projects_label'), layout_projects)
+        #NDCLayout.addRow(self.widget('ndc_groups_label'), self.widget('ndc_groups_field'))
+        NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
+
+        applyBtn = QtWidgets.QPushButton('Apply', objectName='ndc_apply_button')
+        applyBtn.setEnabled(False)
+        connect(applyBtn.clicked, self.doApplyIriLabel)
+        self.addWidget(applyBtn)
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('ndc_apply_button'))
+
+        scroll = QtWidgets.QScrollArea()
+        scrollWidget = QtWidgets.QWidget()
+        scrollWidget.setLayout(NDCLayout)
+        scroll.setWidget(scrollWidget)
+        scroll.setWidgetResizable(True)
+        scroll.setFixedHeight(500)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(scroll)
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('Add NDC Metadata', self,
+                                       objectName='ndc_metadata_group_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        # NDC TAB LAYOUT CONFIGURATION
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('ndc_metadata_endpoint'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('ndc_metadata_group_widget'), 1, QtCore.Qt.AlignTop)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('NDCmetadata_widget')
+        self.addWidget(widget)
+
         #############################################
         # CONFIRMATION BOX
         #################################
@@ -650,6 +1012,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('annotations_widget'), 'Annotations')
         widget.addTab(self.widget('iri_widget'), 'Global IRIs')
         widget.addTab(self.widget('assertions_widget'), 'Annotation Assertions')
+        widget.addTab(self.widget('NDCmetadata_widget'), 'NDC Metadata')
         self.addWidget(widget)
 
         layout = QtWidgets.QVBoxLayout()
@@ -1692,3 +2055,88 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         table.setItem(rowcount, 5, langItem)
 
+    @QtCore.pyqtSlot()
+    def doAddAgent(self):
+        agentBuilder = AgentBuilderDialog(self)
+        connect(agentBuilder.sgnAgentAccepted, self.onAgentAccepted)
+        agentBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def onAgentAccepted(self):
+        endpointURL = self.widget('endpoint_field').text()
+        self.setAgentSuggestions(endpointURL)
+
+    @QtCore.pyqtSlot()
+    def doAddProject(self):
+        projectBuilder = ProjectBuilderDialog(self)
+        connect(projectBuilder.sgnProjectAccepted, self.onProjectAccepted)
+        projectBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def onProjectAccepted(self):
+        endpointURL = self.widget('endpoint_field').text()
+        self.setProjectSuggestions(endpointURL)
+
+    @QtCore.pyqtSlot()
+    def doAddDistribution(self):
+        distributionBuilder = DistributionBuilderDialog(self)
+        connect(distributionBuilder.sgnDistributionAccepted, self.onDistributionAccepted)
+        distributionBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def onDistributionAccepted(self):
+        endpointURL = self.widget('endpoint_field').text()
+        self.setDistributionSuggestions(endpointURL)
+
+    @QtCore.pyqtSlot()
+    def doAddContact(self):
+        contactBuilder = ContactBuilderDialog(self)
+        connect(contactBuilder.sgnContactAccepted, self.onContactAccepted)
+        contactBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def onContactAccepted(self):
+        endpointURL = self.widget('endpoint_field').text()
+        self.setContactPointSuggestions(endpointURL)
+
+    def setAgentSuggestions(self, url):
+        agents = getAgentsFromStore(url)
+        rightsHolderWidget = self.widget('ndc_rightsHolder_field')
+        rightsHolderWidget.addItems(agents)
+        publisherWidget = self.widget('ndc_publisher_field')
+        publisherWidget.addItems(agents)
+        creatorWidget = self.widget('ndc_creator_field')
+        creatorWidget.addItems(agents)
+
+    def setContactPointSuggestions(self, url):
+        contactPoints = getContactPointsFromStore(url)
+        contactPointWidget = self.widget('ndc_contacts_field')
+        contactPointWidget.addItems(contactPoints)
+
+    def setProjectSuggestions(self, url):
+        projects = getProjectsFromStore(url)
+        projectWidget = self.widget('ndc_projects_field')
+        projectWidget.addItems(projects)
+
+    def setDistributionSuggestions(self, url):
+        distributions = getDistributionsFromStore(url)
+        distributionWidget = self.widget('ndc_distributions_field')
+        distributionWidget.addItems(distributions)
+
+    def doConnectEndpoint(self):
+        endpointWidget = self.widget('endpoint_field')
+        url = endpointWidget.text()
+        success = getDataFromEndpoint(url)
+        if success:
+            self.setAgentSuggestions(url)
+            self.setContactPointSuggestions(url)
+            self.setProjectSuggestions(url)
+            self.setDistributionSuggestions(url)
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.setWindowTitle('Done!')
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+            msgbox.setText('Triples retrieved from endpoint!')
+            msgbox.setTextFormat(QtCore.Qt.RichText)
+            msgbox.exec_()
