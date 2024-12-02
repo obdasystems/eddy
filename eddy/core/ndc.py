@@ -33,8 +33,20 @@
 ##########################################################################
 
 
+from dataclasses import dataclass
+from textwrap import dedent, indent
+from typing import Union, Optional, Iterable
+
 from SPARQLWrapper import SPARQLWrapper, RDF as rdf
-from rdflib import Graph, RDF, FOAF, URIRef, Literal
+from rdflib import Graph, RDF, URIRef, Literal, Dataset
+from rdflib.namespace import (
+    FOAF,
+    DCAT,
+    DCTERMS,
+    DefinedNamespace,
+    Namespace,
+)
+from rdflib.store import Store
 
 from eddy.core.commands.iri import CommandIRIAddAnnotationAssertion
 from eddy.core.functions.fsystem import fexists
@@ -45,6 +57,408 @@ from eddy.core.owl import AnnotationAssertion, OWL2Datatype
 if not fexists(expandPath('@data/rdf-store.ttl')):
     with open(expandPath('@data/rdf-store.ttl'), 'w') as store:
         store.writelines(['# NDC default triple store'])
+
+
+# Subset of the l0 ontology vocabulary
+class L0(DefinedNamespace):
+    name: URIRef
+    _NS = Namespace('https://w3id.org/italia/onto/l0/')
+
+
+# Subset of the ADMS ontology vocabulary
+class ADMS(DefinedNamespace):
+    Project: URIRef
+    SemanticAssetDistribution: URIRef
+    hasKeyClass: URIRef
+    hasSemanticAssetDistribution: URIRef
+    officialURI: URIRef
+    prefix: URIRef
+    semanticAssetInUse: URIRef
+    _NS = Namespace('https://w3id.org/italia/onto/ADMS/')
+
+
+# Subset of the vcard ontology vocabulary
+class VCARD(DefinedNamespace):
+    Kind: URIRef
+    fn: URIRef
+    hasEmail: URIRef
+    hasTelephone: URIRef
+    _NS = Namespace('http://www.w3.org/2006/vcard/ns#')
+
+
+@dataclass
+class Agent:
+    uri: URIRef
+    name_en: Optional[Literal]
+    name_it: Optional[Literal]
+    identifier: Optional[Literal]
+
+    def triples(self) -> Iterable:
+        """
+        The list of RDF triples representing this instance.
+        :return: the list  of triples representing this instance.
+        """
+        return [
+            (self.uri, RDF.type, FOAF.Agent),
+            (self.uri, FOAF.name, self.name_en),
+            (self.uri, FOAF.name, self.name_it),
+            (self.uri, DCTERMS.identifier, self.identifier),
+        ]
+
+    @staticmethod
+    def bgp() -> str:
+        """
+        The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :return: the SPARQL BGP
+        """
+        return dedent(f"""
+        {{
+            ?agent a {FOAF.Agent.n3()} .
+            OPTIONAL {{
+                ?agent {FOAF.name.n3()} ?name_en .
+                FILTER langMatches(lang(?name_en), 'en')
+            }}
+            OPTIONAL {{
+                ?agent {FOAF.name.n3()} ?name_it .
+                FILTER langMatches(lang(?name_it), 'it')
+            }}
+            OPTIONAL {{ ?agent {DCTERMS.identifier.n3()} ?id }}
+        }}
+        """).strip()
+
+    @staticmethod
+    def head() -> str:
+        """
+        The head for SPARQL CONSTRUCT queries of this object, will all fields
+        without optionals.
+        :return: the SPARQL CONSTRUCT head
+        """
+        return dedent(f"""
+        ?agent a {FOAF.Agent.n3()} ;
+               {FOAF.name.n3()} ?name_en ;
+               {FOAF.name.n3()} ?name_it ;
+               {DCTERMS.identifier.n3()} ?id .
+        """).strip()
+
+    @staticmethod
+    def vars() -> str:
+        """
+        The variable names used in the object BGP. Useful to build extraction
+        queries from the BGP with the proper variable order.
+        :return: the ordered list of variables appearing in the BGP
+        """
+        return "?agent ?name_en ?name_it ?id"
+
+
+@dataclass
+class ContactPoint:
+    uri: URIRef
+    fn_en: Optional[Literal]
+    fn_it: Optional[Literal]
+    email: Optional[Literal]
+    telephone: Optional[Literal]
+
+    def triples(self) -> Iterable:
+        """
+        The list of RDF triples representing this instance.
+        :return: the list  of triples representing this instance.
+        """
+        return [
+            (self.uri, RDF.type, VCARD.Kind),
+            (self.uri, VCARD.fn, self.fn_en),
+            (self.uri, VCARD.fn, self.fn_it),
+            (self.uri, VCARD.hasEmail, self.email),
+        ]
+
+    @staticmethod
+    def bgp() -> str:
+        """
+        The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :return: the SPARQL BGP
+        """
+        return dedent(f"""
+        {{
+            ?contact a {VCARD.Kind.n3()} .
+            OPTIONAL {{
+                ?contact {VCARD.fn.n3()} ?fn_en .
+                FILTER langMatches(lang(?fn_en), 'en')
+            }}
+            OPTIONAL {{
+                ?contact {VCARD.fn.n3()} ?fn_it .
+                FILTER langMatches(lang(?fn_it), 'it')
+            }}
+            OPTIONAL {{ ?contact {VCARD.hasEmail.n3()} ?email }}
+            OPTIONAL {{ ?contact {VCARD.hasTelephone.n3()} ?tel }}
+        }}
+        """).strip()
+
+    @staticmethod
+    def head() -> str:
+        """
+        The head for SPARQL CONSTRUCT queries of this object, will all fields
+        without optionals.
+        :return: the SPARQL CONSTRUCT head
+        """
+        return dedent(f"""
+        ?contact a {VCARD.Kind.n3()} ;
+                 {VCARD.fn.n3()} ?fn_en ;
+                 {VCARD.fn.n3()} ?fn_it ;
+                 {VCARD.hasEmail.n3()} ?email ;
+                 {VCARD.hasTelephone.n3()} ?tel .
+        """).strip()
+
+    @staticmethod
+    def vars() -> str:
+        """
+        The variable names used in the object BGP. Useful to build extraction
+        queries from the BGP with the proper variable order.
+        :return: the ordered list of variables appearing in the BGP
+        """
+        return "?contact ?fn_en ?fn_it ?email ?tel"
+
+
+@dataclass
+class Distribution:
+    uri: URIRef
+    title_en: Optional[Literal]
+    title_it: Optional[Literal]
+    description_en: Optional[Literal]
+    description_it: Optional[Literal]
+    format: Optional[Literal]
+    license: Optional[Literal]
+    accessURL: Optional[URIRef]
+    downloadURL: Optional[URIRef]
+
+    def triples(self) -> Iterable:
+        """
+        The list of RDF triples representing this instance.
+        :return: the list  of triples representing this instance.
+        """
+        return [
+            (self.uri, RDF.type, ADMS.SemanticAssetDistribution),
+            (self.uri, DCTERMS.title, self.title_en),
+            (self.uri, DCTERMS.title, self.title_it),
+            (self.uri, DCTERMS.description, self.description_en),
+            (self.uri, DCTERMS.description, self.description_it),
+            (self.uri, DCTERMS.format, self.format),
+            (self.uri, DCTERMS.license, self.license),
+            (self.uri, DCAT.accessURL, self.accessURL),
+            (self.uri, DCAT.downloadURL, self.downloadURL),
+        ]
+
+    @staticmethod
+    def bgp() -> str:
+        """
+        The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :return: the SPARQL BGP
+        """
+        return dedent(f"""
+        {{
+            ?distrib a {ADMS.SemanticAssetDistribution.n3()} .
+            OPTIONAL {{
+                ?distrib {DCTERMS.title.n3()} ?title_en .
+                FILTER langMatches(lang(?title_en), 'en')
+            }}
+            OPTIONAL {{
+                ?distrib {DCTERMS.title.n3()} ?title_it .
+                FILTER langMatches(lang(?title_it), 'it')
+            }}
+            OPTIONAL {{
+                ?distrib {DCTERMS.description.n3()} ?description_en .
+                FILTER langMatches(lang(?description_en), 'en')
+            }}
+            OPTIONAL {{
+                ?distrib {DCTERMS.description.n3()} ?description_it .
+                FILTER langMatches(lang(?description_it), 'it')
+            }}
+            OPTIONAL {{ ?distrib {DCTERMS.format.n3()} ?format }}
+            OPTIONAL {{ ?distrib {DCTERMS.license.n3()} ?license }}
+            OPTIONAL {{ ?distrib {DCAT.accessURL.n3()} ?accessURL }}
+            OPTIONAL {{ ?distrib {DCAT.downloadURL.n3()} ?downloadURL }}
+        }}
+        """).strip()
+
+    @staticmethod
+    def head() -> str:
+        """
+        The head for SPARQL CONSTRUCT queries of this object, will all fields
+        without optionals.
+        :return: the SPARQL CONSTRUCT head
+        """
+        return dedent(f"""
+            ?distrib a {ADMS.SemanticAssetDistribution.n3()} ;
+                     {DCTERMS.title.n3()} ?title_en ;
+                     {DCTERMS.title.n3()} ?title_it ;
+                     {DCTERMS.description.n3()} ?description_en ;
+                     {DCTERMS.description.n3()} ?description_it ;
+                     {DCTERMS.format.n3()} ?format ;
+                     {DCTERMS.license.n3()} ?license ;
+                     {DCAT.accessURL.n3()} ?accessURL ;
+                     {DCAT.downloadURL.n3()} ?downloadURL .
+        """).strip()
+
+    @staticmethod
+    def vars() -> str:
+        """
+        The variable names used in the object BGP. Useful to build extraction
+        queries from the BGP with the proper variable order.
+        :return: the ordered list of variables appearing in the BGP
+        """
+        return ("?distrib ?title_en ?title_it ?description_en ?description_it"
+                "?format ?license ?accessURL ?downloadURL")
+
+
+@dataclass
+class Project:
+    uri: URIRef
+    name_en: Optional[Literal]
+    name_it: Optional[Literal]
+
+    def triples(self) -> Iterable:
+        """
+        The list of RDF triples representing this instance.
+        :return: the list  of triples representing this instance.
+        """
+        return [
+            (self.uri, RDF.type, ADMS.Project),
+            (self.uri, L0.name, self.name_en),
+            (self.uri, L0.name, self.name_it),
+        ]
+
+    @staticmethod
+    def bgp() -> str:
+        """
+        The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :return: the SPARQL BGP
+        """
+        return dedent(f"""
+        {{
+            ?project a {ADMS.Project.n3()} .
+            OPTIONAL {{
+                ?project {L0.name.n3()} ?name_en .
+                FILTER langMatches(lang(?name_en), 'en')
+            }}
+            OPTIONAL {{
+                ?project {L0.name.n3()} ?name_it .
+                FILTER langMatches(lang(?name_it), 'it')
+            }}
+        }}
+        """).strip()
+
+    @staticmethod
+    def head() -> str:
+        """
+        The head for SPARQL CONSTRUCT queries of this object, will all fields
+        without optionals.
+        :return: the SPARQL CONSTRUCT head
+        """
+        return dedent(f"""
+        ?project a {ADMS.Project.n3()} ;
+                 {L0.name.n3()} ?name_en ;
+                 {L0.name.n3()} ?name_it .
+        """).strip()
+
+    @staticmethod
+    def vars() -> str:
+        """
+        The variable names used in the object BGP. Useful to build extraction
+        queries from the BGP with the proper variable order.
+        :return: the ordered list of variables appearing in the BGP
+        """
+        return "?project ?name_en ?name_it"
+
+
+class NDCDataset(Dataset):
+    """
+    Small wrapper around the RDF 1.1 Dataset class from rdflib to provide some
+    custom methods that extract the relevant entities for the national data catalog.
+    """
+    DEFAULT_GRAPH = 'urn:x-eddy:ndc:'
+    STORE_PATH = expandPath('@data/ndc.trig')
+
+    def __init__(
+        self,
+        store: Union[Store, str] = 'default',
+        default_union: bool = True,
+        default_graph_base: Optional[str] = DEFAULT_GRAPH,
+    ):
+        super().__init__(store, default_union, default_graph_base)
+
+    @staticmethod
+    def construct() -> str:
+        """
+        Return the SPARQL CONSTRUCT query to relevant data for this dataset.
+        :return: the SPARQL CONSTRUCT query
+        """
+        # Do not indent to avoid problems with indentation
+        return f"""
+CONSTRUCT {{
+    {Agent.head()}
+    {ContactPoint.head()}
+    {Distribution.head()}
+    {Project.head()}
+}}
+WHERE {{
+{Agent.bgp()}
+UNION {ContactPoint.bgp()}
+UNION {Distribution.bgp()}
+UNION {Project.bgp()}
+}}
+        """.strip()
+
+    def agents(self) -> Iterable[Agent]:
+        """
+        Returns the list of agents in this dataset.
+        :return: the list of agents stored
+        """
+        return [Agent(*b) for b in self.query(
+            f'SELECT {Agent.vars()} WHERE {Agent.bgp()}'
+        )]
+
+    def contactPoints(self) -> Iterable[ContactPoint]:
+        """
+        Returns the list of contact points in this dataset.
+        :return: the list of contact points stored
+        """
+        return [ContactPoint(*b) for b in self.query(
+            f'SELECT {ContactPoint.vars()} WHERE {ContactPoint.bgp()}'
+        )]
+
+    def distributions(self) -> Iterable[Distribution]:
+        """
+        Returns the list of distributions in this dataset.
+        :return: the list of distributions stored
+        """
+        return [Distribution(*b) for b in self.query(
+            f'SELECT {Distribution.vars()} WHERE {Distribution.bgp()}'
+        )]
+
+    def projects(self) -> Iterable[Project]:
+        """
+        Returns the list of projects in this dataset.
+        :return: the list of projects stored
+        """
+        return [Project(*b) for b in self.query(
+            f'SELECT {Project.vars()} WHERE {Project.bgp()}'
+        )]
+
+    def load(self, path: str = None) -> Graph:
+        """
+        Loads the dataset from a serialized version. If not specified will use
+        the default store path.
+        :param path: path of the serialized dataset to load
+        :return: the dataset graph
+        """
+        if path:
+            return self.parse(path)
+        elif fexists(NDCDataset.STORE_PATH):
+            return self.parse(NDCDataset.STORE_PATH)
+
+    def save(self) -> None:
+        """
+        Saves this dataset to the default user destination.
+        """
+        self.serialize(NDCDataset.STORE_PATH, format='trig')
 
 
 def sendQuery(query, endpointURL):
