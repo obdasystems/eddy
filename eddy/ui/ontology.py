@@ -1101,6 +1101,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         scroll = QtWidgets.QScrollArea()
         scrollWidget = QtWidgets.QWidget()
         scrollWidget.setLayout(NDCLayout)
+        scrollWidget.setMaximumWidth(740)
         scroll.setWidget(scrollWidget)
         scroll.setWidgetResizable(True)
         scroll.setFixedHeight(500)
