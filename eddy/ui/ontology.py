@@ -37,6 +37,7 @@ from PyQt5 import (
     QtGui,
     QtWidgets,
 )
+from PyQt5.QtCore import QDate
 
 from eddy.core.commands.iri import (
     CommandCommmonSubstringIRIsRefactor,
@@ -688,11 +689,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcTitle)
 
         ndcITtitleField = StringField(self, objectName='ndc_ITtitle_field')
-        ndcITtitleField.setPlaceholderText('@it')
+        ITtitles = filter(lambda x : (str(x.assertionProperty) == 'http://purl.org/dc/terms/title') & (str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
+        ITtitles = list(ITtitles)
+        if len(ITtitles) > 0:
+            ITtitle = ITtitles[0].value
+            ndcITtitleField.setText(ITtitle)
+        else:
+            ndcITtitleField.setPlaceholderText('@it')
         self.addWidget(ndcITtitleField)
 
         ndcENtitleField = StringField(self, objectName='ndc_ENtitle_field')
-        ndcENtitleField.setPlaceholderText('@en')
+        ENtitles = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/title') & (
+                    str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
+        ENtitles = list(ENtitles)
+        if len(ENtitles) > 0:
+            ENtitle = ENtitles[0].value
+            ndcENtitleField.setText(ENtitle)
+        else:
+            ndcENtitleField.setPlaceholderText('@en')
         self.addWidget(ndcENtitleField)
 
         ndcLabel = QtWidgets.QLabel(self, objectName='ndc_label_label')
@@ -700,14 +715,30 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcLabel)
 
         ndcITLabelField = StringField(self, objectName='ndc_ITlabel_field')
-        ndcITLabelField.setPlaceholderText('@it')
+        ITlabels = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#label') & (
+                    str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
+        ITlabels = list(ITlabels)
+        if len(ITlabels) > 0:
+            ITlabel = ITlabels[0].value
+            ndcITLabelField.setText(ITlabel)
+        else:
+            ndcITLabelField.setPlaceholderText('@it')
         self.addWidget(ndcITLabelField)
 
         noLabel = QtWidgets.QLabel(self, objectName='no_label')
         self.addWidget(noLabel)
 
         ndcENLabelField = StringField(self, objectName='ndc_ENlabel_field')
-        ndcENLabelField.setPlaceholderText('@en')
+        ENlabels = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#label') & (
+                str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
+        ENlabels = list(ENlabels)
+        if len(ENlabels) > 0:
+            ENlabel = ENlabels[0].value
+            ndcENLabelField.setText(ENlabel)
+        else:
+            ndcENLabelField.setPlaceholderText('@en')
         self.addWidget(ndcENLabelField)
 
         ndcComment = QtWidgets.QLabel(self, objectName='ndc_comment_label')
@@ -715,11 +746,27 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcComment)
 
         ndcITCommentField = StringField(self, objectName='ndc_ITcomment_field')
-        ndcITCommentField.setPlaceholderText('@it')
+        ITcomments = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#comment') & (
+                str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
+        ITcomments = list(ITcomments)
+        if len(ITcomments) > 0:
+            ITcomment = ITcomments[0].value
+            ndcITCommentField.setText(ITcomment)
+        else:
+            ndcITCommentField.setPlaceholderText('@it')
         self.addWidget(ndcITCommentField)
 
         ndcENCommentField = StringField(self, objectName='ndc_ENcomment_field')
-        ndcENCommentField.setPlaceholderText('@en')
+        ENcomments = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#comment') & (
+                          str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
+        ENcomments = list(ENcomments)
+        if len(ENcomments) > 0:
+            ENcomment = ENcomments[0].value
+            ndcENCommentField.setText(ENcomment)
+        else:
+            ndcENCommentField.setPlaceholderText('@en')
         self.addWidget(ndcENCommentField)
 
         ndcOfficialURI = QtWidgets.QLabel(self, objectName='ndc_officialURI_label')
@@ -727,6 +774,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcOfficialURI)
 
         ndcOfficialURIField = StringField(self, objectName='ndc_officialURI_field')
+        officialURIs = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/officialURI'), self.project.ontologyIRI.annotationAssertions)
+        officialURIs = list(officialURIs)
+        if len(officialURIs) > 0:
+            officialURI = str(officialURIs[0].value)
+            ndcOfficialURIField.setText(officialURI)
         self.addWidget(ndcOfficialURIField)
 
         ndcIdentifier = QtWidgets.QLabel(self, objectName='ndc_id_label')
@@ -734,6 +787,13 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcIdentifier)
 
         ndcIdentifierField = StringField(self, objectName='ndc_id_field')
+        ids = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/identifier'),
+            self.project.ontologyIRI.annotationAssertions)
+        ids = list(ids)
+        if len(ids) > 0:
+            id = ids[0].value
+            ndcIdentifierField.setText(id)
         self.addWidget(ndcIdentifierField)
 
         ndcRightsHolder = QtWidgets.QLabel(self, objectName='ndc_rightsHolder_label')
@@ -758,6 +818,16 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcCreationDate)
 
         ndcCreationDateField = QtWidgets.QDateEdit(self, objectName='ndc_creationDate_field')
+        dates = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/issued'),
+            self.project.ontologyIRI.annotationAssertions)
+        dates = list(dates)
+        if len(dates) > 0:
+            date = str(dates[0].value)[:10].split('-')
+            year = int(date[0])
+            month = int(date[1])
+            day = int(date[2])
+            ndcCreationDateField.setDate(QDate(year, month, day))
         self.addWidget(ndcCreationDateField)
 
         ndcLastModifiedDate = QtWidgets.QLabel(self, objectName='ndc_lastModifiedDate_label')
@@ -765,6 +835,16 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcLastModifiedDate)
 
         ndcLastModifiedDateField = QtWidgets.QDateEdit(self, objectName='ndc_lastModifiedDate_field')
+        dates = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/modified'),
+            self.project.ontologyIRI.annotationAssertions)
+        dates = list(dates)
+        if len(dates) > 0:
+            date = str(dates[0].value)[:10].split('-')
+            year = int(date[0])
+            month = int(date[1])
+            day = int(date[2])
+            ndcLastModifiedDateField.setDate(QDate(year, month, day))
         self.addWidget(ndcLastModifiedDateField)
 
         ndcVersionInfo = QtWidgets.QLabel(self, objectName='ndc_versionInfo_label')
@@ -772,11 +852,27 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcVersionInfo)
 
         ndcVersionInfoITField = StringField(self, objectName='ndc_ITversionInfo_field')
-        ndcVersionInfoITField.setPlaceholderText('@it')
+        ITinfos = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2002/07/owl#versionInfo') & (
+                          str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
+        ITinfos = list(ITinfos)
+        if len(ITinfos) > 0:
+            ITinfo = ITinfos[0].value
+            ndcVersionInfoITField.setText(ITinfo)
+        else:
+            ndcVersionInfoITField.setPlaceholderText('@it')
         self.addWidget(ndcVersionInfoITField)
 
         ndcVersionInfoENField = StringField(self, objectName='ndc_ENversionInfo_field')
-        ndcVersionInfoENField.setPlaceholderText('@en')
+        ENinfos = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2002/07/owl#versionInfo') & (
+                str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
+        ENinfos = list(ENinfos)
+        if len(ENinfos) > 0:
+            ENinfo = ENinfos[0].value
+            ndcVersionInfoENField.setText(ENinfo)
+        else:
+            ndcVersionInfoENField.setPlaceholderText('@en')
         self.addWidget(ndcVersionInfoENField)
 
         ndcAccrualPeriodicity = QtWidgets.QLabel(self, objectName='ndc_accrualPeriodicity_label')
@@ -824,6 +920,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 "http://publications.europa.eu/resource/authority/frequency/ANNUAL"]
         ndcAccrualPeriodicityField.addItems(periodicities)
         self.addWidget(ndcAccrualPeriodicityField)
+        self.setPeriodicities()
 
         ndcContacts = QtWidgets.QLabel(self, objectName='ndc_contacts_label')
         ndcContacts.setText('Contact Point')
@@ -884,6 +981,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         languages = ["http://publications.europa.eu/resource/authority/language/ITA","http://publications.europa.eu/resource/authority/language/ENG"]
         ndcLanguagesField.addItems(languages)
         self.addWidget(ndcLanguagesField)
+        self.setLanguages()
 
         ndcMainClasses = QtWidgets.QLabel(self, objectName='ndc_mainClasses_label')
         ndcMainClasses.setText('Key Classes')
@@ -897,15 +995,24 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                     classes.append(str(node.iri))
         ndcMainClassesField.addItems(classes)
         self.addWidget(ndcMainClassesField)
+        self.setKeyClasses()
 
         ndcPrefix = QtWidgets.QLabel(self, objectName='ndc_prefix_label')
         ndcPrefix.setText('Prefix')
         self.addWidget(ndcPrefix)
 
         ndcPrefixField = StringField(self, objectName='ndc_prefix_field')
-        if self.project.ontologyPrefix is not None:
+        if (self.project.ontologyPrefix is not None) & (len(self.project.ontologyPrefix) > 0):
             prefix = str(self.project.ontologyPrefix)
-            ndcPrefixField.setValue(prefix)
+            ndcPrefixField.setText(prefix)
+        else:
+            prefixes = filter(
+                lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/prefix'),
+                self.project.ontologyIRI.annotationAssertions)
+            prefixes = list(prefixes)
+            if len(prefixes) > 0:
+                prefix = prefixes[0].value
+                ndcPrefixField.setText(prefix)
         self.addWidget(ndcPrefixField)
 
         ndcProjects = QtWidgets.QLabel(self, objectName='ndc_projects_label')
@@ -966,6 +1073,22 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         NDCLayout.addRow(self.widget('ndc_projects_label'), layout_projects)
         #NDCLayout.addRow(self.widget('ndc_groups_label'), self.widget('ndc_groups_field'))
         NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
+
+        endpointWidget = self.widget('endpoint_field')
+        url = endpointWidget.text()
+        if len(url) > 0:
+            self.setAgentSuggestions(url)
+            self.setContactPointSuggestions(url)
+            self.setProjectSuggestions(url)
+            self.setDistributionSuggestions(url)
+            self.setRightsHolders()
+            self.setPublishers()
+            self.setCreators()
+            self.setContacts()
+            self.setProjects()
+            self.setDistributions()
+
+
 
         applyBtn = QtWidgets.QPushButton('Apply', objectName='ndc_apply_button')
         applyBtn.setEnabled(True)
@@ -2106,6 +2229,139 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         endpointURL = self.widget('endpoint_field').text()
         self.setContactPointSuggestions(endpointURL)
 
+    def setRightsHolders(self):
+        widget = self.widget('ndc_rightsHolder_field')
+        rightsHolders = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/rightsHolder'),
+            self.project.ontologyIRI.annotationAssertions)
+        rightsHolders = list(map(lambda x: str(x.value), list(rightsHolders)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in rightsHolders:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setPublishers(self):
+        widget = self.widget('ndc_publisher_field')
+        publishers = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/publisher'),
+            self.project.ontologyIRI.annotationAssertions)
+        publishers = list(map(lambda x: str(x.value), list(publishers)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in publishers:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setCreators(self):
+        widget = self.widget('ndc_creator_field')
+        creators = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/creator'),
+            self.project.ontologyIRI.annotationAssertions)
+        creators = list(map(lambda x: str(x.value), list(creators)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in creators:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setContacts(self):
+        widget = self.widget('ndc_contacts_field')
+        contacts = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/ns/dcat#contactPoint'),
+            self.project.ontologyIRI.annotationAssertions)
+        contacts = list(map(lambda x: str(x.value), list(contacts)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in contacts:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setProjects(self):
+        widget = self.widget('ndc_projects_field')
+        projects = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/semanticAssetInUse'),
+            self.project.ontologyIRI.annotationAssertions)
+        projects = list(map(lambda x: str(x.value), list(projects)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in projects:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setDistributions(self):
+        widget = self.widget('ndc_distributions_field')
+        distributions = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/hasSemanticAssetDistribution'),
+            self.project.ontologyIRI.annotationAssertions)
+        distributions = list(map(lambda x: str(x.value), list(distributions)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in distributions:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setLanguages(self):
+        widget = self.widget('ndc_languages_field')
+        languages = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/language'),
+            self.project.ontologyIRI.annotationAssertions)
+        languages = list(map(lambda x: str(x.value), list(languages)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in languages:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setKeyClasses(self):
+        widget = self.widget('ndc_mainClasses_field')
+        classes = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/hasKeyClass'),
+            self.project.ontologyIRI.annotationAssertions)
+        classes = list(map(lambda x: str(x.value), list(classes)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in classes:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+    def setPeriodicities(self):
+        widget = self.widget('ndc_accrualPeriodicity_field')
+        periodicities = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/accrualPeriodicity'),
+            self.project.ontologyIRI.annotationAssertions)
+        periodicities = list(map(lambda x: str(x.value), list(periodicities)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in periodicities:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        widget.setCurrentText(text)
     def setAgentSuggestions(self, url):
         agents = getAgentsFromStore(url)
         rightsHolderWidget = self.widget('ndc_rightsHolder_field')
@@ -2207,19 +2463,21 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             'lang': ''
         })
         creationDate = self.widget('ndc_creationDate_field').date().toString("yyyy-MM-dd")
-        annotations.append({
-            'prop': 'http://purl.org/dc/terms/issued',
-            'value': creationDate+'T00:00:00+00:00',
-            'type': OWL2Datatype.dateTime.value,
-            'lang': ''
-        })
+        if creationDate != "2000-01-01":
+            annotations.append({
+                'prop': 'http://purl.org/dc/terms/issued',
+                'value': creationDate+'T00:00:00+00:00',
+                'type': OWL2Datatype.dateTime.value,
+                'lang': ''
+            })
         lastModifiedDate = self.widget('ndc_lastModifiedDate_field').date().toString("yyyy-MM-dd")
-        annotations.append({
-            'prop': 'http://purl.org/dc/terms/modified',
-            'value': lastModifiedDate + 'T00:00:00+00:00',
-            'type': OWL2Datatype.dateTime.value,
-            'lang': ''
-        })
+        if lastModifiedDate != "2000-01-01":
+            annotations.append({
+                'prop': 'http://purl.org/dc/terms/modified',
+                'value': lastModifiedDate + 'T00:00:00+00:00',
+                'type': OWL2Datatype.dateTime.value,
+                'lang': ''
+            })
         versionInfoIT = self.widget('ndc_ITversionInfo_field').text()
         annotations.append({
             'prop': 'http://www.w3.org/2002/07/owl#versionInfo',
@@ -2332,10 +2590,23 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             })
         for a in annotations:
             if(a['value']):
-                annotationAssertion = AnnotationAssertion(subjectIRI, self.project.getIRI(a['prop']), a['value'], a['type'], a['lang'])
+                property = a['prop']
+                if not self.project.existAnnotationProperty(property):
+                    self.project.isValidIdentifier(property)
+                    comm = CommandProjectAddAnnotationProperty(self.project, property)
+                    self.session.undostack.push(comm)
+                annotationAssertion = AnnotationAssertion(subjectIRI, self.project.getIRI(property), a['value'], a['type'], a['lang'])
                 command = CommandIRIAddAnnotationAssertion(self.project, subjectIRI, annotationAssertion)
                 self.session.undostack.push(command)
-                self.redraw()
+        self.redraw()
+        msgbox = QtWidgets.QMessageBox(self)
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Done!')
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
+        msgbox.setText('Metadata added to the current project!')
+        msgbox.setTextFormat(QtCore.Qt.RichText)
+        msgbox.exec_()
 
 
 
