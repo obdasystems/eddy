@@ -1,9 +1,54 @@
-from PyQt5 import QtCore, QtWidgets
+# -*- coding: utf-8 -*-
 
-from eddy.core.ndc import addDistributionToStore
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
+
+from __future__ import annotations
+
+from PyQt5 import (
+    QtCore,
+    QtWidgets,
+)
+from rdflib import (
+    Literal,
+    URIRef,
+)
+
+from core.ndc import (
+    Distribution,
+    NDCDataset,
+)
 from eddy.core.common import HasWidgetSystem
 from eddy.core.functions.signals import connect
-from eddy.core.owl import IRI
 from eddy.ui.fields import StringField
 
 
@@ -11,19 +56,13 @@ class DistributionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     """
     Subclass of `QtWidgets.QDialog` used to define annotation assertions.
     """
-    sgnDistributionAccepted = QtCore.pyqtSignal()
-    sgnDistributionRejected = QtCore.pyqtSignal()
 
-    emptyString = ''
-
-    def __init__(self,session):
+    def __init__(self, parent: QtWidgets.QWidget, dataset: NDCDataset) -> None:
         """
         Initialize the distribution builder dialog.
-        :type session: Session
         """
-        super().__init__(session)
-        self.session = session
-        self.project = session.project
+        super().__init__(parent)
+        self.dataset = dataset
 
         #############################################
         # CONFIRMATION BOX
@@ -106,15 +145,20 @@ class DistributionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         layout = QtWidgets.QFormLayout()
         layout.addRow(self.widget('distribution_iri_label'), self.widget('distribution_iri_field'))
-        layout.addRow(self.widget('distribution_title_label'), self.widget('distribution_ITtitle_field'))
+        layout.addRow(self.widget('distribution_title_label'),
+                      self.widget('distribution_ITtitle_field'))
         layout.addRow(self.widget('no_label'), self.widget('distribution_ENtitle_field'))
         layout.addRow(self.widget('distribution_description_label'),
                       self.widget('distribution_ITdescription_field'))
         layout.addRow(self.widget('no_label'), self.widget('distribution_ENdescription_field'))
-        layout.addRow(self.widget('distribution_format_label'), self.widget('distribution_format_field'))
-        layout.addRow(self.widget('distribution_license_label'), self.widget('distribution_license_field'))
-        layout.addRow(self.widget('distribution_accessURL_label'), self.widget('distribution_accessURL_field'))
-        layout.addRow(self.widget('distribution_downloadURL_label'), self.widget('distribution_downloadURL_field'))
+        layout.addRow(self.widget('distribution_format_label'),
+                      self.widget('distribution_format_field'))
+        layout.addRow(self.widget('distribution_license_label'),
+                      self.widget('distribution_license_field'))
+        layout.addRow(self.widget('distribution_accessURL_label'),
+                      self.widget('distribution_accessURL_field'))
+        layout.addRow(self.widget('distribution_downloadURL_label'),
+                      self.widget('distribution_downloadURL_field'))
 
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
@@ -129,22 +173,25 @@ class DistributionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Add Distribution')
-        #self.redraw()
 
     #############################################
     #   SLOTS
     #################################
+
     @QtCore.pyqtSlot()
-    def accept(self):
-        iri = self.widget('distribution_iri_field').text()
-        titleIT = self.widget('distribution_ITtitle_field').text()
-        titleEN = self.widget('distribution_ENtitle_field').text()
-        descriptionIT = self.widget('distribution_ITdescription_field').text()
-        descriptionEN = self.widget('distribution_ENdescription_field').text()
-        format = self.widget('distribution_format_field').text()
-        license = self.widget('distribution_license_field').text()
-        accessURL = self.widget('distribution_accessURL_field').text()
-        downloadURL = self.widget('distribution_downloadURL_field').text()
-        addDistributionToStore(iri, titleIT, titleEN, descriptionIT, descriptionEN, format, license, accessURL, downloadURL)
-        self.sgnDistributionAccepted.emit()
+    def accept(self) -> None:
+        distrib = Distribution(
+            URIRef(self.widget('distribution_iri_field').text().strip()),
+            Literal(self.widget('distribution_ENtitle_field').text().strip(), lang='en'),
+            Literal(self.widget('distribution_ITtitle_field').text().strip(), lang='it'),
+            Literal(self.widget('distribution_ENdescription_field').text().strip(), lang='en'),
+            Literal(self.widget('distribution_ITdescription_field').text().strip(), lang='it'),
+            Literal(self.widget('distribution_format_field').text().strip()),
+            Literal(self.widget('distribution_license_field').text().strip()),
+            URIRef(self.widget('distribution_accessURL_field').text().strip()),
+            URIRef(self.widget('distribution_downloadURL_field').text().strip()),
+        )
+        for triple in distrib.triples():
+            self.dataset.add(triple)
+        self.dataset.save()
         super().accept()

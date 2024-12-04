@@ -1,9 +1,54 @@
-from PyQt5 import QtCore, QtWidgets
+# -*- coding: utf-8 -*-
 
-from eddy.core.ndc import addAgentToStore
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
+
+from __future__ import annotations
+
+from PyQt5 import (
+    QtCore,
+    QtWidgets,
+)
+from rdflib import (
+    Literal,
+    URIRef,
+)
+
+from core.ndc import (
+    Agent,
+    NDCDataset,
+)
 from eddy.core.common import HasWidgetSystem
 from eddy.core.functions.signals import connect
-from eddy.core.owl import IRI
 from eddy.ui.fields import StringField
 
 
@@ -11,19 +56,13 @@ class AgentBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
     """
     Subclass of `QtWidgets.QDialog` used to define annotation assertions.
     """
-    sgnAgentAccepted = QtCore.pyqtSignal()
-    sgnAgentRejected = QtCore.pyqtSignal()
 
-    emptyString = ''
-
-    def __init__(self,session):
+    def __init__(self, parent: QtWidgets.QWidget, dataset: NDCDataset) -> None:
         """
         Initialize the agent builder dialog.
-        :type session: Session
         """
-        super().__init__(session)
-        self.session = session
-        self.project = session.project
+        super().__init__(parent)
+        self.dataset = dataset
 
         #############################################
         # CONFIRMATION BOX
@@ -90,18 +129,20 @@ class AgentBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.setMinimumSize(740, 380)
         self.setWindowTitle('Add Agent')
-        #self.redraw()
 
     #############################################
     #   SLOTS
     #################################
-    @QtCore.pyqtSlot()
-    def accept(self):
-        iri = self.widget('agent_iri_field').text()
-        nameIT = self.widget('agent_ITname_field').text()
-        nameEN = self.widget('agent_ENname_field').text()
-        id = self.widget('agent_id_field').text()
-        addAgentToStore(iri, nameIT, nameEN, id)
-        self.sgnAgentAccepted.emit()
-        super().accept()
 
+    @QtCore.pyqtSlot()
+    def accept(self) -> None:
+        agent = Agent(
+            URIRef(self.widget('agent_iri_field').text().strip()),
+            Literal(self.widget('agent_ENname_field').text().strip(), lang='en'),
+            Literal(self.widget('agent_ITname_field').text().strip(), lang='it'),
+            Literal(self.widget('agent_id_field').text().strip()),
+        )
+        for triple in agent.triples():
+            self.dataset.add(triple)
+        self.dataset.save()
+        super().accept()
