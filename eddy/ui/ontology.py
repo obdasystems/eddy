@@ -37,11 +37,22 @@ from PyQt5 import (
     QtGui,
     QtWidgets,
 )
-from PyQt5.QtCore import QDate
+from rdflib import (
+    Graph,
+    Literal,
+    URIRef,
+)
+from rdflib.namespace import (
+    DCAT,
+    DCTERMS,
+    OWL,
+    RDFS,
+)
 
 from eddy.core.commands.iri import (
     CommandCommmonSubstringIRIsRefactor,
-    CommandIRIRemoveAnnotationAssertion, CommandIRIAddAnnotationAssertion,
+    CommandIRIAddAnnotationAssertion,
+    CommandIRIRemoveAnnotationAssertion,
 )
 from eddy.core.commands.project import (
     CommandProjectAddAnnotationProperty,
@@ -67,18 +78,17 @@ from eddy.core.functions.misc import first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.ndc import (
-    getAgentsFromStore,
-    getContactPointsFromStore,
-    getProjectsFromStore,
-    getDataFromEndpoint,
-    getDistributionsFromStore, addIriAnnotationsToProject,
+    ADMS,
+    NDCDataset,
 )
+from eddy.core.sparql import SPARQLEndpoint
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalPrefixError,
     IllegalNamespaceError,
-    ImportedOntology, IRI, OWL2Datatype,
+    ImportedOntology,
+    OWL2Datatype,
 )
 from eddy.ui.annotation import AnnotationAssertionBuilderDialog
 from eddy.ui.checkable_combobox import CheckableComboBox
@@ -649,17 +659,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # NDC Metadata
         ###################################
 
+        self.ndcDataset = NDCDataset()
+        self.ndcDataset.load()
+
         #ENDPOINT
-        endpoint = QtWidgets.QLabel(self, objectName='endpoint_label')
-        endpoint.setText('Endpoint')
+        endpoint = QtWidgets.QLabel('Endpoint', self, objectName='endpoint_label')
         self.addWidget(endpoint)
 
         #linewidget = QtWidgets.QWidget()
         layout_h = QtWidgets.QHBoxLayout()
 
         endpointField = StringField(self, objectName='endpoint_field')
-        endpointField.setText('https://schema.gov.it/sparql')
-        #endpointField.setPlaceholderText('@it')
+        endpointField.setPlaceholderText('e.g. http://example.org/sparql')
+        endpointField.setText(settings.value('manager/endpoint', None, str))
         self.addWidget(endpointField)
 
         connectBtn = QtWidgets.QPushButton(objectName='endpoint_connect_button')
@@ -677,20 +689,23 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         linelayout = QtWidgets.QFormLayout()
         linelayout.addRow(self.widget('endpoint_label'), layout_h)
-        groupbox0 = QtWidgets.QGroupBox('Metadata Endpoint', self,
-                                       objectName='ndc_metadata_endpoint')
+        groupbox0 = QtWidgets.QGroupBox(
+            'Metadata Endpoint', self,
+            objectName='ndc_metadata_endpoint',
+        )
         groupbox0.setLayout(linelayout)
         self.addWidget(groupbox0)
 
         #FORM
 
-        ndcTitle = QtWidgets.QLabel(self, objectName='ndc_title_label')
-        ndcTitle.setText('Title')
+        ndcTitle = QtWidgets.QLabel('Title', self, objectName='ndc_title_label')
         self.addWidget(ndcTitle)
 
         ndcITtitleField = StringField(self, objectName='ndc_ITtitle_field')
-        ITtitles = filter(lambda x : (str(x.assertionProperty) == 'http://purl.org/dc/terms/title') & (str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
-        ITtitles = list(ITtitles)
+        ITtitles = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.title) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ITtitles) > 0:
             ITtitle = ITtitles[0].value
             ndcITtitleField.setText(ITtitle)
@@ -699,10 +714,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcITtitleField)
 
         ndcENtitleField = StringField(self, objectName='ndc_ENtitle_field')
-        ENtitles = filter(
-            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/title') & (
-                    str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
-        ENtitles = list(ENtitles)
+        ENtitles = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.title) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ENtitles) > 0:
             ENtitle = ENtitles[0].value
             ndcENtitleField.setText(ENtitle)
@@ -710,15 +725,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             ndcENtitleField.setPlaceholderText('@en')
         self.addWidget(ndcENtitleField)
 
-        ndcLabel = QtWidgets.QLabel(self, objectName='ndc_label_label')
-        ndcLabel.setText('Label')
+        ndcLabel = QtWidgets.QLabel('Label', self, objectName='ndc_label_label')
         self.addWidget(ndcLabel)
 
         ndcITLabelField = StringField(self, objectName='ndc_ITlabel_field')
-        ITlabels = filter(
-            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#label') & (
-                    str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
-        ITlabels = list(ITlabels)
+        ITlabels = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.label) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ITlabels) > 0:
             ITlabel = ITlabels[0].value
             ndcITLabelField.setText(ITlabel)
@@ -730,10 +744,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(noLabel)
 
         ndcENLabelField = StringField(self, objectName='ndc_ENlabel_field')
-        ENlabels = filter(
-            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#label') & (
-                str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
-        ENlabels = list(ENlabels)
+        ENlabels = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.label) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ENlabels) > 0:
             ENlabel = ENlabels[0].value
             ndcENLabelField.setText(ENlabel)
@@ -741,15 +755,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             ndcENLabelField.setPlaceholderText('@en')
         self.addWidget(ndcENLabelField)
 
-        ndcComment = QtWidgets.QLabel(self, objectName='ndc_comment_label')
-        ndcComment.setText('Comment')
+        ndcComment = QtWidgets.QLabel('Comment', self, objectName='ndc_comment_label')
         self.addWidget(ndcComment)
 
         ndcITCommentField = StringField(self, objectName='ndc_ITcomment_field')
-        ITcomments = filter(
-            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#comment') & (
-                str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
-        ITcomments = list(ITcomments)
+        ITcomments = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.comment) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ITcomments) > 0:
             ITcomment = ITcomments[0].value
             ndcITCommentField.setText(ITcomment)
@@ -758,10 +771,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcITCommentField)
 
         ndcENCommentField = StringField(self, objectName='ndc_ENcomment_field')
-        ENcomments = filter(
-            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2000/01/rdf-schema#comment') & (
-                          str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
-        ENcomments = list(ENcomments)
+        ENcomments = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.comment) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ENcomments) > 0:
             ENcomment = ENcomments[0].value
             ndcENCommentField.setText(ENcomment)
@@ -774,30 +787,32 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcOfficialURI)
 
         ndcOfficialURIField = StringField(self, objectName='ndc_officialURI_field')
-        officialURIs = filter(
-            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/officialURI'), self.project.ontologyIRI.annotationAssertions)
-        officialURIs = list(officialURIs)
+        officialURIs = list(filter(
+            lambda x: str(x.assertionProperty) == str(ADMS.officialURI),
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(officialURIs) > 0:
             officialURI = str(officialURIs[0].value)
             ndcOfficialURIField.setText(officialURI)
         self.addWidget(ndcOfficialURIField)
 
-        ndcIdentifier = QtWidgets.QLabel(self, objectName='ndc_id_label')
-        ndcIdentifier.setText('Identifier')
+        ndcIdentifier = QtWidgets.QLabel('Identifier', self, objectName='ndc_id_label')
         self.addWidget(ndcIdentifier)
 
         ndcIdentifierField = StringField(self, objectName='ndc_id_field')
-        ids = filter(
-            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/identifier'),
-            self.project.ontologyIRI.annotationAssertions)
-        ids = list(ids)
+        ids = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.identifier),
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ids) > 0:
             id = ids[0].value
             ndcIdentifierField.setText(id)
         self.addWidget(ndcIdentifierField)
 
-        ndcRightsHolder = QtWidgets.QLabel(self, objectName='ndc_rightsHolder_label')
-        ndcRightsHolder.setText('Rights Holder')
+        ndcRightsHolder = QtWidgets.QLabel(
+            'Rights Holder', self,
+            objectName='ndc_rightsHolder_label',
+        )
         self.addWidget(ndcRightsHolder)
 
         ndcRightsHolderField = CheckableComboBox(self, objectName='ndc_rightsHolder_field')
@@ -813,49 +828,52 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_rightsHolder.addWidget(ndcRightsHolderField)
         layout_rightsHolder.addWidget(addRightsHolderBtn)
 
-        ndcCreationDate = QtWidgets.QLabel(self, objectName='ndc_creationDate_label')
-        ndcCreationDate.setText('Creation Date')
+        ndcCreationDate = QtWidgets.QLabel(
+            'Creation Date', self,
+            objectName='ndc_creationDate_label',
+        )
         self.addWidget(ndcCreationDate)
 
         ndcCreationDateField = QtWidgets.QDateEdit(self, objectName='ndc_creationDate_field')
-        dates = filter(
-            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/issued'),
-            self.project.ontologyIRI.annotationAssertions)
-        dates = list(dates)
+        dates = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.issued),
+            self.project.ontologyIRI.annotationAssertions
+        ))
         if len(dates) > 0:
             date = str(dates[0].value)[:10].split('-')
             year = int(date[0])
             month = int(date[1])
             day = int(date[2])
-            ndcCreationDateField.setDate(QDate(year, month, day))
+            ndcCreationDateField.setDate(QtCore.QDate(year, month, day))
         self.addWidget(ndcCreationDateField)
 
-        ndcLastModifiedDate = QtWidgets.QLabel(self, objectName='ndc_lastModifiedDate_label')
-        ndcLastModifiedDate.setText('Last Modified Date')
+        ndcLastModifiedDate = QtWidgets.QLabel(
+            'Last Modified Date', self,
+            objectName='ndc_lastModifiedDate_label',
+        )
         self.addWidget(ndcLastModifiedDate)
 
         ndcLastModifiedDateField = QtWidgets.QDateEdit(self, objectName='ndc_lastModifiedDate_field')
-        dates = filter(
-            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/modified'),
-            self.project.ontologyIRI.annotationAssertions)
-        dates = list(dates)
+        dates = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.modified),
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(dates) > 0:
             date = str(dates[0].value)[:10].split('-')
             year = int(date[0])
             month = int(date[1])
             day = int(date[2])
-            ndcLastModifiedDateField.setDate(QDate(year, month, day))
+            ndcLastModifiedDateField.setDate(QtCore.QDate(year, month, day))
         self.addWidget(ndcLastModifiedDateField)
 
-        ndcVersionInfo = QtWidgets.QLabel(self, objectName='ndc_versionInfo_label')
-        ndcVersionInfo.setText('Version Info')
+        ndcVersionInfo = QtWidgets.QLabel('Version Info', self, objectName='ndc_versionInfo_label')
         self.addWidget(ndcVersionInfo)
 
         ndcVersionInfoITField = StringField(self, objectName='ndc_ITversionInfo_field')
-        ITinfos = filter(
-            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2002/07/owl#versionInfo') & (
-                          str(x.language) == 'it'), self.project.ontologyIRI.annotationAssertions)
-        ITinfos = list(ITinfos)
+        ITinfos = list(filter(
+            lambda x: str(x.assertionProperty) == str(OWL.versionInfo) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ITinfos) > 0:
             ITinfo = ITinfos[0].value
             ndcVersionInfoITField.setText(ITinfo)
@@ -864,10 +882,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcVersionInfoITField)
 
         ndcVersionInfoENField = StringField(self, objectName='ndc_ENversionInfo_field')
-        ENinfos = filter(
-            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/2002/07/owl#versionInfo') & (
-                str(x.language) == 'en'), self.project.ontologyIRI.annotationAssertions)
-        ENinfos = list(ENinfos)
+        ENinfos = list(filter(
+            lambda x: str(x.assertionProperty) == str(OWL.versionInfo) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
         if len(ENinfos) > 0:
             ENinfo = ENinfos[0].value
             ndcVersionInfoENField.setText(ENinfo)
@@ -875,55 +893,59 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             ndcVersionInfoENField.setPlaceholderText('@en')
         self.addWidget(ndcVersionInfoENField)
 
-        ndcAccrualPeriodicity = QtWidgets.QLabel(self, objectName='ndc_accrualPeriodicity_label')
-        ndcAccrualPeriodicity.setText('Accrual Periodicity')
+        ndcAccrualPeriodicity = QtWidgets.QLabel(
+            'Accrual Periodicity', self,
+            objectName='ndc_accrualPeriodicity_label',
+        )
         self.addWidget(ndcAccrualPeriodicity)
 
         ndcAccrualPeriodicityField = QtWidgets.QComboBox(self, objectName='ndc_accrualPeriodicity_field')
-        periodicities = ["", "http://publications.europa.eu/resource/authority/frequency/TRIDECENNIAL",
-                         "http://publications.europa.eu/resource/authority/frequency/BIHOURLY",
-                         "http://publications.europa.eu/resource/authority/frequency/TRIHOURLY",
-                         "http://publications.europa.eu/resource/authority/frequency/OTHER",
-                            "http://publications.europa.eu/resource/authority/frequency/WEEKLY",
-                         "http://publications.europa.eu/resource/authority/frequency/NOT_PLANNED",
-                         "http://publications.europa.eu/resource/authority/frequency/AS_NEEDED",
-                         "http://publications.europa.eu/resource/authority/frequency/5MIN",
-                         "http://publications.europa.eu/resource/authority/frequency/30MIN",
-                         "http://publications.europa.eu/resource/authority/frequency/HOURLY",
-                         "http://publications.europa.eu/resource/authority/frequency/QUADRENNIAL",
-                         "http://publications.europa.eu/resource/authority/frequency/QUINQUENNIAL",
-                         "http://publications.europa.eu/resource/authority/frequency/DECENNIAL",
-                         "http://publications.europa.eu/resource/authority/frequency/1MIN",
-"http://publications.europa.eu/resource/authority/frequency/15MIN",
-"http://publications.europa.eu/resource/authority/frequency/WEEKLY_2",
-"http://publications.europa.eu/resource/authority/frequency/WEEKLY_3",
-"http://publications.europa.eu/resource/authority/frequency/12HRS",
-"http://publications.europa.eu/resource/authority/frequency/UNKNOWN",
-"http://publications.europa.eu/resource/authority/frequency/10MIN",
-"http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT",
-"http://publications.europa.eu/resource/authority/frequency/QUARTERLY",
-"http://publications.europa.eu/resource/authority/frequency/TRIENNIAL",
-"http://publications.europa.eu/resource/authority/frequency/NEVER",
-"http://publications.europa.eu/resource/authority/frequency/OP_DATPRO",
-"http://publications.europa.eu/resource/authority/frequency/MONTHLY_2",
-"http://publications.europa.eu/resource/authority/frequency/MONTHLY_3",
-"http://publications.europa.eu/resource/authority/frequency/IRREG",
-"http://publications.europa.eu/resource/authority/frequency/MONTHLY",
-"http://publications.europa.eu/resource/authority/frequency/DAILY",
-"http://publications.europa.eu/resource/authority/frequency/DAILY_2",
-"http://publications.europa.eu/resource/authority/frequency/BIWEEKLY",
-"http://publications.europa.eu/resource/authority/frequency/CONT",
-"http://publications.europa.eu/resource/authority/frequency/BIENNIAL",
-"http://publications.europa.eu/resource/authority/frequency/BIMONTHLY",
-"http://publications.europa.eu/resource/authority/frequency/ANNUAL_2",
-"http://publications.europa.eu/resource/authority/frequency/ANNUAL_3",
-"http://publications.europa.eu/resource/authority/frequency/ANNUAL"]
+        periodicities = [
+            "",
+            "http://publications.europa.eu/resource/authority/frequency/TRIDECENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/BIHOURLY",
+            "http://publications.europa.eu/resource/authority/frequency/TRIHOURLY",
+            "http://publications.europa.eu/resource/authority/frequency/OTHER",
+            "http://publications.europa.eu/resource/authority/frequency/WEEKLY",
+            "http://publications.europa.eu/resource/authority/frequency/NOT_PLANNED",
+            "http://publications.europa.eu/resource/authority/frequency/AS_NEEDED",
+            "http://publications.europa.eu/resource/authority/frequency/5MIN",
+            "http://publications.europa.eu/resource/authority/frequency/30MIN",
+            "http://publications.europa.eu/resource/authority/frequency/HOURLY",
+            "http://publications.europa.eu/resource/authority/frequency/QUADRENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/QUINQUENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/DECENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/1MIN",
+            "http://publications.europa.eu/resource/authority/frequency/15MIN",
+            "http://publications.europa.eu/resource/authority/frequency/WEEKLY_2",
+            "http://publications.europa.eu/resource/authority/frequency/WEEKLY_3",
+            "http://publications.europa.eu/resource/authority/frequency/12HRS",
+            "http://publications.europa.eu/resource/authority/frequency/UNKNOWN",
+            "http://publications.europa.eu/resource/authority/frequency/10MIN",
+            "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT",
+            "http://publications.europa.eu/resource/authority/frequency/QUARTERLY",
+            "http://publications.europa.eu/resource/authority/frequency/TRIENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/NEVER",
+            "http://publications.europa.eu/resource/authority/frequency/OP_DATPRO",
+            "http://publications.europa.eu/resource/authority/frequency/MONTHLY_2",
+            "http://publications.europa.eu/resource/authority/frequency/MONTHLY_3",
+            "http://publications.europa.eu/resource/authority/frequency/IRREG",
+            "http://publications.europa.eu/resource/authority/frequency/MONTHLY",
+            "http://publications.europa.eu/resource/authority/frequency/DAILY",
+            "http://publications.europa.eu/resource/authority/frequency/DAILY_2",
+            "http://publications.europa.eu/resource/authority/frequency/BIWEEKLY",
+            "http://publications.europa.eu/resource/authority/frequency/CONT",
+            "http://publications.europa.eu/resource/authority/frequency/BIENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/BIMONTHLY",
+            "http://publications.europa.eu/resource/authority/frequency/ANNUAL_2",
+            "http://publications.europa.eu/resource/authority/frequency/ANNUAL_3",
+            "http://publications.europa.eu/resource/authority/frequency/ANNUAL",
+        ]
         ndcAccrualPeriodicityField.addItems(periodicities)
         self.addWidget(ndcAccrualPeriodicityField)
         self.setPeriodicities()
 
-        ndcContacts = QtWidgets.QLabel(self, objectName='ndc_contacts_label')
-        ndcContacts.setText('Contact Point')
+        ndcContacts = QtWidgets.QLabel('Contact Point', self, objectName='ndc_contacts_label')
         self.addWidget(ndcContacts)
 
         ndcContactsField = CheckableComboBox(self, objectName='ndc_contacts_field')
@@ -939,8 +961,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_contact.addWidget(ndcContactsField)
         layout_contact.addWidget(addContactBtn)
 
-        ndcPublisher = QtWidgets.QLabel(self, objectName='ndc_publisher_label')
-        ndcPublisher.setText('Publisher')
+        ndcPublisher = QtWidgets.QLabel('Publisher', self, objectName='ndc_publisher_label')
         self.addWidget(ndcPublisher)
 
         ndcPublisherField = CheckableComboBox(self, objectName='ndc_publisher_field')
@@ -956,8 +977,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_publisher.addWidget(ndcPublisherField)
         layout_publisher.addWidget(addPublisherBtn)
 
-        ndcCreator = QtWidgets.QLabel(self, objectName='ndc_creator_label')
-        ndcCreator.setText('Creator')
+        ndcCreator = QtWidgets.QLabel('Creator', self, objectName='ndc_creator_label')
         self.addWidget(ndcCreator)
 
         ndcCreatorField = CheckableComboBox(self, objectName='ndc_creator_field')
@@ -973,18 +993,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_creator.addWidget(ndcCreatorField)
         layout_creator.addWidget(addCreatorBtn)
 
-        ndcLanguages = QtWidgets.QLabel(self, objectName='ndc_languages_label')
-        ndcLanguages.setText('Languages')
+        ndcLanguages = QtWidgets.QLabel('Languages', self, objectName='ndc_languages_label')
         self.addWidget(ndcLanguages)
 
         ndcLanguagesField = CheckableComboBox(self, objectName='ndc_languages_field')
-        languages = ["http://publications.europa.eu/resource/authority/language/ITA","http://publications.europa.eu/resource/authority/language/ENG"]
+        languages = [
+            "http://publications.europa.eu/resource/authority/language/ITA",
+            "http://publications.europa.eu/resource/authority/language/ENG",
+        ]
         ndcLanguagesField.addItems(languages)
         self.addWidget(ndcLanguagesField)
         self.setLanguages()
 
-        ndcMainClasses = QtWidgets.QLabel(self, objectName='ndc_mainClasses_label')
-        ndcMainClasses.setText('Key Classes')
+        ndcMainClasses = QtWidgets.QLabel('Key Classes', self, objectName='ndc_mainClasses_label')
         self.addWidget(ndcMainClasses)
 
         ndcMainClassesField = CheckableComboBox(self, objectName='ndc_mainClasses_field')
@@ -997,26 +1018,24 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcMainClassesField)
         self.setKeyClasses()
 
-        ndcPrefix = QtWidgets.QLabel(self, objectName='ndc_prefix_label')
-        ndcPrefix.setText('Prefix')
+        ndcPrefix = QtWidgets.QLabel('Prefix', self, objectName='ndc_prefix_label')
         self.addWidget(ndcPrefix)
 
         ndcPrefixField = StringField(self, objectName='ndc_prefix_field')
-        if (self.project.ontologyPrefix is not None) & (len(self.project.ontologyPrefix) > 0):
+        if self.project.ontologyPrefix:
             prefix = str(self.project.ontologyPrefix)
             ndcPrefixField.setText(prefix)
         else:
-            prefixes = filter(
-                lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/prefix'),
-                self.project.ontologyIRI.annotationAssertions)
-            prefixes = list(prefixes)
+            prefixes = list(filter(
+                lambda x: str(x.assertionProperty) == str(ADMS.prefix),
+                self.project.ontologyIRI.annotationAssertions,
+            ))
             if len(prefixes) > 0:
                 prefix = prefixes[0].value
                 ndcPrefixField.setText(prefix)
         self.addWidget(ndcPrefixField)
 
-        ndcProjects = QtWidgets.QLabel(self, objectName='ndc_projects_label')
-        ndcProjects.setText('Projects')
+        ndcProjects = QtWidgets.QLabel('Projects', self, objectName='ndc_projects_label')
         self.addWidget(ndcProjects)
 
         ndcProjectsField = CheckableComboBox(self, objectName='ndc_projects_field')
@@ -1032,8 +1051,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_projects.addWidget(ndcProjectsField)
         layout_projects.addWidget(addProjectBtn)
 
-        ndcDistributions = QtWidgets.QLabel(self, objectName='ndc_distributions_label')
-        ndcDistributions.setText('Distributions')
+        ndcDistributions = QtWidgets.QLabel(
+            'Distributions', self,
+            objectName='ndc_distributions_label',
+        )
         self.addWidget(ndcDistributions)
 
         ndcDistributionsField = CheckableComboBox(self, objectName='ndc_distributions_field')
@@ -1075,20 +1096,16 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
 
         endpointWidget = self.widget('endpoint_field')
-        url = endpointWidget.text()
-        if len(url) > 0:
-            self.setAgentSuggestions(url)
-            self.setContactPointSuggestions(url)
-            self.setProjectSuggestions(url)
-            self.setDistributionSuggestions(url)
-            self.setRightsHolders()
-            self.setPublishers()
-            self.setCreators()
-            self.setContacts()
-            self.setProjects()
-            self.setDistributions()
-
-
+        self.setAgentSuggestions()
+        self.setContactPointSuggestions()
+        self.setProjectSuggestions()
+        self.setDistributionSuggestions()
+        self.setRightsHolders()
+        self.setPublishers()
+        self.setCreators()
+        self.setContacts()
+        self.setProjects()
+        self.setDistributions()
 
         applyBtn = QtWidgets.QPushButton('Apply', objectName='ndc_apply_button')
         applyBtn.setEnabled(True)
@@ -1109,8 +1126,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(scroll)
         formlayout.addRow(boxlayout)
-        groupbox = QtWidgets.QGroupBox('Add NDC Metadata', self,
-                                       objectName='ndc_metadata_group_widget')
+        groupbox = QtWidgets.QGroupBox(
+            'Add NDC Metadata', self,
+            objectName='ndc_metadata_group_widget',
+        )
         groupbox.setLayout(formlayout)
         self.addWidget(groupbox)
 
@@ -1124,11 +1143,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.setObjectName('NDCmetadata_widget')
         self.addWidget(widget)
 
+        self.setAgentSuggestions()
+        self.setContactPointSuggestions()
+        self.setDistributionSuggestions()
+        self.setProjectSuggestions()
+
         #############################################
         # CONFIRMATION BOX
         #################################
 
-        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation = QtWidgets.QDialogButtonBox(
+            QtCore.Qt.Horizontal, self,
+            objectName='confirmation_widget',
+        )
         confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.setContentsMargins(10, 0, 10, 10)
         self.addWidget(confirmation)
@@ -2188,47 +2215,27 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
     @QtCore.pyqtSlot()
     def doAddAgent(self):
-        agentBuilder = AgentBuilderDialog(self)
-        connect(agentBuilder.sgnAgentAccepted, self.onAgentAccepted)
+        agentBuilder = AgentBuilderDialog(self, self.ndcDataset)
+        connect(agentBuilder.accepted, self.setAgentSuggestions)
         agentBuilder.open()
 
     @QtCore.pyqtSlot()
-    def onAgentAccepted(self):
-        endpointURL = self.widget('endpoint_field').text()
-        self.setAgentSuggestions(endpointURL)
-
-    @QtCore.pyqtSlot()
     def doAddProject(self):
-        projectBuilder = ProjectBuilderDialog(self)
-        connect(projectBuilder.sgnProjectAccepted, self.onProjectAccepted)
+        projectBuilder = ProjectBuilderDialog(self, self.ndcDataset)
+        connect(projectBuilder.accepted, self.setProjectSuggestions)
         projectBuilder.open()
 
     @QtCore.pyqtSlot()
-    def onProjectAccepted(self):
-        endpointURL = self.widget('endpoint_field').text()
-        self.setProjectSuggestions(endpointURL)
-
-    @QtCore.pyqtSlot()
     def doAddDistribution(self):
-        distributionBuilder = DistributionBuilderDialog(self)
-        connect(distributionBuilder.sgnDistributionAccepted, self.onDistributionAccepted)
+        distributionBuilder = DistributionBuilderDialog(self, self.ndcDataset)
+        connect(distributionBuilder.accepted, self.setDistributionSuggestions)
         distributionBuilder.open()
 
     @QtCore.pyqtSlot()
-    def onDistributionAccepted(self):
-        endpointURL = self.widget('endpoint_field').text()
-        self.setDistributionSuggestions(endpointURL)
-
-    @QtCore.pyqtSlot()
     def doAddContact(self):
-        contactBuilder = ContactBuilderDialog(self)
-        connect(contactBuilder.sgnContactAccepted, self.onContactAccepted)
+        contactBuilder = ContactBuilderDialog(self, self.ndcDataset)
+        connect(contactBuilder.accepted, self.setContactPointSuggestions)
         contactBuilder.open()
-
-    @QtCore.pyqtSlot()
-    def onContactAccepted(self):
-        endpointURL = self.widget('endpoint_field').text()
-        self.setContactPointSuggestions(endpointURL)
 
     def setRightsHolders(self):
         widget = self.widget('ndc_rightsHolder_field')
@@ -2245,6 +2252,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setPublishers(self):
         widget = self.widget('ndc_publisher_field')
         publishers = filter(
@@ -2260,6 +2268,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setCreators(self):
         widget = self.widget('ndc_creator_field')
         creators = filter(
@@ -2275,6 +2284,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setContacts(self):
         widget = self.widget('ndc_contacts_field')
         contacts = filter(
@@ -2290,6 +2300,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setProjects(self):
         widget = self.widget('ndc_projects_field')
         projects = filter(
@@ -2305,6 +2316,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setDistributions(self):
         widget = self.widget('ndc_distributions_field')
         distributions = filter(
@@ -2320,6 +2332,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setLanguages(self):
         widget = self.widget('ndc_languages_field')
         languages = filter(
@@ -2335,6 +2348,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setKeyClasses(self):
         widget = self.widget('ndc_mainClasses_field')
         classes = filter(
@@ -2350,6 +2364,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         metrics = QtGui.QFontMetrics(widget.lineEdit().font())
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
+
     def setPeriodicities(self):
         widget = self.widget('ndc_accrualPeriodicity_field')
         periodicities = filter(
@@ -2363,8 +2378,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 texts.append(widget.model().item(i).text())
         text = ", ".join(texts)
         widget.setCurrentText(text)
-    def setAgentSuggestions(self, url):
-        agents = getAgentsFromStore(url)
+
+    @QtCore.pyqtSlot()
+    def setAgentSuggestions(self):
+        agents = sorted(set([a.uri.toPython() for a in self.ndcDataset.agents()]))
         rightsHolderWidget = self.widget('ndc_rightsHolder_field')
         rightsHolderWidget.addItems(agents)
         publisherWidget = self.widget('ndc_publisher_field')
@@ -2372,242 +2389,238 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         creatorWidget = self.widget('ndc_creator_field')
         creatorWidget.addItems(agents)
 
-    def setContactPointSuggestions(self, url):
-        contactPoints = getContactPointsFromStore(url)
+    @QtCore.pyqtSlot()
+    def setContactPointSuggestions(self):
+        contactPoints = sorted(set([c.uri.toPython() for c in self.ndcDataset.contactPoints()]))
         contactPointWidget = self.widget('ndc_contacts_field')
         contactPointWidget.addItems(contactPoints)
 
-    def setProjectSuggestions(self, url):
-        projects = getProjectsFromStore(url)
+    @QtCore.pyqtSlot()
+    def setProjectSuggestions(self):
+        projects = sorted(set([p.uri.toPython() for p in self.ndcDataset.projects()]))
         projectWidget = self.widget('ndc_projects_field')
         projectWidget.addItems(projects)
 
-    def setDistributionSuggestions(self, url):
-        distributions = getDistributionsFromStore(url)
+    @QtCore.pyqtSlot()
+    def setDistributionSuggestions(self):
+        distributions = sorted(set([d.uri.toPython() for d in self.ndcDataset.distributions()]))
         distributionWidget = self.widget('ndc_distributions_field')
         distributionWidget.addItems(distributions)
 
-    def doConnectEndpoint(self):
-        endpointWidget = self.widget('endpoint_field')
-        url = endpointWidget.text()
-        success = getDataFromEndpoint(url)
-        if success:
-            self.setAgentSuggestions(url)
-            self.setContactPointSuggestions(url)
-            self.setProjectSuggestions(url)
-            self.setDistributionSuggestions(url)
-            msgbox = QtWidgets.QMessageBox(self)
-            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
-            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-            msgbox.setWindowTitle('Done!')
-            msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-            msgbox.setText('Triples retrieved from endpoint!')
-            msgbox.setTextFormat(QtCore.Qt.RichText)
-            msgbox.exec_()
+    @QtCore.pyqtSlot()
+    def doConnectEndpoint(self) -> None:
+        settings = QtCore.QSettings()
+        url = self.widget('endpoint_field').text()
+        settings.setValue('manager/endpoint', url)
+        endpoint = SPARQLEndpoint(url, self.session.nmanager)
+        connect(endpoint.sgnConstructFinished, self.onEndpointQueryCompleted)
+        connect(endpoint.sgnSPARQLError, self.onEndpointQueryError)
+        endpoint.execConstruct(NDCDataset.construct())
+
+    @QtCore.pyqtSlot(QtCore.QUrl, Graph)
+    def onEndpointQueryCompleted(self, url: QtCore.QUrl, graph: Graph) -> None:
+        self.ndcDataset.remove_graph(URIRef(url.toString()))
+        g = self.ndcDataset.add_graph(URIRef(url.toString()))
+        g += graph
+        self.ndcDataset.save()
+        self.setAgentSuggestions()
+        self.setContactPointSuggestions()
+        self.setDistributionSuggestions()
+        self.setProjectSuggestions()
+        self.session.addNotification('Metadata retrieved from endpoint!')
+
+    @QtCore.pyqtSlot(QtCore.QUrl)
+    def onEndpointQueryError(self, url: QtCore.QUrl) -> None:
+        self.session.addNotification(
+            f'Failed to execute SPARQL query on endpoint: {url.toString()}'
+        )
+
     def doAddMetadata(self):
+        self.session.undostack.beginMacro('Save NDC metadata to project')
         annotations = []
         subjectIRI = self.project.ontologyIRI
-        url = self.widget('endpoint_field').text()
         titleIT = self.widget('ndc_ITtitle_field').text()
         annotations.append({
-            'prop': 'http://purl.org/dc/terms/title',
+            'prop': DCTERMS.title.toPython(),
             'value': titleIT,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'it'})
         titleEN = self.widget('ndc_ENtitle_field').text()
         annotations.append({
-            'prop': 'http://purl.org/dc/terms/title',
+            'prop': DCTERMS.title.toPython(),
             'value': titleEN,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'en'
         })
         labelIT = self.widget('ndc_ITlabel_field').text()
         annotations.append({
-            'prop': 'http://www.w3.org/2000/01/rdf-schema#label',
+            'prop': RDFS.label.toPython(),
             'value': labelIT,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'it'
         })
         labelEN = self.widget('ndc_ENlabel_field').text()
         annotations.append({
-            'prop': 'http://www.w3.org/2000/01/rdf-schema#label',
+            'prop': RDFS.label.toPython(),
             'value': labelEN,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'en'
         })
         commentIT = self.widget('ndc_ITcomment_field').text()
         annotations.append({
-            'prop': 'http://www.w3.org/2000/01/rdf-schema#comment',
+            'prop': RDFS.comment.toPython(),
             'value': commentIT,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'it'
         })
         commentEN = self.widget('ndc_ENcomment_field').text()
         annotations.append({
-            'prop': 'http://www.w3.org/2000/01/rdf-schema#comment',
+            'prop': RDFS.comment.toPython(),
             'value': commentEN,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'en'
         })
         officialURI = self.widget('ndc_officialURI_field').text()
         annotations.append({
-            'prop': 'https://w3id.org/italia/onto/ADMS/officialURI',
+            'prop': ADMS.officialURI.toPython(),
             'value': officialURI,
-            'type': OWL2Datatype.anyURI.value,
-            'lang': ''
+            'type': None,
+            'lang': None
         })
         identifier = self.widget('ndc_id_field').text()
         annotations.append({
-            'prop': 'http://purl.org/dc/terms/identifier',
+            'prop': DCTERMS.identifier.toPython(),
             'value': identifier,
-            'type': OWL2Datatype.PlainLiteral.value,
-            'lang': ''
+            'type': None,
+            'lang': None
         })
         creationDate = self.widget('ndc_creationDate_field').date().toString("yyyy-MM-dd")
         if creationDate != "2000-01-01":
             annotations.append({
-                'prop': 'http://purl.org/dc/terms/issued',
+                'prop': DCTERMS.issued.toPython(),
                 'value': creationDate+'T00:00:00+00:00',
                 'type': OWL2Datatype.dateTime.value,
-                'lang': ''
+                'lang': None
             })
         lastModifiedDate = self.widget('ndc_lastModifiedDate_field').date().toString("yyyy-MM-dd")
         if lastModifiedDate != "2000-01-01":
             annotations.append({
-                'prop': 'http://purl.org/dc/terms/modified',
+                'prop': DCTERMS.modified.toPython(),
                 'value': lastModifiedDate + 'T00:00:00+00:00',
                 'type': OWL2Datatype.dateTime.value,
-                'lang': ''
+                'lang': None
             })
         versionInfoIT = self.widget('ndc_ITversionInfo_field').text()
         annotations.append({
-            'prop': 'http://www.w3.org/2002/07/owl#versionInfo',
+            'prop': OWL.versionInfo.toPython(),
             'value': versionInfoIT,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'it'
         })
         versionInfoEN = self.widget('ndc_ENversionInfo_field').text()
         annotations.append({
-            'prop': 'http://www.w3.org/2002/07/owl#versionInfo',
+            'prop': OWL.versionInfo.toPython(),
             'value': versionInfoEN,
-            'type': OWL2Datatype.PlainLiteral.value,
+            'type': None,
             'lang': 'en'
         })
         accrualPeriodicity = self.widget('ndc_accrualPeriodicity_field').currentText()
         annotations.append({
-            'prop': 'http://purl.org/dc/terms/accrualPeriodicity',
+            'prop': DCTERMS.accrualPeriodicity.toPython(),
             'value':  self.project.getIRI(accrualPeriodicity) if accrualPeriodicity else '',
             'type': None,
-            'lang': ''
+            'lang': None
         })
         languages = self.widget('ndc_languages_field').currentData()
         for l in languages:
             annotations.append({
-                'prop': 'http://purl.org/dc/terms/language',
+                'prop': DCTERMS.language.toPython(),
                 'value': self.project.getIRI(l),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         keyClasses = self.widget('ndc_mainClasses_field').currentData()
         for c in keyClasses:
             annotations.append({
-                'prop': 'https://w3id.org/italia/onto/ADMS/hasKeyClass',
+                'prop': ADMS.hasKeyClass.toPython(),
                 'value': self.project.getIRI(c),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         prefix = self.widget('ndc_prefix_field').text()
         annotations.append({
-            'prop': 'https://w3id.org/italia/onto/ADMS/prefix',
+            'prop': ADMS.prefix.toPython(),
             'value': prefix,
-            'type': OWL2Datatype.PlainLiteral.value,
-            'lang': ''
+            'type': None,
+            'lang': None
         })
         rightsHolders = self.widget('ndc_rightsHolder_field').currentData()
-        for r in rightsHolders:
-            self.project.addIRI(self.project.getIRI(r))
-            addIriAnnotationsToProject(url, self.project, r)
-            self.redraw()
+        for rh in rightsHolders:
             annotations.append({
-                'prop': 'http://purl.org/dc/terms/rightsHolder',
-                'value': self.project.getIRI(r),
+                'prop': DCTERMS.rightsHolder.toPython(),
+                'value': self.project.getIRI(rh),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         publishers = self.widget('ndc_publisher_field').currentData()
-        for p in publishers:
-            self.project.addIRI(self.project.getIRI(p))
-            addIriAnnotationsToProject(url, self.project, p)
-            self.redraw()
+        for pub in publishers:
             annotations.append({
-                'prop': 'http://purl.org/dc/terms/publisher',
-                'value': self.project.getIRI(p),
+                'prop': DCTERMS.publisher.toPython(),
+                'value': self.project.getIRI(pub),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         creators = self.widget('ndc_creator_field').currentData()
-        for c in creators:
-            self.project.addIRI(self.project.getIRI(c))
-            addIriAnnotationsToProject(url, self.project, c)
-            self.redraw()
+        for ct in creators:
             annotations.append({
-                'prop': 'http://purl.org/dc/terms/creator',
-                'value': self.project.getIRI(c),
+                'prop': DCTERMS.creator.toPython(),
+                'value': self.project.getIRI(ct),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         projects = self.widget('ndc_projects_field').currentData()
-        for p in projects:
-            self.project.addIRI(self.project.getIRI(p))
-            addIriAnnotationsToProject(url, self.project, p)
-            self.redraw()
+        for pj in projects:
             annotations.append({
-                'prop': 'https://w3id.org/italia/onto/ADMS/semanticAssetInUse',
-                'value': self.project.getIRI(p),
+                'prop': ADMS.semanticAssetInUse.toPython(),
+                'value': self.project.getIRI(pj),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         distributions = self.widget('ndc_distributions_field').currentData()
-        for d in distributions:
-            self.project.addIRI(self.project.getIRI(d))
-            addIriAnnotationsToProject(url, self.project, d)
-            self.redraw()
+        for ds in distributions:
             annotations.append({
-                'prop': 'https://w3id.org/italia/onto/ADMS/hasSemanticAssetDistribution',
-                'value': self.project.getIRI(d),
+                'prop': ADMS.hasSemanticAssetDistribution.toPython(),
+                'value': self.project.getIRI(ds),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         contacts = self.widget('ndc_contacts_field').currentData()
-        for c in contacts:
-            self.project.addIRI(self.project.getIRI(c))
-            addIriAnnotationsToProject(url, self.project, c)
-            self.redraw()
+        for co in contacts:
             annotations.append({
-                'prop': 'http://www.w3.org/ns/dcat#contactPoint',
-                'value': self.project.getIRI(c),
+                'prop': DCAT.contactPoint.toPython(),
+                'value': self.project.getIRI(co),
                 'type': None,
-                'lang': ''
+                'lang': None
             })
         for a in annotations:
-            if(a['value']):
-                property = a['prop']
-                if not self.project.existAnnotationProperty(property):
-                    self.project.isValidIdentifier(property)
-                    comm = CommandProjectAddAnnotationProperty(self.project, property)
-                    self.session.undostack.push(comm)
-                annotationAssertion = AnnotationAssertion(subjectIRI, self.project.getIRI(property), a['value'], a['type'], a['lang'])
-                command = CommandIRIAddAnnotationAssertion(self.project, subjectIRI, annotationAssertion)
+            if a['value']:
+                # if not self.project.existAnnotationProperty(property):
+                #     # self.project.isValidIdentifier(property)
+                #     comm = CommandProjectAddAnnotationProperty(self.project, property)
+                #     self.session.undostack.push(comm)
+                assertion = AnnotationAssertion(
+                    subjectIRI,
+                    self.project.getIRI(a['prop']),
+                    a['value'],
+                    a['type'],
+                    a['lang'],
+                )
+                command = CommandIRIAddAnnotationAssertion(
+                    self.project,
+                    subjectIRI,
+                    assertion,
+                )
                 self.session.undostack.push(command)
-        self.redraw()
-        msgbox = QtWidgets.QMessageBox(self)
-        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
-        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
-        msgbox.setWindowTitle('Done!')
-        msgbox.setStandardButtons(QtWidgets.QMessageBox.Close)
-        msgbox.setText('Metadata added to the current project!')
-        msgbox.setTextFormat(QtCore.Qt.RichText)
-        msgbox.exec_()
-
-
-
+        self.session.undostack.endMacro()
+        # self.redraw()
+        self.session.addNotification('Metadata added to the current project!')
