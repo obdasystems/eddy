@@ -36,6 +36,7 @@
 from dataclasses import dataclass
 from textwrap import dedent
 from typing import (
+    ClassVar,
     Iterable,
     Optional,
     Union,
@@ -90,6 +91,7 @@ class VCARD(DefinedNamespace):
 
 @dataclass
 class Agent:
+    type: ClassVar[URIRef] = FOAF.Agent
     uri: URIRef
     name_en: Optional[Literal]
     name_it: Optional[Literal]
@@ -101,21 +103,22 @@ class Agent:
         :return: the list  of triples representing this instance.
         """
         return [
-            (self.uri, RDF.type, FOAF.Agent),
+            (self.uri, RDF.type, Agent.type),
             (self.uri, FOAF.name, self.name_en),
             (self.uri, FOAF.name, self.name_it),
             (self.uri, DCTERMS.identifier, self.identifier),
         ]
 
     @staticmethod
-    def bgp() -> str:
+    def bgp(uri: Optional[URIRef] = None) -> str:
         """
         The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :param uri: optional uri of the element to filter for
         :return: the SPARQL BGP
         """
         return dedent(f"""
-        {{
-            ?agent a {FOAF.Agent.n3()} .
+        {{ {f'BIND( {uri.n3()} AS ?agent)' if uri else ''}
+            ?agent a {Agent.type.n3()} .
             OPTIONAL {{
                 ?agent {FOAF.name.n3()} ?name_en .
                 FILTER langMatches(lang(?name_en), 'en')
@@ -136,7 +139,7 @@ class Agent:
         :return: the SPARQL CONSTRUCT head
         """
         return dedent(f"""
-        ?agent a {FOAF.Agent.n3()} ;
+        ?agent a {Agent.type.n3()} ;
                {FOAF.name.n3()} ?name_en ;
                {FOAF.name.n3()} ?name_it ;
                {DCTERMS.identifier.n3()} ?id .
@@ -154,11 +157,12 @@ class Agent:
 
 @dataclass
 class ContactPoint:
+    type: ClassVar[URIRef] = VCARD.Kind
     uri: URIRef
     fn_en: Optional[Literal]
     fn_it: Optional[Literal]
-    email: Optional[Literal]
-    telephone: Optional[Literal]
+    email: Optional[URIRef]
+    telephone: Optional[URIRef]
 
     def triples(self) -> Iterable:
         """
@@ -166,21 +170,23 @@ class ContactPoint:
         :return: the list  of triples representing this instance.
         """
         return [
-            (self.uri, RDF.type, VCARD.Kind),
+            (self.uri, RDF.type, ContactPoint.type),
             (self.uri, VCARD.fn, self.fn_en),
             (self.uri, VCARD.fn, self.fn_it),
             (self.uri, VCARD.hasEmail, self.email),
+            (self.uri, VCARD.hasTelephone, self.telephone),
         ]
 
     @staticmethod
-    def bgp() -> str:
+    def bgp(uri: Optional[URIRef] = None) -> str:
         """
         The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :param uri: optional uri of the element to filter for
         :return: the SPARQL BGP
         """
         return dedent(f"""
-        {{
-            ?contact a {VCARD.Kind.n3()} .
+        {{ {f'BIND( {uri.n3()} AS ?contact)' if uri else ''}
+            ?contact a {ContactPoint.type.n3()} .
             OPTIONAL {{
                 ?contact {VCARD.fn.n3()} ?fn_en .
                 FILTER langMatches(lang(?fn_en), 'en')
@@ -202,7 +208,7 @@ class ContactPoint:
         :return: the SPARQL CONSTRUCT head
         """
         return dedent(f"""
-        ?contact a {VCARD.Kind.n3()} ;
+        ?contact a {ContactPoint.type.n3()} ;
                  {VCARD.fn.n3()} ?fn_en ;
                  {VCARD.fn.n3()} ?fn_it ;
                  {VCARD.hasEmail.n3()} ?email ;
@@ -221,13 +227,14 @@ class ContactPoint:
 
 @dataclass
 class Distribution:
+    type: ClassVar[URIRef] = ADMS.SemanticAssetDistribution
     uri: URIRef
     title_en: Optional[Literal]
     title_it: Optional[Literal]
     description_en: Optional[Literal]
     description_it: Optional[Literal]
-    format: Optional[Literal]
-    license: Optional[Literal]
+    format: Optional[URIRef]
+    license: Optional[URIRef]
     accessURL: Optional[URIRef]
     downloadURL: Optional[URIRef]
 
@@ -237,7 +244,7 @@ class Distribution:
         :return: the list  of triples representing this instance.
         """
         return [
-            (self.uri, RDF.type, ADMS.SemanticAssetDistribution),
+            (self.uri, RDF.type, Distribution.type),
             (self.uri, DCTERMS.title, self.title_en),
             (self.uri, DCTERMS.title, self.title_it),
             (self.uri, DCTERMS.description, self.description_en),
@@ -249,14 +256,15 @@ class Distribution:
         ]
 
     @staticmethod
-    def bgp() -> str:
+    def bgp(uri: Optional[URIRef] = None) -> str:
         """
         The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :param uri: optional uri of the element to filter for
         :return: the SPARQL BGP
         """
         return dedent(f"""
-        {{
-            ?distrib a {ADMS.SemanticAssetDistribution.n3()} .
+        {{ {f'BIND( {uri.n3()} AS ?distrib)' if uri else ''}
+            ?distrib a {Distribution.type.n3()} .
             OPTIONAL {{
                 ?distrib {DCTERMS.title.n3()} ?title_en .
                 FILTER langMatches(lang(?title_en), 'en')
@@ -288,7 +296,7 @@ class Distribution:
         :return: the SPARQL CONSTRUCT head
         """
         return dedent(f"""
-            ?distrib a {ADMS.SemanticAssetDistribution.n3()} ;
+            ?distrib a {Distribution.type.n3()} ;
                      {DCTERMS.title.n3()} ?title_en ;
                      {DCTERMS.title.n3()} ?title_it ;
                      {DCTERMS.description.n3()} ?description_en ;
@@ -312,6 +320,7 @@ class Distribution:
 
 @dataclass
 class Project:
+    type: ClassVar[URIRef] = ADMS.Project
     uri: URIRef
     name_en: Optional[Literal]
     name_it: Optional[Literal]
@@ -322,20 +331,21 @@ class Project:
         :return: the list  of triples representing this instance.
         """
         return [
-            (self.uri, RDF.type, ADMS.Project),
+            (self.uri, RDF.type, Project.type),
             (self.uri, L0.name, self.name_en),
             (self.uri, L0.name, self.name_it),
         ]
 
     @staticmethod
-    def bgp() -> str:
+    def bgp(uri: Optional[URIRef] = None) -> str:
         """
         The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :param uri: optional uri of the element to filter for
         :return: the SPARQL BGP
         """
         return dedent(f"""
-        {{
-            ?project a {ADMS.Project.n3()} .
+        {{ {f'BIND( {uri.n3()} AS ?project)' if uri else ''}
+            ?project a {Project.type.n3()} .
             OPTIONAL {{
                 ?project {L0.name.n3()} ?name_en .
                 FILTER langMatches(lang(?name_en), 'en')
@@ -355,7 +365,7 @@ class Project:
         :return: the SPARQL CONSTRUCT head
         """
         return dedent(f"""
-        ?project a {ADMS.Project.n3()} ;
+        ?project a {Project.type.n3()} ;
                  {L0.name.n3()} ?name_en ;
                  {L0.name.n3()} ?name_it .
         """).strip()
@@ -408,40 +418,44 @@ UNION {Project.bgp()}
 }}
         """.strip()
 
-    def agents(self) -> Iterable[Agent]:
+    def agents(self, uri: Optional[URIRef] = None) -> Iterable[Agent]:
         """
         Returns the list of agents in this dataset.
+        :param uri: the uri of the element to filter for
         :return: the list of agents stored
         """
         return [Agent(*b) for b in self.query(
-            f'SELECT {Agent.vars()} WHERE {Agent.bgp()}'
+            f'SELECT {Agent.vars()} WHERE {Agent.bgp(uri)}'
         )]
 
-    def contactPoints(self) -> Iterable[ContactPoint]:
+    def contactPoints(self, uri: Optional[URIRef] = None) -> Iterable[ContactPoint]:
         """
         Returns the list of contact points in this dataset.
+        :param uri: the uri of the element to filter for
         :return: the list of contact points stored
         """
         return [ContactPoint(*b) for b in self.query(
-            f'SELECT {ContactPoint.vars()} WHERE {ContactPoint.bgp()}'
+            f'SELECT {ContactPoint.vars()} WHERE {ContactPoint.bgp(uri)}'
         )]
 
-    def distributions(self) -> Iterable[Distribution]:
+    def distributions(self, uri: Optional[URIRef] = None) -> Iterable[Distribution]:
         """
         Returns the list of distributions in this dataset.
+        :param uri: the uri of the element to filter for
         :return: the list of distributions stored
         """
         return [Distribution(*b) for b in self.query(
-            f'SELECT {Distribution.vars()} WHERE {Distribution.bgp()}'
+            f'SELECT {Distribution.vars()} WHERE {Distribution.bgp(uri)}'
         )]
 
-    def projects(self) -> Iterable[Project]:
+    def projects(self, uri: Optional[URIRef] = None) -> Iterable[Project]:
         """
         Returns the list of projects in this dataset.
+        :param uri: the uri of the element to filter for
         :return: the list of projects stored
         """
         return [Project(*b) for b in self.query(
-            f'SELECT {Project.vars()} WHERE {Project.bgp()}'
+            f'SELECT {Project.vars()} WHERE {Project.bgp(uri)}'
         )]
 
     def load(self, path: str = None) -> Graph:
