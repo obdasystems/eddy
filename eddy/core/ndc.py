@@ -80,12 +80,20 @@ class ADMS(DefinedNamespace):
     _NS = Namespace('https://w3id.org/italia/onto/ADMS/')
 
 
+# Subset of the dcatapit ontology vocabulary
+class DCATAPIT(DefinedNamespace):
+    Agent: URIRef
+    Organization: URIRef
+    _NS = Namespace('http://dati.gov.it/onto/dcatapit#')
+
+
 # Subset of the vcard ontology vocabulary
 class VCARD(DefinedNamespace):
     Kind: URIRef
     fn: URIRef
     hasEmail: URIRef
     hasTelephone: URIRef
+    Organization: URIRef
     _NS = Namespace('http://www.w3.org/2006/vcard/ns#')
 
 
@@ -104,6 +112,7 @@ class Agent:
         """
         return [
             (self.uri, RDF.type, Agent.type),
+            (self.uri, RDF.type, DCATAPIT.Agent),
             (self.uri, FOAF.name, self.name_en),
             (self.uri, FOAF.name, self.name_it),
             (self.uri, DCTERMS.identifier, self.identifier),
@@ -171,6 +180,8 @@ class ContactPoint:
         """
         return [
             (self.uri, RDF.type, ContactPoint.type),
+            (self.uri, RDF.type, DCATAPIT.Organization),
+            (self.uri, RDF.type, VCARD.Organization),
             (self.uri, VCARD.fn, self.fn_en),
             (self.uri, VCARD.fn, self.fn_it),
             (self.uri, VCARD.hasEmail, self.email),
@@ -386,7 +397,6 @@ class NDCDataset(Dataset):
     custom methods that extract the relevant entities for the national data catalog.
     """
     DEFAULT_GRAPH = 'urn:x-eddy:ndc:'
-    STORE_PATH = expandPath('@data/ndc.trig')
 
     def __init__(
         self,
@@ -467,11 +477,11 @@ UNION {Project.bgp()}
         """
         if path:
             return self.parse(path)
-        elif fexists(NDCDataset.STORE_PATH):
-            return self.parse(NDCDataset.STORE_PATH)
+        elif fexists(expandPath('@data/ndc.trig')):
+            return self.parse(expandPath('@data/ndc.trig'))
 
     def save(self) -> None:
         """
         Saves this dataset to the default user destination.
         """
-        self.serialize(NDCDataset.STORE_PATH, format='trig')
+        self.serialize(expandPath('@data/ndc.trig'), format='trig')
