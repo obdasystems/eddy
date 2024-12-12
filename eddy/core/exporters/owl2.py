@@ -40,6 +40,13 @@ from PyQt5 import (
     QtGui,
     QtWidgets,
 )
+from rdflib import (
+    DCAT,
+    DCTERMS,
+    Literal,
+    RDF,
+    URIRef,
+)
 
 from eddy import BUG_TRACKER
 from eddy.core.common import (
@@ -80,6 +87,10 @@ from eddy.core.functions.path import (
 )
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
+from eddy.core.ndc import (
+    ADMS,
+    NDCDataset,
+)
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     OWL2Datatype,
@@ -91,6 +102,7 @@ from eddy.ui.fields import (
     ComboBox,
     CheckBox,
 )
+
 # from eddy.ui.progress import BusyProgressDialog
 # from eddy.ui.syntax import SyntaxValidationWorker
 
@@ -1802,6 +1814,59 @@ class OWLOntologyExporterWorker(AbstractWorker):
             anns = self.getAxiomAnnotationSet(edge)
             self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB, anns))
 
+    def createNDCNamedIndividual(self, entity):
+        """
+        Generate an OWL 2 NamedIndividual for NDC entities.
+        """
+        ind = self.df.getOWLNamedIndividual(self.IRI.create(entity.uri.toPython()))
+        if OWLAxiom.Declaration in self.axiomsList:
+            self.addAxiom(self.df.getOWLDeclarationAxiom(ind))
+        for s, p, o in entity.triples():
+            if p == RDF.type and OWLAxiom.ClassAssertion in self.axiomsList:
+                inst = self.df.getOWLClassAssertionAxiom(
+                    self.df.getOWLClass(self.IRI.create(o.toPython())),
+                    ind,
+                )
+                self.addAxiom(inst)
+            elif OWLAxiom.Annotation in self.axiomsList:
+                prop = self.df.getOWLAnnotationProperty(self.IRI.create(p.toPython()))
+                if isinstance(o, URIRef):
+                    value = self.IRI.create(o.toPython())
+                elif isinstance(o, Literal) and o.datatype:
+                    dtype = self.df.getOWLDatatype(o.datatype.toPython())
+                    value = self.df.getOWLLiteral(o.toPython(), dtype)
+                elif isinstance(o, Literal) and o.language:
+                    value = self.df.getOWLLiteral(o.toPython(), o.language)
+                else:
+                    value = self.df.getOWLLiteral(o.toPython())
+                assertion = self.df.getOWLAnnotationAssertionAxiom(prop, ind.getIRI(), value)
+                self.addAxiom(assertion)
+
+    def createNDCNamedIndividuals(self):
+        """
+        Generate OWL 2 NamedIndividuals for NDC entities.
+        """
+        if OWLAxiom.Annotation in self.axiomsList:
+            dataset = NDCDataset()
+            dataset.load()
+            for annotation in self.project.ontologyIRI.annotationAssertions:
+                if str(annotation.assertionProperty) in [
+                    DCTERMS.rightsHolder.toPython(),
+                    DCTERMS.publisher.toPython(),
+                    DCTERMS.creator.toPython(),
+                ]:
+                    agent = first(dataset.agents(URIRef(str(annotation.value))))
+                    self.createNDCNamedIndividual(agent)
+                elif str(annotation.assertionProperty) == DCAT.contactPoint.toPython():
+                    contact = first(dataset.contactPoints(URIRef(str(annotation.value))))
+                    self.createNDCNamedIndividual(contact)
+                elif str(annotation.assertionProperty) == ADMS.hasSemanticAssetDistribution.toPython():
+                    distrib = first(dataset.distributions(URIRef(str(annotation.value))))
+                    self.createNDCNamedIndividual(distrib)
+                elif str(annotation.assertionProperty) == ADMS.semanticAssetInUse.toPython():
+                    proj = first(dataset.projects(URIRef(str(annotation.value))))
+                    self.createNDCNamedIndividual(proj)
+
     #############################################
     #   MAIN WORKER
     #################################
@@ -1843,6 +1908,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     value = self.getOWLApiAnnotation(annotation)
                     self.ontology.applyChange(self.AddOntologyAnnotation(self.ontology, value))
 
+            self.createNDCNamedIndividuals()
             LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
             #############################################
