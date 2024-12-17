@@ -43,12 +43,12 @@ from rdflib import (
     URIRef,
 )
 
-from core.ndc import (
+from eddy.core.common import HasWidgetSystem
+from eddy.core.functions.signals import connect
+from eddy.core.ndc import (
     Agent,
     NDCDataset,
 )
-from eddy.core.common import HasWidgetSystem
-from eddy.core.functions.signals import connect
 from eddy.ui.fields import StringField
 
 
