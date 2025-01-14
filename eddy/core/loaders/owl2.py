@@ -80,6 +80,7 @@ class OwlProjectLoader(AbstractProjectLoader):
         """
         ontologyIRI, ontologyV = self.getOntologyID()
         self.nproject = Project(
+            name=ontologyIRI,
             parent=self.session,
             profile=self.session.createProfile('OWL 2'),
             ontologyIRI=ontologyIRI,

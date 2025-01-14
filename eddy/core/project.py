@@ -46,6 +46,7 @@ from PyQt5 import (
     QtCore,
     QtWidgets,
 )
+from rfc3987 import parse
 
 from eddy.core.datatypes.graphol import Item
 from eddy.core.diagram import Diagram
@@ -161,7 +162,7 @@ class Project(IRIManager):
         """
         super().__init__(**kwargs)
         self.index = ProjectIRIIndex(self)
-        self.name = name
+        self.oldName = name
         self.path = expandPath(path) if path else None
         self.profile = profile
         self.profile.setParent(self)
@@ -185,6 +186,22 @@ class Project(IRIManager):
         """
         return cast('Session', self.parent())
 
+    @property
+    def name(self):
+        try:
+            parse(str(self.ontologyIRI), rule='IRI')
+            name = str(self.ontologyIRI)
+        except ValueError:
+            name = "http://obda.org/"+self.oldName
+        simpleName = self.getIRI(name).getSimpleName()
+        return simpleName if len(simpleName) > 0 else self.oldName
+    @name.setter
+    def name(self, value):
+        try:
+            parse(value, rule='IRI')
+            self.ontologyIRI = self.getIRI(value)
+        except ValueError:
+            self.ontologyIRI = self.getIRI("http://obda.org/"+value)
     #############################################
     #   INTERFACE
     #################################
