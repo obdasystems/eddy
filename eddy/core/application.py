@@ -248,9 +248,12 @@ class Eddy(QtWidgets.QApplication):
             # If we have some projects in our recent list, check whether they exists on the
             # filesystem. If they do not exists we remove them from our recent list.
             projects = []
-            for path in map(expandPath, settings.value('project/recent', None, str) or []):
-                if fexists(path) and path not in projects:
-                    projects.append(path)
+            try:
+                for path in map(expandPath, settings.value('project/recent', None, str) or []):
+                    if fexists(path) and path not in projects:
+                        projects.append(path)
+            except Exception as e:
+                print(e)
             settings.setValue('project/recent', projects)
             settings.sync()
 
