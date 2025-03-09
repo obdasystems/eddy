@@ -1,34 +1,34 @@
 altgraph==0.17.4
     # via pyinstaller
 appimage-builder @ git+https://github.com/appimagecrafters/appimage-builder@61c8ddd ; sys_platform == "linux" and python_version < "3.13"
-    # via -r requirements/in/packaging.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/packaging.in
 arpy==2.3.0
     # via pydpkg
 build==1.2.2.post1
     # via pip-tools
-cachetools==5.5.0
+cachetools==5.5.2
     # via tox
-certifi==2024.8.30
+certifi==2025.1.31
     # via requests
 cffi==1.17.1
     # via cryptography
 chardet==5.2.0
     # via tox
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-click==8.1.7
+click==8.1.8
     # via pip-tools
 colorama==0.4.6
     # via tox
-coverage[toml]==7.6.7
+coverage[toml]==7.6.12
     # via pytest-cov
-cryptography==43.0.3
+cryptography==44.0.2
     # via
-    #   pgpy
+    #   pgpy13
     #   pydpkg
-cython==3.0.11
-    # via -r requirements/in/cython.in
-decorator==5.1.1
+cython==3.0.12
+    # via -r /home/manuel/Workspace/eddy/requirements/in/cython.in
+decorator==5.2.1
     # via jsonpath-rw
 distlib==0.3.9
     # via virtualenv
@@ -38,7 +38,7 @@ emrichen==0.4.0
     # via appimage-builder
 et-xmlfile==2.0.0
     # via openpyxl
-filelock==3.16.1
+filelock==3.17.0
     # via
     #   tox
     #   virtualenv
@@ -46,22 +46,22 @@ idna==3.10
     # via requests
 iniconfig==2.0.0
     # via pytest
-jpype1==1.5.1
-    # via -r requirements/in/base.in
+jpype1==1.5.2
+    # via -r /home/manuel/Workspace/eddy/requirements/in/base.in
 jsonpath-rw==1.4.0
     # via emrichen
 libconf==2.0.1
     # via appimage-builder
-lief==0.15.1
+lief==0.16.4
     # via appimage-builder
-mypy==1.13.0
+mypy==1.15.0
     # via -r requirements/in/dev.in
 mypy-extensions==1.0.0
     # via mypy
 objgraph==3.6.2
     # via -r requirements/in/dev.in
 openpyxl==3.1.5
-    # via -r requirements/in/base.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/base.in
 packaging==24.2
     # via
     #   appimage-builder
@@ -72,7 +72,7 @@ packaging==24.2
     #   pyproject-api
     #   pytest
     #   tox
-pgpy==0.6.0
+pgpy13==0.6.1rc1
     # via pydpkg
 pip-tools==7.4.1
     # via -r requirements/in/dev.in
@@ -87,39 +87,39 @@ pluggy==1.5.0
     #   tox
 ply==3.11
     # via jsonpath-rw
-prompt-toolkit==3.0.36
+prompt-toolkit==3.0.50
     # via questionary
 py-cpuinfo==9.0.0
     # via pytest-benchmark
 pyaml==21.10.1
     # via emrichen
 pyasn1==0.6.1
-    # via pgpy
+    # via pgpy13
 pycparser==2.22
     # via cffi
-pydpkg==1.9.3
+pydpkg==1.9.4
     # via appimage-builder
-pyinstaller==6.11.1
-    # via -r requirements/in/packaging.in
-pyinstaller-hooks-contrib==2024.10
+pyinstaller==6.12.0
+    # via -r /home/manuel/Workspace/eddy/requirements/in/packaging.in
+pyinstaller-hooks-contrib==2025.1
     # via pyinstaller
-pyparsing==3.2.0
+pyparsing==3.2.1
     # via rdflib
-pyproject-api==1.8.0
+pyproject-api==1.9.0
     # via tox
 pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
 pyqt5==5.15.11
-    # via -r requirements/in/pyqt5.in
-pyqt5-qt5==5.15.15
+    # via -r /home/manuel/Workspace/eddy/requirements/in/pyqt5.in
+pyqt5-qt5==5.15.16
     # via pyqt5
-pyqt5-sip==12.15.0
+pyqt5-sip==12.17.0
     # via pyqt5
-pytest==8.3.3
+pytest==8.3.5
     # via
-    #   -r requirements/in/tests.in
+    #   -r /home/manuel/Workspace/eddy/requirements/in/tests.in
     #   pytest-benchmark
     #   pytest-cov
     #   pytest-instafail
@@ -128,20 +128,20 @@ pytest==8.3.3
     #   pytest-repeat
     #   pytest-xvfb
 pytest-benchmark==5.1.0
-    # via -r requirements/in/tests.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tests.in
 pytest-cov==6.0.0
-    # via -r requirements/in/tests.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tests.in
 pytest-instafail==0.5.0
-    # via -r requirements/in/tests.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tests.in
 pytest-mock==3.14.0
-    # via -r requirements/in/tests.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tests.in
 pytest-qt==4.4.0
-    # via -r requirements/in/tests.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tests.in
 pytest-repeat==0.9.3
-    # via -r requirements/in/tests.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tests.in
 pytest-xvfb==3.0.0 ; sys_platform != "win32"
-    # via -r requirements/in/tests.in
-python-gnupg==0.5.3
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tests.in
+python-gnupg==0.5.4
     # via appimage-builder
 pyvirtualdisplay==3.0
     # via pytest-xvfb
@@ -150,44 +150,44 @@ pyyaml==6.0.2
     #   appimage-builder
     #   emrichen
     #   pyaml
-questionary==2.0.1
+questionary==2.1.0
     # via appimage-builder
-rdflib==7.1.1
-    # via -r requirements/in/base.in
+rdflib==7.1.3
+    # via -r /home/manuel/Workspace/eddy/requirements/in/base.in
 requests==2.32.3
     # via
     #   appimage-builder
     #   docker
 rfc3987==1.3.8
-    # via -r requirements/in/base.in
+    # via -r /home/manuel/Workspace/eddy/requirements/in/base.in
 roam==0.3.1
     # via appimage-builder
-ruamel-yaml==0.18.6
+ruamel-yaml==0.18.10
     # via appimage-builder
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
 schema==0.7.7
     # via appimage-builder
-six==1.16.0
+six==1.17.0
     # via
     #   jsonpath-rw
     #   pydpkg
-tox==4.23.2
-    # via -r requirements/in/tox.in
+tox==4.24.2
+    # via -r /home/manuel/Workspace/eddy/requirements/in/tox.in
 typing-extensions==4.12.2
     # via mypy
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   appimage-builder
     #   docker
     #   requests
-virtualenv==20.27.1
+virtualenv==20.29.3
     # via tox
 wcwidth==0.2.13
     # via prompt-toolkit
-wheel==0.45.0
+wheel==0.45.1
     # via pip-tools
-zstandard==0.22.0
+zstandard==0.23.0
     # via pydpkg
 
 # The following packages are considered to be unsafe in a requirements file:

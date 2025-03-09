@@ -2,11 +2,11 @@ altgraph==0.17.4
     # via pyinstaller
 build==1.2.2.post1
     # via pip-tools
-cachetools==5.5.0
+cachetools==5.5.2
     # via tox
 chardet==5.2.0
     # via tox
-click==8.1.7
+click==8.1.8
     # via pip-tools
 colorama==0.4.6
     # via
@@ -14,9 +14,9 @@ colorama==0.4.6
     #   click
     #   pytest
     #   tox
-coverage[toml]==7.6.7
+coverage[toml]==7.6.12
     # via pytest-cov
-cython==3.0.11
+cython==3.0.12
     # via -r requirements/in\cython.in
 distlib==0.3.9
     # via virtualenv
@@ -24,11 +24,11 @@ et-xmlfile==2.0.0
     # via openpyxl
 exceptiongroup==1.2.2
     # via pytest
-filelock==3.16.1
+filelock==3.17.0
     # via
     #   tox
     #   virtualenv
-importlib-metadata==8.5.0
+importlib-metadata==8.6.1
     # via
     #   build
     #   pyinstaller
@@ -37,9 +37,9 @@ iniconfig==2.0.0
     # via pytest
 isodate==0.7.2
     # via rdflib
-jpype1==1.5.1
+jpype1==1.5.2
     # via -r requirements/in\base.in
-mypy==1.13.0
+mypy==1.15.0
     # via -r requirements/in/dev.in
 mypy-extensions==1.0.0
     # via mypy
@@ -71,13 +71,13 @@ pluggy==1.5.0
     #   tox
 py-cpuinfo==9.0.0
     # via pytest-benchmark
-pyinstaller==6.11.1
+pyinstaller==6.12.0
     # via -r requirements/in\packaging.in
-pyinstaller-hooks-contrib==2024.10
+pyinstaller-hooks-contrib==2025.1
     # via pyinstaller
-pyparsing==3.2.0
+pyparsing==3.2.1
     # via rdflib
-pyproject-api==1.8.0
+pyproject-api==1.9.0
     # via tox
 pyproject-hooks==1.2.0
     # via
@@ -87,9 +87,9 @@ pyqt5==5.15.11
     # via -r requirements/in\pyqt5.in
 pyqt5-qt5==5.15.2
     # via pyqt5
-pyqt5-sip==12.15.0
+pyqt5-sip==12.17.0
     # via pyqt5
-pytest==8.3.3
+pytest==8.3.5
     # via
     #   -r requirements/in\tests.in
     #   pytest-benchmark
@@ -114,11 +114,11 @@ pywin32-ctypes==0.2.3
     # via pyinstaller
 pyyaml==6.0.2 ; sys_platform == "win32"
     # via -r requirements/in\packaging.in
-rdflib==7.1.1
+rdflib==7.1.3
     # via -r requirements/in\base.in
 rfc3987==1.3.8
     # via -r requirements/in\base.in
-tomli==2.1.0
+tomli==2.2.1
     # via
     #   build
     #   coverage
@@ -127,15 +127,15 @@ tomli==2.1.0
     #   pyproject-api
     #   pytest
     #   tox
-tox==4.23.2
+tox==4.24.2
     # via -r requirements/in\tox.in
 typing-extensions==4.12.2
     # via
     #   mypy
     #   tox
-virtualenv==20.27.1
+virtualenv==20.29.3
     # via tox
-wheel==0.45.0
+wheel==0.45.1
     # via pip-tools
 zipp==3.21.0
     # via importlib-metadata
