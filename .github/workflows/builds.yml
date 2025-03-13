@@ -76,7 +76,7 @@ jobs:
           python -m pip install -U -r requirements/in/dev.in
           # Fix for InvalidVersion error in appimage-builder 1.1.0
           if [[ ${{ matrix.platform }} == 'Linux' ]]; then
-            python -m pip install -U git+https://github.com/AppImageCrafters/appimage-builder.git@9733877eed75aea0fa8e9a1cd26c22d77a10aa4a
+            python -m pip install -U git+https://github.com/AppImageCrafters/appimage-builder.git@61c8ddde9ef44b85d7444bbe79d80b44a6a5576d
           fi
 
       - name: Package application
