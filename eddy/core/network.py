@@ -128,3 +128,31 @@ class NetworkManager(QtNetwork.QNetworkAccessManager):
         connect(reply.finished, self.onCheckForUpdateFinished)
         # TIMEOUT AFTER 10 SECONDS
         QtCore.QTimer.singleShot(10000, reply.abort)
+
+    def getSync(self, url, timeout=10000):
+        """
+        Perform a synchronous HTTP GET request, returning the resulting code and content.
+        :type url: str | QtCore.QUrl
+        :type timeout: int
+        :rtype: tuple
+        """
+        loop = QtCore.QEventLoop(self)
+        timer = QtCore.QTimer(self)
+        timer.setSingleShot(True)
+        url = QtCore.QUrl(url)
+        request = QtNetwork.QNetworkRequest(url)
+        request.setAttribute(QtNetwork.QNetworkRequest.FollowRedirectsAttribute, True)
+        reply = self.get(request)
+        connect(reply.finished, loop.quit)
+        connect(timer.timeout, loop.quit)
+        timer.start(timeout)
+        loop.exec_()
+        reply.deleteLater()
+        status = reply.attribute(QtNetwork.QNetworkRequest.Attribute.HttpStatusCodeAttribute)
+        if reply.isFinished() and reply.error() == QtNetwork.QNetworkReply.NetworkError.NoError:
+            response = str(reply.readAll(), encoding='utf-8')
+            return status, response
+        elif timer.remainingTime() <= 0:
+            return status, 'Operation timed out'
+        else:
+            return status, reply.errorString()
