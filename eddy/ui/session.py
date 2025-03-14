@@ -2683,6 +2683,7 @@ class Session(
                 dialog.setNameFilter(File.Graphol.value)
                 dialog.selectFile(self.project.name)
                 dialog.selectNameFilter(File.Graphol.value)
+                dialog.setDefaultSuffix(File.Graphol.extension)
                 if not dialog.exec_():
                     return
                 self.project.path = expandPath(first(dialog.selectedFiles()))
@@ -2714,6 +2715,7 @@ class Session(
             dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
             dialog.setNameFilter(File.Graphol.value)
             dialog.selectNameFilter(File.Graphol.value)
+            dialog.setDefaultSuffix(File.Graphol.extension)
             if dialog.exec_():
                 self.project.path = expandPath(first(dialog.selectedFiles()))
                 worker = self.createProjectExporter(File.Graphol, self.project, self)

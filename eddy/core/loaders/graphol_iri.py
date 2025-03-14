@@ -2024,7 +2024,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         if not fexists(self.path):
             raise ProjectNotFoundError('missing project ontology: %s' % self.path)
         self.document = QtXml.QDomDocument()
-        if File.forPath(self.path) is not File.Graphol or not self.document.setContent(fread(self.path)):
+        if not self.document.setContent(fread(self.path)):
             raise ProjectNotValidError('invalid project ontology supplied: %s' % self.path)
         e = self.document.documentElement()
         version = int(e.attribute('version', '3'))
