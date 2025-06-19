@@ -220,6 +220,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         settings = QtCore.QSettings()
 
         self.diagrams = diagrams
+        self.missing = set()
 
         #############################################
         # MAIN FORM AREA
@@ -491,11 +492,37 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         {message}
         """))
 
+    @QtCore.pyqtSlot(str)
+    def onNDCMetadataMissing(self, uri):
+        """
+        Executed when an NDC metadata entity is missing from the local store.
+        :type uri: str
+        """
+        self.missing.add(uri)
+
     @QtCore.pyqtSlot()
     def onCompleted(self):
         """
         Executed whenever the translation completes.
         """
+        if self.missing:
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.setText(textwrap.dedent("""
+                Translation completed however there are some missing metadata entities
+
+                If you use the exported OWL 2 ontology these entities will not have
+                the associated metadata. Make sure you have fetched the correct endpoint
+                from the 'Ontology Manager -> NDC Metadata' tab.
+            """
+            ))
+            msgbox.setDetailedText(os.linesep.join((
+                'The following entities are missing from the local store:',
+                os.linesep.join(' - ' + uri for uri in sorted(self.missing)),
+            )))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.exec_()
         msgbox = QtWidgets.QMessageBox(self)
         msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
         msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -544,6 +571,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         connect(worker.sgnCompleted, self.onCompleted)
         connect(worker.sgnErrored, self.onErrored)
         connect(worker.sgnMetadataFetchErrored, self.onMetadataFetchErrored)
+        connect(worker.sgnNDCMetadataMissing, self.onNDCMetadataMissing)
         connect(worker.sgnProgress, self.onProgress)
         self.startThread('OWL2Export', worker)
 
@@ -555,6 +583,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
     sgnCompleted = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal(Exception)
     sgnMetadataFetchErrored = QtCore.pyqtSignal(str)
+    sgnNDCMetadataMissing = QtCore.pyqtSignal(str)
     sgnProgress = QtCore.pyqtSignal(int, int)
     sgnStarted = QtCore.pyqtSignal()
 
@@ -1907,22 +1936,40 @@ class OWLOntologyExporterWorker(AbstractWorker):
             dataset = NDCDataset()
             dataset.load()
             for annotation in self.project.ontologyIRI.annotationAssertions:
-                if str(annotation.assertionProperty) in [
+                prop = str(annotation.assertionProperty)
+                value = str(annotation.value)
+                if prop in [
                     DCTERMS.rightsHolder.toPython(),
                     DCTERMS.publisher.toPython(),
                     DCTERMS.creator.toPython(),
                 ]:
-                    agent = first(dataset.agents(URIRef(str(annotation.value))))
-                    self.createNDCNamedIndividual(agent)
-                elif str(annotation.assertionProperty) == DCAT.contactPoint.toPython():
-                    contact = first(dataset.contactPoints(URIRef(str(annotation.value))))
-                    self.createNDCNamedIndividual(contact)
-                elif str(annotation.assertionProperty) == ADMS.hasSemanticAssetDistribution.toPython():
-                    distrib = first(dataset.distributions(URIRef(str(annotation.value))))
-                    self.createNDCNamedIndividual(distrib)
-                elif str(annotation.assertionProperty) == ADMS.semanticAssetInUse.toPython():
-                    proj = first(dataset.projects(URIRef(str(annotation.value))))
-                    self.createNDCNamedIndividual(proj)
+                    agent = first(dataset.agents(URIRef(value)))
+                    if agent:
+                        self.createNDCNamedIndividual(agent)
+                    else:
+                        LOGGER.error('Unknown agent in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
+                elif prop == DCAT.contactPoint.toPython():
+                    contact = first(dataset.contactPoints(URIRef(value)))
+                    if contact:
+                        self.createNDCNamedIndividual(contact)
+                    else:
+                        LOGGER.error('Unknown contact point in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
+                elif prop == ADMS.hasSemanticAssetDistribution.toPython():
+                    distrib = first(dataset.distributions(URIRef(value)))
+                    if distrib:
+                        self.createNDCNamedIndividual(distrib)
+                    else:
+                        LOGGER.error('Unknown distribution in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
+                elif prop == ADMS.semanticAssetInUse.toPython():
+                    proj = first(dataset.projects(URIRef(value)))
+                    if proj:
+                        self.createNDCNamedIndividual(proj)
+                    else:
+                        LOGGER.error('Unknown project in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
 
     #############################################
     #   MAIN WORKER
