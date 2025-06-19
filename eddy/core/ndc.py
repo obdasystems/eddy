@@ -110,13 +110,13 @@ class Agent:
         The list of RDF triples representing this instance.
         :return: the list  of triples representing this instance.
         """
-        return [
+        return [(s, p, o) for s, p, o in [
             (self.uri, RDF.type, Agent.type),
             (self.uri, RDF.type, DCATAPIT.Agent),
             (self.uri, FOAF.name, self.name_en),
             (self.uri, FOAF.name, self.name_it),
             (self.uri, DCTERMS.identifier, self.identifier),
-        ]
+        ] if o is not None]
 
     @staticmethod
     def bgp(uri: Optional[URIRef] = None) -> str:
@@ -178,7 +178,7 @@ class ContactPoint:
         The list of RDF triples representing this instance.
         :return: the list  of triples representing this instance.
         """
-        return [
+        return [(s, p, o) for s, p, o in [
             (self.uri, RDF.type, ContactPoint.type),
             (self.uri, RDF.type, DCATAPIT.Organization),
             (self.uri, RDF.type, VCARD.Organization),
@@ -186,7 +186,7 @@ class ContactPoint:
             (self.uri, VCARD.fn, self.fn_it),
             (self.uri, VCARD.hasEmail, self.email),
             (self.uri, VCARD.hasTelephone, self.telephone),
-        ]
+        ] if o is not None]
 
     @staticmethod
     def bgp(uri: Optional[URIRef] = None) -> str:
@@ -254,7 +254,7 @@ class Distribution:
         The list of RDF triples representing this instance.
         :return: the list  of triples representing this instance.
         """
-        return [
+        return [(s, p, o) for s, p, o in [
             (self.uri, RDF.type, Distribution.type),
             (self.uri, DCTERMS.title, self.title_en),
             (self.uri, DCTERMS.title, self.title_it),
@@ -264,7 +264,7 @@ class Distribution:
             (self.uri, DCTERMS.license, self.license),
             (self.uri, DCAT.accessURL, self.accessURL),
             (self.uri, DCAT.downloadURL, self.downloadURL),
-        ]
+        ] if o is not None]
 
     @staticmethod
     def bgp(uri: Optional[URIRef] = None) -> str:
@@ -341,11 +341,11 @@ class Project:
         The list of RDF triples representing this instance.
         :return: the list  of triples representing this instance.
         """
-        return [
+        return [(s, p, o) for s, p, o in [
             (self.uri, RDF.type, Project.type),
             (self.uri, L0.name, self.name_en),
             (self.uri, L0.name, self.name_it),
-        ]
+        ] if o is not None]
 
     @staticmethod
     def bgp(uri: Optional[URIRef] = None) -> str:
