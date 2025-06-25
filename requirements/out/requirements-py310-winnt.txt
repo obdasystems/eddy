@@ -2,11 +2,11 @@ altgraph==0.17.4
     # via pyinstaller
 build==1.2.2.post1
     # via pip-tools
-cachetools==5.5.2
+cachetools==6.1.0
     # via tox
 chardet==5.2.0
     # via tox
-click==8.1.8
+click==8.2.1
     # via pip-tools
 colorama==0.4.6
     # via
@@ -14,35 +14,35 @@ colorama==0.4.6
     #   click
     #   pytest
     #   tox
-coverage[toml]==7.6.12
+coverage[toml]==7.9.1
     # via pytest-cov
-cython==3.0.12
-    # via -r requirements/in\cython.in
+cython==3.1.2
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\cython.in
 distlib==0.3.9
     # via virtualenv
 et-xmlfile==2.0.0
     # via openpyxl
-exceptiongroup==1.2.2
+exceptiongroup==1.3.0
     # via pytest
-filelock==3.17.0
+filelock==3.18.0
     # via
     #   tox
     #   virtualenv
-iniconfig==2.0.0
+iniconfig==2.1.0
     # via pytest
 isodate==0.7.2
     # via rdflib
 jpype1==1.5.2
-    # via -r requirements/in\base.in
-mypy==1.15.0
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\base.in
+mypy==1.16.1
     # via -r requirements/in/dev.in
-mypy-extensions==1.0.0
+mypy-extensions==1.1.0
     # via mypy
 objgraph==3.6.2
     # via -r requirements/in/dev.in
 openpyxl==3.1.5
-    # via -r requirements/in\base.in
-packaging==24.2
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\base.in
+packaging==25.0
     # via
     #   build
     #   jpype1
@@ -51,42 +51,47 @@ packaging==24.2
     #   pyproject-api
     #   pytest
     #   tox
+pathspec==0.12.1
+    # via mypy
 pefile==2023.2.7
     # via pyinstaller
 pip-tools==7.4.1
     # via -r requirements/in/dev.in
-platformdirs==4.3.6
+platformdirs==4.3.8
     # via
     #   tox
     #   virtualenv
-pluggy==1.5.0
+pluggy==1.6.0
     # via
     #   pytest
+    #   pytest-cov
     #   pytest-qt
     #   tox
 py-cpuinfo==9.0.0
     # via pytest-benchmark
-pyinstaller==6.12.0
-    # via -r requirements/in\packaging.in
-pyinstaller-hooks-contrib==2025.1
+pygments==2.19.2
+    # via pytest
+pyinstaller==6.14.1
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\packaging.in
+pyinstaller-hooks-contrib==2025.5
     # via pyinstaller
-pyparsing==3.2.1
+pyparsing==3.2.3
     # via rdflib
-pyproject-api==1.9.0
+pyproject-api==1.9.1
     # via tox
 pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
 pyqt5==5.15.11
-    # via -r requirements/in\pyqt5.in
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\pyqt5.in
 pyqt5-qt5==5.15.2
     # via pyqt5
 pyqt5-sip==12.17.0
     # via pyqt5
-pytest==8.3.5
+pytest==8.4.1
     # via
-    #   -r requirements/in\tests.in
+    #   -r C:\Users\Travis\Desktop\eddy\requirements\in\tests.in
     #   pytest-benchmark
     #   pytest-cov
     #   pytest-instafail
@@ -94,25 +99,25 @@ pytest==8.3.5
     #   pytest-qt
     #   pytest-repeat
 pytest-benchmark==5.1.0
-    # via -r requirements/in\tests.in
-pytest-cov==6.0.0
-    # via -r requirements/in\tests.in
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\tests.in
+pytest-cov==6.2.1
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\tests.in
 pytest-instafail==0.5.0
-    # via -r requirements/in\tests.in
-pytest-mock==3.14.0
-    # via -r requirements/in\tests.in
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\tests.in
+pytest-mock==3.14.1
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\tests.in
 pytest-qt==4.4.0
-    # via -r requirements/in\tests.in
-pytest-repeat==0.9.3
-    # via -r requirements/in\tests.in
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\tests.in
+pytest-repeat==0.9.4
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\tests.in
 pywin32-ctypes==0.2.3
     # via pyinstaller
 pyyaml==6.0.2 ; sys_platform == "win32"
-    # via -r requirements/in\packaging.in
-rdflib==7.1.3
-    # via -r requirements/in\base.in
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\packaging.in
+rdflib==7.1.4
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\base.in
 rfc3987==1.3.8
-    # via -r requirements/in\base.in
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\base.in
 tomli==2.2.1
     # via
     #   build
@@ -122,13 +127,14 @@ tomli==2.2.1
     #   pyproject-api
     #   pytest
     #   tox
-tox==4.24.2
-    # via -r requirements/in\tox.in
-typing-extensions==4.12.2
+tox==4.27.0
+    # via -r C:\Users\Travis\Desktop\eddy\requirements\in\tox.in
+typing-extensions==4.14.0
     # via
+    #   exceptiongroup
     #   mypy
     #   tox
-virtualenv==20.29.3
+virtualenv==20.31.2
     # via tox
 wheel==0.45.1
     # via pip-tools
