@@ -2851,11 +2851,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y1 = propNode.pos().y()
             y2 = inv.pos().y()
 
-            bp1 = QtCore.QPointF(x, y1)
-            bp2 = QtCore.QPointF(x, y2)
-
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            # bp1 = QtCore.QPointF(x, y1)
+            # bp2 = QtCore.QPointF(x, y2)
+            #
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
 
         return [inv]
 
@@ -2932,8 +2932,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             x1 = fNode.pos().x()
             y1 = dataNode.pos().y()
 
-            bp = QtCore.QPointF(x1, y1)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, inp, 0, bp))
+            # bp = QtCore.QPointF(x1, y1)
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, inp, 0, bp))
 
         return [dataNode]
 
@@ -3565,9 +3565,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
                                     i = 0
                                     breakpoints.reverse()
-                                    for b in breakpoints:
-                                        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i, b))
-                                        i = i +1
+                                    # for b in breakpoints:
+                                    #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, i, b))
+                                    #     i = i +1
 
                                 elif e.target is supNode:
                                     isa = e
@@ -3575,15 +3575,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     isa = diagram.factory.create(Item.InclusionEdge, source=subNode, target=supNode)
                     self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-                    if propNode:
-                        bps = self.addBreakpoints(diagram, propNode, supNode, subNode, None)
-                        bps.reverse()
-
-                        i = len(isa.breakpoints)
-                        for b in bps:
-                            self.session.undostack.push(
-                                CommandEdgeBreakpointAdd(diagram, isa, i, b))
-                            i = i + 1
+                    # if propNode:
+                        # bps = self.addBreakpoints(diagram, propNode, supNode, subNode, None)
+                        # bps.reverse()
+                        #
+                        # i = len(isa.breakpoints)
+                        # for b in bps:
+                        #     self.session.undostack.push(
+                        #         CommandEdgeBreakpointAdd(diagram, isa, i, b))
+                        #     i = i + 1
 
                 return [isa]
 
@@ -3788,14 +3788,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
         return [n, propNode]
 
@@ -3957,14 +3957,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
         return [n, propNode]
 
@@ -4127,14 +4127,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
 
         return [n, propNode]
@@ -4297,14 +4297,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
         return [n, propNode]
 
@@ -4467,14 +4467,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
         return [n, propNode]
 
@@ -4636,14 +4636,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
 
         return [n, propNode]
@@ -4693,11 +4693,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 y1 = node.pos().y()
                 y2 = notNode.pos().y()
 
-                bp1 = QtCore.QPointF(x1, y1)
-                bp2 = QtCore.QPointF(x1, y2)
-
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+                # bp1 = QtCore.QPointF(x1, y1)
+                # bp2 = QtCore.QPointF(x1, y2)
+                #
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
 
         return [notNode]
 
@@ -4856,14 +4856,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
 
         return [n, propNode]
@@ -5024,14 +5024,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
 
         return [n, propNode]
@@ -5193,14 +5193,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
         return [n, propNode]
 
@@ -5363,14 +5363,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             self.session.undostack.push(CommandEdgeAdd(diagram, input2))
 
-            bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
-            bps.reverse()
-
-            i = len(input2.breakpoints)
-            for b in bps:
-                self.session.undostack.push(
-                    CommandEdgeBreakpointAdd(diagram, input2, i, b))
-                i = i + 1
+            # bps = self.addBreakpoints(diagram, propNode, n, ceNode, None)
+            # bps.reverse()
+            #
+            # i = len(input2.breakpoints)
+            # for b in bps:
+            #     self.session.undostack.push(
+            #         CommandEdgeBreakpointAdd(diagram, input2, i, b))
+            #     i = i + 1
             return [n, propNode, ceNode]
 
         return [n, propNode]
@@ -5471,15 +5471,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 x4 = x3
                 y4 = n.pos().y()
 
-                bp1 = QtCore.QPointF(x1, y1)
-                bp2 = QtCore.QPointF(x2, y2)
-                bp3 = QtCore.QPointF(x3, y3)
-                bp4 = QtCore.QPointF(x4, y4)
-
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+                # bp1 = QtCore.QPointF(x1, y1)
+                # bp2 = QtCore.QPointF(x2, y2)
+                # bp3 = QtCore.QPointF(x3, y3)
+                # bp4 = QtCore.QPointF(x4, y4)
+                #
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
 
         return [union_node]
 
@@ -5545,12 +5545,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             x = union_node.pos().x() + 60
             y2 = union_node.pos().y()
             y1 = n.pos().y()
-            if y1 != y2:
-                bp1 = QtCore.QPointF(x, y1)
-                bp2 = QtCore.QPointF(x, y2)
-
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            # if y1 != y2:
+            #     bp1 = QtCore.QPointF(x, y1)
+            #     bp2 = QtCore.QPointF(x, y2)
+            #
+            #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+            #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
 
         return [union_node]
 
@@ -5643,12 +5643,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             x = oneof_node.pos().x() + 60
             y2 = oneof_node.pos().y()
             y1 = n.pos().y()
-            if y1 != y2:
-                bp1 = QtCore.QPointF(x, y1)
-                bp2 = QtCore.QPointF(x, y2)
-
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            # if y1 != y2:
+            #     bp1 = QtCore.QPointF(x, y1)
+            #     bp2 = QtCore.QPointF(x, y2)
+            #
+            #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+            #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
 
 
         return [oneof_node]
@@ -5756,12 +5756,12 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             x = oneof_node.pos().x() + 60
             y2 = oneof_node.pos().y()
             y1 = n.pos().y()
-            if y1 != y2:
-                bp1 = QtCore.QPointF(x, y1)
-                bp2 = QtCore.QPointF(x, y2)
-
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            # if y1 != y2:
+            #     bp1 = QtCore.QPointF(x, y1)
+            #     bp2 = QtCore.QPointF(x, y2)
+            #
+            #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp1))
+            #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
 
 
         return [oneof_node]
@@ -5859,15 +5859,15 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 x4 = x3
                 y4 = n.pos().y()
 
-                bp1 = QtCore.QPointF(x1, y1)
-                bp2 = QtCore.QPointF(x2, y2)
-                bp3 = QtCore.QPointF(x3, y3)
-                bp4 = QtCore.QPointF(x4, y4)
-
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+                # bp1 = QtCore.QPointF(x1, y1)
+                # bp2 = QtCore.QPointF(x2, y2)
+                # bp3 = QtCore.QPointF(x3, y3)
+                # bp4 = QtCore.QPointF(x4, y4)
+                #
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
 
 
         return [intersect_node]
@@ -5981,8 +5981,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             x = n.pos().x()
             y = key_node.pos().y()
-            bp = QtCore.QPointF(x, y)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp))
+            # bp = QtCore.QPointF(x, y)
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp))
 
         if self.isAtomic(ce):
 
@@ -6104,8 +6104,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
             x = n.pos().x()
             y = chain_node.pos().y()
-            bp = QtCore.QPointF(x, y)
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp))
+            # bp = QtCore.QPointF(x, y)
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp))
 
         if self.isAtomic(property):
             pIri = property.getIRI()
@@ -6170,10 +6170,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
                                     i = len(equiv.breakpoints)
-                                    for b in e_breakpoints:
-                                        self.session.undostack.push(
-                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
-                                        i = i + 1
+                                    # for b in e_breakpoints:
+                                    #     self.session.undostack.push(
+                                    #         CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                    #     i = i + 1
 
                                     return [node]
                                 else:
@@ -6286,7 +6286,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         restrNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
+        # self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
 
         return [restrNode]
 
@@ -6338,10 +6338,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
                                     i = len(equiv.breakpoints)
-                                    for b in e_breakpoints:
-                                        self.session.undostack.push(
-                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
-                                        i = i + 1
+                                    # for b in e_breakpoints:
+                                    #     self.session.undostack.push(
+                                    #         CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                    #     i = i + 1
                                     return [node]
                                 else:
                                     pass
@@ -6451,13 +6451,13 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         restrNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        if domainNode.pos().x() != restrNode.pos().x() and domainNode.pos().y() != restrNode.pos().y():
-
-            bp1 = QtCore.QPointF(domainNode.pos().x() + 50, restrNode.pos().y())
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-
-            bp2 = QtCore.QPointF(domainNode.pos().x() + 50, domainNode.pos().y())
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+        # if domainNode.pos().x() != restrNode.pos().x() and domainNode.pos().y() != restrNode.pos().y():
+        #
+        #     bp1 = QtCore.QPointF(domainNode.pos().x() + 50, restrNode.pos().y())
+        #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        #
+        #     bp2 = QtCore.QPointF(domainNode.pos().x() + 50, domainNode.pos().y())
+        #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
         return [restrNode]
 
@@ -6510,10 +6510,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
                                     i = len(equiv.breakpoints)
-                                    for b in e_breakpoints:
-                                        self.session.undostack.push(
-                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
-                                        i = i + 1
+                                    # for b in e_breakpoints:
+                                    #     self.session.undostack.push(
+                                    #         CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                    #     i = i + 1
                                     return [node]
                                 else:
                                     pass
@@ -6627,7 +6627,7 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         restrNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
+        # self.addBreakpoints(diagram, propNode, restrNode, domainNode, isa)
 
         return [restrNode]
 
@@ -6680,10 +6680,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     node.addEdge(equiv)
                                     self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
                                     i = len(equiv.breakpoints)
-                                    for b in e_breakpoints:
-                                        self.session.undostack.push(
-                                            CommandEdgeBreakpointAdd(diagram, equiv, i, b))
-                                        i = i + 1
+                                    # for b in e_breakpoints:
+                                    #     self.session.undostack.push(
+                                    #         CommandEdgeBreakpointAdd(diagram, equiv, i, b))
+                                    #     i = i + 1
                                     return [node]
                                 else:
                                     pass
@@ -6797,13 +6797,13 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         restrNode.addEdge(isa)
         self.session.undostack.push(CommandEdgeAdd(diagram, isa))
 
-        if domainNode.pos().x() != restrNode.pos().x() and domainNode.pos().y() != restrNode.pos().y():
-
-            bp1 = QtCore.QPointF(domainNode.pos().x() - 70, restrNode.pos().y())
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-
-            bp2 = QtCore.QPointF(domainNode.pos().x() - 70, domainNode.pos().y())
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+        # if domainNode.pos().x() != restrNode.pos().x() and domainNode.pos().y() != restrNode.pos().y():
+        #
+        #     bp1 = QtCore.QPointF(domainNode.pos().x() - 70, restrNode.pos().y())
+        #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        #
+        #     bp2 = QtCore.QPointF(domainNode.pos().x() - 70, domainNode.pos().y())
+        #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
 
         return [restrNode]
@@ -6924,11 +6924,11 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y1 = firstNode.pos().y()
             y2 = inv.pos().y()
 
-            bp1 = QtCore.QPointF(x, y1)
-            bp2 = QtCore.QPointF(x, y2)
-
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equiv, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equiv, 1, bp2))
+            # bp1 = QtCore.QPointF(x, y1)
+            # bp2 = QtCore.QPointF(x, y2)
+            #
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equiv, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equiv, 1, bp2))
 
         input = diagram.factory.create(Item.InputEdge, source=secondNode, target=inv)
         secondNode.addEdge(input)
@@ -6949,14 +6949,14 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             x4 = x3
             y4 = secondNode.pos().y()
 
-            bp2 = QtCore.QPointF(x2, y2)
-            bp3 = QtCore.QPointF(x3, y3)
-            bp4 = QtCore.QPointF(x4, y4)
-
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+            # bp2 = QtCore.QPointF(x2, y2)
+            # bp3 = QtCore.QPointF(x3, y3)
+            # bp4 = QtCore.QPointF(x4, y4)
+            #
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
 
         elif secondNode.pos().x() == firstNode.pos().x():
 
@@ -6964,8 +6964,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y2 = secondNode.pos().y()
             bp2 = QtCore.QPointF(x2, y2)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
 
         else:
 
@@ -6978,9 +6978,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp2 = QtCore.QPointF(x2, y2)
             bp3 = QtCore.QPointF(x3, y3)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
 
         return [inv]
 
@@ -7091,8 +7091,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp1 = QtCore.QPointF(x1, y1)
                 bp2 = QtCore.QPointF(x1, y2)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
             elif node0.pos().y() == node1.pos().y():
 
@@ -7110,10 +7110,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp3 = QtCore.QPointF(x3, y3)
                 bp4 = QtCore.QPointF(x4, y4)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
 
             else:
 
@@ -7128,9 +7128,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp2 = QtCore.QPointF(x2, y2)
                 bp3 = QtCore.QPointF(x3, y3)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
 
         else:
             if node0.pos().x() == node1.pos().x():
@@ -7143,8 +7143,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp1 = QtCore.QPointF(x1, y1)
                 bp2 = QtCore.QPointF(x2, y2)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
 
             else:
@@ -7159,9 +7159,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp2 = QtCore.QPointF(x2, y2)
                 bp3 = QtCore.QPointF(x3, y3)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
 
         return [isa]
 
@@ -7297,9 +7297,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         node1.addEdge(equivalence)
                         self.session.undostack.push(CommandEdgeAdd(diagram, equivalence))
                         i = 0
-                        for b in breakpoints:
-                            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, i, b))
-                            i = i + 1
+                        # for b in breakpoints:
+                        #     self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, i, b))
+                        #     i = i + 1
 
 
         else:
@@ -7312,22 +7312,22 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         if not breakpoints:
             if propNode:
                 if propNode.type() is Item.RoleNode:
-                    bps = self.addBreakpoints(diagram, propNode, restrNode, node1, None)
+                    # bps = self.addBreakpoints(diagram, propNode, restrNode, node1, None)
 
                     #bps.reverse()
 
                     i = len(equivalence.breakpoints)
-                    for b in bps:
-                        self.session.undostack.push(
-                            CommandEdgeBreakpointAdd(diagram, equivalence, i, b))
-                        i = i + 1
-                else:
-                    if node1.pos().x() != restrNode.pos().x() and node1.pos().y() != restrNode.pos().y():
-                        bp1 = QtCore.QPointF(node1.pos().x() - 70, restrNode.pos().y())
-                        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-
-                        bp2 = QtCore.QPointF(node1.pos().x() - 70, node1.pos().y())
-                        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                    # for b in bps:
+                    #     self.session.undostack.push(
+                    #         CommandEdgeBreakpointAdd(diagram, equivalence, i, b))
+                    #     i = i + 1
+                # else:
+                #     if node1.pos().x() != restrNode.pos().x() and node1.pos().y() != restrNode.pos().y():
+                        # bp1 = QtCore.QPointF(node1.pos().x() - 70, restrNode.pos().y())
+                        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                        #
+                        # bp2 = QtCore.QPointF(node1.pos().x() - 70, node1.pos().y())
+                        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
 
             else:
                 if node0.pos().y() == node1.pos().y() and abs(node0.pos().x() - node1.pos().x()) < 130:
@@ -7343,8 +7343,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     bp1 = QtCore.QPointF(x1, y1)
                     bp2 = QtCore.QPointF(x1, y2)
 
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
 
                 elif node0.pos().y() == node1.pos().y():
 
@@ -7362,10 +7362,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     bp3 = QtCore.QPointF(x3, y3)
                     bp4 = QtCore.QPointF(x4, y4)
 
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 3, bp4))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 3, bp4))
 
                 else:
 
@@ -7380,9 +7380,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     bp2 = QtCore.QPointF(x2, y2)
                     bp3 = QtCore.QPointF(x3, y3)
 
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
 
         return [equivalence]
 
@@ -7460,8 +7460,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp1 = QtCore.QPointF(x1, y1)
                 bp2 = QtCore.QPointF(x1, y2)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
 
             elif node0.pos().y() == node1.pos().y():
 
@@ -7479,10 +7479,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp3 = QtCore.QPointF(x3, y3)
                 bp4 = QtCore.QPointF(x4, y4)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 3, bp4))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 3, bp4))
 
             else:
 
@@ -7497,9 +7497,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp2 = QtCore.QPointF(x2, y2)
                 bp3 = QtCore.QPointF(x3, y3)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
 
         else:
             if node0.pos().x() == node1.pos().x():
@@ -7512,8 +7512,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp1 = QtCore.QPointF(x1, y1)
                 bp2 = QtCore.QPointF(x2, y2)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
 
 
             else:
@@ -7528,9 +7528,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                 bp2 = QtCore.QPointF(x2, y2)
                 bp3 = QtCore.QPointF(x3, y3)
 
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 0, bp1))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 1, bp2))
+                # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, equivalence, 2, bp3))
 
         return [equivalence]
 
@@ -7670,8 +7670,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         bp1 = QtCore.QPointF(x, y1)
         bp2 = QtCore.QPointF(x, y2)
 
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
 
         return [isa]
@@ -7946,8 +7946,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         bp1 = QtCore.QPointF(x, y1)
         bp2 = QtCore.QPointF(x, y2)
 
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
         x1 = instanceNode.pos().x()
         y1 = instanceNode.pos().y() - 40
@@ -7960,9 +7960,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         bp2 = QtCore.QPointF(x2, y2)
         bp1 = QtCore.QPointF(x3, y3)
 
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 0, bp1))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 1, bp2))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 2, bp3))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 0, bp1))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 1, bp2))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 2, bp3))
 
         x1 = instanceNode.pos().x()
         y1 = instanceNode.pos().y() - 40
@@ -7975,9 +7975,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         bp2 = QtCore.QPointF(x2, y2)
         bp1 = QtCore.QPointF(x3, y3)
 
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 0, bp1))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 1, bp2))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 2, bp3))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 0, bp1))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 1, bp2))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 2, bp3))
 
         return [instanceNode]
 
@@ -8257,8 +8257,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         bp1 = QtCore.QPointF(x, y1)
         bp2 = QtCore.QPointF(x, y2)
 
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
         x1 = instanceNode.pos().x()
         y1 = instanceNode.pos().y() - 40
@@ -8271,9 +8271,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         bp2 = QtCore.QPointF(x2, y2)
         bp1 = QtCore.QPointF(x3, y3)
 
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 0, bp1))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 1, bp2))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 2, bp3))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 0, bp1))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 1, bp2))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input1, 2, bp3))
 
         x1 = instanceNode.pos().x()
         y1 = instanceNode.pos().y() - 40
@@ -8286,9 +8286,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
         bp2 = QtCore.QPointF(x2, y2)
         bp1 = QtCore.QPointF(x3, y3)
 
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 0, bp1))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 1, bp2))
-        self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 2, bp3))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 0, bp1))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 1, bp2))
+        # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input2, 2, bp3))
 
         return [instanceNode]
 
@@ -8366,8 +8366,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp1 = QtCore.QPointF(x1, y1)
             bp2 = QtCore.QPointF(x1, y2)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
 
         elif node0.pos().y() == node1.pos().y():
 
@@ -8385,10 +8385,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp3 = QtCore.QPointF(x3, y3)
             bp4 = QtCore.QPointF(x4, y4)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 2, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 3, bp4))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 2, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 3, bp4))
 
         else:
 
@@ -8403,9 +8403,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp2 = QtCore.QPointF(x2, y2)
             bp3 = QtCore.QPointF(x3, y3)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 2, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, different, 2, bp3))
 
         return [different]
 
@@ -8485,8 +8485,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp1 = QtCore.QPointF(x1, y1)
             bp2 = QtCore.QPointF(x1, y2)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
 
         elif node0.pos().y() == node1.pos().y():
 
@@ -8504,10 +8504,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp3 = QtCore.QPointF(x3, y3)
             bp4 = QtCore.QPointF(x4, y4)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 2, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 3, bp4))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 2, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 3, bp4))
 
         else:
 
@@ -8522,9 +8522,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp2 = QtCore.QPointF(x2, y2)
             bp3 = QtCore.QPointF(x3, y3)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 2, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, same, 2, bp3))
 
         return [same]
 
@@ -8647,8 +8647,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp1 = QtCore.QPointF(x, y1)
             bp2 = QtCore.QPointF(x, y2)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
 
         node1 = nodes[1]
@@ -8677,10 +8677,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp3 = QtCore.QPointF(x3, y3)
             bp4 = QtCore.QPointF(x4, y4)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
 
         elif node1.pos().x() == node0.pos().x():
 
@@ -8688,8 +8688,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y2 = node1.pos().y()
             bp2 = QtCore.QPointF(x2, y2)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
 
         else:
 
@@ -8702,9 +8702,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp2 = QtCore.QPointF(x2, y2)
             bp3 = QtCore.QPointF(x3, y3)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
 
         return [dis_node]
 
@@ -8869,9 +8869,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y = dis_node.pos().y()
 
             bp1 = QtCore.QPointF(n.pos().x(), y)
-            b1 = CommandEdgeBreakpointAdd(diagram, input, 0, bp1)
+            # b1 = CommandEdgeBreakpointAdd(diagram, input, 0, bp1)
 
-            self.session.undostack.push(b1)
+            # self.session.undostack.push(b1)
 
         equiv = diagram.factory.create(Item.EquivalenceEdge, source=cNode, target=dis_node)
         self.session.undostack.push(CommandEdgeAdd(diagram, equiv))
@@ -8981,8 +8981,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     bp1 = QtCore.QPointF(x, y1)
                     bp2 = QtCore.QPointF(x, y2)
 
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
                 node1 = nodes[1]
 
@@ -9003,8 +9003,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     y2 = node1.pos().y()
                     bp2 = QtCore.QPointF(x2, y2)
 
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
 
                 else:
 
@@ -9021,10 +9021,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                     bp3 = QtCore.QPointF(x3, y3)
                     bp4 = QtCore.QPointF(x4, y4)
 
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
-                    self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+                    # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
 
                 return [dis_node]
 
@@ -9131,8 +9131,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp1 = QtCore.QPointF(x, y1)
             bp2 = QtCore.QPointF(x, y2)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
 
         node1 = nodes[1]
 
@@ -9160,10 +9160,10 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp3 = QtCore.QPointF(x3, y3)
             bp4 = QtCore.QPointF(x4, y4)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp4))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 3, bp1))
 
         elif node1.pos().x() == node0.pos().x():
 
@@ -9171,8 +9171,8 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             y2 = node1.pos().y()
             bp2 = QtCore.QPointF(x2, y2)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp1))
 
         else:
 
@@ -9185,9 +9185,9 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
             bp2 = QtCore.QPointF(x2, y2)
             bp3 = QtCore.QPointF(x3, y3)
 
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
-            self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 0, bp3))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 1, bp2))
+            # self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, input, 2, bp1))
 
         return [dis_node]
 
@@ -9722,100 +9722,100 @@ class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
                         self.session.undostack.push(
                             CommandIRIAddAnnotationAssertion(self.project, iri, annotationAss))
 
-    def addBreakpoints(self, diagram, propNode, restrNode, domainNode, isa):
-
-        bps = []
-
-        if propNode.pos().x() == domainNode.pos().x():
-            if restrNode.pos().x() > domainNode.pos().x():
-                # x = restrNode.pos().x() + 40
-                x = domainNode.pos().x() + 68
-            else:
-                # x = restrNode.pos().x() - 40
-                x = domainNode.pos().x() - 68
-
-            y1 = restrNode.pos().y()
-            y2 = domainNode.pos().y()
-
-            bp1 = QtCore.QPointF(x, y1)
-            bps.append(bp1)
-
-            bp2 = QtCore.QPointF(x, y2)
-            bps.append(bp2)
-
-            if isa:
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
-
-        elif restrNode.pos().y() == domainNode.pos().y():
-
-            if restrNode.pos().x() > domainNode.pos().x():
-                # x = restrNode.pos().x() + 40
-                x = restrNode.pos().x() + 30
-            else:
-                # x = restrNode.pos().x() - 40
-                x = restrNode.pos().x() - 30
-
-            y1 = restrNode.pos().y()
-            y2 = restrNode.pos().y() - 40
-            x3 = domainNode.pos().x()
-            y3 = y2
-
-            bp1 = QtCore.QPointF(x, y1)
-            bps.append(bp1)
-
-            bp2 = QtCore.QPointF(x, y2)
-            bps.append(bp2)
-
-            bp3 = QtCore.QPointF(x3, y3)
-            bps.append(bp3)
-
-            if isa:
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
-
-        elif propNode.pos().x() != domainNode.pos().x() and restrNode.pos().y() != domainNode.pos().y():
-
-            if restrNode.pos().x() > propNode.pos().x():
-                x1 = restrNode.pos().x() + 30
-
-            else:
-                x1 = restrNode.pos().x() - 30
-
-            y1 = restrNode.pos().y()
-            x2 = x1
-            # y2 = restrNode.pos().y() - 28
-            y2 = restrNode.pos().y() - 40
-            if restrNode.pos().y() != propNode.pos().y():
-                if restrNode.pos().y() > propNode.pos().y():
-                    y2 = restrNode.pos().y() - 30
-                else:
-                    y2 = restrNode.pos().y() + 40
-            x3 = domainNode.pos().x() + 70
-            y3 = y2
-            x4 = x3
-            y4 = domainNode.pos().y()
-
-            bp1 = QtCore.QPointF(x1, y1)
-            bps.append(bp1)
-
-            bp2 = QtCore.QPointF(x2, y2)
-            bps.append(bp2)
-
-            bp3 = QtCore.QPointF(x3, y3)
-            bps.append(bp3)
-
-            bp4 = QtCore.QPointF(x4, y4)
-            bps.append(bp4)
-
-            if isa:
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
-                self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
-
-        return bps
+    # def addBreakpoints(self, diagram, propNode, restrNode, domainNode, isa):
+    #
+    #     bps = []
+    #
+    #     if propNode.pos().x() == domainNode.pos().x():
+    #         if restrNode.pos().x() > domainNode.pos().x():
+    #             # x = restrNode.pos().x() + 40
+    #             x = domainNode.pos().x() + 68
+    #         else:
+    #             # x = restrNode.pos().x() - 40
+    #             x = domainNode.pos().x() - 68
+    #
+    #         y1 = restrNode.pos().y()
+    #         y2 = domainNode.pos().y()
+    #
+    #         bp1 = QtCore.QPointF(x, y1)
+    #         bps.append(bp1)
+    #
+    #         bp2 = QtCore.QPointF(x, y2)
+    #         bps.append(bp2)
+    #
+    #         if isa:
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+    #
+    #     elif restrNode.pos().y() == domainNode.pos().y():
+    #
+    #         if restrNode.pos().x() > domainNode.pos().x():
+    #             # x = restrNode.pos().x() + 40
+    #             x = restrNode.pos().x() + 30
+    #         else:
+    #             # x = restrNode.pos().x() - 40
+    #             x = restrNode.pos().x() - 30
+    #
+    #         y1 = restrNode.pos().y()
+    #         y2 = restrNode.pos().y() - 40
+    #         x3 = domainNode.pos().x()
+    #         y3 = y2
+    #
+    #         bp1 = QtCore.QPointF(x, y1)
+    #         bps.append(bp1)
+    #
+    #         bp2 = QtCore.QPointF(x, y2)
+    #         bps.append(bp2)
+    #
+    #         bp3 = QtCore.QPointF(x3, y3)
+    #         bps.append(bp3)
+    #
+    #         if isa:
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+    #
+    #     elif propNode.pos().x() != domainNode.pos().x() and restrNode.pos().y() != domainNode.pos().y():
+    #
+    #         if restrNode.pos().x() > propNode.pos().x():
+    #             x1 = restrNode.pos().x() + 30
+    #
+    #         else:
+    #             x1 = restrNode.pos().x() - 30
+    #
+    #         y1 = restrNode.pos().y()
+    #         x2 = x1
+    #         # y2 = restrNode.pos().y() - 28
+    #         y2 = restrNode.pos().y() - 40
+    #         if restrNode.pos().y() != propNode.pos().y():
+    #             if restrNode.pos().y() > propNode.pos().y():
+    #                 y2 = restrNode.pos().y() - 30
+    #             else:
+    #                 y2 = restrNode.pos().y() + 40
+    #         x3 = domainNode.pos().x() + 70
+    #         y3 = y2
+    #         x4 = x3
+    #         y4 = domainNode.pos().y()
+    #
+    #         bp1 = QtCore.QPointF(x1, y1)
+    #         bps.append(bp1)
+    #
+    #         bp2 = QtCore.QPointF(x2, y2)
+    #         bps.append(bp2)
+    #
+    #         bp3 = QtCore.QPointF(x3, y3)
+    #         bps.append(bp3)
+    #
+    #         bp4 = QtCore.QPointF(x4, y4)
+    #         bps.append(bp4)
+    #
+    #         if isa:
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 0, bp1))
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 1, bp2))
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 2, bp3))
+    #             self.session.undostack.push(CommandEdgeBreakpointAdd(diagram, isa, 3, bp4))
+    #
+    #     return bps
 
 
 class DiagramPropertiesForm(NewDiagramForm):
