@@ -74,5 +74,5 @@ AppDir:
       use_host_x: true
 
 AppImage:
-  update-information: None
   arch: x86_64
+  comp: xz

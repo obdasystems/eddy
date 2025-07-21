@@ -2,15 +2,33 @@
 
 Eddy can be installed via one of the following methods:
 
+* From [PyPI](https://pypi.org/project/Eddy/) releases.
 * Downloading a standalone release from [GitHub releases].
 * Installing from source using a release tarball or from the [GitHub repository].
 
 Standalone releases come with all the required dependencies already bundled.
 This is the simplest way to get up and running with Eddy.
-However, if you prefer manually installing from source, then you will need to have
-Python 3.7 or later, and Java 1.8 or later already installed on your system.
+However, if you prefer manually installing from PyPI or from source, then you will need to have
+Python 3.9 or later, and Java 11 or later already installed on your system.
 
 If you encounter issues with the installation, please report them using the [issue tracker].
+
+## Using a PyPI release
+
+You would need to have a Java Runtime Environment 11 or later installed on your system,
+then install PyQt5 and Eddy from the PyPI repository (we recommend setting up a virtual environment
+to not mess up with the system Python packages):
+
+    $ pip install PyQt5>=5.15 Eddy
+
+Then you can later start Eddy by running the `eddy` command or by running the `eddy` module:
+
+    $ eddy
+    $ # or
+    $ python3 -m eddy
+
+If you have Java installed in a non-standard location, simply point the `JAVA_HOME` environment
+variable to the location where the JVM is stored.
 
 ## Using a standalone release
 
@@ -41,16 +59,18 @@ from [GitHub releases] and unpack it anywhere on your system.
 You can start Eddy by running the `Eddy` executable.
 
 **NOTE**: standalone tarball releases have been deprecated and will be removed in future versions of Eddy.
-It is recommended to switch AppImage builds as these work more reliably between the different distros.
+It is recommended to switch AppImage builds as these work more reliably between the different distros,
+or simply resort to installation from the [PyPI](https://pypi.org/project/Eddy/)repository.
 
 ## Installing from a source tarball
 
-In order to install Eddy from a source tarball you will need to have Python 3.7 or later,
-and a Java Runtime Environment 1.8 or later already installed on your system.
+In order to install Eddy from a source tarball you will need to have Python 3.9 or later,
+and a Java Runtime Environment 11 or later already installed on your system.
 
 The following additional Python requirements are needed:
- * PyQt5 >= 5.11
- * jpype1 >= 0.7.1
+ * PyQt5 >= 5.15
+ * jpype1 >= 1.4.1
+ * rdflib >= 6.2.0
  * openpyxl
  * rfc3987
 
@@ -82,12 +102,12 @@ or, on Windows:
 2. Download a source tarball from [GitHub releases] and install Eddy:
 
  ```bash
- $ pip install "PyQt5>=5.11" # Only if not already provided by the system installation
+ $ pip install "PyQt5>=5.15" # Only if not already provided by the system installation
  $ pip install https://github.com/obdasystems/eddy/archive/<version>.tar.gz
  ```
 e.g.:
 ```bash
- $ pip install https://github.com/obdasystems/eddy/archive/v3.4.tar.gz
+ $ pip install https://github.com/obdasystems/eddy/archive/v3.6.tar.gz
 ```
 
 **NOTE**: Depending on your platform, you may encounter an issue during the installation of PyQt5 where

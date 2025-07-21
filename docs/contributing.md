@@ -7,7 +7,7 @@ contributors to follow so that we can have a chance of keeping this project as c
 
 ## Contributing Issues
 
-Issues submitted on Github must be technically documented with the aim that any contributor trying to fix your issue
+Issues submitted on GitHub must be technically documented with the aim that any contributor trying to fix your issue
 should have enough information to understand and reproduce the issue and validate the fix.
 
 * Make sure you have a [GitHub account](https://github.com/signup/free).
@@ -23,7 +23,7 @@ should have enough information to understand and reproduce the issue and validat
 
 ## Contributing Code
 
-We prefer contributors to submit their code change throught GitHub [pull requests](http://help.github.com/send-pull-requests/).
+We prefer contributors to submit their code change through GitHub [pull requests](http://help.github.com/send-pull-requests/).
 
 * Make sure you have a [GitHub account](https://github.com/signup/free).
 * [Fork](https://github.com/obdasystems/eddy) this repository on GitHub.
@@ -58,10 +58,10 @@ We prefer contributors to submit their code change throught GitHub [pull request
 ## Coding Style
 
 Different programmers use to write code in different ways. Without the usage of coding conventions, a project
-source code may become unreadable and eventually not understandable. While Eddy doesn't strictly follows
+source code may become unreadable and eventually not understandable. While Eddy doesn't strictly follow
 PEP-8 coding conventions, it is required that your code follows the following guidelines:
 
-* **Break long lines** after `110` characters.
+* **Break long lines** after `100` characters.
 * Do not indent using `TAB`: use **4 spaces** to indent your code.
 * Do not use python built-in names to name your variables.
 * **Document** your code (example below):

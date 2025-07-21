@@ -33,11 +33,16 @@
 ##########################################################################
 
 
-from abc import ABCMeta, abstractmethod
-from itertools import permutations
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from collections import defaultdict
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+from PyQt5 import (
+    QtCore,
+    QtGui,
+)
 
 from eddy.core.commands.edges import CommandEdgeAnchorMove
 from eddy.core.commands.edges import CommandEdgeBreakpointAdd
@@ -541,7 +546,7 @@ class AxiomEdge(AbstractEdge):
 
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        self._annotationsMap = {}
+        self._annotationsMap = defaultdict(list)
         self._annotations = []
 
     @property
@@ -567,27 +572,17 @@ class AxiomEdge(AbstractEdge):
         Add an annotation regarding self
         :type: annotation: Annotation
         """
-        if annotation.assertionProperty in self._annotationsMap:
-            if not annotation in self._annotationsMap[annotation.assertionProperty]:
-                self._annotationsMap[annotation.assertionProperty].append(annotation)
-        else:
-            currList = list()
-            currList.append(annotation)
-            self._annotationsMap[annotation.assertionProperty] = currList
-        self.annotations.append(annotation)
+        if annotation not in self.annotations:
+            self.annotations.append(annotation)
+            self._annotationsMap[annotation.assertionProperty].append(annotation)
 
     def removeAnnotation(self, annotation):
         """
         Remove an annotation regarding self
         :type: annotation: Annotation
         """
-        if annotation.assertionProperty in self._annotationsMap:
-            currList = self._annotationsMap[annotation.assertionProperty]
-            if annotation in currList:
-                currList.remove(annotation)
-                if len(currList) < 1:
-                    self._annotationsMap.pop(annotation.assertionProperty, None)
-            if annotation in self.annotations:
-                self.annotations.remove(annotation)
-        else:
-            raise KeyError('Cannot find the annotation')
+        if annotation in self.annotations:
+            self.annotations.remove(annotation)
+            self._annotationsMap[annotation.assertionProperty].remove(annotation)
+            if not self._annotationsMap[annotation.assertionProperty]:
+                del self._annotationsMap[annotation.assertionProperty]

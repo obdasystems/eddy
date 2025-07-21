@@ -1,3 +1,37 @@
+# -*- coding: utf-8 -*-
+
+##########################################################################
+#                                                                        #
+#  Eddy: a graphical editor for the specification of Graphol ontologies  #
+#  Copyright (C) 2015 Daniele Pantaleone <danielepantaleone@me.com>      #
+#                                                                        #
+#  This program is free software: you can redistribute it and/or modify  #
+#  it under the terms of the GNU General Public License as published by  #
+#  the Free Software Foundation, either version 3 of the License, or     #
+#  (at your option) any later version.                                   #
+#                                                                        #
+#  This program is distributed in the hope that it will be useful,       #
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the          #
+#  GNU General Public License for more details.                          #
+#                                                                        #
+#  You should have received a copy of the GNU General Public License     #
+#  along with this program. If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                        #
+#  #####################                          #####################  #
+#                                                                        #
+#  Graphol is developed by members of the DASI-lab group of the          #
+#  Dipartimento di Ingegneria Informatica, Automatica e Gestionale       #
+#  A.Ruberti at Sapienza University of Rome: http://www.dis.uniroma1.it  #
+#                                                                        #
+#     - Domenico Lembo <lembo@dis.uniroma1.it>                           #
+#     - Valerio Santarelli <santarelli@dis.uniroma1.it>                  #
+#     - Domenico Fabio Savo <savo@dis.uniroma1.it>                       #
+#     - Daniele Pantaleone <pantaleone@dis.uniroma1.it>                  #
+#     - Marco Console <console@dis.uniroma1.it>                          #
+#                                                                        #
+##########################################################################
+
 import os
 
 from PyQt5 import QtXml
@@ -12,6 +46,7 @@ from eddy.core.output import getLogger
 from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
+
 
 class GrapholIRIProjectExporter(AbstractProjectExporter):
     """
@@ -187,25 +222,10 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
         irisEl = self.getDomElement('iris')
         ontologyEl.appendChild(irisEl)
-        if not self.selectedDiagrams:
-            for iri in sorted(self.project.iris,key=str):
-                if (self.project.existIriOccurrence(iri) or iri==self.project.ontologyIRI) and not (iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
-                        iriEl = self.getIriDomElement(iri)
-                        irisEl.appendChild(iriEl)
-        else:
-            for iri in sorted(self.project.iris,key=str):
-                if (self.project.existIriOccurrence(iri) or iri == self.project.ontologyIRI) and not (
-                    iri.isTopBottomEntity() or iri in self.project.getDatatypeIRIs() or iri in self.project.constrainingFacets or iri in self.project.getAnnotationPropertyIRIs()):
-                    if self.occursInAtLeastOneSelectedDiagrams(iri):
-                        iriEl = self.getIriDomElement(iri)
-                        irisEl.appendChild(iriEl)
+        for iri in sorted(self.project.iris, key=str):
+            iriEl = self.getIriDomElement(iri)
+            irisEl.appendChild(iriEl)
         return ontologyEl
-
-    def occursInAtLeastOneSelectedDiagrams(self,iri):
-        for diagram in self.selectedDiagrams:
-            if self.project.iriOccurrences(iri=iri,diagram=diagram):
-                return True
-        return False
 
     def getOntologyImportDomElement(self, impOnt):
         impEl = self.getDomElement('import')
@@ -742,10 +762,10 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         element.appendChild(geometry)
         return element
 
-
     #############################################
     #   INTERFACE
     #################################
+
     def createProjectFile(self):
         """
         Serialize a previously created QDomDocument to disk.

@@ -32,15 +32,29 @@
 #                                                                        #
 ##########################################################################
 
+import textwrap
+
 from PyQt5 import (
     QtCore,
     QtGui,
     QtWidgets,
 )
+from rdflib import (
+    Graph,
+    Literal,
+    URIRef,
+)
+from rdflib.namespace import (
+    DCAT,
+    DCTERMS,
+    OWL,
+    RDFS,
+)
 
 from eddy.core.commands.iri import (
     CommandCommmonSubstringIRIsRefactor,
-    CommandIRIRemoveAnnotationAssertion, CommandIRIAddAnnotationAssertion,
+    CommandIRIAddAnnotationAssertion,
+    CommandIRIRemoveAnnotationAssertion,
 )
 from eddy.core.commands.project import (
     CommandProjectAddAnnotationProperty,
@@ -56,9 +70,7 @@ from eddy.core.commands.project import (
 from eddy.core.common import HasWidgetSystem
 from eddy.core.datatypes.graphol import Item
 from eddy.core.datatypes.system import File
-
 from eddy.core.exporters.metadata import (
-    AbstractMetadataExporter,
     AnnotationsOverridingDialog,
     CsvTemplateExporter,
     XlsxTemplateExporter,
@@ -67,20 +79,32 @@ from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
+from eddy.core.metadata import Repository
+from eddy.core.ndc import (
+    ADMS,
+    NDCDataset,
+)
+from eddy.core.sparql import SPARQLEndpoint
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     AnnotationAssertion,
     IllegalPrefixError,
     IllegalNamespaceError,
-    ImportedOntology, IRI
+    ImportedOntology,
+    OWL2Datatype,
 )
-from eddy.ui.dialogs import DiagramSelectionDialog
+from eddy.ui.annotation import AnnotationAssertionBuilderDialog
+from eddy.ui.checkable_combobox import CheckableComboBox
 from eddy.ui.fields import (
     StringField,
     CheckBox,
     ComboBox,
 )
 from eddy.ui.file import FileDialog
+from eddy.ui.ndc.agent import AgentBuilderDialog
+from eddy.ui.ndc.contact import ContactBuilderDialog
+from eddy.ui.ndc.distribution import DistributionBuilderDialog
+from eddy.ui.ndc.project import ProjectBuilderDialog
 
 LOGGER = getLogger()
 
@@ -447,11 +471,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         searchbar = QtWidgets.QLineEdit(objectName='searchbar_annotations')
         searchbar.setPlaceholderText("Search...")
-        searchbar.textChanged.connect(self.searchAnnotationTable)
+        connect(searchbar.textChanged, self.searchAnnotationTable)
         self.addWidget(searchbar)
 
-        table = QtWidgets.QTableWidget(0, 7, self, objectName='annotation_assertions_table_widget')
-        table.setHorizontalHeaderLabels(['IRI', 'SimpleName', 'Type', 'AnnotationProperty', 'Datatype', 'Lang', 'Value'])
+        table = QtWidgets.QTableWidget(0, 6, self, objectName='annotation_assertions_table_widget')
+        table.setHorizontalHeaderLabels([
+            'IRI',
+            'SimpleName',
+            'AnnotationProperty',
+            'Value',
+            'Datatype',
+            'Lang',
+        ])
         table.horizontalHeader().setStretchLastSection(True)
         table.horizontalHeader().setSectionsClickable(False)
         table.horizontalHeader().setMinimumSectionSize(120)
@@ -461,6 +492,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         #table.setSelectionMode(QAbstractItemView.MultiSelection)
         connect(table.cellDoubleClicked, self.editAnnotationAssertion)
+
         self.addWidget(table)
 
         selectBtn = QtWidgets.QPushButton('Select All', objectName = 'annotation_assertions_selectall_button')
@@ -476,7 +508,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(addBtn)
         self.addWidget(editBtn)
         self.addWidget(delBtn)
-
 
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
@@ -529,14 +560,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         snakeCheckbox = CheckBox('convert snake_case to space separated values', self,
                                  checked=self.project.convertSnake,
                                  objectName='convert_snake')
-        snakeCheckbox.clicked.connect(lambda: self.onCaseCheckBoxClicked(snakeCheckbox))
+        connect(snakeCheckbox.clicked, self.onCaseCheckBoxClicked)
         self.addWidget(snakeCheckbox)
         snakeCheckbox.setEnabled(checked)
 
         camelCheckbox = CheckBox('convert camelCase to space separated values', self,
                                  checked=self.project.convertCamel,
                                  objectName='convert_camel')
-        camelCheckbox.clicked.connect(lambda: self.onCaseCheckBoxClicked(camelCheckbox))
+        connect(camelCheckbox.clicked, self.onCaseCheckBoxClicked)
         self.addWidget(camelCheckbox)
         camelCheckbox.setEnabled(checked)
 
@@ -628,15 +659,569 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.setObjectName('iri_widget')
         self.addWidget(widget)
 
+        ###################################
+        # NDC Metadata
+        ###################################
+
+        self.ndcDataset = NDCDataset()
+        self.ndcDataset.load()
+
+        #ENDPOINT
+        endpoint = QtWidgets.QLabel('Endpoint', self, objectName='endpoint_label')
+        self.addWidget(endpoint)
+
+        #linewidget = QtWidgets.QWidget()
+        layout_h = QtWidgets.QHBoxLayout()
+
+        endpointField = StringField(self, objectName='endpoint_field')
+        endpointField.setPlaceholderText('e.g. http://example.org/sparql')
+        endpointField.setText(settings.value('manager/endpoint', None, str))
+        self.addWidget(endpointField)
+
+        connectBtn = QtWidgets.QPushButton(objectName='endpoint_connect_button')
+        connectBtn.setIcon(QtGui.QIcon(':/icons/18/ic_treeview_branch_closed'))
+        connect(connectBtn.clicked, self.doConnectEndpoint)
+        self.addWidget(connectBtn)
+
+        #refreshBtn = QtWidgets.QPushButton(objectName='endpoint_refresh_button')
+        #refreshBtn.setIcon(QtGui.QIcon(':/icons/24/ic_refresh_black'))
+        #self.addWidget(refreshBtn)
+
+        layout_h.addWidget(endpointField)
+        layout_h.addWidget(connectBtn)
+        #layout_h.addWidget(refreshBtn)
+
+        linelayout = QtWidgets.QFormLayout()
+        linelayout.addRow(self.widget('endpoint_label'), layout_h)
+        groupbox0 = QtWidgets.QGroupBox(
+            'Metadata Endpoint', self,
+            objectName='ndc_metadata_endpoint',
+        )
+        groupbox0.setLayout(linelayout)
+        self.addWidget(groupbox0)
+
+        #FORM
+
+        ndcTitle = QtWidgets.QLabel('Title', self, objectName='ndc_title_label')
+        self.addWidget(ndcTitle)
+
+        ndcITtitleField = StringField(self, objectName='ndc_ITtitle_field')
+        ITtitles = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.title) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ITtitles) > 0:
+            ITtitle = ITtitles[0].value
+            ndcITtitleField.setText(ITtitle)
+        else:
+            ndcITtitleField.setPlaceholderText('@it')
+        self.addWidget(ndcITtitleField)
+
+        ndcENtitleField = StringField(self, objectName='ndc_ENtitle_field')
+        ENtitles = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.title) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ENtitles) > 0:
+            ENtitle = ENtitles[0].value
+            ndcENtitleField.setText(ENtitle)
+        else:
+            ndcENtitleField.setPlaceholderText('@en')
+        self.addWidget(ndcENtitleField)
+
+        ndcLabel = QtWidgets.QLabel('Label', self, objectName='ndc_label_label')
+        self.addWidget(ndcLabel)
+
+        ndcITLabelField = StringField(self, objectName='ndc_ITlabel_field')
+        ITlabels = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.label) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ITlabels) > 0:
+            ITlabel = ITlabels[0].value
+            ndcITLabelField.setText(ITlabel)
+        else:
+            ndcITLabelField.setPlaceholderText('@it')
+        self.addWidget(ndcITLabelField)
+
+        noLabel = QtWidgets.QLabel(self, objectName='no_label')
+        self.addWidget(noLabel)
+
+        ndcENLabelField = StringField(self, objectName='ndc_ENlabel_field')
+        ENlabels = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.label) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ENlabels) > 0:
+            ENlabel = ENlabels[0].value
+            ndcENLabelField.setText(ENlabel)
+        else:
+            ndcENLabelField.setPlaceholderText('@en')
+        self.addWidget(ndcENLabelField)
+
+        ndcComment = QtWidgets.QLabel('Comment', self, objectName='ndc_comment_label')
+        self.addWidget(ndcComment)
+
+        ndcITCommentField = StringField(self, objectName='ndc_ITcomment_field')
+        ITcomments = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.comment) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ITcomments) > 0:
+            ITcomment = ITcomments[0].value
+            ndcITCommentField.setText(ITcomment)
+        else:
+            ndcITCommentField.setPlaceholderText('@it')
+        self.addWidget(ndcITCommentField)
+
+        ndcENCommentField = StringField(self, objectName='ndc_ENcomment_field')
+        ENcomments = list(filter(
+            lambda x: str(x.assertionProperty) == str(RDFS.comment) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ENcomments) > 0:
+            ENcomment = ENcomments[0].value
+            ndcENCommentField.setText(ENcomment)
+        else:
+            ndcENCommentField.setPlaceholderText('@en')
+        self.addWidget(ndcENCommentField)
+
+        ndcOfficialURI = QtWidgets.QLabel(self, objectName='ndc_officialURI_label')
+        ndcOfficialURI.setText('Official URI')
+        self.addWidget(ndcOfficialURI)
+
+        ndcOfficialURIField = StringField(self, objectName='ndc_officialURI_field')
+        officialURIs = list(filter(
+            lambda x: str(x.assertionProperty) == str(ADMS.officialURI),
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(officialURIs) > 0:
+            officialURI = str(officialURIs[0].value)
+            ndcOfficialURIField.setText(officialURI)
+        self.addWidget(ndcOfficialURIField)
+
+        ndcIdentifier = QtWidgets.QLabel('Identifier', self, objectName='ndc_id_label')
+        self.addWidget(ndcIdentifier)
+
+        ndcIdentifierField = StringField(self, objectName='ndc_id_field')
+        ids = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.identifier),
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ids) > 0:
+            id = ids[0].value
+            ndcIdentifierField.setText(id)
+        self.addWidget(ndcIdentifierField)
+
+        ndcRightsHolder = QtWidgets.QLabel(
+            'Rights Holder', self,
+            objectName='ndc_rightsHolder_label',
+        )
+        self.addWidget(ndcRightsHolder)
+
+        ndcRightsHolderField = CheckableComboBox(self, objectName='ndc_rightsHolder_field')
+        self.addWidget(ndcRightsHolderField)
+
+        addRightsHolderBtn = QtWidgets.QPushButton(objectName='add_rightsHolder_button')
+        addRightsHolderBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addRightsHolderBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addRightsHolderBtn.clicked, self.doAddAgent)
+        self.addWidget(addRightsHolderBtn)
+
+        layout_rightsHolder = QtWidgets.QHBoxLayout()
+        layout_rightsHolder.addWidget(ndcRightsHolderField)
+        layout_rightsHolder.addWidget(addRightsHolderBtn)
+
+        ndcCreationDate = QtWidgets.QLabel(
+            'Creation Date', self,
+            objectName='ndc_creationDate_label',
+        )
+        self.addWidget(ndcCreationDate)
+
+        ndcCreationDateField = QtWidgets.QDateEdit(self, objectName='ndc_creationDate_field')
+        dates = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.issued),
+            self.project.ontologyIRI.annotationAssertions
+        ))
+        if len(dates) > 0:
+            date = str(dates[0].value)[:10].split('-')
+            year = int(date[0])
+            month = int(date[1])
+            day = int(date[2])
+            ndcCreationDateField.setDate(QtCore.QDate(year, month, day))
+        self.addWidget(ndcCreationDateField)
+
+        ndcLastModifiedDate = QtWidgets.QLabel(
+            'Last Modified Date', self,
+            objectName='ndc_lastModifiedDate_label',
+        )
+        self.addWidget(ndcLastModifiedDate)
+
+        ndcLastModifiedDateField = QtWidgets.QDateEdit(self, objectName='ndc_lastModifiedDate_field')
+        dates = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.modified),
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(dates) > 0:
+            date = str(dates[0].value)[:10].split('-')
+            year = int(date[0])
+            month = int(date[1])
+            day = int(date[2])
+            ndcLastModifiedDateField.setDate(QtCore.QDate(year, month, day))
+        self.addWidget(ndcLastModifiedDateField)
+
+        ndcVersionInfo = QtWidgets.QLabel('Version Info', self, objectName='ndc_versionInfo_label')
+        self.addWidget(ndcVersionInfo)
+
+        ndcVersionInfoITField = StringField(self, objectName='ndc_ITversionInfo_field')
+        ITinfos = list(filter(
+            lambda x: str(x.assertionProperty) == str(OWL.versionInfo) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ITinfos) > 0:
+            ITinfo = ITinfos[0].value
+            ndcVersionInfoITField.setText(ITinfo)
+        else:
+            ndcVersionInfoITField.setPlaceholderText('@it')
+        self.addWidget(ndcVersionInfoITField)
+
+        ndcVersionInfoENField = StringField(self, objectName='ndc_ENversionInfo_field')
+        ENinfos = list(filter(
+            lambda x: str(x.assertionProperty) == str(OWL.versionInfo) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ENinfos) > 0:
+            ENinfo = ENinfos[0].value
+            ndcVersionInfoENField.setText(ENinfo)
+        else:
+            ndcVersionInfoENField.setPlaceholderText('@en')
+        self.addWidget(ndcVersionInfoENField)
+
+        ndcAccrualPeriodicity = QtWidgets.QLabel(
+            'Accrual Periodicity', self,
+            objectName='ndc_accrualPeriodicity_label',
+        )
+        self.addWidget(ndcAccrualPeriodicity)
+
+        ndcAccrualPeriodicityField = QtWidgets.QComboBox(self, objectName='ndc_accrualPeriodicity_field')
+        periodicities = [
+            "",
+            "http://publications.europa.eu/resource/authority/frequency/TRIDECENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/BIHOURLY",
+            "http://publications.europa.eu/resource/authority/frequency/TRIHOURLY",
+            "http://publications.europa.eu/resource/authority/frequency/OTHER",
+            "http://publications.europa.eu/resource/authority/frequency/WEEKLY",
+            "http://publications.europa.eu/resource/authority/frequency/NOT_PLANNED",
+            "http://publications.europa.eu/resource/authority/frequency/AS_NEEDED",
+            "http://publications.europa.eu/resource/authority/frequency/5MIN",
+            "http://publications.europa.eu/resource/authority/frequency/30MIN",
+            "http://publications.europa.eu/resource/authority/frequency/HOURLY",
+            "http://publications.europa.eu/resource/authority/frequency/QUADRENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/QUINQUENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/DECENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/1MIN",
+            "http://publications.europa.eu/resource/authority/frequency/15MIN",
+            "http://publications.europa.eu/resource/authority/frequency/WEEKLY_2",
+            "http://publications.europa.eu/resource/authority/frequency/WEEKLY_3",
+            "http://publications.europa.eu/resource/authority/frequency/12HRS",
+            "http://publications.europa.eu/resource/authority/frequency/UNKNOWN",
+            "http://publications.europa.eu/resource/authority/frequency/10MIN",
+            "http://publications.europa.eu/resource/authority/frequency/UPDATE_CONT",
+            "http://publications.europa.eu/resource/authority/frequency/QUARTERLY",
+            "http://publications.europa.eu/resource/authority/frequency/TRIENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/NEVER",
+            "http://publications.europa.eu/resource/authority/frequency/OP_DATPRO",
+            "http://publications.europa.eu/resource/authority/frequency/MONTHLY_2",
+            "http://publications.europa.eu/resource/authority/frequency/MONTHLY_3",
+            "http://publications.europa.eu/resource/authority/frequency/IRREG",
+            "http://publications.europa.eu/resource/authority/frequency/MONTHLY",
+            "http://publications.europa.eu/resource/authority/frequency/DAILY",
+            "http://publications.europa.eu/resource/authority/frequency/DAILY_2",
+            "http://publications.europa.eu/resource/authority/frequency/BIWEEKLY",
+            "http://publications.europa.eu/resource/authority/frequency/CONT",
+            "http://publications.europa.eu/resource/authority/frequency/BIENNIAL",
+            "http://publications.europa.eu/resource/authority/frequency/BIMONTHLY",
+            "http://publications.europa.eu/resource/authority/frequency/ANNUAL_2",
+            "http://publications.europa.eu/resource/authority/frequency/ANNUAL_3",
+            "http://publications.europa.eu/resource/authority/frequency/ANNUAL",
+        ]
+        ndcAccrualPeriodicityField.addItems(periodicities)
+        self.addWidget(ndcAccrualPeriodicityField)
+        self.setPeriodicities()
+
+        ndcContacts = QtWidgets.QLabel('Contact Point', self, objectName='ndc_contacts_label')
+        self.addWidget(ndcContacts)
+
+        ndcContactsField = CheckableComboBox(self, objectName='ndc_contacts_field')
+        self.addWidget(ndcContactsField)
+
+        addContactBtn = QtWidgets.QPushButton(objectName='add_contact_button')
+        addContactBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addContactBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addContactBtn.clicked, self.doAddContact)
+        self.addWidget(addContactBtn)
+
+        layout_contact = QtWidgets.QHBoxLayout()
+        layout_contact.addWidget(ndcContactsField)
+        layout_contact.addWidget(addContactBtn)
+
+        ndcPublisher = QtWidgets.QLabel('Publisher', self, objectName='ndc_publisher_label')
+        self.addWidget(ndcPublisher)
+
+        ndcPublisherField = CheckableComboBox(self, objectName='ndc_publisher_field')
+        self.addWidget(ndcPublisherField)
+
+        addPublisherBtn = QtWidgets.QPushButton(objectName='add_publisher_button')
+        addPublisherBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addPublisherBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addPublisherBtn.clicked, self.doAddAgent)
+        self.addWidget(addPublisherBtn)
+
+        layout_publisher = QtWidgets.QHBoxLayout()
+        layout_publisher.addWidget(ndcPublisherField)
+        layout_publisher.addWidget(addPublisherBtn)
+
+        ndcCreator = QtWidgets.QLabel('Creator', self, objectName='ndc_creator_label')
+        self.addWidget(ndcCreator)
+
+        ndcCreatorField = CheckableComboBox(self, objectName='ndc_creator_field')
+        self.addWidget(ndcCreatorField)
+
+        addCreatorBtn = QtWidgets.QPushButton(objectName='add_creator_button')
+        addCreatorBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addCreatorBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addCreatorBtn.clicked, self.doAddAgent)
+        self.addWidget(addCreatorBtn)
+
+        layout_creator = QtWidgets.QHBoxLayout()
+        layout_creator.addWidget(ndcCreatorField)
+        layout_creator.addWidget(addCreatorBtn)
+
+        ndcLanguages = QtWidgets.QLabel('Languages', self, objectName='ndc_languages_label')
+        self.addWidget(ndcLanguages)
+
+        ndcLanguagesField = CheckableComboBox(self, objectName='ndc_languages_field')
+        languages = [
+            "http://publications.europa.eu/resource/authority/language/ITA",
+            "http://publications.europa.eu/resource/authority/language/ENG",
+        ]
+        ndcLanguagesField.addItems(languages)
+        self.addWidget(ndcLanguagesField)
+        self.setLanguages()
+
+        ndcMainClasses = QtWidgets.QLabel('Key Classes', self, objectName='ndc_mainClasses_label')
+        self.addWidget(ndcMainClasses)
+
+        ndcMainClassesField = CheckableComboBox(self, objectName='ndc_mainClasses_field')
+        classes = []
+        for diagram in self.project.diagrams():
+            for node in self.project.iriOccurrences(diagram=diagram):
+                if node.type() == Item.ConceptNode and str(node.iri) not in classes:
+                    classes.append(str(node.iri))
+        ndcMainClassesField.addItems(classes)
+        self.addWidget(ndcMainClassesField)
+        self.setKeyClasses()
+
+        ndcPrefix = QtWidgets.QLabel('Prefix', self, objectName='ndc_prefix_label')
+        self.addWidget(ndcPrefix)
+
+        ndcPrefixField = StringField(self, objectName='ndc_prefix_field')
+        if self.project.ontologyPrefix:
+            prefix = str(self.project.ontologyPrefix)
+            ndcPrefixField.setText(prefix)
+        else:
+            prefixes = list(filter(
+                lambda x: str(x.assertionProperty) == str(ADMS.prefix),
+                self.project.ontologyIRI.annotationAssertions,
+            ))
+            if len(prefixes) > 0:
+                prefix = prefixes[0].value
+                ndcPrefixField.setText(prefix)
+        self.addWidget(ndcPrefixField)
+
+        ndcProjects = QtWidgets.QLabel('Projects', self, objectName='ndc_projects_label')
+        self.addWidget(ndcProjects)
+
+        ndcProjectsField = CheckableComboBox(self, objectName='ndc_projects_field')
+        self.addWidget(ndcProjectsField)
+
+        addProjectBtn = QtWidgets.QPushButton(objectName='add_project_button')
+        addProjectBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addProjectBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addProjectBtn.clicked, self.doAddProject)
+        self.addWidget(addProjectBtn)
+
+        layout_projects = QtWidgets.QHBoxLayout()
+        layout_projects.addWidget(ndcProjectsField)
+        layout_projects.addWidget(addProjectBtn)
+
+        ndcDistributions = QtWidgets.QLabel(
+            'Distributions', self,
+            objectName='ndc_distributions_label',
+        )
+        self.addWidget(ndcDistributions)
+
+        ndcDistributionsField = CheckableComboBox(self, objectName='ndc_distributions_field')
+        self.addWidget(ndcDistributionsField)
+
+        addDistributionBtn = QtWidgets.QPushButton(objectName='add_distribution_button')
+        addDistributionBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addDistributionBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addDistributionBtn.clicked, self.doAddDistribution)
+        self.addWidget(addDistributionBtn)
+
+        layout_distributions = QtWidgets.QHBoxLayout()
+        layout_distributions.addWidget(ndcDistributionsField)
+        layout_distributions.addWidget(addDistributionBtn)
+
+        NDCLayout = QtWidgets.QFormLayout()
+        NDCLayout.addRow(self.widget('ndc_title_label'), self.widget('ndc_ITtitle_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENtitle_field'))
+        NDCLayout.addRow(self.widget('ndc_label_label'), self.widget('ndc_ITlabel_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENlabel_field'))
+        NDCLayout.addRow(self.widget('ndc_comment_label'), self.widget('ndc_ITcomment_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENcomment_field'))
+        NDCLayout.addRow(self.widget('ndc_officialURI_label'), self.widget('ndc_officialURI_field'))
+        NDCLayout.addRow(self.widget('ndc_id_label'), self.widget('ndc_id_field'))
+        NDCLayout.addRow(self.widget('ndc_rightsHolder_label'), layout_rightsHolder)
+        NDCLayout.addRow(self.widget('ndc_creationDate_label'), self.widget('ndc_creationDate_field'))
+        NDCLayout.addRow(self.widget('ndc_lastModifiedDate_label'), self.widget('ndc_lastModifiedDate_field'))
+        NDCLayout.addRow(self.widget('ndc_versionInfo_label'), self.widget('ndc_ITversionInfo_field'))
+        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENversionInfo_field'))
+        NDCLayout.addRow(self.widget('ndc_accrualPeriodicity_label'), self.widget('ndc_accrualPeriodicity_field'))
+        NDCLayout.addRow(self.widget('ndc_contacts_label'), layout_contact)
+        NDCLayout.addRow(self.widget('ndc_publisher_label'), layout_publisher)
+        NDCLayout.addRow(self.widget('ndc_creator_label'), layout_creator)
+        NDCLayout.addRow(self.widget('ndc_languages_label'), self.widget('ndc_languages_field'))
+        NDCLayout.addRow(self.widget('ndc_mainClasses_label'), self.widget('ndc_mainClasses_field'))
+        NDCLayout.addRow(self.widget('ndc_prefix_label'), self.widget('ndc_prefix_field'))
+        NDCLayout.addRow(self.widget('ndc_projects_label'), layout_projects)
+        #NDCLayout.addRow(self.widget('ndc_groups_label'), self.widget('ndc_groups_field'))
+        NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
+
+        endpointWidget = self.widget('endpoint_field')
+        self.setAgentSuggestions()
+        self.setContactPointSuggestions()
+        self.setProjectSuggestions()
+        self.setDistributionSuggestions()
+        self.setRightsHolders()
+        self.setPublishers()
+        self.setCreators()
+        self.setContacts()
+        self.setProjects()
+        self.setDistributions()
+
+        applyBtn = QtWidgets.QPushButton('Apply', objectName='ndc_apply_button')
+        applyBtn.setEnabled(True)
+        connect(applyBtn.clicked, self.doAddMetadata)
+        self.addWidget(applyBtn)
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('ndc_apply_button'))
+
+        scroll = QtWidgets.QScrollArea()
+        scrollWidget = QtWidgets.QWidget()
+        scrollWidget.setLayout(NDCLayout)
+        scrollWidget.setMaximumWidth(740)
+        scroll.setWidget(scrollWidget)
+        scroll.setWidgetResizable(True)
+        scroll.setFixedHeight(500)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(scroll)
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox(
+            'Add NDC Metadata', self,
+            objectName='ndc_metadata_group_widget',
+        )
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        # NDC TAB LAYOUT CONFIGURATION
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('ndc_metadata_endpoint'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('ndc_metadata_group_widget'), 1, QtCore.Qt.AlignTop)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('NDCmetadata_widget')
+        self.addWidget(widget)
+
+        self.setAgentSuggestions()
+        self.setContactPointSuggestions()
+        self.setDistributionSuggestions()
+        self.setProjectSuggestions()
+
+        #############################################
+        # METADATA REPOSITORIES
+        #################################
+
+        table = QtWidgets.QTableWidget(0, 2, self, objectName='repository_table_widget')
+        table.setHorizontalHeaderLabels(['Name', 'Endpoint'])
+        table.horizontalHeader().setStretchLastSection(True)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.horizontalHeader().setMinimumSectionSize(100)
+        table.horizontalHeader().setSectionsClickable(False)
+        table.verticalHeader().setVisible(False)
+        table.verticalHeader().setSectionsClickable(False)
+        table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.addWidget(table)
+
+        delBtn = QtWidgets.QPushButton('Remove', objectName='repository_del_button')
+        delBtn.setEnabled(False)
+        connect(delBtn.clicked, self.removeRepository)
+        self.addWidget(delBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(delBtn)
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('repository_table_widget'))
+        formlayout.addRow(boxlayout)
+
+        groupbox = QtWidgets.QGroupBox('Repositories', self)
+        groupbox.setObjectName('repository_list_groupbox')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        nameField = StringField(self, objectName='repository_name_field')
+        uriField = StringField(self, objectName='repository_uri_field')
+        addBtn = QtWidgets.QPushButton('Add', objectName='repository_add_button')
+        connect(addBtn.clicked, self.addRepository)
+        self.addWidget(nameField)
+        self.addWidget(uriField)
+        self.addWidget(addBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(addBtn)
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(QtWidgets.QLabel('Name'), nameField)
+        formlayout.addRow(QtWidgets.QLabel('URI'), uriField)
+        formlayout.addRow(boxlayout)
+
+        groupbox = QtWidgets.QGroupBox('Add Repository', self)
+        groupbox.setObjectName('repository_add_groupbox')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.widget('repository_list_groupbox'))
+        layout.addWidget(self.widget('repository_add_groupbox'))
+        widget = QtWidgets.QWidget()
+        widget.setObjectName('repositories_widget')
+        widget.setLayout(layout)
+        self.addWidget(widget)
+
         #############################################
         # CONFIRMATION BOX
         #################################
 
-        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
-        #confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
-        #confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        doneBtn = QtWidgets.QPushButton('Done', objectName='done_button')
-        confirmation.addButton(doneBtn, QtWidgets.QDialogButtonBox.AcceptRole)
+        confirmation = QtWidgets.QDialogButtonBox(
+            QtCore.Qt.Horizontal, self,
+            objectName='confirmation_widget',
+        )
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Ok)
         confirmation.setContentsMargins(10, 0, 10, 10)
         self.addWidget(confirmation)
 
@@ -650,6 +1235,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('annotations_widget'), 'Annotations')
         widget.addTab(self.widget('iri_widget'), 'Global IRIs')
         widget.addTab(self.widget('assertions_widget'), 'Annotation Assertions')
+        widget.addTab(self.widget('repositories_widget'), 'Metadata Repositories')
+        widget.addTab(self.widget('NDCmetadata_widget'), 'NDC Metadata')
         self.addWidget(widget)
 
         layout = QtWidgets.QVBoxLayout()
@@ -658,6 +1245,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
         self.setLayout(layout)
         self.setMinimumSize(800, 800)
+        self.restoreGeometry(settings.value(
+            'manager/geometry',
+            QtCore.QByteArray(),
+            QtCore.QByteArray),
+        )
         self.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
         self.setWindowTitle('Ontology Manager')
         self.redraw()
@@ -683,6 +1275,16 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     #############################################
     #   SLOTS
     #################################
+
+    @QtCore.pyqtSlot()
+    def accept(self) -> None:
+        """
+        Executed when the dialog is accepted.
+        """
+        settings = QtCore.QSettings()
+        settings.setValue('manager/geometry', self.saveGeometry())
+        settings.sync()
+        super().accept()
 
     @QtCore.pyqtSlot()
     def redraw(self):
@@ -800,65 +1402,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         # ANNOTATION ASSERTIONS TAB
         ################################
 
-        metadataExp = AbstractMetadataExporter(self.project, self.session)
-        annotationAssertions = metadataExp.metadata()
         table = self.widget('annotation_assertions_table_widget')
-        table.clear()
-        table.setHorizontalHeaderLabels(
-            ['IRI', 'SimpleName', 'Type', 'AnnotationProperty', 'Datatype', 'Lang', 'Value'])
-        table.setRowCount(len(annotationAssertions))
-
-        rowcount = 0
-        processed = set()
-        Types = {
-            Item.AttributeNode: 'Data Property',
-            Item.ConceptNode: 'Class',
-            Item.IndividualNode: 'Named Individual',
-            Item.RoleNode: 'Object Property',
-        }
-        items = Types.keys()
-        annotations = self.project.getAnnotationPropertyIRIs()
-
-        for diagram in self.project.diagrams():
-            for node in self.project.iriOccurrences(diagram=diagram):
-                if node.type() not in items or node.iri in processed:
-                    continue
-                for annotation in node.iri.annotationAssertions:
-                    if annotation.assertionProperty in annotations:
-
-                        iriItem = QtWidgets.QTableWidgetItem(str(node.iri))
-                        iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                        table.setItem(rowcount, 0, iriItem)
-
-                        simpleNameItem = QtWidgets.QTableWidgetItem(node.iri.getSimpleName())
-                        simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                        table.setItem(rowcount, 1, simpleNameItem)
-
-                        typeItem = QtWidgets.QTableWidgetItem(Types.get(node.type()))
-                        typeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                        table.setItem(rowcount, 2, typeItem)
-
-                        propItem = QtWidgets.QTableWidgetItem(str(annotation.assertionProperty))
-                        propItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                        propItem.setData(QtCore.Qt.UserRole, annotation)
-                        table.setItem(rowcount, 3, propItem)
-
-                        datatypeItem = QtWidgets.QTableWidgetItem(str(annotation.datatype) or '')
-                        datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                        table.setItem(rowcount, 4, datatypeItem)
-
-                        langItem = QtWidgets.QTableWidgetItem(annotation.language or '')
-                        langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                        table.setItem(rowcount, 5, langItem)
-
-                        valueItem = QtWidgets.QTableWidgetItem(str(annotation.value))
-                        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                        table.setItem(rowcount, 6, valueItem)
-
-                        rowcount += 1
-
-                processed.add(node.iri)
-
+        table.clearContents()
+        for iri in self.project.iris:
+            for assertion in iri.annotationAssertions:
+                self._insertAssertionTableRow(assertion)
         table.resizeColumnsToContents()
         table.sortItems(0)
 
@@ -890,6 +1438,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.widget('iri_label_button').setEnabled(False)
         preField = self.widget('pre_input_field')
         postField = self.widget('post_input_field')
+
+        #############################################
+        # METADATA REPOSITORIES
+        #################################
+
+        widget = self.widget('repository_table_widget')  # type: QtWidgets.QTableWidget
+        widget.clearContents()
+        repos = Repository.load()
+        widget.setRowCount(len(repos))
+        for index, repo in enumerate(repos):
+            nameItem = QtWidgets.QTableWidgetItem(repo.name)
+            nameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            uriItem = QtWidgets.QTableWidgetItem(repo.uri)
+            uriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+            widget.setItem(index, 0, nameItem)
+            widget.setItem(index, 1, uriItem)
+        widget.resizeColumnsToContents()
+        widget.sortItems(0)
+        self.widget('repository_del_button').setEnabled(len(repos) > 0)
 
     #############################################
     # GENERAL TAB
@@ -1048,27 +1615,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         :type _: bool
         """
         LOGGER.debug("addOntologyAnnotation called")
-        assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI) #AnnotationAssertionBuilderDialog(self.project.ontologyIRI,self.session)
-        connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.onOntologyAnnotationAssertionAccepted)
-        assertionBuilder.exec_()
-
-    #@QtCore.pyqtSlot(AnnotationAssertion)
-    def onOntologyAnnotationAssertionAccepted(self,assertion):
-        """
-        :type assertion:AnnotationAssertion
-        """
-        table = self.widget('annotations_table_widget')
-        rowcount = table.rowCount()
-        table.setRowCount(rowcount + 1)
-        propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        propertyItem.setData(QtCore.Qt.UserRole,assertion)
-        table.setItem(rowcount, 0, propertyItem)
-        valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
-        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 1, QtWidgets.QTableWidgetItem(valueItem))
-        table.scrollToItem(table.item(rowcount, 0))
-        table.resizeColumnToContents(0)
+        assertionBuilder = AnnotationAssertionBuilderDialog(self.session, self.project.ontologyIRI)
+        connect(assertionBuilder.sgnAnnotationAssertionAccepted, self.redraw)
+        assertionBuilder.open()
 
     @QtCore.pyqtSlot(bool)
     def removeOntologyAnnotation(self, _):
@@ -1103,6 +1652,18 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.widget('ontology_annotations_delete_button').setEnabled(True)
         self.widget('ontology_annotations_edit_button').setEnabled(True)
 
+    @QtCore.pyqtSlot(int, int)
+    def onAssertionCellDoubleClicked(self, row: int, _col: int) -> None:
+        table: QtWidgets.QTableWidget = self.widget('annotation_assertions_table_widget')
+        assertion = table.item(row, 2).data(QtCore.Qt.ItemDataRole.UserRole)
+        assertionBuilder = AnnotationAssertionBuilderDialog(
+            self.session,
+            self.project.ontologyIRI,
+            assertion,
+        )
+        connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified, self.redraw)
+        assertionBuilder.open()
+
     @QtCore.pyqtSlot(bool)
     def editOntologyAnnotation(self, _):
         self.widget('ontology_annotations_edit_button').setEnabled(False)
@@ -1112,30 +1673,13 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
                 editItem = table.item(row, 0)
                 assertion = editItem.data(QtCore.Qt.UserRole)
-                #editItem.setData(None)
-                assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(self.project.ontologyIRI,assertion)
-                connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,self.onOntologyAnnotationAssertionModified)
-                assertionBuilder.exec_()
-
-    @QtCore.pyqtSlot(AnnotationAssertion)
-    def onOntologyAnnotationAssertionModified(self,assertion):
-        """
-        :type assertion:AnnotationAssertion
-        """
-        table = self.widget('annotations_table_widget')
-        rowcount = table.rowCount()
-        for row in range(0,rowcount):
-            propItem = table.item(row, 0)
-            itemAssertion = propItem.data(QtCore.Qt.UserRole)
-            if itemAssertion is assertion:
-                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                newPropertyItem.setData(QtCore.Qt.UserRole, assertion)
-                table.setItem(row, 0, newPropertyItem)
-                valueItem = QtWidgets.QTableWidgetItem(str(assertion.getObjectResourceString(True)))
-                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 1, QtWidgets.QTableWidgetItem(valueItem))
-                break
+                assertionBuilder = AnnotationAssertionBuilderDialog(
+                    self.session,
+                    self.project.ontologyIRI,
+                    assertion,
+                )
+                connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,self.redraw)
+                assertionBuilder.open()
 
     #############################################
     # PREFIXES TAB
@@ -1536,9 +2080,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.widget('convert_camel').setEnabled(False)
         self.widget('iri_label_button').setEnabled(True)
 
-    def onCaseCheckBoxClicked(self, checkbox):
+    @QtCore.pyqtSlot()
+    def onCaseCheckBoxClicked(self, _):
         self.widget('iri_label_button').setEnabled(True)
-        self.project.convertCase(checkbox)
+        self.project.convertCase(self.sender())
+
     @QtCore.pyqtSlot(int)
     def onLanguageSwitched(self,index):
         self.widget('iri_label_button').setEnabled(True)
@@ -1628,186 +2174,77 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         return
 
-    @QtCore.pyqtSlot(bool)
+    @QtCore.pyqtSlot()
     def addAnnotationAssertion(self):
-
-        assertionBuilder = self.session.doOpenAnnotationAssertionBuilder()
+        assertionBuilder = AnnotationAssertionBuilderDialog(self.session)
         connect(assertionBuilder.sgnAnnotationAssertionAccepted,
                 self.onAnnotationAssertionAccepted)
-        assertionBuilder.exec_()
+        assertionBuilder.open()
 
-    def onAnnotationAssertionAccepted(self, assertion):
-        """
-        :type assertion:AnnotationAssertion
-        """
-        Types = {
-            Item.AttributeNode: 'Data Property',
-            Item.ConceptNode: 'Class',
-            Item.IndividualNode: 'Named Individual',
-            Item.RoleNode: 'Object Property',
-        }
-
-
-        table = self.widget('annotation_assertions_table_widget')
-        rowcount = table.rowCount()
-        table.setRowCount(rowcount + 1)
-
-        subjectIRI = str(assertion.subject)
-        iriItem = QtWidgets.QTableWidgetItem(subjectIRI)
-        iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 0, iriItem)
-
-        simpleName = self.project.getIRI(subjectIRI).getSimpleName()
-        simpleNameItem = QtWidgets.QTableWidgetItem(str(simpleName))
-        simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 1, simpleNameItem)
-
-        for node in self.project.iriOccurrences():
-            if node.iri is self.project.getIRI(subjectIRI):
-                typeItem = QtWidgets.QTableWidgetItem(Types.get(node.type()))
-                typeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 2, typeItem)
-
-        propertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-        propertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        propertyItem.setData(QtCore.Qt.UserRole, assertion)
-        table.setItem(rowcount, 3, propertyItem)
-
-        datatype = assertion.datatype or ''
-        datatypeItem = QtWidgets.QTableWidgetItem(str(datatype))
-        datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 4, QtWidgets.QTableWidgetItem(datatypeItem))
-
-        language = assertion.language or ''
-        langItem = QtWidgets.QTableWidgetItem(str(language))
-        langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 5, QtWidgets.QTableWidgetItem(langItem))
-
-        valueItem = QtWidgets.QTableWidgetItem(str(assertion.value))
-        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        table.setItem(rowcount, 6, QtWidgets.QTableWidgetItem(valueItem))
-
-        table.scrollToItem(table.item(rowcount, 0))
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onAnnotationAssertionAccepted(self, assertion: AnnotationAssertion):
+        table: QtWidgets.QTableWidget = self.widget('annotation_assertions_table_widget')
+        self._insertAssertionTableRow(assertion)
         table.resizeColumnToContents(0)
+        table.scrollToItem(table.item(table.rowCount(), 0))
 
+    @QtCore.pyqtSlot()
     def editAnnotationAssertion(self):
-
         table = self.widget('annotation_assertions_table_widget')
         selectedRanges = table.selectedRanges()
         for selectedRange in selectedRanges:
             for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
-
                 itemIri = self.project.getIRI(str(table.item(row, 0).text()))
-                editItem = table.item(row, 3)
-                assertion = editItem.data(QtCore.Qt.UserRole)
-
-                assertionBuilder = self.session.doOpenAnnotationAssertionBuilder(itemIri,
-                                                                                 assertion)
+                assertion = table.item(row, 2).data(QtCore.Qt.UserRole)
+                assertionBuilder = AnnotationAssertionBuilderDialog(
+                    self.session, itemIri, assertion)
                 connect(assertionBuilder.sgnAnnotationAssertionCorrectlyModified,
                         self.onAnnotationAssertionModified)
-                assertionBuilder.exec_()
+                assertionBuilder.exec_()  # Needed here but should be replaced with open()
 
-    def onAnnotationAssertionModified(self, assertion):
-        """
-        :type assertion:AnnotationAssertion
-        """
-        Types = {
-            Item.AttributeNode: 'Data Property',
-            Item.ConceptNode: 'Class',
-            Item.IndividualNode: 'Named Individual',
-            Item.RoleNode: 'Object Property',
-        }
-
-        table = self.widget('annotation_assertions_table_widget')
-        rowcount = table.rowCount()
-        for row in range(0, rowcount):
-
-            propItem = table.item(row, 3)
-            itemAssertion = propItem.data(QtCore.Qt.UserRole)
+    @QtCore.pyqtSlot(AnnotationAssertion)
+    def onAnnotationAssertionModified(self, assertion: AnnotationAssertion):
+        table: QtWidgets.QTableWidget = self.widget('annotation_assertions_table_widget')
+        for rowcount in range(table.rowCount()):
+            itemAssertion = table.item(rowcount, 2).data(QtCore.Qt.UserRole)
             if itemAssertion is assertion:
-
-                subjectIRI = str(assertion.subject)
-                iriItem = QtWidgets.QTableWidgetItem(subjectIRI)
-                iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 0, iriItem)
-
-                simpleName = self.project.getIRI(subjectIRI).getSimpleName()
-                simpleNameItem = QtWidgets.QTableWidgetItem(str(simpleName))
-                simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 1, simpleNameItem)
-
-                for node in self.project.iriOccurrences():
-                    if node.iri is self.project.getIRI(subjectIRI):
-                        typeItem = QtWidgets.QTableWidgetItem(Types.get(node.type()))
-                        typeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 2, typeItem)
-
-                newPropertyItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
-                newPropertyItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                newPropertyItem.setData(QtCore.Qt.UserRole, assertion)
-                table.setItem(row, 3, newPropertyItem)
-
-                datatype = assertion.datatype or ''
-                datatypeItem = QtWidgets.QTableWidgetItem(str(datatype))
-                datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 4, QtWidgets.QTableWidgetItem(datatypeItem))
-
-                language = assertion.language or ''
-                langItem = QtWidgets.QTableWidgetItem(str(language))
-                langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 5, QtWidgets.QTableWidgetItem(langItem))
-
-                valueItem = QtWidgets.QTableWidgetItem(str(assertion.value))
-                valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                table.setItem(row, 6, QtWidgets.QTableWidgetItem(valueItem))
-
-                table.scrollToItem(table.item(row, 0))
+                table.removeRow(rowcount)
+                self._insertAssertionTableRow(assertion, rowcount)
                 break
 
-
-    @QtCore.pyqtSlot(bool)
-    def removeAnnotationAssertion(self, _):
+    @QtCore.pyqtSlot()
+    def removeAnnotationAssertion(self):
         """
         Removes an annotation assertion from the ontology alphabet.
-        :type _: bool
         """
-        table = self.widget('annotation_assertions_table_widget')
-        rowcount = table.rowCount()
-
-        selectedCells = table.selectedItems()
-        rows = list(set([x.row() for x in selectedCells]))
-        rows = sorted(rows, reverse=True)
-
-        commands = []
-        for row in rows:
-            itemIri = self.project.getIRI(str(table.item(row, 0).text()))
-            editItem = table.item(row, 3)
-            assertion = editItem.data(QtCore.Qt.UserRole)
-            commands.append(CommandIRIRemoveAnnotationAssertion(self.project, itemIri, assertion))
-
+        table: QtWidgets.QTableWidget = self.widget('annotation_assertions_table_widget')
+        # Must remove in reverse order of selection to avoid changing row indexes while removing
+        selection = sorted([
+            r
+            for s in table.selectedRanges()
+            for r in range(s.bottomRow(), s.topRow() + 1)
+        ], reverse=True)
         self.session.undostack.beginMacro('remove annotation assertions >>')
-        for command in commands:
-            if command:
-                self.session.undostack.push(command)
-        self.session.undostack.endMacro()
-        for row in rows:
+        for row in selection:
+            itemIri = self.project.getIRI(str(table.item(row, 0).text()))
+            assertion = table.item(row, 2).data(QtCore.Qt.UserRole)
+            self.session.undostack.push(CommandIRIRemoveAnnotationAssertion(
+                self.project,
+                itemIri,
+                assertion,
+            ))
             table.removeRow(row)
-        table.setRowCount(rowcount - len(rows))
+        self.session.undostack.endMacro()
 
-    def searchAnnotationTable(self):
-
-        text = self.sender().text()
-
+    @QtCore.pyqtSlot(str)
+    def searchAnnotationTable(self, text):
         table = self.widget('annotation_assertions_table_widget')
-
-        rowCount = table.rowCount()
         columnCount = table.columnCount()
-        for row in range(rowCount):
+        for row in range(table.rowCount()):
             table.showRow(row)
 
         self.hiddenRows = []
-
-        for row in range(rowCount):
+        for row in range(table.rowCount()):
             contains = False
             for col in range(columnCount):
                 item = table.item(row, col).text()
@@ -1817,17 +2254,535 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 table.hideRow(row)
                 self.hiddenRows.append(row)
 
+    @QtCore.pyqtSlot()
     def selectAllAnnotationAssertion(self):
-
         table = self.widget('annotation_assertions_table_widget')
         table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         table.clearSelection()
-
-        rowCount = table.rowCount()
-
-        for row in range(rowCount):
+        for row in range(table.rowCount()):
             if row not in self.hiddenRows:
                 table.selectRow(row)
-
         table.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
+    def _insertAssertionTableRow(
+        self,
+        assertion: AnnotationAssertion,
+        row: int = None,
+    ) -> None:
+        """
+        Insert an annotation assertion into the assertion table.
+
+        :param assertion: the assertion to insert.
+        :param row: position to insert the row to.
+        """
+        table = self.widget('annotation_assertions_table_widget')
+        rowcount = row if row is not None else table.rowCount()
+        table.insertRow(rowcount)
+        iriItem = QtWidgets.QTableWidgetItem(str(assertion.subject))
+        iriItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 0, iriItem)
+        simpleNameItem = QtWidgets.QTableWidgetItem(assertion.subject.getSimpleName())
+        simpleNameItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 1, simpleNameItem)
+        propItem = QtWidgets.QTableWidgetItem(str(assertion.assertionProperty))
+        propItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        propItem.setData(QtCore.Qt.UserRole, assertion)
+        table.setItem(rowcount, 2, propItem)
+        valueItem = QtWidgets.QTableWidgetItem(str(assertion.value))
+        valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 3, valueItem)
+        datatypeItem = QtWidgets.QTableWidgetItem(str(assertion.datatype or ''))
+        datatypeItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 4, datatypeItem)
+        langItem = QtWidgets.QTableWidgetItem(assertion.language or '')
+        langItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        table.setItem(rowcount, 5, langItem)
+
+    @QtCore.pyqtSlot()
+    def doAddAgent(self):
+        agentBuilder = AgentBuilderDialog(self, self.ndcDataset)
+        connect(agentBuilder.accepted, self.setAgentSuggestions)
+        agentBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def doAddProject(self):
+        projectBuilder = ProjectBuilderDialog(self, self.ndcDataset)
+        connect(projectBuilder.accepted, self.setProjectSuggestions)
+        projectBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def doAddDistribution(self):
+        distributionBuilder = DistributionBuilderDialog(self, self.ndcDataset)
+        connect(distributionBuilder.accepted, self.setDistributionSuggestions)
+        distributionBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def doAddContact(self):
+        contactBuilder = ContactBuilderDialog(self, self.ndcDataset)
+        connect(contactBuilder.accepted, self.setContactPointSuggestions)
+        contactBuilder.open()
+
+    def setRightsHolders(self):
+        widget = self.widget('ndc_rightsHolder_field')
+        rightsHolders = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/rightsHolder'),
+            self.project.ontologyIRI.annotationAssertions)
+        rightsHolders = list(map(lambda x: str(x.value), list(rightsHolders)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in rightsHolders:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setPublishers(self):
+        widget = self.widget('ndc_publisher_field')
+        publishers = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/publisher'),
+            self.project.ontologyIRI.annotationAssertions)
+        publishers = list(map(lambda x: str(x.value), list(publishers)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in publishers:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setCreators(self):
+        widget = self.widget('ndc_creator_field')
+        creators = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/creator'),
+            self.project.ontologyIRI.annotationAssertions)
+        creators = list(map(lambda x: str(x.value), list(creators)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in creators:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setContacts(self):
+        widget = self.widget('ndc_contacts_field')
+        contacts = filter(
+            lambda x: (str(x.assertionProperty) == 'http://www.w3.org/ns/dcat#contactPoint'),
+            self.project.ontologyIRI.annotationAssertions)
+        contacts = list(map(lambda x: str(x.value), list(contacts)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in contacts:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setProjects(self):
+        widget = self.widget('ndc_projects_field')
+        projects = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/semanticAssetInUse'),
+            self.project.ontologyIRI.annotationAssertions)
+        projects = list(map(lambda x: str(x.value), list(projects)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in projects:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setDistributions(self):
+        widget = self.widget('ndc_distributions_field')
+        distributions = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/hasSemanticAssetDistribution'),
+            self.project.ontologyIRI.annotationAssertions)
+        distributions = list(map(lambda x: str(x.value), list(distributions)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in distributions:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setLanguages(self):
+        widget = self.widget('ndc_languages_field')
+        languages = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/language'),
+            self.project.ontologyIRI.annotationAssertions)
+        languages = list(map(lambda x: str(x.value), list(languages)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in languages:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setKeyClasses(self):
+        widget = self.widget('ndc_mainClasses_field')
+        classes = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/italia/onto/ADMS/hasKeyClass'),
+            self.project.ontologyIRI.annotationAssertions)
+        classes = list(map(lambda x: str(x.value), list(classes)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in classes:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
+    def setPeriodicities(self):
+        widget = self.widget('ndc_accrualPeriodicity_field')
+        periodicities = filter(
+            lambda x: (str(x.assertionProperty) == 'http://purl.org/dc/terms/accrualPeriodicity'),
+            self.project.ontologyIRI.annotationAssertions)
+        periodicities = list(map(lambda x: str(x.value), list(periodicities)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in periodicities:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        widget.setCurrentText(text)
+
+    @QtCore.pyqtSlot()
+    def setAgentSuggestions(self):
+        agents = sorted(set([a.uri.toPython() for a in self.ndcDataset.agents()]))
+        rightsHolderWidget = self.widget('ndc_rightsHolder_field')
+        rightsHolderWidget.addItems(agents)
+        publisherWidget = self.widget('ndc_publisher_field')
+        publisherWidget.addItems(agents)
+        creatorWidget = self.widget('ndc_creator_field')
+        creatorWidget.addItems(agents)
+
+    @QtCore.pyqtSlot()
+    def setContactPointSuggestions(self):
+        contactPoints = sorted(set([c.uri.toPython() for c in self.ndcDataset.contactPoints()]))
+        contactPointWidget = self.widget('ndc_contacts_field')
+        contactPointWidget.addItems(contactPoints)
+
+    @QtCore.pyqtSlot()
+    def setProjectSuggestions(self):
+        projects = sorted(set([p.uri.toPython() for p in self.ndcDataset.projects()]))
+        projectWidget = self.widget('ndc_projects_field')
+        projectWidget.addItems(projects)
+
+    @QtCore.pyqtSlot()
+    def setDistributionSuggestions(self):
+        distributions = sorted(set([d.uri.toPython() for d in self.ndcDataset.distributions()]))
+        distributionWidget = self.widget('ndc_distributions_field')
+        distributionWidget.addItems(distributions)
+
+    @QtCore.pyqtSlot()
+    def doConnectEndpoint(self) -> None:
+        settings = QtCore.QSettings()
+        url = self.widget('endpoint_field').text()
+        settings.setValue('manager/endpoint', url)
+        endpoint = SPARQLEndpoint(url, self.session.nmanager)
+        connect(endpoint.sgnConstructFinished, self.onEndpointQueryCompleted)
+        connect(endpoint.sgnSPARQLError, self.onEndpointQueryError)
+        endpoint.execConstruct(NDCDataset.construct())
+
+    @QtCore.pyqtSlot(QtCore.QUrl, Graph)
+    def onEndpointQueryCompleted(self, url: QtCore.QUrl, graph: Graph) -> None:
+        self.ndcDataset.remove_graph(URIRef(url.toString()))
+        g = self.ndcDataset.add_graph(URIRef(url.toString()))
+        g += graph
+        self.ndcDataset.save()
+        self.setAgentSuggestions()
+        self.setContactPointSuggestions()
+        self.setDistributionSuggestions()
+        self.setProjectSuggestions()
+        self.session.addNotification('Metadata retrieved from endpoint!')
+
+    @QtCore.pyqtSlot(QtCore.QUrl)
+    def onEndpointQueryError(self, url: QtCore.QUrl) -> None:
+        self.session.addNotification(
+            f'Failed to execute SPARQL query on endpoint: {url.toString()}'
+        )
+
+    def doAddMetadata(self):
+        self.session.undostack.beginMacro('Save NDC metadata to project')
+        annotations = []
+        subjectIRI = self.project.ontologyIRI
+        titleIT = self.widget('ndc_ITtitle_field').text()
+        annotations.append({
+            'prop': DCTERMS.title.toPython(),
+            'value': titleIT,
+            'type': None,
+            'lang': 'it'})
+        titleEN = self.widget('ndc_ENtitle_field').text()
+        annotations.append({
+            'prop': DCTERMS.title.toPython(),
+            'value': titleEN,
+            'type': None,
+            'lang': 'en'
+        })
+        labelIT = self.widget('ndc_ITlabel_field').text()
+        annotations.append({
+            'prop': RDFS.label.toPython(),
+            'value': labelIT,
+            'type': None,
+            'lang': 'it'
+        })
+        labelEN = self.widget('ndc_ENlabel_field').text()
+        annotations.append({
+            'prop': RDFS.label.toPython(),
+            'value': labelEN,
+            'type': None,
+            'lang': 'en'
+        })
+        commentIT = self.widget('ndc_ITcomment_field').text()
+        annotations.append({
+            'prop': RDFS.comment.toPython(),
+            'value': commentIT,
+            'type': None,
+            'lang': 'it'
+        })
+        commentEN = self.widget('ndc_ENcomment_field').text()
+        annotations.append({
+            'prop': RDFS.comment.toPython(),
+            'value': commentEN,
+            'type': None,
+            'lang': 'en'
+        })
+        officialURI = self.widget('ndc_officialURI_field').text()
+        annotations.append({
+            'prop': ADMS.officialURI.toPython(),
+            'value': officialURI,
+            'type': None,
+            'lang': None
+        })
+        identifier = self.widget('ndc_id_field').text()
+        annotations.append({
+            'prop': DCTERMS.identifier.toPython(),
+            'value': identifier,
+            'type': None,
+            'lang': None
+        })
+        creationDate = self.widget('ndc_creationDate_field').date().toString("yyyy-MM-dd")
+        if creationDate != "2000-01-01":
+            annotations.append({
+                'prop': DCTERMS.issued.toPython(),
+                'value': creationDate+'T00:00:00+00:00',
+                'type': OWL2Datatype.dateTime.value,
+                'lang': None
+            })
+        lastModifiedDate = self.widget('ndc_lastModifiedDate_field').date().toString("yyyy-MM-dd")
+        if lastModifiedDate != "2000-01-01":
+            annotations.append({
+                'prop': DCTERMS.modified.toPython(),
+                'value': lastModifiedDate + 'T00:00:00+00:00',
+                'type': OWL2Datatype.dateTime.value,
+                'lang': None
+            })
+        versionInfoIT = self.widget('ndc_ITversionInfo_field').text()
+        annotations.append({
+            'prop': OWL.versionInfo.toPython(),
+            'value': versionInfoIT,
+            'type': None,
+            'lang': 'it'
+        })
+        versionInfoEN = self.widget('ndc_ENversionInfo_field').text()
+        annotations.append({
+            'prop': OWL.versionInfo.toPython(),
+            'value': versionInfoEN,
+            'type': None,
+            'lang': 'en'
+        })
+        accrualPeriodicity = self.widget('ndc_accrualPeriodicity_field').currentText()
+        annotations.append({
+            'prop': DCTERMS.accrualPeriodicity.toPython(),
+            'value':  self.project.getIRI(accrualPeriodicity) if accrualPeriodicity else '',
+            'type': None,
+            'lang': None
+        })
+        languages = self.widget('ndc_languages_field').currentData()
+        for l in languages:
+            annotations.append({
+                'prop': DCTERMS.language.toPython(),
+                'value': self.project.getIRI(l),
+                'type': None,
+                'lang': None
+            })
+        keyClasses = self.widget('ndc_mainClasses_field').currentData()
+        for c in keyClasses:
+            annotations.append({
+                'prop': ADMS.hasKeyClass.toPython(),
+                'value': self.project.getIRI(c),
+                'type': None,
+                'lang': None
+            })
+        prefix = self.widget('ndc_prefix_field').text()
+        annotations.append({
+            'prop': ADMS.prefix.toPython(),
+            'value': prefix,
+            'type': None,
+            'lang': None
+        })
+        rightsHolders = self.widget('ndc_rightsHolder_field').currentData()
+        for rh in rightsHolders:
+            annotations.append({
+                'prop': DCTERMS.rightsHolder.toPython(),
+                'value': self.project.getIRI(rh),
+                'type': None,
+                'lang': None
+            })
+        publishers = self.widget('ndc_publisher_field').currentData()
+        for pub in publishers:
+            annotations.append({
+                'prop': DCTERMS.publisher.toPython(),
+                'value': self.project.getIRI(pub),
+                'type': None,
+                'lang': None
+            })
+        creators = self.widget('ndc_creator_field').currentData()
+        for ct in creators:
+            annotations.append({
+                'prop': DCTERMS.creator.toPython(),
+                'value': self.project.getIRI(ct),
+                'type': None,
+                'lang': None
+            })
+        projects = self.widget('ndc_projects_field').currentData()
+        for pj in projects:
+            annotations.append({
+                'prop': ADMS.semanticAssetInUse.toPython(),
+                'value': self.project.getIRI(pj),
+                'type': None,
+                'lang': None
+            })
+        distributions = self.widget('ndc_distributions_field').currentData()
+        for ds in distributions:
+            annotations.append({
+                'prop': ADMS.hasSemanticAssetDistribution.toPython(),
+                'value': self.project.getIRI(ds),
+                'type': None,
+                'lang': None
+            })
+        contacts = self.widget('ndc_contacts_field').currentData()
+        for co in contacts:
+            annotations.append({
+                'prop': DCAT.contactPoint.toPython(),
+                'value': self.project.getIRI(co),
+                'type': None,
+                'lang': None
+            })
+        for a in annotations:
+            if a['value']:
+                # if not self.project.existAnnotationProperty(property):
+                #     # self.project.isValidIdentifier(property)
+                #     comm = CommandProjectAddAnnotationProperty(self.project, property)
+                #     self.session.undostack.push(comm)
+                assertion = AnnotationAssertion(
+                    subjectIRI,
+                    self.project.getIRI(a['prop']),
+                    a['value'],
+                    a['type'],
+                    a['lang'],
+                )
+                command = CommandIRIAddAnnotationAssertion(
+                    self.project,
+                    subjectIRI,
+                    assertion,
+                )
+                self.session.undostack.push(command)
+        self.session.undostack.endMacro()
+        # self.redraw()
+        self.session.addNotification('Metadata added to the current project!')
+
+    #############################################
+    # METADATA REPOSITORIES
+    #################################
+
+    @QtCore.pyqtSlot()
+    def addRepository(self):
+        """Shows a dialog to insert a add a new repository."""
+        nameField = self.widget('repository_name_field')  # type: StringField
+        uriField = self.widget('repository_uri_field')  # type: StringField
+
+        # Validate user input
+        if len(nameField.text()) == 0:
+            msgBox = QtWidgets.QMessageBox(  # noqa
+                QtWidgets.QMessageBox.Warning,
+                'Invalid Repository Name',
+                'Please specify a repository name.',
+                informativeText=textwrap.dedent("""
+                The repository name can be any string that is used to easily
+                reference the repository.
+                """),
+                parent=self,
+            )
+            msgBox.open()
+        elif not QtCore.QUrl(uriField.text()).isValid():
+            msgBox = QtWidgets.QMessageBox(  # noqa
+                QtWidgets.QMessageBox.Warning,
+                'Invalid Repository URI',
+                'Please specify a valid repository URI.',
+                informativeText=textwrap.dedent("""
+                The repository URI is the base path at which the repository API is accessible,
+                and must include protocol, domain and port (if any).
+
+                e.g.:
+                    https://example.com:5000/
+                    https://example.com/myrepo/
+                """),
+                parent=self,
+            )
+            msgBox.open()
+        else:
+            # Add new repository
+            repos = Repository.load()
+            if any(map(lambda r: r.name == nameField.text(), repos)):
+                msgBox = QtWidgets.QMessageBox(  # noqa
+                    QtWidgets.QMessageBox.Warning,
+                    'Duplicate Repository Error',
+                    f'A repository named {nameField.text()} already exists.',
+                    informativeText=textwrap.dedent("""
+                    Repository names must be unique to avoid abiguity in the user interface.
+                    """),
+                    parent=self,
+                )
+                msgBox.open()
+            else:
+                repos.append(Repository(name=nameField.text(), uri=uriField.text()))
+                Repository.save(repos)
+                self.redraw()
+
+    @QtCore.pyqtSlot()
+    def removeRepository(self):
+        """Remove selected repositories."""
+        # Delete selected repositories
+        widget = self.widget('repository_table_widget')  # type: QtWidgets.QTableWidget
+        selections = widget.selectedRanges()
+        for sel in selections:
+            for row in range(sel.bottomRow(), sel.topRow() + 1):
+                widget.removeRow(row)
+        # Save the current repositories list
+        repos = []
+        for row in range(widget.rowCount()):
+            repos.append(Repository(
+                name=widget.item(row, 0).text(),
+                uri=widget.item(row, 1).text(),
+            ))
+        Repository.save(repos)
+        self.redraw()

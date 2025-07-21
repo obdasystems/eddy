@@ -33,12 +33,12 @@ Eddy is written in [Python] and make use of the [PyQt5] python bindings for the 
 ### Installing
 
 You can get the latest version of Eddy from the [GitHub releases page](https://github.com/obdasystems/eddy/releases),
-or follow more detailed [installation instructions](docs/install.md) on how to setup and
+or follow more detailed [installation instructions](docs/install.md) on how to set up and
 install Eddy on the most common platforms.
 
 ### About Graphol
 
-[Graphol] is a novel language for the specification and visualization of Description Logic (DL) ontologies,
+Graphol is a novel language for the specification and visualization of Description Logic (DL) ontologies,
 developed by members of the DASI-lab group of the [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"]
 at [Sapienza] University of Rome. Graphol  offers a completely visual representation of ontologies to users, in order to help
 understanding by people who are not skilled in logic. Graphol provides designers with simple graphical primitives for ontology
@@ -81,7 +81,6 @@ Eddy is licensed under the [GNU General Public License v3](https://www.gnu.org/l
 See the LICENSE file included with the distribution.
 
 [Dipartimento di Ingegneria Informatica, Automatica e Gestionale "A.Ruberti"]: http://www.dis.uniroma1.it/en
-[Graphol]: http://www.dis.uniroma1.it/~graphol/
 [Python]: https://www.python.org/
 [PyQt5]: https://riverbankcomputing.com/software/pyqt/intro
 [Protégé]: http://protege.stanford.edu/

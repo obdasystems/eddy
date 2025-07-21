@@ -32,32 +32,9 @@
 #                                                                        #
 ##########################################################################
 
-
-__appname__ = 'Eddy'
-__copyright__ = 'Copyright © 2025 OBDA Systems'
-__email__ = 'info@obdasystems.com'
-__license__ = 'GPL'
-__organization__ = 'OBDA Systems'
-__status__ = 'Beta'
-__version__ = '3.8.dev0'
-
-
-APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
-APPNAME = __appname__
-BUG_TRACKER = 'https://github.com/obdasystems/eddy/issues'
-MANUAL_URL = 'https://github.com/obdasystems/eddy/wiki'
-COPYRIGHT = __copyright__
-APP_HOME = 'https://www.obdasystems.com/eddy'
-EMAIL = __email__
-GRAPHOL_HOME = 'https://www.obdasystems.com/graphol'
-LICENSE = __license__
-ORGANIZATION = __appname__
-ORGANIZATION_NAME = __organization__
-ORGANIZATION_DOMAIN = 'obdasystems.com'
-ORGANIZATION_REVERSE_DOMAIN = 'com.obdasystems'
-ORGANIZATION_URL = 'https://www.obdasystems.com/'
-PROJECT_HOME = 'https://github.com/obdasystems/eddy'
-SAPIENZA_HOME = 'http://en.uniroma1.it/'
-STATUS = __status__
-VERSION = __version__
-WORKSPACE = '~/EddyProjects'
+[plugin]
+author: OBDA Systems
+contact: info@obdasystems.com
+id: metadata_importer
+name: Metadata Importer
+version: 0.2.0

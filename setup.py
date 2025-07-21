@@ -561,6 +561,16 @@ if LINUX:
 
     cmdclass['appimage'] = AppImageCommand
 
+
+# Reading the long description from README.md
+def read_long_description():
+    try:
+        with open('README.md') as desc_file:
+            return desc_file.read()
+    except FileNotFoundError:
+        return 'No README.md available'
+
+
 #############################################
 # SETUP
 #################################
@@ -574,13 +584,8 @@ setuptools.setup(
     maintainer="Manuel Namici",
     maintainer_email="namici@diag.uniroma1.it",
     description="Eddy is a graphical editor for the specification and visualization of Graphol ontologies.",
-    long_description="Eddy is a graphical editor for the construction of Graphol ontologies. Eddy features a "
-                     "design environment specifically thought out for generating Graphol ontologies through ad-hoc "
-                     "functionalities. Drawing features allow designers to comfortably edit ontologies in a central "
-                     "viewport area, while lateral docking areas contains specifically-tailored widgets for "
-                     "editing, navigation and inspection of the diagram. Eddy is written in [Python 3] and the UI is "
-                     "implemented through the PyQt5 bindings for the Qt5 framework. Eddy is licensed under the GNU "
-                     "General Public License v3.",
+    long_description=read_long_description(),
+    long_description_content_type="text/markdown",
     keywords = "eddy graphol sapienza",
     license=LICENSE,
     url="https://github.com/obdasystems/eddy",
@@ -601,6 +606,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Utilities',
     ],

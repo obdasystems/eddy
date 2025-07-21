@@ -33,12 +33,21 @@
 ##########################################################################
 
 
+import json
 import os
+import textwrap
 
 from PyQt5 import (
     QtCore,
     QtGui,
     QtWidgets,
+)
+from rdflib import (
+    DCAT,
+    DCTERMS,
+    Literal,
+    RDF,
+    URIRef,
 )
 
 from eddy import BUG_TRACKER
@@ -80,6 +89,15 @@ from eddy.core.functions.path import (
 )
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
+from eddy.core.metadata import (
+    LiteralValue,
+    NamedEntity,
+)
+from eddy.core.ndc import (
+    ADMS,
+    NDCDataset,
+)
+from eddy.core.network import NetworkManager
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     OWL2Datatype,
@@ -91,6 +109,7 @@ from eddy.ui.fields import (
     ComboBox,
     CheckBox,
 )
+
 # from eddy.ui.progress import BusyProgressDialog
 # from eddy.ui.syntax import SyntaxValidationWorker
 
@@ -201,6 +220,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         settings = QtCore.QSettings()
 
         self.diagrams = diagrams
+        self.missing = []
 
         #############################################
         # MAIN FORM AREA
@@ -461,11 +481,48 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
 
         self.reject()
 
+    @QtCore.pyqtSlot(str)
+    def onMetadataFetchErrored(self, message):
+        """
+        Executed when a metadata fetch request fails.
+        :type message: str
+        """
+        self.session.addNotification(textwrap.dedent(f"""
+        <b><font color="#7E0B17">ERROR</font></b>:\n
+        {message}
+        """))
+
+    @QtCore.pyqtSlot(str)
+    def onNDCMetadataMissing(self, uri):
+        """
+        Executed when an NDC metadata entity is missing from the local store.
+        :type uri: str
+        """
+        self.missing.append(uri)
+
     @QtCore.pyqtSlot()
     def onCompleted(self):
         """
         Executed whenever the translation completes.
         """
+        if self.missing:
+            msgbox = QtWidgets.QMessageBox(self)
+            msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+            msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msgbox.setText(textwrap.dedent("""
+                Translation completed however there are some missing metadata entities
+
+                If you use the exported OWL 2 ontology these entities will not have
+                the associated metadata. Make sure you have fetched the correct endpoint
+                from the 'Ontology Manager -> NDC Metadata' tab.
+            """
+            ))
+            msgbox.setDetailedText(os.linesep.join((
+                'The following entities are missing from the local store:',
+                os.linesep.join(' - ' + uri for uri in self.missing),
+            )))
+            msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+            msgbox.exec_()
         msgbox = QtWidgets.QMessageBox(self)
         msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
         msgbox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -513,6 +570,8 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
         connect(worker.sgnErrored, self.onErrored)
+        connect(worker.sgnMetadataFetchErrored, self.onMetadataFetchErrored)
+        connect(worker.sgnNDCMetadataMissing, self.onNDCMetadataMissing)
         connect(worker.sgnProgress, self.onProgress)
         self.startThread('OWL2Export', worker)
 
@@ -523,6 +582,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
     """
     sgnCompleted = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal(Exception)
+    sgnMetadataFetchErrored = QtCore.pyqtSignal(str)
+    sgnNDCMetadataMissing = QtCore.pyqtSignal(str)
     sgnProgress = QtCore.pyqtSignal(int, int)
     sgnStarted = QtCore.pyqtSignal()
 
@@ -567,6 +628,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
 
         self.path = path
         self.project = project
+        self.nmanager = NetworkManager(self)
         self.axiomsList = kwargs.get('axioms', set())
         self.normalize = kwargs.get('normalize', False)
         self.syntax = kwargs.get('syntax', OWLSyntax.Functional)
@@ -576,6 +638,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self._axioms = set()
         self._converted = dict()
         self._converted_meta_individuals = dict()
+        self.metadataProperty = self.project.getIRI('urn:x-graphol:origin')
 
         self.df = None
         self.man = None
@@ -698,7 +761,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if annotation.isIRIValued():
             value = self.IRI.create(str(annotation.value))
         else:
-            lexicalForm = annotation.value.replace('\n', '')
+            lexicalForm = annotation.value
             if annotation.language:
                 value = self.df.getOWLLiteral(lexicalForm, annotation.language)
             else:
@@ -1342,8 +1405,43 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if OWLAxiom.Annotation in self.axiomsList:
             for annotation in node.iri.annotationAssertions:
                 subject = self.IRI.create(str(annotation.subject))
-                value = self.getOWLApiAnnotation(annotation)
-                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
+                if annotation.assertionProperty == self.metadataProperty:
+                    uri = annotation.value
+                    # FIXME: this is a sync request!!!
+                    result, response = self.nmanager.getSync(str(uri))
+                    if not result:
+                        msg = f'Retrieval of {uri} failed: {response}'
+                        LOGGER.warning(msg)
+                        self.sgnMetadataFetchErrored.emit(msg)
+                        continue
+                    try:
+                        for assertion in NamedEntity.from_dict(json.loads(response)).annotations:
+                            if isinstance(assertion.object, LiteralValue):
+                                from eddy.core.owl import Annotation
+                                value = Annotation(
+                                    self.project.getIRI(str(assertion.predicate.iri)),
+                                    assertion.object.value,
+                                    type=assertion.object.datatype,
+                                    language=assertion.object.language,
+                                    parent=self.project,
+                                )
+                            elif isinstance(assertion.object, NamedEntity):
+                                value = Annotation(
+                                    self.project.getIRI(str(assertion.predicate.iri)),
+                                    self.project.getIRI(str(assertion.object.iri)),
+                                    parent=self.project,
+                                )
+                            else:
+                                LOGGER.warning(f'Skipping annotation with bnode object {assertion}')
+                            value = self.getOWLApiAnnotation(value)
+                            self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
+                    except Exception as e:
+                        msg = f'Failed to parse metadata for {uri}'
+                        LOGGER.warning(f'{msg}: {response}')
+                        self.sgnMetadataFetchErrored.emit(f'{msg}: See log for details.')
+                else:
+                    value = self.getOWLApiAnnotation(annotation)
+                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
 
     def createClassAssertionAxiom(self, edge):
         """
@@ -1802,6 +1900,77 @@ class OWLOntologyExporterWorker(AbstractWorker):
             anns = self.getAxiomAnnotationSet(edge)
             self.addAxiom(self.df.getOWLSubPropertyChainOfAxiom(conversionA, conversionB, anns))
 
+    def createNDCNamedIndividual(self, entity):
+        """
+        Generate an OWL 2 NamedIndividual for NDC entities.
+        """
+        ind = self.df.getOWLNamedIndividual(self.IRI.create(entity.uri.toPython()))
+        if OWLAxiom.Declaration in self.axiomsList:
+            self.addAxiom(self.df.getOWLDeclarationAxiom(ind))
+        for s, p, o in entity.triples():
+            if p == RDF.type and OWLAxiom.ClassAssertion in self.axiomsList:
+                inst = self.df.getOWLClassAssertionAxiom(
+                    self.df.getOWLClass(self.IRI.create(o.toPython())),
+                    ind,
+                )
+                self.addAxiom(inst)
+            elif OWLAxiom.Annotation in self.axiomsList:
+                prop = self.df.getOWLAnnotationProperty(self.IRI.create(p.toPython()))
+                if isinstance(o, URIRef):
+                    value = self.IRI.create(o.toPython())
+                elif isinstance(o, Literal) and o.datatype:
+                    dtype = self.df.getOWLDatatype(o.datatype.toPython())
+                    value = self.df.getOWLLiteral(o.toPython(), dtype)
+                elif isinstance(o, Literal) and o.language:
+                    value = self.df.getOWLLiteral(o.toPython(), o.language)
+                else:
+                    value = self.df.getOWLLiteral(o.toPython())
+                assertion = self.df.getOWLAnnotationAssertionAxiom(prop, ind.getIRI(), value)
+                self.addAxiom(assertion)
+
+    def createNDCNamedIndividuals(self):
+        """
+        Generate OWL 2 NamedIndividuals for NDC entities.
+        """
+        if OWLAxiom.Annotation in self.axiomsList:
+            dataset = NDCDataset()
+            dataset.load()
+            for annotation in self.project.ontologyIRI.annotationAssertions:
+                prop = str(annotation.assertionProperty)
+                value = str(annotation.value)
+                if prop in [
+                    DCTERMS.rightsHolder.toPython(),
+                    DCTERMS.publisher.toPython(),
+                    DCTERMS.creator.toPython(),
+                ]:
+                    agent = first(dataset.agents(URIRef(value)))
+                    if agent:
+                        self.createNDCNamedIndividual(agent)
+                    else:
+                        LOGGER.error('Unknown agent in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
+                elif prop == DCAT.contactPoint.toPython():
+                    contact = first(dataset.contactPoints(URIRef(value)))
+                    if contact:
+                        self.createNDCNamedIndividual(contact)
+                    else:
+                        LOGGER.error('Unknown contact point in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
+                elif prop == ADMS.hasSemanticAssetDistribution.toPython():
+                    distrib = first(dataset.distributions(URIRef(value)))
+                    if distrib:
+                        self.createNDCNamedIndividual(distrib)
+                    else:
+                        LOGGER.error('Unknown distribution in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
+                elif prop == ADMS.semanticAssetInUse.toPython():
+                    proj = first(dataset.projects(URIRef(value)))
+                    if proj:
+                        self.createNDCNamedIndividual(proj)
+                    else:
+                        LOGGER.error('Unknown project in metadata: %s', value)
+                        self.sgnNDCMetadataMissing.emit(value)
+
     #############################################
     #   MAIN WORKER
     #################################
@@ -1843,6 +2012,7 @@ class OWLOntologyExporterWorker(AbstractWorker):
                     value = self.getOWLApiAnnotation(annotation)
                     self.ontology.applyChange(self.AddOntologyAnnotation(self.ontology, value))
 
+            self.createNDCNamedIndividuals()
             LOGGER.debug('Initialized OWL 2 Ontology: %s', ontologyIRI)
 
             #############################################

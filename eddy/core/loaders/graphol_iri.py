@@ -2024,7 +2024,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         if not fexists(self.path):
             raise ProjectNotFoundError('missing project ontology: %s' % self.path)
         self.document = QtXml.QDomDocument()
-        if File.forPath(self.path) is not File.Graphol or not self.document.setContent(fread(self.path)):
+        if not self.document.setContent(fread(self.path)):
             raise ProjectNotValidError('invalid project ontology supplied: %s' % self.path)
         e = self.document.documentElement()
         version = int(e.attribute('version', '3'))
@@ -2143,12 +2143,12 @@ class GrapholProjectIRILoaderMixin_3(object):
             value = self.nproject.getIRI(iriObjEl.text())
         else:
             value = objectEl.firstChildElement('lexicalForm').text()
-            datatypeEl = objectEl.firstChildElement('datatype')
-            if datatypeEl.text():
-                type = self.nproject.getIRI(datatypeEl.text())
             languageEl = objectEl.firstChildElement('language')
             if languageEl.text():
                 language = languageEl.text()
+            datatypeEl = objectEl.firstChildElement('datatype')
+            if not language and datatypeEl.text():
+                type = self.nproject.getIRI(datatypeEl.text())
         return AnnotationAssertion(subject,property,value,type,language)
 
     def getAnnotation(self,annotationEl):
