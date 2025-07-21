@@ -460,6 +460,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         #table.setSelectionMode(QAbstractItemView.MultiSelection)
+        connect(table.cellDoubleClicked, self.editAnnotationAssertion)
         self.addWidget(table)
 
         selectBtn = QtWidgets.QPushButton('Select All', objectName = 'annotation_assertions_selectall_button')
