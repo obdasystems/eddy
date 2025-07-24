@@ -220,7 +220,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         settings = QtCore.QSettings()
 
         self.diagrams = diagrams
-        self.missing = []
+        self.missing = set()
 
         #############################################
         # MAIN FORM AREA
@@ -498,7 +498,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         Executed when an NDC metadata entity is missing from the local store.
         :type uri: str
         """
-        self.missing.append(uri)
+        self.missing.add(uri)
 
     @QtCore.pyqtSlot()
     def onCompleted(self):
@@ -519,7 +519,7 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
             ))
             msgbox.setDetailedText(os.linesep.join((
                 'The following entities are missing from the local store:',
-                os.linesep.join(' - ' + uri for uri in self.missing),
+                os.linesep.join(' - ' + uri for uri in sorted(self.missing)),
             )))
             msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
             msgbox.exec_()
