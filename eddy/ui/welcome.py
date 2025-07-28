@@ -34,12 +34,13 @@
 
 
 import os
+import sqlite3
 from typing import cast
 
 from PyQt5 import (
     QtCore,
     QtGui,
-    QtWidgets,
+    QtWidgets, QtXml,
 )
 
 from eddy import (
@@ -58,7 +59,7 @@ from eddy.core.datatypes.system import File
 from eddy.core.functions.fsystem import (
     faccess,
     fexists,
-    fremove
+    fremove, fread
 )
 from eddy.core.functions.misc import (
     first,
@@ -75,6 +76,7 @@ from eddy.ui.project import (
     NewProjectDialog,
     ProjectFromOWLDialog,
 )
+from eddy.ui.session import Session
 
 
 class Welcome(QtWidgets.QDialog):
@@ -277,6 +279,24 @@ class Welcome(QtWidgets.QDialog):
         msgbox.exec_()
         if msgbox.result() == QtWidgets.QMessageBox.Yes:
             try:
+                # REMOVE IMPORTS FROM DB
+                document = QtXml.QDomDocument()
+                document.setContent(fread(path))
+                projectEl = document.documentElement().firstChildElement('project')
+                ontologyEl = projectEl.firstChildElement('ontology')
+                iri = str(ontologyEl.attribute('iri'))
+                version = str(projectEl.attribute('version'))
+                db = expandPath('@data/imports.sqlite')
+                if os.path.exists(db):
+                    conn = sqlite3.connect(db)
+                    cursor = conn.cursor()
+                    # DELETE PROJECT IMPORTATIONS #
+                    cursor.execute('''DELETE
+                                           FROM importation
+                                           WHERE project_iri = ? and project_version = ?''',
+                                   (iri, version))
+                    conn.commit()
+                    conn.close()
                 # REMOVE THE PROJECT FROM DISK
                 fremove(path)
             except Exception as e:
