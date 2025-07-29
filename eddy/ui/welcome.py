@@ -296,6 +296,11 @@ class Welcome(QtWidgets.QDialog):
                                            WHERE project_iri = ? and project_version = ?''',
                                    (iri, version))
                     conn.commit()
+                    cursor.execute('''DELETE
+                                      FROM drawn
+                                      WHERE project_iri = ? and project_version = ?''',
+                                   (iri, version))
+                    conn.commit()
                     conn.close()
                 # REMOVE THE PROJECT FROM DISK
                 fremove(path)
