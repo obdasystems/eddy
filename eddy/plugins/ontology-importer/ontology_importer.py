@@ -1110,10 +1110,49 @@ class OntologyImporterPlugin(AbstractPlugin):
             msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
             msgbox.exec_()
 
+    def doRemoveProjectImportations(self):
+        """
+        Remove project importations.
+        """
+        msgbox = QtWidgets.QMessageBox()
+        msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_help_outline_black').pixmap(48))
+        msgbox.setInformativeText('<b>NOTE: This action is not reversible!</b>')
+        msgbox.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
+        msgbox.setTextFormat(QtCore.Qt.RichText)
+        msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+        msgbox.setWindowTitle('Remove project importations')
+        msgbox.setText('Are you sure you want to remove project importations?')
+        msgbox.exec_()
+        if msgbox.result() == QtWidgets.QMessageBox.Yes:
+            try:
+                # TRY TO OPEN IMPORTATIONS ASSOCIATED WITH THIS PROJECT #
+                importation = Importation(self.project)
+                importation.remove()
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_done_black').pixmap(48))
+                msgbox.setText('All the ontologies associated with the current project have been removed.')
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('Success')
+                msgbox.exec_()
+
+            except Exception as e:
+                # IF ERROR -> WARNING #
+                print(e)
+                msgbox = QtWidgets.QMessageBox()
+                msgbox.setIconPixmap(QtGui.QIcon(':/icons/48/ic_warning_black').pixmap(48))
+                msgbox.setWindowIcon(QtGui.QIcon(':/icons/128/ic_eddy'))
+                msgbox.setWindowTitle('No Ontology Imported')
+                msgbox.setText('There is no ontology imported in the current project')
+                msgbox.setTextFormat(QtCore.Qt.RichText)
+                msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msgbox.exec_()
+
     def onNoSave(self):
 
         importation = Importation(self.project)
-        importation.removeFromDB()
+        importation.removeTemporaryImpoFromDB()
         self.onSave()
 
     @QtCore.pyqtSlot()
@@ -1247,6 +1286,13 @@ class OntologyImporterPlugin(AbstractPlugin):
             toolTip='Select axioms from imported ontologies',
             enabled=True, checkable=False, clicked=self.doOpenAxiomImportDialog,
             objectName='owl2_importer_axioms'))
+        # noinspection PyArgumentList
+        self.addWidget(QtWidgets.QToolButton(
+            icon=QtGui.QIcon(':/icons/24/ic_delete_black'),
+            statusTip='Remove imported ontologies',
+            toolTip='Remove imported ontologies',
+            enabled=True, checkable=False, clicked=self.doRemoveProjectImportations,
+            objectName='owl2_importer_remove'))
 
         # CREATE VIEW TOOLBAR BUTTONS
         self.debug('Installing OWL 2 importer control widgets')
@@ -1254,6 +1300,7 @@ class OntologyImporterPlugin(AbstractPlugin):
         self.afwset.add(toolbar.addSeparator())
         self.afwset.add(toolbar.addWidget(self.widget('owl2_importer_open')))
         self.afwset.add(toolbar.addWidget(self.widget('owl2_importer_axioms')))
+        self.afwset.add(toolbar.addWidget(self.widget('owl2_importer_remove')))
 
         # CONFIGURE SIGNALS/SLOTS
         connect(self.session.sgnNoSaveProject, self.onNoSave)
@@ -1524,7 +1571,7 @@ class Importation():
 
             return axioms, not_drawn, drawn
 
-    def removeFromDB(self):
+    def removeTemporaryImpoFromDB(self):
 
         db_exists = os.path.exists(self.db_filename)
         if db_exists:
@@ -1562,7 +1609,40 @@ class Importation():
                             'delete from drawn where project_iri = ? and project_version = ? and ontology_iri = ? and ontology_version = ? and axiom = ? and session_id = ?',
                             (row[0], row[1], row[2], row[3], row[4], row[5]))
                         conn.commit()
-
+    def remove(self):
+        conn = sqlite3.connect(self.db_filename)
+        cursor = conn.cursor()
+        # DELETE TEMPORARY IMPORTATIONS #
+        cursor.execute(
+            """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_importation';""")
+        temp_impo = len(cursor.fetchall()) > 0
+        if temp_impo:
+            cursor.execute('''DELETE
+                                      FROM temp_importation
+                                      WHERE project_iri = ? and project_version = ?''',
+                           (self.project_iri, self.project_version))
+            conn.commit()
+        cursor.execute(
+                """SELECT name FROM sqlite_master WHERE type='table' AND name='temp_drawn';""")
+        temp_drawn = len(cursor.fetchall()) > 0
+        if temp_drawn:
+            cursor.execute('''DELETE
+                                      FROM temp_drawn
+                                      WHERE project_iri = ? and project_version = ?''',
+                           (self.project_iri, self.project_version))
+            conn.commit()
+        # DELETE PROJECT IMPORTATIONS #
+        cursor.execute('''DELETE
+                          FROM importation
+                          WHERE project_iri = ? and project_version = ?''',
+                       (self.project_iri, self.project_version))
+        conn.commit()
+        cursor.execute('''DELETE
+                          FROM drawn
+                          WHERE project_iri = ? and project_version = ?''',
+                       (self.project_iri, self.project_version))
+        conn.commit()
+        conn.close()
 
 class AxiomSelectionDialog(QtWidgets.QDialog, HasWidgetSystem):
 
