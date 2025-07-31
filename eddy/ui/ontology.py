@@ -2041,8 +2041,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
     # Global IRI
     #################################
 
-    @QtCore.pyqtSlot()
-    def onLabelSimpleNameCheckBoxClicked(self):
+    @QtCore.pyqtSlot(bool)
+    def onLabelSimpleNameCheckBoxClicked(self, _):
         checkBoxSimpleName = self.widget('label_simplename_checkbox')
         checkBoxUserInput = self.widget('label_userinput_checkbox')
         if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
@@ -2053,8 +2053,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.widget('lang_switch').setEnabled(False)
         self.widget('iri_label_button').setEnabled(True)
 
-    @QtCore.pyqtSlot()
-    def onLabelUserInputCheckBoxClicked(self):
+    @QtCore.pyqtSlot(bool)
+    def onLabelUserInputCheckBoxClicked(self, _):
         checkBoxSimpleName = self.widget('label_simplename_checkbox')
         checkBoxUserInput = self.widget('label_userinput_checkbox')
         if checkBoxSimpleName.isChecked() or checkBoxUserInput.isChecked():
@@ -2080,7 +2080,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.widget('convert_camel').setEnabled(False)
         self.widget('iri_label_button').setEnabled(True)
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(bool)
     def onCaseCheckBoxClicked(self, _):
         self.widget('iri_label_button').setEnabled(True)
         self.project.convertCase(self.sender())
@@ -2105,8 +2105,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.widget('iri_label_button').setEnabled(False)
 
+    @QtCore.pyqtSlot()
     def createTemplate(self):
-
         session = self.session
         dialog = FileDialog(session)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
@@ -2140,8 +2140,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 Could not complete the export, see the System Log for details.
                 """)
 
+    @QtCore.pyqtSlot()
     def importTemplate(self):
-
         session = self.session
 
         dialog = AnnotationsOverridingDialog(session)
