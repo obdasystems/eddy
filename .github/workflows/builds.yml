@@ -30,18 +30,6 @@ jobs:
             dmg: true
           - os: windows-2022
             python-version: '3.11'
-            architecture: x86
-            platform: Windows
-            type: Installer
-            innosetup: true
-          - os: windows-2022
-            python-version: '3.11'
-            architecture: x86
-            platform: Windows
-            type: Standalone
-            archive: true
-          - os: windows-2022
-            python-version: '3.11'
             architecture: x64
             platform: Windows
             type: Installer
