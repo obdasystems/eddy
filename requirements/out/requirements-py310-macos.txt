@@ -2,31 +2,31 @@ altgraph==0.17.4
     # via
     #   macholib
     #   pyinstaller
-build==1.2.2.post1
+build==1.3.0
     # via pip-tools
-cachetools==6.1.0
+cachetools==6.2.1
     # via tox
 chardet==5.2.0
     # via tox
-click==8.2.1
+click==8.3.0
     # via pip-tools
 colorama==0.4.6
     # via tox
-coverage[toml]==7.9.1
+coverage[toml]==7.11.0
     # via pytest-cov
-cython==3.1.2
-    # via -r /Users/manuel/Developer/eddy/requirements/in/cython.in
-distlib==0.3.9
+cython==3.1.4
+    # via -r requirements/in/cython.in
+distlib==0.4.0
     # via virtualenv
 dmgbuild==1.6.5 ; sys_platform == "darwin"
-    # via -r /Users/manuel/Developer/eddy/requirements/in/packaging.in
+    # via -r requirements/in/packaging.in
 ds-store==1.3.1
     # via dmgbuild
 et-xmlfile==2.0.0
     # via openpyxl
 exceptiongroup==1.3.0
     # via pytest
-filelock==3.18.0
+filelock==3.20.0
     # via
     #   tox
     #   virtualenv
@@ -34,22 +34,22 @@ iniconfig==2.1.0
     # via pytest
 isodate==0.7.2
     # via rdflib
-jpype1==1.5.2
-    # via -r /Users/manuel/Developer/eddy/requirements/in/base.in
+jpype1==1.6.0
+    # via -r requirements/in/base.in
 mac-alias==2.2.2
     # via
     #   dmgbuild
     #   ds-store
 macholib==1.16.3
     # via pyinstaller
-mypy==1.16.1
+mypy==1.18.2
     # via -r requirements/in/dev.in
 mypy-extensions==1.1.0
     # via mypy
 objgraph==3.6.2
     # via -r requirements/in/dev.in
 openpyxl==3.1.5
-    # via -r /Users/manuel/Developer/eddy/requirements/in/base.in
+    # via -r requirements/in/base.in
 packaging==25.0
     # via
     #   build
@@ -61,11 +61,11 @@ packaging==25.0
     #   tox
 pathspec==0.12.1
     # via mypy
-pillow==11.2.1 ; sys_platform == "darwin"
-    # via -r /Users/manuel/Developer/eddy/requirements/in/packaging.in
-pip-tools==7.4.1
+pillow==12.0.0 ; sys_platform == "darwin"
+    # via -r requirements/in/packaging.in
+pip-tools==7.5.1
     # via -r requirements/in/dev.in
-platformdirs==4.3.8
+platformdirs==4.5.0
     # via
     #   tox
     #   virtualenv
@@ -79,27 +79,27 @@ py-cpuinfo==9.0.0
     # via pytest-benchmark
 pygments==2.19.2
     # via pytest
-pyinstaller==6.14.1
-    # via -r /Users/manuel/Developer/eddy/requirements/in/packaging.in
-pyinstaller-hooks-contrib==2025.5
+pyinstaller==6.16.0
+    # via -r requirements/in/packaging.in
+pyinstaller-hooks-contrib==2025.9
     # via pyinstaller
-pyparsing==3.2.3
+pyparsing==3.2.5
     # via rdflib
-pyproject-api==1.9.1
+pyproject-api==1.10.0
     # via tox
 pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
 pyqt5==5.15.11
-    # via -r /Users/manuel/Developer/eddy/requirements/in/pyqt5.in
+    # via -r requirements/in/pyqt5.in
 pyqt5-qt5==5.15.17
     # via pyqt5
-pyqt5-sip==12.17.0
+pyqt5-sip==12.17.1
     # via pyqt5
-pytest==8.4.1
+pytest==8.4.2
     # via
-    #   -r /Users/manuel/Developer/eddy/requirements/in/tests.in
+    #   -r requirements/in/tests.in
     #   pytest-benchmark
     #   pytest-cov
     #   pytest-instafail
@@ -108,26 +108,26 @@ pytest==8.4.1
     #   pytest-repeat
     #   pytest-xvfb
 pytest-benchmark==5.1.0
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tests.in
-pytest-cov==6.2.1
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tests.in
+    # via -r requirements/in/tests.in
+pytest-cov==7.0.0
+    # via -r requirements/in/tests.in
 pytest-instafail==0.5.0
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tests.in
-pytest-mock==3.14.1
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tests.in
-pytest-qt==4.4.0
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tests.in
+    # via -r requirements/in/tests.in
+pytest-mock==3.15.1
+    # via -r requirements/in/tests.in
+pytest-qt==4.5.0
+    # via -r requirements/in/tests.in
 pytest-repeat==0.9.4
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tests.in
+    # via -r requirements/in/tests.in
 pytest-xvfb==3.1.1 ; sys_platform != "win32"
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tests.in
+    # via -r requirements/in/tests.in
 pyvirtualdisplay==3.0
     # via pytest-xvfb
-rdflib==7.1.4
-    # via -r /Users/manuel/Developer/eddy/requirements/in/base.in
+rdflib==7.2.1
+    # via -r requirements/in/base.in
 rfc3987==1.3.8
-    # via -r /Users/manuel/Developer/eddy/requirements/in/base.in
-tomli==2.2.1
+    # via -r requirements/in/base.in
+tomli==2.3.0
     # via
     #   build
     #   coverage
@@ -136,14 +136,16 @@ tomli==2.2.1
     #   pyproject-api
     #   pytest
     #   tox
-tox==4.27.0
-    # via -r /Users/manuel/Developer/eddy/requirements/in/tox.in
-typing-extensions==4.14.0
+tox==4.31.0
+    # via -r requirements/in/tox.in
+typing-extensions==4.15.0
     # via
     #   exceptiongroup
     #   mypy
+    #   pytest-qt
     #   tox
-virtualenv==20.31.2
+    #   virtualenv
+virtualenv==20.35.3
     # via tox
 wheel==0.45.1
     # via pip-tools
