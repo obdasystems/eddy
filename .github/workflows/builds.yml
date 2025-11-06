@@ -11,31 +11,31 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            python-version: '3.11'
+            python-version: '3.12'
             architecture: x64
             platform: Linux
             type: AppImage
             appimage: true
           - os: ubuntu-22.04
-            python-version: '3.11'
+            python-version: '3.12'
             architecture: x64
             platform: Linux
             type: Standalone
             archive: true
           - os: macos-13
-            python-version: '3.11'
+            python-version: '3.12'
             architecture: x64
             platform: macOS
             type: DMG
             dmg: true
           - os: windows-2022
-            python-version: '3.11'
+            python-version: '3.12'
             architecture: x64
             platform: Windows
             type: Installer
             innosetup: true
           - os: windows-2022
-            python-version: '3.11'
+            python-version: '3.12'
             architecture: x64
             platform: Windows
             type: Standalone
