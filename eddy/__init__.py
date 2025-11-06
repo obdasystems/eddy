@@ -36,7 +36,7 @@
 __appname__ = 'Eddy'
 __copyright__ = 'Copyright © 2025 OBDA Systems'
 __email__ = 'info@obdasystems.com'
-__license__ = 'GPL'
+__license__ = 'GPL-3.0-or-later'
 __organization__ = 'OBDA Systems'
 __status__ = 'Beta'
 __version__ = '3.8.dev0'
