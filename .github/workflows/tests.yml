@@ -26,6 +26,10 @@ jobs:
             python-version: '3.13'
             pyqt-version: '515'
 
+          - os: ubuntu-latest
+            python-version: '3.14'
+            pyqt-version: '515'
+
           - os: macos-latest
             python-version: '3.11'
             pyqt-version: '515'
