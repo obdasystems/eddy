@@ -82,6 +82,7 @@ def param_arch(sysarch):
         'armv6l': 'arm',
         'armv7l': 'arm',
         'armv8l': 'arm',
+        'arm64': 'aarch64',
     }.get(sysarch.lower(), sysarch.lower())
 
 
