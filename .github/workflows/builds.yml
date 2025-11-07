@@ -60,7 +60,7 @@ jobs:
       - name: Bundle JRE
         shell: bash
         run: |
-          python ./scripts/getjdk.py --binary --arch ${{ matrix.architecture }} --feature-version 11 --image-type jre --extract-to resources
+          python ./scripts/getjdk.py --binary --feature-version 17 --image-type jre --extract-to resources
           mv resources/jdk* resources/java
 
       - name: Install python dependencies
