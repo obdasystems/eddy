@@ -28,6 +28,12 @@ jobs:
             platform: macOS
             type: DMG
             dmg: true
+          - os: macos-15-intel
+            python-version: '3.12'
+            architecture: x64
+            platform: macOS
+            type: DMG
+            dmg: true
           - os: windows-2022
             python-version: '3.12'
             architecture: x64
