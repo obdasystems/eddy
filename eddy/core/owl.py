@@ -343,8 +343,8 @@ class AnnotationAssertion(QtCore.QObject):
         """
         :type subject:IRI
         :type property:IRI
-        :type value:IRI|str
-        :type type:IRI
+        :type value:IRI | str
+        :type type:IRI | None
         :type language:str
         """
         super().__init__(parent)
@@ -1382,17 +1382,30 @@ class IRIManager(QtCore.QObject):
             self.sgnIRIAdded.emit(iri)
 
     @QtCore.pyqtSlot(str)
-    def getIRI(self, iriString, addLabelFromSimpleName=False, addLabelFromUserInput= False, userInput=None, imported=False, labelExplicitChecked=False, labelLang=None):
+    def getIRI(
+        self,
+        iriString,
+        addLabelFromSimpleName=False,
+        addLabelFromUserInput= False,
+        userInput=None,
+        imported=False,
+        labelExplicitChecked=False,
+        labelLang=None,
+    ):
         """
-        Returns the IRI object identified by iriString. If such object does not exist, creates it and addes to the index.
+        Returns the IRI object identified by iriString.
+
+        If such object does not exist, creates it and adds it to the index.
         If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName.
-        If imported, then the IRI request come from an ontology import, so the IRI object must not be added to the set of iris that have to be serialized
+        If imported, then the IRI request come from an ontology import, so the IRI object
+        must not be added to the set of iris that have to be serialized.
         :type iriString: str
         :type addLabelFromSimpleName: bool
         :type addLabelFromUserInput: bool
         :type userInput: str
         :type imported: bool
         :type labelExplicitChecked: bool
+        :type labelLang: str
         """
         if iriString in self.stringToIRI:
             iri = self.stringToIRI[iriString]
@@ -1403,37 +1416,58 @@ class IRIManager(QtCore.QObject):
             iri = IRI(iriString, parent=self)
             iri.manager = self
             self.addIRI(iri, imported)
+            genLabelFromSimpleName = (
+                (labelExplicitChecked and addLabelFromSimpleName) or
+                (addLabelFromSimpleName and self._addLabelFromSimpleName)
+            )
+            genLabelFromUserInput = (
+                userInput and
+                ((labelExplicitChecked and addLabelFromUserInput and userInput) or
+                 (addLabelFromUserInput and self._addLabelFromUserInput))
+            )
 
-            simpleNameLabel = True if (labelExplicitChecked and addLabelFromSimpleName) or (addLabelFromSimpleName and self._addLabelFromSimpleName) else False
-            userInputLabel = True if userInput and ((labelExplicitChecked and addLabelFromUserInput and userInput) or (addLabelFromUserInput and self._addLabelFromUserInput)) else False
-
-            if simpleNameLabel or userInputLabel:
-                if not labelLang:
+            if genLabelFromSimpleName or genLabelFromUserInput:
+                if labelLang is None:
                     labelLang = self.defaultLanguage
-                if simpleNameLabel:
-                    iri.addAnnotationAssertion(self.getLabelAnnotationFromSimpleName(iri,labelLang))
-                if userInputLabel:
+                if genLabelFromSimpleName:
+                    iri.addAnnotationAssertion(
+                        self.getLabelAnnotationFromSimpleName(iri, labelLang)
+                    )
+                elif genLabelFromUserInput:
                     if self.converttCamel:
-                        userInput = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput)
+                        userInput = re.sub(
+                            r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', userInput,
+                        )
                         userInput = userInput.split()
                         userInput[1:] = [w.lower() if not w.isupper() else w for w in userInput[1:]]
                         userInput = ' '.join(userInput)
                     if self.converttSnake:
-                        userInput = userInput.replace('_',' ')
-                    annAss = AnnotationAssertion(iri, AnnotationAssertionProperty.Label.value, userInput,
-                                                 OWL2Datatype.PlainLiteral.value, labelLang)
-                    iri.addAnnotationAssertion(annAss)
-            connect(iri.sgnIRIModified,self.onIRIModified)
+                        userInput = userInput.replace('_', ' ')
+                    iri.addAnnotationAssertion(AnnotationAssertion(
+                        iri,
+                        AnnotationAssertionProperty.Label.value,
+                        userInput,
+                        None,
+                        labelLang,
+                    ))
+            connect(iri.sgnIRIModified, self.onIRIModified)
             connect(self.sgnAnnotationPropertyRemoved, iri.onAnnotationPropertyRemoved)
             return iri
 
-    def getLabelAnnotationFromSimpleName(self,iri,lang):
+    @staticmethod
+    def getLabelAnnotationFromSimpleName(iri, lang):
         """
         :type iri: IRI
         :type lang: str
         """
         simpleName = iri.getSimpleName()
-        annAss = AnnotationAssertion(iri,AnnotationAssertionProperty.Label.value,simpleName,OWL2Datatype.PlainLiteral.value,lang)
+        annAss = AnnotationAssertion(
+            iri,
+            AnnotationAssertionProperty.Label.value,
+            simpleName,
+            None,
+            lang,
+        )
         return annAss
 
     @QtCore.pyqtSlot(str)
@@ -1442,8 +1476,12 @@ class IRIManager(QtCore.QObject):
         self.stringToIRI.pop(oldIRIStr,None)
         self.stringToIRI[str(iri)] = iri
 
-    def isValidIdentifier(self, iriStr):
-        iri = IRI(iriStr)
+    @staticmethod
+    def isValidIdentifier(iriStr):
+        try:
+            IRI(iriStr)
+        except IllegalNamespaceError as _:
+            return False
         return True
 
     #############################################
@@ -1979,11 +2017,13 @@ class IRIManager(QtCore.QObject):
     def __repr__(self):
         return str(self)
 
+
 class IllegalPrefixError(RuntimeError):
     """
     Used to signal that a prefix contains illegal characters
     """
     pass
+
 
 class IllegalNamespaceError(RuntimeError):
     """
@@ -1991,11 +2031,13 @@ class IllegalNamespaceError(RuntimeError):
     """
     pass
 
+
 class IllegalLiteralError(RuntimeError):
     """
     Used to signal that a literal does not respect the structural specifications
     """
     pass
+
 
 @unique
 class IRIRender(Enum_):
@@ -2108,8 +2150,6 @@ class TopBottomProperty(Enum_):
         return input == TopBottomProperty.BottomDataProperty.value
 
 
-
-
 @unique
 class AnnotationAssertionProperty(Enum_):
     """
@@ -2150,6 +2190,7 @@ class AnnotationAssertionProperty(Enum_):
         elif iriStr == str(AnnotationAssertionProperty.fetchedFrom.value):
             result = AnnotationAssertionProperty.fetchedFrom.value
         return result
+
 
 @unique
 class OWL2Datatype(Enum_):
