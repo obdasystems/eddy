@@ -2135,7 +2135,7 @@ class GrapholProjectIRILoaderMixin_3(object):
         propertyEl = annotationEl.firstChildElement('property')
         property = self.nproject.getIRI(propertyEl.text())
         value = None
-        type = None
+        datatype = None
         language = None
         objectEl = annotationEl.firstChildElement('object')
         iriObjEl = objectEl.firstChildElement('iri')
@@ -2148,14 +2148,14 @@ class GrapholProjectIRILoaderMixin_3(object):
                 language = languageEl.text()
             datatypeEl = objectEl.firstChildElement('datatype')
             if not language and datatypeEl.text():
-                type = self.nproject.getIRI(datatypeEl.text())
-        return AnnotationAssertion(subject,property,value,type,language)
+                datatype = self.nproject.getIRI(datatypeEl.text())
+        return AnnotationAssertion(subject, property, value, datatype, language)
 
     def getAnnotation(self,annotationEl):
         propertyEl = annotationEl.firstChildElement('property')
         property = self.nproject.getIRI(propertyEl.text())
         value = None
-        type = None
+        datatype = None
         language = None
         objectEl = annotationEl.firstChildElement('object')
         iriObjEl = objectEl.firstChildElement('iri')
@@ -2163,13 +2163,13 @@ class GrapholProjectIRILoaderMixin_3(object):
             value = self.nproject.getIRI(iriObjEl.text())
         else:
             value = objectEl.firstChildElement('lexicalForm').text()
-            datatypeEl = objectEl.firstChildElement('datatype')
-            if datatypeEl.text():
-                type = self.nproject.getIRI(datatypeEl.text())
             languageEl = objectEl.firstChildElement('language')
             if languageEl.text():
                 language = languageEl.text()
-        return Annotation(property,value,type,language)
+            datatypeEl = objectEl.firstChildElement('datatype')
+            if not language and datatypeEl.text():
+                datatype = self.nproject.getIRI(datatypeEl.text())
+        return Annotation(property, value, datatype, language)
 
     def getPrefixMap(self, ontologyEl):
         prefixMap = dict()
@@ -2398,15 +2398,15 @@ class GrapholProjectIRILoaderMixin_3(object):
         literalEl = nodeElement.firstChildElement('literal')
         lexicalFormEl = literalEl.firstChildElement('lexicalForm')
         lexicalForm = lexicalFormEl.text()
-        datatype = None
-        datatypeEl = literalEl.firstChildElement('datatype')
-        if datatypeEl.text():
-            datatype = self.nproject.getIRI(datatypeEl.text())
         language = None
         languageEl = literalEl.firstChildElement('language')
         if languageEl.text():
             language = self.nproject.getIRI(languageEl.text())
-        literal = Literal(lexicalForm, datatype,language)
+        datatype = None
+        datatypeEl = literalEl.firstChildElement('datatype')
+        if not language and datatypeEl.text():
+            datatype = self.nproject.getIRI(datatypeEl.text())
+        literal = Literal(lexicalForm, datatype, language)
 
         geometryElement = nodeElement.firstChildElement('geometry')
         node = diagram.factory.create(Item.LiteralNode, **{
@@ -2434,9 +2434,6 @@ class GrapholProjectIRILoaderMixin_3(object):
         constrFacetIRI = self.nproject.getIRI(constrFacetEl.text())
         literalEl = facetEl.firstChildElement('literal')
         lexForm = literalEl.firstChildElement('lexicalForm').text()
-
-
-
         datatypeStr = literalEl.firstChildElement('datatype').text()
         if datatypeStr:
             datatypeIRI = self.nproject.getIRI(datatypeStr)
