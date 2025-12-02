@@ -96,6 +96,7 @@ class Diagram(QtWidgets.QGraphicsScene):
     Extension of QtWidgets.QGraphicsScene which implements a single Graphol diagram.
     Additionally to built-in signals, this class emits:
 
+    * sgnDragDropEvent: whenever data is dropped onto the Diagram.
     * sgnItemAdded: whenever an element is added to the Diagram.
     * sgnItemInsertionCompleted: whenever an item 'MANUAL' insertion process is completed.
     * sgnItemRemoved: whenever an element is removed from the Diagram.
@@ -110,6 +111,7 @@ class Diagram(QtWidgets.QGraphicsScene):
     MaxFontSize = 40
     SelectionRadius = 4
 
+    sgnDragDropEvent = QtCore.pyqtSignal(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsSceneDragDropEvent)
     sgnItemAdded = QtCore.pyqtSignal(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
     sgnItemInsertionCompleted = QtCore.pyqtSignal(QtWidgets.QGraphicsItem, int)
     sgnItemRemoved = QtCore.pyqtSignal(QtWidgets.QGraphicsScene, QtWidgets.QGraphicsItem)
@@ -235,15 +237,25 @@ class Diagram(QtWidgets.QGraphicsScene):
         Executed when a dragged element is dropped on the diagram.
         """
         super().dropEvent(dropEvent)
-        if dropEvent.mimeData().hasFormat('text/plain') and Item.valueOf(dropEvent.mimeData().text()):
+        self.sgnDragDropEvent.emit(self, dropEvent)
+        if (
+            dropEvent.dropAction() == QtCore.Qt.DropAction.CopyAction
+            and dropEvent.mimeData().hasFormat('text/plain')
+            and Item.valueOf(dropEvent.mimeData().text())
+        ):
             snapToGrid = self.session.action('toggle_grid').isChecked()
             node = self.factory.create(Item.valueOf(dropEvent.mimeData().text()))
             node.setPos(snap(dropEvent.scenePos(), Diagram.GridSize, snapToGrid))
             data = dropEvent.mimeData().data(dropEvent.mimeData().text())
-            if int(dropEvent.mimeData().text()) in {Item.ConceptNode, Item.AttributeNode,
-                                                    Item.RoleNode, Item.IndividualNode,
-                                                    Item.ValueDomainNode, Item.LiteralNode,
-                                                    Item.FacetNode}:
+            if Item.valueOf(dropEvent.mimeData().text()) in {
+                Item.ConceptNode,
+                Item.AttributeNode,
+                Item.RoleNode,
+                Item.IndividualNode,
+                Item.ValueDomainNode,
+                Item.LiteralNode,
+                Item.FacetNode,
+            }:
                 if not data:
                     # For new nodes (e.g. drag and drop from palette)
                     if isinstance(node, FacetNode):
