@@ -58,7 +58,7 @@ from eddy.core.commands.nodes import (
 )
 from eddy.core.common import HasWidgetSystem
 from eddy.core.diagram import Diagram
-from eddy.core.functions.signals import connect
+from eddy.core.functions.signals import connect, disconnect
 from eddy.core.items.nodes.attribute import AttributeNode
 from eddy.core.items.nodes.common.base import AbstractNode
 from eddy.core.items.nodes.facet import FacetNode
@@ -643,13 +643,14 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 if self.iri:
                     if not str(self.iri) == inputIriString:
                         if len(self.project.iriOccurrences(iri=self.iri)) == 1:
-                            existIRI = self.project.existIRI(inputIriString)
-                            if existIRI:
-                                newIRI = self.project.getIRI(inputIriString,
-                                                             addLabelFromSimpleName=True,
-                                                             addLabelFromUserInput=True,
-                                                             userInput=userExplicitInput,
-                                                             labelLang=labelLang)
+                            if self.project.existIRI(inputIriString):
+                                newIRI = self.project.getIRI(
+                                    inputIriString,
+                                    addLabelFromSimpleName=True,
+                                    addLabelFromUserInput=True,
+                                    userInput=userExplicitInput,
+                                    labelLang=labelLang,
+                                )
                                 if newIRI is not self.iri:
                                     oldIRI = self.iri
                                     self.iri = newIRI
@@ -797,6 +798,15 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(addBtn.clicked, self.addAnnotation)
         connect(delBtn.clicked, self.removeAnnotation)
         connect(editBtn.clicked, self.editAnnotation)
+        ##############################
+        # Disable edit - add - delete if entity has an external origin annotation
+        if any([str(a.assertionProperty) == 'urn:x-graphol:origin'
+                for a in self.iri.annotationAssertions]):
+            addBtn.setDisabled(True)
+            delBtn.setDisabled(True)
+            editBtn.setDisabled(True)
+            disconnect(table.cellDoubleClicked, self.editAnnotation)
+        ##############################
         self.addWidget(addBtn)
         self.addWidget(delBtn)
         self.addWidget(editBtn)

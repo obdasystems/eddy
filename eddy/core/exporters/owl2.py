@@ -89,10 +89,6 @@ from eddy.core.functions.path import (
 )
 from eddy.core.functions.signals import connect
 from eddy.core.jvm import getJavaVM
-from eddy.core.metadata import (
-    LiteralValue,
-    NamedEntity,
-)
 from eddy.core.ndc import (
     ADMS,
     NDCDataset,
@@ -482,17 +478,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         self.reject()
 
     @QtCore.pyqtSlot(str)
-    def onMetadataFetchErrored(self, message):
-        """
-        Executed when a metadata fetch request fails.
-        :type message: str
-        """
-        self.session.addNotification(textwrap.dedent(f"""
-        <b><font color="#7E0B17">ERROR</font></b>:\n
-        {message}
-        """))
-
-    @QtCore.pyqtSlot(str)
     def onNDCMetadataMissing(self, uri):
         """
         Executed when an NDC metadata entity is missing from the local store.
@@ -570,7 +555,6 @@ class OWLOntologyExporterDialog(QtWidgets.QDialog, HasThreadingSystem, HasWidget
         connect(worker.sgnStarted, self.onStarted)
         connect(worker.sgnCompleted, self.onCompleted)
         connect(worker.sgnErrored, self.onErrored)
-        connect(worker.sgnMetadataFetchErrored, self.onMetadataFetchErrored)
         connect(worker.sgnNDCMetadataMissing, self.onNDCMetadataMissing)
         connect(worker.sgnProgress, self.onProgress)
         self.startThread('OWL2Export', worker)
@@ -582,7 +566,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
     """
     sgnCompleted = QtCore.pyqtSignal()
     sgnErrored = QtCore.pyqtSignal(Exception)
-    sgnMetadataFetchErrored = QtCore.pyqtSignal(str)
     sgnNDCMetadataMissing = QtCore.pyqtSignal(str)
     sgnProgress = QtCore.pyqtSignal(int, int)
     sgnStarted = QtCore.pyqtSignal()
@@ -638,7 +621,6 @@ class OWLOntologyExporterWorker(AbstractWorker):
         self._axioms = set()
         self._converted = dict()
         self._converted_meta_individuals = dict()
-        self.metadataProperty = self.project.getIRI('urn:x-graphol:origin')
 
         self.df = None
         self.man = None
@@ -1405,43 +1387,8 @@ class OWLOntologyExporterWorker(AbstractWorker):
         if OWLAxiom.Annotation in self.axiomsList:
             for annotation in node.iri.annotationAssertions:
                 subject = self.IRI.create(str(annotation.subject))
-                if annotation.assertionProperty == self.metadataProperty:
-                    uri = annotation.value
-                    # FIXME: this is a sync request!!!
-                    result, response = self.nmanager.getSync(str(uri))
-                    if not result:
-                        msg = f'Retrieval of {uri} failed: {response}'
-                        LOGGER.warning(msg)
-                        self.sgnMetadataFetchErrored.emit(msg)
-                        continue
-                    try:
-                        for assertion in NamedEntity.from_dict(json.loads(response)).annotations:
-                            if isinstance(assertion.object, LiteralValue):
-                                from eddy.core.owl import Annotation
-                                value = Annotation(
-                                    self.project.getIRI(str(assertion.predicate.iri)),
-                                    assertion.object.value,
-                                    type=assertion.object.datatype,
-                                    language=assertion.object.language,
-                                    parent=self.project,
-                                )
-                            elif isinstance(assertion.object, NamedEntity):
-                                value = Annotation(
-                                    self.project.getIRI(str(assertion.predicate.iri)),
-                                    self.project.getIRI(str(assertion.object.iri)),
-                                    parent=self.project,
-                                )
-                            else:
-                                LOGGER.warning(f'Skipping annotation with bnode object {assertion}')
-                            value = self.getOWLApiAnnotation(value)
-                            self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
-                    except Exception as e:
-                        msg = f'Failed to parse metadata for {uri}'
-                        LOGGER.warning(f'{msg}: {response}')
-                        self.sgnMetadataFetchErrored.emit(f'{msg}: See log for details.')
-                else:
-                    value = self.getOWLApiAnnotation(annotation)
-                    self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
+                value = self.getOWLApiAnnotation(annotation)
+                self.addAxiom(self.df.getOWLAnnotationAssertionAxiom(subject, value))
 
     def createClassAssertionAxiom(self, edge):
         """
