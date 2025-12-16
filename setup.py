@@ -36,6 +36,7 @@
 import distutils
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import setuptools
@@ -43,9 +44,6 @@ import setuptools
 from eddy import APPNAME, APPID, BUG_TRACKER, COPYRIGHT
 from eddy import GRAPHOL_HOME, LICENSE, ORGANIZATION_URL
 from eddy import ORGANIZATION, PROJECT_HOME, VERSION
-from eddy.core.functions.fsystem import fexists, isdir
-from eddy.core.functions.fsystem import rmdir
-from eddy.core.functions.path import expandPath
 
 ###################################
 # SETUP CONSTANTS DECLARATION
@@ -72,9 +70,9 @@ if WIN32:
     EXEC_ARCH = os.environ['PROCESSOR_ARCHITECTURE'].lower() if 'PROCESSOR_ARCHITECTURE' in os.environ else platform.machine().lower()
     EXEC_NAME = '%s.exe' % APPNAME
 
-SPEC_FILE = os.path.join(expandPath(os.path.dirname(__file__)), '%s.spec' % APPNAME.lower())
-BUILD_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'build')
-DIST_DIR = os.path.join(expandPath(os.path.dirname(__file__)), 'dist')
+SPEC_FILE = os.path.join(os.path.dirname(__file__), '%s.spec' % APPNAME.lower())
+BUILD_DIR = os.path.join(os.path.dirname(__file__), 'build')
+DIST_DIR = os.path.join(os.path.dirname(__file__), 'dist')
 DIST_NAME = '%s-%s-%s_%s' % (APPNAME, VERSION, platform.system().lower(), EXEC_ARCH)
 DIST_PATH = BUILD_DIR
 WORK_PATH = BUILD_DIR
@@ -104,8 +102,8 @@ class CleanCommand(setuptools.Command):
 
     def run(self):
         """Command execution."""
-        rmdir(BUILD_DIR)
-        rmdir(DIST_DIR)
+        shutil.rmtree(BUILD_DIR)
+        shutil.rmtree(DIST_DIR)
 
 
 cmdclass['clean'] = CleanCommand
@@ -306,7 +304,7 @@ if WIN32:
             if not config['iscc'].lower().endswith('iscc.exe'):
                 print("ERROR: invalid location for the ISCC.exe program: %s" % config['iscc'])
                 sys.exit(1)
-            if not fexists(os.path.join('support', 'innosetup', config['iscc'])):
+            if not os.path.isfile(os.path.join('support', 'innosetup', config['iscc'])):
                 print("ERROR: invalid config file: '%s' is not a file" % config['iscc'])
                 sys.exit(1)
 
@@ -394,9 +392,15 @@ if MACOS:
             if self.volume_label is None:
                 self.volume_label = '%s %s' % (APPNAME, VERSION)
             if self.volume_background is None:
-                self.volume_background = expandPath('@resources/images/macos_background_dmg.png')
+                self.volume_background = os.path.join(
+                    os.path.dirname(__file__),
+                    'resources/images/macos_background_dmg.png',
+                )
             if self.volume_icon is None:
-                self.volume_icon = expandPath('@resources/images/macos_icon_dmg.icns')
+                self.volume_icon = os.path.join(
+                    os.path.dirname(__file__),
+                    'resources/images/macos_icon_dmg.icns',
+                )
             if self.skip_build is None:
                 self.skip_build = 0
 
@@ -407,13 +411,13 @@ if MACOS:
             except ImportError:
                 raise OSError('Unable to import dmgbuild: please install the dmgbuild package.')
 
-            if fexists(self.dmgName):
+            if os.path.isfile(self.dmgName):
                 os.unlink(self.dmgName)
 
             defines = {
                 'appname': APPNAME,
                 'files': [self.bundleDir],
-                'license_file': expandPath('@root/LICENSE'),
+                'license_file': os.path.join(os.path.dirname(__file__), 'LICENSE'),
                 'icon_locations': {'{}.app'.format(APPNAME): (60, 50)},
             }
 
@@ -422,7 +426,7 @@ if MACOS:
                 defines['icon_locations']['Applications'] = (60, 130)
 
             if self.volume_background:
-                if not fexists(self.volume_background):
+                if not os.path.isfile(self.volume_background):
                     raise OSError('DMG volume background image not found at {0}'
                                   .format(self.volume_background))
                 print('Using DMG volume background: {0}'.format(self.volume_background))
@@ -432,7 +436,7 @@ if MACOS:
                 defines['window_rect'] = ((100, 500), (str(w), (str(h))))
 
             if self.volume_icon:
-                if not fexists(self.volume_icon):
+                if not os.path.isfile(self.volume_icon):
                     raise OSError('DMG volume icon not found at {0}'.format(self.volume_icon))
                 print('Using DMG volume icon: {0}'.format(self.volume_icon))
                 defines['icon'] = self.volume_icon
@@ -441,7 +445,10 @@ if MACOS:
             dmgbuild.build_dmg(
                 self.dmgName,
                 self.volume_label,
-                settings_file=expandPath('@support/dmgbuild/settings.py'),
+                settings_file=os.path.join(
+                    os.path.dirname(__file__),
+                    'support/dmgbuild/settings.py',
+                ),
                 defines=defines,
             )
 
@@ -512,7 +519,7 @@ if LINUX:
             self.appImageName = '{}-{}-{}.AppImage'.format(APPNAME, VERSION, EXEC_ARCH)
             self.mkpath(self.dist_dir)
             self.execute(self.build_appimage, (), msg='Creating AppImage...')
-            if fexists(self.appImageName):
+            if os.path.isfile(self.appImageName):
                 self.move_file(self.appImageName,
                                os.path.join(self.dist_dir, DIST_NAME + '.AppImage'))
 
