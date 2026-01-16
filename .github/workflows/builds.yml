@@ -22,12 +22,12 @@ jobs:
             platform: Linux
             type: Standalone
             archive: true
-          - os: macos-14
-            python-version: '3.12'
-            architecture: arm64
-            platform: macOS
-            type: DMG
-            dmg: true
+          # - os: macos-14
+          #   python-version: '3.12'
+          #   architecture: arm64
+          #   platform: macOS
+          #   type: DMG
+          #   dmg: true
           - os: macos-15-intel
             python-version: '3.12'
             architecture: x64
