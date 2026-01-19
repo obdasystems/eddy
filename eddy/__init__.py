@@ -38,8 +38,8 @@ __copyright__ = 'Copyright © 2026 OBDA Systems'
 __email__ = 'info@obdasystems.com'
 __license__ = 'GPL-3.0-or-later'
 __organization__ = 'OBDA Systems'
-__status__ = 'Beta'
-__version__ = '3.8.dev0'
+__status__ = 'Stable'
+__version__ = '3.8'
 
 
 APPID = "60119D28-5488-4663-879E-34FCD9C5C38C"
