@@ -87,6 +87,12 @@ class DCATAPIT(DefinedNamespace):
     _NS = Namespace('http://dati.gov.it/onto/dcatapit#')
 
 
+# Subset of the mod ontology vocabulary
+class MOD(DefinedNamespace):
+    Group: URIRef
+    _NS = Namespace('https://w3id.org/mod#')
+
+
 # Subset of the vcard ontology vocabulary
 class VCARD(DefinedNamespace):
     Kind: URIRef
@@ -327,6 +333,68 @@ class Distribution:
         """
         return ("?distrib ?title_en ?title_it ?description_en ?description_it"
                 "?format ?license ?accessURL ?downloadURL")
+
+
+@dataclass
+class Group:
+    type: ClassVar[URIRef] = MOD.Group
+    uri: URIRef
+    name_en: Optional[Literal]
+    name_it: Optional[Literal]
+
+    def triples(self) -> Iterable:
+        """
+        The list of RDF triples representing this instance.
+        :return: the list  of triples representing this instance.
+        """
+        return [(s, p, o) for s, p, o in [
+            (self.uri, RDF.type, Group.type),
+            (self.uri, FOAF.name, self.name_en),
+            (self.uri, FOAF.name, self.name_it),
+        ] if o is not None]
+
+    @staticmethod
+    def bgp(uri: Optional[URIRef] = None) -> str:
+        """
+        The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :param uri: optional uri of the element to filter for
+        :return: the SPARQL BGP
+        """
+        return dedent(f"""
+        {{ {f'BIND( {uri.n3()} AS ?group)' if uri else ''}
+            ?group a {Group.type.n3()} .
+            OPTIONAL {{
+                ?group {FOAF.name.n3()} ?name_en .
+                FILTER langMatches(lang(?name_en), 'en')
+            }}
+            OPTIONAL {{
+                ?group {FOAF.name.n3()} ?name_it .
+                FILTER langMatches(lang(?name_it), 'it')
+            }}
+        }}
+        """).strip()
+
+    @staticmethod
+    def head() -> str:
+        """
+        The head for SPARQL CONSTRUCT queries of this object, will all fields
+        without optionals.
+        :return: the SPARQL CONSTRUCT head
+        """
+        return dedent(f"""
+        ?group a {Group.type.n3()} ;
+                 {FOAF.name.n3()} ?name_en ;
+                 {FOAF.name.n3()} ?name_it .
+        """).strip()
+
+    @staticmethod
+    def vars() -> str:
+        """
+        The variable names used in the object BGP. Useful to build extraction
+        queries from the BGP with the proper variable order.
+        :return: the ordered list of variables appearing in the BGP
+        """
+        return "?group ?name_en ?name_it"
 
 
 @dataclass
