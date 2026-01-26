@@ -101,6 +101,7 @@ from eddy.ui.file import FileDialog
 from eddy.ui.ndc.agent import AgentBuilderDialog
 from eddy.ui.ndc.contact import ContactBuilderDialog
 from eddy.ui.ndc.distribution import DistributionBuilderDialog
+from eddy.ui.ndc.group import GroupBuilderDialog
 from eddy.ui.ndc.project import ProjectBuilderDialog
 
 LOGGER = getLogger()
@@ -1019,6 +1020,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(ndcMainClassesField)
         self.setKeyClasses()
 
+        ndcGroup = QtWidgets.QLabel(
+            'Group', self,
+            objectName='ndc_group_label',
+        )
+        self.addWidget(ndcGroup)
+
+        ndcGroupField = CheckableComboBox(self, objectName='ndc_group_field')
+        self.addWidget(ndcGroupField)
+
+        addGroupBtn = QtWidgets.QPushButton(objectName='add_group_button')
+        addGroupBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addGroupBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addGroupBtn.clicked, self.doAddGroup)
+        self.addWidget(addGroupBtn)
+
+        layout_group = QtWidgets.QHBoxLayout()
+        layout_group.addWidget(ndcGroupField)
+        layout_group.addWidget(addGroupBtn)
+
         ndcPrefix = QtWidgets.QLabel('Prefix', self, objectName='ndc_prefix_label')
         self.addWidget(ndcPrefix)
 
@@ -1091,6 +1111,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         NDCLayout.addRow(self.widget('ndc_creator_label'), layout_creator)
         NDCLayout.addRow(self.widget('ndc_languages_label'), self.widget('ndc_languages_field'))
         NDCLayout.addRow(self.widget('ndc_mainClasses_label'), self.widget('ndc_mainClasses_field'))
+        NDCLayout.addRow(self.widget('ndc_group_label'), layout_group)
         NDCLayout.addRow(self.widget('ndc_prefix_label'), self.widget('ndc_prefix_field'))
         NDCLayout.addRow(self.widget('ndc_projects_label'), layout_projects)
         #NDCLayout.addRow(self.widget('ndc_groups_label'), self.widget('ndc_groups_field'))
@@ -1107,6 +1128,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.setContacts()
         self.setProjects()
         self.setDistributions()
+        self.setGroups()
 
         applyBtn = QtWidgets.QPushButton('Apply', objectName='ndc_apply_button')
         applyBtn.setEnabled(True)
@@ -2238,6 +2260,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(contactBuilder.accepted, self.setContactPointSuggestions)
         contactBuilder.open()
 
+    @QtCore.pyqtSlot()
+    def doAddGroup(self):
+        groupBuilder = GroupBuilderDialog(self, self.ndcDataset)
+        connect(groupBuilder.accepted, self.setGroupSuggestions)
+        groupBuilder.open()
+
     def setRightsHolders(self):
         widget = self.widget('ndc_rightsHolder_field')
         rightsHolders = filter(
@@ -2366,6 +2394,22 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
 
+    def setGroups(self):
+        widget = self.widget('ndc_group_field')
+        groups = filter(
+            lambda x: (str(x.assertionProperty) == 'https://w3id.org/mod#group'),
+            self.project.ontologyIRI.annotationAssertions)
+        groups = list(map(lambda x: str(x.value), list(groups)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in groups:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
     def setPeriodicities(self):
         widget = self.widget('ndc_accrualPeriodicity_field')
         periodicities = filter(
@@ -2407,6 +2451,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         distributions = sorted(set([d.uri.toPython() for d in self.ndcDataset.distributions()]))
         distributionWidget = self.widget('ndc_distributions_field')
         distributionWidget.addItems(distributions)
+
+    @QtCore.pyqtSlot()
+    def setGroupSuggestions(self):
+        groups = sorted(set([d.uri.toPython() for d in self.ndcDataset.groups()]))
+        groupWidget = self.widget('ndc_group_field')
+        groupWidget.addItems(groups)
 
     @QtCore.pyqtSlot()
     def doConnectEndpoint(self) -> None:
