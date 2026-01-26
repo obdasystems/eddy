@@ -487,12 +487,14 @@ CONSTRUCT {{
     {ContactPoint.head()}
     {Distribution.head()}
     {Project.head()}
+    {Group.head()}
 }}
 WHERE {{
 {Agent.bgp()}
 UNION {ContactPoint.bgp()}
 UNION {Distribution.bgp()}
 UNION {Project.bgp()}
+UNION {Group.bgp()}
 }}
         """.strip()
 
@@ -534,6 +536,16 @@ UNION {Project.bgp()}
         """
         return [Project(*b) for b in self.query(
             f'SELECT {Project.vars()} WHERE {Project.bgp(uri)}'
+        )]
+
+    def groups(self, uri: Optional[URIRef] = None) -> Iterable[Group]:
+        """
+        Returns the list of distributions in this dataset.
+        :param uri: the uri of the element to filter for
+        :return: the list of distributions stored
+        """
+        return [Group(*b) for b in self.query(
+            f'SELECT {Group.vars()} WHERE {Group.bgp(uri)}'
         )]
 
     def load(self, path: str = None) -> Graph:
