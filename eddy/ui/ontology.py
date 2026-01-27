@@ -88,7 +88,7 @@ from eddy.core.owl import (
     IllegalPrefixError,
     IllegalNamespaceError,
     ImportedOntology,
-    OWL2Datatype,
+    OWL2Datatype, IRI,
 )
 from eddy.ui.annotation import AnnotationAssertionBuilderDialog
 from eddy.ui.checkable_combobox import CheckableComboBox
@@ -1360,7 +1360,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         ################################
 
         table = self.widget('annotation_assertions_table_widget')
-        table.clearContents()
+        table.setRowCount(0)
         for iri in self.project.iris:
             for assertion in iri.annotationAssertions:
                 self._insertAssertionTableRow(assertion)
@@ -2227,6 +2227,29 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         propItem.setData(QtCore.Qt.UserRole, assertion)
         table.setItem(rowcount, 2, propItem)
         valueItem = QtWidgets.QTableWidgetItem(str(assertion.value))
+        if isinstance(assertion.value, IRI):
+            prop = str(assertion.assertionProperty)
+            val = URIRef(str(assertion.value))
+            if prop in ['http://purl.org/dc/terms/creator', 'http://purl.org/dc/terms/publisher', 'http://purl.org/dc/terms/rightsHolder']:
+                agent = self.ndcDataset.agents(val)[0]
+                valueItem.setToolTip(f'Name: {agent.name_en} \nNome: {agent.name_it} \nId: {agent. identifier}')
+            elif prop == 'https://w3id.org/italia/onto/ADMS/semanticAssetInUse':
+                project = self.ndcDataset.projects(val)[0]
+                valueItem.setToolTip(f'Name: {project.name_en} \nNome: {project.name_it}')
+            elif prop == 'https://w3id.org/italia/onto/ADMS/hasSemanticAssetDistribution':
+                distribution = self.ndcDataset.distributions(val)[0]
+                valueItem.setToolTip(
+                    f'Title: {distribution.title_en} \nTitolo: {distribution.title_it} \nDescription: {distribution.description_en} \nDescrizione: {distribution.description_it} \nFormat: {distribution.format} \nLicense: {distribution.license} \nAccess URL: {distribution.accessURL} \nDownload URL: {distribution.downloadURL}')
+            elif prop == 'http://www.w3.org/ns/dcat#contactPoint':
+                contact = self.ndcDataset.contactPoints(val)[0]
+                valueItem.setToolTip(
+                    f'Name: {contact.fn_en} \nNome: {contact.fn_it} \nEmail: {contact.email} \nTelephone: {contact.telephone}')
+            elif prop == 'https://w3id.org/mod#group':
+                group = self.ndcDataset.groups(val)[0]
+                valueItem.setToolTip(
+                    f'Name: {group.name_en} \nNome: {group.name_it}')
+            else:
+                pass
         valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         table.setItem(rowcount, 3, valueItem)
         datatypeItem = QtWidgets.QTableWidgetItem(str(assertion.datatype or ''))
@@ -2490,6 +2513,26 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.undostack.beginMacro('Save NDC metadata to project')
         annotations = []
         subjectIRI = self.project.ontologyIRI
+        PROPS = [
+            DCTERMS.title.toPython(),
+            RDFS.label.toPython(),
+            RDFS.comment.toPython(),
+            ADMS.officialURI.toPython(),
+            DCTERMS.identifier.toPython(),
+            DCTERMS.issued.toPython(),
+            DCTERMS.modified.toPython(),
+            OWL.versionInfo.toPython(),
+            DCTERMS.accrualPeriodicity.toPython(),
+            DCTERMS.language.toPython(),
+            ADMS.hasKeyClass.toPython(),
+            ADMS.prefix.toPython(),
+            DCTERMS.rightsHolder.toPython(),
+            DCTERMS.publisher.toPython(),
+            DCTERMS.creator.toPython(),
+            ADMS.semanticAssetInUse.toPython(),
+            ADMS.hasSemanticAssetDistribution.toPython(),
+            DCAT.contactPoint.toPython()
+        ]
         titleIT = self.widget('ndc_ITtitle_field').text()
         annotations.append({
             'prop': DCTERMS.title.toPython(),
@@ -2653,6 +2696,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 'type': None,
                 'lang': None
             })
+        for ann in subjectIRI.annotationAssertions:
+            if str(ann.assertionProperty) in PROPS:
+                command = CommandIRIRemoveAnnotationAssertion(
+                    self.project,
+                    subjectIRI,
+                    ann,
+                )
+                self.session.undostack.push(command)
         for a in annotations:
             if a['value']:
                 # if not self.project.existAnnotationProperty(property):
@@ -2673,5 +2724,5 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 )
                 self.session.undostack.push(command)
         self.session.undostack.endMacro()
-        # self.redraw()
+        self.redraw()
         self.session.addNotification('Metadata added to the current project!')
