@@ -105,6 +105,26 @@ from eddy.ui.ndc.group import GroupBuilderDialog
 from eddy.ui.ndc.project import ProjectBuilderDialog
 
 LOGGER = getLogger()
+PROPS = [
+            DCTERMS.title.toPython(),
+            RDFS.label.toPython(),
+            RDFS.comment.toPython(),
+            ADMS.officialURI.toPython(),
+            DCTERMS.identifier.toPython(),
+            DCTERMS.issued.toPython(),
+            DCTERMS.modified.toPython(),
+            OWL.versionInfo.toPython(),
+            DCTERMS.accrualPeriodicity.toPython(),
+            DCTERMS.language.toPython(),
+            ADMS.hasKeyClass.toPython(),
+            ADMS.prefix.toPython(),
+            DCTERMS.rightsHolder.toPython(),
+            DCTERMS.publisher.toPython(),
+            DCTERMS.creator.toPython(),
+            ADMS.semanticAssetInUse.toPython(),
+            ADMS.hasSemanticAssetDistribution.toPython(),
+            DCAT.contactPoint.toPython()
+        ]
 
 
 class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -489,7 +509,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         table.verticalHeader().setSectionsClickable(False)
         table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         #table.setSelectionMode(QAbstractItemView.MultiSelection)
-        connect(table.cellDoubleClicked, self.editAnnotationAssertion)
+        connect(table.cellClicked, self.onAssertionCellClicked)
+        #connect(table.cellDoubleClicked, self.editAnnotationAssertion)
 
         self.addWidget(table)
 
@@ -499,7 +520,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         addBtn = QtWidgets.QPushButton('Add', objectName='annotation_assertions_add_button')
         editBtn = QtWidgets.QPushButton('Edit', objectName='annotation_assertions_edit_button')
+        editBtn.setEnabled(False)
         delBtn = QtWidgets.QPushButton('Remove', objectName='annotation_assertions_delete_button')
+        delBtn.setEnabled(False)
         connect(addBtn.clicked, self.addAnnotationAssertion)
         connect(editBtn.clicked, self.editAnnotationAssertion)
         connect(delBtn.clicked, self.removeAnnotationAssertion)
@@ -2193,6 +2216,22 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.hiddenRows.append(row)
 
     @QtCore.pyqtSlot()
+    def onAssertionCellClicked(self):
+        table = self.widget('annotation_assertions_table_widget')
+        selectedRanges = table.selectedRanges()
+        for selectedRange in selectedRanges:
+            for row in range(selectedRange.bottomRow(), selectedRange.topRow() + 1):
+                itemIri = self.project.getIRI(str(table.item(row, 0).text()))
+                assertion = table.item(row, 2).data(QtCore.Qt.UserRole)
+                if itemIri != self.project.ontologyIRI or str(assertion.assertionProperty) not in PROPS:
+                    self.widget('annotation_assertions_edit_button').setEnabled(True)
+                    self.widget('annotation_assertions_delete_button').setEnabled(True)
+                else:
+                    self.widget('annotation_assertions_edit_button').setEnabled(False)
+                    self.widget('annotation_assertions_delete_button').setEnabled(False)
+                break
+
+    @QtCore.pyqtSlot()
     def selectAllAnnotationAssertion(self):
         table = self.widget('annotation_assertions_table_widget')
         table.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
@@ -2513,26 +2552,6 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.undostack.beginMacro('Save NDC metadata to project')
         annotations = []
         subjectIRI = self.project.ontologyIRI
-        PROPS = [
-            DCTERMS.title.toPython(),
-            RDFS.label.toPython(),
-            RDFS.comment.toPython(),
-            ADMS.officialURI.toPython(),
-            DCTERMS.identifier.toPython(),
-            DCTERMS.issued.toPython(),
-            DCTERMS.modified.toPython(),
-            OWL.versionInfo.toPython(),
-            DCTERMS.accrualPeriodicity.toPython(),
-            DCTERMS.language.toPython(),
-            ADMS.hasKeyClass.toPython(),
-            ADMS.prefix.toPython(),
-            DCTERMS.rightsHolder.toPython(),
-            DCTERMS.publisher.toPython(),
-            DCTERMS.creator.toPython(),
-            ADMS.semanticAssetInUse.toPython(),
-            ADMS.hasSemanticAssetDistribution.toPython(),
-            DCAT.contactPoint.toPython()
-        ]
         titleIT = self.widget('ndc_ITtitle_field').text()
         annotations.append({
             'prop': DCTERMS.title.toPython(),
