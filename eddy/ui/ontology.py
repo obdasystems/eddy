@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 ##########################################################################
 #                                                                        #
@@ -37,9 +38,9 @@ from PyQt5 import (
     QtGui,
     QtWidgets,
 )
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from rdflib import (
     Graph,
-    Literal,
     URIRef,
 )
 from rdflib.namespace import (
@@ -1153,12 +1154,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.setDistributions()
         self.setGroups()
 
+        loadBtn = QtWidgets.QPushButton('Load', objectName='ndc_load_button')
+        loadBtn.setEnabled(True)
+        connect(loadBtn.clicked, self.openFileDialog)
+        self.addWidget(loadBtn)
         applyBtn = QtWidgets.QPushButton('Apply', objectName='ndc_apply_button')
         applyBtn.setEnabled(True)
         connect(applyBtn.clicked, self.doAddMetadata)
         self.addWidget(applyBtn)
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('ndc_load_button'))
         boxlayout.addWidget(self.widget('ndc_apply_button'))
 
         scroll = QtWidgets.QScrollArea()
@@ -2547,6 +2553,46 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.addNotification(
             f'Failed to execute SPARQL query on endpoint: {url.toString()}'
         )
+
+    def openFileDialog(self) -> None:
+        options = QFileDialog.Options()
+        fileName, _ = QFileDialog.getOpenFileName(self, "Scegli un file da leggere", "",
+                                                  "File OWL (*.owl);;File RDF (*.rdf);;File TTL (*.ttl)",
+                                                  options=options)
+        if fileName:
+            self.parseFile(fileName)
+
+    def parseFile(self, fileName):
+        # Creazione di un grafo RDF
+        g = Graph()
+
+        _, ext = os.path.splitext(fileName)
+        format_map = {
+            '.owl': 'xml',
+            '.rdf': 'xml',
+            '.ttl': 'ttl',
+            '.nt': 'nt',
+            '.n3': 'n3'
+        }
+        format = format_map.get(ext.lower(), None)
+        if format is None:
+            QMessageBox.critical(self, "Errore", "Formato di file non supportato!")
+            return
+        # Parsing del file
+        try:
+            g.parse(fileName,
+                    format=format)
+            QMessageBox.information(self, "Parsing completato",
+                                        f"File {fileName} caricato correttamente!\n")
+            res = g.query("select ?url where {?o owl:versionIRI ?url}")
+            url = fileName
+            for row in res:
+                url = row.url
+                break
+            new_graph = g.query(NDCDataset.construct())
+            self.onEndpointQueryCompleted(QtCore.QUrl(str(url)), new_graph)
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", f"Impossibile parsare il file: {str(e)}")
 
     def doAddMetadata(self):
         self.session.undostack.beginMacro('Save NDC metadata to project')
