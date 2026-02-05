@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 import os
 
 ##########################################################################
@@ -36,8 +37,9 @@ import os
 from PyQt5 import (
     QtCore,
     QtGui,
-    QtWidgets,
+    QtWidgets, Qt,
 )
+from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from rdflib import (
     Graph,
@@ -2591,9 +2593,90 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 break
             new_graph = g.query(NDCDataset.construct())
             self.onEndpointQueryCompleted(QtCore.QUrl(str(url)), new_graph)
+            annotations = g.query('''SELECT ?annotationProperty ?value (LANG(?value) AS ?lang)
+                                    WHERE {
+                                      ?ont a owl:Ontology ;
+                                           ?annotationProperty ?value .
+                                    }''')
+            rightsHolders = []
+            periodicities = []
+            contacts = []
+            publishers =[]
+            creators =[]
+            languages =[]
+            projects =[]
+            distributions =[]
+            for row in annotations:
+                if str(row.annotationProperty) == DCTERMS.title.toPython():
+                    if row.lang and row.lang.strip() == 'it':
+                        self.widget('ndc_ITtitle_field').setText(row.value)
+                    elif row.lang and row.lang.strip() == 'en':
+                        self.widget('ndc_ENtitle_field').setText(row.value)
+                elif str(row.annotationProperty) == RDFS.label.toPython():
+                    if row.lang and row.lang.strip() == 'it':
+                        self.widget('ndc_ITlabel_field').setText(row.value)
+                    elif row.lang and row.lang.strip() == 'en':
+                        self.widget('ndc_ENlabel_field').setText(row.value)
+                elif str(row.annotationProperty) == RDFS.comment.toPython():
+                    if row.lang and row.lang.strip() == 'it':
+                        self.widget('ndc_ITcomment_field').setText(row.value)
+                    elif row.lang and row.lang.strip() == 'en':
+                        self.widget('ndc_ENcomment_field').setText(row.value)
+                elif str(row.annotationProperty) == ADMS.officialURI.toPython():
+                    self.widget('ndc_officialURI_field').setText(row.value)
+                elif str(row.annotationProperty) == DCTERMS.identifier.toPython():
+                    self.widget('ndc_id_field').setText(row.value)
+                elif str(row.annotationProperty) == DCTERMS.rightsHolder.toPython():
+                    rightsHolders.append(str(row.value))
+                elif str(row.annotationProperty) == DCTERMS.issued.toPython():
+                    dt = datetime.fromisoformat(row.value)
+                    qdate = QDate(dt.year, dt.month, dt.day)
+                    self.widget('ndc_creationDate_field').setDate(qdate)
+                elif str(row.annotationProperty) == DCTERMS.modified.toPython():
+                    dt = datetime.fromisoformat(row.value)
+                    qdate = QDate(dt.year, dt.month, dt.day)
+                    self.widget('ndc_lastModifiedDate_field').setDate(qdate)
+                elif str(row.annotationProperty) == OWL.versionInfo.toPython():
+                    if row.lang and row.lang.strip() == 'it':
+                        self.widget('ndc_ITversionInfo_field').setText(row.value)
+                    elif row.lang and row.lang.strip() == 'en':
+                        self.widget('ndc_ENversionInfo_field').setText(row.value)
+                elif str(row.annotationProperty) == DCTERMS.accrualPeriodicity.toPython():
+                    periodicities.append(str(row.value))
+                elif str(row.annotationProperty) == DCAT.contactPoint.toPython():
+                    contacts.append(str(row.value))
+                elif str(row.annotationProperty) == DCTERMS.publisher.toPython():
+                    publishers.append(str(row.value))
+                elif str(row.annotationProperty) == DCTERMS.creator.toPython():
+                    creators.append(str(row.value))
+                elif str(row.annotationProperty) == DCTERMS.language.toPython():
+                    languages.append(str(row.value))
+                elif str(row.annotationProperty) == ADMS.prefix.toPython():
+                    self.widget('ndc_prefix_field').setText(row.value)
+                elif str(row.annotationProperty) == ADMS.semanticAssetInUse.toPython():
+                    projects.append(str(row.value))
+                elif str(row.annotationProperty) == ADMS.hasSemanticAssetDistribution.toPython():
+                    distributions.append(str(row.value))
+                else:
+                    pass
+            self.set_checked_texts(self.widget('ndc_rightsHolder_field'), rightsHolders)
+            self.set_checked_texts(self.widget('ndc_accrualPeriodicity_field'), periodicities)
+            self.set_checked_texts(self.widget('ndc_contacts_field'), contacts)
+            self.set_checked_texts(self.widget('ndc_publisher_field'), publishers)
+            self.set_checked_texts(self.widget('ndc_languages_field'), languages)
+            self.set_checked_texts(self.widget('ndc_accrualPeriodicity_field'), periodicities)
+            self.set_checked_texts(self.widget('ndc_projects_field'), projects)
+            self.set_checked_texts(self.widget('ndc_distributions_field'), distributions)
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"Impossibile parsare il file: {str(e)}")
 
+    def set_checked_texts(self, combobox, texts):
+        model = combobox.model()
+        for i in range(model.rowCount()):
+            item = model.item(i)
+            item.setCheckState(
+                2 if item.text() in texts else 0
+            )
     def doAddMetadata(self):
         self.session.undostack.beginMacro('Save NDC metadata to project')
         annotations = []
