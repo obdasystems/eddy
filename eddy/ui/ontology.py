@@ -1117,31 +1117,31 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_distributions.addWidget(ndcDistributionsField)
         layout_distributions.addWidget(addDistributionBtn)
 
-        NDCLayout = QtWidgets.QFormLayout()
-        NDCLayout.addRow(self.widget('ndc_title_label'), self.widget('ndc_ITtitle_field'))
-        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENtitle_field'))
-        NDCLayout.addRow(self.widget('ndc_label_label'), self.widget('ndc_ITlabel_field'))
-        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENlabel_field'))
-        NDCLayout.addRow(self.widget('ndc_comment_label'), self.widget('ndc_ITcomment_field'))
-        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENcomment_field'))
-        NDCLayout.addRow(self.widget('ndc_officialURI_label'), self.widget('ndc_officialURI_field'))
-        NDCLayout.addRow(self.widget('ndc_id_label'), self.widget('ndc_id_field'))
-        NDCLayout.addRow(self.widget('ndc_rightsHolder_label'), layout_rightsHolder)
-        NDCLayout.addRow(self.widget('ndc_creationDate_label'), self.widget('ndc_creationDate_field'))
-        NDCLayout.addRow(self.widget('ndc_lastModifiedDate_label'), self.widget('ndc_lastModifiedDate_field'))
-        NDCLayout.addRow(self.widget('ndc_versionInfo_label'), self.widget('ndc_ITversionInfo_field'))
-        NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENversionInfo_field'))
-        NDCLayout.addRow(self.widget('ndc_accrualPeriodicity_label'), self.widget('ndc_accrualPeriodicity_field'))
-        NDCLayout.addRow(self.widget('ndc_contacts_label'), layout_contact)
-        NDCLayout.addRow(self.widget('ndc_publisher_label'), layout_publisher)
-        NDCLayout.addRow(self.widget('ndc_creator_label'), layout_creator)
-        NDCLayout.addRow(self.widget('ndc_languages_label'), self.widget('ndc_languages_field'))
-        NDCLayout.addRow(self.widget('ndc_mainClasses_label'), self.widget('ndc_mainClasses_field'))
-        NDCLayout.addRow(self.widget('ndc_group_label'), layout_group)
-        NDCLayout.addRow(self.widget('ndc_prefix_label'), self.widget('ndc_prefix_field'))
-        NDCLayout.addRow(self.widget('ndc_projects_label'), layout_projects)
+        self.NDCLayout = QtWidgets.QFormLayout()
+        self.NDCLayout.addRow(self.widget('ndc_title_label'), self.widget('ndc_ITtitle_field'))
+        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENtitle_field'))
+        self.NDCLayout.addRow(self.widget('ndc_label_label'), self.widget('ndc_ITlabel_field'))
+        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENlabel_field'))
+        self.NDCLayout.addRow(self.widget('ndc_comment_label'), self.widget('ndc_ITcomment_field'))
+        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENcomment_field'))
+        self.NDCLayout.addRow(self.widget('ndc_officialURI_label'), self.widget('ndc_officialURI_field'))
+        self.NDCLayout.addRow(self.widget('ndc_id_label'), self.widget('ndc_id_field'))
+        self.NDCLayout.addRow(self.widget('ndc_rightsHolder_label'), layout_rightsHolder)
+        self.NDCLayout.addRow(self.widget('ndc_creationDate_label'), self.widget('ndc_creationDate_field'))
+        self.NDCLayout.addRow(self.widget('ndc_lastModifiedDate_label'), self.widget('ndc_lastModifiedDate_field'))
+        self.NDCLayout.addRow(self.widget('ndc_versionInfo_label'), self.widget('ndc_ITversionInfo_field'))
+        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENversionInfo_field'))
+        self.NDCLayout.addRow(self.widget('ndc_accrualPeriodicity_label'), self.widget('ndc_accrualPeriodicity_field'))
+        self.NDCLayout.addRow(self.widget('ndc_contacts_label'), layout_contact)
+        self.NDCLayout.addRow(self.widget('ndc_publisher_label'), layout_publisher)
+        self.NDCLayout.addRow(self.widget('ndc_creator_label'), layout_creator)
+        self.NDCLayout.addRow(self.widget('ndc_languages_label'), self.widget('ndc_languages_field'))
+        self.NDCLayout.addRow(self.widget('ndc_mainClasses_label'), self.widget('ndc_mainClasses_field'))
+        self.NDCLayout.addRow(self.widget('ndc_group_label'), layout_group)
+        self.NDCLayout.addRow(self.widget('ndc_prefix_label'), self.widget('ndc_prefix_field'))
+        self.NDCLayout.addRow(self.widget('ndc_projects_label'), layout_projects)
         #NDCLayout.addRow(self.widget('ndc_groups_label'), self.widget('ndc_groups_field'))
-        NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
+        self.NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
 
         endpointWidget = self.widget('endpoint_field')
         self.setAgentSuggestions()
@@ -1156,6 +1156,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.setDistributions()
         self.setGroups()
 
+        clearBtn = QtWidgets.QPushButton('Clear', objectName='ndc_clear_button')
+        clearBtn.setEnabled(True)
+        connect(clearBtn.clicked, self.clearMetadataForm)
+        self.addWidget(clearBtn)
         loadBtn = QtWidgets.QPushButton('Load', objectName='ndc_load_button')
         loadBtn.setEnabled(True)
         connect(loadBtn.clicked, self.openFileDialog)
@@ -1166,12 +1170,13 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(applyBtn)
         boxlayout = QtWidgets.QHBoxLayout()
         boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('ndc_clear_button'))
         boxlayout.addWidget(self.widget('ndc_load_button'))
         boxlayout.addWidget(self.widget('ndc_apply_button'))
 
         scroll = QtWidgets.QScrollArea()
         scrollWidget = QtWidgets.QWidget()
-        scrollWidget.setLayout(NDCLayout)
+        scrollWidget.setLayout(self.NDCLayout)
         scrollWidget.setMaximumWidth(740)
         scroll.setWidget(scrollWidget)
         scroll.setWidgetResizable(True)
@@ -2875,3 +2880,28 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.session.undostack.endMacro()
         self.redraw()
         self.session.addNotification('Metadata added to the current project!')
+
+    def clearMetadataForm(self):
+        self.clearLayout(self.NDCLayout)
+
+    def clearLayout(self, layout):
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item.widget():
+                widget = item.widget()
+                if isinstance(widget, QtWidgets.QLineEdit):
+                    widget.clear()
+                elif isinstance(widget, QtWidgets.QTextEdit):
+                    widget.clear()
+                elif isinstance(widget, CheckableComboBox):
+                    widget.clearChecks()
+                elif isinstance(widget, QtWidgets.QComboBox):
+                    widget.setCurrentIndex(0)
+                elif isinstance(widget, QtWidgets.QCheckBox):
+                    widget.setChecked(False)
+                elif isinstance(widget, QtWidgets.QDateEdit):
+                    widget.setDate(QtCore.QDate(2000, 1, 1))
+            elif item.layout():
+                self.clearLayout(item.layout())
+
+
