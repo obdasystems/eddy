@@ -2844,7 +2844,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 'type': None,
                 'lang': None
             })
-        for ann in subjectIRI.annotationAssertions:
+        while len(subjectIRI.annotationAssertions) > 0:
+            ann = subjectIRI.annotationAssertions[0]
             if str(ann.assertionProperty) in PROPS:
                 command = CommandIRIRemoveAnnotationAssertion(
                     self.project,
