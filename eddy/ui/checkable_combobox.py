@@ -122,3 +122,10 @@ class CheckableComboBox(QtWidgets.QComboBox):
             if self.model().item(i).checkState() == 2:
                 res.append(self.model().item(i).data())
         return res
+
+    def clearChecks(self):
+        for i in range(self.model().rowCount()):
+            item = self.model().item(i)
+            item.setCheckState(0)
+        self.updateText()
+
