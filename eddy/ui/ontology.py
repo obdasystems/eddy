@@ -737,9 +737,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ITtitles) > 0:
             ITtitle = ITtitles[0].value
             ndcITtitleField.setText(ITtitle)
-        else:
-            ndcITtitleField.setPlaceholderText('@it')
         self.addWidget(ndcITtitleField)
+
+        langTitleIT = QtWidgets.QLabel('@it', self)
+        langTitleIT.setObjectName('ndc_lang_titleIT')
+
+        titleITLayout = QtWidgets.QHBoxLayout()
+        titleITLayout.setContentsMargins(0, 0, 0, 0)
+        titleITLayout.setSpacing(10)
+
+        titleITLayout.addWidget(ndcITtitleField)
+        titleITLayout.addWidget(langTitleIT)
 
         ndcENtitleField = StringField(self, objectName='ndc_ENtitle_field')
         ENtitles = list(filter(
@@ -749,9 +757,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ENtitles) > 0:
             ENtitle = ENtitles[0].value
             ndcENtitleField.setText(ENtitle)
-        else:
-            ndcENtitleField.setPlaceholderText('@en')
         self.addWidget(ndcENtitleField)
+
+        langTitleEN = QtWidgets.QLabel('@en', self)
+        langTitleEN.setObjectName('ndc_lang_titleEN')
+
+        titleENLayout = QtWidgets.QHBoxLayout()
+        titleENLayout.setContentsMargins(0, 0, 0, 0)
+        titleENLayout.setSpacing(4)
+
+        titleENLayout.addWidget(ndcENtitleField)
+        titleENLayout.addWidget(langTitleEN)
 
         ndcLabel = QtWidgets.QLabel('Label', self, objectName='ndc_label_label')
         self.addWidget(ndcLabel)
@@ -764,9 +780,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ITlabels) > 0:
             ITlabel = ITlabels[0].value
             ndcITLabelField.setText(ITlabel)
-        else:
-            ndcITLabelField.setPlaceholderText('@it')
         self.addWidget(ndcITLabelField)
+
+        langLabelIT = QtWidgets.QLabel('@it', self)
+        langLabelIT.setObjectName('ndc_lang_labelIT')
+
+        labelITLayout = QtWidgets.QHBoxLayout()
+        labelITLayout.setContentsMargins(0, 0, 0, 0)
+        labelITLayout.setSpacing(10)
+
+        labelITLayout.addWidget(ndcITLabelField)
+        labelITLayout.addWidget(langLabelIT)
 
         noLabel = QtWidgets.QLabel(self, objectName='no_label')
         self.addWidget(noLabel)
@@ -779,9 +803,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ENlabels) > 0:
             ENlabel = ENlabels[0].value
             ndcENLabelField.setText(ENlabel)
-        else:
-            ndcENLabelField.setPlaceholderText('@en')
         self.addWidget(ndcENLabelField)
+
+        langLabelEN = QtWidgets.QLabel('@en', self)
+        langLabelEN.setObjectName('ndc_lang_labelEN')
+
+        labelENLayout = QtWidgets.QHBoxLayout()
+        labelENLayout.setContentsMargins(0, 0, 0, 0)
+        labelENLayout.setSpacing(4)
+
+        labelENLayout.addWidget(ndcENLabelField)
+        labelENLayout.addWidget(langLabelEN)
 
         ndcComment = QtWidgets.QLabel('Comment', self, objectName='ndc_comment_label')
         self.addWidget(ndcComment)
@@ -794,9 +826,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ITcomments) > 0:
             ITcomment = ITcomments[0].value
             ndcITCommentField.setText(ITcomment)
-        else:
-            ndcITCommentField.setPlaceholderText('@it')
         self.addWidget(ndcITCommentField)
+
+        langCommentIT = QtWidgets.QLabel('@it', self)
+        langCommentIT.setObjectName('ndc_lang_commentIT')
+
+        commentITLayout = QtWidgets.QHBoxLayout()
+        commentITLayout.setContentsMargins(0, 0, 0, 0)
+        commentITLayout.setSpacing(10)
+
+        commentITLayout.addWidget(ndcITCommentField)
+        commentITLayout.addWidget(langCommentIT)
 
         ndcENCommentField = StringField(self, objectName='ndc_ENcomment_field')
         ENcomments = list(filter(
@@ -806,9 +846,17 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ENcomments) > 0:
             ENcomment = ENcomments[0].value
             ndcENCommentField.setText(ENcomment)
-        else:
-            ndcENCommentField.setPlaceholderText('@en')
         self.addWidget(ndcENCommentField)
+
+        langCommentEN = QtWidgets.QLabel('@en', self)
+        langCommentEN.setObjectName('ndc_lang_commentEN')
+
+        commentENLayout = QtWidgets.QHBoxLayout()
+        commentENLayout.setContentsMargins(0, 0, 0, 0)
+        commentENLayout.setSpacing(4)
+
+        commentENLayout.addWidget(ndcENCommentField)
+        commentENLayout.addWidget(langCommentEN)
 
         ndcOfficialURI = QtWidgets.QLabel(self, objectName='ndc_officialURI_label')
         ndcOfficialURI.setText('Official URI')
@@ -905,9 +953,16 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ITinfos) > 0:
             ITinfo = ITinfos[0].value
             ndcVersionInfoITField.setText(ITinfo)
-        else:
-            ndcVersionInfoITField.setPlaceholderText('@it')
         self.addWidget(ndcVersionInfoITField)
+        langVersionInfoIT = QtWidgets.QLabel('@it', self)
+        langVersionInfoIT.setObjectName('ndc_lang_versionInfoIT')
+
+        versionInfoITLayout = QtWidgets.QHBoxLayout()
+        versionInfoITLayout.setContentsMargins(0, 0, 0, 0)
+        versionInfoITLayout.setSpacing(10)
+
+        versionInfoITLayout.addWidget(ndcVersionInfoITField)
+        versionInfoITLayout.addWidget(langVersionInfoIT)
 
         ndcVersionInfoENField = StringField(self, objectName='ndc_ENversionInfo_field')
         ENinfos = list(filter(
@@ -917,9 +972,16 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if len(ENinfos) > 0:
             ENinfo = ENinfos[0].value
             ndcVersionInfoENField.setText(ENinfo)
-        else:
-            ndcVersionInfoENField.setPlaceholderText('@en')
         self.addWidget(ndcVersionInfoENField)
+        langVersionInfoEN = QtWidgets.QLabel('@en', self)
+        langVersionInfoEN.setObjectName('ndc_lang_versionInfoIT')
+
+        versionInfoENLayout = QtWidgets.QHBoxLayout()
+        versionInfoENLayout.setContentsMargins(0, 0, 0, 0)
+        versionInfoENLayout.setSpacing(4)
+
+        versionInfoENLayout.addWidget(ndcVersionInfoENField)
+        versionInfoENLayout.addWidget(langVersionInfoEN)
 
         ndcAccrualPeriodicity = QtWidgets.QLabel(
             'Accrual Periodicity', self,
@@ -1118,19 +1180,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_distributions.addWidget(addDistributionBtn)
 
         self.NDCLayout = QtWidgets.QFormLayout()
-        self.NDCLayout.addRow(self.widget('ndc_title_label'), self.widget('ndc_ITtitle_field'))
-        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENtitle_field'))
-        self.NDCLayout.addRow(self.widget('ndc_label_label'), self.widget('ndc_ITlabel_field'))
-        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENlabel_field'))
-        self.NDCLayout.addRow(self.widget('ndc_comment_label'), self.widget('ndc_ITcomment_field'))
-        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENcomment_field'))
+        self.NDCLayout.addRow(self.widget('ndc_title_label'), titleITLayout)
+        self.NDCLayout.addRow(self.widget('no_label'), titleENLayout)
+        self.NDCLayout.addRow(self.widget('ndc_label_label'), labelITLayout)
+        self.NDCLayout.addRow(self.widget('no_label'), labelENLayout)
+        self.NDCLayout.addRow(self.widget('ndc_comment_label'), commentITLayout)
+        self.NDCLayout.addRow(self.widget('no_label'), commentENLayout)
         self.NDCLayout.addRow(self.widget('ndc_officialURI_label'), self.widget('ndc_officialURI_field'))
         self.NDCLayout.addRow(self.widget('ndc_id_label'), self.widget('ndc_id_field'))
         self.NDCLayout.addRow(self.widget('ndc_rightsHolder_label'), layout_rightsHolder)
         self.NDCLayout.addRow(self.widget('ndc_creationDate_label'), self.widget('ndc_creationDate_field'))
         self.NDCLayout.addRow(self.widget('ndc_lastModifiedDate_label'), self.widget('ndc_lastModifiedDate_field'))
-        self.NDCLayout.addRow(self.widget('ndc_versionInfo_label'), self.widget('ndc_ITversionInfo_field'))
-        self.NDCLayout.addRow(self.widget('no_label'), self.widget('ndc_ENversionInfo_field'))
+        self.NDCLayout.addRow(self.widget('ndc_versionInfo_label'), versionInfoITLayout)
+        self.NDCLayout.addRow(self.widget('no_label'), versionInfoENLayout)
         self.NDCLayout.addRow(self.widget('ndc_accrualPeriodicity_label'), self.widget('ndc_accrualPeriodicity_field'))
         self.NDCLayout.addRow(self.widget('ndc_contacts_label'), layout_contact)
         self.NDCLayout.addRow(self.widget('ndc_publisher_label'), layout_publisher)
@@ -2690,48 +2752,48 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         annotations.append({
             'prop': DCTERMS.title.toPython(),
             'value': titleIT,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'it'})
         titleEN = self.widget('ndc_ENtitle_field').text()
         annotations.append({
             'prop': DCTERMS.title.toPython(),
             'value': titleEN,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'en'
         })
         labelIT = self.widget('ndc_ITlabel_field').text()
         annotations.append({
             'prop': RDFS.label.toPython(),
             'value': labelIT,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'it'
         })
         labelEN = self.widget('ndc_ENlabel_field').text()
         annotations.append({
             'prop': RDFS.label.toPython(),
             'value': labelEN,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'en'
         })
         commentIT = self.widget('ndc_ITcomment_field').text()
         annotations.append({
             'prop': RDFS.comment.toPython(),
             'value': commentIT,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'it'
         })
         commentEN = self.widget('ndc_ENcomment_field').text()
         annotations.append({
             'prop': RDFS.comment.toPython(),
             'value': commentEN,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'en'
         })
         officialURI = self.widget('ndc_officialURI_field').text()
         annotations.append({
             'prop': ADMS.officialURI.toPython(),
             'value': officialURI,
-            'type': None,
+            'type': OWL2Datatype.anyURI.value,
             'lang': None
         })
         identifier = self.widget('ndc_id_field').text()
@@ -2761,14 +2823,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         annotations.append({
             'prop': OWL.versionInfo.toPython(),
             'value': versionInfoIT,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'it'
         })
         versionInfoEN = self.widget('ndc_ENversionInfo_field').text()
         annotations.append({
             'prop': OWL.versionInfo.toPython(),
             'value': versionInfoEN,
-            'type': None,
+            'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'en'
         })
         accrualPeriodicity = self.widget('ndc_accrualPeriodicity_field').currentText()
@@ -2806,7 +2868,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             annotations.append({
                 'prop': DCTERMS.rightsHolder.toPython(),
                 'value': self.project.getIRI(rh),
-                'type': None,
+                'type': OWL2Datatype.anyURI.value,
                 'lang': None
             })
         publishers = self.widget('ndc_publisher_field').currentData()
@@ -2814,7 +2876,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             annotations.append({
                 'prop': DCTERMS.publisher.toPython(),
                 'value': self.project.getIRI(pub),
-                'type': None,
+                'type': OWL2Datatype.anyURI.value,
                 'lang': None
             })
         creators = self.widget('ndc_creator_field').currentData()
@@ -2822,7 +2884,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             annotations.append({
                 'prop': DCTERMS.creator.toPython(),
                 'value': self.project.getIRI(ct),
-                'type': None,
+                'type': OWL2Datatype.anyURI.value,
                 'lang': None
             })
         projects = self.widget('ndc_projects_field').currentData()
