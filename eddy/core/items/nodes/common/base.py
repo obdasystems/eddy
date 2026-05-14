@@ -385,11 +385,12 @@ class AbstractNode(AbstractItem):
         for edge in self.edges:
             edge.updateEdge()
 
-    def updateNode(self, selected=None, valid=None, **kwargs):
+    def updateNode(self, selected=None, valid=None, color= None, **kwargs,):
         """
         Update the current node.
         :type selected: bool
         :type valid: bool
+        :type color: QtGui.QColor
         """
         # ITEM SELECTION (BRUSH)
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
@@ -400,9 +401,13 @@ class AbstractNode(AbstractItem):
         # SYNTAX VALIDATION (BACKGROUND BRUSH)
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if valid is not None:
-            brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
             if valid:
                 brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160))
+            else:
+                if color is not None:
+                    brush = QtGui.QBrush(QtGui.QColor(color))
+                else:
+                    brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
         self.background.setBrush(brush)
 
         # FORCE CACHE REGENERATION
@@ -547,13 +552,14 @@ class AbstractResizableNode(AbstractNode):
         """
         pass
 
-    def updateNode(self, selected=None, valid=None, handle=None, anchors=None, **kwargs):
+    def updateNode(self, selected=None, valid=None, handle=None, anchors=None, color=None, **kwargs):
         """
         Update the current node.
         :type selected: bool
         :type valid: bool
         :type handle: int
         :type anchors: T <= list|tuple
+        :type color: QtGui.QColor
         """
         # RESIZE HANDLES (GEOMETRY)
         b = self.boundingRect()
@@ -591,7 +597,13 @@ class AbstractResizableNode(AbstractNode):
         # SYNTAX VALIDATION (BACKGROUND BRUSH)
         brush = QtGui.QBrush(QtCore.Qt.NoBrush)
         if valid is not None:
-            brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160)) if valid else QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
+            if valid:
+                brush = QtGui.QBrush(QtGui.QColor(43, 173, 63, 160))
+            else:
+                if color is not None:
+                    brush = QtGui.QBrush(QtGui.QColor(color))
+                else:
+                    brush = QtGui.QBrush(QtGui.QColor(179, 12, 12, 160))
         self.background.setBrush(brush)
 
         # ANCHOR POINTS (POSITION) -> NB: SHAPE IS IN THE EDGES
