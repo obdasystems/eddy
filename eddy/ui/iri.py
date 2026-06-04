@@ -802,7 +802,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         # Disable edit - add - delete if entity has an external origin annotation
         if any([str(a.assertionProperty) == 'urn:x-graphol:origin'
                 for a in self.iri.annotationAssertions]):
-            addBtn.setDisabled(True)
+            #addBtn.setDisabled(True)
             delBtn.setDisabled(True)
             editBtn.setDisabled(True)
             disconnect(table.cellDoubleClicked, self.editAnnotation)
