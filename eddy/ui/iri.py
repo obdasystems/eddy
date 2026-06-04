@@ -159,6 +159,9 @@ def getIRIPrefixComboBox(parent):
     combobox.setEditable(False)
     combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
     combobox.setScrollEnabled(False)
+    if any([str(a.assertionProperty) == 'urn:x-graphol:origin'
+            for a in parent.iri.annotationAssertions]):
+        combobox.setEnabled(False)
     return combobox
 
 
@@ -172,6 +175,9 @@ def getInputLabel(parent):
 # noinspection PyArgumentList
 def getInputField(parent):
     inputField = StringField(parent, objectName='iri_input_field')
+    if any([str(a.assertionProperty) == 'urn:x-graphol:origin'
+            for a in parent.iri.annotationAssertions]):
+        inputField.setReadOnly(True)
     return inputField
 
 
