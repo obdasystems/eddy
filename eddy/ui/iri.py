@@ -159,9 +159,6 @@ def getIRIPrefixComboBox(parent):
     combobox.setEditable(False)
     combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
     combobox.setScrollEnabled(False)
-    if any([str(a.assertionProperty) == 'urn:x-graphol:origin'
-            for a in parent.iri.annotationAssertions]):
-        combobox.setEnabled(False)
     return combobox
 
 
@@ -175,9 +172,6 @@ def getInputLabel(parent):
 # noinspection PyArgumentList
 def getInputField(parent):
     inputField = StringField(parent, objectName='iri_input_field')
-    if any([str(a.assertionProperty) == 'urn:x-graphol:origin'
-            for a in parent.iri.annotationAssertions]):
-        inputField.setReadOnly(True)
     return inputField
 
 
@@ -648,6 +642,10 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.project.isValidIdentifier(inputIriString)
                 if self.iri:
                     if not str(self.iri) == inputIriString:
+                        for a in self.iri.annotationAssertions:
+                            if str(a.assertionProperty) == 'urn:x-graphol:origin':
+                                command = CommandIRIRemoveAnnotationAssertion(self.project, self.iri, a)
+                                self.session.undostack.push(command)
                         if len(self.project.iriOccurrences(iri=self.iri)) == 1:
                             if self.project.existIRI(inputIriString):
                                 newIRI = self.project.getIRI(
@@ -1026,6 +1024,11 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             userExplicitInput = self.widget('iri_input_field').value()
             fullIRIString = self.widget('full_iri_field').value()
             existIRI = self.project.existIRI(fullIRIString)
+            if not str(self.iri) == fullIRIString:
+                for a in self.iri.annotationAssertions:
+                    if str(a.assertionProperty) == 'urn:x-graphol:origin':
+                        command = CommandIRIRemoveAnnotationAssertion(self.project, self.iri, a)
+                        self.session.undostack.push(command)
             if existIRI:
                 newIRI = self.project.getIRI(
                     fullIRIString,
