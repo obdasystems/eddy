@@ -794,6 +794,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         table = getAnnotationAssertionsTable(self)
         table.clear()
         connect(table.cellDoubleClicked, self.editAnnotation)
+        connect(table.itemSelectionChanged, self.onAnnotationSelectionChanged)
         self.addWidget(table)
 
         addBtn = QtWidgets.QPushButton('Add', objectName='annotations_add_button')
@@ -1057,6 +1058,36 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             dialog.open()
         finally:
             self.widget('save_iri_button').setEnabled(False)
+
+    @QtCore.pyqtSlot()
+    def onAnnotationSelectionChanged(self):
+        if not any([str(a.assertionProperty) == 'urn:x-graphol:origin'
+                for a in self.iri.annotationAssertions]):
+            return
+
+        table = self.widget('annotation_assertions_table_widget')
+        editBtn = self.widget('annotations_edit_button')
+        delBtn = self.widget('annotations_delete_button')
+
+        ranges = table.selectedRanges()
+        ok = bool(ranges)
+
+        for r in ranges:
+            for row in range(r.topRow(), r.bottomRow() + 1):
+                item = table.item(row, 0)
+                assertion = item.data(QtCore.Qt.UserRole) if item else None
+
+                if (
+                    assertion is None
+                    or str(assertion.assertionProperty).endswith('#label') or str(assertion.assertionProperty).endswith('#comment')
+                ):
+                    ok = False
+                    break
+            if not ok:
+                break
+
+        editBtn.setEnabled(ok)
+        delBtn.setEnabled(ok)
 
 
 class ConstrainingFacetDialog(QtWidgets.QDialog, HasWidgetSystem):
