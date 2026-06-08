@@ -145,7 +145,11 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         combobox.setModel(self.predicates)
         combobox.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         combobox.addItem('')
+        fromMetastat = any([str(a.assertionProperty) == 'urn:x-graphol:origin'
+                for a in self.iri.annotationAssertions])
         for p in self.annotations:
+            if fromMetastat and (str(p).endswith('#label') or str(p).endswith('#comment')):
+                continue
             self.predicates.appendRow(QtGui.QStandardItem(str(p)))
         if not self.assertion:
             combobox.setCurrentText('')
