@@ -159,6 +159,7 @@
   <file alias="ic_select_all_black@2x">../../resources/icons/24/ic_select_all_black_24dp_2x.png</file>
   <file alias="ic_settings_black">../../resources/icons/24/ic_settings_black_24dp_1x.png</file>
   <file alias="ic_settings_black@2x">../../resources/icons/24/ic_settings_black_24dp_2x.png</file>
+  <file alias="ic_check_sync">../../resources/icons/24/ic_check_sync_black_24dp.png</file>
   <file alias="ic_system_update">../../resources/icons/24/ic_system_update_alt_black_24dp_1x.png</file>
   <file alias="ic_system_update@2x">../../resources/icons/24/ic_system_update_alt_black_24dp_2x.png</file>
   <file alias="ic_spellcheck_black">../../resources/icons/24/ic_spellcheck_black_24dp_1x.png</file>
