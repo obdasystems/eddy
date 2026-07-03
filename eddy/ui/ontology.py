@@ -106,12 +106,14 @@ from eddy.ui.ndc.contact import ContactBuilderDialog
 from eddy.ui.ndc.distribution import DistributionBuilderDialog
 from eddy.ui.ndc.group import GroupBuilderDialog
 from eddy.ui.ndc.project import ProjectBuilderDialog
+from eddy.ui.ndc.theme import ThemeBuilderDialog
 
 LOGGER = getLogger()
 PROPS = [
             DCTERMS.title.toPython(),
             RDFS.label.toPython(),
             RDFS.comment.toPython(),
+            DCTERMS.description.toPython(),
             ADMS.officialURI.toPython(),
             DCTERMS.identifier.toPython(),
             DCTERMS.issued.toPython(),
@@ -858,6 +860,49 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         commentENLayout.addWidget(ndcENCommentField)
         commentENLayout.addWidget(langCommentEN)
 
+        ndcDescription = QtWidgets.QLabel('Description', self, objectName='ndc_description_label')
+        self.addWidget(ndcDescription)
+
+        ndcITDescriptionField = StringField(self, objectName='ndc_ITdescription_field')
+        ITdescriptions = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.description) and x.language == 'it',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ITdescriptions) > 0:
+            ITdescription = ITdescriptions[0].value
+            ndcITDescriptionField.setText(ITdescription)
+        self.addWidget(ndcITDescriptionField)
+
+        langDescriptionIT = QtWidgets.QLabel('@it', self)
+        langDescriptionIT.setObjectName('ndc_lang_descriptionIT')
+
+        descriptionITLayout = QtWidgets.QHBoxLayout()
+        descriptionITLayout.setContentsMargins(0, 0, 0, 0)
+        descriptionITLayout.setSpacing(10)
+
+        descriptionITLayout.addWidget(ndcITDescriptionField)
+        descriptionITLayout.addWidget(langDescriptionIT)
+
+        ndcENDescriptionField = StringField(self, objectName='ndc_ENdescription_field')
+        ENdescriptions = list(filter(
+            lambda x: str(x.assertionProperty) == str(DCTERMS.description) and x.language == 'en',
+            self.project.ontologyIRI.annotationAssertions,
+        ))
+        if len(ENdescriptions) > 0:
+            ENdescription = ENdescriptions[0].value
+            ndcENDescriptionField.setText(ENdescription)
+        self.addWidget(ndcENDescriptionField)
+
+        langDescriptionEN = QtWidgets.QLabel('@en', self)
+        langDescriptionEN.setObjectName('ndc_lang_descriptionEN')
+
+        descriptionENLayout = QtWidgets.QHBoxLayout()
+        descriptionENLayout.setContentsMargins(0, 0, 0, 0)
+        descriptionENLayout.setSpacing(4)
+
+        descriptionENLayout.addWidget(ndcENDescriptionField)
+        descriptionENLayout.addWidget(langDescriptionEN)
+
         ndcOfficialURI = QtWidgets.QLabel(self, objectName='ndc_officialURI_label')
         ndcOfficialURI.setText('Official URI')
         self.addWidget(ndcOfficialURI)
@@ -1179,6 +1224,25 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         layout_distributions.addWidget(ndcDistributionsField)
         layout_distributions.addWidget(addDistributionBtn)
 
+        ndcTheme = QtWidgets.QLabel(
+            'Theme', self,
+            objectName='ndc_theme_label',
+        )
+        self.addWidget(ndcTheme)
+
+        ndcThemeField = CheckableComboBox(self, objectName='ndc_theme_field')
+        self.addWidget(ndcThemeField)
+
+        addThemeBtn = QtWidgets.QPushButton(objectName='add_theme_button')
+        addThemeBtn.setIcon(QtGui.QIcon(':/icons/24/ic_create_black'))
+        addThemeBtn.setFixedSize(QtCore.QSize(30, 20))
+        connect(addThemeBtn.clicked, self.doAddTheme)
+        self.addWidget(addThemeBtn)
+
+        layout_theme = QtWidgets.QHBoxLayout()
+        layout_theme.addWidget(ndcThemeField)
+        layout_theme.addWidget(addThemeBtn)
+
         self.NDCLayout = QtWidgets.QFormLayout()
         self.NDCLayout.addRow(self.widget('ndc_title_label'), titleITLayout)
         self.NDCLayout.addRow(self.widget('no_label'), titleENLayout)
@@ -1186,6 +1250,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.NDCLayout.addRow(self.widget('no_label'), labelENLayout)
         self.NDCLayout.addRow(self.widget('ndc_comment_label'), commentITLayout)
         self.NDCLayout.addRow(self.widget('no_label'), commentENLayout)
+        self.NDCLayout.addRow(self.widget('ndc_description_label'), descriptionITLayout)
+        self.NDCLayout.addRow(self.widget('no_label'), descriptionENLayout)
         self.NDCLayout.addRow(self.widget('ndc_officialURI_label'), self.widget('ndc_officialURI_field'))
         self.NDCLayout.addRow(self.widget('ndc_id_label'), self.widget('ndc_id_field'))
         self.NDCLayout.addRow(self.widget('ndc_rightsHolder_label'), layout_rightsHolder)
@@ -1204,12 +1270,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.NDCLayout.addRow(self.widget('ndc_projects_label'), layout_projects)
         #NDCLayout.addRow(self.widget('ndc_groups_label'), self.widget('ndc_groups_field'))
         self.NDCLayout.addRow(self.widget('ndc_distributions_label'), layout_distributions)
+        self.NDCLayout.addRow(self.widget('ndc_theme_label'), layout_theme)
 
         endpointWidget = self.widget('endpoint_field')
         self.setAgentSuggestions()
         self.setContactPointSuggestions()
         self.setProjectSuggestions()
         self.setDistributionSuggestions()
+        self.setThemeSuggestions()
         self.setRightsHolders()
         self.setPublishers()
         self.setCreators()
@@ -1217,6 +1285,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.setProjects()
         self.setDistributions()
         self.setGroups()
+        self.setThemes()
 
         clearBtn = QtWidgets.QPushButton('Clear', objectName='ndc_clear_button')
         clearBtn.setEnabled(True)
@@ -1268,6 +1337,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.setContactPointSuggestions()
         self.setDistributionSuggestions()
         self.setProjectSuggestions()
+        self.setThemeSuggestions()
 
         #############################################
         # CONFIRMATION BOX
@@ -2354,6 +2424,9 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 distribution = self.ndcDataset.distributions(val)[0]
                 valueItem.setToolTip(
                     f'Title: {distribution.title_en} \nTitolo: {distribution.title_it} \nDescription: {distribution.description_en} \nDescrizione: {distribution.description_it} \nFormat: {distribution.format} \nLicense: {distribution.license} \nAccess URL: {distribution.accessURL} \nDownload URL: {distribution.downloadURL}')
+            elif prop == 'https://www.w3.org/ns/dcat#theme':
+                theme = self.ndcDataset.themes(val)[0]
+                valueItem.setToolTip(f'Label: {theme.label_en} \nEtichetta: {theme.label_it} \nIn scheme: {theme.scheme} ')
             elif prop == 'http://www.w3.org/ns/dcat#contactPoint':
                 contact = self.ndcDataset.contactPoints(val)[0]
                 valueItem.setToolTip(
@@ -2390,6 +2463,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         distributionBuilder = DistributionBuilderDialog(self, self.ndcDataset)
         connect(distributionBuilder.accepted, self.setDistributionSuggestions)
         distributionBuilder.open()
+
+    @QtCore.pyqtSlot()
+    def doAddTheme(self):
+        themeBuilder = ThemeBuilderDialog(self, self.ndcDataset)
+        connect(themeBuilder.accepted, self.setThemeSuggestions)
+        themeBuilder.open()
 
     @QtCore.pyqtSlot()
     def doAddContact(self):
@@ -2499,6 +2578,22 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
         widget.lineEdit().setText(elidedText)
 
+    def setThemes(self):
+        widget = self.widget('ndc_theme_field')
+        themes = filter(
+            lambda x: (str(x.assertionProperty) == DCAT.theme.toPython()),
+            self.project.ontologyIRI.annotationAssertions)
+        themes = list(map(lambda x: str(x.value), list(themes)))
+        texts = []
+        for i in range(widget.model().rowCount()):
+            if widget.model().item(i).text() in themes:
+                widget.model().item(i).setCheckState(2)
+                texts.append(widget.model().item(i).text())
+        text = ", ".join(texts)
+        metrics = QtGui.QFontMetrics(widget.lineEdit().font())
+        elidedText = metrics.elidedText(text, 1, widget.lineEdit().width())
+        widget.lineEdit().setText(elidedText)
+
     def setLanguages(self):
         widget = self.widget('ndc_languages_field')
         languages = filter(
@@ -2590,6 +2685,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         distributionWidget.addItems(distributions)
 
     @QtCore.pyqtSlot()
+    def setThemeSuggestions(self):
+        themes = sorted(set([d.uri.toPython() for d in self.ndcDataset.themes()]))
+        themeWidget = self.widget('ndc_theme_field')
+        themeWidget.addItems(themes)
+
+    @QtCore.pyqtSlot()
     def setGroupSuggestions(self):
         groups = sorted(set([d.uri.toPython() for d in self.ndcDataset.groups()]))
         groupWidget = self.widget('ndc_group_field')
@@ -2603,7 +2704,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         endpoint = SPARQLEndpoint(url, self.session.nmanager)
         connect(endpoint.sgnConstructFinished, self.onEndpointQueryCompleted)
         connect(endpoint.sgnSPARQLError, self.onEndpointQueryError)
-        endpoint.execConstruct(NDCDataset.construct())
+        endpoint.execConstruct(NDCDataset.constructForNDC())
 
     @QtCore.pyqtSlot(QtCore.QUrl, Graph)
     def onEndpointQueryCompleted(self, url: QtCore.QUrl, graph: Graph) -> None:
@@ -2614,6 +2715,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.setAgentSuggestions()
         self.setContactPointSuggestions()
         self.setDistributionSuggestions()
+        #self.setThemeSuggestions()
         self.setProjectSuggestions()
         self.session.addNotification('Metadata retrieved from endpoint!')
 
@@ -2673,6 +2775,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             languages =[]
             projects =[]
             distributions =[]
+            themes = []
             for row in annotations:
                 if str(row.annotationProperty) == DCTERMS.title.toPython():
                     if row.lang and row.lang.strip() == 'it':
@@ -2689,6 +2792,11 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                         self.widget('ndc_ITcomment_field').setText(row.value)
                     elif row.lang and row.lang.strip() == 'en':
                         self.widget('ndc_ENcomment_field').setText(row.value)
+                elif str(row.annotationProperty) == DCTERMS.description.toPython():
+                    if row.lang and row.lang.strip() == 'it':
+                        self.widget('ndc_ITdescription_field').setText(row.value)
+                    elif row.lang and row.lang.strip() == 'en':
+                        self.widget('ndc_ENdescription_field').setText(row.value)
                 elif str(row.annotationProperty) == ADMS.officialURI.toPython():
                     self.widget('ndc_officialURI_field').setText(row.value)
                 elif str(row.annotationProperty) == DCTERMS.identifier.toPython():
@@ -2724,6 +2832,8 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                     projects.append(str(row.value))
                 elif str(row.annotationProperty) == ADMS.hasSemanticAssetDistribution.toPython():
                     distributions.append(str(row.value))
+                elif str(row.annotationProperty) == DCAT.theme.toPython():
+                    themes.append(str(row.value))
                 else:
                     pass
             self.set_checked_texts(self.widget('ndc_rightsHolder_field'), rightsHolders)
@@ -2734,6 +2844,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.set_checked_texts(self.widget('ndc_accrualPeriodicity_field'), periodicities)
             self.set_checked_texts(self.widget('ndc_projects_field'), projects)
             self.set_checked_texts(self.widget('ndc_distributions_field'), distributions)
+            self.set_checked_texts(self.widget('ndc_theme_field'), themes)
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"Impossibile parsare il file: {str(e)}")
 
@@ -2786,6 +2897,20 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         annotations.append({
             'prop': RDFS.comment.toPython(),
             'value': commentEN,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'en'
+        })
+        descriptionIT = self.widget('ndc_ITdescription_field').text()
+        annotations.append({
+            'prop': DCTERMS.description.toPython(),
+            'value': descriptionIT,
+            'type': OWL2Datatype.PlainLiteral.value,
+            'lang': 'it'
+        })
+        descriptionEN = self.widget('ndc_ENdescription_field').text()
+        annotations.append({
+            'prop': DCTERMS.description.toPython(),
+            'value': descriptionEN,
             'type': OWL2Datatype.PlainLiteral.value,
             'lang': 'en'
         })
@@ -2903,6 +3028,14 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 'type': None,
                 'lang': None
             })
+        themes = self.widget('ndc_theme_field').currentData()
+        for t in themes:
+            annotations.append({
+                'prop': DCAT.theme.toPython(),
+                'value': self.project.getIRI(t),
+                'type': None,
+                'lang': None
+            })
         contacts = self.widget('ndc_contacts_field').currentData()
         for co in contacts:
             annotations.append({
@@ -2911,8 +3044,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 'type': None,
                 'lang': None
             })
-        while len(subjectIRI.annotationAssertions) > 0:
-            ann = subjectIRI.annotationAssertions[0]
+        for ann in subjectIRI.annotationAssertions[:]:
             if str(ann.assertionProperty) in PROPS:
                 command = CommandIRIRemoveAnnotationAssertion(
                     self.project,

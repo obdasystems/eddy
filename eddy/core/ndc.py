@@ -46,7 +46,7 @@ from rdflib import (
     Dataset,
     Graph,
     Literal,
-    URIRef,
+    URIRef, SKOS,
 )
 from rdflib.namespace import (
     FOAF,
@@ -458,6 +458,73 @@ class Project:
         """
         return "?project ?name_en ?name_it"
 
+@dataclass
+class Theme:
+    type: ClassVar[URIRef] = SKOS.Concept
+    uri: URIRef
+    label_en: Optional[Literal]
+    label_it: Optional[Literal]
+    scheme: Optional[URIRef]
+
+    def triples(self) -> Iterable:
+        """
+        The list of RDF triples representing this instance.
+        :return: the list  of triples representing this instance.
+        """
+        return [(s, p, o) for s, p, o in [
+            (self.uri, RDF.type, Theme.type),
+            (self.uri, SKOS.prefLabel, self.label_en),
+            (self.uri, SKOS.prefLabel, self.label_it),
+            (self.uri, SKOS.inScheme, self.scheme),
+        ] if o is not None]
+
+    @staticmethod
+    def bgp(uri: Optional[URIRef] = None) -> str:
+        """
+        The SPARQL BGP that identifies instances of this class in an RDF dataset.
+        :param uri: optional uri of the element to filter for
+        :return: the SPARQL BGP
+        """
+        return dedent(f"""
+        {{ {f'BIND( {uri.n3()} AS ?theme)' if uri else ''}
+            ?theme a {Theme.type.n3()} .
+            OPTIONAL {{
+                ?theme {SKOS.prefLabel.n3()} ?label_en .
+                FILTER langMatches(lang(?label_en), 'en')
+            }}
+            OPTIONAL {{
+                ?theme {SKOS.prefLabel.n3()} ?label_it .
+                FILTER langMatches(lang(?label_it), 'it')
+            }}
+            OPTIONAL {{
+                ?theme {SKOS.inScheme.n3()} ?scheme .
+            }}
+        }}
+        """).strip()
+
+    @staticmethod
+    def head() -> str:
+        """
+        The head for SPARQL CONSTRUCT queries of this object, will all fields
+        without optionals.
+        :return: the SPARQL CONSTRUCT head
+        """
+        return dedent(f"""
+        ?theme a {Theme.type.n3()} ;
+                 {SKOS.prefLabel.n3()} ?label_en ;
+                 {SKOS.prefLabel.n3()} ?label_it ;
+                 {SKOS.inScheme.n3()} ?scheme .
+        """).strip()
+
+    @staticmethod
+    def vars() -> str:
+        """
+        The variable names used in the object BGP. Useful to build extraction
+        queries from the BGP with the proper variable order.
+        :return: the ordered list of variables appearing in the BGP
+        """
+        return "?theme ?label_en ?label_it ?scheme"
+
 
 class NDCDataset(Dataset):
     """
@@ -488,6 +555,7 @@ CONSTRUCT {{
     {Distribution.head()}
     {Project.head()}
     {Group.head()}
+    {Theme.head()}
 }}
 WHERE {{
 {Agent.bgp()}
@@ -495,8 +563,33 @@ UNION {ContactPoint.bgp()}
 UNION {Distribution.bgp()}
 UNION {Project.bgp()}
 UNION {Group.bgp()}
+UNION {Theme.bgp()}
 }}
         """.strip()
+
+    @staticmethod
+    def constructForNDC() -> str:
+            """
+            Return the SPARQL CONSTRUCT query to relevant data for this dataset.
+            :return: the SPARQL CONSTRUCT query
+            """
+            # Do not indent to avoid problems with indentation
+            return f"""
+    CONSTRUCT {{
+        {Agent.head()}
+        {ContactPoint.head()}
+        {Distribution.head()}
+        {Project.head()}
+        {Group.head()}
+    }}
+    WHERE {{
+    {Agent.bgp()}
+    UNION {ContactPoint.bgp()}
+    UNION {Distribution.bgp()}
+    UNION {Project.bgp()}
+    UNION {Group.bgp()}
+    }}
+            """.strip()
 
     def agents(self, uri: Optional[URIRef] = None) -> Iterable[Agent]:
         """
@@ -536,6 +629,16 @@ UNION {Group.bgp()}
         """
         return [Project(*b) for b in self.query(
             f'SELECT {Project.vars()} WHERE {Project.bgp(uri)}'
+        )]
+
+    def themes(self, uri: Optional[URIRef] = None) -> Iterable[Theme]:
+        """
+        Returns the list of projects in this dataset.
+        :param uri: the uri of the element to filter for
+        :return: the list of projects stored
+        """
+        return [Theme(*b) for b in self.query(
+            f'SELECT {Theme.vars()} WHERE {Theme.bgp(uri)}'
         )]
 
     def groups(self, uri: Optional[URIRef] = None) -> Iterable[Group]:

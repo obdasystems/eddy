@@ -96,12 +96,17 @@ class CheckableComboBox(QtWidgets.QComboBox):
         self.lineEdit().setText(elidedText)
 
     def addItem(self, text, data=None):
+        key = data if data is not None else text
+
+        for i in range(self.model().rowCount()):
+            item = self.model().item(i)
+            existing = item.data() if data is not None else item.text()
+            if existing == key:
+                return  # già presente, non aggiungere
+
         item = QtGui.QStandardItem()
         item.setText(text)
-        if data is None:
-            item.setData(text)
-        else:
-            item.setData(data)
+        item.setData(key)
         item.setEnabled(True)
         item.setCheckable(True)
         item.setCheckState(0)
