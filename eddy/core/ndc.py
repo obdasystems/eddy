@@ -89,6 +89,7 @@ class DCATAPIT(DefinedNamespace):
 
 # Subset of the mod ontology vocabulary
 class MOD(DefinedNamespace):
+    group: URIRef
     Group: URIRef
     _NS = Namespace('https://w3id.org/mod#')
 
@@ -643,9 +644,9 @@ UNION {Theme.bgp()}
 
     def groups(self, uri: Optional[URIRef] = None) -> Iterable[Group]:
         """
-        Returns the list of distributions in this dataset.
+        Returns the list of groups in this dataset.
         :param uri: the uri of the element to filter for
-        :return: the list of distributions stored
+        :return: the list of groups stored
         """
         return [Group(*b) for b in self.query(
             f'SELECT {Group.vars()} WHERE {Group.bgp(uri)}'
