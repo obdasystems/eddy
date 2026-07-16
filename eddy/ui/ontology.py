@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-import os
 
 ##########################################################################
 #                                                                        #
@@ -34,10 +32,14 @@ import os
 #                                                                        #
 ##########################################################################
 
+
+from datetime import datetime
+import os
+import textwrap
 from PyQt5 import (
     QtCore,
     QtGui,
-    QtWidgets, Qt,
+    QtWidgets,
 )
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -82,6 +84,7 @@ from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.ndc import (
     ADMS,
+    MOD,
     NDCDataset,
 )
 from eddy.core.sparql import SPARQLEndpoint
@@ -2414,27 +2417,44 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         if isinstance(assertion.value, IRI):
             prop = str(assertion.assertionProperty)
             val = URIRef(str(assertion.value))
-            if prop in ['http://purl.org/dc/terms/creator', 'http://purl.org/dc/terms/publisher', 'http://purl.org/dc/terms/rightsHolder']:
-                agent = self.ndcDataset.agents(val)[0]
-                valueItem.setToolTip(f'Name: {agent.name_en} \nNome: {agent.name_it} \nId: {agent. identifier}')
-            elif prop == 'https://w3id.org/italia/onto/ADMS/semanticAssetInUse':
-                project = self.ndcDataset.projects(val)[0]
-                valueItem.setToolTip(f'Name: {project.name_en} \nNome: {project.name_it}')
-            elif prop == 'https://w3id.org/italia/onto/ADMS/hasSemanticAssetDistribution':
-                distribution = self.ndcDataset.distributions(val)[0]
-                valueItem.setToolTip(
-                    f'Title: {distribution.title_en} \nTitolo: {distribution.title_it} \nDescription: {distribution.description_en} \nDescrizione: {distribution.description_it} \nFormat: {distribution.format} \nLicense: {distribution.license} \nAccess URL: {distribution.accessURL} \nDownload URL: {distribution.downloadURL}')
-            elif prop == 'https://www.w3.org/ns/dcat#theme':
-                theme = self.ndcDataset.themes(val)[0]
-                valueItem.setToolTip(f'Label: {theme.label_en} \nEtichetta: {theme.label_it} \nIn scheme: {theme.scheme} ')
-            elif prop == 'http://www.w3.org/ns/dcat#contactPoint':
-                contact = self.ndcDataset.contactPoints(val)[0]
-                valueItem.setToolTip(
-                    f'Name: {contact.fn_en} \nNome: {contact.fn_it} \nEmail: {contact.email} \nTelephone: {contact.telephone}')
-            elif prop == 'https://w3id.org/mod#group':
-                group = self.ndcDataset.groups(val)[0]
-                valueItem.setToolTip(
-                    f'Name: {group.name_en} \nNome: {group.name_it}')
+            if prop in [DCTERMS.creator, DCTERMS.publisher, DCTERMS.rightsHolder]:
+                agent = first(self.ndcDataset.agents(val))
+                if agent:
+                    valueItem.setToolTip(textwrap.dedent(f"""
+                    Name: {agent.name_en}
+                    Nome: {agent.name_it}
+                    Id: {agent.identifier}
+                    """))
+            elif prop == ADMS.semanticAssetInUse:
+                project = first(self.ndcDataset.projects(val))
+                if project:
+                    valueItem.setToolTip(f'Name: {project.name_en} \nNome: {project.name_it}')
+            elif prop == ADMS.hasSemanticAssetDistribution:
+                distribution = first(self.ndcDataset.distributions(val))
+                if distribution:
+                    valueItem.setToolTip(textwrap.dedent(f"""
+                    Title: {distribution.title_en}
+                    Titolo: {distribution.title_it}
+                    Description: {distribution.description_en}
+                    Descrizione: {distribution.description_it}
+                    Format: {distribution.format}
+                    License: {distribution.license}
+                    Access URL: {distribution.accessURL}
+                    Download URL: {distribution.downloadURL}
+                    """))
+            elif prop == DCAT.contactPoint:
+                contact = first(self.ndcDataset.contactPoints(val))
+                if contact:
+                    valueItem.setToolTip(textwrap.dedent(f"""
+                    Name: {contact.fn_en}
+                    Nome: {contact.fn_it}
+                    Email: {contact.email}
+                    Telephone: {contact.telephone}
+                    """))
+            elif prop == MOD.group:
+                group = first(self.ndcDataset.groups(val))
+                if group:
+                    valueItem.setToolTip(f'Name: {group.name_en} \nNome: {group.name_it}')
             else:
                 pass
         valueItem.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
