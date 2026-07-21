@@ -4,59 +4,60 @@ appimage-builder @ git+https://github.com/appimagecrafters/appimage-builder@d96c
     # via -r requirements/in/packaging.in
 arpy==2.3.0
     # via pydpkg
-build==1.4.0
+ast-serialize==0.6.0
+    # via mypy
+build==1.5.0
     # via pip-tools
-cachetools==6.2.4
+cachetools==7.1.4
     # via tox
-certifi==2026.1.4
+certifi==2026.6.17
     # via requests
-cffi==2.0.0
+cffi==2.1.0
     # via cryptography
-chardet==5.2.0
-    # via tox
-charset-normalizer==3.4.4
+charset-normalizer==3.4.9
     # via requests
-click==8.3.1
+click==8.4.2
     # via pip-tools
 colorama==0.4.6
     # via tox
-coverage[toml]==7.13.1
+coverage[toml]==7.15.2
     # via pytest-cov
-cryptography==46.0.3
+cryptography==49.0.0
     # via
     #   pgpy13
     #   pydpkg
-cython==3.2.4
+cython==3.2.8
     # via -r requirements/in/cython.in
-decorator==5.2.1
+decorator==5.3.1
     # via jsonpath-rw
-distlib==0.4.0
+distlib==0.4.3
     # via virtualenv
-docker==7.1.0
+docker==7.2.0
     # via appimage-builder
 emrichen==0.4.0
     # via appimage-builder
 et-xmlfile==2.0.0
     # via openpyxl
-filelock==3.20.3
+filelock==3.31.2
     # via
+    #   python-discovery
     #   tox
     #   virtualenv
-idna==3.11
+idna==3.18
     # via requests
 iniconfig==2.3.0
     # via pytest
-jpype1==1.6.0 ; sys_platform != "win32"
+jpype1==1.7.1
     # via -r requirements/in/base.in
 jsonpath-rw==1.4.0
     # via emrichen
 libconf==2.0.1
     # via appimage-builder
-librt==0.7.8
+librt==0.13.0
     # via mypy
-lief==0.17.2
+lief==1.0.0
     # via appimage-builder
-mypy==1.19.1
+mypy==2.3.0
     # via -r requirements/in/dev.in
 mypy-extensions==1.1.0
     # via mypy
@@ -64,7 +65,7 @@ objgraph==3.6.2
     # via -r requirements/in/dev.in
 openpyxl==3.1.5
     # via -r requirements/in/base.in
-packaging==25.0
+packaging==26.2
     # via
     #   appimage-builder
     #   build
@@ -74,14 +75,16 @@ packaging==25.0
     #   pyproject-api
     #   pytest
     #   tox
-pathspec==1.0.3
+    #   wheel
+pathspec==1.1.1
     # via mypy
 pgpy13==0.6.1rc1
     # via pydpkg
-pip-tools==7.5.2
+pip-tools==7.6.0
     # via -r requirements/in/dev.in
-platformdirs==4.5.1
+platformdirs==4.10.1
     # via
+    #   python-discovery
     #   tox
     #   virtualenv
 pluggy==1.6.0
@@ -98,21 +101,21 @@ py-cpuinfo==9.0.0
     # via pytest-benchmark
 pyaml==21.10.1
     # via emrichen
-pyasn1==0.6.1
+pyasn1==0.6.4
     # via pgpy13
-pycparser==2.23
+pycparser==3.0
     # via cffi
 pydpkg==1.9.5
     # via appimage-builder
-pygments==2.19.2
+pygments==2.20.0
     # via pytest
-pyinstaller==6.18.0
+pyinstaller==6.21.0
     # via -r requirements/in/packaging.in
-pyinstaller-hooks-contrib==2025.11
+pyinstaller-hooks-contrib==2026.6
     # via pyinstaller
-pyparsing==3.3.1
+pyparsing==3.3.2
     # via rdflib
-pyproject-api==1.10.0
+pyproject-api==1.10.1
     # via tox
 pyproject-hooks==1.2.0
     # via
@@ -120,11 +123,11 @@ pyproject-hooks==1.2.0
     #   pip-tools
 pyqt5==5.15.11
     # via -r requirements/in/pyqt5.in
-pyqt5-qt5==5.15.18
+pyqt5-qt5==5.15.19
     # via pyqt5
 pyqt5-sip==12.18.0
     # via pyqt5
-pytest==9.0.2
+pytest==9.1.1
     # via
     #   -r requirements/in/tests.in
     #   pytest-benchmark
@@ -136,7 +139,7 @@ pytest==9.0.2
     #   pytest-xvfb
 pytest-benchmark==5.2.3
     # via -r requirements/in/tests.in
-pytest-cov==7.0.0
+pytest-cov==7.1.0
     # via -r requirements/in/tests.in
 pytest-instafail==0.5.0
     # via -r requirements/in/tests.in
@@ -148,6 +151,10 @@ pytest-repeat==0.9.4
     # via -r requirements/in/tests.in
 pytest-xvfb==3.1.1 ; sys_platform != "win32"
     # via -r requirements/in/tests.in
+python-discovery==1.4.4
+    # via
+    #   tox
+    #   virtualenv
 python-gnupg==0.5.6
     # via appimage-builder
 pyvirtualdisplay==3.0
@@ -159,9 +166,9 @@ pyyaml==6.0.3
     #   pyaml
 questionary==2.1.1
     # via appimage-builder
-rdflib==7.5.0
+rdflib==7.6.0
     # via -r requirements/in/base.in
-requests==2.32.5
+requests==2.34.2
     # via
     #   appimage-builder
     #   docker
@@ -177,22 +184,24 @@ six==1.17.0
     # via
     #   jsonpath-rw
     #   pydpkg
-tox==4.34.1
+tomli-w==1.2.0
+    # via tox
+tox==4.57.2
     # via -r requirements/in/tox.in
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   mypy
     #   pytest-qt
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   appimage-builder
     #   docker
     #   requests
-virtualenv==20.36.1
+virtualenv==21.6.1
     # via tox
-wcwidth==0.2.14
+wcwidth==0.8.2
     # via prompt-toolkit
-wheel==0.45.1
+wheel==0.47.0
     # via pip-tools
 zstandard==0.23.0
     # via pydpkg
