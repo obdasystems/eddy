@@ -963,18 +963,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             lambda x: str(x.assertionProperty) == str(DCTERMS.issued),
             self.project.ontologyIRI.annotationAssertions
         )))
-        date = QtCore.QDate.fromString(dateValue, QtCore.Qt.DateFormat.ISODate)
-        if date.isValid():
-            ndcCreationDateField.setDate(date)
-        else:
-            LOGGER.warning(
-                f"NDC creation date not in ISO 8601 format will be ignored: {dateValue}"
-            )
-            self.session.addNotification(f"""
-            NDC creation date not in ISO 8601 format will be ignored:
+        if dateValue:
+            date = QtCore.QDate.fromString(dateValue, QtCore.Qt.DateFormat.ISODate)
+            if date.isValid():
+                ndcCreationDateField.setDate(date)
+            else:
+                LOGGER.warning(
+                    f"NDC creation date not in ISO 8601 format will be ignored: {dateValue}"
+                )
+                self.session.addNotification(f"""
+                NDC creation date not in ISO 8601 format will be ignored:
 
-            {dateValue}
-            """)
+                {dateValue}
+                """)
         self.addWidget(ndcCreationDateField)
 
         ndcLastModifiedDate = QtWidgets.QLabel(
@@ -988,18 +989,19 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             lambda x: str(x.assertionProperty) == str(DCTERMS.modified),
             self.project.ontologyIRI.annotationAssertions,
         )))
-        date = QtCore.QDate.fromString(dateValue, QtCore.Qt.DateFormat.ISODate)
-        if date.isValid():
-            ndcLastModifiedDateField.setDate(date)
-        else:
-            LOGGER.warning(
-                f"NDC modification date not in ISO 8601 format will be ignored: {dateValue}"
-            )
-            self.session.addNotification(f"""
-            NDC modification date not in ISO 8601 format will be ignored:
+        if dateValue:
+            date = QtCore.QDate.fromString(dateValue, QtCore.Qt.DateFormat.ISODate)
+            if date.isValid():
+                ndcLastModifiedDateField.setDate(date)
+            else:
+                LOGGER.warning(
+                    f"NDC modification date not in ISO 8601 format will be ignored: {dateValue}"
+                )
+                self.session.addNotification(f"""
+                NDC modification date not in ISO 8601 format will be ignored:
 
-            {dateValue}
-            """)
+                {dateValue}
+                """)
         self.addWidget(ndcLastModifiedDateField)
 
         ndcVersionInfo = QtWidgets.QLabel('Version Info', self, objectName='ndc_versionInfo_label')
