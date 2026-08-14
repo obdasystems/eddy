@@ -52,7 +52,7 @@ from eddy.core.loaders.common import AbstractOntologyLoader
 from eddy.core.output import getLogger
 from eddy.core.owl import (
     AnnotationAssertion,
-    IllegalNamespaceError,
+    IllegalNamespaceError, IRI,
 )
 from eddy.ui.progress import BusyProgressDialog
 
@@ -146,6 +146,8 @@ class TemplateLoader(AbstractOntologyLoader):
                         )
                         msgBox.exec_()
 
+                    if datatypeIRI and str(datatypeIRI) == "http://www.w3.org/2001/XMLSchema#anyURI":
+                        value = IRI(value)
                     # CREATE ANNOTATION ASSERTION
                     annotationAss = AnnotationAssertion(resourceIRI, annotationIRI, value,
                                                         type=datatypeIRI,
