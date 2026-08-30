@@ -39,6 +39,7 @@ from PyQt5 import (
     QtWidgets,
     QtXmlPatterns,
 )
+from rfc3987 import parse
 
 from eddy.core.functions.misc import isEmpty
 from eddy.core.functions.signals import connect
@@ -61,12 +62,6 @@ class NewProjectDialog(QtWidgets.QDialog):
         # FORM AREA
         #################################
 
-        self.nameLabel = QtWidgets.QLabel(self)
-        self.nameLabel.setText('Project name')
-        self.nameField = StringField(self)
-        self.nameField.setMinimumWidth(400)
-        self.nameField.setMaxLength(64)
-
         self.iriLabel = QtWidgets.QLabel(self)
         self.iriLabel.setText('Ontology IRI')
         self.iriField = StringField(self)
@@ -79,7 +74,6 @@ class NewProjectDialog(QtWidgets.QDialog):
 
         connect(self.prefixField.textChanged, self.doValidateForm)
         connect(self.iriField.textChanged, self.doValidateForm)
-        connect(self.nameField.textChanged, self.doValidateForm)
 
         spacer = QtWidgets.QFrame()
         spacer.setFrameShape(QtWidgets.QFrame.HLine)
@@ -87,7 +81,6 @@ class NewProjectDialog(QtWidgets.QDialog):
 
         self.formWidget = QtWidgets.QWidget(self)
         self.formLayout = QtWidgets.QFormLayout(self.formWidget)
-        self.formLayout.addRow(self.nameLabel, self.nameField)
         self.formLayout.addRow(self.iriLabel, self.iriField)
         self.formLayout.addRow(self.prefixLabel, self.prefixField)
         self.formLayout.addWidget(spacer)
@@ -132,13 +125,21 @@ class NewProjectDialog(QtWidgets.QDialog):
         """
         Returns the value of the iri field (trimmed).
         """
-        return self.iriField.value()
+        try:
+            parse(self.iriField.value(), rule='IRI')
+            return self.iriField.value()
+        except ValueError:
+            return "http://obda.org/" + self.iriField.value()
 
     def name(self) -> str:
         """
         Returns the value of the name field (trimmed).
         """
-        return self.nameField.value()
+        try:
+            parse(self.iriField.value(), rule='IRI')
+            return self.iriField.value()
+        except ValueError:
+            return "http://obda.org/" + self.iriField.value()
 
     def prefix(self) -> str:
         """
