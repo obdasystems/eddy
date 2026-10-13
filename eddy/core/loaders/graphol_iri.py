@@ -99,6 +99,7 @@ from eddy.core.project import (
     ProjectVersionError,
 )
 from eddy.core.regex import RE_FACET
+from eddy.core.tags import Tag
 from eddy.ui.dialogs import DiagramSelectionDialog
 
 LOGGER = getLogger()
@@ -2088,11 +2089,20 @@ class GrapholProjectIRILoaderMixin_3(object):
             finally:
                 iriEl = iriEl.nextSiblingElement('iri')
 
+        tagsEl = ontologyEl.firstChildElement('tags')
+        if not tagsEl.isNull():
+            tagEl = tagsEl.firstChildElement('tag')
+            while not tagEl.isNull():
+                self.nproject.tags.append(self.getTag(tagEl))
+                tagEl = tagEl.nextSiblingElement('tag')
 
-
-    def getIri(self,iriEl,datatypes,facets,annotationProperties):
+    def getIri(self, iriEl, datatypes, facets, annotationProperties):
         iriString = iriEl.firstChildElement('value').text()
-        if not (iriString in datatypes or iriString in facets or iriString in annotationProperties):
+        if not (
+            iriString in datatypes or
+            iriString in facets or
+            iriString in annotationProperties
+        ):
             result = self.nproject.getIRI(iriString)
             if not iriEl.firstChildElement('functional').isNull():
                 result.functional = True
@@ -2108,15 +2118,6 @@ class GrapholProjectIRILoaderMixin_3(object):
                 result.irreflexive = True
             if not iriEl.firstChildElement('transitive').isNull():
                 result.transitive = True
-            '''
-            result.functional = bool(int(iriEl.firstChildElement('functional').text()))
-            result.inverseFunctional = bool(int(iriEl.firstChildElement('inverseFunctional').text()))
-            result.symmetric = bool(int(iriEl.firstChildElement('symmetric').text()))
-            result.asymmetric = bool(int(iriEl.firstChildElement('asymmetric').text()))
-            result.reflexive = bool(int(iriEl.firstChildElement('reflexive').text()))
-            result.irreflexive = bool(int(iriEl.firstChildElement('irreflexive').text()))
-            result.transitive = bool(int(iriEl.firstChildElement('transitive').text()))
-            '''
             annotationsEl = iriEl.firstChildElement('annotations')
             if not annotationsEl.isNull():
                 annotationEl = annotationsEl.firstChildElement('annotation')
@@ -2127,7 +2128,11 @@ class GrapholProjectIRILoaderMixin_3(object):
                         LOGGER.exception('Failed to import annotation element for iri {} [{}]'.format(iriString,e))
                     finally:
                         annotationEl = annotationEl.nextSiblingElement('annotation')
+            if iriEl.attribute('tag', None):
+                result.tag = iriEl.attribute('tag')
             return result
+        else:
+            return self.nproject.getIRI(iriString)
 
     def getAnnotationAssertion(self,annotationEl):
         subjectEl = annotationEl.firstChildElement('subject')
@@ -2261,6 +2266,18 @@ class GrapholProjectIRILoaderMixin_3(object):
             finally:
                 importEl = importEl.nextSiblingElement('import')
         return result
+
+    def getTag(self, tagEl):
+        tag = Tag(
+            tagEl.attribute('name'),
+            description=tagEl.attribute('description', None),
+            id=tagEl.attribute('id', None)
+        )
+        subtagEl = tagEl.firstChildElement('tag')
+        while not subtagEl.isNull():
+            tag.addTag(self.getTag(subtagEl))
+            subtagEl = subtagEl.nextSiblingElement('tag')
+        return tag
 
     def projectRender(self):
         """
