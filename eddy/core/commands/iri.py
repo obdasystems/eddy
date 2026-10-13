@@ -350,6 +350,47 @@ class CommandIRISetMeta(QtWidgets.QUndoCommand):
 
 
 #############################################
+#   IRI TAG
+#################################
+
+class CommandIRISetTag(QtWidgets.QUndoCommand):
+    """
+    This command is used to set (or clear) the tag associated to an IRI.
+    """
+    def __init__(self, project, iri, tagRedo, tagUndo, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type iri: IRI
+        :type tagRedo: Tag | str | None
+        :type tagUndo: Tag | str | None
+        :type name: str
+        """
+        super().__init__(name or 'Set tag for {0} '.format(str(iri)))
+        self._iri = iri
+        self._project = project
+        self._tagRedo = self._tagId(tagRedo)
+        self._tagUndo = self._tagId(tagUndo)
+
+    @staticmethod
+    def _tagId(tag):
+        """Normalizes a Tag instance (or an already plain id/None) to its id."""
+        return getattr(tag, 'id', tag)
+
+    def redo(self):
+        """redo the command"""
+        self._iri.tag = self._tagRedo
+        # Notify listeners (e.g. the Info widget) so that the newly assigned
+        # tag is reflected immediately, without requiring a manual refresh.
+        self._project.sgnUpdated.emit()
+
+    def undo(self):
+        """undo the command"""
+        self._iri.tag = self._tagUndo
+        self._project.sgnUpdated.emit()
+
+
+#############################################
 #   IRI NODES
 #################################
 
