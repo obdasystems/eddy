@@ -166,6 +166,7 @@ class Project(IRIManager):
         self.profile = profile
         self.profile.setParent(self)
         self.version = version if version is not None else '1.0'
+        self.tags = kwargs.get('tags', [])
 
         # FIXME: delete once all references have been dropped
         self.IRI_prefixes_nodes_dict = kwargs.get('IRI_prefixes_nodes_dict')
