@@ -62,11 +62,13 @@ from eddy.core.commands.iri import (
 from eddy.core.commands.project import (
     CommandProjectAddAnnotationProperty,
     CommandProjectAddPrefix,
+    CommandProjectAddTag,
     CommandProjectModifyPrefixResolution,
     CommandProjectModifyNamespacePrefix,
     CommandProjectRemoveAnnotationProperty,
     CommandProjectRemoveOntologyImport,
     CommandProjectRemovePrefix,
+    CommandProjectRemoveTag,
     CommandProjectSetLabelFromSimpleNameOrInputAndLanguage,
     CommandProjectSetOntologyIRIAndVersion,
 )
@@ -82,6 +84,11 @@ from eddy.core.functions.fsystem import fexists
 from eddy.core.functions.misc import first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
+from eddy.core.loaders.tags import (
+    CsvTagLoader,
+    XlsxTagLoader,
+)
+from eddy.core.tags import Tag
 from eddy.core.ndc import (
     ADMS,
     MOD,
@@ -102,6 +109,7 @@ from eddy.ui.fields import (
     StringField,
     CheckBox,
     ComboBox,
+    TextField,
 )
 from eddy.ui.file import FileDialog
 from eddy.ui.ndc.agent import AgentBuilderDialog
@@ -133,6 +141,116 @@ PROPS = [
             ADMS.hasSemanticAssetDistribution.toPython(),
             DCAT.contactPoint.toPython()
         ]
+
+
+class TagBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
+    """
+    Subclass of `QtWidgets.QDialog` used to define a new tag as a child of a
+    (possibly missing) parent tag.
+    """
+
+    def __init__(self, parent, parentTagName=None, parentTag=None):
+        """
+        Initialize the tag builder dialog.
+        :type parent: QtWidgets.QWidget
+        :type parentTagName: str
+        """
+        super().__init__(parent)
+        self.parentTagName = parentTagName
+        self.parentTag = parentTag
+
+        #############################################
+        # CONFIRMATION BOX
+        #################################
+
+        confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self, objectName='confirmation_widget')
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Save)
+        confirmation.addButton(QtWidgets.QDialogButtonBox.Cancel)
+        confirmation.setContentsMargins(10, 0, 10, 10)
+        self.addWidget(confirmation)
+        connect(confirmation.accepted, self.accept)
+        connect(confirmation.rejected, self.reject)
+
+        #############################################
+        # MAIN WIDGET
+        #################################
+
+        nameLabel = QtWidgets.QLabel(self, objectName='tag_name_label')
+        nameLabel.setText('Name')
+        self.addWidget(nameLabel)
+
+        nameField = StringField(self, objectName='tag_name_field')
+        self.addWidget(nameField)
+
+        descriptionLabel = QtWidgets.QLabel(self, objectName='tag_description_label')
+        descriptionLabel.setText('Description')
+        self.addWidget(descriptionLabel)
+
+        descriptionField = TextField(self, objectName='tag_description_field')
+        descriptionField.setFixedHeight(100)
+        self.addWidget(descriptionField)
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('tag_name_label'), self.widget('tag_name_field'))
+        formlayout.addRow(self.widget('tag_description_label'), self.widget('tag_description_field'))
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(formlayout)
+        widget.setObjectName('tag_widget')
+        self.addWidget(widget)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.addWidget(self.widget('tag_widget'))
+        layout.addWidget(self.widget('confirmation_widget'), 0, QtCore.Qt.AlignRight)
+        self.setLayout(layout)
+
+        self.setMinimumSize(420, 220)
+        if parentTagName:
+            self.setWindowTitle('Add Tag under "{0}"'.format(parentTagName))
+        else:
+            self.setWindowTitle('Add Tag')
+
+    #############################################
+    #   PROPERTIES
+    #################################
+
+    @property
+    def name(self):
+        """
+        Returns the tag name entered by the user.
+        :rtype: str
+        """
+        return self.widget('tag_name_field').value().strip()
+
+    @property
+    def description(self):
+        """
+        Returns the tag description entered by the user.
+        :rtype: str
+        """
+        return self.widget('tag_description_field').value().strip()
+
+    #############################################
+    #   SLOTS
+    #################################
+
+    @QtCore.pyqtSlot()
+    def accept(self):
+        """
+        Validate the input and accept the dialog.
+        """
+        if not self.name:
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Tag Definition Error',
+                'Tag name not defined.',
+                informativeText='Please provide a tag name.',
+                parent=self,
+            )
+            msgBox.exec_()
+            return
+        super().accept()
 
 
 class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
@@ -487,6 +605,74 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
         widget.setObjectName('annotations_widget')
+        self.addWidget(widget)
+
+        #############################################
+        # TAGS TAB
+        #################################
+
+        tree = QtWidgets.QTreeWidget(self, objectName='tags_tree_widget')
+        tree.setColumnCount(2)
+        tree.setHeaderLabels(['Name', 'Description'])
+        tree.header().setStretchLastSection(True)
+        tree.header().setSectionsClickable(False)
+        tree.header().setMinimumSectionSize(100)
+        tree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        tree.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        connect(tree.itemSelectionChanged, self.onTagSelectionChanged)
+        self.addWidget(tree)
+
+        addBtn = QtWidgets.QPushButton('Add', objectName='tag_add_button')
+        addBtn.setEnabled(True)
+        connect(addBtn.clicked, self.addTag)
+        self.addWidget(addBtn)
+
+        delBtn = QtWidgets.QPushButton('Remove', objectName='tags_delete_button')
+        delBtn.setEnabled(False)
+        connect(delBtn.clicked, self.removeTag)
+        self.addWidget(delBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('tag_add_button'))
+        boxlayout.addWidget(self.widget('tags_delete_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(self.widget('tags_tree_widget'))
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('Tags', self, objectName='tags_group_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        importTagsBtn = QtWidgets.QPushButton('Import Tags', objectName='import_tags_button')
+        connect(importTagsBtn.clicked, self.importTags)
+        self.addWidget(importTagsBtn)
+
+        importTaggedEntitiesBtn = QtWidgets.QPushButton(
+            'Import Tagged Entities',
+            objectName='import_tagged_entities_button',
+        )
+        self.addWidget(importTaggedEntitiesBtn)
+
+        boxlayout = QtWidgets.QHBoxLayout()
+        boxlayout.setAlignment(QtCore.Qt.AlignCenter)
+        boxlayout.addWidget(self.widget('import_tags_button'))
+        boxlayout.addWidget(self.widget('import_tagged_entities_button'))
+
+        formlayout = QtWidgets.QFormLayout()
+        formlayout.addRow(boxlayout)
+        groupbox = QtWidgets.QGroupBox('Import', self, objectName='tags_import_group_widget')
+        groupbox.setLayout(formlayout)
+        self.addWidget(groupbox)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('tags_group_widget'), 0, QtCore.Qt.AlignTop)
+        layout.addWidget(self.widget('tags_import_group_widget'), 1, QtCore.Qt.AlignTop)
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(layout)
+        widget.setObjectName('tags_widget')
         self.addWidget(widget)
 
         ###################################
@@ -1376,6 +1562,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         widget.addTab(self.widget('general_widget'), 'General')
         widget.addTab(self.widget('prefixes_widget'), 'Prefixes')
         widget.addTab(self.widget('annotations_widget'), 'Annotations')
+        widget.addTab(self.widget('tags_widget'), 'Tags')
         widget.addTab(self.widget('iri_widget'), 'Global IRIs')
         widget.addTab(self.widget('assertions_widget'), 'Annotation Assertions')
         widget.addTab(self.widget('NDCmetadata_widget'), 'NDC Metadata')
@@ -1413,6 +1600,34 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         :rtype: Session
         """
         return self.parent()
+
+    def redrawTags(self):
+        tree = self.widget('tags_tree_widget')
+        tree.clear()
+
+        # Root tags of the tree-shaped tag model held by the project.
+        tags = sorted(self.project.getTags(), key=lambda tag: tag.name.lower())
+
+        def addTagItems(parentItem, tagList):
+            for tag in sorted(tagList, key=lambda t: t.name.lower()):
+                name = tag.name
+                description = tag.description or ''
+                item = QtWidgets.QTreeWidgetItem([name, description])
+                item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+                item.setData(0, QtCore.Qt.UserRole, name)
+                item.setData(0, QtCore.Qt.UserRole + 1, tag)
+                if parentItem is None:
+                    tree.addTopLevelItem(item)
+                else:
+                    parentItem.addChild(item)
+                addTagItems(item, tag.subtag or [])
+
+        addTagItems(None, tags)
+        tree.expandAll()
+        tree.resizeColumnToContents(0)
+
+        self.widget('tag_add_button').setEnabled(True)
+        self.widget('tags_delete_button').setEnabled(False)
 
     #############################################
     #   SLOTS
@@ -1539,6 +1754,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             table.setItem(rowcount,0,propertyItem)
             rowcount += 1
         table.resizeColumnsToContents()
+
+        #############################################
+        # TAGS TAB
+        #################################
+
+        self.redrawTags()
 
         ###########################################
         # ANNOTATION ASSERTIONS TAB
@@ -2085,6 +2306,120 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         resolvedPrefix = self.resolvePrefix(prefix)
         fullIri = '{}{}'.format(resolvedPrefix, input)
         self.widget('full_iri_field').setValue(fullIri)
+
+    #############################################
+    # TAGS TAB
+    #################################
+
+    @QtCore.pyqtSlot()
+    def onTagSelectionChanged(self):
+        hasSelection = bool(self.widget('tags_tree_widget').selectedItems())
+        self.widget('tags_delete_button').setEnabled(hasSelection)
+
+    @QtCore.pyqtSlot(bool)
+    def addTag(self, _):
+        tree = self.widget('tags_tree_widget')
+        selectedItems = tree.selectedItems()
+        if selectedItems:
+            parentItem = selectedItems[0]
+            parentName = parentItem.data(0, QtCore.Qt.UserRole)
+            parentTag = parentItem.data(0, QtCore.Qt.UserRole+1)
+        else:
+            parentName = None
+            parentTag = None
+        dialog = TagBuilderDialog(self, parentName, parentTag)
+        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+            try:
+                newTag = Tag(
+                    dialog.name,
+                    dialog.description or None,
+                    id=None,
+                )
+                command = CommandProjectAddTag(self.project, newTag, parent=parentTag)
+                self.session.undostack.push(command)
+            except ValueError as e:
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Tag Definition Error',
+                    'Could not add the tag.',
+                    informativeText=str(e),
+                    parent=self,
+                )
+                msgBox.exec_()
+                return
+            self.redrawTags()
+
+    @QtCore.pyqtSlot(bool)
+    def removeTag(self, _):
+        self.widget('tag_add_button').setEnabled(True)
+        self.widget('tags_delete_button').setEnabled(False)
+        tree = self.widget('tags_tree_widget')
+        selectedTags = [
+            item.data(0, QtCore.Qt.UserRole+1)
+            for item in tree.selectedItems()
+        ]
+        try:
+            if len(selectedTags) > 1:
+                self.session.undostack.beginMacro('Remove tags >>')
+                for tag in selectedTags:
+                    command = CommandProjectRemoveTag(self.project, tag)
+                    self.session.undostack.push(command)
+                self.session.undostack.endMacro()
+            elif selectedTags:
+                command = CommandProjectRemoveTag(self.project, selectedTags[0])
+                self.session.undostack.push(command)
+        except ValueError as e:
+            msgBox = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Warning,
+                'Tag Definition Error',
+                'Could not remove the tag.',
+                informativeText=str(e),
+                parent=self,
+            )
+            msgBox.exec_()
+            return
+        self.redrawTags()
+
+    @QtCore.pyqtSlot()
+    def importTags(self):
+        session = self.session
+        dialog = FileDialog(session)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        filters = ['Comma-separated values (*.csv)', 'Excel Spreadsheet (*.xlsx)']
+        dialog.setNameFilters(sorted(filters))
+        dialog.selectNameFilter(File.Csv.value)
+
+        if dialog.exec_():
+            path = expandPath(first(dialog.selectedFiles()))
+            filetype = File.valueOf(dialog.selectedNameFilter())
+            try:
+                if filetype == File.Csv:
+                    loader = CsvTagLoader(path, session.project, session)
+                else:
+                    loader = XlsxTagLoader(path, session.project, session)
+                loader.run(path)
+                self.redrawTags()
+            except ValueError as e:
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Tag Import Error',
+                    'Could not complete tag import.',
+                    informativeText=str(e),
+                    parent=self,
+                )
+                msgBox.exec_()
+            except Exception as e:
+                LOGGER.error('error during tag import: {}', e)
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Tag Import Error',
+                    'Could not complete tag import.',
+                    informativeText='See the System Log for details.',
+                    parent=self,
+                )
+                msgBox.exec_()
 
     def resolvePrefix(self, prefixStr):
         prefixLimit = prefixStr.find(':')
@@ -3131,5 +3466,3 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                     widget.setDate(QtCore.QDate(2000, 1, 1))
             elif item.layout():
                 self.clearLayout(item.layout())
-
-

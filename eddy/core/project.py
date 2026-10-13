@@ -34,6 +34,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import (
     cast,
     Any,
@@ -79,6 +80,7 @@ from eddy.core.owl import (
     K_FUNCTIONAL,
 )
 from eddy.core.profiles.owl2 import OWL2Profile
+from eddy.core.tags import Tag
 
 if TYPE_CHECKING:
     from eddy.ui.session import Session
@@ -232,6 +234,47 @@ class Project(IRIManager):
         Returns True if the Project contains no element, False otherwise.
         """
         return self.index.isEmpty()
+
+    def getTags(self) -> list[Tag]:
+        """
+        Returns the list of root tags defined for this Project.
+        """
+        return self.tags
+
+    def findTag(self, tagId: str) -> Optional[Tag]:
+        """
+        Looks up and returns the Tag (root or nested) matching the given
+        id, or `None` if no such tag exists in this Project.
+        """
+        if not tagId:
+            return None
+        for rootTag in self.tags:
+            found = rootTag[tagId]
+            if found is not None:
+                return found
+        return None
+
+    def addTag(self, tag: Tag, parent: Tag = None) -> Tag:
+        """
+        Adds the given tag to the Project, either as a root tag, or as a
+        subtag of the given parent tag.
+        """
+        if parent is not None:
+            parent.addTag(tag)
+        else:
+            self.tags.append(tag)
+        self.sgnUpdated.emit()
+        return tag
+
+    def removeTag(self, tag: Tag) -> None:
+        """
+        Removes the given tag (together with its subtags) from the Project.
+        """
+        if tag.parent is not None:
+            tag.parent.subtag.remove(tag)
+        else:
+            self.tags.remove(tag)
+        self.sgnUpdated.emit()
 
     def item(self, diagram: Diagram, iid: str) -> Optional[AbstractItem]:
         """
