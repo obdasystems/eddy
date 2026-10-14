@@ -64,7 +64,14 @@ class Tag:
         if parent is not None and not isinstance(parent, Tag):
             raise TypeError('Tag parent if present must be another Tag instance')
         # Init instance fields
-        self._id: str = id or guid.next('t')
+        if id:
+            try:
+                guid.update(id)
+            except ValueError:
+                pass
+            self._id: str = id
+        else:
+            self._id: str = guid.next('t')
         self._name: str = name
         self._description: str | None = description
         self._subtag: list[Tag] = []
