@@ -2333,7 +2333,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                 newTag = Tag(
                     dialog.name,
                     dialog.description or None,
-                    id=self.project.nextTagId(),
+                    id=None,
                 )
                 command = CommandProjectAddTag(self.project, newTag, parent=parentTag)
                 self.session.undostack.push(command)

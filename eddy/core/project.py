@@ -254,25 +254,6 @@ class Project(IRIManager):
                 return found
         return None
 
-    def nextTagId(self) -> str:
-        """
-        Returns the next numeric id available for a new tag, incremental with
-        respect to the ids already in use within this Project (regardless of
-        whether the tags are roots or nested sub-tags).
-        """
-        maxId = -1
-
-        def visit(tagList: list[Tag]) -> None:
-            nonlocal maxId
-            for tag in tagList:
-                match = re.search(r'(\d+)$', tag.id or '')
-                if match:
-                    maxId = max(maxId, int(match.group(1)))
-                visit(tag.subtag)
-
-        visit(self.tags)
-        return str(maxId + 1)
-
     def addTag(self, tag: Tag, parent: Tag = None) -> Tag:
         """
         Adds the given tag to the Project, either as a root tag, or as a
