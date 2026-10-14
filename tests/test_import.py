@@ -34,6 +34,7 @@
 
 
 import pytest
+from openpyxl import Workbook
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
@@ -45,6 +46,11 @@ from eddy.core.loaders.graphol_iri import (
     GrapholIRIProjectLoader_v2,
     GrapholIRIProjectLoader_v3,
 )
+from eddy.core.loaders.tags import (
+    CsvTagLoader,
+    XlsxTagLoader,
+)
+from eddy.core.tags import Tag
 from eddy.ui.session import Session
 
 
@@ -220,3 +226,123 @@ def test_load_ontology_from_graphml_2(session, qtbot):
     assert len(list(filter(lambda n: n.type() == Item.RoleNode, project.diagram(diagram).nodes()))) == 60
     assert len(list(filter(lambda n: n.type() == Item.AttributeNode, project.diagram(diagram).nodes()))) == 27
     assert len(list(filter(lambda n: n.type() == Item.IndividualNode, project.diagram(diagram).nodes()))) == 0
+
+
+def test_import_tags_from_csv(session, tmpdir):
+    # GIVEN
+    csvfile = tmpdir.join('tags.csv')
+    csvfile.write(
+        'name,category,description\n'
+        'Domain,,Domain description\n'
+        'SubDomain,Domain,SubDomain description\n',
+        encoding='utf-8',
+    )
+    # WHEN
+    loader = CsvTagLoader(str(csvfile), session.project, session)
+    loader.run(str(csvfile))
+    # THEN
+    assert len(loader.importedTags) == 1
+    domain = loader.importedTags[0]
+    assert isinstance(domain, Tag)
+    assert domain.name == 'Domain'
+    assert domain.description == 'Domain description'
+    assert len(domain.subtag) == 1
+    subdomain = domain.subtag[0]
+    assert isinstance(subdomain, Tag)
+    assert subdomain.name == 'SubDomain'
+    assert subdomain.description == 'SubDomain description'
+    assert subdomain.subtag == []
+    # the imported tags are actually persisted into the project
+    assert domain in session.project.getTags()
+    assert session.project.findTag(domain.id) is domain
+    assert session.project.findTag(subdomain.id) is subdomain
+    # the whole import is undoable/redoable as a single operation
+    assert session.undostack.canUndo()
+    session.undostack.undo()
+    assert domain not in session.project.getTags()
+    assert session.project.findTag(domain.id) is None
+    session.undostack.redo()
+    assert domain in session.project.getTags()
+    assert session.project.findTag(subdomain.id) is subdomain
+
+
+def test_import_tags_from_xlsx(session, tmpdir):
+    # GIVEN
+    xlsxfile = tmpdir.join('tags.xlsx')
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(['name', 'category', 'description'])
+    sheet.append(['Root', '', 'Root description'])
+    sheet.append(['Leaf', 'Root', 'Leaf description'])
+    workbook.save(str(xlsxfile))
+    # WHEN
+    loader = XlsxTagLoader(str(xlsxfile), session.project, session)
+    loader.run(str(xlsxfile))
+    # THEN
+    assert len(loader.importedTags) == 1
+    root = loader.importedTags[0]
+    assert isinstance(root, Tag)
+    assert root.name == 'Root'
+    assert root.description == 'Root description'
+    assert len(root.subtag) == 1
+    leaf = root.subtag[0]
+    assert isinstance(leaf, Tag)
+    assert leaf.name == 'Leaf'
+    assert leaf.description == 'Leaf description'
+    assert leaf.subtag == []
+    # the imported tags are actually persisted into the project
+    assert root in session.project.getTags()
+    assert session.project.findTag(root.id) is root
+    assert session.project.findTag(leaf.id) is leaf
+    # the whole import is undoable/redoable as a single operation
+    assert session.undostack.canUndo()
+    session.undostack.undo()
+    assert root not in session.project.getTags()
+    assert session.project.findTag(root.id) is None
+    session.undostack.redo()
+    assert root in session.project.getTags()
+    assert session.project.findTag(leaf.id) is leaf
+
+
+def test_import_tags_from_csv_twice_does_not_duplicate(session, tmpdir):
+    # GIVEN
+    csvfile = tmpdir.join('tags.csv')
+    csvfile.write(
+        'name,category,description\n'
+        'Domain,,Domain description\n'
+        'SubDomain,Domain,SubDomain description\n',
+        encoding='utf-8',
+    )
+    loader1 = CsvTagLoader(str(csvfile), session.project, session)
+    loader1.run(str(csvfile))
+    domain1 = loader1.importedTags[0]
+    stackCountAfterFirstImport = session.undostack.count()
+    # WHEN
+    loader2 = CsvTagLoader(str(csvfile), session.project, session)
+    loader2.run(str(csvfile))
+    # THEN
+    domain2 = loader2.importedTags[0]
+    assert domain2 is domain1
+    assert len(session.project.getTags()) == 1
+    # re-importing an identical file does not push any new undo command
+    assert session.undostack.count() == stackCountAfterFirstImport
+
+
+def test_import_tags_ids_do_not_collide_with_existing_tags(session, tmpdir):
+    # GIVEN
+    existingTag = Tag('Existing', None, id='t0')
+    session.project.addTag(existingTag)
+    csvfile = tmpdir.join('tags.csv')
+    csvfile.write(
+        'name,category,description\n'
+        'Domain,,Domain description\n',
+        encoding='utf-8',
+    )
+    # WHEN
+    loader = CsvTagLoader(str(csvfile), session.project, session)
+    loader.run(str(csvfile))
+    # THEN
+    domain = loader.importedTags[0]
+    assert domain.id != existingTag.id
+    assert session.project.findTag(existingTag.id) is existingTag
+    assert session.project.findTag(domain.id) is domain
