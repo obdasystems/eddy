@@ -85,7 +85,9 @@ from eddy.core.functions.misc import first
 from eddy.core.functions.path import expandPath
 from eddy.core.functions.signals import connect
 from eddy.core.loaders.tags import (
+    CsvTaggedEntityLoader,
     CsvTagLoader,
+    XlsxTaggedEntityLoader,
     XlsxTagLoader,
 )
 from eddy.core.tags import Tag
@@ -652,6 +654,7 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             'Import Tagged Entities',
             objectName='import_tagged_entities_button',
         )
+        connect(importTaggedEntitiesBtn.clicked, self.importTaggedEntities)
         self.addWidget(importTaggedEntitiesBtn)
 
         boxlayout = QtWidgets.QHBoxLayout()
@@ -2416,6 +2419,57 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
                     QtWidgets.QMessageBox.Warning,
                     'Tag Import Error',
                     'Could not complete tag import.',
+                    informativeText='See the System Log for details.',
+                    parent=self,
+                )
+                msgBox.exec_()
+
+    @QtCore.pyqtSlot()
+    def importTaggedEntities(self):
+        session = self.session
+        dialog = FileDialog(session)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        filters = ['Comma-separated values (*.csv)', 'Excel Spreadsheet (*.xlsx)']
+        dialog.setNameFilters(sorted(filters))
+        dialog.selectNameFilter(File.Csv.value)
+
+        if dialog.exec_():
+            path = expandPath(first(dialog.selectedFiles()))
+            filetype = File.valueOf(dialog.selectedNameFilter())
+            try:
+                if filetype == File.Csv:
+                    loader = CsvTaggedEntityLoader(path, session.project, session)
+                else:
+                    loader = XlsxTaggedEntityLoader(path, session.project, session)
+                loader.run(path)
+                if not loader.templateMismatch:
+                    msgBox = QtWidgets.QMessageBox(
+                        QtWidgets.QMessageBox.Information,
+                        'Tagged Entities Import',
+                        'Import completed.',
+                        informativeText='{0} entities tagged, {1} rows skipped.'.format(
+                            loader.importedCount, loader.skippedCount,
+                        ),
+                        parent=self,
+                    )
+                    msgBox.exec_()
+            except ValueError as e:
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Tagged Entities Import Error',
+                    'Could not complete tagged entities import.',
+                    informativeText=str(e),
+                    parent=self,
+                )
+                msgBox.exec_()
+            except Exception as e:
+                LOGGER.error('error during tagged entities import: {}', e)
+                msgBox = QtWidgets.QMessageBox(
+                    QtWidgets.QMessageBox.Warning,
+                    'Tagged Entities Import Error',
+                    'Could not complete tagged entities import.',
                     informativeText='See the System Log for details.',
                     parent=self,
                 )
