@@ -1160,6 +1160,7 @@ class IRIManager(QtCore.QObject):
         facets=None,
         languages=None,
         defaultLanguage='en',
+        addIsDefinedBy = True,
         addLabelFromSimpleName=False,
         addLabelFromUserInput=False,
         convertSnake=False,
@@ -1178,6 +1179,10 @@ class IRIManager(QtCore.QObject):
             self.setDefaultPrefixes()
         else:
             self.prefix2namespaceMap = prefixMap
+        self._defaultLanguage = defaultLanguage
+        self._addIsDefinedBy = addIsDefinedBy
+        self._addLabelFromSimpleName = addLabelFromSimpleName
+        self._addLabelFromUserInput = addLabelFromUserInput
         self.ontologyIRI = None
         if ontologyIRI:
             self.setOntologyIRI(ontologyIRI)
@@ -1223,8 +1228,6 @@ class IRIManager(QtCore.QObject):
         if defaults:
             self.setDefaults()
         self._defaultLanguage = defaultLanguage
-        self._addLabelFromSimpleName = addLabelFromSimpleName
-        self._addLabelFromUserInput = addLabelFromUserInput
         self._importedOntologies = imports or set()
         self._convertCamel = convertCamel
         self._convertSnake = convertSnake
@@ -1263,6 +1266,14 @@ class IRIManager(QtCore.QObject):
     #############################################
     #   LANGUAGES
     #################################
+    @property
+    def addIsDefinedBy(self):
+        return self._addIsDefinedBy
+
+    @addIsDefinedBy.setter
+    def addIsDefinedBy(self, addIsDefinedBy):
+        self._addIsDefinedBy = addIsDefinedBy
+
     @property
     def addLabelFromSimpleName(self):
         return self._addLabelFromSimpleName
@@ -1385,11 +1396,13 @@ class IRIManager(QtCore.QObject):
     def getIRI(
         self,
         iriString,
+        addIsDefinedBy=False,
         addLabelFromSimpleName=False,
         addLabelFromUserInput= False,
         userInput=None,
         imported=False,
         labelExplicitChecked=False,
+        isDefinedByExplicitChecked=False,
         labelLang=None,
     ):
         """
@@ -1397,14 +1410,19 @@ class IRIManager(QtCore.QObject):
 
         If such object does not exist, creates it and adds it to the index.
         If addLabelFromSimpleName, then automatically add a label corresponding to its simpleName.
+        If addIsDefinedBy (combined with the project-wide setting, unless explicitly overridden
+        through isDefinedByExplicitChecked) and the new IRI shares the same prefix/namespace as
+        the ontology IRI, automatically add an rdfs:isDefinedBy annotation pointing to it.
         If imported, then the IRI request come from an ontology import, so the IRI object
         must not be added to the set of iris that have to be serialized.
         :type iriString: str
+        :type addIsDefinedBy: bool
         :type addLabelFromSimpleName: bool
         :type addLabelFromUserInput: bool
         :type userInput: str
         :type imported: bool
         :type labelExplicitChecked: bool
+        :type isDefinedByExplicitChecked: bool
         :type labelLang: str
         """
         if iriString in self.stringToIRI:
@@ -1425,6 +1443,23 @@ class IRIManager(QtCore.QObject):
                 ((labelExplicitChecked and addLabelFromUserInput and userInput) or
                  (addLabelFromUserInput and self._addLabelFromUserInput))
             )
+            genIsDefinedBy = (
+                (isDefinedByExplicitChecked and addIsDefinedBy) or
+                (addIsDefinedBy and self._addIsDefinedBy)
+            )
+
+            if (
+                genIsDefinedBy
+                and not imported
+                and self.ontologyIRI is not None
+                and iri != self.ontologyIRI
+                and iriString.startswith(str(self.ontologyIRI))
+            ):
+                iri.addAnnotationAssertion(AnnotationAssertion(
+                    iri,
+                    AnnotationAssertionProperty.IsDefinedBy.value,
+                    self.ontologyIRI,
+                ))
 
             if genLabelFromSimpleName or genLabelFromUserInput:
                 if labelLang is None:
@@ -1885,7 +1920,7 @@ class IRIManager(QtCore.QObject):
         """
         matchingList = self.getPrefixedForms(iri)
         result = None
-        maxSuffixLength = 0
+        maxSuffixLength = -1
         for prefixed in matchingList:
             sufLength = len(prefixed.suffix)
             if sufLength > maxSuffixLength:
