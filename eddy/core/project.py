@@ -359,6 +359,7 @@ class Project(IRIManager):
         """
         self.index.switchIRI(sub,master)
         self.sgnIRIRemovedFromAllDiagrams.emit(sub)
+        self.syncIsDefinedByAnnotation(master)
 
     @QtCore.pyqtSlot(QtWidgets.QGraphicsItem, IRI)
     def doSingleSwitchIRI(self, node: QtWidgets.QGraphicsItem, oldIri: IRI) -> None:
@@ -369,6 +370,7 @@ class Project(IRIManager):
             self.sgnIRIRemovedFromAllDiagrams.emit(oldIri)
         else:
             self.sgnSingleNodeSwitchIRI.emit(node, oldIri)
+        self.syncIsDefinedByAnnotation(node.iri)
 
 
 class ProjectIndex(dict):

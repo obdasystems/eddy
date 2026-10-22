@@ -652,6 +652,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.project.isValidIdentifier(inputIriString)
                 if self.iri:
                     if not str(self.iri) == inputIriString:
+                        refactored = False
                         for a in self.iri.annotationAssertions:
                             if str(a.assertionProperty) == 'urn:x-graphol:origin':
                                 command = CommandIRIRemoveAnnotationAssertion(self.project, self.iri, a)
@@ -668,18 +669,23 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                                 if newIRI is not self.iri:
                                     oldIRI = self.iri
                                     self.iri = newIRI
-                                    self.redraw()
                                     command = CommandIRIRefactor(self.project, self.iri, oldIRI)
                                     self.session.undostack.push(command)
+                                    refactored = True
                             else:
                                 oldStr = self.iri.namespace
                                 command = CommandChangeIRIIdentifier(self.project, self.iri,
                                                                      inputIriString, oldStr)
                                 self.session.undostack.push(command)
+                                refactored = True
                         else:
                             command = CommandChangeIRIOfNode(self.project, self.node,
                                                              inputIriString, str(self.iri))
                             self.session.undostack.push(command)
+                            refactored = True
+                        if refactored:
+                            self.iri = self.node.iri
+                            self.redraw()
                 else:
                     inputIri = self.project.getIRI(
                         inputIriString,
@@ -1071,6 +1077,8 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             dialog.open()
         finally:
             self.widget('save_iri_button').setEnabled(False)
+            self.focusOnAnnotation=False
+            self.redraw()
 
     @QtCore.pyqtSlot()
     def onAnnotationSelectionChanged(self):

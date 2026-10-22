@@ -1345,6 +1345,12 @@ class IRIManager(QtCore.QObject):
         iri = self.sender()
         self.stringToIRI.pop(oldIRIStr,None)
         self.stringToIRI[str(iri)] = iri
+        if iri == self.ontologyIRI:
+            # The ontology IRI itself was renamed: every entity's rdfs:isDefinedBy annotation
+            # needs to be re-evaluated against the new ontology IRI value.
+            self.syncAllIsDefinedByAnnotations()
+        else:
+            self.syncIsDefinedByAnnotation(iri)
 
 
     @QtCore.pyqtSlot(ImportedOntology)
@@ -1361,6 +1367,8 @@ class IRIManager(QtCore.QObject):
                 newOntIRI.addAnnotationAssertion(annot)
         self.ontologyIRI = newOntIRI
         self.sgnOntologyIRIModified.emit(self.ontologyIRI)
+        self.syncAllIsDefinedByAnnotations()
+
 
     @QtCore.pyqtSlot(IRI)
     def deleteIRI(self, iri):
@@ -1510,6 +1518,10 @@ class IRIManager(QtCore.QObject):
         iri = self.sender()
         self.stringToIRI.pop(oldIRIStr,None)
         self.stringToIRI[str(iri)] = iri
+        if iri == self.ontologyIRI:
+            self.syncAllIsDefinedByAnnotations()
+        else:
+            self.syncIsDefinedByAnnotation(iri)
 
     @staticmethod
     def isValidIdentifier(iriStr):
@@ -1802,6 +1814,42 @@ class IRIManager(QtCore.QObject):
             if not iri.hasLabelMatchingSimpleName():
                 result.append(iri)
         return result
+
+    def syncIsDefinedByAnnotation(self, iri):
+        """
+        Keep the automatic rdfs:isDefinedBy annotation consistent with the
+        current ontology IRI: if `iri`'s namespace matches the ontology
+        IRI, the annotation is added (if missing) or its value refreshed; otherwise
+        any such annotation is removed.
+        :type iri: IRI
+        """
+        if (
+            iri is None
+            or self.ontologyIRI is None
+            or iri == self.ontologyIRI
+            or self.isFromReservedVocabulary(iri)
+        ):
+            return
+        existing = iri.getAnnotationAssertion(AnnotationAssertionProperty.IsDefinedBy.value)
+        if str(iri).startswith(str(self.ontologyIRI)):
+            if not existing:
+                iri.addAnnotationAssertion(AnnotationAssertion(
+                    iri,
+                    AnnotationAssertionProperty.IsDefinedBy.value,
+                    self.ontologyIRI,
+                ))
+            elif existing.value != self.ontologyIRI:
+                existing.value = self.ontologyIRI
+        else:
+            if existing:
+                iri.removeAnnotationAssertion(existing)
+
+    def syncAllIsDefinedByAnnotations(self):
+        """
+        Re-synchronize the automatic rdfs:isDefinedBy annotation of every IRI.
+        """
+        for iri in list(self.iris):
+            self.syncIsDefinedByAnnotation(iri)
 
     ##Prefixes
     @property

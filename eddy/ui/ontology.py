@@ -586,6 +586,12 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         connect(definedByAddAllBtn.clicked, self.doAddIsDefinedByToAll)
         self.addWidget(definedByAddAllBtn)
 
+        definedByRemoveAllBtn = QtWidgets.QPushButton(
+            'Remove rdfs:isDefinedBy from all', objectName='definedby_removeall_button',
+        )
+        connect(definedByRemoveAllBtn.clicked, self.doRemoveIsDefinedByFromAll)
+        self.addWidget(definedByRemoveAllBtn)
+
         checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_simplename')
         checkBoxLabel.setText('Derive rdfs:label from simple name')
         self.addWidget(checkBoxLabel)
@@ -639,7 +645,10 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
         self.addWidget(combobox)
         iriLabelLayout = QtWidgets.QFormLayout()
         iriLabelLayout.addRow(self.widget('checkbox_definedBy_label'), self.widget('checkbox_definedBy'))
-        iriLabelLayout.addRow(self.widget('definedby_addall_button'))
+        definedByButtonsLayout = QtWidgets.QHBoxLayout()
+        definedByButtonsLayout.addWidget(self.widget('definedby_addall_button'))
+        definedByButtonsLayout.addWidget(self.widget('definedby_removeall_button'))
+        iriLabelLayout.addRow(definedByButtonsLayout)
         iriLabelLayout.addRow(self.widget('checkBox_label_simplename'), self.widget('label_simplename_checkbox'))
         iriLabelLayout.addRow(self.widget('checkBox_label_userinput'), self.widget('label_userinput_checkbox'))
         iriLabelLayout.addRow(self.widget('convert_snake'))
@@ -2250,6 +2259,58 @@ class OntologyManagerDialog(QtWidgets.QDialog, HasWidgetSystem):
             self.session.addNotification(
                 'Added rdfs:isDefinedBy annotation to {0} entities!'.format(added)
             )
+
+    @QtCore.pyqtSlot()
+    def doRemoveIsDefinedByFromAll(self):
+        targets = []
+        for iri in self.project.iris:
+            if iri == self.project.ontologyIRI:
+                continue
+            existing = iri.getAnnotationAssertion(AnnotationAssertionProperty.IsDefinedBy.value)
+            if existing:
+                targets.append((iri, existing))
+        if not targets:
+            self.session.addNotification("""
+            No entity has the rdfs:isDefinedBy annotation.
+            """)
+            return
+
+        progress = QtWidgets.QProgressDialog(
+            'Removing rdfs:isDefinedBy annotation...', 'Cancel', 0, len(targets), self,
+        )
+        progress.setWindowTitle('Remove rdfs:isDefinedBy from all')
+        progress.setWindowModality(QtCore.Qt.WindowModal)
+        progress.setMinimumDuration(0)
+
+        removed = 0
+        self.session.undostack.beginMacro('Remove rdfs:isDefinedBy annotation from all entities')
+        try:
+            for i, (iri, assertion) in enumerate(targets):
+                if progress.wasCanceled():
+                    break
+                progress.setLabelText('Removing rdfs:isDefinedBy annotations...')
+                progress.setValue(i)
+                QtWidgets.QApplication.processEvents()
+                command = CommandIRIRemoveAnnotationAssertion(self.project, iri, assertion)
+                self.session.undostack.push(command)
+                removed += 1
+            progress.setValue(len(targets))
+        finally:
+            self.session.undostack.endMacro()
+            progress.close()
+
+        self.redraw()
+        if removed < len(targets):
+            self.session.addNotification(
+                'Operation cancelled: removed rdfs:isDefinedBy annotation from {0} of {1} entities.'.format(
+                    removed, len(targets),
+                )
+            )
+        else:
+            self.session.addNotification(
+                'Removed rdfs:isDefinedBy annotation from {0} entities!'.format(removed)
+            )
+
 
     @QtCore.pyqtSlot(bool)
     def onLabelSimpleNameCheckBoxClicked(self, _):
