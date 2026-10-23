@@ -965,12 +965,17 @@ class IRIInfo(NodeInfo):
         self.labelField.setReadOnly(True)
         # connect(self.labelField.editingFinished, self.editingFinished)
 
+        self.tagKey = Key('Tag', self)
+        self.tagField = String(self)
+        self.tagField.setReadOnly(True)
+
         self.predPropHeader = Header('IRI properties', self)
         self.predPropLayout = QtWidgets.QFormLayout()
         self.predPropLayout.setSpacing(0)
         self.predPropLayout.addRow(self.fullIRIKey, self.fullIRIField)
         self.predPropLayout.addRow(self.nameKey, self.nameField)
         self.predPropLayout.addRow(self.labelKey, self.labelField)
+        self.predPropLayout.addRow(self.tagKey, self.tagField)
         self.predPropLayout.addRow(self.deprKey, deprParent)
 
         self.mainLayout.insertWidget(0, self.predPropHeader)
@@ -1063,6 +1068,11 @@ class IRIInfo(NodeInfo):
                 self.labelField.setValue(labelAssertion.getObjectResourceString(True))
             else:
                 self.labelField.setValue('')
+            # `node.iri.tag` only stores the tag's id, so
+            # the full Tag object (needed to display its name) is resolved
+            # on demand from the project's tag tree.
+            tag = self.project.findTag(node.iri.tag)
+            self.tagField.setValue(str(tag.name) if tag else '')
             self.deprBox.setChecked(node.iri.deprecated)
 
 

@@ -308,6 +308,62 @@ class CommandProjectRemoveAnnotationProperty(QtWidgets.QUndoCommand):
         self._project.addAnnotationProperty(self._propIriStr)
 
 #############################################
+#   TAGS
+#################################
+class CommandProjectAddTag(QtWidgets.QUndoCommand):
+    """
+    This command is used to add a tag to the Project, either as a root tag
+    or as a subtag of another tag already defined in the Project.
+    """
+    def __init__(self, project, tag, parent=None, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type tag: Tag
+        :type parent: Tag
+        :type name: str
+        """
+        super().__init__(name or "Add tag '{0}'".format(tag.name))
+        self._project = project
+        self._tag = tag
+        self._parent = parent
+
+    def redo(self):
+        """redo the command"""
+        self._project.addTag(self._tag, parent=self._parent)
+
+    def undo(self):
+        """undo the command"""
+        self._project.removeTag(self._tag)
+
+
+class CommandProjectRemoveTag(QtWidgets.QUndoCommand):
+    """
+    This command is used to remove a tag (together with its subtags) from
+    the Project.
+    """
+    def __init__(self, project, tag, name=None):
+        """
+        Initialize the command.
+        :type project: Project
+        :type tag: Tag
+        :type name: str
+        """
+        super().__init__(name or "Remove tag '{0}'".format(tag.name))
+        self._project = project
+        self._tag = tag
+        self._parent = tag.parent
+
+    def redo(self):
+        """redo the command"""
+        self._project.removeTag(self._tag)
+
+    def undo(self):
+        """undo the command"""
+        self._project.addTag(self._tag, parent=self._parent)
+
+
+#############################################
 #   ONTOLOGY IMPORTS
 #################################
 class CommandProjectAddOntologyImport(QtWidgets.QUndoCommand):
