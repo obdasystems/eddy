@@ -280,6 +280,7 @@ class AnnotationAssertionBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 )
                 self.widget('iri_input_field').setText(prefixed.suffix)
             else:
+                self.widget('iri_prefix_switch').setCurrentText('')
                 self.widget('iri_input_field').setText(str(self.assertion.value))
 
         #############################################
@@ -622,6 +623,7 @@ class AnnotationBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 )
                 self.widget('iri_input_field').setText(prefixed.suffix)
             else:
+                self.widget('iri_prefix_switch').setCurrentText('')
                 self.widget('iri_input_field').setText(str(self.annotation.value))
 
         #############################################
