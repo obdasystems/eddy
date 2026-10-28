@@ -73,7 +73,7 @@ class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoComm
     """
     This command is used to set the IRI identifying the ontology.
     """
-    def __init__(self, project, labelFromSimpleNameRedo, labelFromUserInputRedo, languageRedo, snakeConversionRedo, camelConversionRedo, labelFromSimpleNameUndo, labelFromUserInputUndo, languageUndo, snakeConversionUndo, camelConversionUndo, name=None):
+    def __init__(self, project, labelFromSimpleNameRedo, labelFromUserInputRedo, languageRedo, snakeConversionRedo, camelConversionRedo, labelFromSimpleNameUndo, labelFromUserInputUndo, languageUndo, snakeConversionUndo, camelConversionUndo, name=None, isDefinedByRedo=None, isDefinedByUndo=None):
         """
         Initialize the command.
         :type project: Project
@@ -84,6 +84,8 @@ class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoComm
         :type labelFromUserInputUndo: bool
         :type languageUndo: str
         :type name: str
+        :type isDefinedByRedo: bool
+        :type isDefinedByUndo: bool
         """
         super().__init__(name or 'Set automatic rdfs:label management')
         self._project = project
@@ -97,8 +99,13 @@ class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoComm
         self._languageUndo = languageUndo
         self._snakeConversionUndo = snakeConversionUndo
         self._camelConversionUndo = camelConversionUndo
+        self._isDefinedByRedo = isDefinedByRedo
+        self._isDefinedByUndo = isDefinedByUndo
+
     def redo(self):
         """redo the command"""
+        if self._isDefinedByRedo is not None:
+            self._project.addIsDefinedBy = self._isDefinedByRedo
         self._project.addLabelFromSimpleName = self._labelFromSimpleNameRedo
         self._project.addLabelFromUserInput = self._labelFromUserInputRedo
         self._project.defaultLanguage = self._languageRedo
@@ -107,6 +114,8 @@ class CommandProjectSetLabelFromSimpleNameOrInputAndLanguage(QtWidgets.QUndoComm
 
     def undo(self):
         """undo the command"""
+        if self._isDefinedByUndo is not None:
+            self._project.addIsDefinedBy = self._isDefinedByUndo
         self._project.addLabelFromSimpleName = self._labelFromSimpleNameUndo
         self._project.addLabelFromUserInput = self._labelFromUserInputUndo
         self._project.defaultLanguage = self._languageUndo

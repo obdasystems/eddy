@@ -561,6 +561,15 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
         # groupbox.setLayout(formlayout)
         # self.addWidget(groupbox)
 
+        checkBoxDefinedBy = QtWidgets.QLabel(self, objectName='checkbox_definedBy_label')
+        checkBoxDefinedBy.setText('Add rdfs:isDefinedBy annotation')
+        self.addWidget(checkBoxDefinedBy)
+        checked = self.project.addIsDefinedBy
+        checkBox = CheckBox('', self, enabled=True, checked=checked,
+                            clicked=self.onLabelSimpleNameCheckBoxClicked,
+                            objectName='checkbox_definedBy')
+        self.addWidget(checkBox)
+
         checkBoxLabel = QtWidgets.QLabel(self, objectName='checkBox_label_simplename')
         checkBoxLabel.setText('Derive rdfs:label from simple name')
         self.addWidget(checkBoxLabel)
@@ -616,6 +625,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
 
         self.addWidget(combobox)
         iriLabelLayout = QtWidgets.QFormLayout()
+        iriLabelLayout.addRow(self.widget('checkbox_definedBy_label'), self.widget('checkbox_definedBy'))
         iriLabelLayout.addRow(self.widget('checkBox_label_simplename'),
                               self.widget('label_simplename_checkbox'))
         iriLabelLayout.addRow(self.widget('checkBox_label_userinput'),
@@ -871,6 +881,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 self.project.isValidIdentifier(inputIriString)
                 if self.iri:
                     if not str(self.iri) == inputIriString:
+                        refactored = False
                         for a in self.iri.annotationAssertions:
                             if str(a.assertionProperty) == 'urn:x-graphol:origin':
                                 command = CommandIRIRemoveAnnotationAssertion(self.project, self.iri, a)
@@ -894,6 +905,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                                     self.redraw()
                                     command = CommandIRIRefactor(self.project, self.iri, oldIRI)
                                     self.session.undostack.push(command)
+                                    refactored = True
                             else:
                                 oldStr = self.iri.namespace
                                 command = CommandChangeIRIIdentifier(self.project, self.iri,
@@ -903,6 +915,7 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                                 if _tagId(newTag) != self.iri.tag:
                                     command = CommandIRISetTag(self.project, self.iri, newTag, self.iri.tag)
                                     self.session.undostack.push(command)
+                                refactored = True
                         else:
                             command = CommandChangeIRIOfNode(self.project, self.node,
                                                              inputIriString, str(self.iri))
@@ -918,13 +931,20 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                         if _tagId(newTag) != self.iri.tag:
                             command = CommandIRISetTag(self.project, self.iri, newTag, self.iri.tag)
                             self.session.undostack.push(command)
+                            refactored = True
+                        if refactored:
+                            self.iri = self.node.iri
+                            self.redraw()
                 else:
                     inputIri = self.project.getIRI(
                         inputIriString,
+                        addIsDefinedBy=self.widget('checkbox_definedBy').isChecked(),
                         addLabelFromSimpleName=self.widget('label_simplename_checkbox').isChecked(),
                         addLabelFromUserInput=self.widget('label_userinput_checkbox').isChecked(),
                         userInput=userExplicitInput,
-                        labelExplicitChecked=True, labelLang=labelLang
+                        labelExplicitChecked=True,
+                        isDefinedByExplicitChecked=True,
+                        labelLang=labelLang
                     )
                     newTag = self.widget('tag_switch').currentTag()
                     if _tagId(newTag) != inputIri.tag:
@@ -1329,6 +1349,8 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
             dialog.open()
         finally:
             self.widget('save_iri_button').setEnabled(False)
+            self.focusOnAnnotation=False
+            self.redraw()
 
     @QtCore.pyqtSlot()
     def onAnnotationSelectionChanged(self):

@@ -418,15 +418,15 @@ class CommandChangeIRIOfNode(QtWidgets.QUndoCommand):
 
     def redo(self):
         """redo the command"""
-        iri = self._project.getIRI(self._iriStringRedo, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=self._userExplicitInput)
-        oldIri = self._project.getIRI(self._iriStringUndo, addLabelFromSimpleName=True, addLabelFromUserInput=True)
+        iri = self._project.getIRI(self._iriStringRedo, addIsDefinedBy=True, addLabelFromSimpleName=True, addLabelFromUserInput=True, userInput=self._userExplicitInput)
+        oldIri = self._project.getIRI(self._iriStringUndo, addIsDefinedBy=True, addLabelFromSimpleName=True, addLabelFromUserInput=True)
         self._node.iri = iri
         self._project.sgnIRIChanged.emit(self._node, oldIri)
 
     def undo(self):
         """undo the command"""
-        iri = self._project.getIRI(self._iriStringRedo, addLabelFromSimpleName=True, addLabelFromUserInput=True)
-        oldIri = self._project.getIRI(self._iriStringUndo, addLabelFromSimpleName=True, addLabelFromUserInput=True)
+        iri = self._project.getIRI(self._iriStringRedo, addIsDefinedBy=True, addLabelFromSimpleName=True, addLabelFromUserInput=True)
+        oldIri = self._project.getIRI(self._iriStringUndo, addIsDefinedBy=True, addLabelFromSimpleName=True, addLabelFromUserInput=True)
         self._node.iri = oldIri
         self._project.sgnIRIChanged.emit(self._node, iri)
 
