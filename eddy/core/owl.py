@@ -493,7 +493,20 @@ class IRI(QtCore.QObject):
     sgnFunctionalModified = QtCore.pyqtSignal()
     sgnInverseFunctionalModified = QtCore.pyqtSignal()
 
-    def __init__(self, namespace,suffix=None, functional=False, invFuctional=False, symmetric=False, asymmetric=False,reflexive=False,irreflexive=False,transitive=False, parent=None):
+    def __init__(
+        self,
+        namespace,
+        suffix=None,
+        functional=False,
+        invFuctional=False,
+        symmetric=False,
+        asymmetric=False,
+        reflexive=False,
+        irreflexive=False,
+        transitive=False,
+        tag=None,
+        parent=None,
+    ):
         """
         Create a new IRI
         """
@@ -513,6 +526,7 @@ class IRI(QtCore.QObject):
         self.components = parse(IRI.concat(self._namespace, self._suffix))
         self._annotationAssertionsMap = defaultdict(list)
         self._annotationAssertions = []
+        self._tag = tag
 
     @staticmethod
     def concat(namespace, suffix):
@@ -675,6 +689,17 @@ class IRI(QtCore.QObject):
     def transitive(self, tran):
         self._isTransitive = tran
         self.sgnIRIPropModified.emit()
+
+    @property
+    def tag(self):
+        """
+        Returns the Tag associated with this IRI.
+        """
+        return self._tag
+
+    @tag.setter
+    def tag(self, tag):
+        self._tag = tag
 
     @property
     def deprecated(self):
