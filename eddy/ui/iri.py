@@ -51,6 +51,7 @@ from eddy.core.commands.iri import (
     CommandEdgeRemoveAnnotation,
     CommandIRIRefactor,
     CommandIRIRemoveAnnotationAssertion,
+    CommandIRISetTag,
 )
 from eddy.core.commands.nodes import (
     CommandNodeAdd,
@@ -86,6 +87,172 @@ if TYPE_CHECKING:
 #############################################
 #   GLOBALS
 #################################
+
+TAG_NAME_ROLE = QtCore.Qt.ItemDataRole.UserRole + 1
+TAG_ROLE = QtCore.Qt.ItemDataRole.UserRole + 2
+
+
+class TagComboBox(ComboBox):
+    """
+    ComboBox che espone il nome del tag selezionato visualizzando i tag
+    annidati all'interno di una struttura ad albero reale (QTreeView).
+    """
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+
+        self.tree_view = QtWidgets.QTreeView(self)
+        self.tree_view.setHeaderHidden(True)
+        self.tree_view.setRootIsDecorated(True)
+        self.setView(self.tree_view)
+
+        self.tree_model = QtGui.QStandardItemModel(self)
+        self.setModel(self.tree_model)
+
+        self.setEditable(True)
+        self.setInsertPolicy(QtWidgets.QComboBox.NoInsert)
+        lineEdit = self.lineEdit()
+        lineEdit.setReadOnly(True)
+        lineEdit.installEventFilter(self)
+
+        self._currentModelIndex = QtCore.QPersistentModelIndex()
+        connect(self.tree_view.pressed, self.onItemClicked)
+
+    def eventFilter(self, obj, event):
+        if obj is self.lineEdit() and event.type() == QtCore.QEvent.MouseButtonPress:
+            self.showPopup()
+            return True
+        return super().eventFilter(obj, event)
+
+    def onItemClicked(self, index):
+        """Handles the user picking an entry from the popup tree view."""
+        self.setCurrentModelIndex(index)
+        self.hidePopup()
+
+    def currentModelIndex(self):
+        """Returns the QModelIndex of the currently selected tag entry, if any."""
+        return QtCore.QModelIndex(self._currentModelIndex)
+
+    def setCurrentModelIndex(self, index, emitSignal=True):
+        """
+        Selects the entry pointed to by the given QModelIndex, which may
+        refer to a nested tag. Passing an invalid index clears the selection.
+        """
+        changed = self.currentModelIndex() != index
+        self._currentModelIndex = (
+            QtCore.QPersistentModelIndex(index)
+            if index is not None and index.isValid()
+            else QtCore.QPersistentModelIndex()
+        )
+        if self._currentModelIndex.isValid():
+            self.tree_view.setCurrentIndex(QtCore.QModelIndex(self._currentModelIndex))
+
+        self.lineEdit().setText(self.currentText())
+        if changed and emitSignal:
+            self.currentTextChanged.emit(self.currentText())
+
+    def currentText(self):
+        # Recupera i dati dall'indice correntemente selezionato nel modello ad albero.
+        index = self.currentModelIndex()
+        if not index.isValid():
+            return ''
+        tagName = self.model().data(index, TAG_NAME_ROLE)
+        return str(tagName) if tagName is not None else ''
+
+    def currentTag(self):
+        index = self.currentModelIndex()
+        if not index.isValid():
+            return None
+        return self.model().data(index, TAG_ROLE)
+
+
+def _getTagValue(tag, key, default=None):
+    if isinstance(tag, dict):
+        return tag.get(key, default)
+    return getattr(tag, key, default)
+
+
+def _tagId(tag):
+    """
+    Normalizes a Tag instance (or an already plain id string/None) to its
+    id, so that it can be compared against `IRI.tag` (which only ever
+    stores the plain id).
+    """
+    return getattr(tag, 'id', tag)
+
+
+def _getSubTags(tag):
+    """
+    Returns the list of sub-tags of the given tag, supporting both real
+    `Tag` instances (whose children are exposed through the `subtag`
+    property) and the plain dict representation used as a fallback
+    (`subTags` key).
+    """
+    if isinstance(tag, dict):
+        return tag.get('subTags') or []
+    return getattr(tag, 'subtag', None) or []
+
+
+def _populateTreeModel(parent_item, tags):
+    """
+    Funzione ricorsiva per popolare l'albero basata sulla struttura dei tag.
+    """
+    for tag in tags or []:
+        name = str(_getTagValue(tag, 'name', '')).strip()
+        if not name:
+            continue
+
+        description = str(_getTagValue(tag, 'description', '') or '').strip()
+
+        item = QtGui.QStandardItem(name)
+        item.setData(name, TAG_NAME_ROLE)
+        item.setData(tag, TAG_ROLE)
+        if description:
+            item.setData(description, QtCore.Qt.ItemDataRole.ToolTipRole)
+
+        parent_item.appendRow(item)
+
+        _populateTreeModel(item, _getSubTags(tag))
+
+
+def _populateProjectTags(combobox, project):
+    """
+    Rebuilds the combobox's tree model with the project's tags, always
+    keeping an initial blank entry (row 0) representing "no tag".
+    """
+    model = combobox.model()
+    model.clear()
+
+    # L'opzione "nessun tag" deve sempre essere la prima voce dell'albero.
+    blankItem = QtGui.QStandardItem('')
+    blankItem.setData('', TAG_NAME_ROLE)
+    blankItem.setData(None, TAG_ROLE)
+    model.invisibleRootItem().appendRow(blankItem)
+
+    tags = project.tags if project else []
+    _populateTreeModel(model.invisibleRootItem(), tags)
+
+    combobox.tree_view.expandAll()
+
+
+def _findTagIndex(combobox, tag):
+    """
+    Cerca il tag all'interno del modello gerarchico.
+    :rtype: QtCore.QModelIndex
+    """
+    model = combobox.model()
+    start_index = model.index(0, 0)
+    matching_indexes = model.match(
+        start_index,
+        TAG_ROLE,
+        tag,
+        hits=1,
+        flags=QtCore.Qt.MatchFlag.MatchExactly | QtCore.Qt.MatchFlag.MatchRecursive
+    )
+
+    if matching_indexes:
+        return matching_indexes[0]
+    return QtCore.QModelIndex()
 
 
 # noinspection PyArgumentList
@@ -161,6 +328,58 @@ def getIRIPrefixComboBox(parent):
     combobox.setScrollEnabled(False)
     return combobox
 
+
+# noinspection PyArgumentList
+def getTagComboBoxLabel(parent):
+    comboBoxLabel = QtWidgets.QLabel(parent, objectName='tag_combobox_label')
+    comboBoxLabel.setText('Tag')
+    return comboBoxLabel
+
+
+# noinspection PyArgumentList
+def getTagComboBox(parent):
+    combobox = TagComboBox(parent, objectName='tag_switch')
+    combobox.setFocusPolicy(QtCore.Qt.StrongFocus)
+    combobox.setScrollEnabled(False)
+    return combobox
+
+
+def populateTagComboBox(combobox, iri, project):
+    """
+    Populate the tag combobox.
+    """
+    _populateProjectTags(combobox, project)
+
+    tagId = iri.tag if iri else None
+    tag = project.findTag(tagId) if (tagId and project) else None
+    index = _findTagIndex(combobox, tag) if tag else combobox.model().index(0, 0)
+    if tagId and not tag:
+        # se il tag associato all'IRI non e' più risolvibile nell'albero dei
+        # tag del progetto (es. tag rimosso dopo essere stato assegnato):
+        # lo si mostra comunque usando il suo id cosi' che l'informazione
+        # non venga silenziosamente persa, e l'utente possa accorgersene.
+        name = str(tagId)
+        item = QtGui.QStandardItem(name)
+        item.setData(name, TAG_NAME_ROLE)
+        item.setData(tagId, TAG_ROLE)
+        combobox.model().invisibleRootItem().appendRow(item)
+        index = item.index()
+    elif tag and not index.isValid():
+        # se il tag associato all'IRI non fa parte dell'albero dei tag
+        # del progetto (es. tag orfano/importato): lo si aggiunge come voce
+        # aggiuntiva di primo livello cosi' che possa comunque essere
+        # mostrato e selezionato.
+        name = str(_getTagValue(tag, 'name', ''))
+        description = str(_getTagValue(tag, 'description', '') or '')
+        item = QtGui.QStandardItem(name)
+        item.setData(name, TAG_NAME_ROLE)
+        item.setData(tag, TAG_ROLE)
+        if description:
+            item.setData(description, QtCore.Qt.ItemDataRole.ToolTipRole)
+        combobox.model().invisibleRootItem().appendRow(item)
+        index = item.index()
+
+    combobox.setCurrentModelIndex(index, emitSignal=False)
 
 # noinspection PyArgumentList
 def getInputLabel(parent):
@@ -324,11 +543,19 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                 fullIriField.setText('')
         self.addWidget(fullIriField)
 
+        tagLabel = getTagComboBoxLabel(self)
+        self.addWidget(tagLabel)
+
+        tagComboBox = getTagComboBox(self)
+        populateTagComboBox(tagComboBox, self.iri, self.project)
+        self.addWidget(tagComboBox)
+
         formlayout = QtWidgets.QFormLayout()
         formlayout.addRow(self.widget('iri_prefix_combobox_label'),
                           self.widget('iri_prefix_switch'))
         formlayout.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
         formlayout.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
+        formlayout.addRow(self.widget('tag_combobox_label'), self.widget('tag_switch'))
 
         # groupbox = QtWidgets.QGroupBox('', self, objectName='iri_definition_group_widget')
         # groupbox.setLayout(formlayout)
@@ -546,6 +773,8 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
             else:
                 fullIriField.setText('')
 
+        populateTagComboBox(self.widget('tag_switch'), self.iri, self.project)
+
         checked = self.project.addLabelFromSimpleName
         checkBox = self.widget('label_simplename_checkbox')
         checkBox.setChecked(checked)
@@ -669,6 +898,11 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                                 if newIRI is not self.iri:
                                     oldIRI = self.iri
                                     self.iri = newIRI
+                                    newTag = self.widget('tag_switch').currentTag()
+                                    if _tagId(newTag) != self.iri.tag:
+                                        command = CommandIRISetTag(self.project, self.iri, newTag, self.iri.tag)
+                                        self.session.undostack.push(command)
+                                    self.redraw()
                                     command = CommandIRIRefactor(self.project, self.iri, oldIRI)
                                     self.session.undostack.push(command)
                                     refactored = True
@@ -677,10 +911,25 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                                 command = CommandChangeIRIIdentifier(self.project, self.iri,
                                                                      inputIriString, oldStr)
                                 self.session.undostack.push(command)
+                                newTag = self.widget('tag_switch').currentTag()
+                                if _tagId(newTag) != self.iri.tag:
+                                    command = CommandIRISetTag(self.project, self.iri, newTag, self.iri.tag)
+                                    self.session.undostack.push(command)
                                 refactored = True
                         else:
                             command = CommandChangeIRIOfNode(self.project, self.node,
                                                              inputIriString, str(self.iri))
+                            self.session.undostack.push(command)
+                            newTag = self.widget('tag_switch').currentTag()
+                            if _tagId(newTag) != self.node.iri.tag:
+                                command = CommandIRISetTag(self.project, self.node.iri, newTag, self.node.iri.tag)
+                                self.session.undostack.push(command)
+                    else:
+                        # L'IRI non e' cambiata: il tag selezionato va comunque
+                        # salvato, altrimenti verrebbe silenziosamente perso.
+                        newTag = self.widget('tag_switch').currentTag()
+                        if _tagId(newTag) != self.iri.tag:
+                            command = CommandIRISetTag(self.project, self.iri, newTag, self.iri.tag)
                             self.session.undostack.push(command)
                             refactored = True
                         if refactored:
@@ -697,6 +946,10 @@ class IriBuilderDialog(QtWidgets.QDialog, HasWidgetSystem):
                         isDefinedByExplicitChecked=True,
                         labelLang=labelLang
                     )
+                    newTag = self.widget('tag_switch').currentTag()
+                    if _tagId(newTag) != inputIri.tag:
+                        command = CommandIRISetTag(self.project, inputIri, newTag, inputIri.tag)
+                        self.session.undostack.push(command)
                     self.node.iri = inputIri
                     self.sgnIRIAccepted.emit(self.node)
                 super().accept()
@@ -785,6 +1038,14 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         fullIriField.setText(str(iri))
         self.addWidget(fullIriField)
 
+        tagLabel = getTagComboBoxLabel(self)
+        self.addWidget(tagLabel)
+
+        tagComboBox = getTagComboBox(self)
+        populateTagComboBox(tagComboBox, self.iri, self.project)
+        connect(tagComboBox.currentTextChanged, self.onTagChanged)
+        self.addWidget(tagComboBox)
+
         saveBtn = QtWidgets.QPushButton('Save', objectName='save_iri_button')
         connect(saveBtn.clicked, self.saveIRI)
         saveBtn.setEnabled(False)
@@ -799,6 +1060,7 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                           self.widget('iri_prefix_switch'))
         formlayout.addRow(self.widget('input_field_label'), self.widget('iri_input_field'))
         formlayout.addRow(self.widget('full_iri_label'), self.widget('full_iri_field'))
+        formlayout.addRow(self.widget('tag_combobox_label'), self.widget('tag_switch'))
         formlayout.addRow(boxlayout)
 
         widget = QtWidgets.QWidget()
@@ -936,6 +1198,8 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         fullIriField = self.widget('full_iri_field')
         fullIriField.setText(str(self.iri))
 
+        populateTagComboBox(self.widget('tag_switch'), self.iri, self.project)
+
         #############################################
         # ANNOTATIONS TAB
         #################################
@@ -1038,6 +1302,10 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
         else:
             self.widget('save_iri_button').setEnabled(False)
 
+    @QtCore.pyqtSlot(str)
+    def onTagChanged(self, _):
+        self.widget('save_iri_button').setEnabled(True)
+
     @QtCore.pyqtSlot(bool)
     def saveIRI(self, _):
         try:
@@ -1068,6 +1336,10 @@ class IriPropsDialog(QtWidgets.QDialog, HasWidgetSystem):
                     command = CommandChangeIRIIdentifier(self.project, self.iri, fullIRIString,
                                                          oldStr)
                     self.session.undostack.push(command)
+            newTag = self.widget('tag_switch').currentTag()
+            if _tagId(newTag) != self.iri.tag:
+                command = CommandIRISetTag(self.project, self.iri, newTag, self.iri.tag)
+                self.session.undostack.push(command)
         except IllegalNamespaceError:
             dialog = QtWidgets.QMessageBox(
                 QtWidgets.QMessageBox.Warning,

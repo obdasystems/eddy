@@ -225,6 +225,12 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         for iri in sorted(self.project.iris, key=str):
             iriEl = self.getIriDomElement(iri)
             irisEl.appendChild(iriEl)
+
+        tagsEl = self.getDomElement('tags')
+        ontologyEl.appendChild(tagsEl)
+        for tag in sorted(self.project.tags, key=str):
+            tagsEl.appendChild(self.getDomTagNode(tag))
+
         return ontologyEl
 
     def getOntologyImportDomElement(self, impOnt):
@@ -272,6 +278,9 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
         transitiveEl = self.getDomElement('transitive')
         if iri.transitive:
             iriEl.appendChild(transitiveEl)
+
+        if iri.tag:
+            iriEl.setAttribute('tag', iri.tag)
 
         if iri.annotationAssertions:
             annotationsEl = self.getDomElement('annotations')
@@ -792,6 +801,15 @@ class GrapholIRIProjectExporter(AbstractProjectExporter):
 
     def getDomTextNode(self, text):
         return self.document.createTextNode(text)
+
+    def getDomTagNode(self, tag):
+        tagEl = self.document.createElement('tag')
+        tagEl.setAttribute('name', tag.name)
+        tagEl.setAttribute('description', tag.description)
+        tagEl.setAttribute('id', tag.id)
+        for subtag in tag.subtag:
+            tagEl.appendChild(self.getDomTagNode(subtag))
+        return tagEl
 
     @classmethod
     def filetype(cls):

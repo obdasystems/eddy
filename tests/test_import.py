@@ -34,6 +34,7 @@
 
 
 import pytest
+from openpyxl import Workbook
 from PyQt5 import QtWidgets
 
 from eddy.core.datatypes.graphol import Item
@@ -45,6 +46,11 @@ from eddy.core.loaders.graphol_iri import (
     GrapholIRIProjectLoader_v2,
     GrapholIRIProjectLoader_v3,
 )
+from eddy.core.loaders.tags import (
+    CsvTagLoader,
+    XlsxTagLoader,
+)
+from eddy.core.tags import Tag
 from eddy.ui.session import Session
 
 
