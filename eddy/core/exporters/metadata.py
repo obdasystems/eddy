@@ -109,7 +109,8 @@ class AbstractMetadataExporter(AbstractProjectExporter):
         self.annotations = kwargs.get('annotations', None)
         self.items = kwargs.get('items', None)
         self.open = kwargs.get('open', False)
-        self.includeEntitiesWithoutAnnotations = kwargs.get('includeEntitiesWithoutAnnotations',False)
+        self.includeEntitiesWithoutAnnotations = kwargs.get('includeEntitiesWithoutAnnotations', False)
+        self.onlyWithDefinedBy = kwargs.get('onlyWithDefinedBy', False)
 
 
     #############################################
@@ -130,6 +131,19 @@ class AbstractMetadataExporter(AbstractProjectExporter):
             self.KeyValue,
         ]
 
+    def _hasIsDefinedByOntology(self, iri) -> bool:
+        """
+        Check if an IRI has an isDefinedBy annotation pointing to the ontology IRI.
+        """
+        if not self.onlyWithDefinedBy or self.project.ontologyIRI is None:
+            return True
+
+        for annotation in iri.annotationAssertions:
+            if annotation.assertionProperty == AnnotationAssertionProperty.IsDefinedBy.value:
+                if str(annotation.value) == str(self.project.ontologyIRI):
+                    return True
+        return False
+
     def metadata(self) -> List[Dict[str, str]]:
         """
         Returns a list containing the metadata table rows, as dictionaries
@@ -147,6 +161,9 @@ class AbstractMetadataExporter(AbstractProjectExporter):
         for diagram in self.diagrams:
             for node in self.project.iriOccurrences(diagram=diagram):
                 if node.type() not in self.items or node.iri in processed:
+                    continue
+                if not self._hasIsDefinedByOntology(node.iri):
+                    processed.add(node.iri)
                     continue
                 if self.includeEntitiesWithoutAnnotations and len(
                     node.iri.annotationAssertions) == 0:
@@ -185,6 +202,9 @@ class AbstractMetadataExporter(AbstractProjectExporter):
                 resources.extend(map(lambda v: ('Named Individual', v), ont.individuals))
             for entityType, resource in resources:
                 if resource in processed:
+                    continue
+                if not self._hasIsDefinedByOntology(resource):
+                    processed.add(resource)
                     continue
                 for annotation in resource.annotationAssertions:
                     if annotation.assertionProperty in self.annotations:
@@ -256,6 +276,8 @@ class CsvProjectExporter(AbstractMetadataExporter):
             self.items = dialog.selectedItems()
             # CHECK INCLUSION OF ENTITIES WITHOUT ANNOTATIONS
             self.includeEntitiesWithoutAnnotations = dialog.checked()
+            # CHECK FILTER BY ISDEFINEDBY
+            self.onlyWithDefinedBy = dialog.onlyWithDefinedBy()
 
         buffer = io.StringIO()
         writer = csv.writer(buffer, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL)
@@ -305,6 +327,8 @@ class XlsxProjectExporter(AbstractMetadataExporter):
             self.items = dialog.selectedItems()
             # CHECK INCLUSION OF ENTITIES WITHOUT ANNOTATIONS
             self.includeEntitiesWithoutAnnotations = dialog.checked()
+            # CHECK FILTER BY ISDEFINEDBY
+            self.onlyWithDefinedBy = dialog.onlyWithDefinedBy()
 
         workbook = Workbook()
         worksheet = workbook.active
@@ -675,6 +699,18 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
 
         self.addWidget(groupbox2)
 
+        # ISDEFINEDBY CHECKBOX
+        groupbox3 = QtWidgets.QGroupBox('Filter by isDefinedBy')
+        groupbox3.setObjectName('isdefinedby_group')
+        layout3 = QtWidgets.QHBoxLayout(groupbox3)
+
+        checkbox3 = CheckBox('Only export entities with rdfs:isDefinedBy pointing to this ontology')
+        checkbox3.setObjectName('only_isdefinedby_checkbox')
+        layout3.addWidget(checkbox3)
+        self.addWidget(checkbox3)
+
+        self.addWidget(groupbox3)
+
         # CONFIRMATION BOX
         confirmation = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
         confirmation.setObjectName('confirmation_box')
@@ -690,6 +726,7 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
         mainLayout.addWidget(self.widget('annotations_group'))
         mainLayout.addWidget(self.widget('entities_group'))
         mainLayout.addWidget(self.widget('entities_without_annotations'))
+        mainLayout.addWidget(self.widget('isdefinedby_group'))
         mainLayout.addWidget(self.widget('confirmation_box'), 0, QtCore.Qt.AlignRight)
 
         self.setMinimumSize(640, 480)
@@ -732,6 +769,13 @@ class AnnotationSelectionDialog(HasWidgetSystem, QtWidgets.QDialog):
 
         checked = self.widget('all_entities_checkbox').isChecked()
         return checked
+
+    def onlyWithDefinedBy(self):
+        """
+        Return whether to only export entities with isDefinedBy annotation pointing to the ontology IRI.
+        """
+        checkbox = cast(QtWidgets.QCheckBox, self.widget('only_isdefinedby_checkbox'))
+        return checkbox.isChecked()
 
 
 class AnnotationListWidget(HasWidgetSystem, QtWidgets.QWidget):
